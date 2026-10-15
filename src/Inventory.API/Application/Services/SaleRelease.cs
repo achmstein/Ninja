@@ -50,12 +50,16 @@ public static class SaleRelease
         {
             // At the cost the sale went out at, so cost of goods takes back
             // exactly what it was given; a sale that went out at nothing has
-            // nothing to give back and leaves the average alone
+            // nothing to give back and leaves the average alone. On the sale's
+            // own day: the sale leaves the books where it entered them, not
+            // in the month the order was called off
             drafts.Add(new MovementDraft(
                 line.StockItemId, MovementType.SaleReversal, -line.Quantity, reference, reason,
-                UnitCost: line.UnitCost > 0 ? line.UnitCost : null));
+                UnitCost: line.UnitCost > 0 ? line.UnitCost : null,
+                OccurredAt: line.OccurredAt));
         }
 
+        // The food is thrown away now, so its waste is today's
         if (waste)
         {
             drafts.AddRange(lines.Select(line =>

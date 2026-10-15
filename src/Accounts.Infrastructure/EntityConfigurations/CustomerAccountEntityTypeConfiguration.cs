@@ -24,6 +24,10 @@ class CustomerAccountEntityTypeConfiguration : IEntityTypeConfiguration<Customer
             .HasPrecision(18, 2)
             .IsRequired();
 
+        // The balance is a running total: a concurrent posting must not overwrite it
+        builder.Property(a => a.Version)
+            .IsRowVersion();
+
         builder.Property(a => a.CreatedAt)
             .IsRequired();
 

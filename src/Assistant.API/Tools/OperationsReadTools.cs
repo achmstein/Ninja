@@ -64,7 +64,12 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
             period = fan.Ok[0].Value.Period.Label,
             currency = snap!.Currency,
             orders = total,
-            listedByStatus = rows.GroupBy(r => r.o.Status).Select(g => new { status = g.Key, count = g.Count(), total = g.Sum(r => r.o.Total) }),
+            // Only the rows fetched, never the period: said so beside it whenever more exist. An order
+            // voided at the till stays Confirmed in Ordering, so it is counted as voided here
+            listedByStatus = rows.GroupBy(r => r.o.VoidedAt is not null ? "Voided" : r.o.Status).Select(g => new { status = g.Key, count = g.Count(), total = g.Sum(r => r.o.Total) }),
+            listedByStatusCovers = total > rows.Count
+                ? $"only the {rows.Count} orders listed, not all {total} in the period; for money totals use get_sales_summary"
+                : "every order in the period",
             rows = rows.OrderByDescending(r => r.o.Date).Take(top).Select(r => new
             {
                 branch = r.Branch.DisplayName,

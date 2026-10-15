@@ -85,11 +85,16 @@ public interface IOrderQueries
     Task<PaginatedResult<GuestSummary>> GetGuestsAsync(int branchId, int pageIndex, int pageSize, string? search = null);
 
     /// <summary>
-    /// Aggregated per-day and per-item order statistics (admin dashboard),
-    /// excluding cancelled orders. tzOffsetMinutes uses JS getTimezoneOffset
-    /// semantics (UTC − local) so days bucket on the caller's calendar.
+    /// Aggregated per-day and per-item order statistics (admin dashboard) of
+    /// the orders the business took on in [fromDate, toDate): confirmed and
+    /// never voided at the till. Days are business days in
+    /// <paramref name="zone"/> starting at <paramref name="dayStart"/> when a
+    /// zone is given; otherwise tzOffsetMinutes, with JS getTimezoneOffset
+    /// semantics (UTC − local), buckets them on the caller's calendar. Items
+    /// are ranked by revenue net of every discount; <paramref name="top"/> of
+    /// them, or all when it is 0.
     /// </summary>
-    Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes);
+    Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes, TimeZoneInfo? zone = null, TimeOnly dayStart = default, int top = 10);
 }
 
 /// <summary>

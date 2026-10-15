@@ -12,4 +12,7 @@ public interface ICustomerAccountRepository : IRepository<CustomerAccount>
     Task<CustomerAccount?> GetWithTransactionsByCustomerIdAsync(string customerId);
     Task<IEnumerable<CustomerAccount>> GetAllAsync();
     Task<IEnumerable<CustomerAccount>> GetAccountsWithBalanceAsync();
+
+    /// <summary>Drops everything loaded or pending, so a write refused for a concurrent one can start again from the database.</summary>
+    void ForgetChanges();
 }

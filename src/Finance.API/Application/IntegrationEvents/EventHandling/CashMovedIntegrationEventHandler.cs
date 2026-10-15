@@ -1,6 +1,7 @@
 #nullable enable
 using Ninja.EventBus.Abstractions;
 using Ninja.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.Finance.API.Application.Services;
 
 namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 
@@ -17,6 +18,7 @@ public class CashMovedIntegrationEventHandler(
     IExpenseCategoryRepository categories,
     ISupplierRepository suppliers,
     IPartnerRepository partners,
+    IBranchDays days,
     FinanceTransaction transaction,
     ILogger<CashMovedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<CashMovedIntegrationEvent>
@@ -29,7 +31,7 @@ public class CashMovedIntegrationEventHandler(
     private async Task Post(CashMovedIntegrationEvent @event)
     {
         var reference = ReferenceFor(@event.ShiftId, @event.MovementId);
-        var day = BusinessDay.Of(@event.ShiftOpenedAt);
+        var day = await days.OfAsync(@event.BranchId, @event.ShiftOpenedAt);
         var payOut = @event.Type == "PayOut";
 
         switch (@event.Kind)

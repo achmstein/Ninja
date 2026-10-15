@@ -135,7 +135,8 @@ public class DeletePayslipCommandHandler(
 
         // The period cost nothing until it is generated again
         await integrationEvents.AddAndSaveEventAsync(new EmployeeEarningsChangedIntegrationEvent(
-            payslip.BranchId, payslip.EmployeeId, payslip.PeriodStart, payslip.PeriodEnd, 0));
+            payslip.BranchId, payslip.EmployeeId, payslip.PeriodStart, payslip.PeriodEnd, 0,
+            PayslipId: payslip.Id, LabourCost: 0));
 
         return true;
     }

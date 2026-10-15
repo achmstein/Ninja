@@ -18,7 +18,10 @@ public class RecordPaymentCommandHandler : IRequestHandler<RecordPaymentCommand,
         _logger = logger;
     }
 
-    public async Task<bool> Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
+    public Task<bool> Handle(RecordPaymentCommand request, CancellationToken cancellationToken)
+        => AccountWriteRetry.RunAsync(_accountRepository, _logger, request.CustomerId, () => Post(request, cancellationToken));
+
+    private async Task<bool> Post(RecordPaymentCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetWithTransactionsByCustomerIdAsync(request.CustomerId);
 

@@ -94,6 +94,29 @@ public class LoyaltyAccount
     }
 
     /// <summary>
+    /// Give back points redeemed on a sale that never happened (its bill
+    /// voided): filed as a redemption the other way, so the balance has them
+    /// again while lifetime points and the tier, which they never raised, stay
+    /// as they are.
+    /// </summary>
+    public void RestoreRedeemedPoints(int points, string referenceId, string? description = null)
+    {
+        if (points <= 0) throw new ArgumentException("Points must be positive", nameof(points));
+
+        PointsBalance += points;
+        UpdatedAt = DateTime.UtcNow;
+
+        Transactions.Add(new PointsTransaction
+        {
+            AccountId = Id,
+            Points = points,
+            Type = TransactionType.Redemption,
+            ReferenceId = referenceId,
+            Description = description
+        });
+    }
+
+    /// <summary>
     /// Take back points a refunded purchase had earned. Never below zero:
     /// points already spent are not a debt, so the deduction is capped at
     /// the balance and the amount actually taken is returned.

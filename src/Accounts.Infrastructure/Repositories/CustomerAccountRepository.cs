@@ -53,6 +53,8 @@ public class CustomerAccountRepository : ICustomerAccountRepository
             .ToListAsync();
     }
 
+    public void ForgetChanges() => _context.ChangeTracker.Clear();
+
     public async Task<IEnumerable<CustomerAccount>> GetAccountsWithBalanceAsync()
     {
         return await _context.CustomerAccounts

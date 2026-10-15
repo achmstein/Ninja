@@ -95,4 +95,32 @@ public sealed class LoyaltyAccountTests
     {
         Assert.AreEqual(100, LoyaltyApi.RedemptionPointsPerUnit);
     }
+
+    [TestMethod]
+    public void Points_given_back_from_a_voided_bill_are_spendable_again_but_earn_no_tier()
+    {
+        var card = Card(balance: 990, lifetime: 990);
+        card.RedeemPoints(500, "41");
+
+        card.RestoreRedeemedPoints(500, "void-redeemed:41", "Bill voided");
+
+        Assert.AreEqual(990, card.PointsBalance);
+        Assert.AreEqual(990, card.LifetimePoints, "they were earned once already");
+        Assert.AreEqual(LoyaltyTier.Bronze, card.CurrentTier);
+        var back = card.Transactions.Last();
+        Assert.AreEqual(TransactionType.Redemption, back.Type, "a redemption undone");
+        Assert.AreEqual(500, back.Points);
+        Assert.ThrowsExactly<ArgumentException>(() => card.RestoreRedeemedPoints(0, "x"));
+    }
+
+    [TestMethod]
+    public void The_stats_windows_are_the_businesss_own_day_week_and_month()
+    {
+        // 23:30 UTC on 15 January is already half past one on the 16th in Cairo (two hours ahead in winter)
+        var (today, week, month) = LoyaltyApi.StatsWindows(new DateTime(2026, 1, 15, 23, 30, 0, DateTimeKind.Utc));
+
+        Assert.AreEqual(new DateTime(2026, 1, 15, 22, 0, 0, DateTimeKind.Utc), today, "Cairo's midnight, not UTC's");
+        Assert.AreEqual(new DateTime(2026, 1, 9, 22, 0, 0, DateTimeKind.Utc), week, "seven days with today");
+        Assert.AreEqual(new DateTime(2025, 12, 31, 22, 0, 0, DateTimeKind.Utc), month, "the 1st of Cairo's month, not thirty days back");
+    }
 }

@@ -81,8 +81,9 @@ public record UsageReport(
 /// The usage report reframed as the period the field reads: what was there,
 /// what came in, what the recipes say went out, what was thrown away, what
 /// the counts found, what is left. Quantities in the item's base unit;
-/// movements valued at the cost they were posted with, opening and closing
-/// at the branch's current average.
+/// movements valued at the cost they were posted with and dated when they
+/// happened, opening and closing at the branch's average as it stood at the
+/// period's start and end.
 /// </summary>
 public record VarianceRow(
     int StockItemId,
@@ -108,7 +109,13 @@ public record VarianceRow(
     decimal Closing,
     decimal ClosingValue,
     /// <summary>Count variance over theoretical usage; null when nothing was sold.</summary>
-    decimal? VariancePercent);
+    decimal? VariancePercent,
+    /// <summary>
+    /// The opening or closing value had no average recorded for its date
+    /// (stock that moved only before the ledger kept one) and is valued at
+    /// today's average instead.
+    /// </summary>
+    bool ValuedAtCurrentAverage = false);
 
 public record VarianceReport(
     DateTime From,
@@ -120,8 +127,12 @@ public record VarianceReport(
     decimal TheoreticalValue,
     decimal WastedValue,
     decimal CountVarianceValue,
-    decimal ClosingValue);
+    decimal ClosingValue,
+    /// <summary>Some row's opening or closing is valued at today's average (see <see cref="VarianceRow.ValuedAtCurrentAverage"/>).</summary>
+    bool ValuedAtCurrentAverage = false);
 
+/// <param name="RecordedAt">When it was posted.</param>
+/// <param name="OccurredAt">When it happened, which the reports date it by: a late offline sale's sale time, a sale given back on its sale's.</param>
 public record MovementView(
     int Id,
     int StockItemId,
@@ -133,7 +144,8 @@ public record MovementView(
     string? Reference,
     string? Reason,
     string RecordedBy,
-    DateTime RecordedAt);
+    DateTime RecordedAt,
+    DateTime? OccurredAt = null);
 
 public record PagedResult<T>(IReadOnlyList<T> Items, int TotalCount);
 

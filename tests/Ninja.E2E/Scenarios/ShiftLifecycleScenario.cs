@@ -78,7 +78,8 @@ public sealed class ShiftLifecycleScenario(NinjaApp app, DaySetup day) : Scenari
         Assert.Equal(28.50m, shift.SalesTotal);
         Assert.Equal(1.50m, shift.ChangeGiven);
         var cash = Assert.Single(shift.TenderTotals, t => t.Tender == "Cash");
-        Assert.Equal(30m, cash.Amount);
+        Assert.Equal(28.50m, cash.Amount); // what the sale kept: the 30 handed over less the 1.50 change
+        Assert.Equal(30m, cash.Tendered);
         Assert.Equal(528.50m, shift.ExpectedInDrawer);
 
         // 4/5. Untyped pay-in / pay-out: drawer only, no event for anyone.

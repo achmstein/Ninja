@@ -48,7 +48,8 @@ public class Payment : Entity
         decimal amount,
         string recordedBy,
         string? customerId = null,
-        string? customerName = null)
+        string? customerName = null,
+        DateTime? recordedAt = null)
     {
         if (amount <= 0)
             throw new SalesDomainException("A payment must be a positive amount");
@@ -63,6 +64,8 @@ public class Payment : Entity
         RecordedBy = recordedBy;
         CustomerId = tender == PaymentTender.Account ? customerId : null;
         CustomerName = tender == PaymentTender.Account ? customerName : null;
-        RecordedAt = DateTime.UtcNow;
+        // A sale replayed from a till that was offline was paid when it was
+        // rung up, not when the replay reached the server
+        RecordedAt = recordedAt ?? DateTime.UtcNow;
     }
 }

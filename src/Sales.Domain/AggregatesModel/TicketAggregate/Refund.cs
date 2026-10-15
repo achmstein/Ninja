@@ -11,7 +11,8 @@ public record RefundRequestLine(int LineId, decimal Qty);
 /// itself never changes — its receipt stays exactly as printed — and the
 /// refund is its own numbered document referencing it. Each refunded line
 /// gives back what the customer actually paid for it, so the frozen service
-/// charge and VAT ride along in proportion. Cash leaves the drawer; Account
+/// charge and VAT ride along in proportion, and so does the bill's money off.
+/// The delivery fee comes back only when its own line is refunded. Cash leaves the drawer; Account
 /// credits the named tab (Accounts posts it off the refunded event).
 /// </summary>
 public class Refund : Entity, IAggregateRoot
@@ -43,7 +44,11 @@ public class Refund : Entity, IAggregateRoot
 
     public DateTime RefundedAt { get; private set; }
 
-    /// <summary>The drawer shift a cash refund came out of, if one was open.</summary>
+    /// <summary>
+    /// The shift on duty when the refund was issued, whatever the tender, so the
+    /// shift's report shows every refund it gave; only a cash one left its
+    /// drawer. Null when no shift was open.
+    /// </summary>
     public int? ShiftId { get; private set; }
 
     private readonly List<RefundLine> _lines = [];
@@ -99,9 +104,11 @@ public class Refund : Entity, IAggregateRoot
         var alreadyAmount = earlier.Sum(r => r.Amount);
         var remainder = ticket.Total - alreadyAmount;
 
-        // What the customer paid per pound of menu price: the frozen service
-        // charge and VAT, spread over every line
-        var paidPerMenuPound = ticket.Subtotal > 0 ? ticket.Total / ticket.Subtotal : 1m;
+        // What the customer paid for each line: the bill's money off (the
+        // bill discount, loyalty and promo lines alike), its service and VAT,
+        // spread over the items, and the delivery fee at its own share. Two
+        // items at 50 with 20 off in loyalty, paid 80: one comes back at 40.
+        var shares = ticket.GetPaidShares();
 
         var refund = new Refund
         {
@@ -140,7 +147,7 @@ public class Refund : Entity, IAggregateRoot
                 line.Id,
                 line.Description,
                 request.Qty,
-                Money(menuAmount * paidPerMenuPound),
+                Money(shares.PaidFor(line, menuAmount)),
                 menuAmount,
                 line.OrderId));
         }
@@ -195,7 +202,7 @@ public class RefundLine : Entity
 
     public decimal Qty { get; private set; }
 
-    /// <summary>What the customer gets back for this line — menu price plus its share of service and VAT.</summary>
+    /// <summary>What the customer gets back for this line — what they paid for it: its menu price with its share of the money off, service and VAT.</summary>
     public decimal Amount { get; private set; }
 
     /// <summary>The same at menu price, for reversing loyalty in proportion.</summary>

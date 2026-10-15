@@ -274,7 +274,7 @@ public record OrderStats
 
 public record OrderStatsDay
 {
-    /// <summary>Local calendar day (per the caller's tz offset)</summary>
+    /// <summary>The day: a business day in the zone asked for, or the local calendar day at the caller's tz offset.</summary>
     public DateOnly Date { get; init; }
     public int Orders { get; init; }
     public double Revenue { get; init; }
@@ -282,8 +282,11 @@ public record OrderStatsDay
 
 public record OrderStatsItem
 {
+    /// <summary>The catalog item: what branches' rows are added up by.</summary>
+    public int ProductId { get; init; }
     public LocalizedText ProductName { get; init; } = new();
     public int Units { get; init; }
+    /// <summary>What was paid for the units: line discounts off, and the order's promo and loyalty money off spread over its lines.</summary>
     public double Revenue { get; init; }
 }
 

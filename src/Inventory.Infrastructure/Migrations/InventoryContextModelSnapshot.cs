@@ -155,8 +155,15 @@ namespace Inventory.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "stockmovementseq", "inventory");
 
+                    b.Property<decimal?>("AvgUnitCostAfter")
+                        .HasPrecision(18, 4)
+                        .HasColumnType("numeric(18,4)");
+
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("timestamp with time zone");
 
                     b.Property<decimal>("Quantity")
                         .HasPrecision(18, 3)
@@ -193,6 +200,8 @@ namespace Inventory.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("StockItemId");
+
+                    b.HasIndex("BranchId", "OccurredAt");
 
                     b.HasIndex("BranchId", "RecordedAt");
 

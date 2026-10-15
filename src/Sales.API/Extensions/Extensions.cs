@@ -16,6 +16,8 @@ public static class Extensions
     {
         var services = builder.Services;
 
+        // The business's zone: the reports read their hours and business days in it
+        TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
         builder.AddDefaultAuthentication();
 
         // Online payments: the business's own provider account, its secrets sealed with the stack's payments key

@@ -144,7 +144,7 @@ public static partial class OrdersApi
         api.MapGet("/stats", GetOrderStatsAsync)
             .WithName("GetOrderStats")
             .WithSummary("Get aggregated order statistics (admin)")
-            .WithDescription("Per-day order counts/revenue and top items over a date range, excluding cancelled orders.")
+            .WithDescription("Per-day order counts/revenue and top items over [fromDate, toDate) of the orders the business took on: confirmed and not voided at the till; those still awaiting validation or payment, and cancelled ones, are left out. Revenue is net of discounts, loyalty, promo and what credit notes gave back. Days are business days in the IANA zone tz starting at dayStart (HH:mm) when tz is given, otherwise calendar days at tzOffsetMinutes (JS getTimezoneOffset). Top items are ranked by revenue; top caps them (10 by default, 0 for every item, which is what adding branches up needs). These are orders, not the till's sales: for money use Sales' reports.")
             .RequireAuthorization("Admin");
 
         api.MapGet("/user/{userId}", GetOrdersByUserIdAsync)
@@ -623,10 +623,26 @@ public static partial class OrdersApi
         DateTime fromDate,
         DateTime toDate,
         int tzOffsetMinutes = 0,
+        string? tz = null,
+        string? dayStart = null,
+        int top = 10,
         [AsParameters] OrderServices services = default!)
     {
+        // An unknown zone or day start is the caller's mistake, but the
+        // dashboard should still draw: it falls back to the offset
+        TimeZoneInfo? zone = null;
+        if (!string.IsNullOrWhiteSpace(tz))
+        {
+            try { zone = TimeZoneInfo.FindSystemTimeZoneById(tz.Trim()); }
+            catch (TimeZoneNotFoundException) { }
+            catch (InvalidTimeZoneException) { }
+        }
+        var start = TimeOnly.TryParseExact(dayStart ?? "", ["HH:mm", "HH:mm:ss", "H:mm"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out var parsed)
+            ? parsed
+            : TimeOnly.MinValue;
+
         var branchId = httpContext.GetRequiredBranchId();
-        var stats = await services.Queries.GetOrderStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes);
+        var stats = await services.Queries.GetOrderStatsAsync(branchId, fromDate, toDate, tzOffsetMinutes, zone, start, Math.Max(0, top));
         return TypedResults.Ok(stats);
     }
 

@@ -24,4 +24,6 @@ public record BranchSettingsChangedIntegrationEvent(
     // Still one of the business's branches: one switched off delivers nothing and is offered to nobody
     bool IsActive = true,
     // The area drawn on the map, [lat, lng] points round it; null for none. When there is one it, not the radius, says where the branch delivers
-    double[][]? DeliveryArea = null) : IntegrationEvent;
+    double[][]? DeliveryArea = null,
+    // When the branch's day turns over, in the business's local time: Finance dates the day's takings and costs by it
+    TimeOnly? DayStartTime = null) : IntegrationEvent;

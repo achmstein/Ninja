@@ -14,6 +14,8 @@ class SalesFactEntityTypeConfiguration : IEntityTypeConfiguration<SalesFact>
         builder.HasIndex(f => new { f.BranchId, f.Date });
         // A redelivered settle or refund changes nothing
         builder.HasIndex(f => f.Reference).IsUnique();
+        // A sale finds the refunds that arrived before it
+        builder.HasIndex(f => f.TicketId);
     }
 }
 
@@ -41,8 +43,19 @@ class LabourFactEntityTypeConfiguration : IEntityTypeConfiguration<LabourFact>
         builder.Property(f => f.Id).UseHiLo("labourfactseq", "finance");
         builder.Ignore(f => f.DomainEvents);
         builder.Property(f => f.Amount).HasPrecision(18, 2);
-        // One figure per employee per period; the latest from Payroll wins
-        builder.HasIndex(f => new { f.EmployeeId, f.PeriodStart }).IsUnique();
+        // One figure per payslip, the newest from Payroll; facts from before
+        // Payroll named the payslip (0) stay one per employee and period start
+        builder.HasIndex(f => new { f.PayslipId, f.EmployeeId, f.PeriodStart }).IsUnique();
         builder.HasIndex(f => new { f.BranchId, f.PeriodStart });
+    }
+}
+
+class BranchDayStartEntityTypeConfiguration : IEntityTypeConfiguration<BranchDayStart>
+{
+    public void Configure(EntityTypeBuilder<BranchDayStart> builder)
+    {
+        builder.ToTable("branch_day_starts");
+        builder.HasKey(d => d.BranchId);
+        builder.Property(d => d.BranchId).ValueGeneratedNever();
     }
 }

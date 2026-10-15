@@ -93,31 +93,52 @@ public record TillCategoryView(int Id, LocalizedText Name);
 
 /// <summary>
 /// A month's profit and loss at a branch. Sales less refunds is what came
-/// in; goods, waste, labour and the expenses by category are what went out;
-/// prime cost (goods + labour) over net sales is the ratio every business
-/// watches. Partners' money is nowhere in it.
+/// in (<see cref="NetSales"/>, as the customers paid it, VAT inside); less
+/// the VAT inside them, which is the tax office's, it is what the business
+/// earned (<see cref="NetSalesExVat"/>), and everything below is measured
+/// against that. Goods, waste, shrinkage, labour and the expenses by
+/// category are what went out; prime cost (goods + labour) over net sales
+/// is the ratio every business watches. Partners' money is nowhere in it.
 /// </summary>
 public record ProfitView(
     int Year,
     int Month,
+    /// <summary>What the till took, VAT inside.</summary>
     decimal Sales,
+    /// <summary>What went back on credit notes, VAT inside.</summary>
     decimal Refunds,
+    /// <summary>Sales less refunds, VAT inside: what the customers paid, for display.</summary>
     decimal NetSales,
+    /// <summary>The VAT inside the sales (before refunds).</summary>
     decimal Vat,
     decimal Goods,
     decimal Waste,
     decimal Labour,
     IReadOnlyList<CategoryTotal> ExpensesByCategory,
     decimal Expenses,
+    /// <summary>Net sales without VAT, less goods, waste, shrinkage, labour and expenses.</summary>
     decimal Profit,
-    /// <summary>(goods + labour) ÷ net sales; null when there were no sales.</summary>
+    /// <summary>(goods + labour) ÷ net sales without VAT; null when there were no sales.</summary>
     decimal? PrimeCostRatio,
-    /// <summary>profit ÷ net sales; null when there were no sales.</summary>
+    /// <summary>profit ÷ net sales without VAT; null when there were no sales.</summary>
     decimal? Margin,
     /// <summary>How the profit falls to the partners by their shares; empty when none are set.</summary>
-    IReadOnlyList<PartnerProfitShareView>? PartnerShares = null);
+    IReadOnlyList<PartnerProfitShareView>? PartnerShares = null,
+    /// <summary>The VAT that went back with the refunds: each refund's share of its sale's VAT.</summary>
+    decimal RefundVat = 0,
+    /// <summary>The VAT the month owes: <see cref="Vat"/> less <see cref="RefundVat"/>.</summary>
+    decimal NetVat = 0,
+    /// <summary>Net sales without the VAT inside them: (sales − refunds) − (VAT − refund VAT). What profit, margin, prime cost and the partners' shares are worked from.</summary>
+    decimal NetSalesExVat = 0,
+    /// <summary>Stock found short at counts or taken off by hand, less stock found over; negative when more was found than lost.</summary>
+    decimal Shrinkage = 0);
 
 public record PartnerProfitShareView(int PartnerId, string Name, decimal Percent, decimal Amount);
 
-/// <summary>One month's headline figures, for the trend.</summary>
-public record ProfitMonthView(int Year, int Month, decimal NetSales, decimal Goods, decimal Labour, decimal Expenses, decimal Profit);
+/// <summary>
+/// One month's headline figures, for the trend. <see cref="Goods"/> is
+/// everything the stock cost (goods, waste and shrinkage), so profit is
+/// <see cref="NetSalesExVat"/> less goods, labour and expenses;
+/// <see cref="NetSales"/> keeps the VAT, for display.
+/// </summary>
+public record ProfitMonthView(int Year, int Month, decimal NetSales, decimal Goods, decimal Labour, decimal Expenses, decimal Profit, decimal NetSalesExVat = 0);

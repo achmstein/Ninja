@@ -40,6 +40,19 @@ public class SaleReleaseTest
     }
 
     [TestMethod]
+    public void The_sale_leaves_the_books_on_its_own_day_and_the_waste_is_todays()
+    {
+        // Rung up on the last evening of March, called off on 1 April
+        var soldAt = new DateTime(2026, 3, 31, 19, 0, 0, DateTimeKind.Utc);
+        var sale = new StockMovement(1, 7, MovementType.Sale, -0.04m, 300m, SaleDeduction.ReferenceFor(Order), null, "system", occurredAt: soldAt);
+
+        var drafts = SaleRelease.BuildDrafts(Order, SaleRelease.Waste, [sale], new Dictionary<int, DateTime>());
+
+        Assert.AreEqual(soldAt, drafts.Single(d => d.Type == MovementType.SaleReversal).OccurredAt, "March's sale, given back in March");
+        Assert.IsNull(drafts.Single(d => d.Type == MovementType.Waste).OccurredAt, "the food goes in the bin when the order is called off");
+    }
+
+    [TestMethod]
     public void A_sale_that_went_out_at_nothing_leaves_the_average_alone()
     {
         var drafts = SaleRelease.BuildDrafts(Order, SaleRelease.Restock, [Sold(7, 1m, 0m)], new Dictionary<int, DateTime>());

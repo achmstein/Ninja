@@ -127,11 +127,14 @@ public sealed class PayrollAndProfitScenario(NinjaApp app, DaySetup day) : Scena
             Assert.Equal(BaristaDailyRate, d.Labour);
             Assert.Equal(expenseAmount, d.Expenses);
             Assert.Equal(expenseAmount, d.Category(Day.ElectricityCategoryId));
-            Assert.Equal(d.NetSales - d.Goods - d.Waste - d.Labour - d.Expenses, d.Profit);
+            // The whole bill went back, and all of its VAT with it: nothing earned
+            Assert.Equal(coffeeBill.Vat, d.RefundVat);
+            Assert.Equal(0m, d.NetSalesExVat);
+            Assert.Equal(d.NetSalesExVat - d.Goods - d.Waste - d.Shrinkage - d.Labour - d.Expenses, d.Profit);
         }, TimeSpan.FromSeconds(30));
 
         // The absolute figures obey the same arithmetic (FinanceQueries), and the partner's share follows.
-        Assert.Equal(after.NetSales - after.Goods - after.Waste - after.Labour - after.Expenses, after.Profit);
+        Assert.Equal(after.NetSalesExVat - after.Goods - after.Waste - after.Shrinkage - after.Labour - after.Expenses, after.Profit);
         var share = Assert.Single(after.PartnerShares ?? [], s => s.PartnerId == Day.PartnerId);
         Assert.Equal(DaySetup.PartnerPercent, share.Percent);
         Assert.Equal(Math.Round(after.Profit * DaySetup.PartnerPercent / 100m, 2), share.Amount);

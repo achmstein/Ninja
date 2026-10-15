@@ -280,6 +280,8 @@ public record TicketHistoryRow(
     decimal RefundedTotal);
 
 /// <summary>One payment taken on a settled ticket, with the bill it paid.</summary>
+/// <param name="Amount">What was handed over; for cash, before the change went back.</param>
+/// <param name="NetAmount">What the payment kept towards the bill: cash less the change handed back (taken from the bill's last cash payment first), the same as Amount otherwise. The rows' NetAmount add up to the range report's tender split.</param>
 public record PaymentRow(
     int TicketId,
     int? ReceiptNumber,
@@ -292,7 +294,8 @@ public record PaymentRow(
     string? CustomerName,
     string RecordedBy,
     DateTime RecordedAt,
-    DateTime SettledAt);
+    DateTime SettledAt,
+    decimal NetAmount = 0);
 
 /// <summary>A credit note as the back office lists it — the ticket screen has the lines.</summary>
 public record RefundSummary(

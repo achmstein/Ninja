@@ -52,6 +52,13 @@ public class Shift : Entity, IAggregateRoot
 
     public decimal GetPayOutsTotal() => _movements.Where(m => m.Type == CashMovementType.PayOut).Sum(m => m.Amount);
 
+    /// <summary>
+    /// Whether the drawer was this shift's at that moment: opened by then and
+    /// not yet closed. What a sale rung up offline checks before it is put
+    /// on the shift it was rung up in.
+    /// </summary>
+    public bool WasOpenAt(DateTime at) => OpenedAt <= at && (ClosedAt is null || at < ClosedAt);
+
     protected Shift() { }
 
     public Shift(int branchId, decimal openingFloat, string openedBy, string? openedByUserId = null)

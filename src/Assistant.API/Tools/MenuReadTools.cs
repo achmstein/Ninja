@@ -334,7 +334,7 @@ public sealed class MenuReadTools(TenantContext tenant, NinjaApiClient api, Time
             var menu = await api.GetAsync<List<MenuItemView>>("catalog-api", "/api/catalog/items", b.Id, ct);
             if (!menu.IsOk) return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Fail(menu.Error!, menu.Status);
             var sales = await api.GetAsync<BreakdownReport>("sales-api",
-                $"/api/tickets/reports/breakdown?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&offsetMinutes={p.OffsetMinutes}", b.Id, ct);
+                $"/api/tickets/reports/breakdown?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&tz={Uri.EscapeDataString(snap!.Zone.Id)}", b.Id, ct);
             if (!sales.IsOk) return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Fail(sales.Error!, sales.Status);
             return ApiResult<(List<RecipeCostView>, List<MenuItemView>, BreakdownReport)>.Ok((costs.Value!, menu.Value!, sales.Value!));
         });

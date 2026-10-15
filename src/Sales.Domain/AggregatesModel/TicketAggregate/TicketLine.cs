@@ -66,6 +66,9 @@ public class TicketLine : Entity
 
     public decimal Total => Qty * UnitPrice - Discount;
 
+    /// <summary>The delivery's fee: billed with the order, but not a thing sold.</summary>
+    public bool IsDeliveryFee => Source == TicketLineSource.DeliveryFee;
+
     protected TicketLine() { }
 
     public TicketLine(

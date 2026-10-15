@@ -75,6 +75,7 @@ public static class Extensions
         services.AddHostedService<RecurringExpensesJob>();
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<IFinanceQueries, FinanceQueries>();
+        services.AddScoped<IBranchDays, BranchDays>();
 
         // What Finance listens for: money the till moved for a supplier, an
         // expense or a partner, and deliveries Inventory booked
@@ -86,6 +87,8 @@ public static class Extensions
             .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
             .AddSubscription<StockConsumedIntegrationEvent, StockConsumedIntegrationEventHandler>()
             .AddSubscription<EmployeeEarningsChangedIntegrationEvent, EmployeeEarningsChangedIntegrationEventHandler>()
+            // When each branch's day starts, to date all of the above by
+            .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(FinanceIntegrationEventContext.Default));
     }
@@ -97,6 +100,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
 [JsonSerializable(typeof(StockConsumedIntegrationEvent))]
 [JsonSerializable(typeof(EmployeeEarningsChangedIntegrationEvent))]
+[JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 public partial class FinanceIntegrationEventContext : JsonSerializerContext
 {
 }

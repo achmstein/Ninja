@@ -23,7 +23,10 @@ public class VoidTicketCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
-        ticket.Void(command.Reason, command.VoidedBy, command.StockDisposition);
+        // Frozen under the rules as they stand, so the history shows what the
+        // void cancelled even after the rates change
+        var rules = await ticketRepository.GetPricingRulesAsync(ticket.BranchId);
+        ticket.Void(command.Reason, command.VoidedBy, command.StockDisposition, rules);
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

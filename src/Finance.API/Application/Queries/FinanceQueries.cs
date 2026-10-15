@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Finance.API.Application.Services;
 using Ninja.Finance.Infrastructure;
 
 namespace Ninja.Finance.API.Application.Queries;
@@ -21,7 +22,7 @@ public interface IFinanceQueries
 }
 
 /// <summary>Read side, straight off the context with no tracking. Balances are sums over the ledgers.</summary>
-public class FinanceQueries(FinanceContext context) : IFinanceQueries
+public class FinanceQueries(FinanceContext context, IBranchDays days) : IFinanceQueries
 {
     public async Task<IReadOnlyList<ExpenseCategoryView>> GetCategoriesAsync(bool includeInactive)
     {
@@ -196,9 +197,11 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
             .Select(g => new { g.Key, Amount = g.Sum(f => f.Amount) })
             .ToListAsync();
 
-        var labour = await context.LabourFacts.AsNoTracking()
-            .Where(f => f.BranchId == branchId && f.PeriodStart >= from && f.PeriodStart <= to)
-            .SumAsync(f => f.Amount);
+        // Every payslip whose period touches the month, each for the days of it inside the month
+        var labourFacts = await context.LabourFacts.AsNoTracking()
+            .Where(f => f.BranchId == branchId && f.PeriodStart <= to && f.PeriodEnd >= from)
+            .ToListAsync();
+        var labour = labourFacts.Sum(f => f.ShareOf(from, to));
 
         var expenses = await context.Expenses.AsNoTracking()
             .Where(e => e.BranchId == branchId && e.Date >= from && e.Date <= to && e.VoidedAt == null)
@@ -208,20 +211,30 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
         var categories = await context.ExpenseCategories.AsNoTracking().ToDictionaryAsync(c => c.Id, c => c.Name);
 
         var gross = sales.FirstOrDefault(s => s.Key == SalesFactKind.Sale);
-        var refunds = sales.FirstOrDefault(s => s.Key == SalesFactKind.Refund)?.Amount ?? 0;
+        var refund = sales.FirstOrDefault(s => s.Key == SalesFactKind.Refund);
+        var refunds = refund?.Amount ?? 0;
         var net = (gross?.Amount ?? 0) - refunds;
+        // The VAT is the tax office's, not the business's: what the month
+        // earned is the net sales without the VAT still inside them
+        var saleVat = gross?.Vat ?? 0;
+        var refundVat = refund?.Vat ?? 0;
+        var netVat = saleVat - refundVat;
+        var netExVat = net - netVat;
+        decimal Cost(CostFactKind kind) => costs.FirstOrDefault(c => c.Key == kind)?.Amount ?? 0;
         // Net of the sales given back: a cancelled or voided order sold nothing
-        var goods = (costs.FirstOrDefault(c => c.Key == CostFactKind.Goods)?.Amount ?? 0)
-            - (costs.FirstOrDefault(c => c.Key == CostFactKind.GoodsReturned)?.Amount ?? 0);
-        var waste = costs.FirstOrDefault(c => c.Key == CostFactKind.Waste)?.Amount ?? 0;
+        var goods = Cost(CostFactKind.Goods) - Cost(CostFactKind.GoodsReturned);
+        var waste = Cost(CostFactKind.Waste);
+        // Stock gone at a count less stock found: negative when more was found
+        var shrinkage = Cost(CostFactKind.Shrinkage) - Cost(CostFactKind.ShrinkageFound);
         var byCategory = expenses
             .Select(e => new CategoryTotal(e.Key, categories.GetValueOrDefault(e.Key) ?? new LocalizedText("?", null), e.Amount))
             .OrderByDescending(c => c.Total)
             .ToList();
         var operating = byCategory.Sum(c => c.Total);
-        var profit = net - goods - waste - labour - operating;
+        var profit = netExVat - goods - waste - shrinkage - labour - operating;
 
         // How the month falls to the partners, by their shares of this branch
+        // as they stand today (shares keep no history)
         var partners = await context.Partners.AsNoTracking()
             .Where(p => p.IsActive && p.Shares.Any(s => s.BranchId == branchId))
             .OrderBy(p => p.Name)
@@ -230,24 +243,28 @@ public class FinanceQueries(FinanceContext context) : IFinanceQueries
             .Select(p => new PartnerProfitShareView(p.Id, p.Name, p.ShareAt(branchId), Math.Round(profit * p.ShareAt(branchId) / 100m, 2)))
             .ToList();
 
-        return new ProfitView(year, month, gross?.Amount ?? 0, refunds, net, gross?.Vat ?? 0, goods, waste, labour,
+        return new ProfitView(year, month, gross?.Amount ?? 0, refunds, net, saleVat, goods, waste, labour,
             byCategory, operating, profit,
-            net > 0 ? Math.Round((goods + labour) / net, 4) : null,
-            net > 0 ? Math.Round(profit / net, 4) : null,
-            shares);
+            netExVat > 0 ? Math.Round((goods + labour) / netExVat, 4) : null,
+            netExVat > 0 ? Math.Round(profit / netExVat, 4) : null,
+            shares,
+            RefundVat: refundVat,
+            NetVat: netVat,
+            NetSalesExVat: netExVat,
+            Shrinkage: shrinkage);
     }
 
     public async Task<IReadOnlyList<ProfitMonthView>> GetProfitTrendAsync(int branchId, int months)
     {
         var rows = new List<ProfitMonthView>();
-        var today = BusinessDay.Of(DateTime.UtcNow);
+        var today = await days.OfAsync(branchId, DateTime.UtcNow);
         var first = new DateOnly(today.Year, today.Month, 1);
 
         for (var i = 0; i < months; i++)
         {
             var m = first.AddMonths(-i);
             var p = await GetProfitAsync(branchId, m.Year, m.Month);
-            rows.Add(new ProfitMonthView(m.Year, m.Month, p.NetSales, p.Goods + p.Waste, p.Labour, p.Expenses, p.Profit));
+            rows.Add(new ProfitMonthView(m.Year, m.Month, p.NetSales, p.Goods + p.Waste + p.Shrinkage, p.Labour, p.Expenses, p.Profit, p.NetSalesExVat));
         }
 
         return rows;

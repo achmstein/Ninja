@@ -20,7 +20,11 @@ public static class Money
         return new Bill(subtotal, service, vat, total);
     }
 
-    /// <summary>What refunding part of one line gives back (Sales Refund.Create): menu amount scaled by what was paid per menu pound.</summary>
+    /// <summary>
+    /// What refunding part of one line gives back (Sales Refund.Issue): menu amount scaled by what was paid per
+    /// pound of the items. Sales divides the total by the positive item lines (loyalty, promo and the delivery fee
+    /// apart); this takes the subtotal, which is the same thing on a bill with none of those, as the scenarios ring up.
+    /// </summary>
     public static decimal RefundLine(decimal lineTotal, decimal lineQty, decimal refundQty, decimal ticketTotal, decimal ticketSubtotal)
     {
         var menuAmount = Round(lineTotal * refundQty / lineQty);
@@ -47,7 +51,11 @@ public static class Money
         _ => 1.0,
     };
 
-    /// <summary>Finance/Payroll business day: Cairo local time with a 06:00 cutoff (Finance.Domain BusinessDay.Of).</summary>
+    /// <summary>
+    /// Payroll's business day: Cairo local time with a 06:00 cutoff (Payroll.Domain BusinessDay.Of).
+    /// Finance dates by the branch's own day start, 05:00 for the seeded branches, which only
+    /// buckets differently between five and six on the morning of a month's first day.
+    /// </summary>
     public static DateOnly BusinessDay(DateTime utc)
     {
         var local = TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), Cairo.Value);

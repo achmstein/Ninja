@@ -50,22 +50,21 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         }
 
         // A replayed offline sale that arrives after a stocktake: the count
-        // already saw the shelf without these units
+        // already saw the shelf without these units, and booked them as
+        // missing. The sale still costs its goods; a correction to the count
+        // puts the units back where the count left them
         var lastCounted = await ledger.GetLastCountedAtAsync(@event.BranchId, drafts.Select(d => d.StockItemId));
-        var toPost = SaleDeduction.DropCountedAfter(drafts, @event.PlacedAt, lastCounted);
+        var counted = SaleDeduction.CountedSince(@event.OrderId, drafts, @event.PlacedAt, lastCounted);
 
-        if (toPost.Count < drafts.Count)
+        if (counted.Count > 0)
         {
             logger.LogInformation(
-                "Order {OrderId} placed {PlacedAt}: {Skipped} item(s) counted since, left alone",
-                @event.OrderId, @event.PlacedAt, drafts.Count - toPost.Count);
+                "Order {OrderId} placed {PlacedAt}: {Counted} item(s) counted since, the count corrected",
+                @event.OrderId, @event.PlacedAt, counted.Count);
         }
 
-        if (toPost.Count == 0)
-            return;
-
         // Its cost lands on the day it was sold, not the day a late replay arrived
-        await posting.PostAsync(@event.BranchId, toPost, "system", @event.PlacedAt);
+        await posting.PostAsync(@event.BranchId, [.. drafts, .. counted], "system", @event.PlacedAt);
 
         logger.LogInformation(
             "Order {OrderId} deducted {Count} stock item(s) at branch {BranchId}",

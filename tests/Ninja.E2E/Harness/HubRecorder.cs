@@ -37,7 +37,8 @@ public sealed class HubRecorder : IAsyncDisposable
     [
         "TicketUpdated", "OrderStatusChanged", "RoomStatusChanged", "CatalogChanged",
         "StockLow", "ServiceRequestCreated", "ServiceRequestChanged", "BranchSettingsChanged",
-        "AccountChanged", "PlaceCleared",
+        "AccountChanged", "PlaceCleared", "DeliveryChanged", "OrderSentToBranch",
+        "RiderStatusChanged",
     ];
 
     private readonly HubConnection _connection;

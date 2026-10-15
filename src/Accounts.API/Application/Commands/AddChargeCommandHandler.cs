@@ -18,7 +18,10 @@ public class AddChargeCommandHandler : IRequestHandler<AddChargeCommand, bool>
         _logger = logger;
     }
 
-    public async Task<bool> Handle(AddChargeCommand request, CancellationToken cancellationToken)
+    public Task<bool> Handle(AddChargeCommand request, CancellationToken cancellationToken)
+        => AccountWriteRetry.RunAsync(_accountRepository, _logger, request.CustomerId, () => Post(request, cancellationToken));
+
+    private async Task<bool> Post(AddChargeCommand request, CancellationToken cancellationToken)
     {
         var account = await _accountRepository.GetWithTransactionsByCustomerIdAsync(request.CustomerId);
 

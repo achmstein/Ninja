@@ -27,11 +27,27 @@ public class StockMovement : Entity
 
     public string RecordedBy { get; private set; } = string.Empty;
 
+    /// <summary>When it was posted.</summary>
     public DateTime RecordedAt { get; private set; }
+
+    /// <summary>
+    /// When it happened, which the reports date it by: a sale an offline till
+    /// sent hours later happened when it was rung up, and a sale given back
+    /// leaves the books on the sale's own day. The posting time otherwise.
+    /// </summary>
+    public DateTime OccurredAt { get; private set; }
+
+    /// <summary>
+    /// The branch's average unit cost after this posted: the stock's value as
+    /// it stood then, for a report that reads a past date. Null on movements
+    /// from before it was kept.
+    /// </summary>
+    public decimal? AvgUnitCostAfter { get; private set; }
 
     protected StockMovement() { }
 
-    public StockMovement(int branchId, int stockItemId, MovementType type, decimal quantity, decimal unitCost, string? reference, string? reason, string recordedBy)
+    public StockMovement(int branchId, int stockItemId, MovementType type, decimal quantity, decimal unitCost, string? reference, string? reason, string recordedBy,
+        DateTime? occurredAt = null, decimal? avgUnitCostAfter = null)
     {
         if (quantity == 0)
             throw new InventoryDomainException("A movement moves something.");
@@ -45,5 +61,14 @@ public class StockMovement : Entity
         Reason = string.IsNullOrWhiteSpace(reason) ? null : reason.Trim();
         RecordedBy = recordedBy;
         RecordedAt = DateTime.UtcNow;
+        OccurredAt = occurredAt is { } at ? Utc(at) : RecordedAt;
+        AvgUnitCostAfter = avgUnitCostAfter;
     }
+
+    private static DateTime Utc(DateTime at) => at.Kind switch
+    {
+        DateTimeKind.Utc => at,
+        DateTimeKind.Local => at.ToUniversalTime(),
+        _ => DateTime.SpecifyKind(at, DateTimeKind.Utc),
+    };
 }

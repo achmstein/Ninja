@@ -2349,6 +2349,13 @@
           "recordedAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "occurredAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
           }
         }
       },
@@ -4159,6 +4166,10 @@
               "string"
             ],
             "format": "double"
+          },
+          "valuedAtCurrentAverage": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -4346,6 +4357,10 @@
               "string"
             ],
             "format": "double"
+          },
+          "valuedAtCurrentAverage": {
+            "type": "boolean",
+            "default": false
           }
         }
       }

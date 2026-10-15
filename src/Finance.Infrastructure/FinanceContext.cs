@@ -22,6 +22,7 @@ public class FinanceContext : DbContext, IUnitOfWork
     public DbSet<SalesFact> SalesFacts { get; set; }
     public DbSet<CostFact> CostFacts { get; set; }
     public DbSet<LabourFact> LabourFacts { get; set; }
+    public DbSet<BranchDayStart> BranchDayStarts { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -51,6 +52,7 @@ public class FinanceContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new SalesFactEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CostFactEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new LabourFactEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new BranchDayStartEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

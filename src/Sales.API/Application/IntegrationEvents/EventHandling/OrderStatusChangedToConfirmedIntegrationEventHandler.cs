@@ -89,11 +89,12 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             suggestion: i.Suggestion)).ToList();
 
         // The delivery is part of the order: its fee rides with the order's
-        // lines, so it is billed, refunded and moved along with them
+        // lines, so it is billed, refunded and moved along with them. Marked as
+        // the fee, so the reports keep it out of what was sold
         if (@event.DeliveryFee is decimal fee && fee > 0)
         {
             lines.Add(new TicketLine(
-                TicketLineSource.Order,
+                TicketLineSource.DeliveryFee,
                 DeliveryFeeLine,
                 qty: 1,
                 unitPrice: fee,

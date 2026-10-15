@@ -39,6 +39,15 @@ public record PayStatement(
     public decimal NetEarned => Earned + OvertimePay - AbsenceDeduction;
 
     public decimal AmountDue => CarriedOver + NetEarned + Bonuses - Deductions - Advances - Payments;
+
+    /// <summary>
+    /// What the period cost the business in wages: the pay with its overtime,
+    /// net of absence, plus the bonuses given, less the deductions taken (a
+    /// fine, a broken glass the person pays for: money the business keeps).
+    /// Advances and payments are only when the money moved, not what it cost,
+    /// and what was carried over belongs to earlier periods. Never below zero.
+    /// </summary>
+    public decimal LabourCost => Math.Max(0, NetEarned + Bonuses - Deductions);
 }
 
 /// <summary>

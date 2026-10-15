@@ -130,7 +130,10 @@ public sealed class InventoryFlowScenario(NinjaApp app, DaySetup day) : Scenario
         var backInStock = await ExpectEventAsync(count, "CatalogItemStockChanged", e => e.Bool("InStock"));
         Assert.Contains(backInStock.Array("CatalogItemIds"), id => id.GetInt32() == lemonade.Id);
         await ExpectEventAsync(count, "CatalogItemAvailabilityChanged", e => e.Int("ItemId") == lemonade.Id && e.Bool("IsAvailable"));
-        await ExpectNoEventAsync(count, "StockConsumed"); // a count is not a cost
+        // Five found where the ledger had none: stock the books had taken for gone comes back, at the average
+        var found = await ExpectEventAsync(count, "StockConsumed", e => e.Str("Reference") == $"count:{countId}");
+        Assert.Equal("ShrinkageFound", found.Str("Kind"));
+        Assert.Equal(5 * LemonCost, found.Dec("Cost"));
 
         Assert.Equal(5m, (await Owner.LevelAsync(lemons, Ct)).OnHand);
         var movements = await Owner.MovementsAsync(lemons, Ct);

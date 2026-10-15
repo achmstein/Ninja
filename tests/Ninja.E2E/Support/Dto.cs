@@ -35,7 +35,9 @@ public sealed record ShiftView(
 public sealed record CashMovementView(string Type, decimal Amount, string Reason, string RecordedBy, DateTime RecordedAt, string Kind,
     int? EmployeeId, string? EmployeeName, int? SupplierId, string? SupplierName, int? PartnerId, string? PartnerName, int? CategoryId);
 
-public sealed record TenderTotal(string Tender, decimal Amount, int Count);
+/// <param name="Amount">Cash is net of the change handed back.</param>
+/// <param name="Tendered">What was handed over, before the change.</param>
+public sealed record TenderTotal(string Tender, decimal Amount, int Count, decimal Tendered = 0);
 
 public sealed record TabPaymentView(int Id, int Number, int BranchId, string CustomerId, string? CustomerName, string Tender, decimal Amount, int? ShiftId);
 
@@ -281,7 +283,11 @@ public sealed record ProfitView(
     List<CategoryTotal> ExpensesByCategory,
     decimal Expenses,
     decimal Profit,
-    List<PartnerProfitShareView>? PartnerShares)
+    List<PartnerProfitShareView>? PartnerShares,
+    decimal RefundVat = 0,
+    decimal NetVat = 0,
+    decimal NetSalesExVat = 0,
+    decimal Shrinkage = 0)
 {
     public decimal ByCategory(int categoryId) => ExpensesByCategory.FirstOrDefault(c => c.CategoryId == categoryId)?.Total ?? 0m;
 
@@ -297,11 +303,15 @@ public sealed record ProfitView(
         Expenses - before.Expenses,
         Profit - before.Profit,
         ExpensesByCategory.Select(c => c.CategoryId).Union(before.ExpensesByCategory.Select(c => c.CategoryId))
-            .ToDictionary(id => id, id => ByCategory(id) - before.ByCategory(id)));
+            .ToDictionary(id => id, id => ByCategory(id) - before.ByCategory(id)),
+        RefundVat - before.RefundVat,
+        NetSalesExVat - before.NetSalesExVat,
+        Shrinkage - before.Shrinkage);
 }
 
+/// <param name="NetSalesExVat">Net sales without the VAT inside them: what profit is worked from.</param>
 public sealed record ProfitDelta(decimal Sales, decimal Refunds, decimal NetSales, decimal Vat, decimal Goods, decimal Waste, decimal Labour,
-    decimal Expenses, decimal Profit, Dictionary<int, decimal> ByCategory)
+    decimal Expenses, decimal Profit, Dictionary<int, decimal> ByCategory, decimal RefundVat = 0, decimal NetSalesExVat = 0, decimal Shrinkage = 0)
 {
     public decimal Category(int id) => ByCategory.GetValueOrDefault(id);
 }

@@ -11,6 +11,13 @@ public class CustomerAccount : Entity, IAggregateRoot
     public DateTime CreatedAt { get; private set; }
     public DateTime UpdatedAt { get; private set; }
 
+    /// <summary>
+    /// The row's version (Postgres' xmin): two charges or payments landing on
+    /// one tab at once each read the balance before the other wrote it, so
+    /// the second to save is refused and tried again, never written over.
+    /// </summary>
+    public uint Version { get; private set; }
+
     private readonly List<AccountTransaction> _transactions = new();
     public IReadOnlyCollection<AccountTransaction> Transactions => _transactions.AsReadOnly();
 

@@ -12,6 +12,7 @@ class TicketLineEntityTypeConfiguration : IEntityTypeConfiguration<TicketLine>
             .UseHiLo("ticketlineseq", "sales");
 
         builder.Ignore(l => l.DomainEvents);
+        builder.Ignore(l => l.IsDeliveryFee);
 
         builder.Property(l => l.Source)
             .HasConversion<string>()

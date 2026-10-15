@@ -14,7 +14,8 @@ public record SettleTicketCommand(
     IReadOnlyCollection<PaymentDto> Payments,
     string SettledBy,
     DateTime? SettledAt = null,
-    string? ProvisionalReceiptNumber = null)
+    string? ProvisionalReceiptNumber = null,
+    int? ShiftId = null)
     : IRequest<SettleResult>;
 
 public class SettleTicketCommandHandler(
@@ -43,21 +44,24 @@ public class SettleTicketCommandHandler(
             throw new SalesDomainException("A guest is paying this bill online right now. Wait a moment and try again.");
 
         var payments = command.Payments
-            .Select(p => new Payment(p.Tender, p.Amount, command.SettledBy, p.CustomerId, p.CustomerName))
+            .Select(p => new Payment(p.Tender, p.Amount, command.SettledBy, p.CustomerId, p.CustomerName, command.SettledAt))
             .Concat(online
                 .Where(p => p.Status == Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePaymentStatus.Paid)
                 .Select(p => new Payment(PaymentTender.Online, p.Amount, p.PayerName ?? "online")))
             .ToList();
 
         // Attribute the settle to the branch's open drawer, if one is open —
-        // a missing shift never blocks a sale, it just goes unattributed
-        var shift = await shiftRepository.FindOpenByBranchAsync(ticket.BranchId);
+        // a missing shift never blocks a sale, it just goes unattributed. A
+        // sale replayed from a till that was offline names the shift it was
+        // rung up in, which takes it even if it has closed since: its cash
+        // went into that drawer, and that Z report shows it as late cash.
+        var shiftId = await AttributeAsync(command, ticket.BranchId);
 
         // The branch's rules as they stand now, frozen onto the ticket by the
         // settle: this is the last moment they can change the bill
         var rules = await ticketRepository.GetPricingRulesAsync(ticket.BranchId);
 
-        var change = ticket.Settle(payments, command.SettledBy, shift?.Id, rules, command.SettledAt, command.ProvisionalReceiptNumber);
+        var change = ticket.Settle(payments, command.SettledBy, shiftId, rules, command.SettledAt, command.ProvisionalReceiptNumber);
 
         for (var attempt = 1; ; attempt++)
         {
@@ -117,6 +121,35 @@ public class SettleTicketCommandHandler(
                 ticketRepository.RemoveReceipt(receipt);
             }
         }
+    }
+
+    /// <summary>
+    /// The shift a settle belongs to, held against a close summing it
+    /// meanwhile. The one the till names is taken when it is this branch's
+    /// and its drawer was open when the money was taken (the replay's
+    /// settledAt, or now); otherwise, or when none is named, the branch's
+    /// open shift, as before.
+    /// </summary>
+    private async Task<int?> AttributeAsync(SettleTicketCommand command, int branchId)
+    {
+        if (command.ShiftId is { } named)
+        {
+            var shift = await shiftRepository.HoldForAttributionAsync(named);
+            var at = command.SettledAt ?? DateTime.UtcNow;
+
+            if (shift is not null && shift.BranchId == branchId && shift.WasOpenAt(at))
+            {
+                if (shift.Status == Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.ShiftStatus.Closed)
+                    logger.LogWarning("A sale rung up at {SettledAt} in shift {ShiftId} reached it after it closed - late cash on its Z report", at, named);
+                return shift.Id;
+            }
+
+            logger.LogWarning(
+                "Settle named shift {ShiftId}, which is not branch {BranchId}'s or was not open at {SettledAt} - the branch's open shift takes it",
+                named, branchId, at);
+        }
+
+        return await shiftRepository.HoldOpenForAttributionAsync(branchId);
     }
 }
 

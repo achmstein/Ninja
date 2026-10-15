@@ -8,6 +8,8 @@ public static class Extensions
 {
     public static void AddApplicationServices(this IHostApplicationBuilder builder)
     {
+        // The stats' today and this month are the business's, in its own zone
+        TenantClock.Configure(builder.Configuration["Tenant:TimeZone"]);
         builder.AddDefaultAuthentication();
 
         // Avoid loading full database config and migrations if startup

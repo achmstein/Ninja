@@ -46,12 +46,14 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
 
     public async Task<IEnumerable<ShiftView>> GetClosedShiftsAsync(int branchId, int pageIndex, int pageSize, DateTime? from = null, DateTime? to = null)
     {
-        // A shift belongs to the business day it opened on
+        // A shift belongs to the business day it opened on; the window is
+        // [from, to) like every other report's, so a shift opened on the very
+        // moment one day ends is the next day's, not both
         var shifts = await context.Shifts
             .AsNoTracking()
             .Where(s => s.BranchId == branchId && s.Status == ShiftStatus.Closed)
             .Where(s => from == null || s.OpenedAt >= from.Value)
-            .Where(s => to == null || s.OpenedAt <= to.Value)
+            .Where(s => to == null || s.OpenedAt < to.Value)
             .OrderByDescending(s => s.OpenedAt)
             .Skip(pageIndex * pageSize)
             .Take(pageSize)
@@ -93,20 +95,19 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
         // keeps the money math in the aggregate, same as the floor view
         var tickets = await ShiftTickets(shift.Id).ToListAsync();
 
-        var tenders = tickets
-            .SelectMany(t => t.Payments)
-            .GroupBy(p => p.Tender)
-            .Select(g => new TenderTotal(g.Key.ToString(), g.Sum(p => p.Amount), g.Count()))
-            .OrderBy(t => t.Tender)
-            .ToList();
+        // Cash net of the change, so the tenders add up to the sales; the
+        // drawer below works from what was handed over and the change apart
+        var tenders = SalesFigures.Tenders(tickets);
 
-        var cashPayments = tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+        var cashPayments = TicketQueries.CashTenderedOf(tickets);
         var changeGiven = tickets.Sum(t => t.ChangeGiven);
 
-        // Credit notes issued during the shift: cash ones left the drawer
+        // Credit notes issued during the shift, whatever the tender (older
+        // ones carry a shift only when they were cash): cash ones left the drawer
         var refunds = await context.Refunds.AsNoTracking().Where(r => r.ShiftId == shift.Id).ToListAsync();
         var refundsTotal = refunds.Sum(r => r.Amount);
         var cashRefunds = refunds.Where(r => r.Tender == PaymentTender.Cash).Sum(r => r.Amount);
+        var figures = SalesFigures.Of(tickets, refunds, await TicketQueries.RefundedSalesAsync(context, refunds));
         var payIns = shift.GetPayInsTotal();
         var payOuts = shift.GetPayOutsTotal();
 
@@ -119,6 +120,12 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             .OrderByDescending(p => p.Number)
             .ToListAsync();
         var cashTabPayments = tabPayments.Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+
+        // Live for an open shift; for a closed one the frozen ExpectedCash is
+        // the verdict, and anything this has above it is cash from sales rung
+        // up offline during the shift that reached it after the close
+        var expectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments + payIns - payOuts;
+        var lateCash = shift.Status == ShiftStatus.Closed && shift.ExpectedCash is { } frozen ? expectedInDrawer - frozen : 0m;
 
         return new ShiftView
         {
@@ -137,8 +144,18 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
                 m.Type.ToString(), m.Amount, m.Reason, m.RecordedBy, m.RecordedAt, m.Kind.ToString(), m.EmployeeId, m.EmployeeName,
                 m.SupplierId, m.SupplierName, m.PartnerId, m.PartnerName, m.CategoryId)).ToList(),
             TicketsSettled = tickets.Count,
-            SalesTotal = tickets.Sum(t => t.Total),
-            Discounts = TicketQueries.DiscountsOf(tickets),
+            SalesTotal = figures.GrossSales,
+            GrossSales = figures.GrossSales,
+            NetSales = figures.NetSales,
+            NetSalesExVat = figures.NetSalesExVat,
+            Vat = figures.Vat,
+            VatAdded = figures.VatAdded,
+            RefundVat = figures.RefundVat,
+            Discounts = figures.Discounts,
+            BillDiscounts = figures.BillDiscounts,
+            LineDiscounts = figures.LineDiscounts,
+            LoyaltyAndPromo = figures.LoyaltyAndPromo,
+            CashTendered = cashPayments,
             RefundsTotal = refundsTotal,
             CashRefunds = cashRefunds,
             TenderTotals = tenders,
@@ -149,9 +166,9 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             CashTabPayments = cashTabPayments,
             TabPaymentTenderTotals = TenderTotals(tabPayments),
             TabPayments = tabPayments.Select(ToView).ToList(),
-            // Live for an open shift; for a closed one the frozen ExpectedCash
-            // is the authoritative number and these two should agree
-            ExpectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments + payIns - payOuts,
+            ExpectedInDrawer = expectedInDrawer,
+            LateCash = lateCash,
+            AdjustedOverShort = shift.ClosingCount is { } counted && shift.Status == ShiftStatus.Closed ? counted - expectedInDrawer : null,
         };
     }
 
@@ -161,7 +178,7 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
     public static List<TenderTotal> TenderTotals(IEnumerable<TabPayment> payments)
         => payments
             .GroupBy(p => p.Tender)
-            .Select(g => new TenderTotal(g.Key.ToString(), g.Sum(p => p.Amount), g.Count()))
+            .Select(g => new TenderTotal(g.Key.ToString(), g.Sum(p => p.Amount), g.Count(), g.Sum(p => p.Amount)))
             .OrderBy(t => t.Tender)
             .ToList();
 

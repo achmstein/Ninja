@@ -264,6 +264,32 @@ public class PayCalculatorTest
     }
 
     [TestMethod]
+    public void What_a_period_costs_the_business_is_the_pay_with_its_bonuses_less_its_deductions()
+    {
+        var ahmed = Runner(PayScheme.Daily, 100);
+        LedgerEntry[] ledger =
+        [
+            new(ahmed.Id, LedgerEntryType.Bonus, 150, new DateOnly(2026, 3, 20), "A good month", "manager"),
+            new(ahmed.Id, LedgerEntryType.Deduction, 40, new DateOnly(2026, 3, 21), "A broken glass", "manager"),
+            // Money handed over moves when it is paid, not what the month cost
+            new(ahmed.Id, LedgerEntryType.Advance, 300, new DateOnly(2026, 3, 22), null, "manager"),
+            new(ahmed.Id, LedgerEntryType.Payment, 100, new DateOnly(2026, 3, 23), null, "till"),
+            // Another month's bonus is that month's
+            new(ahmed.Id, LedgerEntryType.Bonus, 999, new DateOnly(2026, 4, 2), null, "manager"),
+        ];
+
+        var statement = PayCalculator.Build(ahmed, March1, March31, [Day(ahmed, 1), Day(ahmed, 2), Day(ahmed, 3)], ledger);
+
+        Assert.AreEqual(300m, statement.NetEarned, "three days at a hundred");
+        Assert.AreEqual(410m, statement.LabourCost, "the pay, the bonus on top, the glass the employee paid for taken off");
+
+        // A fine bigger than the month's pay is not income
+        var fined = PayCalculator.Build(ahmed, March1, March31, [],
+            [new(ahmed.Id, LedgerEntryType.Deduction, 500, new DateOnly(2026, 3, 5), null, "manager")]);
+        Assert.AreEqual(0m, fined.LabourCost);
+    }
+
+    [TestMethod]
     public void Same_day_terms_replace_and_an_employee_needs_a_name_and_positive_pay()
     {
         var ahmed = Runner(PayScheme.Daily, 100);

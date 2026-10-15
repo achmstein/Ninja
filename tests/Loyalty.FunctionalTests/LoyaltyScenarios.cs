@@ -1,5 +1,10 @@
 using System.Net;
+using Microsoft.Extensions.DependencyInjection;
+using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Events;
 using Ninja.Loyalty.API.Apis;
+using Ninja.Loyalty.API.IntegrationEvents.EventHandling;
+using Ninja.Loyalty.API.IntegrationEvents.Events;
 using Ninja.Testing;
 
 namespace Ninja.Loyalty.FunctionalTests;
@@ -32,7 +37,7 @@ public record AccountView(int Id, string UserId, string? UserDisplayName, int Po
 public record BalanceView(int Balance, int LifetimePoints, string Tier);
 public record TransactionView(int Id, int Points, string Type, string? ReferenceId, string? Description);
 public record TierView(string Name, int PointsRequired, string Benefits);
-public record StatsView(int TotalAccounts, Dictionary<string, int> AccountsByTier, int PointsIssuedToday);
+public record StatsView(int TotalAccounts, Dictionary<string, int> AccountsByTier, int PointsIssuedToday, int PointsOutstanding, DateTime? MonthStartsAt);
 
 /// <summary>
 /// A business's loyalty card through the API: joining, earning, being adjusted
@@ -152,5 +157,51 @@ public sealed class LoyaltyScenarios
         Assert.IsTrue(stats.TotalAccounts >= 1);
         Assert.IsTrue(stats.AccountsByTier.TryGetValue("Gold", out var gold) && gold >= 1, "seven thousand earned is Gold");
         Assert.IsTrue(stats.PointsIssuedToday >= 7000);
+        Assert.IsGreaterThanOrEqualTo(7000, stats.PointsOutstanding, "the points not yet spent are still owed");
+        Assert.IsNotNull(stats.MonthStartsAt, "and the page is told where its month begins");
+    }
+
+    private static async Task HandleAsync<THandler, TEvent>(TEvent what)
+        where THandler : IIntegrationEventHandler<TEvent>
+        where TEvent : IntegrationEvent
+    {
+        using var scope = Suite.Loyalty.Services.CreateScope();
+        await ActivatorUtilities.CreateInstance<THandler>(scope.ServiceProvider).Handle(what);
+    }
+
+    [TestMethod]
+    public async Task A_voided_bill_gives_back_the_points_spent_on_it_and_takes_back_those_it_earned()
+    {
+        var admin = Suite.Loyalty.As(Persona.Admin());
+        var userId = NewCustomer();
+        var order = Random.Shared.Next(1_000_000, 2_000_000);
+        await admin.PostAsync<AccountView>("/api/loyalty/accounts?api-version=1.0", new CreateAccountRequest(userId), HttpStatusCode.Created);
+        await admin.PostAsync<TransactionView>("/api/loyalty/transactions/earn?api-version=1.0", new EarnPointsRequest(userId, 800, "Purchase"));
+
+        // An order paid partly with 300 points, earning its own on the rest
+        await HandleAsync<OrderStatusChangedToConfirmedIntegrationEventHandler, OrderStatusChangedToConfirmedIntegrationEvent>(new()
+        {
+            OrderId = order, BuyerIdentityGuid = userId, BuyerName = "Mona", OrderTotal = 100m, PointsToRedeem = 300,
+        });
+        var afterOrder = await admin.GetAsync<BalanceView>($"/api/loyalty/accounts/{userId}/balance?api-version=1.0");
+        Assert.AreEqual(700, afterOrder.Balance, "800, 300 spent, 200 earned on the order");
+
+        // The bill is voided: nothing was owed, so nothing was spent and nothing earned
+        var voided = new TicketVoidedIntegrationEvent
+        {
+            TicketId = order, Reason = "Rung up twice",
+            OrderReversals = [new RefundOrderReversal { OrderId = order, RefundedAmount = 100m, OrderAmount = 100m }],
+        };
+        await HandleAsync<TicketVoidedIntegrationEventHandler, TicketVoidedIntegrationEvent>(voided);
+        await HandleAsync<TicketVoidedIntegrationEventHandler, TicketVoidedIntegrationEvent>(voided);
+
+        var balance = await admin.GetAsync<BalanceView>($"/api/loyalty/accounts/{userId}/balance?api-version=1.0");
+        Assert.AreEqual(800, balance.Balance, "the 300 spent come back and the 200 earned go, once");
+        Assert.AreEqual(1000, balance.LifetimePoints, "giving spent points back earns nothing new");
+
+        var statement = await admin.GetAsync<List<TransactionView>>($"/api/loyalty/transactions/{userId}?api-version=1.0");
+        var givenBack = statement.Single(t => t.ReferenceId == $"void-redeemed:{order}");
+        Assert.AreEqual(300, givenBack.Points);
+        Assert.AreEqual("Redemption", givenBack.Type, "a redemption undone, not points earned");
     }
 }

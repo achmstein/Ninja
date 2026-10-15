@@ -333,6 +333,22 @@ namespace Finance.Infrastructure.Migrations
                     b.ToTable("partner_shares", "finance");
                 });
 
+            modelBuilder.Entity("Ninja.Finance.Domain.AggregatesModel.ProfitAggregate.BranchDayStart", b =>
+                {
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<TimeOnly>("DayStart")
+                        .HasColumnType("time without time zone");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("BranchId");
+
+                    b.ToTable("branch_day_starts", "finance");
+                });
+
             modelBuilder.Entity("Ninja.Finance.Domain.AggregatesModel.ProfitAggregate.CostFact", b =>
                 {
                     b.Property<int>("Id")
@@ -381,10 +397,16 @@ namespace Finance.Infrastructure.Migrations
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
 
+                    b.Property<DateTime>("AsOf")
+                        .HasColumnType("timestamp with time zone");
+
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
 
                     b.Property<int>("EmployeeId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PayslipId")
                         .HasColumnType("integer");
 
                     b.Property<DateOnly>("PeriodEnd")
@@ -397,7 +419,7 @@ namespace Finance.Infrastructure.Migrations
 
                     b.HasIndex("BranchId", "PeriodStart");
 
-                    b.HasIndex("EmployeeId", "PeriodStart")
+                    b.HasIndex("PayslipId", "EmployeeId", "PeriodStart")
                         .IsUnique();
 
                     b.ToTable("labour_facts", "finance");
@@ -429,6 +451,9 @@ namespace Finance.Infrastructure.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<int?>("TicketId")
+                        .HasColumnType("integer");
+
                     b.Property<decimal>("Vat")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
@@ -437,6 +462,8 @@ namespace Finance.Infrastructure.Migrations
 
                     b.HasIndex("Reference")
                         .IsUnique();
+
+                    b.HasIndex("TicketId");
 
                     b.HasIndex("BranchId", "Date");
 

@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Ninja.EventBus.Abstractions;
 using Ninja.EventBus.Events;
@@ -262,5 +263,62 @@ public sealed class PayScenarios
         // The till's picker shows a daily worker what they are owed tonight
         var pick = (await Suite.TillAt(branch).GetAsync<List<TillEmployeeView>>($"/api/payroll/till/employees?{Suite.Version}")).Single();
         Assert.AreEqual(40m, pick.Balance);
+    }
+
+    /// <summary>What Payroll last told Finance a payslip cost, off the outbox.</summary>
+    private static async Task<EmployeeEarningsChangedIntegrationEvent> LastLabourAsync(int payslipId)
+    {
+        using var scope = Suite.Payroll.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Ninja.Payroll.Infrastructure.PayrollContext>();
+        var sent = await context.Set<Ninja.IntegrationEventLogEF.IntegrationEventLogEntry>()
+            .Where(e => e.EventTypeName.Contains(nameof(EmployeeEarningsChangedIntegrationEvent)) && e.Content.Contains($"\"PayslipId\": {payslipId}"))
+            .Select(e => e.Content)
+            .ToListAsync();
+        return sent
+            .Select(c => System.Text.Json.JsonSerializer.Deserialize<EmployeeEarningsChangedIntegrationEvent>(c)!)
+            .Where(e => e.PayslipId == payslipId)
+            .OrderBy(e => e.CreationDate)
+            .Last();
+    }
+
+    [TestMethod]
+    public async Task What_a_payslip_costs_the_business_counts_its_bonuses_and_deductions_once()
+    {
+        var branch = Suite.NewBranch();
+        var books = Suite.BackOfficeAt(branch);
+        var id = await Suite.HireAsync(books, branch, "Karim", PayScheme.Daily, 100m);
+
+        await PresentAsync(books, id, "2026-03-02", "2026-03-03");
+        await PostAsync(books, id, LedgerEntryType.Bonus, 50m, "2026-03-05", "A busy weekend");
+        await PostAsync(books, id, LedgerEntryType.Deduction, 20m, "2026-03-06", "A broken cup");
+        await PostAsync(books, id, LedgerEntryType.Advance, 70m, "2026-03-07");
+
+        var march = (await books.GetAsync<List<PayslipView>>(Suite.Url("/payslips") + "&from=2026-03-01&to=2026-03-31")).Single();
+        var labour = await LastLabourAsync(march.Id);
+        Assert.AreEqual(200m, labour.NetEarned, "two days at a hundred");
+        Assert.AreEqual(230m, labour.LabourCost, "the bonus on top, the cup off; the advance is only money moving early");
+        Assert.AreEqual(march.Id, labour.PayslipId, "Finance keeps one figure per payslip");
+
+        // A pay cycle over days the March draft already covers would pay them twice
+        var (overlapping, why) = await books.RefusedAsync(HttpMethod.Post, Suite.Url("/payslips"), new
+        {
+            employeeId = id, periodStart = "2026-03-20", periodEnd = "2026-04-19",
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, overlapping);
+        Assert.Contains("covers some of these days", why);
+
+        // Dropped, the cycle can be made; the month's own draft then stays away
+        await books.RefusedAsync(HttpMethod.Delete, Suite.Url($"/payslips/{march.Id}"));
+        Assert.AreEqual(0m, (await LastLabourAsync(march.Id)).LabourCost, "a dropped draft costs nothing");
+        var cycle = (await GenerateAsync(books, id, "2026-03-20", "2026-04-19")).Ids.Single();
+
+        await PresentAsync(books, id, "2026-03-25");
+        Assert.AreEqual(cycle, (await GenerateAsync(books, id, "2026-03-20", "2026-04-19")).Ids.Single());
+
+        var payslips = await books.GetAsync<List<PayslipView>>(Suite.Url("/payslips") + "&from=2026-03-01&to=2026-04-30");
+        Assert.AreEqual(cycle, payslips.Single().Id, "a day marked inside the cycle does not bring the calendar month's draft back over it");
+        var earned = (await LedgerAsync(books, id)).Entries.Where(e => e.Type == LedgerEntryType.Earned).ToList();
+        Assert.AreEqual(100m, earned.Single().Amount, "the 25th is earned once, on the cycle");
+        Assert.AreEqual(100m, (await LastLabourAsync(cycle)).LabourCost);
     }
 }

@@ -59,10 +59,15 @@ public sealed record TenantFeaturesDto(bool? Ai);
 
 // --- Sales -------------------------------------------------------------------
 
-public sealed record TenderTotal(string Tender, decimal Amount, int Count);
+/// <param name="Amount">Cash is net of the change handed back.</param>
+/// <param name="Tendered">What was handed over, before the change.</param>
+public sealed record TenderTotal(string Tender, decimal Amount, int Count, decimal Tendered = 0);
 
 public sealed record TypeTotal(string Type, int Count, decimal Net);
 
+public sealed record ChannelTotal(string Channel, int Count, decimal Gross);
+
+/// <param name="Net">Gross sales (Σ ticket totals), kept by Sales for older screens; net sales is NetSales.</param>
 public sealed record RangeReport(
     int TicketsSettled,
     decimal Net,
@@ -76,15 +81,30 @@ public sealed record RangeReport(
     decimal Refunds,
     int RefundCount,
     decimal TabPayments,
-    int TabPaymentCount);
+    int TabPaymentCount,
+    decimal GrossSales = 0,
+    decimal NetSales = 0,
+    decimal NetSalesExVat = 0,
+    decimal BillDiscounts = 0,
+    decimal LineDiscounts = 0,
+    decimal LoyaltyAndPromo = 0,
+    decimal VatAdded = 0,
+    decimal DeliveryFees = 0,
+    decimal CashTendered = 0,
+    List<TenderTotal>? TabPaymentTenderTotals = null,
+    List<ChannelTotal>? ByChannel = null);
+
+public sealed record DailySales(string? Date, int Tickets, decimal GrossSales, decimal Refunds, decimal NetSales, int RefundCount);
+
+public sealed record DailyReport(List<DailySales>? Days);
 
 public sealed record HourTotal(int Hour, int Count, decimal Net);
 
 public sealed record WeekdayTotal(int Weekday, int Count, decimal Net);
 
-public sealed record CashierTotal(string Name, int Count, decimal Net, decimal Discounts, int Voids, decimal Refunds);
+public sealed record CashierTotal(string Name, int Count, decimal Net, decimal Discounts, int Voids, decimal Refunds, string? Kind = null, decimal NetSales = 0);
 
-public sealed record ItemTotal(LocalizedText? Description, decimal Qty, decimal Amount, int Tickets, int? CatalogItemId);
+public sealed record ItemTotal(LocalizedText? Description, decimal Qty, decimal Amount, int Tickets, int? CatalogItemId, decimal MenuAmount = 0, decimal RefundedQty = 0, decimal RefundedAmount = 0, decimal NetQty = 0, decimal NetAmount = 0);
 
 public sealed record BreakdownReport(
     List<HourTotal>? ByHour,
@@ -120,13 +140,16 @@ public sealed record ShiftView(
     int TicketsSettled,
     decimal SalesTotal,
     decimal RefundsTotal,
-    decimal ExpectedInDrawer);
+    decimal ExpectedInDrawer,
+    decimal NetSales = 0,
+    decimal LateCash = 0,
+    decimal? AdjustedOverShort = null);
 
 // --- Ordering ----------------------------------------------------------------
 
 public sealed record OrderStatsDay(string? Date, int Orders, decimal Revenue);
 
-public sealed record OrderStatsItem(LocalizedText? ProductName, int Units, decimal Revenue);
+public sealed record OrderStatsItem(LocalizedText? ProductName, int Units, decimal Revenue, int ProductId = 0);
 
 public sealed record OrderStats(List<OrderStatsDay>? Days, List<OrderStatsItem>? TopItems);
 

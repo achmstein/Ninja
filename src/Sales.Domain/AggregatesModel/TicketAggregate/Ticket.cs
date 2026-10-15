@@ -184,9 +184,39 @@ public class Ticket : Entity, IAggregateRoot
     /// rules say now; open, it is the lines priced under the rules given.
     /// </summary>
     public Bill GetBill(PricingRules rules)
-        => Status == TicketStatus.Settled
+        => Status == TicketStatus.Settled || IsVoidedBillFrozen
             ? new Bill(Subtotal, Discount, ServiceCharge, Vat, Total, VatIncluded, VatRate, ServiceChargeRate)
             : ComputeBill(rules);
+
+    /// <summary>
+    /// A void freezes the bill it cancelled, the way a settle freezes a
+    /// receipt, so history never revalues it under rules set later. Voids
+    /// from before that left the figures at zero and are still worked out;
+    /// a bill whose lines come to nothing is worth nothing either way.
+    /// </summary>
+    private bool IsVoidedBillFrozen => Status == TicketStatus.Voided && (Subtotal != 0 || Total != 0);
+
+    /// <summary>
+    /// How a settled bill's money divides between its delivery fee and what
+    /// was sold. The fee takes its menu share of the bill-level figures (the
+    /// bill discount, service and VAT, which reached it like any line); the
+    /// rest of <see cref="Total"/> is the items', spread over the positive
+    /// lines, so a loyalty or promo line thins every item alike instead of
+    /// standing apart. A refund gives an item back at this rate, and the
+    /// reports value an item sold at it.
+    /// </summary>
+    public PaidShares GetPaidShares()
+    {
+        var fee = _lines.Where(l => l.IsDeliveryFee).Sum(l => l.Total);
+        var items = _lines.Where(l => !l.IsDeliveryFee && l.Total > 0).Sum(l => l.Total);
+
+        var feePaid = fee > 0 && Subtotal > 0
+            ? Math.Min(Total, Money(fee * Total / Subtotal))
+            : 0m;
+        var perItemPound = items > 0 ? Math.Max(0m, Total - feePaid) / items : 0m;
+
+        return new PaidShares(fee, feePaid, perItemPound);
+    }
 
     private Bill ComputeBill(PricingRules rules)
     {
@@ -675,13 +705,30 @@ public class Ticket : Entity, IAggregateRoot
     /// "Restock"); it is not kept here, only told to Ordering, which owns
     /// what the stock does about it.
     /// </param>
-    public void Void(string reason, string voidedBy, string? stockDisposition = null)
+    /// <param name="rules">
+    /// The branch's pricing rules now: the bill the void cancels is frozen
+    /// under them, as a settle would have. Null leaves the figures unfrozen.
+    /// </param>
+    public void Void(string reason, string voidedBy, string? stockDisposition = null, PricingRules? rules = null)
     {
         EnsureOpen();
         EnsureSessionEnded();
 
         if (string.IsNullOrWhiteSpace(reason))
             throw new SalesDomainException("Voiding a ticket needs a reason — that is the whole audit trail.");
+
+        if (rules is not null)
+        {
+            var bill = ComputeBill(rules);
+            Subtotal = bill.Subtotal;
+            Discount = bill.Discount;
+            ServiceCharge = bill.ServiceCharge;
+            Vat = bill.Vat;
+            Total = bill.Total;
+            VatRate = bill.VatRate;
+            ServiceChargeRate = bill.ServiceChargeRate;
+            VatIncluded = bill.VatIncluded;
+        }
 
         Status = TicketStatus.Voided;
         VoidReason = reason;

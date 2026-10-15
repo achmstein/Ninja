@@ -14,6 +14,13 @@ public class CloseShiftCommandHandler(
 {
     public async Task<ShiftView> Handle(CloseShiftCommand command, CancellationToken cancellationToken)
     {
+        // The shift is held before it is summed: a settle, refund or tab
+        // payment putting itself on the shift right now is waited for and
+        // counted, and one arriving during the close finds it closed. Without
+        // the hold one could commit between the sums and the close and be on
+        // the shift but not in its expected cash.
+        await shiftRepository.HoldForCloseAsync(command.ShiftId);
+
         var shift = await shiftRepository.GetAsync(command.ShiftId)
             ?? throw new SalesDomainException($"Shift {command.ShiftId} does not exist.");
 

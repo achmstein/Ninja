@@ -42,6 +42,7 @@ class StockMovementEntityTypeConfiguration : IEntityTypeConfiguration<StockMovem
 
         builder.Property(m => m.Quantity).HasPrecision(18, 3);
         builder.Property(m => m.UnitCost).HasPrecision(18, 4);
+        builder.Property(m => m.AvgUnitCostAfter).HasPrecision(18, 4);
         builder.Property(m => m.Reference).HasMaxLength(64);
         builder.Property(m => m.Reason).HasMaxLength(500);
         builder.Property(m => m.RecordedBy).HasMaxLength(64).IsRequired();
@@ -59,6 +60,8 @@ class StockMovementEntityTypeConfiguration : IEntityTypeConfiguration<StockMovem
 
         builder.HasIndex(m => new { m.BranchId, m.StockItemId, m.RecordedAt });
         builder.HasIndex(m => new { m.BranchId, m.RecordedAt });
+        // The reports read a period by when things happened
+        builder.HasIndex(m => new { m.BranchId, m.OccurredAt });
     }
 }
 

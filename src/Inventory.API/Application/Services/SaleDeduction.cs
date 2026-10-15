@@ -36,22 +36,32 @@ public static class SaleDeduction
             .ToList();
     }
 
+    public static string CountedReferenceFor(int orderId) => $"order:{orderId}:counted";
+
     /// <summary>
-    /// Drops the drafts for stock items that were counted after the sale
-    /// happened: a till that sold while offline and synced later, after a
-    /// stocktake, would otherwise take those units twice. The count already
-    /// recorded the shelf as it was after the sale.
+    /// For the stock items counted after the sale happened, a Count back
+    /// up by what the sale takes: a till that sold while offline and synced
+    /// later, after a stocktake, would otherwise take those units twice, as
+    /// the count already recorded the shelf as it was after the sale. The
+    /// sale is posted all the same, so its cost is the sale's on its day;
+    /// the correction, dated to the count, takes the same units out of what
+    /// the count found missing. The shelf ends where the count left it.
     /// </summary>
-    public static IReadOnlyList<MovementDraft> DropCountedAfter(
+    public static IReadOnlyList<MovementDraft> CountedSince(
+        int orderId,
         IReadOnlyList<MovementDraft> drafts,
         DateTime? placedAt,
         IReadOnlyDictionary<int, DateTime> lastCountedAt)
     {
         if (placedAt is not { } soldAt)
-            return drafts;
+            return [];
+
+        var reference = CountedReferenceFor(orderId);
 
         return drafts
-            .Where(d => !(lastCountedAt.TryGetValue(d.StockItemId, out var countedAt) && countedAt > soldAt))
+            .Where(d => d.Type == MovementType.Sale && lastCountedAt.TryGetValue(d.StockItemId, out var countedAt) && countedAt > soldAt)
+            .Select(d => new MovementDraft(d.StockItemId, MovementType.Count, -d.Quantity, reference,
+                "Sold before the count, sent after it", OccurredAt: lastCountedAt[d.StockItemId]))
             .ToList();
     }
 }

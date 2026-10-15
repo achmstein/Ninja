@@ -85,12 +85,17 @@ public static class TicketsApi
         api.MapGet("/reports/range", GetRangeReport)
             .WithName("GetRangeReport")
             .WithSummary("Settled sales over a window: tender split, discounts, per-type counts")
-            .WithDescription("The caller picks the window — pass the branch's business-day bounds for the day report.");
+            .WithDescription("The caller picks the window — pass the branch's business-day bounds for the day report. netSales is gross sales less the refunds issued in the window; net (gross) is kept for older screens. Cash in tenderTotals is net of change; tendered and cashTendered keep what was handed over.");
 
         api.MapGet("/reports/breakdown", GetBreakdownReport)
             .WithName("GetBreakdownReport")
             .WithSummary("Settled sales in a window by hour, weekday, cashier and item")
-            .WithDescription("offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.");
+            .WithDescription("tz is the IANA zone the hours and weekdays are read in (each bill at its own moment's offset, so daylight saving is right); offsetMinutes, how far a fixed clock is ahead of UTC, is still read when tz is not given; neither means the business's own zone. Items are valued at what customers paid (Amount) and at menu money (MenuAmount), with the refunds issued in the window netted per item; the delivery fee is not an item.");
+
+        api.MapGet("/reports/daily", GetDailyReport)
+            .WithName("GetDailyReport")
+            .WithSummary("Settled sales per business day: gross, refunds, net and tickets")
+            .WithDescription("A business day starts at dayStart (HH:mm, the branch's day start; 00:00 when not given) in the IANA zone tz (the business's own when not given) and runs to the same time the next day. Every day the window [from, to) touches is listed, empty ones included. Net is gross less the credit notes issued that day, the same net sales as the range report's.");
 
         api.MapGet("/reports/pairs", GetItemPairsReport)
             .WithName("GetItemPairsReport")
@@ -386,15 +391,66 @@ public static class TicketsApi
         DateTime to,
         HttpContext httpContext,
         [FromServices] ITicketQueries queries,
-        int offsetMinutes = 0)
+        int? offsetMinutes = null,
+        string? tz = null)
     {
         if (to <= from)
         {
             return TypedResults.BadRequest("The report window must end after it starts.");
         }
 
+        // The zone asked for; a caller that still sends a fixed offset keeps
+        // it; one that says neither reads the business's own zone
+        TimeZoneInfo? zone = null;
+        if (tz is not null)
+        {
+            zone = ReportClock.FindZone(tz);
+            if (zone is null)
+                return TypedResults.BadRequest($"Unknown time zone '{tz}'. Use an IANA id such as Africa/Cairo.");
+        }
+        else if (offsetMinutes is null)
+        {
+            zone = TenantClock.Zone;
+        }
+
         var branchId = httpContext.GetRequiredBranchId();
-        return TypedResults.Ok(await queries.GetBreakdownAsync(branchId, from, to, offsetMinutes));
+        return TypedResults.Ok(await queries.GetBreakdownAsync(branchId, from, to, offsetMinutes ?? 0, zone));
+    }
+
+    public static async Task<Results<Ok<DailyReport>, BadRequest<string>>> GetDailyReport(
+        DateTime from,
+        DateTime to,
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        string? tz = null,
+        string? dayStart = null)
+    {
+        if (to <= from)
+        {
+            return TypedResults.BadRequest("The report window must end after it starts.");
+        }
+
+        // A year of days is as much as one answer holds
+        if (to - from > TimeSpan.FromDays(367))
+        {
+            return TypedResults.BadRequest("The daily report covers at most a year.");
+        }
+
+        var zone = tz is null ? TenantClock.Zone : ReportClock.FindZone(tz);
+        if (zone is null)
+        {
+            return TypedResults.BadRequest($"Unknown time zone '{tz}'. Use an IANA id such as Africa/Cairo.");
+        }
+
+        var start = TimeOnly.MinValue;
+        if (dayStart is not null
+            && !TimeOnly.TryParseExact(dayStart, ["HH:mm", "HH:mm:ss", "H:mm"], System.Globalization.CultureInfo.InvariantCulture, System.Globalization.DateTimeStyles.None, out start))
+        {
+            return TypedResults.BadRequest($"dayStart must be a time of day as HH:mm, not '{dayStart}'.");
+        }
+
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetDailyReportAsync(branchId, from, to, zone, start));
     }
 
     public static async Task<Results<Ok<ItemPairsReport>, BadRequest<string>>> GetItemPairsReport(
@@ -482,7 +538,8 @@ public static class TicketsApi
                 request.Payments.Select(p => new PaymentDto(p.Tender, p.Amount, p.CustomerId, p.CustomerName)).ToList(),
                 httpContext.GetActor(),
                 request.SettledAt,
-                request.ProvisionalReceiptNumber));
+                request.ProvisionalReceiptNumber,
+                request.ShiftId));
 
             return TypedResults.Ok(result);
         }
@@ -679,7 +736,12 @@ public record AddLineRequest(LocalizedText Description, decimal Qty, decimal Uni
 
 /// <param name="SettledAt">When the money was actually taken, for a till replaying a sale it rang up while offline; null settles now.</param>
 /// <param name="ProvisionalReceiptNumber">The number the till printed on the offline receipt, kept beside the real one.</param>
-public record SettleRequest(List<SettlePayment> Payments, DateTime? SettledAt = null, string? ProvisionalReceiptNumber = null);
+/// <param name="ShiftId">
+/// The drawer shift the sale was rung up in, for a till replaying an offline sale. Taken when it is this
+/// branch's and was open at <paramref name="SettledAt"/>, even if it has closed since (its Z report then
+/// shows the sale's cash as late cash); otherwise ignored, and the branch's open shift takes the sale.
+/// </param>
+public record SettleRequest(List<SettlePayment> Payments, DateTime? SettledAt = null, string? ProvisionalReceiptNumber = null, int? ShiftId = null);
 
 public record SettlePayment(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
 

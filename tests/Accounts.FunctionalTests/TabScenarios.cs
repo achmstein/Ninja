@@ -109,6 +109,32 @@ public sealed class TabScenarios
     }
 
     [TestMethod]
+    public async Task Charges_and_payments_landing_on_one_tab_at_once_all_count()
+    {
+        var customer = ACustomer();
+
+        // Eight first charges at once: each would open the tab, and each
+        // would add to a balance it read before the others wrote theirs
+        await Task.WhenAll(Enumerable.Range(1, 8).Select(i => ChargeAsync(customer, 10m * i, "Nadia")));
+
+        var opened = await TabAsync(customer);
+        Assert.AreEqual(360m, opened.Balance, "ten to eighty: every charge is in the balance");
+        Assert.AreEqual(8, opened.Transactions.Count, "on one tab");
+
+        async Task PayAsync(decimal amount)
+        {
+            var (paid, detail) = await Suite.BackOffice.RefusedAsync(HttpMethod.Post, Suite.Url($"/{customer}/payment"), new { amount });
+            Assert.AreEqual(HttpStatusCode.OK, paid, detail);
+        }
+
+        await Task.WhenAll(Enumerable.Range(1, 6).SelectMany(i => new[] { ChargeAsync(customer, 5m), PayAsync(20m) }));
+
+        var tab = await TabAsync(customer);
+        Assert.AreEqual(270m, tab.Balance, "360, thirty more charged, a hundred and twenty paid");
+        Assert.AreEqual(tab.Transactions.Sum(t => t.Type == "charge" ? t.Amount : -t.Amount), tab.Balance, "the balance is its lines, line by line");
+    }
+
+    [TestMethod]
     public async Task A_payment_lowers_what_is_owed_and_a_tab_can_run_into_credit()
     {
         var customer = ACustomer();

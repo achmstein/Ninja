@@ -11,7 +11,7 @@ namespace Ninja.Assistant.API.Tools;
 public sealed class OverviewTools(TenantContext tenant, NinjaApiClient api, TimeProvider clock)
 {
     [McpServerTool(Name = "get_business_overview", Title = "Business overview", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Start here, before any other tool. Returns the business's branches (id, English name and Arabic nameAr, whether active, when its business day starts, whether online ordering is on), the currency, the time zone and the local time, and today so far: settled tickets and net sales per branch. Use the branch ids and names it returns in the other tools.")]
+    [Description("Start here, before any other tool. Returns the business's branches (id, English name and Arabic nameAr, whether active, when its business day starts, whether online ordering is on), the currency, the time zone and the local time, and today so far: settled tickets, gross sales, refunds, net sales (gross less refunds - the figure to call 'net sales') and net sales without VAT, per branch. Use the branch ids and names it returns in the other tools.")]
     public async Task<CallToolResult> GetBusinessOverview(CancellationToken ct = default)
     {
         var snapshot = await tenant.LoadAsync(ct);
@@ -45,7 +45,10 @@ public sealed class OverviewTools(TenantContext tenant, NinjaApiClient api, Time
             today = new
             {
                 businessDay = today.Ok.Count > 0 ? Day(today.Ok[0].Value.Period.FromDate) : null,
-                netSales = today.Ok.Sum(x => x.Value.Value.Net),
+                grossSales = today.Ok.Sum(x => x.Value.Value.GrossSales),
+                refunds = today.Ok.Sum(x => x.Value.Value.Refunds),
+                netSales = today.Ok.Sum(x => x.Value.Value.NetSales),
+                netSalesExVat = today.Ok.Sum(x => x.Value.Value.NetSalesExVat),
                 ticketsSettled = today.Ok.Sum(x => x.Value.Value.TicketsSettled),
                 branches = today.Ok.Select(x => new
                 {
@@ -53,12 +56,15 @@ public sealed class OverviewTools(TenantContext tenant, NinjaApiClient api, Time
                     name = x.Branch.DisplayName,
                     nameAr = x.Branch.NameAr,
                     businessDay = Day(x.Value.Period.FromDate),
-                    netSales = x.Value.Value.Net,
-                    ticketsSettled = x.Value.Value.TicketsSettled,
+                    grossSales = x.Value.Value.GrossSales,
                     refunds = x.Value.Value.Refunds,
+                    netSales = x.Value.Value.NetSales,
+                    netSalesExVat = x.Value.Value.NetSalesExVat,
+                    ticketsSettled = x.Value.Value.TicketsSettled,
                 }),
                 errors = ErrorsOrNull(today.Errors),
             },
+            definitions = SalesTools.SalesDefinitions,
             hint = "Amounts are in " + snap.Currency + ". Ask get_sales_summary, get_profit, get_expenses, get_stock_levels or get_staff next.",
         });
     }

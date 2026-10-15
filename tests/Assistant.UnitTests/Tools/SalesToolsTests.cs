@@ -12,21 +12,32 @@ public sealed class SalesToolsTests
     {
         ticketsSettled = branch == 1 ? 12 : 5,
         net = branch == 1 ? 1500.5m : 400m,
+        grossSales = branch == 1 ? 1500.5m : 400m,
+        netSales = branch == 1 ? 1470.5m : 400m,
+        netSalesExVat = branch == 1 ? 1274.18m : 350m,
         subtotal = branch == 1 ? 1600m : 420m,
         discounts = branch == 1 ? 100m : 20m,
-        changeGiven = 0m,
+        billDiscounts = branch == 1 ? 60m : 20m,
+        lineDiscounts = branch == 1 ? 10m : 0m,
+        loyaltyAndPromo = branch == 1 ? 30m : 0m,
+        changeGiven = branch == 1 ? 50m : 0m,
+        cashTendered = branch == 1 ? 1050m : 400m,
         tenderTotals = new[]
         {
-            new { tender = "Cash", amount = branch == 1 ? 1000m : 400m, count = branch == 1 ? 8 : 5 },
-            new { tender = "Card", amount = branch == 1 ? 500.5m : 0m, count = branch == 1 ? 4 : 0 },
+            new { tender = "Cash", amount = branch == 1 ? 1000m : 400m, count = branch == 1 ? 8 : 5, tendered = branch == 1 ? 1050m : 400m },
+            new { tender = "Card", amount = branch == 1 ? 500.5m : 0m, count = branch == 1 ? 4 : 0, tendered = branch == 1 ? 500.5m : 0m },
         },
         byType = new[] { new { type = "Counter", count = branch == 1 ? 12 : 5, net = branch == 1 ? 1500.5m : 400m } },
+        byChannel = new[] { new { channel = "Counter", count = branch == 1 ? 12 : 5, gross = branch == 1 ? 1500.5m : 400m } },
         serviceCharge = 0m,
         vat = branch == 1 ? 200m : 50m,
+        vatAdded = branch == 1 ? 200m : 50m,
+        deliveryFees = 0m,
         refunds = branch == 1 ? 30m : 0m,
         refundCount = branch == 1 ? 1 : 0,
-        tabPayments = 0m,
-        tabPaymentCount = 0,
+        tabPayments = branch == 1 ? 200m : 0m,
+        tabPaymentCount = branch == 1 ? 1 : 0,
+        tabPaymentTenderTotals = branch == 1 ? new[] { new { tender = "Cash", amount = 200m, count = 1, tendered = 200m } } : [],
     };
 
     [TestMethod]
@@ -42,11 +53,22 @@ public sealed class SalesToolsTests
         var json = Bench.JsonOf(result);
         Assert.AreEqual("EGP", json.GetProperty("currency").GetString());
         Assert.AreEqual(17, json.GetProperty("total").GetProperty("ticketsSettled").GetInt32());
-        Assert.AreEqual(1900.5m, json.GetProperty("total").GetProperty("net").GetDecimal());
-        var tenders = json.GetProperty("total").GetProperty("tenders").EnumerateArray().ToList();
+        var total = json.GetProperty("total");
+        Assert.AreEqual(1900.5m, total.GetProperty("grossSales").GetDecimal());
+        Assert.AreEqual(30m, total.GetProperty("refunds").GetDecimal());
+        Assert.AreEqual(1870.5m, total.GetProperty("netSales").GetDecimal(), "net sales is gross less refunds");
+        Assert.AreEqual(1624.18m, total.GetProperty("netSalesExVat").GetDecimal());
+        Assert.IsFalse(total.TryGetProperty("net", out _), "no figure called just net for the model to misread");
+        StringAssert.Contains(json.GetProperty("definitions").GetString(), "netSales = grossSales - refunds");
+        Assert.AreEqual(80m, total.GetProperty("discounts").GetProperty("bill").GetDecimal());
+        var tenders = total.GetProperty("tenders").EnumerateArray().ToList();
         Assert.AreEqual("Cash", tenders[0].GetProperty("tender").GetString());
         Assert.AreEqual(1400m, tenders[0].GetProperty("amount").GetDecimal());
+        Assert.AreEqual(1450m, tenders[0].GetProperty("tendered").GetDecimal(), "what was handed over, before the change");
         Assert.AreEqual(13, tenders[0].GetProperty("count").GetInt32());
+        Assert.AreEqual(50m, total.GetProperty("changeGiven").GetDecimal());
+        var tabCash = total.GetProperty("tabPaymentTenders").EnumerateArray().Single();
+        Assert.AreEqual(200m, tabCash.GetProperty("amount").GetDecimal(), "tab payments are a series of their own, beside the sales");
         var branches = json.GetProperty("branches").EnumerateArray().ToList();
         Assert.AreEqual(2, branches.Count);
         Assert.AreEqual("Nasr City", branches[0].GetProperty("name").GetString());
@@ -113,7 +135,8 @@ public sealed class SalesToolsTests
             byCashier = Array.Empty<object>(),
             byItem = new[]
             {
-                new { description = new { en = "Turkish Coffee", ar = "قهوة تركي" }, qty = 10, amount = 300, tickets = 9, catalogItemId = 1 },
+                // The same item, named a little differently at each branch: one row
+                new { description = new { en = r.Headers.GetValues("X-Branch-Id").First() == "1" ? "Turkish Coffee" : "Turkish coffee (double)", ar = "قهوة تركي" }, qty = 10, amount = 300, tickets = 9, catalogItemId = 1 },
                 new { description = new { en = "Hibiscus", ar = "كركديه" }, qty = 4, amount = 80, tickets = 4, catalogItemId = 2 },
                 new { description = new { en = "Water", ar = "مياه" }, qty = 20, amount = 60, tickets = 15, catalogItemId = 3 },
             },
@@ -127,7 +150,10 @@ public sealed class SalesToolsTests
         Assert.AreEqual("Turkish Coffee", rows[0].GetProperty("item").GetString());
         Assert.AreEqual(600m, rows[0].GetProperty("amount").GetDecimal(), "two branches, same item");
         Assert.AreEqual("قهوة تركي", rows[0].GetProperty("itemAr").GetString());
-        StringAssert.Contains(bench.Handler.Requests.First(q => q.Url.Host == "sales-api").Url.Query, "offsetMinutes=180");
+        Assert.AreEqual(1, rows[0].GetProperty("catalogItemId").GetInt32(), "merged by the catalog item, not its name");
+        var query = bench.Handler.Requests.First(q => q.Url.Host == "sales-api").Url.Query;
+        StringAssert.Contains(query, "tz=Africa%2FCairo", "the zone, so hours across a clock change are each at their own offset");
+        Assert.IsFalse(query.Contains("offsetMinutes", StringComparison.Ordinal));
 
         var bad = await tools.GetSalesBreakdown("colour", "today", null, null, null, 10, CancellationToken.None);
         Assert.IsTrue(bad.IsError);
@@ -171,15 +197,60 @@ public sealed class SalesToolsTests
     }
 
     [TestMethod]
-    public async Task The_daily_trend_sends_the_zone_offset_as_javascript_spells_it()
+    public async Task The_daily_trend_is_the_tills_sales_per_business_day_with_orders_beside()
     {
         var bench = new Bench().WithTenant();
-        bench.Handler.OnJson("GET", "ordering-api/api/orders/stats", _ => new { days = Array.Empty<object>(), topItems = Array.Empty<object>() });
+        bench.Handler.OnJson("GET", "sales-api/api/tickets/reports/daily", r => new
+        {
+            days = new[]
+            {
+                new { date = "2026-09-21", tickets = 3, grossSales = 300m, refunds = 30m, netSales = 270m, refundCount = 1 },
+                new { date = "2026-09-22", tickets = 2, grossSales = 200m, refunds = 0m, netSales = 200m, refundCount = 0 },
+            },
+        });
+        bench.Handler.OnJson("GET", "ordering-api/api/orders/stats", r => new
+        {
+            days = new[] { new { date = "2026-09-21", orders = 4, revenue = 280m } },
+            topItems = new[]
+            {
+                new { productId = 7, productName = new { en = r.Headers.GetValues("X-Branch-Id").First() == "1" ? "Latte" : "Latte (large)", ar = "لاتيه" }, units = 3, revenue = 150m },
+            },
+        });
         var tools = new SalesTools(bench.Tenant, bench.Api, bench.Clock);
 
-        await tools.GetDailySalesTrend(branch: "Maadi");
+        var json = Bench.JsonOf(await tools.GetDailySalesTrend());
 
-        var stats = bench.Handler.Requests.Single(r => r.Url.AbsolutePath == "/api/orders/stats");
-        StringAssert.Contains(stats.Url.Query, "tzOffsetMinutes=-180", "Cairo is UTC+3, which getTimezoneOffset calls -180");
+        var days = json.GetProperty("days").EnumerateArray().ToList();
+        Assert.HasCount(2, days);
+        Assert.AreEqual(600m, days[0].GetProperty("grossSales").GetDecimal(), "two branches");
+        Assert.AreEqual(540m, days[0].GetProperty("netSales").GetDecimal(), "gross less refunds, as in the summary");
+        Assert.AreEqual(8, days[0].GetProperty("orders").GetInt32());
+        Assert.AreEqual(0, days[1].GetProperty("orders").GetInt32());
+        var item = json.GetProperty("topItems").EnumerateArray().Single();
+        Assert.AreEqual(300m, item.GetProperty("revenue").GetDecimal(), "one item across branches by its catalog id");
+
+        var daily = bench.Handler.Requests.Where(r => r.Url.AbsolutePath == "/api/tickets/reports/daily").ToList();
+        StringAssert.Contains(daily.Single(r => r.Branch == "1").Url.Query, "tz=Africa%2FCairo");
+        StringAssert.Contains(daily.Single(r => r.Branch == "1").Url.Query, "dayStart=17%3A00", "Nasr City's day starts at five");
+        StringAssert.Contains(daily.Single(r => r.Branch == "2").Url.Query, "dayStart=00%3A00");
+        var stats = bench.Handler.Requests.First(r => r.Url.AbsolutePath == "/api/orders/stats").Url.Query;
+        StringAssert.Contains(stats, "top=0", "every item, so the branches add up");
+        StringAssert.Contains(stats, "tz=Africa%2FCairo");
+    }
+
+    [TestMethod]
+    public async Task The_overview_calls_gross_less_refunds_net_sales()
+    {
+        var bench = new Bench().WithTenant();
+        bench.Handler.OnJson("GET", "sales-api/api/tickets/reports/range", r => Range(int.Parse(r.Headers.GetValues("X-Branch-Id").First())));
+        var tools = new OverviewTools(bench.Tenant, bench.Api, bench.Clock);
+
+        var today = Bench.JsonOf(await tools.GetBusinessOverview(CancellationToken.None)).GetProperty("today");
+
+        Assert.AreEqual(1900.5m, today.GetProperty("grossSales").GetDecimal());
+        Assert.AreEqual(1870.5m, today.GetProperty("netSales").GetDecimal());
+        var nasr = today.GetProperty("branches").EnumerateArray().First();
+        Assert.AreEqual(1470.5m, nasr.GetProperty("netSales").GetDecimal());
+        Assert.AreEqual(30m, nasr.GetProperty("refunds").GetDecimal());
     }
 }

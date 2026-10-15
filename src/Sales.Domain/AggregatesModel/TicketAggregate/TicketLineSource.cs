@@ -10,4 +10,11 @@ public enum TicketLineSource
 
     /// <summary>Keyed in by a cashier.</summary>
     Manual = 2,
+
+    /// <summary>
+    /// A delivery order's fee. It rides with the order's lines (billed, moved
+    /// and refunded with them), but it is not a thing sold: reports keep it out
+    /// of the items and count it on its own.
+    /// </summary>
+    DeliveryFee = 3,
 }

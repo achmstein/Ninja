@@ -794,7 +794,7 @@
           "Tickets"
         ],
         "summary": "Settled sales over a window: tender split, discounts, per-type counts",
-        "description": "The caller picks the window — pass the branch's business-day bounds for the day report.",
+        "description": "The caller picks the window — pass the branch's business-day bounds for the day report. netSales is gross sales less the refunds issued in the window; net (gross) is kept for older screens. Cash in tenderTotals is net of change; tendered and cashTendered keep what was handed over.",
         "operationId": "GetRangeReport",
         "parameters": [
           {
@@ -865,7 +865,7 @@
           "Tickets"
         ],
         "summary": "Settled sales in a window by hour, weekday, cashier and item",
-        "description": "offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.",
+        "description": "tz is the IANA zone the hours and weekdays are read in (each bill at its own moment's offset, so daylight saving is right); offsetMinutes, how far a fixed clock is ahead of UTC, is still read when tz is not given; neither means the business's own zone. Items are valued at what customers paid (Amount) and at menu money (MenuAmount), with the refunds issued in the window netted per item; the delivery fee is not an item.",
         "operationId": "GetBreakdownReport",
         "parameters": [
           {
@@ -895,8 +895,14 @@
                 "integer",
                 "string"
               ],
-              "format": "int32",
-              "default": 0
+              "format": "int32"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "schema": {
+              "type": "string"
             }
           },
           {
@@ -917,6 +923,91 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/BreakdownReport"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/tickets/reports/daily": {
+      "get": {
+        "tags": [
+          "Tickets"
+        ],
+        "summary": "Settled sales per business day: gross, refunds, net and tickets",
+        "description": "A business day starts at dayStart (HH:mm, the branch's day start; 00:00 when not given) in the IANA zone tz (the business's own when not given) and runs to the same time the next day. Every day the window [from, to) touches is listed, empty ones included. Net is gross less the credit notes issued that day, the same net sales as the range report's.",
+        "operationId": "GetDailyReport",
+        "parameters": [
+          {
+            "name": "from",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "to",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "format": "date-time"
+            }
+          },
+          {
+            "name": "tz",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "dayStart",
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DailyReport"
                 }
               }
             }
@@ -3662,6 +3753,12 @@
             ],
             "format": "int32"
           },
+          "timeZone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "byHour": {
             "type": "array",
             "items": {
@@ -3747,6 +3844,73 @@
               "string"
             ],
             "format": "double"
+          },
+          "kind": {
+            "type": "string",
+            "default": "Staff"
+          },
+          "grossSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "netSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "netSalesExVat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "billDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "lineDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "loyaltyAndPromo": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "vatAdded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
           }
         }
       },
@@ -3929,6 +4093,35 @@
           }
         }
       },
+      "ChannelTotal": {
+        "required": [
+          "channel",
+          "count",
+          "gross"
+        ],
+        "type": "object",
+        "properties": {
+          "channel": {
+            "type": "string"
+          },
+          "count": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "gross": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
       "CloseShiftRequest": {
         "required": [
           "closingCount"
@@ -3942,6 +4135,88 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "DailyReport": {
+        "type": "object",
+        "properties": {
+          "from": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "to": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "dayStart": {
+            "type": "string"
+          },
+          "days": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DailySales"
+            }
+          }
+        }
+      },
+      "DailySales": {
+        "required": [
+          "date",
+          "tickets",
+          "grossSales",
+          "refunds",
+          "netSales",
+          "refundCount"
+        ],
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "tickets": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "grossSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "refunds": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "netSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "refundCount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -4121,6 +4396,51 @@
               "string"
             ],
             "format": "int32"
+          },
+          "menuAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "refundedQty": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "refundedAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "netQty": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
+          },
+          "netAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
           }
         }
       },
@@ -4922,6 +5242,15 @@
           "settledAt": {
             "type": "string",
             "format": "date-time"
+          },
+          "netAmount": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
           }
         }
       },
@@ -5694,7 +6023,55 @@
             ],
             "format": "double"
           },
+          "grossSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "netSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "netSalesExVat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
           "discounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "billDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lineDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "loyaltyAndPromo": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
@@ -5716,10 +6093,24 @@
               "$ref": "#/components/schemas/TenderTotal"
             }
           },
+          "cashTendered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
           "byType": {
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/TypeTotal"
+            }
+          },
+          "byChannel": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ChannelTotal"
             }
           },
           "subtotal": {
@@ -5739,6 +6130,30 @@
             "format": "double"
           },
           "vat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "vatAdded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "refundVat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "deliveryFees": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
@@ -6516,6 +6931,15 @@
               "null",
               "string"
             ]
+          },
+          "shiftId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },
@@ -6643,7 +7067,79 @@
             ],
             "format": "double"
           },
+          "grossSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "netSales": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "netSalesExVat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "vat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "vatAdded": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "refundVat": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
           "discounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "billDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lineDiscounts": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "loyaltyAndPromo": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",
@@ -6656,6 +7152,14 @@
             "items": {
               "$ref": "#/components/schemas/TenderTotal"
             }
+          },
+          "cashTendered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
           },
           "changeGiven": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
@@ -6728,6 +7232,23 @@
           "expectedInDrawer": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "lateCash": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "adjustedOverShort": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
               "number",
               "string"
             ],
@@ -7067,6 +7588,15 @@
               "string"
             ],
             "format": "int32"
+          },
+          "tendered": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double",
+            "default": 0
           }
         }
       },

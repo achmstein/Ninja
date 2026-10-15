@@ -78,6 +78,12 @@ public class PayslipRepository(PayrollContext context) : IPayslipRepository
     public Task<Payslip?> FindAsync(int employeeId, DateOnly periodStart)
         => context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PeriodStart == periodStart);
 
+    public Task<Payslip?> FindOverlappingAsync(int employeeId, DateOnly periodStart, DateOnly periodEnd)
+        => context.Payslips
+            .Where(p => p.EmployeeId == employeeId && p.PeriodStart != periodStart && p.PeriodStart <= periodEnd && p.PeriodEnd >= periodStart)
+            .OrderBy(p => p.PeriodStart)
+            .FirstOrDefaultAsync();
+
     public Task<Payslip?> FindEndingAsync(int employeeId, DateOnly periodEnd)
         => context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PeriodEnd == periodEnd);
 }

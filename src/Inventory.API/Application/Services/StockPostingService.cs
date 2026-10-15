@@ -14,7 +14,8 @@ namespace Ninja.Inventory.API.Application.Services;
 public interface IStockPostingService
 {
     // at: when it happened, so what it cost lands on that day (a sale an
-    // offline till sent late); now when not given
+    // offline till sent late); now when not given. A draft that carries its
+    // own time keeps it
     Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor, DateTime? at = null);
 }
 
@@ -28,6 +29,9 @@ public class StockPostingService(
 {
     public async Task<IReadOnlyList<LevelChange>> PostAsync(int branchId, IReadOnlyList<MovementDraft> drafts, string actor, DateTime? at = null)
     {
+        if (at is { } happened)
+            drafts = drafts.Select(d => d.OccurredAt is null ? d with { OccurredAt = happened } : d).ToList();
+
         var posted = await ledger.PostAsync(branchId, drafts, actor);
 
         if (posted.Count == 0)
@@ -47,7 +51,7 @@ public class StockPostingService(
         await AnnounceSoldOutChangesAsync(branchId, changes, items);
         await AnnounceOptionSoldOutChangesAsync(branchId, changes, items);
         await AnnounceLowStockAsync(branchId, changes, items);
-        await AnnounceConsumptionAsync(branchId, drafts, changes, at ?? DateTime.UtcNow);
+        await AnnounceConsumptionAsync(branchId, drafts, changes, DateTime.UtcNow);
 
         return changes;
     }
@@ -63,29 +67,49 @@ public class StockPostingService(
     /// What a sale or waste posting cost, at the average the units left
     /// at, so Finance can put the cost of goods beside the sales; and what a
     /// sale given back returns to it, at the cost the sale went out at (one
-    /// that went out at nothing returns nothing). Receipts, counts,
-    /// adjustments and transfers cost nothing here.
+    /// that went out at nothing returns nothing). Stock a count found short,
+    /// or taken off by hand, is lost all the same (Shrinkage); found over, or
+    /// put back by hand at the average, it comes back (ShrinkageFound). Stock
+    /// put on with a price of its own (opening stock) is not income, and
+    /// receipts and transfers cost nothing here. Each is dated when it
+    /// happened: a sale given back on its sale's day, its waste today.
     /// </summary>
-    private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes, DateTime at)
+    private async Task AnnounceConsumptionAsync(int branchId, IReadOnlyList<MovementDraft> drafts, IReadOnlyList<LevelChange> changes, DateTime now)
     {
         var avg = changes.ToDictionary(c => c.StockItemId, c => c.AvgUnitCost);
 
-        foreach (var kind in new[] { MovementType.Sale, MovementType.Waste, MovementType.SaleReversal })
+        foreach (var group in drafts.GroupBy(d => d.OccurredAt ?? now))
         {
-            var cost = kind == MovementType.SaleReversal
-                ? drafts
-                    .Where(d => d.Type == kind && d.Quantity > 0)
-                    .Sum(d => d.Quantity * (d.UnitCost ?? 0))
-                : drafts
-                    .Where(d => d.Type == kind && d.Quantity < 0)
-                    .Sum(d => -d.Quantity * (d.UnitCost ?? avg.GetValueOrDefault(d.StockItemId)));
+            var at = group.Key;
 
-            if (cost <= 0)
-                continue;
+            foreach (var kind in new[] { MovementType.Sale, MovementType.Waste, MovementType.SaleReversal })
+            {
+                var cost = kind == MovementType.SaleReversal
+                    ? group
+                        .Where(d => d.Type == kind && d.Quantity > 0)
+                        .Sum(d => d.Quantity * (d.UnitCost ?? 0))
+                    : group
+                        .Where(d => d.Type == kind && d.Quantity < 0)
+                        .Sum(d => -d.Quantity * (d.UnitCost ?? avg.GetValueOrDefault(d.StockItemId)));
 
-            var reference = drafts.FirstOrDefault(d => d.Type == kind)?.Reference;
-            await integrationEvents.AddAndSaveEventAsync(new StockConsumedIntegrationEvent(
-                branchId, kind.ToString(), reference, Math.Round(cost, 2), at));
+                if (cost <= 0)
+                    continue;
+
+                var reference = group.FirstOrDefault(d => d.Type == kind)?.Reference;
+                await integrationEvents.AddAndSaveEventAsync(new StockConsumedIntegrationEvent(
+                    branchId, kind.ToString(), reference, Math.Round(cost, 2), at));
+            }
+
+            var corrections = group
+                .Where(d => d.Type is MovementType.Count or MovementType.Adjustment && (d.Quantity < 0 || d.UnitCost is null))
+                .ToList();
+            var lost = corrections.Sum(d => -d.Quantity * avg.GetValueOrDefault(d.StockItemId));
+
+            if (Math.Round(lost, 2) != 0)
+            {
+                await integrationEvents.AddAndSaveEventAsync(new StockConsumedIntegrationEvent(
+                    branchId, lost > 0 ? "Shrinkage" : "ShrinkageFound", corrections[0].Reference, Math.Round(Math.Abs(lost), 2), at));
+            }
         }
     }
 

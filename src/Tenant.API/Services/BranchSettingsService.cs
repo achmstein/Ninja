@@ -9,7 +9,8 @@ namespace Ninja.Tenant.API.Services;
 /// as <see cref="BranchSettingsChangedIntegrationEvent"/>, saved with it in
 /// the outbox (<see cref="TenantEvents"/>), so Ordering, Spaces and
 /// Notification keep their own copy of the flags (Ordering also of where the
-/// branch is and how it delivers) even when the bus was down at the time.
+/// branch is and how it delivers, Finance of when its day starts) even when
+/// the bus was down at the time.
 /// </summary>
 public class BranchSettingsService(
     TenantContext context,
@@ -69,5 +70,6 @@ public class BranchSettingsService(
         Version: DateTime.UtcNow.Ticks,
         RequireSignInForDelivery: branch.RequireSignInForDelivery,
         IsActive: branch.IsActive,
-        DeliveryArea: branch.DeliveryArea);
+        DeliveryArea: branch.DeliveryArea,
+        DayStartTime: branch.DayStartTime);
 }

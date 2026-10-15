@@ -288,7 +288,9 @@ public class RecordPaymentMoveCommandHandler(
         {
             await mediator.Send(new RefundTicketCommand(
                 bill.Id,
-                bill.Lines.Select(l => new RefundLineDto(l.Id, l.Qty)).ToList(),
+                // Every line that can be given back; a loyalty or promo line is
+                // money off, already inside what each item gives back
+                bill.Lines.Where(l => l.Total > 0).Select(l => new RefundLineDto(l.Id, l.Qty)).ToList(),
                 reason ?? "Given back online",
                 PaymentTender.Online,
                 null,

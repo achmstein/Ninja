@@ -85,6 +85,7 @@ public sealed class DeliveryScenarios
         var fee = ticket.Lines.Single(l => l.Description.En == "Delivery fee");
         Assert.AreEqual(20m, fee.Total);
         Assert.AreEqual(orderId, fee.OrderId);
+        Assert.AreEqual(TicketAggregate.TicketLineSource.DeliveryFee, fee.Source, "marked as the fee, so no report counts it as a thing sold");
         Assert.AreEqual($"#{orderId} · Mona Adel", ticket.Label, "plain text a receipt printer can print");
     }
 

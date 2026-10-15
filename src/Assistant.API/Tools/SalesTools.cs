@@ -11,8 +11,15 @@ namespace Ninja.Assistant.API.Tools;
 [McpServerToolType]
 public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimeProvider clock)
 {
+    /// <summary>Told to the model beside every money figure, so it never calls gross sales "net".</summary>
+    internal const string SalesDefinitions =
+        "grossSales is what customers paid on the bills settled in the period (VAT, service and delivery fees in). " +
+        "refunds is the credit notes issued in the period. netSales = grossSales - refunds: this is \"net sales\" (and \"revenue\" or \"sales\" when the person does not say gross). " +
+        "netSalesExVat is netSales without the VAT inside it. Cash in tenders is net of the change handed back; cashTendered is what was handed over. " +
+        "Tab payments are money collected against customers' tabs, not sales.";
+
     [McpServerTool(Name = "get_sales_summary", Title = "Sales summary", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Sales totals for a period: net and gross sales, settled tickets, discounts, refunds, VAT, service charge, totals per tender (cash, card, ...) and per ticket type. Use for 'how much did we sell', 'revenue', 'cash versus card', 'how many tickets'. Omit branch for all branches with a line per branch.")]
+    [Description("Sales totals for a period: gross sales, refunds, net sales (gross less refunds - the figure to call 'net sales' or 'revenue'), net sales without VAT, settled tickets, the discounts (bill, line, loyalty and promo), VAT, service charge, delivery fees, totals per tender (cash net of change), tab payments by tender, and per ticket type and channel. Use for 'how much did we sell', 'revenue', 'net sales', 'cash versus card', 'how many tickets'. Omit branch for all branches with a line per branch.")]
     public async Task<CallToolResult> GetSalesSummary(
         [Description(PeriodDescription)] string period = "today",
         [Description(FromDescription)] string? from = null,
@@ -32,25 +39,42 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
         {
             period = fan.Ok[0].Value.Period.Label,
             currency = snap!.Currency,
+            definitions = SalesDefinitions,
             total = new
             {
                 ticketsSettled = reports.Sum(r => r.TicketsSettled),
-                net = reports.Sum(r => r.Net),
-                subtotal = reports.Sum(r => r.Subtotal),
-                discounts = reports.Sum(r => r.Discounts),
-                serviceCharge = reports.Sum(r => r.ServiceCharge),
-                vat = reports.Sum(r => r.Vat),
+                grossSales = reports.Sum(r => r.GrossSales),
                 refunds = reports.Sum(r => r.Refunds),
                 refundCount = reports.Sum(r => r.RefundCount),
+                netSales = reports.Sum(r => r.NetSales),
+                netSalesExVat = reports.Sum(r => r.NetSalesExVat),
+                averageBill = Average(reports.Sum(r => r.GrossSales), reports.Sum(r => r.TicketsSettled)),
+                subtotal = reports.Sum(r => r.Subtotal),
+                discounts = new
+                {
+                    total = reports.Sum(r => r.Discounts),
+                    bill = reports.Sum(r => r.BillDiscounts),
+                    line = reports.Sum(r => r.LineDiscounts),
+                    loyaltyAndPromo = reports.Sum(r => r.LoyaltyAndPromo),
+                },
+                serviceCharge = reports.Sum(r => r.ServiceCharge),
+                vat = reports.Sum(r => r.Vat),
+                vatAddedOnTop = reports.Sum(r => r.VatAdded),
+                deliveryFees = reports.Sum(r => r.DeliveryFees),
+                changeGiven = reports.Sum(r => r.ChangeGiven),
+                cashTendered = reports.Sum(r => r.CashTendered),
+                tenders = MergeTenders(reports.SelectMany(r => r.TenderTotals ?? [])),
                 tabPayments = reports.Sum(r => r.TabPayments),
-                tenders = reports.SelectMany(r => r.TenderTotals ?? [])
-                    .GroupBy(t => t.Tender)
-                    .Select(g => new { tender = g.Key, amount = g.Sum(t => t.Amount), count = g.Sum(t => t.Count) })
-                    .OrderByDescending(t => t.amount),
+                tabPaymentCount = reports.Sum(r => r.TabPaymentCount),
+                tabPaymentTenders = MergeTenders(reports.SelectMany(r => r.TabPaymentTenderTotals ?? [])),
                 byType = reports.SelectMany(r => r.ByType ?? [])
                     .GroupBy(t => t.Type)
-                    .Select(g => new { type = g.Key, count = g.Sum(t => t.Count), net = g.Sum(t => t.Net) })
-                    .OrderByDescending(t => t.net),
+                    .Select(g => new { type = g.Key, count = g.Sum(t => t.Count), grossSales = g.Sum(t => t.Net) })
+                    .OrderByDescending(t => t.grossSales),
+                byChannel = reports.SelectMany(r => r.ByChannel ?? [])
+                    .GroupBy(c => c.Channel)
+                    .Select(g => new { channel = g.Key, count = g.Sum(c => c.Count), grossSales = g.Sum(c => c.Gross) })
+                    .OrderByDescending(c => c.grossSales),
             },
             branches = fan.Ok.Select(x => new
             {
@@ -59,17 +83,30 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
                 nameAr = x.Branch.NameAr,
                 period = x.Value.Period.Label,
                 ticketsSettled = x.Value.Value.TicketsSettled,
-                net = x.Value.Value.Net,
-                discounts = x.Value.Value.Discounts,
+                grossSales = x.Value.Value.GrossSales,
                 refunds = x.Value.Value.Refunds,
-                tenders = (x.Value.Value.TenderTotals ?? []).Select(t => new { t.Tender, t.Amount, t.Count }),
+                netSales = x.Value.Value.NetSales,
+                netSalesExVat = x.Value.Value.NetSalesExVat,
+                discounts = x.Value.Value.Discounts,
+                changeGiven = x.Value.Value.ChangeGiven,
+                tenders = MergeTenders(x.Value.Value.TenderTotals ?? []),
+                tabPaymentTenders = MergeTenders(x.Value.Value.TabPaymentTenderTotals ?? []),
             }),
             errors = ErrorsOrNull(fan.Errors),
         });
     }
 
+    private static decimal? Average(decimal amount, int count) => count == 0 ? null : Math.Round(amount / count, 2);
+
+    private static IEnumerable<object> MergeTenders(IEnumerable<TenderTotal> tenders)
+        => tenders
+            .GroupBy(t => t.Tender)
+            .Select(g => new { tender = g.Key, amount = g.Sum(t => t.Amount), count = g.Sum(t => t.Count), tendered = g.Sum(t => t.Tendered) })
+            .OrderByDescending(t => t.amount)
+            .ToList();
+
     [McpServerTool(Name = "get_sales_breakdown", Title = "Sales breakdown", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Where the sales came from in a period, by one dimension: hour of day, weekday, cashier, or menu item. Use for 'busiest hour', 'best-selling item', 'which day of the week is strongest', 'who sold the most'. Rows are merged across branches when branch is omitted.")]
+    [Description("Where the sales came from in a period, by one dimension: hour of day, weekday, cashier, or menu item. Hours, weekdays and cashiers are gross sales (before refunds); cashiers also carry their net sales and refunds; items carry what customers paid for them (amount, the bill's discounts, VAT and service spread over the items; the delivery fee is not an item), the units, what was refunded and the net. Use for 'busiest hour', 'best-selling item', 'which day of the week is strongest', 'who sold the most'. Rows are merged across branches when branch is omitted.")]
     public async Task<CallToolResult> GetSalesBreakdown(
         [Description("hour, weekday, cashier or item")] string dimension = "item",
         [Description(PeriodDescription)] string period = "today",
@@ -87,25 +124,42 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
         if (fail is not null) return fail;
         top = ToolResults.ClampTop(top);
 
+        // In the business's zone, each bill at its own offset: a period across a
+        // clock change keeps its hours
         var fan = await PerBranchWithPeriodAsync(snap!, branches!, period, from, to, clock.GetUtcNow(),
             (b, p) => api.GetAsync<BreakdownReport>("sales-api",
-                $"/api/tickets/reports/breakdown?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&offsetMinutes={p.OffsetMinutes}", b.Id, ct));
+                $"/api/tickets/reports/breakdown?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&tz={Uri.EscapeDataString(snap!.Zone.Id)}", b.Id, ct));
         if (!fan.AnyOk) return ToolResults.Fail(string.Join("\n", fan.Errors));
 
         var reports = fan.Ok.Select(x => x.Value.Value).ToList();
         object rows = dim switch
         {
             "hour" => reports.SelectMany(r => r.ByHour ?? []).GroupBy(h => h.Hour)
-                .Select(g => new { hour = g.Key, count = g.Sum(h => h.Count), net = g.Sum(h => h.Net) })
+                .Select(g => new { hour = g.Key, count = g.Sum(h => h.Count), grossSales = g.Sum(h => h.Net) })
                 .OrderBy(h => h.hour).ToList(),
             "weekday" => reports.SelectMany(r => r.ByWeekday ?? []).GroupBy(w => w.Weekday)
-                .Select(g => new { weekday = WeekdayName(g.Key), count = g.Sum(w => w.Count), net = g.Sum(w => w.Net) })
-                .OrderByDescending(w => w.net).ToList(),
+                .Select(g => new { weekday = WeekdayName(g.Key), count = g.Sum(w => w.Count), grossSales = g.Sum(w => w.Net) })
+                .OrderByDescending(w => w.grossSales).ToList(),
             "cashier" => reports.SelectMany(r => r.ByCashier ?? []).GroupBy(c => c.Name)
-                .Select(g => new { cashier = g.Key, count = g.Sum(c => c.Count), net = g.Sum(c => c.Net), discounts = g.Sum(c => c.Discounts), voids = g.Sum(c => c.Voids), refunds = g.Sum(c => c.Refunds) })
-                .OrderByDescending(c => c.net).Take(top).ToList(),
-            _ => reports.SelectMany(r => r.ByItem ?? []).GroupBy(i => i.Description?.Display ?? "")
-                .Select(g => new { item = g.Key, itemAr = g.Select(i => i.Description?.Arabic).FirstOrDefault(a => a is not null), qty = g.Sum(i => i.Qty), amount = g.Sum(i => i.Amount), tickets = g.Sum(i => i.Tickets), catalogItemId = g.Select(i => i.CatalogItemId).FirstOrDefault(id => id is not null) })
+                .Select(g => new { cashier = g.Key, kind = CashierKind(g.First().Kind), count = g.Sum(c => c.Count), grossSales = g.Sum(c => c.Net), refunds = g.Sum(c => c.Refunds), netSales = g.Sum(c => c.NetSales), discounts = g.Sum(c => c.Discounts), voids = g.Sum(c => c.Voids) })
+                .OrderByDescending(c => c.grossSales).Take(top).ToList(),
+            // One row per catalog item across branches (the same item may be
+            // named differently in each); by name only where there is no id
+            _ => reports.SelectMany(r => r.ByItem ?? []).GroupBy(i => i.CatalogItemId is { } id ? $"#{id}" : i.Description?.Display ?? "")
+                .Select(g => new
+                {
+                    item = g.Select(i => i.Description?.Display).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "",
+                    itemAr = g.Select(i => i.Description?.Arabic).FirstOrDefault(a => a is not null),
+                    catalogItemId = g.Select(i => i.CatalogItemId).FirstOrDefault(id => id is not null),
+                    qty = g.Sum(i => i.Qty),
+                    amount = g.Sum(i => i.Amount),
+                    menuAmount = g.Sum(i => i.MenuAmount),
+                    refundedQty = g.Sum(i => i.RefundedQty),
+                    refundedAmount = g.Sum(i => i.RefundedAmount),
+                    netQty = g.Sum(i => i.NetQty),
+                    netAmount = g.Sum(i => i.NetAmount),
+                    tickets = g.Sum(i => i.Tickets),
+                })
                 .OrderByDescending(i => i.amount).Take(top).ToList(),
         };
 
@@ -114,14 +168,28 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
             period = fan.Ok[0].Value.Period.Label,
             currency = snap!.Currency,
             dimension = dim,
+            timeZone = snap.Zone.Id,
+            note = dim == "item"
+                ? "amount is what customers paid for the item (its share of the bills, discounts, VAT and service included); netAmount takes off what was refunded in the period."
+                : "grossSales is before refunds.",
             branches = fan.Ok.Select(x => new { id = x.Branch.Id, name = x.Branch.DisplayName, nameAr = x.Branch.NameAr }),
             rows,
             errors = ErrorsOrNull(fan.Errors),
         });
     }
 
+    /// <summary>What a cashier row stands for, so the model never names the system a member of staff.</summary>
+    private static string CashierKind(string? kind) => kind switch
+    {
+        "Platform" => "delivery platform (settled by itself, not a person)",
+        "Online" => "paid online (settled by itself, not a person)",
+        "Rider" => "delivery rider's cash (settled by itself, not a person)",
+        "Automatic" => "automatic (voided or refunded because the order was cancelled, not a person)",
+        _ => "staff",
+    };
+
     [McpServerTool(Name = "get_daily_sales_trend", Title = "Daily sales trend", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Day by day for a period: how many customer orders and how much revenue each day, plus the top-selling items. Use for 'trend', 'compare days', 'which day was best this month'. Counts customer orders (app, table, counter), not drawer tickets; for money totals prefer get_sales_summary.")]
+    [Description("Day by day for a period, by business day: gross sales, refunds, net sales (gross less refunds) and settled tickets each day, plus how many customer orders were placed and the top-selling items. Use for 'trend', 'compare days', 'which day was best this month'. The money is the till's settled sales; orders are a secondary count of customer orders (app, table, counter), not tickets.")]
     public async Task<CallToolResult> GetDailySalesTrend(
         [Description(PeriodDescription)] string period = "last_7_days",
         [Description(FromDescription)] string? from = null,
@@ -134,33 +202,57 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
         if (fail is not null) return fail;
         top = ToolResults.ClampTop(top);
 
-        var fan = await PerBranchWithPeriodAsync(snap!, branches!, period, from, to, clock.GetUtcNow(),
-            // Ordering reads the offset as JavaScript's getTimezoneOffset (Cairo is -180), the opposite
-            // sign of the zone's own; sent as it is, each day's orders landed six hours off their day
-            (b, p) => api.GetAsync<OrderStats>("ordering-api",
-                $"/api/orders/stats?fromDate={Utc(p.FromUtc)}&toDate={Utc(p.ToUtc)}&tzOffsetMinutes={-p.OffsetMinutes}", b.Id, ct));
+        var zone = Uri.EscapeDataString(snap!.Zone.Id);
+        string DayStart(BranchResponse b) => Uri.EscapeDataString(b.DayStart.ToString("HH:mm", System.Globalization.CultureInfo.InvariantCulture));
+
+        // Each branch's business days, in the business's zone from the branch's day start
+        var fan = await PerBranchWithPeriodAsync(snap, branches!, period, from, to, clock.GetUtcNow(),
+            (b, p) => api.GetAsync<DailyReport>("sales-api",
+                $"/api/tickets/reports/daily?from={Utc(p.FromUtc)}&to={Utc(p.ToUtc)}&tz={zone}&dayStart={DayStart(b)}", b.Id, ct));
         if (!fan.AnyOk) return ToolResults.Fail(string.Join("\n", fan.Errors));
 
-        var stats = fan.Ok.Select(x => x.Value.Value).ToList();
+        // The orders beside them, on the same business days; every item, so
+        // branches add up item by item. A failure here leaves the money standing
+        var orders = await PerBranchWithPeriodAsync(snap, branches!, period, from, to, clock.GetUtcNow(),
+            (b, p) => api.GetAsync<OrderStats>("ordering-api",
+                $"/api/orders/stats?fromDate={Utc(p.FromUtc)}&toDate={Utc(p.ToUtc)}&tz={zone}&dayStart={DayStart(b)}&top=0", b.Id, ct));
+
+        var days = fan.Ok.SelectMany(x => x.Value.Value.Days ?? []).ToList();
+        var orderDays = orders.Ok.SelectMany(x => x.Value.Value.Days ?? [])
+            .GroupBy(d => d.Date ?? "")
+            .ToDictionary(g => g.Key, g => g.Sum(d => d.Orders));
+
         return ToolResults.Ok(new
         {
             period = fan.Ok[0].Value.Period.Label,
-            currency = snap!.Currency,
-            days = stats.SelectMany(s => s.Days ?? []).GroupBy(d => d.Date)
-                .Select(g => new { date = g.Key, orders = g.Sum(d => d.Orders), revenue = g.Sum(d => d.Revenue) })
+            currency = snap.Currency,
+            definitions = SalesDefinitions,
+            days = days.GroupBy(d => d.Date ?? "")
+                .Select(g => new
+                {
+                    date = g.Key,
+                    ticketsSettled = g.Sum(d => d.Tickets),
+                    grossSales = g.Sum(d => d.GrossSales),
+                    refunds = g.Sum(d => d.Refunds),
+                    netSales = g.Sum(d => d.NetSales),
+                    orders = orders.AnyOk ? orderDays.GetValueOrDefault(g.Key) : (int?)null,
+                })
                 .OrderBy(d => d.date),
-            topItems = stats.SelectMany(s => s.TopItems ?? []).GroupBy(i => i.ProductName?.Display ?? "")
-                .Select(g => new { item = g.Key, itemAr = g.Select(i => i.ProductName?.Arabic).FirstOrDefault(a => a is not null), units = g.Sum(i => i.Units), revenue = g.Sum(i => i.Revenue) })
+            topItems = orders.Ok.SelectMany(s => s.Value.Value.TopItems ?? [])
+                .GroupBy(i => i.ProductId != 0 ? $"#{i.ProductId}" : i.ProductName?.Display ?? "")
+                .Select(g => new { item = g.Select(i => i.ProductName?.Display).FirstOrDefault(n => !string.IsNullOrEmpty(n)) ?? "", itemAr = g.Select(i => i.ProductName?.Arabic).FirstOrDefault(a => a is not null), units = g.Sum(i => i.Units), revenue = g.Sum(i => i.Revenue) })
                 .OrderByDescending(i => i.revenue).Take(top),
             branches = fan.Ok.Select(x => new
             {
                 id = x.Branch.Id,
                 name = x.Branch.DisplayName,
                 nameAr = x.Branch.NameAr,
-                orders = (x.Value.Value.Days ?? []).Sum(d => d.Orders),
-                revenue = (x.Value.Value.Days ?? []).Sum(d => d.Revenue),
+                ticketsSettled = (x.Value.Value.Days ?? []).Sum(d => d.Tickets),
+                grossSales = (x.Value.Value.Days ?? []).Sum(d => d.GrossSales),
+                refunds = (x.Value.Value.Days ?? []).Sum(d => d.Refunds),
+                netSales = (x.Value.Value.Days ?? []).Sum(d => d.NetSales),
             }),
-            errors = ErrorsOrNull(fan.Errors),
+            errors = ErrorsOrNull(fan.Errors.Concat(orders.Errors).ToList()),
         });
     }
 
@@ -249,11 +341,16 @@ public sealed class SalesTools(TenantContext tenant, NinjaApiClient api, TimePro
                 s.ClosedBy,
                 closedAt = s.ClosedAt is { } c ? Local(c) : null,
                 s.TicketsSettled,
-                s.SalesTotal,
+                grossSales = s.SalesTotal,
                 s.RefundsTotal,
+                netSales = s.NetSales,
                 s.ExpectedCash,
                 counted = s.ClosingCount,
                 s.OverShort,
+                // Cash from sales rung up offline during the shift that came in after it closed:
+                // in the drawer when it was counted, so the real over/short is the adjusted one
+                lateCash = s.LateCash != 0 ? s.LateCash : (decimal?)null,
+                adjustedOverShort = s.LateCash != 0 ? s.AdjustedOverShort : null,
             })).OrderByDescending(s => s.openedAt).Take(top),
             errors = ErrorsOrNull(current.Errors.Concat(closed.Errors).ToList()),
         });

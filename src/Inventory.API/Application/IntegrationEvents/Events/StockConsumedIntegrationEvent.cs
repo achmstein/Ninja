@@ -11,6 +11,9 @@ namespace Ninja.Inventory.API.Application.IntegrationEvents.Events;
 /// <c>Kind</c> is "Sale", "Waste", or "SaleReversal": a confirmed order that
 /// was never sold gives back what its sale cost (at the cost it went out at),
 /// to take out of the cost of goods. A made one then posts its "Waste".
+/// "Shrinkage" is stock a count found short or a correction took off by
+/// hand, "ShrinkageFound" stock found over or put back at the average: lost
+/// and found, both at the branch average. <c>At</c> is when it happened.
 /// </para>
 /// </summary>
 public record StockConsumedIntegrationEvent(

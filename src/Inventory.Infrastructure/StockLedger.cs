@@ -68,7 +68,9 @@ public class StockLedger(InventoryContext context) : IStockLedger
                 draft.UnitCost ?? level.AvgUnitCost,
                 draft.Reference,
                 draft.Reason,
-                actor));
+                actor,
+                draft.OccurredAt,
+                avg));
 
             changes.Add(new LevelChange(draft.StockItemId, pre, post, level.ReorderLevel, avg));
         }
@@ -105,7 +107,8 @@ public class StockLedger(InventoryContext context) : IStockLedger
             .AsNoTracking()
             .Where(m => m.BranchId == branchId && m.Type == MovementType.Count && ids.Contains(m.StockItemId))
             .GroupBy(m => m.StockItemId)
-            .Select(g => new { StockItemId = g.Key, At = g.Max(m => m.RecordedAt) })
+            // When the count was taken: a correction to it posted later is dated to it
+            .Select(g => new { StockItemId = g.Key, At = g.Max(m => m.OccurredAt) })
             .ToDictionaryAsync(x => x.StockItemId, x => x.At);
     }
 

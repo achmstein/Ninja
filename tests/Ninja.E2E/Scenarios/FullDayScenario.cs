@@ -118,7 +118,8 @@ public sealed class FullDayScenario(NinjaApp app, DaySetup day) : ScenarioBase(a
         refunds += refund.Amount; cashRefunds += refund.Amount;
 
         var walkIn = await Cashier.RingUpAsync(Menu, Lines((MenuLookup.Tea, 1)), Ct);
-        goods += teaGoods; // stock left with the order; a void does not restock
+        // The tea was never made, so the void puts its bag back on the shelf:
+        // the cost of goods takes back what the sale gave it
         await Owner.VoidAsync(walkIn.TicketId, "walked away", Ct);
 
         // --- Stock: a delivery, waste, a sell-out, a count ------------------------------
@@ -212,7 +213,9 @@ public sealed class FullDayScenario(NinjaApp app, DaySetup day) : ScenarioBase(a
             Assert.Equal(waste, d.Waste);
             Assert.Equal(labour, d.Labour);
             Assert.Equal(expenses, d.Expenses);
-            Assert.Equal(d.NetSales - d.Goods - d.Waste - d.Labour - d.Expenses, d.Profit);
+            // Profit is earned without the VAT, the refunds' share of it given back
+            Assert.Equal(d.NetSales - (d.Vat - d.RefundVat), d.NetSalesExVat);
+            Assert.Equal(d.NetSalesExVat - d.Goods - d.Waste - d.Shrinkage - d.Labour - d.Expenses, d.Profit);
         }, TimeSpan.FromSeconds(30));
         await ExpectAsync("the supplier's account carries the invoice and the payment", async () =>
         {

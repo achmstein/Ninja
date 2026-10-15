@@ -60,6 +60,28 @@ public class Partner : Entity, IAggregateRoot
 
     /// <summary>The partner's share of a branch's profit, as a percentage; 0 where they hold none.</summary>
     public decimal ShareAt(int branchId) => _shares.FirstOrDefault(s => s.BranchId == branchId)?.Percent ?? 0m;
+
+    /// <summary>
+    /// A branch's profit is shared out once: the active partners' shares of
+    /// any branch come to 100% at most. Checks the shares a partner is about to
+    /// hold (<paramref name="partnerId"/> null for a new one) against everyone
+    /// else's; an inactive partner holds nothing and is never in the way.
+    /// </summary>
+    public static void CheckSharesFit(int? partnerId, bool isActive, IEnumerable<(int BranchId, decimal Percent)> shares, IEnumerable<Partner> everyone)
+    {
+        if (!isActive)
+            return;
+
+        var others = everyone.Where(p => p.IsActive && p.Id != partnerId).ToList();
+
+        foreach (var (branchId, percent) in shares.Where(s => s.BranchId > 0).GroupBy(s => s.BranchId).Select(g => g.Last()))
+        {
+            var taken = others.Sum(p => p.ShareAt(branchId));
+            if (taken + percent > 100m)
+                throw new FinanceDomainException(
+                    $"The partners' shares of branch {branchId} would come to {taken + percent:0.##}%; at most {Math.Max(0, 100m - taken):0.##}% of it is left to give.");
+        }
+    }
 }
 
 /// <summary>A partner's share of one branch, in percent.</summary>

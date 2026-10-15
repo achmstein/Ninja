@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Finance.API.Application.Services;
 using Ninja.Finance.Infrastructure.Idempotency;
 
 namespace Ninja.Finance.API.Application.Commands;
@@ -96,7 +97,8 @@ public record VoidExpenseCommand(int ExpenseId, string Reason, string By) : IReq
 
 public class VoidExpenseCommandHandler(
     IExpenseRepository expenses,
-    IPartnerRepository partners) : IRequestHandler<VoidExpenseCommand, bool>
+    IPartnerRepository partners,
+    IBranchDays days) : IRequestHandler<VoidExpenseCommand, bool>
 {
     public async Task<bool> Handle(VoidExpenseCommand command, CancellationToken cancellationToken)
     {
@@ -107,7 +109,7 @@ public class VoidExpenseCommandHandler(
         if (expense.PartnerId is { } partnerId)
         {
             partners.AddEntry(new PartnerEntry(partnerId, expense.BranchId, PartnerEntryType.Drawing, expense.Amount,
-                BusinessDay.Of(DateTime.UtcNow), $"void: {command.Reason}", command.By, FinanceSource.Manual, $"expense:{expense.Id}:void"));
+                await days.OfAsync(expense.BranchId, DateTime.UtcNow), $"void: {command.Reason}", command.By, FinanceSource.Manual, $"expense:{expense.Id}:void"));
         }
 
         await expenses.UnitOfWork.SaveEntitiesAsync(cancellationToken);
@@ -260,15 +262,21 @@ public class SavePartnerCommandHandler(IPartnerRepository partners) : IRequestHa
     public async Task<int> Handle(SavePartnerCommand command, CancellationToken cancellationToken)
     {
         Partner partner;
+        var shares = command.Shares.Select(s => (s.BranchId, s.Percent)).ToList();
+
+        // A branch's profit can be shared out only once: the active partners'
+        // shares of each branch come to 100% at most. Read before this one
+        // changes, the others as they stand
+        Partner.CheckSharesFit(command.Id, command.Id is null || command.IsActive, shares, await partners.GetAllAsync());
 
         if (command.Id is { } id)
         {
             partner = await partners.GetAsync(id) ?? throw new FinanceDomainException("Partner not found.");
-            partner.Update(command.Name, command.Phone, command.UserId, command.Shares.Select(s => (s.BranchId, s.Percent)), command.IsActive);
+            partner.Update(command.Name, command.Phone, command.UserId, shares, command.IsActive);
         }
         else
         {
-            partner = partners.Add(new Partner(command.Name, command.Phone, command.UserId, command.Shares.Select(s => (s.BranchId, s.Percent))));
+            partner = partners.Add(new Partner(command.Name, command.Phone, command.UserId, shares));
         }
 
         await partners.UnitOfWork.SaveEntitiesAsync(cancellationToken);

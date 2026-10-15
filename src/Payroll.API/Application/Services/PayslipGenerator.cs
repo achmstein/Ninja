@@ -14,7 +14,11 @@ namespace Ninja.Payroll.API.Application.Services;
 /// </summary>
 public interface IPayslipGenerator
 {
-    /// <summary>Answers the payslip, or null when the period is already paid and <paramref name="throwIfPaid"/> is false.</summary>
+    /// <summary>
+    /// Answers the payslip, or null when <paramref name="throwIfPaid"/> is false
+    /// and the period is already paid or overlaps another payslip (with it
+    /// true, both are errors).
+    /// </summary>
     Task<Payslip?> GenerateAsync(Employee employee, int branchId, DateOnly periodStart, DateOnly periodEnd, string by, bool throwIfPaid);
 
     /// <summary>Refresh (or create) the calendar month's draft covering <paramref name="date"/> for these employees; a paid month is left alone.</summary>
@@ -40,6 +44,17 @@ public class PayslipGenerator(
 
         if (existing is not null && existing.PeriodEnd != periodEnd)
             throw new PayrollDomainException($"{employee.Name} already has a draft for a period starting {periodStart:yyyy-MM-dd} that ends on {existing.PeriodEnd:yyyy-MM-dd}. Delete it first.");
+
+        // A day is paid on one payslip: a period over days another payslip
+        // already covers would put them on the ledger, and in the profit, twice.
+        // Asked for by name it is an error; the month's own draft kept up to
+        // date in the background simply waits for the other to go
+        if (existing is null && await payslips.FindOverlappingAsync(employee.Id, periodStart, periodEnd) is { } other)
+        {
+            if (throwIfPaid)
+                throw new PayrollDomainException($"{employee.Name} already has a payslip from {other.PeriodStart:yyyy-MM-dd} to {other.PeriodEnd:yyyy-MM-dd}, which covers some of these days. Delete it first, or pick days it does not cover.");
+            return null;
+        }
 
         var days = await attendance.GetRangeAsync([employee.Id], periodStart, periodEnd);
 
@@ -83,9 +98,11 @@ public class PayslipGenerator(
 
         await payslips.UnitOfWork.SaveEntitiesAsync();
 
-        // Finance puts the period's wages beside the sales
+        // Finance puts the period's wages beside the sales: what the payslip
+        // costs the business, bonuses and deductions included
         await integrationEvents.AddAndSaveEventAsync(new EmployeeEarningsChangedIntegrationEvent(
-            branchId, employee.Id, periodStart, periodEnd, Math.Max(0, statement.NetEarned)));
+            branchId, employee.Id, periodStart, periodEnd, Math.Max(0, statement.NetEarned),
+            PayslipId: payslip.Id, LabourCost: statement.LabourCost));
 
         return payslip;
     }

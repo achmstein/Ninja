@@ -34,8 +34,9 @@ public class RecordTabPaymentCommandHandler(
     {
         // Whatever the tender, the slip belongs to the shift on duty: cash
         // raises the drawer expectation, card and InstaPay reconcile against
-        // the terminal. No shift open — the slip goes unattributed.
-        var shift = await shiftRepository.FindOpenByBranchAsync(command.BranchId);
+        // the terminal. No shift open — the slip goes unattributed. Held
+        // against a close summing the shift meanwhile.
+        var shiftId = await shiftRepository.HoldOpenForAttributionAsync(command.BranchId);
 
         for (var attempt = 1; ; attempt++)
         {
@@ -49,7 +50,7 @@ public class RecordTabPaymentCommandHandler(
                 command.Tender,
                 command.Amount,
                 command.RecordedBy,
-                shift?.Id);
+                shiftId);
 
             tabPayments.Add(payment);
 
@@ -59,7 +60,7 @@ public class RecordTabPaymentCommandHandler(
 
                 logger.LogInformation(
                     "Tab payment #{Number} of {Amount} via {Tender} taken from {CustomerId} by {RecordedBy} (shift {ShiftId})",
-                    payment.Number, payment.Amount, payment.Tender, payment.CustomerId, command.RecordedBy, shift?.Id);
+                    payment.Number, payment.Amount, payment.Tender, payment.CustomerId, command.RecordedBy, shiftId);
 
                 await integrationEvents.AddAndSaveEventAsync(new TabPaymentRecordedIntegrationEvent(
                     payment.Id,

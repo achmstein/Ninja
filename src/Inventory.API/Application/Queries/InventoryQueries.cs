@@ -104,7 +104,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             .Take(pageSize)
             .Join(context.StockItems.AsNoTracking(), m => m.StockItemId, s => s.Id, (m, s) => new MovementView(
                 m.Id, m.StockItemId, s.Name, s.Unit, m.Type.ToString(), m.Quantity, m.UnitCost,
-                m.Reference, m.Reason, m.RecordedBy, m.RecordedAt))
+                m.Reference, m.Reason, m.RecordedBy, m.RecordedAt, m.OccurredAt))
             .ToListAsync();
 
         return new PagedResult<MovementView>(rows, total);
@@ -175,10 +175,12 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
     public async Task<UsageReport> GetUsageReportAsync(int branchId, DateTime from, DateTime to)
     {
         // Each movement is valued at the cost it was posted with, so the
-        // period's figures never move when a later receipt changes the average
+        // period's figures never move when a later receipt changes the average,
+        // and falls in the period it happened in: a sale an offline till sent
+        // the next morning is the evening's
         var sums = await context.StockMovements
             .AsNoTracking()
-            .Where(m => m.BranchId == branchId && m.RecordedAt >= from && m.RecordedAt < to)
+            .Where(m => m.BranchId == branchId && m.OccurredAt >= from && m.OccurredAt < to)
             .GroupBy(m => new { m.StockItemId, m.Type })
             .Select(g => new
             {
@@ -231,11 +233,11 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
     public async Task<VarianceReport> GetVarianceReportAsync(int branchId, DateTime from, DateTime to)
     {
         // The period's movements by item and type, valued as posted (the
-        // usage report's principle); what was there before the period is
-        // the ledger summed up to it
+        // usage report's principle) and dated when they happened; what was
+        // there before the period is the ledger summed up to it
         var within = await context.StockMovements
             .AsNoTracking()
-            .Where(m => m.BranchId == branchId && m.RecordedAt >= from && m.RecordedAt < to)
+            .Where(m => m.BranchId == branchId && m.OccurredAt >= from && m.OccurredAt < to)
             .GroupBy(m => new { m.StockItemId, m.Type })
             .Select(g => new
             {
@@ -248,17 +250,21 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
 
         var opening = await context.StockMovements
             .AsNoTracking()
-            .Where(m => m.BranchId == branchId && m.RecordedAt < from)
+            .Where(m => m.BranchId == branchId && m.OccurredAt < from)
             .GroupBy(m => m.StockItemId)
             .Select(g => new { StockItemId = g.Key, Quantity = g.Sum(m => m.Quantity) })
             .ToDictionaryAsync(x => x.StockItemId, x => x.Quantity);
 
         var ids = within.Select(s => s.StockItemId).Concat(opening.Keys).Distinct().ToList();
         var names = await NamesAsync(ids);
-        var averages = await context.StockLevels
+        // Opening and closing stock valued at the average as it stood then,
+        // not today's: a price rise since must not revalue last month's shelf
+        var current = await context.StockLevels
             .AsNoTracking()
             .Where(l => l.BranchId == branchId && ids.Contains(l.StockItemId))
             .ToDictionaryAsync(l => l.StockItemId, l => l.AvgUnitCost);
+        var openingAverages = await AveragesAsOfAsync(branchId, from);
+        var closingAverages = await AveragesAsOfAsync(branchId, to);
         var byItem = within.GroupBy(s => s.StockItemId).ToDictionary(g => g.Key, g => g.ToList());
 
         var rows = ids
@@ -271,14 +277,15 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
 
                 var open = opening.GetValueOrDefault(id);
                 var close = open + sums.Sum(s => s.Quantity);
-                var avg = averages.GetValueOrDefault(id);
+                var openAvg = openingAverages.TryGetValue(id, out var o) ? o : (decimal?)null;
+                var closeAvg = closingAverages.TryGetValue(id, out var c) ? c : (decimal?)null;
                 // What the sales should have used: net of the sales given back
                 var theoretical = -(Qty(MovementType.Sale) + Qty(MovementType.SaleReversal));
                 var countVariance = Qty(MovementType.Count);
 
                 return new VarianceRow(
                     id, Name(names, id), Unit(names, id),
-                    Opening: open, OpeningValue: StockValue(open, avg),
+                    Opening: open, OpeningValue: StockValue(open, openAvg ?? current.GetValueOrDefault(id)),
                     Received: Qty(MovementType.Purchase), ReceivedValue: Val(MovementType.Purchase),
                     TransferredIn: Qty(MovementType.TransferIn), TransferredOut: -Qty(MovementType.TransferOut),
                     TransferredValue: Val(MovementType.TransferIn) + Val(MovementType.TransferOut),
@@ -286,8 +293,11 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                     Wasted: -Qty(MovementType.Waste), WastedValue: -Val(MovementType.Waste),
                     Adjusted: Qty(MovementType.Adjustment), AdjustedValue: Val(MovementType.Adjustment),
                     CountVariance: countVariance, CountVarianceValue: Val(MovementType.Count),
-                    Closing: close, ClosingValue: StockValue(close, avg),
-                    VariancePercent: theoretical > 0 ? Math.Round(countVariance / theoretical * 100, 1, MidpointRounding.AwayFromZero) : null);
+                    Closing: close, ClosingValue: StockValue(close, closeAvg ?? current.GetValueOrDefault(id)),
+                    VariancePercent: theoretical > 0 ? Math.Round(countVariance / theoretical * 100, 1, MidpointRounding.AwayFromZero) : null,
+                    // No average was recorded by then (stock moved before the
+                    // ledger kept one): valued at today's instead, and said so
+                    ValuedAtCurrentAverage: (open > 0 && openAvg is null) || (close > 0 && closeAvg is null));
             })
             .Where(r => r.Opening != 0 || r.Closing != 0 || byItem.ContainsKey(r.StockItemId))
             .OrderBy(r => r.Name.Primary)
@@ -300,7 +310,28 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             TheoreticalValue: rows.Sum(r => r.TheoreticalValue),
             WastedValue: rows.Sum(r => r.WastedValue),
             CountVarianceValue: rows.Sum(r => r.CountVarianceValue),
-            ClosingValue: rows.Sum(r => r.ClosingValue));
+            ClosingValue: rows.Sum(r => r.ClosingValue),
+            ValuedAtCurrentAverage: rows.Any(r => r.ValuedAtCurrentAverage));
+    }
+
+    /// <summary>
+    /// Each item's average unit cost at the branch as it stood at
+    /// <paramref name="at"/>: what the last movement posted before then left
+    /// behind. Items with no such movement are absent.
+    /// </summary>
+    private async Task<Dictionary<int, decimal>> AveragesAsOfAsync(int branchId, DateTime at)
+    {
+        var last = await context.StockMovements
+            .FromSqlInterpolated($"""
+                SELECT DISTINCT ON ("StockItemId") *
+                FROM inventory.stock_movements
+                WHERE "BranchId" = {branchId} AND "RecordedAt" < {at} AND "AvgUnitCostAfter" IS NOT NULL
+                ORDER BY "StockItemId", "RecordedAt" DESC, "Id" DESC
+                """)
+            .AsNoTracking()
+            .ToListAsync();
+
+        return last.ToDictionary(m => m.StockItemId, m => m.AvgUnitCostAfter!.Value);
     }
 
     public async Task<Dictionary<int, (decimal UnitCost, DateTime At)>> GetLastCostsAsync(int branchId)

@@ -40,11 +40,10 @@ public class RefundTicketCommandHandler(
 
         var earlier = await ticketRepository.GetRefundsForTicketAsync(ticket.Id);
 
-        // A cash refund comes out of the open drawer, if one is open; the Z
-        // report subtracts it. An account credit touches no cash.
-        var shift = command.Tender == PaymentTender.Cash
-            ? await shiftRepository.FindOpenByBranchAsync(ticket.BranchId)
-            : null;
+        // Every refund belongs to the shift on duty, so its report lists them
+        // all; only a cash one comes out of the drawer, which is what the Z
+        // subtracts. Held against a close summing the shift meanwhile.
+        var shiftId = await shiftRepository.HoldOpenForAttributionAsync(ticket.BranchId);
 
         var requested = command.Lines.Select(l => new RefundRequestLine(l.LineId, l.Qty)).ToList();
 
@@ -63,7 +62,7 @@ public class RefundTicketCommandHandler(
                 command.CustomerId,
                 command.CustomerName,
                 command.RefundedBy,
-                shift?.Id);
+                shiftId);
 
             ticketRepository.AddRefund(refund);
 

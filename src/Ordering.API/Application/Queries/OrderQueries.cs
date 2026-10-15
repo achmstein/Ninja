@@ -544,31 +544,45 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .WithOrderTotals()
             .ToListAsync();
 
-    public async Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes)
+    public async Task<OrderStats> GetOrderStatsAsync(int branchId, DateTime fromDate, DateTime toDate, int tzOffsetMinutes, TimeZoneInfo? zone = null, TimeOnly dayStart = default, int top = 10)
     {
-        // Narrow projections aggregated in memory: a range covers at most a
-        // few thousand rows, and grouping on the JSON ProductName column (or
-        // a tz-shifted date) doesn't translate to SQL anyway.
+        // Orders the business took on: confirmed, never voided at the till
+        // (a void stamps the order but leaves it Confirmed), and placed in
+        // [fromDate, toDate) — the end is the next window's start, so an order
+        // on the boundary counts once. One awaiting validation or payment is
+        // not a sale yet, and may never be. Narrow projections aggregated in
+        // memory: a range covers at most a few thousand rows, and grouping on
+        // the JSON ProductName column (or a zoned date) doesn't translate to
+        // SQL anyway.
         var baseQuery = context.Orders
             .AsNoTracking()
             .Where(o => o.BranchId == branchId)
-            .Where(o => o.OrderStatus != Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Cancelled)
-            .Where(o => o.OrderDate >= fromDate && o.OrderDate <= toDate);
+            .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
+            .Where(o => o.VoidedAt == null)
+            .Where(o => o.OrderDate >= fromDate && o.OrderDate < toDate);
 
         var orders = await baseQuery
             .Select(o => new
             {
                 o.OrderDate,
-                // Net of line discounts and the loyalty discount — revenue is
-                // what customers actually paid, not the sticker sum
-                Total = (double)OrderTotals.Of(o),
+                // Net of line discounts and the loyalty discount, and of what
+                // credit notes gave back — revenue is what customers paid and
+                // kept paying, not the sticker sum
+                Total = (double)(OrderTotals.Of(o) - o.RefundedAmount),
             })
             .WithOrderTotals()
             .ToListAsync();
 
-        // JS getTimezoneOffset is UTC − local, so local = UTC − offset
+        // The day an order belongs to: in the zone asked for, each order at
+        // its own offset, less the branch's day start; otherwise the caller's
+        // fixed offset, which is JS getTimezoneOffset (UTC − local), so local
+        // = UTC − offset
+        DateOnly DayOf(DateTime utc) => zone is not null
+            ? DateOnly.FromDateTime(TimeZoneInfo.ConvertTimeFromUtc(DateTime.SpecifyKind(utc, DateTimeKind.Utc), zone) - dayStart.ToTimeSpan())
+            : DateOnly.FromDateTime(utc.AddMinutes(-tzOffsetMinutes));
+
         var days = orders
-            .GroupBy(o => DateOnly.FromDateTime(o.OrderDate.AddMinutes(-tzOffsetMinutes)))
+            .GroupBy(o => DayOf(o.OrderDate))
             .OrderBy(g => g.Key)
             .Select(g => new OrderStatsDay
             {
@@ -579,20 +593,39 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .ToList();
 
         var itemRows = await baseQuery
-            .SelectMany(o => o.OrderItems)
-            .Select(oi => new { oi.ProductId, oi.ProductName, oi.Units, oi.UnitPrice })
+            .Select(o => new
+            {
+                o.PromoDiscount,
+                o.LoyaltyDiscount,
+                Items = o.OrderItems.Select(oi => new { oi.ProductId, oi.ProductName, oi.Units, oi.UnitPrice, oi.Discount }).ToList(),
+            })
             .ToListAsync();
 
+        // An item's revenue is what was paid for it: its line less the line
+        // discount, less its share of the order's promo and loyalty money off
+        // (spread over the order's lines by their worth, as the bill does).
+        // Ranked by that, not by units, and every item when asked for all, so
+        // branches can be added up item by item without losing one that is
+        // eleventh here and first there.
         var topItems = itemRows
+            .SelectMany(o =>
+            {
+                var lines = o.Items.Sum(i => i.UnitPrice * i.Units - i.Discount);
+                var off = Math.Min(lines, o.PromoDiscount + (decimal)o.LoyaltyDiscount);
+                var kept = lines > 0 ? (lines - off) / lines : 0m;
+                return o.Items.Select(i => (i.ProductId, i.ProductName, i.Units, Revenue: (i.UnitPrice * i.Units - i.Discount) * kept));
+            })
             .GroupBy(i => i.ProductId)
             .Select(g => new OrderStatsItem
             {
+                ProductId = g.Key,
                 ProductName = g.First().ProductName,
                 Units = g.Sum(i => i.Units),
-                Revenue = (double)g.Sum(i => i.UnitPrice * i.Units),
+                Revenue = (double)Math.Round(g.Sum(i => i.Revenue), 2, MidpointRounding.AwayFromZero),
             })
-            .OrderByDescending(i => i.Units)
-            .Take(10)
+            .OrderByDescending(i => i.Revenue)
+            .ThenByDescending(i => i.Units)
+            .Take(top > 0 ? top : int.MaxValue)
             .ToList();
 
         return new OrderStats { Days = days, TopItems = topItems };

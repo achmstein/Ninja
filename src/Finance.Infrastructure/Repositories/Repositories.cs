@@ -85,8 +85,26 @@ public class ProfitRepository(FinanceContext context) : IProfitRepository
     public Task<bool> HasCostReferenceAsync(string reference)
         => context.CostFacts.AnyAsync(f => f.Reference == reference);
 
-    public Task<LabourFact?> FindLabourAsync(int employeeId, DateOnly periodStart)
-        => context.LabourFacts.FirstOrDefaultAsync(f => f.EmployeeId == employeeId && f.PeriodStart == periodStart);
+    public Task<SalesFact?> FindSaleOfTicketAsync(int ticketId)
+    {
+        // Keyed on the reference, which sale facts from before TicketId was kept carry too
+        var reference = $"ticket:{ticketId}";
+        return context.SalesFacts.FirstOrDefaultAsync(f => f.Reference == reference && f.Kind == SalesFactKind.Sale);
+    }
+
+    public Task<List<SalesFact>> GetRefundsOfTicketAsync(int ticketId)
+        => context.SalesFacts.Where(f => f.TicketId == ticketId && f.Kind == SalesFactKind.Refund).ToListAsync();
+
+    public Task<LabourFact?> FindLabourAsync(int payslipId)
+        => context.LabourFacts.FirstOrDefaultAsync(f => f.PayslipId == payslipId);
+
+    public Task<LabourFact?> FindUnnamedLabourAsync(int employeeId, DateOnly periodStart)
+        => context.LabourFacts.FirstOrDefaultAsync(f => f.PayslipId == 0 && f.EmployeeId == employeeId && f.PeriodStart == periodStart);
+
+    public Task<BranchDayStart?> FindDayStartAsync(int branchId)
+        => context.BranchDayStarts.FirstOrDefaultAsync(d => d.BranchId == branchId);
+
+    public BranchDayStart Add(BranchDayStart dayStart) => context.BranchDayStarts.Add(dayStart).Entity;
 }
 
 public class PartnerRepository(FinanceContext context) : IPartnerRepository

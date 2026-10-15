@@ -6,7 +6,8 @@ namespace Ninja.Inventory.Domain.Services;
 /// <summary>
 /// A movement about to be posted. <paramref name="UnitCost"/> is what a base
 /// unit cost, for a receipt or an opening-stock adjustment; null keeps the
-/// branch's average.
+/// branch's average. <paramref name="OccurredAt"/> is when it happened, when
+/// that is not now (a late sale, a sale given back on its own day).
 /// </summary>
 public record MovementDraft(
     int StockItemId,
@@ -14,7 +15,8 @@ public record MovementDraft(
     decimal Quantity,
     string? Reference = null,
     string? Reason = null,
-    decimal? UnitCost = null);
+    decimal? UnitCost = null,
+    DateTime? OccurredAt = null);
 
 /// <summary>
 /// What posting did to one level: the figures before and after. A draft

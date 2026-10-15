@@ -1,6 +1,7 @@
 #nullable enable
 using Ninja.EventBus.Abstractions;
 using Ninja.Finance.API.Application.IntegrationEvents.Events;
+using Ninja.Finance.API.Application.Services;
 
 namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 
@@ -11,6 +12,7 @@ namespace Ninja.Finance.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class PurchaseReceivedIntegrationEventHandler(
     ISupplierRepository suppliers,
+    IBranchDays days,
     FinanceTransaction transaction,
     ILogger<PurchaseReceivedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<PurchaseReceivedIntegrationEvent>
@@ -42,7 +44,7 @@ public class PurchaseReceivedIntegrationEventHandler(
         var note = string.IsNullOrWhiteSpace(@event.InvoiceRef) ? $"#{@event.PurchaseId}" : @event.InvoiceRef;
 
         suppliers.AddEntry(new SupplierEntry(supplierId, @event.BranchId, SupplierEntryType.Invoice, @event.Total,
-            BusinessDay.Of(@event.ReceivedAt), note, @event.ReceivedBy, FinanceSource.Purchase, reference));
+            await days.OfAsync(@event.BranchId, @event.ReceivedAt), note, @event.ReceivedBy, FinanceSource.Purchase, reference));
         await suppliers.UnitOfWork.SaveEntitiesAsync();
 
         logger.LogInformation("Invoice of {Total} posted for supplier {SupplierId} from purchase {PurchaseId}", @event.Total, supplierId, @event.PurchaseId);

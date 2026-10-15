@@ -49,6 +49,32 @@ public sealed class OperationsReadToolsTests
     }
 
     [TestMethod]
+    public async Task The_status_totals_say_they_cover_only_the_listed_orders_and_a_void_is_not_confirmed()
+    {
+        var bench = new Bench().WithTenant();
+        bench.Handler.OnJson("GET", "ordering-api/api/orders/all", r => new
+        {
+            items = r.Headers.GetValues("X-Branch-Id").First() == "1"
+                ? new object[]
+                {
+                    new { orderNumber = 7, date = new DateTime(2026, 9, 22, 10, 0, 0, DateTimeKind.Utc), status = "Confirmed", total = 100.0, promoDiscount = 0m, loyaltyDiscount = 0, paysOnline = false, refundedAmount = 0m, source = "Customer", userName = "Ahmed" },
+                    new { orderNumber = 8, date = new DateTime(2026, 9, 22, 11, 0, 0, DateTimeKind.Utc), status = "Confirmed", total = 40.0, promoDiscount = 0m, loyaltyDiscount = 0, paysOnline = false, refundedAmount = 0m, source = "Customer", userName = "Mona", voidedAt = new DateTime(2026, 9, 22, 11, 30, 0, DateTimeKind.Utc) },
+                }
+                : Array.Empty<object>(),
+            pageIndex = 0,
+            pageSize = 2,
+            totalCount = r.Headers.GetValues("X-Branch-Id").First() == "1" ? 30 : 0,
+        });
+
+        var json = Bench.JsonOf(await Tools(bench).GetOrders(null, null, "today", null, null, null, 2, CancellationToken.None));
+
+        var byStatus = json.GetProperty("listedByStatus").EnumerateArray().ToDictionary(s => s.GetProperty("status").GetString()!, s => s.GetProperty("total").GetDecimal());
+        Assert.AreEqual(100m, byStatus["Confirmed"]);
+        Assert.AreEqual(40m, byStatus["Voided"], "voided at the till, though Ordering keeps it Confirmed");
+        StringAssert.Contains(json.GetProperty("listedByStatusCovers").GetString(), "only the 2 orders listed, not all 30");
+    }
+
+    [TestMethod]
     public async Task Open_bills_are_counted_per_branch_oldest_first_with_their_idle_time()
     {
         var bench = new Bench().WithTenant();

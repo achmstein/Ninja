@@ -339,29 +339,50 @@ public static class LoyaltyApi
             .Select(g => new { Tier = g.Key, Count = g.Count() })
             .ToListAsync();
 
-        var today = DateTime.UtcNow.Date;
-        var thisWeek = today.AddDays(-7);
-        var thisMonth = today.AddDays(-30);
+        var (today, thisWeek, thisMonth) = StatsWindows(TenantClock.UtcNow());
 
-        var pointsToday = await context.Transactions
-            .Where(t => t.CreatedAt >= today && t.Points > 0)
-            .SumAsync(t => t.Points);
+        // Issued is net: points earned, given or adjusted, less those clawed
+        // back for refunds and voids. Redeemed is net of redemptions given
+        // back when the bill they were spent on was voided
+        // The week can reach back into last month
+        var earliest = thisWeek < thisMonth ? thisWeek : thisMonth;
+        var since = await context.Transactions
+            .Where(t => t.CreatedAt >= earliest)
+            .Select(t => new { t.CreatedAt, t.Points, t.Type })
+            .ToListAsync();
 
-        var pointsThisWeek = await context.Transactions
-            .Where(t => t.CreatedAt >= thisWeek && t.Points > 0)
-            .SumAsync(t => t.Points);
+        int Issued(DateTime from) => since.Where(t => t.CreatedAt >= from && t.Type != TransactionType.Redemption).Sum(t => t.Points);
+        int Redeemed(DateTime from) => -since.Where(t => t.CreatedAt >= from && t.Type == TransactionType.Redemption).Sum(t => t.Points);
 
-        var pointsThisMonth = await context.Transactions
-            .Where(t => t.CreatedAt >= thisMonth && t.Points > 0)
-            .SumAsync(t => t.Points);
+        var outstanding = await context.Accounts.SumAsync(a => a.PointsBalance);
 
         return TypedResults.Ok(new LoyaltyStatsDto(
             totalAccounts,
             tierCounts.ToDictionary(t => t.Tier.ToString(), t => t.Count),
-            pointsToday,
-            pointsThisWeek,
-            pointsThisMonth
+            Issued(today),
+            Issued(thisWeek),
+            Issued(thisMonth),
+            Redeemed(today),
+            Redeemed(thisWeek),
+            Redeemed(thisMonth),
+            outstanding,
+            today,
+            thisWeek,
+            thisMonth
         ));
+    }
+
+    /// <summary>
+    /// Where the stats' windows start, as UTC instants, in the business's own
+    /// zone: today since local midnight, the week as the last seven local days
+    /// with today, the month since the 1st of the local calendar month.
+    /// </summary>
+    public static (DateTime Today, DateTime Week, DateTime Month) StatsWindows(DateTime utcNow)
+    {
+        var local = TenantClock.ToLocal(utcNow).Date;
+        DateTime Utc(DateTime localMidnight) => TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(localMidnight, DateTimeKind.Unspecified), TenantClock.Zone);
+
+        return (Utc(local), Utc(local.AddDays(-6)), Utc(new DateTime(local.Year, local.Month, 1)));
     }
 }
 
@@ -411,10 +432,25 @@ public record TierInfoDto(string Name, int PointsRequired, string Benefits);
 
 public record PointsValueDto(int Points, double DiscountValue, int RedemptionRate);
 
+/// <summary>
+/// The programme at a glance. Windows are the business's own (its time zone):
+/// today since local midnight, this week the last seven days with today, this
+/// month since the 1st; each starts at the instant given beside it.
+/// </summary>
+/// <param name="PointsIssuedToday">Points earned, given or adjusted, net of those clawed back by refunds and voids.</param>
+/// <param name="PointsRedeemedToday">Points spent on orders, net of those given back when their bill was voided.</param>
+/// <param name="PointsOutstanding">Every account's balance together: what the business still owes in points.</param>
 public record LoyaltyStatsDto(
     int TotalAccounts,
     Dictionary<string, int> AccountsByTier,
     int PointsIssuedToday,
     int PointsIssuedThisWeek,
-    int PointsIssuedThisMonth
+    int PointsIssuedThisMonth,
+    int PointsRedeemedToday = 0,
+    int PointsRedeemedThisWeek = 0,
+    int PointsRedeemedThisMonth = 0,
+    int PointsOutstanding = 0,
+    DateTime? TodayStartsAt = null,
+    DateTime? WeekStartsAt = null,
+    DateTime? MonthStartsAt = null
 );

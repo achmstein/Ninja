@@ -30,7 +30,7 @@ public static class Suite
 /// <summary>What the apps read off the wire; named here so a change in the API's shape fails a test.</summary>
 public record ItemView(int Id, LocalizedView Name, string Unit, decimal? PackSize, string? PackName, bool AutoSoldOut, bool IsActive);
 public record LevelView(int StockItemId, LocalizedView Name, string Unit, decimal OnHand, decimal? ReorderLevel, decimal AvgUnitCost, bool IsLow, decimal Value, decimal? LastCost);
-public record MovementView(int StockItemId, string Type, decimal Quantity, string? Reason);
+public record MovementView(int StockItemId, string Type, decimal Quantity, string? Reason, string? Reference = null, DateTime? RecordedAt = null, DateTime? OccurredAt = null);
 public record PageView<T>(List<T> Items, int TotalCount);
 public record CreatedView(int Id);
 public record LocalizedView(string En, string? Ar);

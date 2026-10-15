@@ -14,7 +14,7 @@ public static class KnownEvents
 
     public static readonly Choreography[] Catalog =
     [
-        new("BranchSettingsChanged", "Tenant", ["Ordering", "Spaces", "Notification"]),
+        new("BranchSettingsChanged", "Tenant", ["Ordering", "Spaces", "Notification", "Finance"]),
         new("CashMoved", "Sales", ["Finance"]),
         new("CashPaidOut", "Sales", ["Payroll"]),
         new("CatalogItemAvailabilityChanged", "Catalog", ["Notification"]),
@@ -22,8 +22,12 @@ public static class KnownEvents
         new("CatalogOptionStockChanged", "Inventory", ["Catalog"]),
         new("EmployeeEarningsChanged", "Payroll", ["Finance"]),
         new("KitchenTicketQueued", "Ordering", ["Notification"]),
+        new("OrderAwaitingPayment", "Ordering", ["Sales"]),
         new("OrderConfirmedWithPreferences", "", ["Catalog"]),          // dead consumer: nobody publishes it
         new("OrderCustomerAssigned", "Ordering", ["Sales", "Loyalty"]),
+        new("OrderDeliveryChanged", "Ordering", ["Notification", "Sales"]),
+        new("OrderOnlinePaymentRefused", "Ordering", ["Sales"]),
+        new("OrderPaidOnline", "Sales", ["Ordering"]),
         new("OrderPaymentChanged", "Ordering", ["Notification"]),
         new("OrderReadyChanged", "Ordering", ["Notification"]),
         new("OrderReminder", "Ordering", ["Notification"]),
@@ -35,6 +39,7 @@ public static class KnownEvents
         new("OrderStatusChangedToSubmitted", "Ordering", ["Notification"]),
         new("OrderStockConfirmed", "", ["Ordering"]),               // dead consumer: read one release for answers queued at upgrade
         new("OrderStockRejected", "", ["Ordering"]),                // dead consumer: as above
+        new("OrderStockReleased", "Ordering", ["Inventory"]),
         new("OrderValidated", "Catalog", ["Ordering"]),
         new("OrderValidationFailed", "Catalog", ["Ordering"]),
         new("PlaceUpdated", "Spaces", ["Ordering", "Notification"]),
@@ -45,6 +50,7 @@ public static class KnownEvents
         new("ReservationCancelled", "Spaces", ["Sales", "Notification"]),
         new("ReservationCompleted", "Spaces", ["Notification"]),
         new("ReservationSeated", "Spaces", ["Notification"]),
+        new("RiderStatusChanged", "Ordering", ["Notification"]),
         new("ServiceRequestCreated", "Notification", ["Notification"]),
         new("SessionCompleted", "Spaces", ["Sales"]),
         new("SessionCustomerAssigned", "Spaces", ["Notification"]),
@@ -54,6 +60,7 @@ public static class KnownEvents
         new("SessionStarted", "Spaces", ["Sales", "Notification"]),
         new("ShiftClosed", "Sales", ["Tenant"]),
         new("ShiftOpened", "Sales", ["Tenant", "Payroll"]),
+        new("StaffAccountChanged", "Identity", ["Notification", "Ordering"]),
         new("StockConsumed", "Inventory", ["Finance"]),
         new("StockLow", "Inventory", ["Notification"]),
         new("TabPaymentRecorded", "Sales", ["Accounts"]),
