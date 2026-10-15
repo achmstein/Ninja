@@ -7,6 +7,7 @@ import { Badge } from '@/components/ui/badge'
 import { Separator } from '@/components/ui/separator'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { When } from '@/components/when'
+import { drawerSum } from '../drawer'
 import { tenderLabelKey } from './tender'
 import { TenderBadge } from './tender-badge'
 
@@ -35,8 +36,11 @@ export function OverShortBadge({ value }: { value: number }) {
 /**
  * The shift figures as the till prints them: the live X view of an open
  * shift leads with what should be in the drawer; a closed one leads with the
- * frozen expected-vs-counted verdict. Read-only here — the drawer is opened,
- * moved and counted from the till.
+ * frozen expected-vs-counted verdict (and, when an offline sale's cash came
+ * in after the close, that late cash and the verdict with it). Sales read
+ * gross (what customers paid) then net (less every refund); the drawer is
+ * its own sum, term by term, adding up to Expected. Read-only here — the
+ * drawer is opened, moved and counted from the till.
  */
 export function ShiftReport({ shift }: { shift: ShiftView }) {
   const t = useT()
@@ -51,6 +55,13 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const tabTenders = shift.tabPaymentTenderTotals ?? []
   const tabPayments = shift.tabPayments ?? []
   const movements = shift.movements ?? []
+  const drawer = drawerSum(shift)
+  const lateCash = toNumber(shift.lateCash)
+  const gross = toNumber(shift.grossSales ?? shift.salesTotal)
+  const net =
+    shift.netSales != null
+      ? toNumber(shift.netSales)
+      : gross - toNumber(shift.refundsTotal)
 
   return (
     <div className='flex flex-col gap-5'>
@@ -70,6 +81,19 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
             }
             tone={overShort >= 0 ? 'positive' : 'negative'}
           />
+          {/* An offline sale's cash that reached the shift after it closed */}
+          {lateCash !== 0 && (
+            <Stat label={t('lateCash')} value={formatEgp(lateCash)} />
+          )}
+          {lateCash !== 0 && shift.adjustedOverShort != null && (
+            <Stat
+              label={t('adjustedOverShort')}
+              value={`${toNumber(shift.adjustedOverShort) >= 0 ? '+' : '−'}${formatEgp(Math.abs(toNumber(shift.adjustedOverShort)))}`}
+              tone={
+                toNumber(shift.adjustedOverShort) >= 0 ? 'positive' : 'negative'
+              }
+            />
+          )}
         </StatStrip>
       ) : (
         <Stat
@@ -106,38 +130,61 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       </div>
 
       <StatStrip>
-        <Stat label={t('openingFloat')} value={formatEgp(shift.openingFloat)} />
         <Stat
           label={t('posTicketsSettled')}
           value={String(toNumber(shift.ticketsSettled))}
         />
-        <Stat label={t('salesTotal')} value={formatEgp(shift.salesTotal)} />
-        <Stat label={t('changeGiven')} value={formatEgp(shift.changeGiven)} />
+        <Stat label={t('grossSalesBeforeRefunds')} value={formatEgp(gross)} />
+        {toNumber(shift.discounts) > 0 && (
+          <Stat
+            label={t('discountsTotal')}
+            value={formatEgp(shift.discounts)}
+          />
+        )}
         <Stat
-          label={t('refundsTotal')}
+          label={t('refundsAllTenders')}
           value={formatEgp(shift.refundsTotal)}
-          hint={`${t('cashRefunds')} ${formatEgp(shift.cashRefunds)}`}
         />
+        <Stat label={t('netSalesAfterRefunds')} value={formatEgp(net)} />
+        <Stat label={t('changeGiven')} value={formatEgp(shift.changeGiven)} />
         <Stat
           label={t('tabPayments')}
           value={formatEgp(shift.tabPaymentsTotal)}
-          hint={`${t('cashTabPayments')} ${formatEgp(shift.cashTabPayments)}`}
-        />
-        <Stat
-          label={t('payInsTotal')}
-          value={formatEgp(shift.payInsTotal)}
-          tone='positive'
-        />
-        <Stat
-          label={t('payOutsTotal')}
-          value={formatEgp(shift.payOutsTotal)}
-          tone='negative'
         />
       </StatStrip>
 
+      {/* The drawer, term by term, adding up to what should be in it */}
+      <section>
+        <h4 className='mb-1 text-sm font-medium'>{t('drawerFormula')}</h4>
+        <dl className='text-sm'>
+          {drawer.terms.map((term, index) => (
+            <div
+              key={term.key}
+              className='flex items-center justify-between gap-4 py-1'
+            >
+              <dt className='text-muted-foreground'>{t(term.labelKey)}</dt>
+              <dd className='tabular-nums'>
+                {index === 0 ? '' : term.sign > 0 ? '+ ' : '− '}
+                {formatEgp(term.amount)}
+              </dd>
+            </div>
+          ))}
+          <div className='flex items-center justify-between gap-4 border-t pt-2 font-semibold'>
+            <dt>{t(closed ? 'expected' : 'expectedInDrawer')}</dt>
+            <dd className='tabular-nums'>
+              {formatEgp(
+                closed
+                  ? (shift.expectedCash ?? shift.expectedInDrawer)
+                  : shift.expectedInDrawer
+              )}
+            </dd>
+          </div>
+        </dl>
+      </section>
+
       {tenders.length > 0 && (
         <section>
-          <h4 className='mb-1 text-sm font-medium'>{t('tenderSplit')}</h4>
+          <h4 className='mb-1 text-sm font-medium'>{t('billsByTender')}</h4>
           <ul className='divide-y text-sm'>
             {tenders.map((total) => {
               const key = tenderLabelKey(total.tender)

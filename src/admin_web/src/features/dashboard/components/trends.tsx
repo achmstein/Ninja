@@ -1,12 +1,16 @@
-import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from 'recharts'
-import { getOrderStatsOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import {
+  getBreakdownReportOptions,
+  getDailyReportOptions,
+} from '@/api/sales/@tanstack/react-query.gen'
 import { getStayStatsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
+import { useNow } from '@/lib/business-clock'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
+import { localDateOf, parsePlainDate } from '@/lib/zoned-time'
 import { Badge } from '@/components/ui/badge'
 import {
   Card,
@@ -35,6 +39,8 @@ import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { RankedList } from '@/components/ranked-list'
 import { formatEgp } from '@/features/orders/status'
+import { useTillWindow } from '@/features/till/use-till-window'
+import { dayStartParam, trendRows, trendWindows } from '../trend-rows'
 import { changeOf, formatChange } from './kpi-card'
 
 const route = getRouteApi('/_authenticated/')
@@ -47,101 +53,89 @@ const ranges: { value: Range; key: TranslationKey; days: number }[] = [
   { value: '90d', key: 'last90Days', days: 90 },
 ]
 
-type DayRow = {
-  date: string
-  revenue: number
-  orders: number
-  previous: number
-}
-
-// Local YYYY-MM-DD, matching the backend's tz-adjusted DateOnly buckets
-function localDayKey(date: Date): string {
-  const pad = (n: number) => String(n).padStart(2, '0')
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
-
-/** The range in the URL, and the days it covers with the same span before it */
+/**
+ * The range in the URL and its business-day windows: the last N business
+ * days of the active branch (from its day start, in the business's zone)
+ * and the N before them, cut to the same time into today's twin. Recomputed
+ * every minute; the bounds only move when a business day rolls over (and
+ * the comparison's end every five minutes).
+ */
 function useRange() {
   const search = route.useSearch()
   const range: Range = search.range ?? '30d'
-  const window = useMemo(() => {
-    const days = ranges.find((r) => r.value === range)!.days
-    const from = new Date()
-    from.setHours(0, 0, 0, 0)
-    from.setDate(from.getDate() - (days - 1))
-    // Next local midnight: stable across renders for the whole day
-    const to = new Date()
-    to.setHours(24, 0, 0, 0)
-    const previousFrom = new Date(from)
-    previousFrom.setDate(from.getDate() - days)
-    return { days, from, to, previousFrom }
-  }, [range])
-  return { range, ...window }
-}
-
-function statsQuery(from: Date, to: Date) {
+  const days = ranges.find((r) => r.value === range)!.days
+  const { branch, hours, timeZone } = useTillWindow({})
+  const now = useNow()
+  const windows = hours ? trendWindows(now, hours, days) : null
   return {
-    fromDate: from.toISOString(),
-    toDate: to.toISOString(),
-    tzOffsetMinutes: new Date().getTimezoneOffset(),
+    range,
+    days,
+    windows,
+    timeZone,
+    dayStart: dayStartParam(branch?.dayStartTime),
   }
 }
 
 /**
- * Sales over the chosen days as shadcn's interactive area chart: this period
- * as a soft filled area, the same number of days before it as a faint dashed
- * line underneath, and in the header the total and how it moved against the
- * days before. The range is a select on a phone and a toggle where there is
- * room; it lives in the URL.
+ * Net sales per business day (Sales' daily report: what customers paid less
+ * the refunds given that day) as shadcn's interactive area chart: this
+ * period as a soft filled area, the same number of business days before it
+ * as a faint dashed line underneath, and in the header the total and how it
+ * moved against the same stretch before (today only as far as it has gone).
+ * The range is a select on a phone and a toggle where there is room; it
+ * lives in the URL.
  */
 export function SalesChart() {
   const t = useT()
   const locale = useLocale()
   const navigate = route.useNavigate()
-  const { range, days, from, to, previousFrom } = useRange()
+  const { range, days, windows, timeZone, dayStart } = useRange()
 
   const current = useQuery({
-    ...getOrderStatsOptions({
-      query: { 'api-version': API_VERSION, ...statsQuery(from, to) },
+    ...getDailyReportOptions({
+      query: {
+        'api-version': API_VERSION,
+        from: windows?.current.from.toISOString() ?? '',
+        to: windows?.current.to.toISOString() ?? '',
+        tz: timeZone,
+        dayStart,
+      },
     }),
+    enabled: windows !== null,
     refetchInterval: 5 * 60_000,
   })
   const previous = useQuery({
-    ...getOrderStatsOptions({
-      query: { 'api-version': API_VERSION, ...statsQuery(previousFrom, from) },
+    ...getDailyReportOptions({
+      query: {
+        'api-version': API_VERSION,
+        from: windows?.previous.from.toISOString() ?? '',
+        to: windows?.previous.to.toISOString() ?? '',
+        tz: timeZone,
+        dayStart,
+      },
     }),
+    enabled: windows !== null,
   })
 
-  // The backend only returns days that have data; the axis needs every day, and each day its twin before
-  const rows = useMemo<DayRow[]>(() => {
-    const byDay = (list: typeof current.data) =>
-      new Map((list?.days ?? []).map((d) => [d.date ?? '', d]))
-    const now = byDay(current.data)
-    const before = byDay(previous.data)
-    return Array.from({ length: days }, (_, i) => {
-      const day = new Date(from)
-      day.setDate(from.getDate() + i)
-      const twin = new Date(previousFrom)
-      twin.setDate(previousFrom.getDate() + i)
-      const row = now.get(localDayKey(day))
-      return {
-        date: localDayKey(day),
-        revenue: Number(row?.revenue ?? 0),
-        orders: Number(row?.orders ?? 0),
-        previous: Number(before.get(localDayKey(twin))?.revenue ?? 0),
-      }
-    })
-  }, [current.data, previous.data, days, from, previousFrom])
+  // Every business day on the axis, each with its twin before
+  const rows = windows
+    ? trendRows(windows, days, current.data?.days, previous.data?.days)
+    : []
 
   const total = rows.reduce((sum, d) => sum + d.revenue, 0)
   const totalBefore = rows.reduce((sum, d) => sum + d.previous, 0)
   const change = previous.isSuccess ? changeOf(total, totalBefore) : undefined
 
-  const shortDay = (key: string) =>
-    new Date(`${key}T00:00:00`).toLocaleDateString(locale, {
-      day: 'numeric',
-      month: 'short',
-    })
+  // A business day by its date, whatever zone the browser is in
+  const shortDay = (key: string) => {
+    const date = parsePlainDate(key)
+    return date
+      ? localDateOf(date).toLocaleDateString(locale, {
+          day: 'numeric',
+          month: 'short',
+        })
+      : key
+  }
   const compact = (value: number) =>
     new Intl.NumberFormat(locale, { notation: 'compact' }).format(value)
 
@@ -166,7 +160,7 @@ export function SalesChart() {
   return (
     <Card className='@container/card gap-4'>
       <CardHeader>
-        <CardTitle>{t('salesTitle')}</CardTitle>
+        <CardTitle>{t('netSalesByDay')}</CardTitle>
         <CardDescription className='flex flex-wrap items-center gap-2'>
           {current.isLoading ? (
             <Skeleton className='h-5 w-32' />
@@ -234,7 +228,7 @@ export function SalesChart() {
       <CardContent className='px-2 sm:px-6'>
         {current.isError ? (
           <ErrorState error={current.error} onRetry={() => current.refetch()} />
-        ) : current.isLoading ? (
+        ) : current.isLoading || windows === null ? (
           <Skeleton className='h-64 w-full' />
         ) : total === 0 && totalBefore === 0 ? (
           <EmptyState compact title={t('noAnalyticsData')} />
@@ -290,8 +284,10 @@ export function SalesChart() {
                           {formatEgp(Number(value))}
                           {name === 'revenue' && (
                             <span className='text-muted-foreground ms-1 font-normal'>
-                              · {Number(item.payload?.orders ?? 0)}{' '}
-                              {t('ordersLabel')}
+                              ·{' '}
+                              {t('posTicketsCount', {
+                                count: Number(item.payload?.tickets ?? 0),
+                              })}
                             </span>
                           )}
                         </span>
@@ -326,34 +322,60 @@ export function SalesChart() {
 }
 
 /**
- * What sold over the same days: the top items, and the places that sold the
- * most time, as ranked bars that read without hovering, each in a card.
+ * What sold over the same days: the top items by what customers paid for
+ * them less what was refunded (Sales' breakdown, the same money as net
+ * sales, grouped by catalog item), and the places that sold the most time,
+ * as ranked bars that read without hovering, each in a card.
  */
 export function TopLists() {
   const t = useT()
   const features = useFeatures()
   const localized = useLocalized()
-  const { from, to } = useRange()
+  const { windows, timeZone } = useRange()
+  const from = windows?.current.from
+  const to = windows?.current.to
 
-  const orderStats = useQuery({
-    ...getOrderStatsOptions({
-      query: { 'api-version': API_VERSION, ...statsQuery(from, to) },
+  const breakdown = useQuery({
+    ...getBreakdownReportOptions({
+      query: {
+        'api-version': API_VERSION,
+        from: from?.toISOString() ?? '',
+        to: to?.toISOString() ?? '',
+        tz: timeZone,
+      },
     }),
+    enabled: windows !== null,
     refetchInterval: 5 * 60_000,
   })
   const stayStats = useQuery({
-    ...getStayStatsOptions({ query: statsQuery(from, to) }),
+    ...getStayStatsOptions({
+      query: {
+        fromDate: from?.toISOString() ?? '',
+        toDate: to?.toISOString() ?? '',
+        tzOffsetMinutes: new Date().getTimezoneOffset(),
+      },
+    }),
     refetchInterval: 5 * 60_000,
-    enabled: features.timeBilling,
+    enabled: features.timeBilling && windows !== null,
   })
 
-  const topItems = (orderStats.data?.topItems ?? []).map((item, index) => ({
-    key: `${index}`,
-    label: localized(item.productName) || '—',
-    value: Number(item.units ?? 0),
-    display: `${Number(item.units ?? 0)} ${t('unitsLabel')}`,
-    hint: formatEgp(item.revenue),
-  }))
+  // Ranked by net paid; the delivery fee is not an item and is not listed
+  const topItems = [...(breakdown.data?.byItem ?? [])]
+    .map((item) => ({
+      item,
+      amount: Number(item.netAmount ?? item.amount ?? 0),
+      qty: Number(item.netQty ?? item.qty ?? 0),
+    }))
+    .filter((row) => row.amount > 0 || row.qty > 0)
+    .sort((a, b) => b.amount - a.amount)
+    .slice(0, 10)
+    .map(({ item, amount, qty }, index) => ({
+      key: `${item.catalogItemId ?? index}`,
+      label: localized(item.description) || '—',
+      value: amount,
+      display: formatEgp(amount),
+      hint: `${qty} ${t('unitsLabel')}`,
+    }))
 
   const placeRows = [...(stayStats.data?.places ?? [])]
     .map((place, index) => ({
@@ -372,12 +394,12 @@ export function TopLists() {
           <CardTitle>{t('topItemsTitle')}</CardTitle>
         </CardHeader>
         <CardContent>
-          {orderStats.isError ? (
+          {breakdown.isError ? (
             <ErrorState
-              error={orderStats.error}
-              onRetry={() => orderStats.refetch()}
+              error={breakdown.error}
+              onRetry={() => breakdown.refetch()}
             />
-          ) : orderStats.isLoading ? (
+          ) : breakdown.isLoading || windows === null ? (
             <Skeleton className='h-40 w-full' />
           ) : topItems.length === 0 ? (
             <p className='text-muted-foreground py-3 text-sm'>

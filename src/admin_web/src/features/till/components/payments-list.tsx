@@ -100,13 +100,33 @@ function getPaymentColumns({
       header: t('tender'),
       cell: (info) => <TenderBadge tender={info.getValue()} />,
     }),
-    columnHelper.accessor('amount', {
+    // What the payment kept towards its bill (cash after the change), with
+    // what was handed over under it when that was more
+    columnHelper.accessor((row) => keptOf(row), {
       meta: { align: 'end' },
       id: 'amount',
       header: t('amount'),
-      cell: (info) => <Money value={info.getValue()} strong />,
+      cell: (info) => (
+        <Money
+          value={info.getValue()}
+          strong
+          sub={handedOverNote(info.row.original, t)}
+        />
+      ),
     }),
   ])
+}
+
+/** What a payment kept towards its bill: cash net of the change (older servers: what was handed over) */
+function keptOf(payment: PaymentRow): number {
+  return toNumber(payment.netAmount ?? payment.amount)
+}
+
+function handedOverNote(payment: PaymentRow, t: Translate): string | undefined {
+  const handed = toNumber(payment.amount)
+  return handed > keptOf(payment)
+    ? t('handedOver', { amount: formatEgp(handed) })
+    : undefined
 }
 
 /** A payment as a phone lists it: where, then the receipt, time and who paid; how much over how */
@@ -142,7 +162,13 @@ function PaymentListRow({
           )}
         </>
       }
-      trailing={<Money value={payment.amount} strong />}
+      trailing={
+        <Money
+          value={keptOf(payment)}
+          strong
+          sub={handedOverNote(payment, t)}
+        />
+      }
       trailingMeta={<TenderBadge tender={payment.tender} />}
     />
   )

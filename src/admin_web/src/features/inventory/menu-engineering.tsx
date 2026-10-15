@@ -10,6 +10,7 @@ import {
 } from '@/api/inventory/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { businessDateOf, businessDaysWindow } from '@/lib/business-day'
 import { useContentLanguages } from '@/lib/content-languages'
 import {
   useLanguage,
@@ -19,6 +20,7 @@ import {
 } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { addDays } from '@/lib/zoned-time'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
 import {
   Card,
@@ -45,6 +47,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { assistErrorMessage } from '@/features/assist/errors'
 import { useAiAvailable } from '@/features/assist/use-ai-available'
+import { useTillWindow } from '@/features/till/use-till-window'
 import { toMenuCostRows } from './menu-cost-rows'
 import {
   ClassChip,
@@ -98,15 +101,16 @@ export function MenuEngineering() {
   const navigate = route.useNavigate()
   const days: MenuEngineeringDays = search.days ?? 30
 
-  // Whole days back from now; the key moves only when the window does
-  const [now] = useState(() => Date.now())
-  const span = useMemo(
-    () => ({
-      from: new Date(now - days * 86_400_000).toISOString(),
-      to: new Date(now).toISOString(),
-    }),
-    [now, days]
-  )
+  // Whole business days ending with today's (the branch's day start, the
+  // business's zone); the key moves only when the window does
+  const { hours, timeZone } = useTillWindow({})
+  const [now] = useState(() => new Date())
+  const span = useMemo(() => {
+    if (!hours) return null
+    const today = businessDateOf(now, hours)
+    const window = businessDaysWindow(addDays(today, -(days - 1)), today, hours)
+    return { from: window.from.toISOString(), to: window.to.toISOString() }
+  }, [now, days, hours])
 
   const costs = useQuery(
     getRecipeCostsOptions({ query: { 'api-version': API_VERSION } })
@@ -114,16 +118,17 @@ export function MenuEngineering() {
   const items = useQuery(
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
-  const sales = useQuery(
-    getBreakdownReportOptions({
+  const sales = useQuery({
+    ...getBreakdownReportOptions({
       query: {
         'api-version': API_VERSION,
-        from: span.from,
-        to: span.to,
-        offsetMinutes: -new Date().getTimezoneOffset(),
+        from: span?.from ?? '',
+        to: span?.to ?? '',
+        tz: timeZone,
       },
-    })
-  )
+    }),
+    enabled: span !== null,
+  })
 
   const matrix = useMemo(
     () =>

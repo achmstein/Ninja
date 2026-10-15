@@ -22,6 +22,7 @@ import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { MonthSwitcher } from '@/components/month-switcher'
 import { PageHeader } from '@/components/page-header'
+import { countAttendance } from './attendance-count'
 import { ATTENDANCE, monthRange, PAY_SCHEME, schemeLabel } from './format'
 import { PayrollTabs } from './payroll-tabs'
 import { attendanceQueryOptions, employeesQueryOptions } from './queries'
@@ -272,28 +273,13 @@ export function Attendance() {
                   toNumber(
                     employee.currentTerms?.scheme ?? PAY_SCHEME.daily
                   ) === PAY_SCHEME.monthly
-                const worked = days.reduce((sum, d) => {
-                  const status = marks.get(`${employee.id}/${d.iso}`)?.status
-                  if (status === undefined) return sum
-                  const n = toNumber(status)
-                  return (
-                    sum +
-                    (n === ATTENDANCE.present
-                      ? 1
-                      : n === ATTENDANCE.halfDay
-                        ? 0.5
-                        : 0)
-                  )
-                }, 0)
-                const marked = days.filter((d) =>
-                  marks.has(`${employee.id}/${d.iso}`)
-                ).length
-                const absent = marked - worked
-                const offDays = days.filter(
-                  (d) =>
-                    toNumber(marks.get(`${employee.id}/${d.iso}`)?.status) ===
-                    ATTENDANCE.dayOff
-                ).length
+                // A day off is a rest day, not an absence
+                const { worked, absent, offDays } = countAttendance(
+                  days.flatMap((d) => {
+                    const status = marks.get(`${employee.id}/${d.iso}`)?.status
+                    return status === undefined ? [] : [toNumber(status)]
+                  })
+                )
                 const overtime = days.reduce(
                   (sum, d) =>
                     sum +

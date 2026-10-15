@@ -6,12 +6,14 @@ import {
   getProfitTrendOptions,
 } from '@/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { formatDay } from '@/lib/business-day'
+import { useBusinessTimeZone } from '@/lib/business-clock'
 import { downloadCsv } from '@/lib/csv'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { zonedParts } from '@/lib/zoned-time'
 import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -23,11 +25,16 @@ import { ErrorState } from '@/components/error-state'
 import { InfoTip } from '@/components/info-tip'
 import { Main } from '@/components/layout/main'
 import { MonthSwitcher } from '@/components/month-switcher'
-import { ProfitTrend } from './components/profit-trend'
-import { ProfitWaterfall } from './components/profit-waterfall'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
+import { ProfitTrend } from './components/profit-trend'
+import { ProfitWaterfall } from './components/profit-waterfall'
+import {
+  formatShare,
+  profitBase,
+  profitStatement,
+  shareOf,
+} from './profit-math'
 
 const route = getRouteApi('/_authenticated/finance/profit')
 
@@ -35,7 +42,10 @@ const route = getRouteApi('/_authenticated/finance/profit')
  * The month as one statement: what came in, what it cost, what is left.
  * Sales from the till, cost of goods from the storeroom, wages from
  * payroll, the rest from the expense register — and the ratio a business
- * lives by, prime cost (goods + wages) over sales.
+ * lives by, prime cost (goods + wages) over sales. Profit, margin, the
+ * ratios and the partners' shares are all on net sales without its VAT
+ * (VAT is the state's, not earned); the statement shows the VAT coming
+ * off, so every line adds up to the next.
  */
 export function Profit() {
   const t = useT()
@@ -44,10 +54,11 @@ export function Profit() {
   const navigate = route.useNavigate()
   const search = route.useSearch()
 
-  const today = formatDay(new Date())
-  const [year, month] = (search.month ?? today.slice(0, 7))
-    .split('-')
-    .map(Number)
+  // This month by the business's clock, not the browser's
+  const timeZone = useBusinessTimeZone()
+  const wall = zonedParts(new Date(), timeZone)
+  const today = `${wall.year}-${String(wall.month).padStart(2, '0')}`
+  const [year, month] = (search.month ?? today).split('-').map(Number)
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const monthName = (y: number, m: number) =>
     new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(
@@ -57,6 +68,7 @@ export function Profit() {
     style: 'percent',
     maximumFractionDigits: 0,
   })
+  const share = (value: number) => formatShare(shareOf(value, base), locale)
 
   const profit = useQuery(
     getProfitOptions({ query: { 'api-version': API_VERSION, year, month } })
@@ -66,7 +78,9 @@ export function Profit() {
   )
 
   const p = profit.data
-  const net = toNumber(p?.netSales)
+  // What profit and every percentage on the page is on: net sales ex VAT
+  const base = profitBase(p)
+  const statement = profitStatement(p)
   const partnerShares = p?.partnerShares ?? []
   const sharesTotal = partnerShares.reduce(
     (sum, s) => sum + toNumber(s.percent),
@@ -80,17 +94,22 @@ export function Profit() {
       `profit-${monthKey}`,
       [t('lineItem'), t('amount')],
       [
-        [t('salesGross'), toNumber(p.sales)],
-        [t('refundsTotal'), -toNumber(p.refunds)],
-        [t('netSales'), net],
-        [t('costOfGoods'), -toNumber(p.goods)],
-        [t('wasteCost'), -toNumber(p.waste)],
-        [t('labourCost'), -toNumber(p.labour)],
-        ...p.expensesByCategory.map((c) => [
-          `${t('operatingExpenses')} · ${localized(c.categoryName)}`,
-          -toNumber(c.total),
-        ]),
-        [t('operatingExpenses'), -toNumber(p.expenses)],
+        ...statement
+          .filter((l) => l.key !== 'profit')
+          .flatMap((l) => {
+            const signed = l.sign === '−' ? -l.amount : l.amount
+            const row: [string, number] = [t(l.labelKey), signed]
+            // The expense categories under their total, as on the page
+            return l.key === 'expenses'
+              ? [
+                  ...p.expensesByCategory.map((c): [string, number] => [
+                    `${t('operatingExpenses')} · ${localized(c.categoryName)}`,
+                    -toNumber(c.total),
+                  ]),
+                  row,
+                ]
+              : [row]
+          }),
         [t('profitLabel'), toNumber(p.profit)],
         ...partnerShares.map((s) => [
           `${t('partnerShareOf', { name: s.name })} (${toNumber(s.percent)}%)`,
@@ -106,6 +125,7 @@ export function Profit() {
       [
         t('month'),
         t('netSales'),
+        t('netSalesExVat'),
         t('costOfGoods'),
         t('labourCost'),
         t('operatingExpenses'),
@@ -114,6 +134,7 @@ export function Profit() {
       (trend.data ?? []).map((m) => [
         `${m.year}-${String(m.month).padStart(2, '0')}`,
         toNumber(m.netSales),
+        profitBase(m),
         toNumber(m.goods),
         toNumber(m.labour),
         toNumber(m.expenses),
@@ -141,10 +162,11 @@ export function Profit() {
       <span>{label}</span>
       <span className='tabular-nums'>
         {opts.sign === '−' && value > 0 ? '− ' : ''}
+        {opts.sign === '+' && value > 0 ? '+ ' : ''}
         {formatEgp(value)}
-        {net > 0 && !opts.indent && (
+        {!opts.indent && share(value) != null && (
           <span className='text-muted-foreground ms-2 text-xs'>
-            {percent.format(value / net)}
+            {share(value)}
           </span>
         )}
       </span>
@@ -202,7 +224,15 @@ export function Profit() {
                   : undefined
               }
             />
-            <Stat label={t('netSales')} value={formatEgp(p.netSales)} />
+            <Stat
+              label={t('netSalesExVat')}
+              value={formatEgp(base)}
+              hint={
+                toNumber(p.netSales) !== base
+                  ? `${t('netSales')} ${formatEgp(p.netSales)}`
+                  : undefined
+              }
+            />
             <Stat
               label={
                 <span className='inline-flex items-center gap-1'>
@@ -230,8 +260,9 @@ export function Profit() {
             </CardHeader>
             <CardContent>
               <ProfitWaterfall
-                sales={net}
+                sales={base}
                 goods={toNumber(p.goods) + toNumber(p.waste)}
+                shrinkage={toNumber(p.shrinkage)}
                 labour={toNumber(p.labour)}
                 expenses={toNumber(p.expenses)}
                 profit={toNumber(p.profit)}
@@ -240,26 +271,28 @@ export function Profit() {
           </Card>
 
           <div className='bg-card divide-border/60 divide-y rounded-xl px-4 shadow-sm'>
-            {line(t('salesGross'), toNumber(p.sales))}
-            {toNumber(p.refunds) > 0 &&
-              line(t('refundsTotal'), toNumber(p.refunds), {
-                sign: '−',
-                muted: true,
-              })}
-            {line(t('netSales'), net, { strong: true })}
-            {line(t('costOfGoods'), toNumber(p.goods), { sign: '−' })}
-            {toNumber(p.waste) > 0 &&
-              line(t('wasteCost'), toNumber(p.waste), { sign: '−' })}
-            {line(t('labourCost'), toNumber(p.labour), { sign: '−' })}
-            {line(t('operatingExpenses'), toNumber(p.expenses), { sign: '−' })}
-            {p.expensesByCategory.map((c) => (
-              <div key={String(c.categoryId)}>
-                {line(localized(c.categoryName), toNumber(c.total), {
-                  indent: true,
-                  muted: true,
-                })}
-              </div>
-            ))}
+            {statement
+              .filter((l) => l.key !== 'profit')
+              .map((l) => (
+                <div key={l.key}>
+                  {line(t(l.labelKey), l.amount, {
+                    sign:
+                      l.sign === '−' ? '−' : l.sign === '+' ? '+' : undefined,
+                    strong: l.sign === '=',
+                    muted: l.key === 'refunds' || l.key === 'vat',
+                  })}
+                  {/* The expense categories under their total */}
+                  {l.key === 'expenses' &&
+                    p.expensesByCategory.map((c) => (
+                      <div key={String(c.categoryId)}>
+                        {line(localized(c.categoryName), toNumber(c.total), {
+                          indent: true,
+                          muted: true,
+                        })}
+                      </div>
+                    ))}
+                </div>
+              ))}
             <div
               className={cn(
                 'flex items-baseline justify-between gap-4 py-2 text-lg font-semibold',
@@ -271,9 +304,9 @@ export function Profit() {
             </div>
           </div>
 
-          {toNumber(p.vat) > 0 && (
+          {toNumber(p.netVat ?? p.vat) > 0 && (
             <p className='text-muted-foreground text-xs'>
-              {t('vatNote', { amount: formatEgp(p.vat) })}
+              {t('vatNote', { amount: formatEgp(p.netVat ?? p.vat) })}
             </p>
           )}
 

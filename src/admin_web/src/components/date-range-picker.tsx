@@ -1,7 +1,7 @@
 import { useState } from 'react'
-import { format } from 'date-fns'
 import { CalendarIcon, RotateCcw } from 'lucide-react'
 import { type DateRange } from 'react-day-picker'
+import { useBusinessTimeZone } from '@/lib/business-clock'
 import {
   formatDay,
   parseDay,
@@ -11,6 +11,7 @@ import {
 import { useLocale, useT, type TranslationKey } from '@/lib/i18n'
 import { type RangeKey, type RangeSearch } from '@/lib/search-schemas'
 import { cn } from '@/lib/utils'
+import { zonedParts } from '@/lib/zoned-time'
 import { useIsMobile } from '@/hooks/use-mobile'
 import { Button } from '@/components/ui/button'
 import { Calendar } from '@/components/ui/calendar'
@@ -99,14 +100,22 @@ export function DateRangePicker({
         : t('pickADate')
       : t(presetKeys[preset])
 
+  // The window's ends read on the business's clock, not the browser's
+  const timeZone = useBusinessTimeZone()
   const shortDay = new Intl.DateTimeFormat(locale, {
     day: 'numeric',
     month: 'short',
+    timeZone,
   })
+  const hhmm = (date: Date) => {
+    const wall = zonedParts(date, timeZone)
+    return `${String(wall.hour).padStart(2, '0')}:${String(wall.minute).padStart(2, '0')}`
+  }
   const span =
     dayWindow && preset !== 'all'
-      ? dayWindow.to.getTime() - dayWindow.from.getTime() <= 86_400_000
-        ? `${format(dayWindow.from, 'HH:mm')} → ${format(dayWindow.to, 'HH:mm')}`
+      ? // One business day, 25 hours long on the night the clocks go back
+        dayWindow.to.getTime() - dayWindow.from.getTime() <= 25 * 3_600_000
+        ? `${hhmm(dayWindow.from)} → ${hhmm(dayWindow.to)}`
         : `${shortDay.format(dayWindow.from)} → ${shortDay.format(
             new Date(dayWindow.to.getTime() - 1)
           )}`
@@ -122,10 +131,8 @@ export function DateRangePicker({
   }
 
   // The hours in force: the picked ones, else the window's (branch hours)
-  const startTime =
-    search.fromTime ?? (dayWindow ? format(dayWindow.from, 'HH:mm') : '')
-  const endTime =
-    search.toTime ?? (dayWindow ? format(dayWindow.to, 'HH:mm') : '')
+  const startTime = search.fromTime ?? (dayWindow ? hhmm(dayWindow.from) : '')
+  const endTime = search.toTime ?? (dayWindow ? hhmm(dayWindow.to) : '')
   const hoursPicked = search.fromTime != null || search.toTime != null
   const pickTime = (key: 'fromTime' | 'toTime', value: string) =>
     onChange({ [key]: value || undefined })

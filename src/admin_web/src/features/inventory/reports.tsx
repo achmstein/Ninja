@@ -9,7 +9,7 @@ import { getProfitOptions } from '@/api/finance/@tanstack/react-query.gen'
 import { getVarianceReportOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
-import { useLanguage, useLocalized, useT } from '@/lib/i18n'
+import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -27,6 +27,11 @@ import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
+import {
+  formatShare,
+  profitBase,
+  shareOf,
+} from '@/features/finance/profit-math'
 import { useTillWindow } from '@/features/till/use-till-window'
 import { formatQuantity, formatSignedQuantity } from './format'
 import { getReportColumns } from './report-columns'
@@ -45,6 +50,7 @@ const route = getRouteApi('/_authenticated/inventory/reports')
  */
 export function Reports() {
   const t = useT()
+  const locale = useLocale()
   const localized = useLocalized()
   const language = useLanguage((s) => s.language)
   const search = route.useSearch()
@@ -75,10 +81,15 @@ export function Reports() {
     }),
     enabled: isOwner && month !== null,
   })
-  const netSales = toNumber(profit.data?.netSales)
+  // Cost of goods over net sales without its VAT, the base the profit page
+  // and its ratios are on, shown the same way
+  const salesBase = profitBase(profit.data)
   const cogsPercent =
-    month && isOwner && netSales > 0
-      ? Math.round((toNumber(data?.theoreticalValue) / netSales) * 100)
+    month && isOwner && profit.data
+      ? formatShare(
+          shareOf(toNumber(data?.theoreticalValue), salesBase),
+          locale
+        )
       : null
 
   const { globalFilter, onGlobalFilterChange, pagination, onPaginationChange } =
@@ -164,7 +175,11 @@ export function Reports() {
               <Stat
                 label={t('costOfGoodsSold')}
                 value={formatEgp(data?.theoreticalValue)}
-                hint={cogsPercent !== null ? `${cogsPercent}%` : undefined}
+                hint={
+                  cogsPercent !== null
+                    ? t('ofNetSalesExVat', { share: cogsPercent })
+                    : undefined
+                }
               />
               <Stat
                 label={t('waste')}
@@ -189,6 +204,11 @@ export function Reports() {
               </span>
               <InfoTip>{t('countVarianceHint')}</InfoTip>
             </p>
+            {data?.valuedAtCurrentAverage && (
+              <p className='text-warning text-xs'>
+                {t('reportValuedAtTodaysAverage')}
+              </p>
+            )}
           </>
         )}
 

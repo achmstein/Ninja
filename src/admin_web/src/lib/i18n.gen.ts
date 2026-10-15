@@ -557,7 +557,7 @@ export const messages = {
   connectorStepRun: { en: "When it asks, paste this link. It installs itself and starts with Windows.", ar: "عندما يطلب ذلك، الصق هذا الرابط. سيثبّت نفسه ويعمل مع بدء تشغيل ويندوز." },
   pairingLinkCopied: { en: "Link copied", ar: "تم نسخ الرابط" },
   pairingLinkExpires: { en: "Good once, until {time}", ar: "صالح لمرة واحدة حتى {time}" },
-  noPrintConnectors: { en: "No Windows PC prints for this branch yet. Tills and kitchen tablets can print to network printers without one.", ar: "لا يوجد جهاز ويندوز يطبع لهذا الفرع بعد. يمكن للكاشير وتابلت المطبخ الطباعة على طابعات الشبكة بدونه." },
+  noPrintConnectors: { en: "No Windows PC prints for this branch yet. Tills and kitchen tablets can print to network printers without one.", ar: "لا يوجد جهاز ويندوز يطبع لهذا الفرع بعد. يمكن للكاشير وأجهزة المطبخ اللوحية الطباعة على طابعات الشبكة بدونه." },
   noPrintersReported: { en: "No printers reported yet", ar: "لم تُرسل أي طابعات بعد" },
   connectorRemoved: { en: "Connector removed", ar: "تم حذف الموصّل" },
   printerTarget: { en: "Printer", ar: "الطابعة" },

@@ -16,9 +16,20 @@ export interface LoyaltyAccount {
 export interface LoyaltyStats {
   totalAccounts: number
   accountsByTier: Record<string, number>
+  /** Points earned less points clawed back (a voided or refunded sale), today in the business's zone */
   pointsIssuedToday: number
+  /** The same over the last 7 days (a rolling week, not a calendar one) */
   pointsIssuedThisWeek: number
+  /** The same over the calendar month in the business's zone */
   pointsIssuedThisMonth: number
+  pointsRedeemedToday?: number
+  pointsRedeemedThisWeek?: number
+  pointsRedeemedThisMonth?: number
+  /** Points members hold now and may still redeem: the programme's liability */
+  pointsOutstanding?: number
+  todayStartsAt?: string | null
+  weekStartsAt?: string | null
+  monthStartsAt?: string | null
 }
 
 export interface TierInfo {

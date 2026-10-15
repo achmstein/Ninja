@@ -5,7 +5,13 @@ import { type TranslationKey } from '@/lib/i18n'
 // models spell the name. Online is what guests paid from their phones (online
 // payments); Talabat is a Talabat order Talabat pays the business for, settled
 // when it lands. Neither is cash, neither is in the drawer.
-type TenderName = 'Cash' | 'Card' | 'InstaPay' | 'Account' | 'Online' | 'Talabat'
+export type TenderName =
+  | 'Cash'
+  | 'Card'
+  | 'InstaPay'
+  | 'Account'
+  | 'Online'
+  | 'Talabat'
 
 export const TENDERS: {
   name: TenderName
@@ -25,7 +31,11 @@ export const TENDERS: {
  * the table, or where some was taken anyway (switched off since); Talabat
  * only where some was taken.
  */
-export function tendersFor(onlinePayments: boolean | undefined, hasOnline = false, hasTalabat = false) {
+export function tendersFor(
+  onlinePayments: boolean | undefined,
+  hasOnline = false,
+  hasTalabat = false
+) {
   return TENDERS.filter(
     (tender) =>
       (tender.name !== 'Online' || onlinePayments || hasOnline) &&

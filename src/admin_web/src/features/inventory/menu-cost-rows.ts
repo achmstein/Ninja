@@ -80,7 +80,11 @@ export function toMenuCostRows(
 
 /** The page's headline figures */
 export function summarize(rows: MenuCostRow[], target: number) {
-  const priced = rows.filter((r) => r.foodCost !== null)
+  // Only items whose every ingredient is costed: an uncosted one's cost is
+  // a lower bound and would pull the average down
+  const priced = rows.filter(
+    (r) => r.foodCost !== null && r.status !== 'incomplete'
+  )
   const revenue = priced.reduce((sum, r) => sum + r.price, 0)
   const cost = priced.reduce((sum, r) => sum + r.cost, 0)
   return {

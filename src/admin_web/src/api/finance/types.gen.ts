@@ -164,6 +164,7 @@ export type ProfitMonthView = {
     labour: number | string;
     expenses: number | string;
     profit: number | string;
+    netSalesExVat?: number | string;
 };
 
 export type ProfitView = {
@@ -182,6 +183,10 @@ export type ProfitView = {
     primeCostRatio: null | number | string;
     margin: null | number | string;
     partnerShares?: null | Array<PartnerProfitShareView>;
+    refundVat?: number | string;
+    netVat?: number | string;
+    netSalesExVat?: number | string;
+    shrinkage?: number | string;
 };
 
 export type RecurringExpenseRequest = {

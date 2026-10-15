@@ -1,12 +1,12 @@
 import { useMemo, useState } from 'react'
-import { startOfMonth } from 'date-fns'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { type StockLevelView } from '@/api/inventory'
 import { getUsageReportOptions } from '@/api/inventory/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
-import { presetWindow } from '@/lib/business-day'
+import { useBusinessTimeZone } from '@/lib/business-clock'
+import { businessMonthWindow } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -35,16 +35,18 @@ export function StockStats({ levels }: StockStatsProps) {
   const { branches } = useAllowedBranches()
   const branch = branches.find((b) => toNumber(b.id) === branchId)
 
+  const timeZone = useBusinessTimeZone()
   const now = useMemo(() => new Date(), [])
+  // The business month so far: its first business day's start to today's end
   const monthWindow = useMemo(
     () =>
       branch
-        ? presetWindow('custom', branch.dayStartTime, branch.dayEndTime, {
-            from: startOfMonth(now),
-            to: now,
+        ? businessMonthWindow(now, {
+            dayStart: branch.dayStartTime,
+            timeZone,
           })
         : null,
-    [branch, now]
+    [branch, now, timeZone]
   )
 
   // Only fetched once the row is opened
@@ -64,9 +66,10 @@ export function StockStats({ levels }: StockStatsProps) {
 
   type StatRow = { label: string; value: React.ReactNode; tone?: string }
   // The current numbers need no caption; the period ones carry the month
-  const monthName = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
-    now
-  )
+  const monthName = new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    timeZone,
+  }).format(monthWindow?.from ?? now)
   const groups: { title: string | null; stats: StatRow[] }[] = [
     {
       title: null,

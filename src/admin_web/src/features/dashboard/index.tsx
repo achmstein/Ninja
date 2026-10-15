@@ -7,8 +7,14 @@ import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.ge
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
+import {
+  businessDateOf,
+  businessDayWindow,
+  elapsedOf,
+} from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { addDays } from '@/lib/zoned-time'
 import { Card, CardContent } from '@/components/ui/card'
 import { Main } from '@/components/layout/main'
 import { CountUp, Stagger, StaggerItem } from '@/components/motion'
@@ -29,8 +35,6 @@ import { LiveFloor } from './components/live-floor'
 import { MonthMoney } from './components/month-money'
 import { TodaysTill } from './components/todays-till'
 import { SalesChart, TopLists } from './components/trends'
-
-const WEEK_MS = 7 * 24 * 60 * 60_000
 
 type AttentionLine = {
   key: string
@@ -67,8 +71,11 @@ export function Dashboard() {
     return () => clearInterval(timer)
   }, [])
 
-  // The branch's business day (17:00 → 05:00), re-evaluated every minute
-  const { branch, dayWindow, fromIso, toIso } = useTillWindow({})
+  // The branch's business day (17:00 → 17:00 the next day, in the
+  // business's zone), re-evaluated every minute
+  const { branch, hours, timeZone, dayWindow, fromIso, toIso } = useTillWindow(
+    {}
+  )
 
   const pendingQuery = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
@@ -122,40 +129,50 @@ export function Dashboard() {
     pending.some((order) => orderIsAt(order, table))
   ).length
 
-  // The same stretch of the day a week ago, up to the same time: a fair
+  // The same business day a week ago, up to the same time into it: a fair
   // comparison while today is still going (to the 5 minutes, so it is not
-  // asked for again every tick)
-  const lastWeekTo = dayWindow
-    ? new Date(
-        Math.floor(Math.min(nowMs, dayWindow.to.getTime()) / 300_000) *
-          300_000 -
-          WEEK_MS
-      ).toISOString()
-    : ''
+  // asked for again every tick). Days, not 168 hours, so a clock change in
+  // between does not move it by an hour.
+  const lastWeekWindow =
+    dayWindow && hours
+      ? businessDayWindow(
+          addDays(businessDateOf(dayWindow.from, hours), -7),
+          hours
+        )
+      : null
+  const lastWeekFrom = lastWeekWindow?.from.toISOString() ?? ''
+  const lastWeekTo =
+    dayWindow && lastWeekWindow
+      ? new Date(
+          lastWeekWindow.from.getTime() +
+            Math.floor(elapsedOf(dayWindow, new Date(nowMs)) / 300_000) *
+              300_000
+        ).toISOString()
+      : ''
   const lastWeekQuery = useQuery({
     ...getRangeReportOptions({
       query: {
         'api-version': API_VERSION,
-        from: dayWindow
-          ? new Date(dayWindow.from.getTime() - WEEK_MS).toISOString()
-          : '',
+        from: lastWeekFrom,
         to: lastWeekTo,
       },
     }),
-    enabled: dayWindow !== null,
+    enabled: lastWeekWindow !== null,
   })
 
   const report = reportQuery.data
-  const net = Number(report?.net ?? 0)
+  // Net sales: what customers paid less the credit notes given back
+  const net = Number(report?.netSales ?? 0)
   const bills = Number(report?.ticketsSettled ?? 0)
   const lastWeek = lastWeekQuery.data
-  const lastNet = Number(lastWeek?.net ?? 0)
+  const lastNet = Number(lastWeek?.netSales ?? 0)
   const lastBills = Number(lastWeek?.ticketsSettled ?? 0)
   const averageBill = bills > 0 ? net / bills : 0
   const lastAverage = lastBills > 0 ? lastNet / lastBills : 0
   const compared = lastWeekQuery.isSuccess
   const reportLoading = dayWindow === null || reportQuery.isPending
   const dateTime = new Intl.DateTimeFormat(locale, {
+    timeZone,
     weekday: 'short',
     hour: 'numeric',
     minute: '2-digit',

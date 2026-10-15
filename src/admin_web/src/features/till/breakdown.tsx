@@ -2,9 +2,11 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Bar, BarChart, Cell, XAxis } from 'recharts'
-import type { LocalizedText } from '@/api/catalog'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { getBreakdownReportOptions } from '@/api/sales/@tanstack/react-query.gen'
+import {
+  getBreakdownReportOptions,
+  getRangeReportOptions,
+} from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -27,6 +29,12 @@ import { ErrorState } from '@/components/error-state'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { RankedList } from '@/components/ranked-list'
+import {
+  cashierKindKey,
+  cashierNetSales,
+  categoryRows,
+  itemRows,
+} from './breakdown-rows'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
 
@@ -37,9 +45,13 @@ const SUNDAY = Date.UTC(2023, 0, 1)
 
 /**
  * The window cut four ways: when the money came in (hour, weekday), who
- * took it, and what sold. Hours and weekdays are in this browser's clock,
- * which is the business's. Charts where a shape says it (when), lists
- * where names do (who, what).
+ * took it, and what sold. Hours and weekdays are on the business's own
+ * clock (its IANA zone, so a day across a clock change is still right).
+ * Items and categories are in the money of net sales: what customers paid
+ * for them (their share of each bill after the bill discount, service and
+ * VAT) less what was refunded; the delivery fee is not an item and has a
+ * line of its own. Charts where a shape says it (when), lists where names
+ * do (who, what).
  */
 export function TillBreakdown() {
   const t = useT()
@@ -47,7 +59,7 @@ export function TillBreakdown() {
   const localized = useLocalized()
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { dayWindow, fromIso, toIso } = useTillWindow(search)
+  const { dayWindow, timeZone, fromIso, toIso } = useTillWindow(search)
 
   const report = useQuery({
     ...getBreakdownReportOptions({
@@ -55,11 +67,19 @@ export function TillBreakdown() {
         'api-version': API_VERSION,
         from: fromIso,
         to: toIso,
-        offsetMinutes: -new Date().getTimezoneOffset(),
+        tz: timeZone,
       },
     }),
     enabled: dayWindow !== null,
   })
+  // The till report's own query, usually already cached: the delivery fees
+  const range = useQuery({
+    ...getRangeReportOptions({
+      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+    }),
+    enabled: dayWindow !== null,
+  })
+  const deliveryFees = toNumber(range.data?.deliveryFees)
 
   // The category is Catalog's, joined here: Sales names the item on each
   // line, the menu says which category it is in. A line from before the
@@ -67,28 +87,11 @@ export function TillBreakdown() {
   const items = useQuery(
     listItemsOptions({ query: { 'api-version': API_VERSION } })
   )
-  const byCategory = useMemo(() => {
-    const category = new Map<number, LocalizedText | undefined>()
-    for (const item of items.data ?? []) {
-      category.set(toNumber(item.id), item.catalogTypeName ?? undefined)
-    }
-    const groups = new Map<
-      string,
-      { name: LocalizedText | undefined; qty: number; amount: number }
-    >()
-    for (const row of report.data?.byItem ?? []) {
-      const name =
-        row.catalogItemId != null
-          ? category.get(toNumber(row.catalogItemId))
-          : undefined
-      const key = name ? localized(name) : ''
-      const group = groups.get(key) ?? { name, qty: 0, amount: 0 }
-      group.qty += toNumber(row.qty)
-      group.amount += toNumber(row.amount)
-      groups.set(key, group)
-    }
-    return [...groups.values()].sort((a, b) => b.amount - a.amount)
-  }, [items.data, report.data, localized])
+  const soldItems = useMemo(() => itemRows(report.data?.byItem), [report.data])
+  const byCategory = useMemo(
+    () => categoryRows(soldItems, items.data),
+    [soldItems, items.data]
+  )
 
   const data = report.data
   const loading = !dayWindow || report.isPending
@@ -143,47 +146,63 @@ export function TillBreakdown() {
             </CardHeader>
             <CardContent>
               <ul className='divide-y'>
-                {(data.byCashier ?? []).map((c) => (
-                  <li key={c.name} className='py-2.5'>
-                    <ListRow
-                      leading={<EntityAvatar name={c.name || '—'} />}
-                      title={c.name || '—'}
-                      meta={
-                        <>
-                          <span className='tabular-nums'>
-                            {t('posTicketsCount', { count: toNumber(c.count) })}
-                          </span>
-                          {/* What a reviewer looks for, only when there is any */}
-                          {toNumber(c.discounts) > 0 && (
-                            <>
-                              <Dot />
-                              <span className='tabular-nums'>
-                                {t('discount')} {formatEgp(c.discounts)}
-                              </span>
-                            </>
-                          )}
-                          {toNumber(c.voids) > 0 && (
-                            <>
-                              <Dot />
-                              <span className='text-destructive tabular-nums'>
-                                {t('voidsCount', { count: toNumber(c.voids) })}
-                              </span>
-                            </>
-                          )}
-                          {toNumber(c.refunds) > 0 && (
-                            <>
-                              <Dot />
-                              <span className='text-destructive tabular-nums'>
-                                {t('tillRefunds')} {formatEgp(c.refunds)}
-                              </span>
-                            </>
-                          )}
-                        </>
-                      }
-                      trailing={<Money value={c.net} strong />}
-                    />
-                  </li>
-                ))}
+                {(data.byCashier ?? []).map((c) => {
+                  // The system's own work (a platform, guests paying online,
+                  // a rider, an automatic void) is said as what it is
+                  const kindKey = c.kind ? cashierKindKey[c.kind] : undefined
+                  const title = kindKey ? t(kindKey) : c.name || '—'
+                  return (
+                    <li key={`${c.kind ?? ''}-${c.name}`} className='py-2.5'>
+                      <ListRow
+                        leading={<EntityAvatar name={title} />}
+                        title={title}
+                        meta={
+                          <>
+                            {kindKey && c.name && (
+                              <>
+                                <span>{c.name}</span>
+                                <Dot />
+                              </>
+                            )}
+                            <span className='tabular-nums'>
+                              {t('posTicketsCount', {
+                                count: toNumber(c.count),
+                              })}
+                            </span>
+                            {/* What a reviewer looks for, only when there is any */}
+                            {toNumber(c.discounts) > 0 && (
+                              <>
+                                <Dot />
+                                <span className='tabular-nums'>
+                                  {t('discount')} {formatEgp(c.discounts)}
+                                </span>
+                              </>
+                            )}
+                            {toNumber(c.voids) > 0 && (
+                              <>
+                                <Dot />
+                                <span className='text-destructive tabular-nums'>
+                                  {t('voidsCount', {
+                                    count: toNumber(c.voids),
+                                  })}
+                                </span>
+                              </>
+                            )}
+                            {toNumber(c.refunds) > 0 && (
+                              <>
+                                <Dot />
+                                <span className='text-destructive tabular-nums'>
+                                  {t('tillRefunds')} {formatEgp(c.refunds)}
+                                </span>
+                              </>
+                            )}
+                          </>
+                        }
+                        trailing={<Money value={cashierNetSales(c)} strong />}
+                      />
+                    </li>
+                  )
+                })}
               </ul>
             </CardContent>
           </Card>
@@ -224,12 +243,15 @@ export function TillBreakdown() {
               </CardHeader>
               <CardContent>
                 <RankedList
-                  items={byCategory.map((c, index) => ({
-                    key: String(index),
+                  items={byCategory.map((c) => ({
+                    key: c.id != null ? String(c.id) : 'none',
                     label: c.name ? localized(c.name) : t('uncategorised'),
                     value: c.amount,
                     display: formatEgp(c.amount),
-                    hint: `${c.qty}×`,
+                    hint:
+                      c.refundedQty > 0
+                        ? `${c.qty}× · ${t('refundedQty', { count: c.refundedQty })}`
+                        : `${c.qty}×`,
                   }))}
                 />
               </CardContent>
@@ -237,19 +259,29 @@ export function TillBreakdown() {
             <Card className='gap-3'>
               <CardHeader>
                 <CardTitle>{t('byItem')}</CardTitle>
+                <CardDescription>{t('itemsPaidNetOfRefunds')}</CardDescription>
               </CardHeader>
               <CardContent>
                 <RankedList
-                  items={[...(data.byItem ?? [])]
-                    .sort((a, b) => toNumber(b.amount) - toNumber(a.amount))
-                    .map((i, index) => ({
-                      key: String(index),
-                      label: localized(i.description),
-                      value: toNumber(i.amount),
-                      display: formatEgp(i.amount),
-                      hint: `${toNumber(i.qty)}×`,
-                    }))}
+                  items={soldItems.map((i) => ({
+                    key: i.key,
+                    label: localized(i.description),
+                    value: i.amount,
+                    display: formatEgp(i.amount),
+                    hint:
+                      i.refundedQty > 0
+                        ? `${i.qty}× · ${t('refundedQty', { count: i.refundedQty })}`
+                        : `${i.qty}×`,
+                  }))}
                 />
+                {deliveryFees > 0 && (
+                  <div className='text-muted-foreground mt-3 flex justify-between gap-3 border-t pt-2 text-sm'>
+                    <span>{t('deliveryFeesNotItems')}</span>
+                    <span className='tabular-nums'>
+                      {formatEgp(deliveryFees)}
+                    </span>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -273,7 +305,8 @@ function Bars({ title, rows }: { title: string; rows: Bar[] }) {
     null
   )
   const config = {
-    net: { label: t('net'), color: 'var(--chart-1)' },
+    // What customers paid in the bucket, before refunds
+    net: { label: t('grossSales'), color: 'var(--chart-1)' },
   } satisfies ChartConfig
   return (
     <Card className='gap-2'>

@@ -26,7 +26,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { AddStaffDialog } from '@/features/staff/components/add-staff-dialog'
-import { refreshRiders } from './refresh'
+import { useBusinessDayOffset } from '@/features/till/use-till-window'
 import {
   compareRiders,
   num,
@@ -34,6 +34,7 @@ import {
   presenceOf,
   presenceTone,
 } from './format'
+import { refreshRiders } from './refresh'
 
 const columnHelper = createAppColumnHelper<RiderOverview>()
 
@@ -79,12 +80,14 @@ export function Riders() {
   const queryClient = useQueryClient()
   const [adding, setAdding] = useState(false)
 
-  // "Today" is the admin's own day: Ordering keeps no time zone
-  const tzOffsetMinutes = new Date().getTimezoneOffset()
+  // "Today" is the branch's business day: Ordering takes only an offset,
+  // so it is handed the one whose midnight is the day's start
+  const tzOffsetMinutes = useBusinessDayOffset()
   const overview = useQuery({
     ...getRidersOverviewOptions({
       query: { 'api-version': API_VERSION, tzOffsetMinutes },
     }),
+    enabled: tzOffsetMinutes !== undefined,
     refetchInterval: 60_000,
   })
   const riders = useMemo(

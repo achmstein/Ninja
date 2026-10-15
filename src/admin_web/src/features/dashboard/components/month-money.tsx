@@ -3,34 +3,40 @@ import { Link, type LinkProps } from '@tanstack/react-router'
 import { getProfitOptions } from '@/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
+import { businessDateOf } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { localDateOf } from '@/lib/zoned-time'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { Money } from '@/components/money'
+import {
+  formatShare,
+  profitBase,
+  shareOf,
+} from '@/features/finance/profit-math'
+import { useTillWindow } from '@/features/till/use-till-window'
 
 /**
  * The month so far, in money: what came in, what it cost, what is left.
  * The owners' view — the profit feed is theirs — as one list down the card:
- * sales, each cost with its share of sales, the profit under a line; each
- * row opens the page behind it.
+ * net sales without its VAT (what profit is on), each cost with its share
+ * of that, the profit under a line, every row adding up to it; each row
+ * opens the page behind it. The month is the business's: the one today's
+ * business day is in, in the business's zone.
  */
 export function MonthMoney() {
   const t = useT()
   const features = useFeatures()
   const locale = useLocale()
-  const now = new Date()
-  const year = now.getFullYear()
-  const month = now.getMonth() + 1
+  const { hours, timeZone } = useTillWindow({})
+  const today = businessDateOf(new Date(), hours ?? { timeZone })
+  const { year, month } = today
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
-    now
+    localDateOf(today)
   )
-  const percent = new Intl.NumberFormat(locale, {
-    style: 'percent',
-    maximumFractionDigits: 0,
-  })
 
   const profit = useQuery(
     getProfitOptions({ query: { 'api-version': API_VERSION, year, month } })
@@ -41,13 +47,14 @@ export function MonthMoney() {
   }
 
   const p = profit.data
-  const sales = toNumber(p?.netSales)
-  const costs = toNumber(p?.goods) + toNumber(p?.waste)
-  // A share of sales says something only while it is one: 1,615% of a quiet month's sales says nothing
-  const share = (amount: number) =>
-    sales > 0 && amount / sales <= 1
-      ? t('ofSales', { share: percent.format(amount / sales) })
-      : undefined
+  // Net sales ex VAT, the base profit and every share here is on
+  const sales = profitBase(p)
+  const costs = toNumber(p?.goods) + toNumber(p?.waste) + toNumber(p?.shrinkage)
+  // The same share as the profit page shows, uncapped
+  const share = (amount: number) => {
+    const formatted = formatShare(shareOf(amount, sales), locale)
+    return formatted ? t('ofSales', { share: formatted }) : undefined
+  }
 
   const rows: {
     label: string
@@ -58,7 +65,7 @@ export function MonthMoney() {
     shown: boolean
   }[] = [
     {
-      label: t('costOfGoods'),
+      label: t('goodsWasteShrinkage'),
       amount: costs,
       hint: share(costs),
       to: features.inventory ? '/inventory/reports' : undefined,
@@ -107,7 +114,9 @@ export function MonthMoney() {
             search={{ month: monthKey }}
             className={line}
           >
-            <span className='flex-1 text-sm font-medium'>{t('netSales')}</span>
+            <span className='flex-1 text-sm font-medium'>
+              {t('netSalesExVat')}
+            </span>
             <Money value={sales} strong className='text-base' />
           </Link>
           {rows
@@ -152,10 +161,10 @@ export function MonthMoney() {
               <span className='block text-sm font-semibold'>
                 {t('profitLabel')}
               </span>
-              {p.margin != null && Math.abs(toNumber(p.margin)) <= 1 && (
+              {p.margin != null && (
                 <span className='text-muted-foreground block text-xs'>
                   {t('marginOfSales', {
-                    share: percent.format(toNumber(p.margin)),
+                    share: formatShare(toNumber(p.margin), locale) ?? '—',
                   })}
                 </span>
               )}

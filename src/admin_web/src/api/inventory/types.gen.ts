@@ -91,6 +91,7 @@ export type MovementView = {
     reason: null | string;
     recordedBy: string;
     recordedAt: string;
+    occurredAt?: null | string;
 };
 
 export type PagedResultOfMovementView = {
@@ -409,6 +410,7 @@ export type VarianceReport = {
     wastedValue: number | string;
     countVarianceValue: number | string;
     closingValue: number | string;
+    valuedAtCurrentAverage?: boolean;
 };
 
 export type VarianceRow = {
@@ -433,6 +435,7 @@ export type VarianceRow = {
     closing: number | string;
     closingValue: number | string;
     variancePercent: null | number | string;
+    valuedAtCurrentAverage?: boolean;
 };
 
 export type GetStockItemsData = {

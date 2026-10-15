@@ -43,6 +43,13 @@ const route = getRouteApi('/_authenticated/till/shifts')
 // is prev/next only, at the size the API defaults to
 const PAGE_SIZE = 20
 
+/** A shift's net sales; an older server sent only the gross sales total */
+function shiftNetSales(shift: ShiftView): number {
+  return shift.netSales != null
+    ? toNumber(shift.netSales)
+    : toNumber(shift.salesTotal) - toNumber(shift.refundsTotal)
+}
+
 const columnHelper = createAppColumnHelper<ShiftView>()
 
 type Translate = (key: TranslationKey, params?: TranslateParams) => string
@@ -90,10 +97,11 @@ function getShiftColumns({ t }: { t: Translate }) {
         </div>
       ),
     }),
-    columnHelper.accessor('salesTotal', {
+    // Net sales: what the shift sold less every refund it gave
+    columnHelper.accessor((row) => shiftNetSales(row), {
       meta: { align: 'end' },
       id: 'sales',
-      header: t('salesTotal'),
+      header: t('netSales'),
       cell: (info) => (
         <Money
           value={info.getValue()}
@@ -139,7 +147,7 @@ function ShiftListRow({ row, t }: { row: AppRow<ShiftView>; t: Translate }) {
           {t('posTicketsCount', { count: toNumber(shift.ticketsSettled) })}
         </>
       }
-      trailing={<Money value={shift.salesTotal} strong />}
+      trailing={<Money value={shiftNetSales(shift)} strong />}
       trailingMeta={<OverShortBadge value={toNumber(shift.overShort)} />}
     />
   )
@@ -253,7 +261,7 @@ export function TillShifts() {
                     count: toNumber(shift.ticketsSettled),
                   })}
                   {' · '}
-                  {t('salesTotal')} {formatEgp(shift.salesTotal)}
+                  {t('netSales')} {formatEgp(shiftNetSales(shift))}
                 </p>
               </div>
               <Button variant='outline' onClick={() => setSelected(shift)}>

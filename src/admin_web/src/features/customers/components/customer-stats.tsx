@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { useFeatures } from '@/lib/brand'
+import { useBusinessTimeZone } from '@/lib/business-clock'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -21,7 +22,9 @@ const tierOrder: LoyaltyTier[] = ['bronze', 'silver', 'gold', 'platinum']
 
 /**
  * The customer-side numbers, folded away by default: what is owed, how
- * many members, points this month, and the tier spread as one bar.
+ * many members, points this month (issued net of what was clawed back, and
+ * redeemed), the points members still hold, and the tier spread as one bar.
+ * The month is the calendar month in the business's zone, as Loyalty counts it.
  */
 export function CustomerStats() {
   const t = useT()
@@ -40,9 +43,16 @@ export function CustomerStats() {
   const outstanding = owing.reduce((sum, a) => sum + a.balance, 0)
   const byTier = stats.data?.accountsByTier ?? {}
   const members = stats.data?.totalAccounts ?? 0
-  const monthName = new Intl.DateTimeFormat(locale, { month: 'long' }).format(
-    new Date()
-  )
+  const timeZone = useBusinessTimeZone()
+  const monthStart = stats.data?.monthStartsAt
+    ? new Date(stats.data.monthStartsAt)
+    : new Date()
+  const monthName = new Intl.DateTimeFormat(locale, {
+    month: 'long',
+    timeZone,
+  }).format(monthStart)
+  const points = (value: number | undefined) =>
+    stats.data ? Number(value ?? 0).toLocaleString(locale) : null
 
   // The tab figures with tabs, the points figures with loyalty; nothing to show without either
   const cells: { label: string; value: React.ReactNode; tone?: string }[] = [
@@ -63,11 +73,26 @@ export function CustomerStats() {
       ? [
           { label: t('members'), value: stats.data ? members : null },
           {
-            label: `${t('pointsIssued')} · ${monthName}`,
-            value: stats.data
-              ? stats.data.pointsIssuedThisMonth.toLocaleString(locale)
-              : null,
+            label: `${t('pointsIssuedNet')} · ${monthName}`,
+            value: points(stats.data?.pointsIssuedThisMonth),
           },
+          // Older servers do not say what was redeemed or is still held
+          ...(stats.data?.pointsRedeemedThisMonth != null
+            ? [
+                {
+                  label: `${t('pointsRedeemed')} · ${monthName}`,
+                  value: points(stats.data.pointsRedeemedThisMonth),
+                },
+              ]
+            : []),
+          ...(stats.data?.pointsOutstanding != null
+            ? [
+                {
+                  label: t('pointsOutstanding'),
+                  value: points(stats.data.pointsOutstanding),
+                },
+              ]
+            : []),
         ]
       : []),
   ]

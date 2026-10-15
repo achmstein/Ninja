@@ -5,7 +5,9 @@ import { Search, X } from 'lucide-react'
 import { getRangeReportOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { useNow } from '@/lib/business-clock'
+import { previousWindow } from '@/lib/business-day'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -19,12 +21,13 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { ErrorState } from '@/components/error-state'
 import { MetricStrip, MetricTile } from '@/components/kit'
 import { CountUp } from '@/components/motion'
-import { SegmentedBar } from '@/components/segmented-bar'
 import { PaymentsList } from './components/payments-list'
 import { RefundsList } from './components/refunds-list'
 import { TabPaymentsList } from './components/tab-payments-list'
-import { TICKET_TYPES, tendersFor } from './components/tender'
+import { TICKET_TYPES } from './components/tender'
+import { TenderSeriesView } from './components/tender-series'
 import { TicketsList } from './components/tickets-list'
+import { netStatement } from './report-math'
 import { TillPage } from './till-page'
 import { useTillWindow } from './use-till-window'
 
@@ -32,23 +35,39 @@ const route = getRouteApi('/_authenticated/till/')
 
 type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
 
+// Where a sale came from (the range report's byChannel): the ticket types,
+// with delivery and platform orders apart from the counter they settle at.
+// Each shows what customers paid, before refunds.
+const CHANNELS: { name: string; labelKey: TranslationKey; always: boolean }[] =
+  [
+    ...TICKET_TYPES.map(({ name, labelKey }) => ({
+      name,
+      labelKey,
+      always: true,
+    })),
+    { name: 'Delivery', labelKey: 'channelDelivery', always: false },
+    { name: 'Platform', labelKey: 'channelPlatform', always: false },
+  ]
+
 /**
- * Settled sales over a window of business days. Net is the one big number,
- * compared with the period before; the strip carries the lines that make it
- * up; the tender split and the per-type counts sit side by side. Every
- * number opens the list behind it right under the report, on this page.
+ * Settled sales over a window of business days. Net sales (what customers
+ * paid less the refunds given back) is the one big number, compared with
+ * the same stretch of the period before; the strip carries the lines that
+ * make it up; the tenders and the statement sit side by side. Every number
+ * opens the list behind it right under the report, on this page.
  *
- * A tender's segment counts everything that went through it — payments on
- * tickets plus tab payments — so InstaPay reads what the InstaPay app will
- * show, not just what settled a bill. "On account" is what was charged to
- * customers' accounts, and is paid off later through those tab payments.
+ * Tenders come as two series: what the bills were paid with (cash after
+ * the change) and the tab payments, which are money in but not sales. "On
+ * account" is what was charged to customers' accounts, paid off later
+ * through those tab payments.
  */
 export function TillReport() {
   const t = useT()
   const features = useFeatures()
   const search = route.useSearch()
   const navigate = route.useNavigate()
-  const { dayWindow, fromIso, toIso } = useTillWindow(search)
+  const { dayWindow, hours, fromIso, toIso } = useTillWindow(search)
+  const now = useNow()
 
   // A typed receipt number opens the tickets list on that one bill
   const view: TillView | undefined =
@@ -61,14 +80,22 @@ export function TillReport() {
     enabled: dayWindow !== null,
   })
 
-  // The same-length window right before this one, for the comparison
-  const previous = dayWindow
+  // As many business days right before this window, cut to the same time
+  // into them while this one is still going (to the 5 minutes, so the
+  // query is not asked again every tick)
+  const previousSpan =
+    dayWindow && hours ? previousWindow(dayWindow, hours, now) : null
+  const previous = previousSpan
     ? {
-        from: new Date(
-          dayWindow.from.getTime() -
-            (dayWindow.to.getTime() - dayWindow.from.getTime())
+        from: previousSpan.from,
+        to: new Date(
+          previousSpan.from.getTime() +
+            Math.floor(
+              (previousSpan.to.getTime() - previousSpan.from.getTime()) /
+                300_000
+            ) *
+              300_000
         ),
-        to: dayWindow.from,
       }
     : null
   const previousReport = useQuery({
@@ -83,22 +110,19 @@ export function TillReport() {
   })
 
   const data = report.data
-  const net = toNumber(data?.net)
+  const net = toNumber(data?.netSales)
   const bills = toNumber(data?.ticketsSettled)
   const refunds = toNumber(data?.refunds)
-  const previousNet = toNumber(previousReport.data?.net)
+  const previousNet = toNumber(previousReport.data?.netSales)
   const delta =
     previousReport.data && previousNet > 0
       ? ((net - previousNet) / previousNet) * 100
       : null
 
-  const tenderTotals = new Map(
-    (data?.tenderTotals ?? []).map((row) => [row.tender, row])
+  const channelTotals = new Map(
+    (data?.byChannel ?? []).map((row) => [row.channel, row])
   )
-  const tabTenderTotals = new Map(
-    (data?.tabPaymentTenderTotals ?? []).map((row) => [row.tender, row])
-  )
-  const typeTotals = new Map((data?.byType ?? []).map((row) => [row.type, row]))
+  const statement = netStatement(data)
   const range = {
     range: search.range,
     from: search.from,
@@ -247,44 +271,13 @@ export function TillReport() {
                 {loading ? (
                   <Skeleton className='h-40' />
                 ) : (
-                  <SegmentedBar
-                    segments={tendersFor(
-                      features.onlinePayments,
-                      toNumber(tenderTotals.get('Online')?.amount) > 0,
-                      toNumber(tenderTotals.get('Talabat')?.amount) > 0
-                    ).map(({ name, value, labelKey }) => {
-                      const payments = toNumber(tenderTotals.get(name)?.count)
-                      const slips = toNumber(tabTenderTotals.get(name)?.count)
-                      const amount =
-                        toNumber(tenderTotals.get(name)?.amount) +
-                        toNumber(tabTenderTotals.get(name)?.amount)
-                      // "3 payments · 1 tab payment": each kind only when there is one
-                      const hint =
-                        [
-                          payments > 0 &&
-                            t('paymentsCount', { count: payments }),
-                          slips > 0 && t('tabPaymentsCount', { count: slips }),
-                        ]
-                          .filter(Boolean)
-                          .join(' · ') || t('paymentsCount', { count: 0 })
-                      return {
-                        key: name,
-                        label: t(labelKey),
-                        value: amount,
-                        display: formatEgp(amount),
-                        hint,
-                        to: '/till' as const,
-                        search: open('payments', { tender: String(value) }),
-                      }
-                    })}
+                  <TenderSeriesView
+                    report={data}
+                    billsSearch={(tender) =>
+                      open('payments', { tender: String(tender) })
+                    }
+                    tabsSearch={() => open('tab-payments')}
                   />
-                )}
-                {!loading && toNumber(data?.changeGiven) > 0 && (
-                  <p className='text-muted-foreground mt-3 text-xs tabular-nums'>
-                    {t('changeGivenNote', {
-                      amount: formatEgp(data?.changeGiven),
-                    })}
-                  </p>
                 )}
               </CardContent>
             </Card>
@@ -299,39 +292,36 @@ export function TillReport() {
                   <Skeleton className='h-40' />
                 ) : (
                   <dl className='grid gap-2 text-sm'>
-                    {[
-                      [t('subtotal'), toNumber(data?.subtotal), ''],
-                      [
-                        t('serviceChargeTotal'),
-                        toNumber(data?.serviceCharge),
-                        '+',
-                      ],
-                      [t('vatTotal'), toNumber(data?.vat), '+'],
-                      [t('discountsTotal'), toNumber(data?.discounts), '−'],
-                      [t('refundsTotal'), refunds, '−'],
-                    ]
-                      .filter(([, amount, sign]) => !sign || Number(amount) > 0)
-                      .map(([label, amount, sign]) => (
-                        <div
-                          key={String(label)}
-                          className='flex justify-between gap-3'
+                    {statement.map((line) => (
+                      <div
+                        key={line.key}
+                        className={cn(
+                          'flex justify-between gap-3',
+                          line.sign === '=' && 'border-t pt-2 font-semibold',
+                          line.sign === 'of' && 'ps-3 text-xs'
+                        )}
+                      >
+                        <dt
+                          className={cn(
+                            line.sign !== '=' && 'text-muted-foreground'
+                          )}
                         >
-                          <dt className='text-muted-foreground'>{label}</dt>
-                          <dd
-                            className={cn(
-                              'tabular-nums',
-                              sign === '−' && 'text-destructive'
-                            )}
-                          >
-                            {sign}
-                            {formatEgp(Number(amount))}
-                          </dd>
-                        </div>
-                      ))}
-                    <div className='mt-1 flex justify-between gap-3 border-t pt-2 font-semibold'>
-                      <dt>{t('netSales')}</dt>
-                      <dd className='tabular-nums'>{formatEgp(net)}</dd>
-                    </div>
+                          {t(line.labelKey)}
+                        </dt>
+                        <dd
+                          className={cn(
+                            'tabular-nums',
+                            line.sign === '−' && 'text-destructive',
+                            line.sign === 'of' && 'text-muted-foreground'
+                          )}
+                        >
+                          {line.sign === '−' || line.sign === '+'
+                            ? line.sign
+                            : ''}
+                          {formatEgp(line.amount)}
+                        </dd>
+                      </div>
+                    ))}
                   </dl>
                 )}
               </CardContent>
@@ -340,15 +330,17 @@ export function TillReport() {
 
           <Card className='gap-3'>
             <CardHeader>
-              <CardTitle>{t('byTicketType')}</CardTitle>
+              <CardTitle>{t('byChannel')}</CardTitle>
             </CardHeader>
             <CardContent>
               {loading ? (
                 <Skeleton className='h-24' />
               ) : (
-                <div className='grid gap-3 sm:grid-cols-3'>
-                  {TICKET_TYPES.map(({ name, labelKey }) => {
-                    const row = typeTotals.get(name)
+                <div className='grid gap-3 sm:grid-cols-3 lg:grid-cols-5'>
+                  {CHANNELS.filter(
+                    ({ name, always }) => always || channelTotals.has(name)
+                  ).map(({ name, labelKey }) => {
+                    const row = channelTotals.get(name)
                     return (
                       <Link
                         key={name}
@@ -360,7 +352,7 @@ export function TillReport() {
                           {t(labelKey)}
                         </div>
                         <div className='mt-0.5 font-semibold tabular-nums'>
-                          {formatEgp(row?.net)}
+                          {formatEgp(row?.gross)}
                         </div>
                         <div className='text-muted-foreground text-xs tabular-nums'>
                           {t('posTicketsCount', {

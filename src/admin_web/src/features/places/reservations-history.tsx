@@ -7,6 +7,8 @@ import {
   getReservationHistoryOptions,
   listPlacesOptions,
 } from '@/api/spaces/@tanstack/react-query.gen'
+import { useNow } from '@/lib/business-clock'
+import { presetWindow } from '@/lib/business-day'
 import {
   useLanguage,
   useLocale,
@@ -34,6 +36,7 @@ import { Dot, ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
+import { useTillWindow } from '@/features/till/use-till-window'
 import {
   comparePlaces,
   RESERVATION_CANCELLED,
@@ -46,19 +49,23 @@ const route = getRouteApi('/_authenticated/places/reservations')
 
 type DateRange = 'today' | '7d' | '30d'
 
-const dateRanges: { value: DateRange; key: TranslationKey; days: number }[] = [
-  { value: 'today', key: 'today', days: 0 },
-  { value: '7d', key: 'last7Days', days: 7 },
-  { value: '30d', key: 'last30Days', days: 30 },
+const dateRanges: { value: DateRange; key: TranslationKey }[] = [
+  { value: 'today', key: 'today' },
+  { value: '7d', key: 'last7Days' },
+  { value: '30d', key: 'last30Days' },
 ]
 
-function rangeToFromDate(range: DateRange | undefined): string | undefined {
-  if (!range) return undefined
-  const days = dateRanges.find((r) => r.value === range)?.days ?? 0
-  const from = new Date()
-  from.setHours(0, 0, 0, 0)
-  from.setDate(from.getDate() - days)
-  return from.toISOString()
+// "Last 7 days" is exactly seven business days ending with today's (the
+// branch's day start, the business's zone), with an end as well as a start
+function useRangeWindow(range: DateRange | undefined) {
+  const { hours } = useTillWindow({})
+  const now = useNow()
+  const window = range && hours ? presetWindow(range, hours, {}, now) : null
+  return {
+    fromDate: window?.from.toISOString(),
+    toDate: window?.to.toISOString(),
+    ready: !range || window !== null,
+  }
 }
 
 /** How a closed reservation ended, as a badge. */
@@ -102,7 +109,7 @@ export function ReservationHistory() {
       globalFilter: { enabled: false },
     })
 
-  const fromDate = useMemo(() => rangeToFromDate(search.range), [search.range])
+  const { fromDate, toDate, ready } = useRangeWindow(search.range)
 
   // Any place can have been reserved; the filter lists them all
   const { data: places = [] } = useQuery(listPlacesOptions())
@@ -118,8 +125,10 @@ export function ReservationHistory() {
         pageSize: pagination.pageSize,
         placeId: search.place,
         fromDate,
+        toDate,
       },
     }),
+    enabled: ready,
     placeholderData: keepPreviousData,
   })
 

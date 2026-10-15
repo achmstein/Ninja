@@ -31,7 +31,10 @@ import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
-import { useTillWindow } from '@/features/till/use-till-window'
+import {
+  useBusinessDayOffset,
+  useTillWindow,
+} from '@/features/till/use-till-window'
 import {
   addressLine,
   cashDifferenceTone,
@@ -119,13 +122,12 @@ export function RiderPage({ userId }: { userId: string }) {
   const [timelineOrder, setTimelineOrder] = useState<number | null>(null)
 
   // The rider as the Riders page has them: served from its cache when it was open
+  const tzOffsetMinutes = useBusinessDayOffset()
   const overview = useQuery({
     ...getRidersOverviewOptions({
-      query: {
-        'api-version': API_VERSION,
-        tzOffsetMinutes: new Date().getTimezoneOffset(),
-      },
+      query: { 'api-version': API_VERSION, tzOffsetMinutes },
     }),
+    enabled: tzOffsetMinutes !== undefined,
     refetchInterval: 60_000,
   })
   const rider = overview.data?.find((r) => r.userId === userId)

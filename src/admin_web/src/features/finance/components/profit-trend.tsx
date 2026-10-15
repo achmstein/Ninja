@@ -7,6 +7,7 @@ import {
   ChartTooltip,
   type ChartConfig,
 } from '@/components/ui/chart'
+import { oldestFirst, profitBase } from '../profit-math'
 
 type Month = {
   year: number | string
@@ -16,13 +17,16 @@ type Month = {
   labour: number | string
   expenses: number | string
   profit: number | string
+  netSalesExVat?: number | string
 }
 
 /**
- * The last months side by side: what each sold and what it kept, as bars,
- * profit in green or red under its sales. Hovering a month gives its costs;
- * a click opens it. A trend is what this answers at a glance, where a table
- * of six rows and six figures had to be read.
+ * The last months side by side, oldest on the left: what each sold (net
+ * sales without its VAT, the base profit is on) and what it kept, as bars,
+ * profit in green or red under its sales. Hovering a month gives its costs,
+ * which add up to its profit; a click opens it. A trend is what this
+ * answers at a glance, where a table of six rows and six figures had to be
+ * read.
  */
 export function ProfitTrend({
   months,
@@ -35,7 +39,8 @@ export function ProfitTrend({
 }) {
   const t = useT()
   const locale = useLocale()
-  const rows = months.map((m) => {
+  // The API lists the newest first; time reads left to right
+  const rows = oldestFirst(months).map((m) => {
     const key = `${m.year}-${String(m.month).padStart(2, '0')}`
     return {
       key,
@@ -44,7 +49,7 @@ export function ProfitTrend({
         toNumber(m.month) - 1,
         1
       ).toLocaleDateString(locale, { month: 'short' }),
-      sales: toNumber(m.netSales),
+      sales: profitBase(m),
       profit: toNumber(m.profit),
       goods: toNumber(m.goods),
       labour: toNumber(m.labour),
@@ -55,7 +60,7 @@ export function ProfitTrend({
     new Intl.NumberFormat(locale, { notation: 'compact' }).format(value)
 
   const config = {
-    sales: { label: t('netSales'), color: 'var(--chart-2)' },
+    sales: { label: t('netSalesExVat'), color: 'var(--chart-2)' },
     profit: { label: t('profitLabel'), color: 'var(--success)' },
   } satisfies ChartConfig
 
@@ -114,8 +119,8 @@ export function ProfitTrend({
                 return (
                   <div className='bg-background grid min-w-48 gap-1 rounded-lg border px-3 py-2 text-xs shadow-xl'>
                     <div className='font-medium'>{row.label}</div>
-                    {line(t('netSales'), row.sales)}
-                    {line(t('costOfGoods'), row.goods)}
+                    {line(t('netSalesExVat'), row.sales)}
+                    {line(t('goodsWasteShrinkage'), row.goods)}
                     {line(t('labourCost'), row.labour)}
                     {line(t('operatingExpenses'), row.expenses)}
                     {line(t('profitLabel'), row.profit, true)}

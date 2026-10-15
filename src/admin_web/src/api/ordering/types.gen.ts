@@ -176,6 +176,7 @@ export type DeliveryQuote = {
     minimumOrder: number | string;
     radiusKm: number | string;
     signInRequired?: boolean;
+    hasArea?: boolean;
 };
 
 export type DeliveryRequest = {
@@ -464,6 +465,7 @@ export type OrderStatsDay = {
 };
 
 export type OrderStatsItem = {
+    productId?: number | string;
     productName?: LocalizedText;
     units?: number | string;
     revenue?: number | string;
@@ -666,6 +668,14 @@ export type SetOrderReadyRequest = {
     ready: boolean;
 };
 
+export type StaffDeliveryResolution = {
+    delivers: boolean;
+    latitude: null | number | string;
+    longitude: null | number | string;
+    locationRead: boolean;
+    branches: Array<DeliveryAlternative>;
+};
+
 export type StockDisposition = 'Waste' | 'Restock';
 
 export type SuggestionSource = 'None' | 'Pairing' | 'CartNudge' | 'Till';
@@ -681,6 +691,7 @@ export type TillDeliveryQuote = {
     longitude: null | number | string;
     locationRead: boolean;
     alternatives: Array<DeliveryAlternative>;
+    hasArea?: boolean;
 };
 
 export type GetOrdersByUserData = {
@@ -1386,6 +1397,9 @@ export type GetOrderStatsData = {
         fromDate: string;
         toDate: string;
         tzOffsetMinutes?: number | string;
+        tz?: string;
+        dayStart?: string;
+        top?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -2367,12 +2381,48 @@ export type GetTillDeliveryQuoteResponses = {
 
 export type GetTillDeliveryQuoteResponse = GetTillDeliveryQuoteResponses[keyof GetTillDeliveryQuoteResponses];
 
+export type ResolveDeliveryBranchForStaffData = {
+    body?: never;
+    path?: never;
+    query: {
+        location?: string;
+        latitude?: number | string;
+        longitude?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/resolve-staff';
+};
+
+export type ResolveDeliveryBranchForStaffErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ResolveDeliveryBranchForStaffResponses = {
+    /**
+     * OK
+     */
+    200: StaffDeliveryResolution;
+};
+
+export type ResolveDeliveryBranchForStaffResponse = ResolveDeliveryBranchForStaffResponses[keyof ResolveDeliveryBranchForStaffResponses];
+
 export type GetKnownDeliveryAddressesData = {
     body?: never;
     path?: never;
     query: {
         customerUserId?: string;
         phone?: string;
+        everyBranch?: boolean;
         /**
          * The API version, in the format 'major.minor'.
          */

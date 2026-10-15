@@ -69,9 +69,17 @@ export function getReportColumns({ t, localized }: ReportColumnsContext) {
         id: 'item',
         header: t('stockItem'),
         cell: ({ row }) => (
-          <span className='font-medium'>
-            {localized(row.original.name) || '—'}
-          </span>
+          <div className='flex flex-col leading-tight'>
+            <span className='font-medium'>
+              {localized(row.original.name) || '—'}
+            </span>
+            {/* No cost history for the period: its values are at today's average */}
+            {row.original.valuedAtCurrentAverage && (
+              <span className='text-warning text-xs'>
+                {t('valuedAtTodaysAverage')}
+              </span>
+            )}
+          </div>
         ),
       }
     ),

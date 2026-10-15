@@ -75,7 +75,10 @@ export function Employees() {
   const employees = useQuery(employeesQueryOptions(showInactive))
   const rows = employees.data ?? []
   const active = rows.filter((e) => e.isActive)
-  const owedToStaff = rows.reduce(
+  // Owed to everyone, those who left included, whatever the switch shows:
+  // a leaver not yet paid off is still owed (the same query as the switch's)
+  const everyone = useQuery(employeesQueryOptions(true))
+  const owedToStaff = (everyone.data ?? rows).reduce(
     (sum, e) => sum + Math.max(0, toNumber(e.balance)),
     0
   )

@@ -21,21 +21,47 @@ type MovementColumnsContext = {
 const columnHelper = createAppColumnHelper<MovementView>()
 
 /**
+ * When a movement happened: a sale's or a count's own time (an offline
+ * sale replayed later still belongs to when it was sold), else when it was
+ * posted. Older servers send only the posting time.
+ */
+export function movementTime(m: MovementView): string {
+  return m.occurredAt ?? m.recordedAt
+}
+
+/** Posted a minute or more after it happened: the posting time is worth saying */
+export function postedLater(m: MovementView): boolean {
+  return (
+    m.occurredAt != null &&
+    new Date(m.recordedAt).getTime() - new Date(m.occurredAt).getTime() >=
+      60_000
+  )
+}
+
+/**
  * The stock ledger, read under day headings: the time, what moved and
  * why. Six columns; the reference and reason share one cell so the eye
  * lands on item and quantity.
  */
 export function getMovementColumns({ t, localized }: MovementColumnsContext) {
   return columnHelper.columns([
-    columnHelper.accessor('recordedAt', {
+    columnHelper.accessor((row) => movementTime(row), {
       id: 'recordedAt',
       header: t('time'),
       cell: (info) => (
-        <When
-          value={info.getValue()}
-          mode='time'
-          className='text-muted-foreground'
-        />
+        <div className='flex flex-col leading-tight'>
+          <When
+            value={info.getValue()}
+            mode='time'
+            className='text-muted-foreground'
+          />
+          {postedLater(info.row.original) && (
+            <span className='text-muted-foreground/80 text-xs'>
+              {t('postedAt')}{' '}
+              <When value={info.row.original.recordedAt} mode='time' />
+            </span>
+          )}
+        </div>
       ),
       meta: { className: 'w-[88px]' },
     }),

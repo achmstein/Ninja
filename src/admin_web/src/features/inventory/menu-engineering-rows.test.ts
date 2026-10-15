@@ -1,6 +1,12 @@
-import { describe, expect, it } from 'vitest'
-import { type MenuCostRow } from './menu-cost-rows'
+import { describe, expect, it, vi } from 'vitest'
+import { summarize, type MenuCostRow } from './menu-cost-rows'
 import { countClasses, toMenuEngineering } from './menu-engineering-rows'
+
+// The cost rows name items through the localized input's helper, whose
+// module boots the app's API client; the names do not matter here
+vi.mock('@/components/localized-input', () => ({
+  primaryText: (text: { en?: string } | undefined) => text?.en ?? '',
+}))
 
 const row = (
   id: number,
@@ -87,5 +93,21 @@ describe('toMenuEngineering', () => {
     ])
     expect(result.rows.find((r) => r.catalogItemId === 1)?.sold).toBe(12)
     expect(result.rows.find((r) => r.catalogItemId === 2)?.sold).toBe(0)
+  })
+})
+
+describe('refunds and uncosted items', () => {
+  it('counts units sold less units refunded', () => {
+    const result = toMenuEngineering(
+      [row(1, 60, 20), row(2, 40, 30)],
+      [{ ...sold(1, 10), refundedQty: 4, netQty: 6 }, sold(2, 6)]
+    )
+    expect(result.rows.find((r) => r.catalogItemId === 1)?.sold).toBe(6)
+  })
+
+  it('keeps an item with an uncosted ingredient out of the average food cost', () => {
+    // 20/60 and 30/40 costed: 50/100 = 50%; the incomplete one (cost 1 of 50) would pull it to 34%
+    const rows = [row(1, 60, 20), row(2, 40, 30), row(3, 50, 1, 'incomplete')]
+    expect(summarize(rows, 35).averageFoodCost).toBe(50)
   })
 })

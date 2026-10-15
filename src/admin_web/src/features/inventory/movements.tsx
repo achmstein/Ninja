@@ -29,7 +29,7 @@ import {
   MOVEMENT_TYPE_VALUES,
 } from './format'
 import { HistoryPage } from './history-page'
-import { getMovementColumns } from './movement-columns'
+import { getMovementColumns, movementTime } from './movement-columns'
 import { stockItemsQueryOptions, toStockItemOptions } from './queries'
 
 const route = getRouteApi('/_authenticated/inventory/history/')
@@ -171,7 +171,7 @@ export function Movements() {
         <DataTable
           table={table}
           groupBy={{
-            key: (row) => dayKey(row.recordedAt),
+            key: (row) => dayKey(movementTime(row)),
             label: (key) => dayHeading(key, locale, t),
           }}
           isLoading={query.isLoading}
@@ -184,7 +184,7 @@ export function Movements() {
                 meta={
                   <>
                     <MovementTypeBadge type={m.type} />
-                    <When value={m.recordedAt} mode='time' />
+                    <When value={movementTime(m)} mode='time' />
                   </>
                 }
                 trailing={

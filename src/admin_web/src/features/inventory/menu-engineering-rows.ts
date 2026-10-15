@@ -15,7 +15,7 @@ export const MENU_CLASSES: MenuClass[] = ['star', 'plowhorse', 'puzzle', 'dog']
 export const POPULARITY_FACTOR = 0.7
 
 export type MenuEngineeringRow = MenuCostRow & {
-  /** Units sold in the window */
+  /** Units sold in the window, less the units refunded */
   sold: number
   /** Its share of the units the classified items sold, 0 to 1 */
   mix: number
@@ -52,7 +52,9 @@ export function toMenuEngineering(
   for (const line of byItem) {
     if (line.catalogItemId == null) continue
     const id = toNumber(line.catalogItemId)
-    sold.set(id, (sold.get(id) ?? 0) + toNumber(line.qty))
+    // Units sold less units refunded: a sale given back did not sell
+    const units = line.netQty != null ? line.netQty : line.qty
+    sold.set(id, (sold.get(id) ?? 0) + toNumber(units))
   }
 
   const placeable = (r: MenuCostRow) => r.status === 'ok' || r.status === 'over'

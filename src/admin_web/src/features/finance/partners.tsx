@@ -38,6 +38,7 @@ import { Section } from '@/components/section'
 import { AccountsTabs } from './accounts-tabs'
 import { LedgerList } from './components/ledger-list'
 import { PARTNER_ENTRY, partnerEntryLabel, sourceLabel } from './format'
+import { remainingShare, shareFits } from './partner-shares'
 import { partnerLedgerQueryOptions, partnersQueryOptions } from './queries'
 import { useFinanceActions } from './use-finance-actions'
 
@@ -228,10 +229,17 @@ function PartnerForm({
   const { branches } = useAllowedBranches()
   const activeBranchId = useBranchStore((s) => s.branchId)
 
+  // Every partner, to say what is left of each branch's profit (the
+  // list's own query, so from the cache)
+  const everyone = useQuery(partnersQueryOptions(true))
+  const editingId = partner ? toNumber(partner.id) : null
+  const left = (branchId: number) =>
+    remainingShare(everyone.data, branchId, editingId)
+
   const [name, setName] = useState(partner?.name ?? '')
   const [phone, setPhone] = useState(partner?.phone ?? '')
   // Branch → share of its profit, in percent (as typed); a branch not in
-  // the map is not theirs
+  // the map is not theirs. A new partner starts with what is left, not 100%.
   const [shares, setShares] = useState<Map<number, string>>(() =>
     partner
       ? new Map(
@@ -241,7 +249,7 @@ function PartnerForm({
           ])
         )
       : activeBranchId !== null
-        ? new Map([[activeBranchId, '100']])
+        ? new Map([[activeBranchId, String(left(activeBranchId))]])
         : new Map()
   )
   const [isActive, setIsActive] = useState(partner?.isActive ?? true)
@@ -249,7 +257,7 @@ function PartnerForm({
   const toggleBranch = (id: number, checked: boolean) =>
     setShares((prev) => {
       const next = new Map(prev)
-      if (checked) next.set(id, next.get(id) ?? '100')
+      if (checked) next.set(id, next.get(id) ?? String(left(id)))
       else next.delete(id)
       return next
     })
@@ -260,7 +268,10 @@ function PartnerForm({
     branchId,
     percent: parseFloat(percent) || 0,
   }))
-  const sharesValid = shareList.every((s) => s.percent >= 0 && s.percent <= 100)
+  // No branch's shares may add up to more than 100% (the server refuses it too)
+  const sharesValid = shareList.every((s) =>
+    shareFits(s.percent, left(s.branchId))
+  )
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -329,7 +340,7 @@ function PartnerForm({
                       <Input
                         type='number'
                         min='0'
-                        max='100'
+                        max={String(left(id))}
                         step='any'
                         inputMode='decimal'
                         aria-label={t('profitShare')}
@@ -339,6 +350,19 @@ function PartnerForm({
                       />
                       <span className='text-muted-foreground'>
                         % {t('ofProfit')}
+                      </span>
+                      <span
+                        className={cn(
+                          'text-xs tabular-nums',
+                          shareFits(
+                            parseFloat(shares.get(id) ?? '') || 0,
+                            left(id)
+                          )
+                            ? 'text-muted-foreground'
+                            : 'text-destructive'
+                        )}
+                      >
+                        {t('shareLeft', { pct: String(left(id)) })}
                       </span>
                     </div>
                   )}

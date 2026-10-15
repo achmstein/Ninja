@@ -1,8 +1,9 @@
 import { motion } from 'motion/react'
-import { useT } from '@/lib/i18n'
+import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { SPRING } from '@/components/motion'
+import { formatShare, shareOf } from '../profit-math'
 
 type Step = {
   key: string
@@ -12,20 +13,28 @@ type Step = {
 }
 
 /**
- * Where the month's money went, as a waterfall: what the business sold, each
- * cost taking its bite off it, and what is left. One look says which cost is
- * the big one, which a statement of lines does not. The bars grow in turn.
+ * Where the month's money went, as a waterfall: what the business sold
+ * (net sales without its VAT, the base profit is on), each cost taking its
+ * bite off it, and what is left. A stock count that found more than the
+ * books said (negative shrinkage) gives a little back. One look says which
+ * cost is the big one, which a statement of lines does not. The bars grow
+ * in turn.
  */
 export function ProfitWaterfall({
   sales,
   goods,
+  shrinkage = 0,
   labour,
   expenses,
   shares = 0,
   profit,
 }: {
+  /** Net sales ex VAT */
   sales: number
+  /** Cost of goods with waste */
   goods: number
+  /** Stock-count shortfall; negative when the count found more */
+  shrinkage?: number
   labour: number
   expenses: number
   /** What partners take, when there are partners */
@@ -33,9 +42,20 @@ export function ProfitWaterfall({
   profit: number
 }) {
   const t = useT()
+  const locale = useLocale()
   const steps: Step[] = [
-    { key: 'sales', label: t('netSales'), value: sales, kind: 'total' },
+    { key: 'sales', label: t('netSalesExVat'), value: sales, kind: 'total' },
     { key: 'goods', label: t('costOfGoods'), value: goods, kind: 'cost' },
+    ...(shrinkage !== 0
+      ? [
+          {
+            key: 'shrinkage',
+            label: shrinkage > 0 ? t('shrinkageCost') : t('stockCountGain'),
+            value: shrinkage,
+            kind: 'cost' as const,
+          },
+        ]
+      : []),
     { key: 'labour', label: t('labourCost'), value: labour, kind: 'cost' },
     {
       key: 'expenses',
@@ -66,7 +86,12 @@ export function ProfitWaterfall({
         from: Math.min(0, step.value),
         to: Math.max(0, step.value),
       }
-    const bar = { ...step, from: level - step.value, to: level }
+    // A gain (negative cost) lifts the level instead of taking from it
+    const bar = {
+      ...step,
+      from: Math.min(level, level - step.value),
+      to: Math.max(level, level - step.value),
+    }
     level -= step.value
     return bar
   })
@@ -110,11 +135,11 @@ export function ProfitWaterfall({
               bar.kind === 'result' && bar.value < 0 && 'text-destructive'
             )}
           >
-            {bar.kind === 'cost' ? '−' : ''}
-            {formatEgp(bar.value)}
+            {bar.kind === 'cost' ? (bar.value < 0 ? '+' : '−') : ''}
+            {formatEgp(Math.abs(bar.value))}
             {bar.kind === 'cost' && sales > 0 && (
               <span className='ms-1.5 text-xs'>
-                {Math.round((bar.value / sales) * 100)}%
+                {formatShare(shareOf(Math.abs(bar.value), sales), locale)}
               </span>
             )}
           </span>
