@@ -4,6 +4,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../receipt/sheet_widgets.dart';
 import '../../ticket/tenders.dart';
 import '../models/shift.dart';
+import 'shift_report.dart' show drawerPartLabel, signedMoney;
 
 /// The 80 mm printable shift report (Z for a closed shift, X otherwise) —
 /// same mechanics as the receipt: painted off screen, sent as an image.
@@ -21,9 +22,10 @@ class ShiftReportSheet extends StatelessWidget {
     final closed = shift.isClosed;
     final overShort = shift.overShort ?? 0;
     String at(DateTime? value) => value == null ? '' : sheetDate(value, locale);
-    String verdict() => overShort == 0
+    String verdictOf(double value) => value == 0
         ? l10n.drawerBalanced
-        : '${overShort > 0 ? l10n.drawerOver : l10n.drawerShort} ${money(overShort.abs())}';
+        : '${value > 0 ? l10n.drawerOver : l10n.drawerShort} ${money(value.abs())}';
+    String verdict() => verdictOf(overShort);
 
     return Paper(
       locale: locale,
@@ -41,18 +43,17 @@ class ShiftReportSheet extends StatelessWidget {
         const SizedBox(height: 8),
         const Dashes(),
         const SizedBox(height: 8),
-        SheetRow(l10n.openingFloat, money(shift.openingFloat)),
         SheetRow(l10n.ticketsSettled, '${shift.ticketsSettled}'),
-        SheetRow(l10n.salesTotal, money(shift.salesTotal), weight: FontWeight.w700),
+        SheetRow(l10n.grossSales, money(shift.grossSales), weight: FontWeight.w700),
         SheetRow(l10n.discount, money(shift.discounts)),
+        SheetRow(l10n.refundsAllTenders, money(shift.refundsTotal)),
+        SheetRow(l10n.netSales, money(shift.netSales), weight: FontWeight.w700),
         SheetRow(l10n.changeGiven, money(shift.changeGiven)),
-        SheetRow(l10n.payInsTotal, money(shift.payInsTotal)),
-        SheetRow(l10n.payOutsTotal, money(shift.payOutsTotal)),
         if (shift.tenderTotals.isNotEmpty) ...[
           const SizedBox(height: 8),
           const Dashes(),
           const SizedBox(height: 8),
-          Text(l10n.tenderSplit, style: const TextStyle(fontWeight: FontWeight.w600)),
+          Text(l10n.billTenders, style: const TextStyle(fontWeight: FontWeight.w600)),
           for (final total in shift.tenderTotals)
             SheetRow('${tenderLabel(l10n, total.tender)} × ${total.count}', money(total.amount)),
         ],
@@ -74,6 +75,17 @@ class ShiftReportSheet extends StatelessWidget {
             Text('${movement.recordedBy} · ${at(movement.recordedAt)}', style: const TextStyle(fontSize: 20)),
           ],
         ],
+        // The drawer sum written out, so the parts reach the expected figure
+        const SizedBox(height: 8),
+        const Dashes(),
+        const SizedBox(height: 8),
+        Text(l10n.drawerCashTitle, style: const TextStyle(fontWeight: FontWeight.w600)),
+        for (final line in shift.drawer.lines)
+          SheetRow(
+            drawerPartLabel(l10n, line.part),
+            line.part == DrawerPart.openingFloat ? money(line.amount) : signedMoney(money.call, line.amount),
+          ),
+        SheetRow('= ${l10n.expectedInDrawer}', money(shift.expectedInDrawer), weight: FontWeight.w700),
         const SizedBox(height: 8),
         const Dashes(),
         const SizedBox(height: 8),
@@ -81,6 +93,11 @@ class ShiftReportSheet extends StatelessWidget {
           SheetRow(l10n.expected, money(shift.expected), size: 26, weight: FontWeight.w700),
           SheetRow(l10n.counted, money(shift.closingCount ?? 0), size: 26, weight: FontWeight.w700),
           SheetRow(l10n.overShort, verdict(), size: 30, weight: FontWeight.w700),
+          if (shift.lateCash != 0) ...[
+            SheetRow(l10n.lateCash, signedMoney(money.call, shift.lateCash), size: 22),
+            if (shift.adjustedOverShort != null)
+              SheetRow(l10n.adjustedOverShort, verdictOf(shift.adjustedOverShort!), size: 26, weight: FontWeight.w700),
+          ],
         ] else
           SheetRow(l10n.expectedInDrawer, money(shift.expectedInDrawer), size: 30, weight: FontWeight.w700),
       ],

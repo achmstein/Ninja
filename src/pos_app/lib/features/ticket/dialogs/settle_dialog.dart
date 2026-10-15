@@ -24,6 +24,7 @@ import '../../receipt/receipt_sheet.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/settle.dart';
 import '../../places/models/place.dart';
+import '../../shifts/providers/shifts_provider.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
@@ -245,11 +246,16 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     try {
       final number = await nextProvisionalReceiptNumber();
       final payments = List.of(_payments);
+      // The drawer the cash went into: the shift this till last knew open
+      // (kept through the outage), so the replay credits it and not
+      // whichever shift is open when the network is back
+      final shift = ref.read(currentShiftProvider).value;
       final sale = OfflineSale(
         id: draft.requestId,
         settleRequestId: const Uuid().v4(),
         placedAt: draft.placedAt,
         branchId: ref.read(selectedBranchIdProvider),
+        shiftId: shift != null && !shift.isClosed ? shift.id : null,
         provisionalReceiptNumber: number,
         lines: draft.lines,
         note: draft.note,

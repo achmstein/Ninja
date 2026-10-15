@@ -137,6 +137,11 @@ class SaleNotifier extends Notifier<SaleState> {
       _set(delivery == null ? state.copyWith(clearDelivery: true) : state.copyWith(delivery: delivery));
 
   void clear() => _set(SaleState(target: state.target));
+
+  /// A walk-in sale put back on the pad as it was charged, for the cashier
+  /// to change or charge again (one that never reached the server)
+  void restore(List<SaleLine> lines, {String note = '', SaleCustomer? customer}) =>
+      _set(SaleState(lines: lines, note: note, customer: customer));
 }
 
 final saleProvider = NotifierProvider<SaleNotifier, SaleState>(SaleNotifier.new);

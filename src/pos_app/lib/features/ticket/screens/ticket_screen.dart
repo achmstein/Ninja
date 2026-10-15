@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -12,6 +13,8 @@ import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/branch_names.dart';
 import '../../../core/printing/print_service.dart';
+import '../../../core/sending/sending.dart';
+import '../../../core/sending/sending_lines.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
@@ -35,6 +38,7 @@ import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/move_lines.dart';
 import '../../tickets/models/online_payment.dart';
+import '../../tickets/models/pricing.dart';
 import '../../tickets/services/online_payments_service.dart';
 import '../widgets/online_payments_card.dart';
 import '../../tickets/models/ticket_detail.dart';
@@ -78,17 +82,54 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   bool _selecting = false;
   final Set<int> _selected = {};
   bool _busy = false;
+  // Quick refreshes while an order the server took is still to show its lines here
+  Timer? _landingPoll;
 
   @override
   void initState() {
     super.initState();
     _subscription = ref.listenManual(ticketProvider(widget.ticketId), _onTicket, fireImmediately: true);
+    ref.listenManual(sendingProvider, (_, _) {
+      _landArrived();
+      _syncLandingPoll();
+    }, fireImmediately: true);
   }
 
   @override
   void dispose() {
     _subscription?.close();
+    _landingPoll?.cancel();
     super.dispose();
+  }
+
+  /// Lines charged onto this bill that the server has not confirmed yet
+  /// (core/sending): shown faded under the bill's own, in its total, and
+  /// holding the payment until they are in
+  List<Sending> _sends(List<Sending> all) => all.where((s) => s.ticketId == widget.ticketId).toList();
+
+  /// An order's lines are on the bill: its faded copy goes, the real ones tick
+  void _landArrived() {
+    final ticket = ref.read(ticketProvider(widget.ticketId)).value;
+    if (ticket == null) return;
+    final orderIds = {for (final line in ticket.lines) ?line.orderId};
+    for (final send in _sends(ref.read(sendingProvider))) {
+      final orderId = send.orderId;
+      if (send.status == SendStatus.placed && orderId != null && orderIds.contains(orderId)) {
+        unawaited(ref.read(sendingProvider.notifier).land(send.requestId, orderId));
+      }
+    }
+  }
+
+  void _syncLandingPoll() {
+    final placed = _sends(ref.read(sendingProvider)).any((s) => s.status == SendStatus.placed);
+    if (!placed) {
+      _landingPoll?.cancel();
+      _landingPoll = null;
+    } else {
+      _landingPoll ??= Timer.periodic(const Duration(milliseconds: 700), (_) {
+        if (mounted) ref.invalidate(ticketProvider(widget.ticketId));
+      });
+    }
   }
 
   void _onTicket(AsyncValue<TicketDetail>? previous, AsyncValue<TicketDetail> next) {
@@ -99,6 +140,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       _leave();
       return;
     }
+    _landArrived();
     final ticket = next.value;
     if (ticket == null || !widget.autoSettle || _autoSettleConsumed) return;
     _autoSettleConsumed = true;
@@ -405,6 +447,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     }
 
     final lines = ticket.lines;
+    final sends = ticket.isOpen ? _sends(ref.watch(sendingProvider)) : const <Sending>[];
+    final onTheirWay = sends.where((s) => s.status != SendStatus.failed).toList();
+    final landed = ref.watch(landedOrdersProvider);
     // App orders for this table or session that have not been accepted yet —
     // they are not on the bill until someone taps Confirm
     final waiting = ticket.isOpen
@@ -444,7 +489,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // session has ended with nothing on it — while it runs, there is time
     // still to come. Once a line lands, only an owner's void (with its
     // reason) takes it off the floor.
-    final canDiscard = lines.isEmpty && (ticket.sessionId == null || ticket.sessionEndedAt != null);
+    final canDiscard = lines.isEmpty && sends.isEmpty && (ticket.sessionId == null || ticket.sessionEndedAt != null);
     final canVoid = !canDiscard && isOwner;
 
     return Stack(
@@ -580,8 +625,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                       ),
                     ),
                   if (lines.isEmpty)
-                    // Nothing to say while a session runs: the time row above is the bill so far
-                    if (activeSession == null)
+                    // Nothing to say while a session runs: the time row above is
+                    // the bill so far; nor while lines are on their way
+                    if (activeSession == null && sends.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 64),
                         child: Text(l10n.emptyTicket,
@@ -591,7 +637,8 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     else
                       const SizedBox.shrink()
                   else if (!shared)
-                    _LineList(lines: shown(lines), selecting: selecting, selected: _selected, onToggle: _toggleLine)
+                    _LineList(
+                        lines: shown(lines), selecting: selecting, selected: _selected, onToggle: _toggleLine, landed: landed)
                   else
                     // Shared bill: one heading per person, each with its own
                     // subtotal, so the cashier can read (and split) who owes
@@ -612,10 +659,12 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                             selecting: selecting,
                             selected: _selected,
                             onToggle: _toggleLine,
+                            landed: landed,
                           ),
                         ],
                       ],
                     ),
+                  SendingLines(sends: sends),
                   if (online.isNotEmpty && !ticket.isVoided) ...[
                     const SizedBox(height: 16),
                     OnlinePaymentsCard(
@@ -657,8 +706,12 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
               busy: _busy,
               canRefund: isOwner && ticket.refundedTotal < ticket.total,
               paidOnline: online.paidOnline,
-              // Not while a guest is at the provider's checkout
-              onSettle: lines.isEmpty || online.anyPending
+              total: onTheirWay.isEmpty ? ticket.total : totalWith(ticket, onTheirWay.fold(0, (sum, s) => sum + s.total)),
+              confirming: onTheirWay.isNotEmpty,
+              // Not while a guest is at the provider's checkout, nor before
+              // every line charged here is in: the money is never taken
+              // against a bill the server has not got all of
+              onSettle: lines.isEmpty || online.anyPending || sends.isNotEmpty
                   ? null
                   : () => _settle(ticket, waiting: waiting, activeSession: activeSession, members: session?.members ?? const []),
               onPrint: () => _print(ticket),
@@ -874,7 +927,11 @@ class _LineList extends StatelessWidget {
   final Set<int> selected;
   final ValueChanged<int> onToggle;
 
-  const _LineList({required this.lines, required this.selecting, required this.selected, required this.onToggle});
+  /// Orders just confirmed by the server, whose lines tick for a moment
+  final Set<int> landed;
+
+  const _LineList(
+      {required this.lines, required this.selecting, required this.selected, required this.onToggle, this.landed = const {}});
 
   @override
   Widget build(BuildContext context) {
@@ -890,6 +947,7 @@ class _LineList extends StatelessWidget {
             selectable: selecting && line.source != 'SessionTime',
             selected: selected.contains(line.id),
             onToggle: () => onToggle(line.id),
+            landed: landed.contains(line.orderId),
           ),
         ],
       ],
@@ -903,7 +961,11 @@ class _LineRow extends StatelessWidget {
   final bool selected;
   final VoidCallback onToggle;
 
-  const _LineRow({required this.line, required this.selectable, required this.selected, required this.onToggle});
+  /// Just confirmed by the server: it fades up from how it was shown on its way, ticked
+  final bool landed;
+
+  const _LineRow(
+      {required this.line, required this.selectable, required this.selected, required this.onToggle, this.landed = false});
 
   @override
   Widget build(BuildContext context) {
@@ -946,11 +1008,23 @@ class _LineRow extends StatelessWidget {
               ),
               if (details != null && details.isNotEmpty)
                 Text(details, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
-              Text(
-                line.discount > 0
-                    ? '${_qty(line.qty)} × ${money(context, line.unitPrice)} − ${money(context, line.discount)} (${l10n.discount})'
-                    : '${_qty(line.qty)} × ${money(context, line.unitPrice)}',
-                style: muted.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Flexible(
+                    child: Text(
+                      line.discount > 0
+                          ? '${_qty(line.qty)} × ${money(context, line.unitPrice)} − ${money(context, line.discount)} (${l10n.discount})'
+                          : '${_qty(line.qty)} × ${money(context, line.unitPrice)}',
+                      style: muted.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+                    ),
+                  ),
+                  // Where the upload mark was while it was on its way: the price stays put
+                  if (landed) ...[
+                    const SizedBox(width: 6),
+                    Icon(FIcons.check, size: 14, color: emerald),
+                  ],
+                ],
               ),
             ],
           ),
@@ -976,7 +1050,14 @@ class _LineRow extends StatelessWidget {
       ),
       child: content,
     );
-    return selectable ? FTappable(onPress: onToggle, child: box) : box;
+    if (selectable) return FTappable(onPress: onToggle, child: box);
+    if (!landed) return box;
+    return TweenAnimationBuilder<double>(
+      tween: Tween(begin: 0.7, end: 1),
+      duration: const Duration(milliseconds: 500),
+      builder: (context, opacity, child) => Opacity(opacity: opacity, child: child),
+      child: box,
+    );
   }
 
   static String _qty(double qty) =>
@@ -1137,6 +1218,12 @@ class _ActionBar extends StatelessWidget {
 
   /// What guests paid from their phones: the till takes the rest
   final double paidOnline;
+
+  /// The bill's total with any lines still on their way; the ticket's own otherwise
+  final double total;
+
+  /// Lines charged here are still on their way: the settle says so and waits
+  final bool confirming;
   final VoidCallback? onSettle;
   final VoidCallback onPrint;
   final VoidCallback onRefund;
@@ -1152,6 +1239,8 @@ class _ActionBar extends StatelessWidget {
     required this.busy,
     required this.canRefund,
     this.paidOnline = 0,
+    required this.total,
+    this.confirming = false,
     required this.onSettle,
     required this.onPrint,
     required this.onRefund,
@@ -1172,14 +1261,19 @@ class _ActionBar extends StatelessWidget {
         ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0 || ticket.refundedTotal > 0;
 
     Widget big(String label,
-            {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Color? color, double padding = 16}) =>
+            {VoidCallback? onPress,
+            FButtonVariant? variant,
+            IconData? icon,
+            Widget? prefix,
+            Color? color,
+            double padding = 16}) =>
         SizedBox(
           height: 56,
           child: FButton(
             variant: variant,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: icon == null ? null : Icon(icon, size: 20, color: color),
+            prefix: prefix ?? (icon == null ? null : Icon(icon, size: 20, color: color)),
             child: Padding(
               padding: EdgeInsets.symmetric(horizontal: padding),
               child: Text(label, style: theme.typography.lg.forButton.copyWith(color: color)),
@@ -1218,7 +1312,17 @@ class _ActionBar extends StatelessWidget {
                 const SizedBox(width: 8),
                 big(l10n.newBill, onPress: selectedCount == 0 || busy ? null : onNewBill, icon: FIcons.plus, padding: 8),
               ]
-            : [big(l10n.settleAction, onPress: onSettle)];
+            : [
+                confirming
+                    ? big(
+                        l10n.confirming,
+                        prefix: SizedBox.square(
+                          dimension: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
+                        ),
+                      )
+                    : big(l10n.settleAction, onPress: onSettle),
+              ];
 
     return Container(
       height: _actionBarHeight,
@@ -1238,7 +1342,7 @@ class _ActionBar extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    Text(money(context, ticket.total),
+                    Text(money(context, total),
                         style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
                     if (ticket.discount > 0)
                       Text(

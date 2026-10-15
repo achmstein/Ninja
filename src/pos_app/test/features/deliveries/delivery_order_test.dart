@@ -59,7 +59,7 @@ void main() {
     test('the address joins with the language\'s own comma', () {
       final d = DeliveryOrder.fromJson(_order(1)).delivery;
       expect(d.line(building: 'Bldg', floor: 'Floor', apartment: 'Apt', separator: ', '), 'Maadi, Road 9 · Bldg 12, Floor 3');
-      expect(d.line(building: 'عمارة', floor: 'دور', apartment: 'شقة', separator: '، '), 'Maadi, Road 9 · عمارة 12، دور 3');
+      expect(d.line(building: 'عمارة', floor: 'طابق', apartment: 'شقة', separator: '، '), 'Maadi, Road 9 · عمارة 12، طابق 3');
     });
 
     test("the lane is the server's stage; the till adds only settled", () {

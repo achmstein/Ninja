@@ -5,7 +5,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/orders/services/order_service.dart';
 import '../../features/sale/models/pos_order_request.dart';
-import '../../features/tickets/models/settle.dart';
 import '../../features/tickets/providers/tickets_provider.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../config/app_config.dart';
@@ -115,15 +114,7 @@ class OfflineQueueNotifier extends Notifier<List<OfflineSale>> {
       await _update(current.id, (_) => current);
     }
 
-    await tickets.settle(
-      current.ticketId!,
-      SettleRequest(
-        payments: current.payments,
-        settledAt: current.placedAt,
-        provisionalReceiptNumber: current.provisionalReceiptNumber,
-      ),
-      requestId: current.settleRequestId,
-    );
+    await tickets.settle(current.ticketId!, current.toSettleRequest(), requestId: current.settleRequestId);
   }
 
   // The counter ticket materializes off the order-confirmed event, so the

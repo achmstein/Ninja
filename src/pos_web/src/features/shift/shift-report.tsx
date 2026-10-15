@@ -4,6 +4,7 @@ import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { drawerFormula } from './drawer'
 
 /**
  * Over/short verdict badge: green when the drawer is over or balanced,
@@ -54,6 +55,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
   const tenders = shift.tenderTotals ?? []
   const tabPayments = shift.tabPaymentTenderTotals ?? []
   const movements = shift.movements ?? []
+  const drawer = drawerFormula(shift)
 
   const stat = (label: string, value: string) => (
     <div className='bg-card rounded-xl border p-3'>
@@ -133,20 +135,58 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
         )}
       </div>
 
+      {/* Sales: gross is what the bills settled in the shift came to;
+          net takes off the credit notes issued in it, whatever the tender */}
       <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
-        {stat(t('openingFloat'), money(shift.openingFloat))}
         {stat(t('ticketsSettled'), String(toNumber(shift.ticketsSettled)))}
-        {stat(t('salesTotal'), money(shift.salesTotal))}
+        {stat(t('grossSales'), money(shift.grossSales ?? shift.salesTotal))}
         {stat(t('discount'), money(shift.discounts))}
+        {stat(t('refundsIssued'), money(shift.refundsTotal))}
+        {stat(t('netSales'), money(shift.netSales ?? shift.salesTotal))}
         {stat(t('changeGiven'), money(shift.changeGiven))}
-        {stat(t('payInsTotal'), money(shift.payInsTotal))}
-        {stat(t('payOutsTotal'), money(shift.payOutsTotal))}
       </div>
 
-      {/* Tender split */}
+      {/* The drawer, term by term, adding up to Expected */}
+      <div>
+        <h2 className='mb-1 text-sm font-semibold'>{t('drawerFormula')}</h2>
+        <div className='divide-y rounded-xl border'>
+          {drawer.terms.map((term) => (
+            <div
+              key={term.key}
+              className='flex items-center justify-between gap-4 px-3 py-2'
+            >
+              <span>{t(term.key)}</span>
+              <span className='tabular-nums'>
+                {term.sign < 0 ? '−' : '+'}
+                {money(term.amount)}
+              </span>
+            </div>
+          ))}
+          <div className='flex items-center justify-between gap-4 px-3 py-2 font-semibold'>
+            <span>{t('expectedInDrawer')}</span>
+            <span className='tabular-nums'>= {money(drawer.expected)}</span>
+          </div>
+          {drawer.lateCash !== 0 && (
+            <div className='flex items-center justify-between gap-4 px-3 py-2'>
+              <span className='text-muted-foreground'>{t('lateCash')}</span>
+              <span className='tabular-nums'>{money(drawer.lateCash)}</span>
+            </div>
+          )}
+          {drawer.lateCash !== 0 && drawer.adjustedOverShort != null && (
+            <div className='flex items-center justify-between gap-4 px-3 py-2'>
+              <span className='text-muted-foreground'>
+                {t('adjustedOverShort')}
+              </span>
+              <OverShortBadge value={drawer.adjustedOverShort} />
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Tender split: bills only, cash net of the change handed back */}
       {tenders.length > 0 && (
         <div>
-          <h2 className='mb-1 text-sm font-semibold'>{t('tenderSplit')}</h2>
+          <h2 className='mb-1 text-sm font-semibold'>{t('billsByTender')}</h2>
           <div className='divide-y rounded-xl border'>
             {tenders.map((total) => (
               <div

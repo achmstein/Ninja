@@ -4,6 +4,7 @@ import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { drawerFormula } from './drawer'
 
 /**
  * The 80mm printable shift report (Z for a closed shift, X otherwise) —
@@ -33,6 +34,11 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
   const tenders = shift.tenderTotals ?? []
   const tabPayments = shift.tabPaymentTenderTotals ?? []
   const movements = shift.movements ?? []
+  const drawer = drawerFormula(shift)
+  const overShortText = (value: number) =>
+    value === 0
+      ? t('drawerBalanced')
+      : `${t(value > 0 ? 'drawerOver' : 'drawerShort')} ${money(Math.abs(value))}`
 
   const row = (
     label: string,
@@ -76,17 +82,28 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
 
       {dashed}
 
-      {row(t('openingFloat'), money(shift.openingFloat))}
       {row(t('ticketsSettled'), String(toNumber(shift.ticketsSettled)))}
-      {row(t('salesTotal'), money(shift.salesTotal), { bold: true })}
+      {row(t('grossSales'), money(shift.grossSales ?? shift.salesTotal), { bold: true })}
+      {row(t('discount'), money(shift.discounts))}
+      {row(t('refundsIssued'), money(shift.refundsTotal))}
+      {row(t('netSales'), money(shift.netSales ?? shift.salesTotal), { bold: true })}
       {row(t('changeGiven'), money(shift.changeGiven))}
-      {row(t('payInsTotal'), money(shift.payInsTotal))}
-      {row(t('payOutsTotal'), money(shift.payOutsTotal))}
+
+      {dashed}
+      <div style={{ fontWeight: 600 }}>{t('drawerFormula')}</div>
+      {drawer.terms.map((term) =>
+        row(t(term.key), `${term.sign < 0 ? '−' : '+'}${money(term.amount)}`)
+      )}
+      {row(t('expectedInDrawer'), `= ${money(drawer.expected)}`, { bold: true })}
+      {drawer.lateCash !== 0 && row(t('lateCash'), money(drawer.lateCash))}
+      {drawer.lateCash !== 0 &&
+        drawer.adjustedOverShort != null &&
+        row(t('adjustedOverShort'), overShortText(drawer.adjustedOverShort))}
 
       {tenders.length > 0 && (
         <>
           {dashed}
-          <div style={{ fontWeight: 600 }}>{t('tenderSplit')}</div>
+          <div style={{ fontWeight: 600 }}>{t('billsByTender')}</div>
           {tenders.map((total) =>
             row(
               `${
@@ -147,9 +164,7 @@ export function ShiftReportSheet({ shift }: { shift: ShiftView }) {
           {row(t('counted'), money(shift.closingCount), { bold: true, size: 13 })}
           {row(
             t('overShort'),
-            overShort === 0
-              ? t('drawerBalanced')
-              : `${t(overShort > 0 ? 'drawerOver' : 'drawerShort')} ${money(Math.abs(overShort))}`,
+            overShortText(overShort),
             { bold: true, size: 15 }
           )}
         </>

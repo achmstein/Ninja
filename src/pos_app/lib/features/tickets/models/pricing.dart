@@ -1,4 +1,6 @@
 import '../../../core/models/money.dart';
+import 'enums.dart';
+import 'ticket_detail.dart';
 
 /// The branch's money rules (Sales `PricingView`): VAT, whether menu prices
 /// already hold it, and the service charge on served orders.
@@ -32,4 +34,34 @@ class PricingView {
   final vat = rules.pricesIncludeVat ? money(taxable - taxable / (1 + rules.vatRate)) : money(taxable * rules.vatRate);
   final total = rules.pricesIncludeVat ? taxable : taxable + vat;
   return (subtotal: subtotal, serviceCharge: 0, vat: vat, total: total);
+}
+
+/// What an open bill comes to once lines still on their way land on it: the
+/// same arithmetic as `Ticket.ComputeBill` in Sales, under the rules the bill
+/// was last priced by (its VAT, and its service charge where it is served).
+/// The till shows this the moment the cashier charges; the server's own
+/// figure replaces it once the lines are in.
+double totalWith(TicketDetail ticket, double extra) {
+  double money(double v) => (v * 100).roundToDouble() / 100;
+  final lines = ticket.lines;
+  final subtotal = lines.fold<double>(0, (sum, l) => sum + l.total) + extra;
+
+  // A percent follows the lines as they land; a fixed amount never exceeds what is there
+  final rate = ticket.discountRate;
+  final discount = subtotal <= 0
+      ? 0.0
+      : rate != null
+          ? money(subtotal * rate)
+          : (ticket.discount < subtotal ? ticket.discount : subtotal);
+  final discounted = subtotal - discount;
+
+  // Service is for being served: a counter sale is not, and room time is not an order
+  var served = ticket.type == TicketType.counter
+      ? 0.0
+      : lines.where((l) => l.source != 'SessionTime').fold<double>(0, (sum, l) => sum + l.total) + extra;
+  if (subtotal > 0) served *= discounted / subtotal;
+  final service = money((served < 0 ? 0 : served) * ticket.serviceChargeRate);
+
+  final taxable = discounted + service;
+  return ticket.vatIncluded ? taxable : taxable + money(taxable * ticket.vatRate);
 }

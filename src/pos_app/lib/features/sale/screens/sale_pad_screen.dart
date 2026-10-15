@@ -7,13 +7,13 @@ import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/config/app_config.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/offline/offline_sale.dart';
+import '../../../core/sending/sending.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -39,7 +39,6 @@ import '../../tickets/models/pricing.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/pricing_provider.dart';
 import '../../tickets/providers/tickets_provider.dart';
-import '../../tickets/services/tickets_service.dart';
 import '../models/pos_order_request.dart';
 import '../models/sale_delivery.dart';
 import '../services/price_check_service.dart';
@@ -103,9 +102,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   /// The compact pad's search, always in view over its category list
   final _search = TextEditingController();
   bool _placing = false;
-  int? _pendingOrderId;
-  Timer? _poll;
-  Timer? _timeout;
 
   // Idempotency mirror of pos_web's charge: the request id must survive
   // retries of the SAME sale, so a resubmit after a timeout (where the
@@ -149,8 +145,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
 
   @override
   void dispose() {
-    _poll?.cancel();
-    _timeout?.cancel();
     _note.dispose();
     _search.dispose();
     super.dispose();
@@ -331,6 +325,28 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       }
     }
 
+    // Onto an open bill, or a walk-in's new one: the bill shows the lines at
+    // once, faded until the server has them, and the till is free for the
+    // next thing (core/sending)
+    if (delivery == null && !callCentre) {
+      final requestId = _requestId!;
+      final ticketId = widget.ticketId;
+      unawaited(ref.read(sendingProvider.notifier).start(Sending(
+            requestId: requestId,
+            ticketId: ticketId,
+            branchId: ref.read(selectedBranchIdProvider),
+            lines: lines,
+            note: sale.note,
+            customer: sale.customer,
+            startedAt: DateTime.now(),
+          )));
+      _requestSignature = null;
+      _requestId = null;
+      ref.read(saleProvider.notifier).clear();
+      context.go(ticketId != null ? '/ticket/$ticketId' : '/ticket/sending/$requestId');
+      return;
+    }
+
     var goOffline = false;
     setState(() => _placing = true);
     try {
@@ -356,47 +372,22 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       // in: nothing to pay now, and the rider is picked on the floor. So is
       // the call centre's pickup: the branch's counter takes the money when
       // the caller collects, and the call centre goes on to the next caller
-      if (delivery != null || callCentre) {
-        ref.read(saleProvider.notifier).clear();
-        _note.clear();
-        unawaited(ref.read(deliveriesProvider.notifier).refresh());
-        ref.read(openTicketsProvider.notifier).refresh();
-        showPosToast(
-          context,
-          PosToastType.success,
-          orderId == 0
-              ? l10n.orderAlreadyPlaced
-              : callCentre
-                  ? l10n.callCentrePlaced(orderId, ref.read(branchProvider).selectedBranch?.name.localized(context) ?? '')
-                  : sendTo != null
-                  ? l10n.deliverySentTo(sendToName, orderId)
-                  : l10n.deliveryPlaced,
-        );
-        context.go('/');
-        return;
-      }
-
-      // Adding to a bill already on the floor: the order names the ticket,
-      // so there is no lookup to wait on and nothing to pay yet. The lines
-      // land over SignalR (the ticket screen's poll is the fallback).
-      if (_addingToTicket) {
-        ref.read(saleProvider.notifier).clear();
-        ref.invalidate(ticketProvider(widget.ticketId!));
-        ref.read(openTicketsProvider.notifier).refresh();
-        showPosToast(context, PosToastType.success, orderId == 0 ? l10n.orderAlreadyPlaced : l10n.itemsAddedToTicket);
-        context.go('/ticket/${widget.ticketId}');
-        return;
-      }
-
-      if (orderId == 0) {
-        // Deduplicated retry: the first attempt went through and its ticket
-        // is (or will be) on the floor
-        ref.read(saleProvider.notifier).clear();
-        showPosToast(context, PosToastType.info, l10n.orderAlreadyPlaced);
-        context.go('/');
-        return;
-      }
-      _startTicketLookup(orderId);
+      ref.read(saleProvider.notifier).clear();
+      _note.clear();
+      unawaited(ref.read(deliveriesProvider.notifier).refresh());
+      ref.read(openTicketsProvider.notifier).refresh();
+      showPosToast(
+        context,
+        PosToastType.success,
+        orderId == 0
+            ? l10n.orderAlreadyPlaced
+            : callCentre
+                ? l10n.callCentrePlaced(orderId, ref.read(branchProvider).selectedBranch?.name.localized(context) ?? '')
+                : sendTo != null
+                ? l10n.deliverySentTo(sendToName, orderId)
+                : l10n.deliveryPlaced,
+      );
+      context.go('/');
     } catch (e) {
       if (!mounted) return;
       // The first sign the network is gone is usually this very call
@@ -476,43 +467,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       ref.read(saleProvider.notifier).clear();
       context.go('/');
     }
-  }
-
-  // The counter ticket materializes off the order-confirmed event, so the
-  // order → ticket lookup 404s for a moment. Poll fast (a cashier is
-  // standing there); give up after ~12 s — the order IS in the kitchen
-  // (clearing the cart prevents a duplicate charge), the ticket just has
-  // not landed yet and will show up on the floor.
-  void _startTicketLookup(int orderId) {
-    setState(() => _pendingOrderId = orderId);
-    _poll = Timer.periodic(AppConfig.ticketByOrderPoll, (_) async {
-      int? ticketId;
-      try {
-        ticketId = await ref.read(ticketsRepositoryProvider).getTicketByOrder(orderId);
-      } catch (_) {
-        return;
-      }
-      if (ticketId == null || !mounted || _pendingOrderId != orderId) return;
-      _stopLookup();
-      ref.read(saleProvider.notifier).clear();
-      ref.read(openTicketsProvider.notifier).refresh();
-      context.go('/ticket/$ticketId?settle=true');
-    });
-    _timeout = Timer(AppConfig.ticketByOrderTimeout, () {
-      if (!mounted || _pendingOrderId != orderId) return;
-      _stopLookup();
-      ref.read(saleProvider.notifier).clear();
-      showPosToast(context, PosToastType.warning, AppLocalizations.of(context)!.ticketNotReadyYet);
-      context.go('/');
-    });
-  }
-
-  void _stopLookup() {
-    _poll?.cancel();
-    _timeout?.cancel();
-    _poll = null;
-    _timeout = null;
-    if (mounted) setState(() => _pendingOrderId = null);
   }
 
   /// Who this round should go to by default, so items keep landing on the
@@ -613,7 +567,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
       final id => id,
     };
     final wide = MediaQuery.sizeOf(context).width >= 1280;
-    final busy = _placing || _pendingOrderId != null;
+    final busy = _placing;
     // A walk-in sale can go out with a rider instead, where the business and
     // the branch deliver; a round on an open bill never does
     final features = ref.watch(featuresProvider);
@@ -1110,8 +1064,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
             ),
           ],
         ),
-        // Blocking wait: the sale is committed, nothing else may be touched
-        // until the ticket lands (or the lookup gives up)
+        // Blocking wait for a delivery or a call-centre order, which has no
+        // bill on this till to show itself on: nothing else may be touched
+        // until the server has it
         if (busy)
           Positioned.fill(
             child: ColoredBox(

@@ -384,7 +384,7 @@ export const getOrderStatsQueryKey = (options: Options<GetOrderStatsData>) => cr
 /**
  * Get aggregated order statistics (admin)
  *
- * Per-day order counts/revenue and top items over a date range, excluding cancelled orders.
+ * Per-day order counts/revenue and top items over [fromDate, toDate) of the orders the business took on: confirmed and not voided at the till; those still awaiting validation or payment, and cancelled ones, are left out. Revenue is net of discounts, loyalty, promo and what credit notes gave back. Days are business days in the IANA zone tz starting at dayStart (HH:mm) when tz is given, otherwise calendar days at tzOffsetMinutes (JS getTimezoneOffset). Top items are ranked by revenue; top caps them (10 by default, 0 for every item, which is what adding branches up needs). These are orders, not the till's sales: for money use Sales' reports.
  */
 export const getOrderStatsOptions = (options: Options<GetOrderStatsData>) => queryOptions<GetOrderStatsResponse, AxiosError<DefaultError>, GetOrderStatsResponse, ReturnType<typeof getOrderStatsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {

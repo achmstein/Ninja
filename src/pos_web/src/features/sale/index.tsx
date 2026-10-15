@@ -20,10 +20,7 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import {
-  getTicketByOrderOptions,
-  getTicketOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
+import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
@@ -35,6 +32,7 @@ import {
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
 import { useOfflineCharge } from '@/features/offline/offline-charge'
+import { saveCustomerPreferences, startSend } from '@/features/sending/sending'
 import { PriceReviewDialog } from './price-review-dialog'
 import { sendToBranchId, toPosDeliveryRequest } from './sale-delivery'
 import { SaleDeliverySummary } from './sale-delivery-summary'
@@ -69,11 +67,6 @@ import { CustomizeDialog } from './customize-dialog'
 import { itemPictureUrl } from './item-picture'
 import { ItemImage } from './item-image'
 
-// The counter ticket materializes off the order-confirmed event, so the
-// order → ticket lookup 404s for a moment. Poll fast (a cashier is standing
-// there); the SignalR TicketUpdated invalidation short-circuits the wait.
-const TICKET_POLL_INTERVAL_MS = 600
-const TICKET_POLL_TIMEOUT_MS = 12_000
 /** How long a charge waits for the server before the sale is taken offline */
 const CHARGE_TIMEOUT_MS = 20_000
 /** The attached customer's usuals, shown as a category of their own */
@@ -454,13 +447,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     setCustomer,
   ])
 
-  // Set once the order is accepted; drives the blocking "sending to
-  // kitchen" state while the ticket lookup polls
-  const [pending, setPending] = useState<{
-    orderId: number
-    startedAt: number
-  } | null>(null)
-
   const { data: categories = [] } = useQuery(
     listCategoriesOptions({ query: { 'api-version': API_VERSION } }),
   )
@@ -622,40 +608,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     })
   }
 
-  // After a POS order for an attached customer, remember how their items were
-  // customized so it prefills next time — the same thing the customer app does
-  // for its own orders. Fire-and-forget; a failure just means no prefill.
-  const saveCustomerPreferences = (
-    customerId: string,
-    saleLines: SaleLine[],
-  ) => {
-    const byProduct = new Map<
-      number,
-      { customizationId: number; optionId: number }[]
-    >()
-    for (const line of saleLines) {
-      if (!line.customizations?.length) continue
-      // Last line for a product wins, matching the app's last-order-wins rule
-      byProduct.set(
-        line.productId,
-        line.customizations.map((c) => ({
-          customizationId: c.customizationId,
-          optionId: c.optionId,
-        })),
-      )
-    }
-    if (byProduct.size === 0) return
-    const items = [...byProduct.entries()].map(
-      ([catalogItemId, selectedOptions]) => ({
-        catalogItemId,
-        selectedOptions,
-      }),
-    )
-    apiClient
-      .post(`/api/catalog/customers/${customerId}/preferences`, { items })
-      .catch(() => {})
-  }
-
   const placeOrder = useMutation({
     ...createPosOrderMutation(),
     onError: (error) => {
@@ -688,23 +640,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         return
       }
 
-      // Adding to a bill already on the floor: the order names the ticket,
-      // so there is no lookup to wait on and nothing to pay yet. The lines
-      // land over SignalR (the ticket screen's poll is the fallback).
-      if (addingToTicket) {
-        clear()
-        queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
-        queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-        toast.success(
-          t(orderId === 0 ? 'orderAlreadyPlaced' : 'itemsAddedToTicket'),
-        )
-        navigate({
-          to: '/ticket/$ticketId',
-          params: { ticketId: String(ticketId) },
-        })
-        return
-      }
-
       // A caller collecting at the branch: their bill waits at its counter,
       // paid when they come for it; the call centre takes the next call
       if (callCentre) {
@@ -716,19 +651,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             : t('callCentrePickupPlaced', { branch: branchName(getActiveBranchId()), orderId }),
         )
         navigate({ to: '/' })
-        return
       }
-
-      if (orderId === 0) {
-        // Deduplicated retry: the first attempt went through and its ticket
-        // is (or will be) on the floor — don't wait on a lookup for an order
-        // id we don't have
-        clear()
-        toast.info(t('orderAlreadyPlaced'))
-        navigate({ to: '/' })
-        return
-      }
-      setPending({ orderId, startedAt: Date.now() })
     },
   })
 
@@ -760,29 +683,61 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   /** Places the order with these lines: the cart's, or the other branch's prices of them */
   const send = (toSend: SaleLine[]) => {
     const requestId = requestIdFor(toSend)
+    const body = {
+      items: toBasketItems(toSend),
+      customerNote: note.trim() || null,
+      // No place: a counter sale settles at the till. When the
+      // cashier is adding to an open bill, the ticket is named outright —
+      // Sales appends to it instead of inferring a destination.
+      ticketId: ticketId ?? null,
+      // The account, only when there is one: it is what loyalty accrues to
+      // and what an on-account settle charges
+      customerUserId: customer?.id ?? null,
+      customerUserName: customer?.id ? customer.name : null,
+      // The name always travels, account or not — the kitchen card and the
+      // bill line both carry it
+      customerName: customer?.name ?? null,
+      // Redemption at the counter is a later phase; accrual happens
+      // server-side off the attached customer
+      pointsToRedeem: 0,
+      // Where it goes; the pin only when the caller shared one
+      delivery: delivery ? toPosDeliveryRequest(delivery) : null,
+      // The branch nearer the caller that makes and delivers it
+      sendToBranchId: sendTo,
+    }
+
+    // Onto an open bill, or a walk-in's new one: the bill shows the lines
+    // at once, faded until the server has them, and the till is free for
+    // the next thing (features/sending)
+    if (!delivering && !callCentre) {
+      const target = ticketId ?? null
+      void startSend({
+        requestId,
+        ticketId: target,
+        branchId: getActiveBranchId(),
+        lines: toSend,
+        note,
+        customer,
+        body,
+      }).then((outcome) => {
+        if (outcome.kind === 'alreadyPlaced') toast.info(t('orderAlreadyPlaced'))
+        if (outcome.kind !== 'failed') {
+          queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+          queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+        }
+      })
+      requestIdRef.current = null
+      clear()
+      if (target != null) {
+        navigate({ to: '/ticket/$ticketId', params: { ticketId: String(target) } })
+      } else {
+        navigate({ to: '/ticket/sending/$requestId', params: { requestId } })
+      }
+      return
+    }
+
     placeOrder.mutate({
-      body: {
-        items: toBasketItems(toSend),
-        customerNote: note.trim() || null,
-        // No place: a counter sale settles at the till. When the
-        // cashier is adding to an open bill, the ticket is named outright —
-        // Sales appends to it instead of inferring a destination.
-        ticketId: ticketId ?? null,
-        // The account, only when there is one: it is what loyalty accrues to
-        // and what an on-account settle charges
-        customerUserId: customer?.id ?? null,
-        customerUserName: customer?.id ? customer.name : null,
-        // The name always travels, account or not — the kitchen card and the
-        // bill line both carry it
-        customerName: customer?.name ?? null,
-        // Redemption at the counter is a later phase; accrual happens
-        // server-side off the attached customer
-        pointsToRedeem: 0,
-        // Where it goes; the pin only when the caller shared one
-        delivery: delivery ? toPosDeliveryRequest(delivery) : null,
-        // The branch nearer the caller that makes and delivers it
-        sendToBranchId: sendTo,
-      },
+      body,
       headers: { 'x-requestid': requestId },
       query: { 'api-version': API_VERSION },
       // A line that has gone quiet answers nothing for minutes: past this,
@@ -791,58 +746,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       timeout: CHARGE_TIMEOUT_MS,
     })
   }
-
-  // The order → ticket lookup 404s until Sales consumes the confirmation
-  // event; keep polling (retry:false makes each 404 land fast so the
-  // interval refires) until it resolves or the timeout gives up
-  const ticketLookup = useQuery({
-    ...getTicketByOrderOptions({
-      path: { orderId: pending?.orderId ?? 0 },
-      query: { 'api-version': API_VERSION },
-    }),
-    enabled: pending !== null,
-    retry: false,
-    refetchInterval: TICKET_POLL_INTERVAL_MS,
-    staleTime: 0,
-    gcTime: 0,
-  })
-
-  const foundTicketId = ticketLookup.data
-    ? toNumber(ticketLookup.data.ticketId)
-    : null
-
-  useEffect(() => {
-    if (pending === null || foundTicketId === null) return
-    setPending(null)
-    clear()
-    queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-    navigate({
-      to: '/ticket/$ticketId',
-      params: { ticketId: String(foundTicketId) },
-      search: { settle: true },
-    })
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pending, foundTicketId])
-
-  // Give up after ~12s of 404s: the order IS in the kitchen (clearing the
-  // cart prevents a duplicate charge), the ticket just hasn't landed yet —
-  // it will show up on the floor via SignalR. A plain timer, so the wait
-  // can never hang on the polling machinery; success above clears it.
-  useEffect(() => {
-    if (pending === null) return
-    const remaining = TICKET_POLL_TIMEOUT_MS - (Date.now() - pending.startedAt)
-    const handle = setTimeout(
-      () => {
-        setPending(null)
-        clear()
-        toast.warning(t('ticketNotReadyYet'))
-        navigate({ to: '/' })
-      },
-      Math.max(0, remaining),
-    )
-    return () => clearTimeout(handle)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pending])
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
   const SaleHeading = isMobile ? SheetTitle : 'h2'
@@ -1019,7 +922,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           disabled={
             lines.length === 0 ||
             placeOrder.isPending ||
-            pending !== null ||
             // A delivery waits for its terms rather than going out as a counter sale
             (delivering && saleDelivery.readiness !== 'ready')
           }
@@ -1280,9 +1182,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         quickPicks={roster}
       />
 
-      {/* Blocking wait: the sale is committed, nothing else may be touched
-          until the ticket lands (or the lookup gives up) */}
-      {(pending !== null || placeOrder.isPending || priceCheck.checking) && (
+      {/* Blocking wait for a delivery or a call-centre order, which has no
+          bill on this till to show itself on: nothing else may be touched
+          until the server has it */}
+      {(placeOrder.isPending || priceCheck.checking) && (
         <div className='bg-background/80 fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 backdrop-blur-sm'>
           <Loader2 className='size-10 animate-spin' />
           <p className='text-lg font-semibold'>

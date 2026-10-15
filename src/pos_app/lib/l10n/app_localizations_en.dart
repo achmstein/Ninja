@@ -1139,6 +1139,42 @@ class AppLocalizationsEn extends AppLocalizations {
   String get drawerBalanced => 'Balanced';
 
   @override
+  String get otherTender => 'Other tender';
+
+  @override
+  String get grossSales => 'Gross sales (before refunds)';
+
+  @override
+  String get netSales => 'Net sales (after refunds)';
+
+  @override
+  String get refundsAllTenders => 'Refunds (all tenders)';
+
+  @override
+  String get billTenders => 'Bills by tender (cash after change)';
+
+  @override
+  String get drawerCashTitle => 'Cash in the drawer';
+
+  @override
+  String get cashTakenNet => 'Cash taken (after change)';
+
+  @override
+  String get cashTabPayments => 'Cash tab payments';
+
+  @override
+  String get cashRefunds => 'Cash refunds';
+
+  @override
+  String get expectedAtClose => 'Expected at close';
+
+  @override
+  String get lateCash => 'Late cash (offline sales received after close)';
+
+  @override
+  String get adjustedOverShort => 'Over / short with late cash';
+
+  @override
   String get zReportTitle => 'Z report — shift close';
 
   @override
@@ -2326,4 +2362,37 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get deliveryNotOfferedNow =>
       'This branch doesn\'t deliver now. Remove the delivery to charge.';
+
+  @override
+  String get sending => 'Sending';
+
+  @override
+  String get confirming => 'Confirming…';
+
+  @override
+  String get notSent => 'Not sent';
+
+  @override
+  String get sendNoConnection => 'No connection to the server.';
+
+  @override
+  String get backToSale => 'Back to the sale';
+
+  @override
+  String get sellOffline => 'Sell offline';
+
+  @override
+  String sendsFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count not sent',
+      one: '1 not sent',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendsFailedHint =>
+      'These never reached the server, so the kitchen doesn\'t have them. Try again, or remove them.';
 }

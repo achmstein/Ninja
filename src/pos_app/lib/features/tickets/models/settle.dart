@@ -42,12 +42,19 @@ class SettleRequest {
   /// The number the till printed on the offline receipt
   final String? provisionalReceiptNumber;
 
-  const SettleRequest({required this.payments, this.settledAt, this.provisionalReceiptNumber});
+  /// The shift that was open on the till when an offline sale was made, so
+  /// its cash lands in that drawer rather than whichever is open at replay.
+  /// Left out of the body when null (a live settle, or a sale queued before
+  /// the till recorded it): the server then uses the open shift.
+  final int? shiftId;
+
+  const SettleRequest({required this.payments, this.settledAt, this.provisionalReceiptNumber, this.shiftId});
 
   Map<String, dynamic> toJson() => {
         'payments': payments.map((p) => p.toJson()).toList(),
         'settledAt': settledAt?.toUtc().toIso8601String(),
         'provisionalReceiptNumber': provisionalReceiptNumber,
+        if (shiftId != null) 'shiftId': shiftId,
       };
 }
 

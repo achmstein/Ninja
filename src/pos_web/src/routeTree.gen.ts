@@ -22,6 +22,7 @@ import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as AuthenticatedShiftsIndexRouteImport } from './routes/_authenticated/shifts.index'
 import { Route as AuthenticatedShiftsShiftIdRouteImport } from './routes/_authenticated/shifts.$shiftId'
 import { Route as AuthenticatedTicketTicketIdRouteImport } from './routes/_authenticated/ticket.$ticketId'
+import { Route as AuthenticatedTicketSendingRequestIdRouteImport } from './routes/_authenticated/ticket.sending.$requestId'
 
 const AuthenticatedRouteRoute = AuthenticatedRouteRouteImport.update({
   id: '/_authenticated',
@@ -91,6 +92,12 @@ const AuthenticatedTicketTicketIdRoute =
     path: '/ticket/$ticketId',
     getParentRoute: () => AuthenticatedRouteRoute,
   } as any)
+const AuthenticatedTicketSendingRequestIdRoute =
+  AuthenticatedTicketSendingRequestIdRouteImport.update({
+    id: '/ticket/sending/$requestId',
+    path: '/ticket/sending/$requestId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof AuthenticatedIndexRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByFullPath {
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/shifts/': typeof AuthenticatedShiftsIndexRoute
+  '/ticket/sending/$requestId': typeof AuthenticatedTicketSendingRequestIdRoute
 }
 export interface FileRoutesByTo {
   '/sign-in': typeof authSignInRoute
@@ -119,6 +127,7 @@ export interface FileRoutesByTo {
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/shifts': typeof AuthenticatedShiftsIndexRoute
+  '/ticket/sending/$requestId': typeof AuthenticatedTicketSendingRequestIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -135,6 +144,7 @@ export interface FileRoutesById {
   '/_authenticated/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/_authenticated/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/_authenticated/shifts/': typeof AuthenticatedShiftsIndexRoute
+  '/_authenticated/ticket/sending/$requestId': typeof AuthenticatedTicketSendingRequestIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -151,6 +161,7 @@ export interface FileRouteTypes {
     | '/shifts/$shiftId'
     | '/ticket/$ticketId'
     | '/shifts/'
+    | '/ticket/sending/$requestId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/sign-in'
@@ -165,6 +176,7 @@ export interface FileRouteTypes {
     | '/shifts/$shiftId'
     | '/ticket/$ticketId'
     | '/shifts'
+    | '/ticket/sending/$requestId'
   id:
     | '__root__'
     | '/_authenticated'
@@ -180,6 +192,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shifts/$shiftId'
     | '/_authenticated/ticket/$ticketId'
     | '/_authenticated/shifts/'
+    | '/_authenticated/ticket/sending/$requestId'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -282,6 +295,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedTicketTicketIdRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/ticket/sending/$requestId': {
+      id: '/_authenticated/ticket/sending/$requestId'
+      path: '/ticket/sending/$requestId'
+      fullPath: '/ticket/sending/$requestId'
+      preLoaderRoute: typeof AuthenticatedTicketSendingRequestIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
   }
 }
 
@@ -295,6 +315,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedShiftsShiftIdRoute: typeof AuthenticatedShiftsShiftIdRoute
   AuthenticatedTicketTicketIdRoute: typeof AuthenticatedTicketTicketIdRoute
   AuthenticatedShiftsIndexRoute: typeof AuthenticatedShiftsIndexRoute
+  AuthenticatedTicketSendingRequestIdRoute: typeof AuthenticatedTicketSendingRequestIdRoute
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
@@ -307,6 +328,8 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedShiftsShiftIdRoute: AuthenticatedShiftsShiftIdRoute,
   AuthenticatedTicketTicketIdRoute: AuthenticatedTicketTicketIdRoute,
   AuthenticatedShiftsIndexRoute: AuthenticatedShiftsIndexRoute,
+  AuthenticatedTicketSendingRequestIdRoute:
+    AuthenticatedTicketSendingRequestIdRoute,
 }
 
 const AuthenticatedRouteRouteWithChildren =

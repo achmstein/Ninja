@@ -14,6 +14,20 @@ String overShortText(AppLocalizations l10n, BuildContext context, double value) 
     ? l10n.drawerBalanced
     : '${value > 0 ? l10n.drawerOver : l10n.drawerShort} ${money(context, value.abs())}';
 
+/// What one part of the drawer sum is called, on screen and on paper
+String drawerPartLabel(AppLocalizations l10n, DrawerPart part) => switch (part) {
+      DrawerPart.openingFloat => l10n.openingFloat,
+      DrawerPart.cashTaken => l10n.cashTakenNet,
+      DrawerPart.cashTabPayments => l10n.cashTabPayments,
+      DrawerPart.payIns => l10n.payInsTotal,
+      DrawerPart.payOuts => l10n.payOutsTotal,
+      DrawerPart.cashRefunds => l10n.cashRefunds,
+    };
+
+/// A signed drawer amount: "+" for what went in, "−" for what came out
+String signedMoney(String Function(double) money, double value) =>
+    '${value < 0 ? '−' : '+'}${money(value.abs())}';
+
 /// Over/short verdict pill: green when the drawer is over or balanced, red
 /// when short. Shared by the report and the Z-history rows.
 class OverShortPill extends StatelessWidget {
@@ -139,15 +153,14 @@ class ShiftReport extends StatelessWidget {
         // Three tiles a row, each as tall as its two lines need
         for (final row in [
           [
-            stat(l10n.openingFloat, money(context, shift.openingFloat)),
             stat(l10n.ticketsSettled, '${shift.ticketsSettled}'),
-            stat(l10n.salesTotal, money(context, shift.salesTotal)),
+            stat(l10n.grossSales, money(context, shift.grossSales)),
             stat(l10n.discount, money(context, shift.discounts)),
           ],
           [
+            stat(l10n.refundsAllTenders, money(context, shift.refundsTotal)),
+            stat(l10n.netSales, money(context, shift.netSales)),
             stat(l10n.changeGiven, money(context, shift.changeGiven)),
-            stat(l10n.payInsTotal, money(context, shift.payInsTotal)),
-            stat(l10n.payOutsTotal, money(context, shift.payOutsTotal)),
           ],
         ]) ...[
           Row(
@@ -162,7 +175,7 @@ class ShiftReport extends StatelessWidget {
         ],
         if (shift.tenderTotals.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(l10n.tenderSplit, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.billTenders, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           _Bordered(
             children: [
@@ -213,6 +226,10 @@ class ShiftReport extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
+        Text(l10n.drawerCashTitle, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(height: 4),
+        _DrawerSum(shift: shift),
+        const SizedBox(height: 16),
         Text(l10n.drawerMovements, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         if (shift.movements.isEmpty)
@@ -257,6 +274,62 @@ class ShiftReport extends StatelessWidget {
                 ),
             ],
           ),
+      ],
+    );
+  }
+}
+
+/// The drawer sum written out — float + cash taken (after change) + cash
+/// tab payments + pay-ins − pay-outs − cash refunds = expected — so the
+/// parts visibly reach the figure; on a closed shift with late cash, the
+/// frozen expectation, the late cash and the over/short they make
+class _DrawerSum extends StatelessWidget {
+  final ShiftView shift;
+
+  const _DrawerSum({required this.shift});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final emerald = AppColors.emerald(theme.colors.brightness);
+    String format(double value) => money(context, value);
+
+    Widget row(String label, String value, {bool bold = false, Color? color}) => Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(label,
+                    style: bold ? theme.typography.base.copyWith(fontWeight: FontWeight.w700) : theme.typography.base),
+              ),
+              Text(value,
+                  style: theme.typography.base.copyWith(
+                    fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                    fontFeatures: _tabular,
+                    color: color,
+                  )),
+            ],
+          ),
+        );
+
+    final adjusted = shift.adjustedOverShort;
+    return _Bordered(
+      children: [
+        for (final line in shift.drawer.lines)
+          row(
+            drawerPartLabel(l10n, line.part),
+            line.part == DrawerPart.openingFloat ? format(line.amount) : signedMoney(format, line.amount),
+            color: line.isOut ? theme.colors.destructive : null,
+          ),
+        row('= ${l10n.expectedInDrawer}', format(shift.expectedInDrawer), bold: true),
+        if (shift.isClosed && shift.lateCash != 0) ...[
+          row(l10n.expectedAtClose, format(shift.expected)),
+          row(l10n.lateCash, signedMoney(format, shift.lateCash)),
+          if (adjusted != null)
+            row(l10n.adjustedOverShort, overShortText(l10n, context, adjusted),
+                bold: true, color: adjusted >= 0 ? emerald : theme.colors.destructive),
+        ],
       ],
     );
   }

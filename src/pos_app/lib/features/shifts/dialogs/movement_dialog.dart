@@ -389,17 +389,13 @@ class _PickButton extends StatelessWidget {
           ),
           if (hint != null) ...[
             const SizedBox(width: 8),
-            // The name gives way first; a hint only ever loses its tail
-            // on a cell too narrow for either
-            Flexible(
-              child: Text(
-                hint,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.typography.xs.copyWith(
-                  color: hintColor,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                ),
+            // Kept whole at the row's end; the name gives way to it
+            Text(
+              hint,
+              maxLines: 1,
+              style: theme.typography.xs.copyWith(
+                color: hintColor,
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
           ],

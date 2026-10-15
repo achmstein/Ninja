@@ -37,7 +37,7 @@ void main() {
   testWidgets("in Arabic the lockup stays Latin, left to right, and a dark theme keeps the connect screen's dark", (tester) async {
     await tester.pumpWidget(_app(const Locale('ar'), AppThemeMode.dark));
 
-    expect(find.text('جاري التشغيل…'), findsOneWidget);
+    expect(find.text('جارٍ التشغيل…'), findsOneWidget);
     final ninja = tester.getCenter(find.text('ninja'));
     final pos = tester.getCenter(find.text('POS'));
     expect(ninja.dx, lessThan(pos.dx));

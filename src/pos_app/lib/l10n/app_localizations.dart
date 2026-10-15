@@ -2138,6 +2138,78 @@ abstract class AppLocalizations {
   /// **'Balanced'**
   String get drawerBalanced;
 
+  /// No description provided for @otherTender.
+  ///
+  /// In en, this message translates to:
+  /// **'Other tender'**
+  String get otherTender;
+
+  /// No description provided for @grossSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Gross sales (before refunds)'**
+  String get grossSales;
+
+  /// No description provided for @netSales.
+  ///
+  /// In en, this message translates to:
+  /// **'Net sales (after refunds)'**
+  String get netSales;
+
+  /// No description provided for @refundsAllTenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Refunds (all tenders)'**
+  String get refundsAllTenders;
+
+  /// No description provided for @billTenders.
+  ///
+  /// In en, this message translates to:
+  /// **'Bills by tender (cash after change)'**
+  String get billTenders;
+
+  /// No description provided for @drawerCashTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash in the drawer'**
+  String get drawerCashTitle;
+
+  /// No description provided for @cashTakenNet.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash taken (after change)'**
+  String get cashTakenNet;
+
+  /// No description provided for @cashTabPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash tab payments'**
+  String get cashTabPayments;
+
+  /// No description provided for @cashRefunds.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash refunds'**
+  String get cashRefunds;
+
+  /// No description provided for @expectedAtClose.
+  ///
+  /// In en, this message translates to:
+  /// **'Expected at close'**
+  String get expectedAtClose;
+
+  /// No description provided for @lateCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Late cash (offline sales received after close)'**
+  String get lateCash;
+
+  /// No description provided for @adjustedOverShort.
+  ///
+  /// In en, this message translates to:
+  /// **'Over / short with late cash'**
+  String get adjustedOverShort;
+
   /// No description provided for @zReportTitle.
   ///
   /// In en, this message translates to:
@@ -4057,6 +4129,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This branch doesn\'t deliver now. Remove the delivery to charge.'**
   String get deliveryNotOfferedNow;
+
+  /// No description provided for @sending.
+  ///
+  /// In en, this message translates to:
+  /// **'Sending'**
+  String get sending;
+
+  /// No description provided for @confirming.
+  ///
+  /// In en, this message translates to:
+  /// **'Confirming…'**
+  String get confirming;
+
+  /// No description provided for @notSent.
+  ///
+  /// In en, this message translates to:
+  /// **'Not sent'**
+  String get notSent;
+
+  /// No description provided for @sendNoConnection.
+  ///
+  /// In en, this message translates to:
+  /// **'No connection to the server.'**
+  String get sendNoConnection;
+
+  /// No description provided for @backToSale.
+  ///
+  /// In en, this message translates to:
+  /// **'Back to the sale'**
+  String get backToSale;
+
+  /// No description provided for @sellOffline.
+  ///
+  /// In en, this message translates to:
+  /// **'Sell offline'**
+  String get sellOffline;
+
+  /// No description provided for @sendsFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 not sent} other{{count} not sent}}'**
+  String sendsFailed(int count);
+
+  /// No description provided for @sendsFailedHint.
+  ///
+  /// In en, this message translates to:
+  /// **'These never reached the server, so the kitchen doesn\'t have them. Try again, or remove them.'**
+  String get sendsFailedHint;
 }
 
 class _AppLocalizationsDelegate

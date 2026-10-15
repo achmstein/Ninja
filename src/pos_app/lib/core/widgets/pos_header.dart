@@ -9,6 +9,7 @@ import '../../features/shifts/widgets/shift_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'branch_switcher.dart';
 import 'offline_chip.dart';
+import '../sending/sending_chip.dart';
 
 /// The single app-chrome row: brand + branch on the start side, drawer
 /// shift status on the end side. Language, theme and sign-out are a
@@ -58,6 +59,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
         children: [
           const BranchSwitcher(),
           const Spacer(),
+          const SendingChip(),
           const OfflineChip(),
           const ShiftChip(),
           const SizedBox(width: 4),

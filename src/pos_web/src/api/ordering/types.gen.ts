@@ -465,6 +465,7 @@ export type OrderStatsDay = {
 };
 
 export type OrderStatsItem = {
+    productId?: number | string;
     productName?: LocalizedText;
     units?: number | string;
     revenue?: number | string;
@@ -1396,6 +1397,9 @@ export type GetOrderStatsData = {
         fromDate: string;
         toDate: string;
         tzOffsetMinutes?: number | string;
+        tz?: string;
+        dayStart?: string;
+        top?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */

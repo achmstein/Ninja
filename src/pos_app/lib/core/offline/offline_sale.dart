@@ -27,6 +27,12 @@ class OfflineSale {
   final String settleRequestId;
   final DateTime placedAt;
   final int? branchId;
+
+  /// The shift open on this till when the sale was made, sent with the
+  /// settle so the cash is that drawer's. Null on a sale queued by an older
+  /// version of the till, or when no shift was known: the server then uses
+  /// the shift open at replay, as it always did.
+  final int? shiftId;
   final String provisionalReceiptNumber;
   final List<SaleLine> lines;
   final String note;
@@ -48,6 +54,7 @@ class OfflineSale {
     required this.settleRequestId,
     required this.placedAt,
     required this.branchId,
+    this.shiftId,
     required this.provisionalReceiptNumber,
     required this.lines,
     this.note = '',
@@ -69,6 +76,7 @@ class OfflineSale {
         settleRequestId: settleRequestId,
         placedAt: placedAt,
         branchId: branchId,
+        shiftId: shiftId,
         provisionalReceiptNumber: provisionalReceiptNumber,
         lines: lines,
         note: note,
@@ -89,6 +97,7 @@ class OfflineSale {
         'settleRequestId': settleRequestId,
         'placedAt': placedAt.toUtc().toIso8601String(),
         'branchId': branchId,
+        'shiftId': shiftId,
         'provisionalReceiptNumber': provisionalReceiptNumber,
         'lines': lines.map((l) => l.toJson()).toList(),
         'note': note,
@@ -109,6 +118,7 @@ class OfflineSale {
         settleRequestId: json['settleRequestId'] as String,
         placedAt: DateTime.parse(json['placedAt'] as String),
         branchId: json['branchId'] as int?,
+        shiftId: json['shiftId'] as int?,
         provisionalReceiptNumber: json['provisionalReceiptNumber'] as String,
         lines: ((json['lines'] as List<dynamic>?) ?? []).map((e) => SaleLine.fromJson(e as Map<String, dynamic>)).toList(),
         note: json['note'] as String? ?? '',
@@ -122,5 +132,14 @@ class OfflineSale {
         error: json['error'] as String?,
         orderId: json['orderId'] as int?,
         ticketId: json['ticketId'] as int?,
+      );
+
+  /// What the replay sends to settle the sale's ticket: dated when it was
+  /// sold, against the shift that was open then
+  SettleRequest toSettleRequest() => SettleRequest(
+        payments: payments,
+        settledAt: placedAt,
+        provisionalReceiptNumber: provisionalReceiptNumber,
+        shiftId: shiftId,
       );
 }

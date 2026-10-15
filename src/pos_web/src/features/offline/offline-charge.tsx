@@ -5,6 +5,7 @@ import { KitchenChitSheet } from '@/features/receipt/kitchen-chit-sheet'
 import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
 import { saleTotal, type SaleLine } from '@/features/sale/cart'
 import { SettleDialog } from '@/features/ticket/settle-dialog'
+import { lastOpenShiftId } from '@/features/shift/last-open-shift'
 import { getActiveBranchId } from '@/stores/branch-store'
 import {
   enqueueOfflineSale,
@@ -91,11 +92,14 @@ export function useOfflineCharge() {
   const settle = async (payments: OfflinePayment[], change: number) => {
     if (!charging) throw new Error('Nothing is being charged')
     const { draft, placedAt, ticket } = charging
+    const branchId = getActiveBranchId()
     const sale: OfflineSale = {
       id: draft.requestId,
       settleRequestId: crypto.randomUUID(),
       placedAt,
-      branchId: getActiveBranchId(),
+      branchId,
+      // The drawer it was paid into, so the replay credits that shift
+      shiftId: lastOpenShiftId(branchId),
       provisionalReceiptNumber: nextProvisionalReceiptNumber(),
       lines: draft.lines,
       note: draft.note,

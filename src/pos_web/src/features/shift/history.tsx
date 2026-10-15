@@ -14,6 +14,7 @@ import { OverShortBadge } from './shift-report'
 const PAGE_SIZE = 20
 
 function ShiftRow({ shift }: { shift: ShiftView }) {
+  const t = useT()
   const money = useMoney()
   const locale = useLocale()
   const navigate = useNavigate()
@@ -47,8 +48,12 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
           </div>
         )}
       </div>
-      <span className='shrink-0 text-lg font-semibold tabular-nums'>
-        {money(shift.salesTotal)}
+      {/* Net of the refunds issued in the shift, as the report labels it */}
+      <span className='flex shrink-0 flex-col items-end'>
+        <span className='text-lg font-semibold tabular-nums'>
+          {money(shift.netSales ?? shift.salesTotal)}
+        </span>
+        <span className='text-muted-foreground text-xs'>{t('netSales')}</span>
       </span>
       <OverShortBadge value={toNumber(shift.overShort)} />
     </button>

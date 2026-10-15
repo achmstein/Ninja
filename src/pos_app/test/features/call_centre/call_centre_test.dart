@@ -222,7 +222,7 @@ void main() {
 
       expect(drawn.hasArea, isTrue);
       expect(outOfRangeWarning(en, drawn), "Outside the branch's delivery area");
-      expect(outOfRangeWarning(ar, drawn), 'برّه منطقة توصيل الفرع');
+      expect(outOfRangeWarning(ar, drawn), 'خارج منطقة توصيل الفرع');
       expect(outOfRangeWarning(en, const TillDeliveryQuote(radiusKm: 5)), 'Outside the 5 km delivery area');
       expect(outOfRangeWarning(en, const TillDeliveryQuote(radiusKm: 2.5)), 'Outside the 2.5 km delivery area');
     });

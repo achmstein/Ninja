@@ -490,7 +490,7 @@ class _DemoOrderRepository implements OrderRepository {
       status: OrderStatus.submitted,
       total: 115,
       placeId: 25,
-      placeName: _lt('Table 5', 'ترابيزة 5'),
+      placeName: _lt('Table 5', 'طاولة 5'),
       customerNote: 'No ice please',
       items: [
         OrderItem(productId: 6, productName: _lt('Iced Americano', 'أمريكانو مثلج'), unitPrice: 45, units: 1),
@@ -505,7 +505,7 @@ class _DemoOrderRepository implements OrderRepository {
       sessionId: 7,
       placeId: 3,
       placeKind: 'Room',
-      placeName: _lt('Room 3', 'اوضة 3'),
+      placeName: _lt('Room 3', 'غرفة 3'),
       guestPhone: '0100 123 4567',
       items: [OrderItem(productId: 1, productName: _lt('Latte', 'لاتيه'), unitPrice: 55, units: 2, customizationsDescription: _lt('Large', 'كبير'))],
     ),
@@ -578,19 +578,40 @@ class _DemoShiftsRepository implements ShiftsRepository {
       openingFloat: 500,
       closedAt: _now.subtract(const Duration(days: 1)),
       closedBy: 'Sara',
+      // The figures add up the way the server's do: the tenders (cash after
+      // change) make the gross; the drawer is float 500 + cash 1900 + tab
+      // cash 150 + pay-in 200 − pay-out 300 − cash refund 50 = 2400
       closingCount: 2380,
       expectedCash: 2400,
       overShort: -20,
+      adjustedOverShort: -20,
+      movements: [
+        CashMovementView(
+            type: CashMovementType.payIn, amount: 200, reason: 'Change float top-up', recordedBy: 'Sara', recordedAt: _now.subtract(const Duration(days: 1, hours: 8))),
+        CashMovementView(
+            type: CashMovementType.payOut, amount: 300, reason: 'Milk supplier', recordedBy: 'Sara', recordedAt: _now.subtract(const Duration(days: 1, hours: 4))),
+      ],
       ticketsSettled: 38,
       salesTotal: 4210,
+      grossSales: 4210,
+      netSales: 4160,
+      discounts: 85,
+      billDiscounts: 60,
+      lineDiscounts: 25,
       tenderTotals: const [
-        TenderTotal(tender: PaymentTender.cash, amount: 1900, count: 21),
+        TenderTotal(tender: PaymentTender.cash, amount: 1900, count: 21, tendered: 2045),
         TenderTotal(tender: PaymentTender.card, amount: 1710, count: 14),
         TenderTotal(tender: PaymentTender.instaPay, amount: 600, count: 3),
       ],
+      cashTendered: 2045,
       changeGiven: 145,
-      payInsTotal: 0,
-      payOutsTotal: 0,
+      refundsTotal: 50,
+      cashRefunds: 50,
+      payInsTotal: 200,
+      payOutsTotal: 300,
+      tabPaymentsTotal: 150,
+      cashTabPayments: 150,
+      tabPaymentTenderTotals: const [TenderTotal(tender: PaymentTender.cash, amount: 150, count: 1)],
       expectedInDrawer: 2400,
     ),
   ];
@@ -647,7 +668,8 @@ class _DemoShiftsRepository implements ShiftsRepository {
         closedBy: 'Demo Cashier',
         closingCount: closingCount,
         expectedCash: shift.expectedInDrawer,
-        overShort: closingCount - shift.expectedInDrawer);
+        overShort: closingCount - shift.expectedInDrawer,
+        adjustedOverShort: closingCount - shift.expectedInDrawer);
     _closed.insert(0, z);
     _current = null;
     return z;
@@ -661,6 +683,7 @@ class _DemoShiftsRepository implements ShiftsRepository {
     double? closingCount,
     double? expectedCash,
     double? overShort,
+    double? adjustedOverShort,
     List<CashMovementView>? movements,
     double? payInsTotal,
     double? payOutsTotal,
@@ -680,46 +703,62 @@ class _DemoShiftsRepository implements ShiftsRepository {
         movements: movements ?? s.movements,
         ticketsSettled: s.ticketsSettled,
         salesTotal: s.salesTotal,
+        grossSales: s.grossSales,
+        netSales: s.netSales,
+        netSalesExVat: s.netSalesExVat,
+        vat: s.vat,
+        vatAdded: s.vatAdded,
+        refundVat: s.refundVat,
         tenderTotals: s.tenderTotals,
+        cashTendered: s.cashTendered,
         changeGiven: s.changeGiven,
         refundsTotal: s.refundsTotal,
+        discounts: s.discounts,
+        billDiscounts: s.billDiscounts,
+        lineDiscounts: s.lineDiscounts,
+        loyaltyAndPromo: s.loyaltyAndPromo,
         cashRefunds: s.cashRefunds,
         payInsTotal: payInsTotal ?? s.payInsTotal,
         payOutsTotal: payOutsTotal ?? s.payOutsTotal,
+        tabPaymentsTotal: s.tabPaymentsTotal,
+        cashTabPayments: s.cashTabPayments,
+        tabPaymentTenderTotals: s.tabPaymentTenderTotals,
         expectedInDrawer: expectedInDrawer ?? s.expectedInDrawer,
+        lateCash: s.lateCash,
+        adjustedOverShort: adjustedOverShort ?? s.adjustedOverShort,
       );
 }
 
 class _DemoPlaceRepository implements PlaceRepository {
   static final _roomTariff = [
-    RateOption(code: 'single', name: _lt('Single', 'سنجل'), hourlyRate: 60),
-    RateOption(code: 'multi', name: _lt('Multi', 'ملتي'), hourlyRate: 90),
+    RateOption(code: 'single', name: _lt('Single', 'فردي'), hourlyRate: 60),
+    RateOption(code: 'multi', name: _lt('Multi', 'جماعي'), hourlyRate: 90),
   ];
   static final _vipTariff = [
-    RateOption(code: 'single', name: _lt('Single', 'سنجل'), hourlyRate: 80),
-    RateOption(code: 'multi', name: _lt('Multi', 'ملتي'), hourlyRate: 120),
+    RateOption(code: 'single', name: _lt('Single', 'فردي'), hourlyRate: 80),
+    RateOption(code: 'multi', name: _lt('Multi', 'جماعي'), hourlyRate: 120),
   ];
   static final _tableTariff = [RateOption(code: 'standard', name: _lt('Standard', 'عادي'), hourlyRate: 40)];
 
   final List<Place> _places = [
-    Place(id: 1, name: _lt('Room 1', 'اوضة 1'), status: PlaceStatus.available, options: _roomTariff),
-    Place(id: 2, name: _lt('Room 2', 'اوضة 2'), status: PlaceStatus.held, options: _roomTariff),
-    Place(id: 3, name: _lt('Room 3', 'اوضة 3'), status: PlaceStatus.occupied, options: _vipTariff),
-    Place(id: 4, name: _lt('Room 4', 'اوضة 4'), status: PlaceStatus.outOfService, options: _roomTariff),
+    Place(id: 1, name: _lt('Room 1', 'غرفة 1'), status: PlaceStatus.available, options: _roomTariff),
+    Place(id: 2, name: _lt('Room 2', 'غرفة 2'), status: PlaceStatus.held, options: _roomTariff),
+    Place(id: 3, name: _lt('Room 3', 'غرفة 3'), status: PlaceStatus.occupied, options: _vipTariff),
+    Place(id: 4, name: _lt('Room 4', 'غرفة 4'), status: PlaceStatus.outOfService, options: _roomTariff),
     for (var n = 1; n <= 3; n++)
-      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available),
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'طاولة $n'), status: PlaceStatus.available),
     // Table 4 runs a clock, at one rate
-    Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'ترابيزة 4'), status: PlaceStatus.available, options: _tableTariff),
+    Place(id: 24, kind: PlaceKind.table, name: _lt('Table 4', 'طاولة 4'), status: PlaceStatus.available, options: _tableTariff),
     for (var n = 5; n <= 8; n++)
-      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'ترابيزة $n'), status: PlaceStatus.available),
-    Place(id: 29, kind: PlaceKind.table, name: _lt('Garden 1', 'الجنينة 1'), status: PlaceStatus.available),
-    Place(id: 30, kind: PlaceKind.table, name: _lt('Garden 2', 'الجنينة 2'), status: PlaceStatus.available, isActive: false),
+      Place(id: 20 + n, kind: PlaceKind.table, name: _lt('Table $n', 'طاولة $n'), status: PlaceStatus.available),
+    Place(id: 29, kind: PlaceKind.table, name: _lt('Garden 1', 'الحديقة 1'), status: PlaceStatus.available),
+    Place(id: 30, kind: PlaceKind.table, name: _lt('Garden 2', 'الحديقة 2'), status: PlaceStatus.available, isActive: false),
   ];
   final List<Stay> _sessions = [
     Stay(
       id: 7,
       placeId: 3,
-      placeName: _lt('Room 3', 'اوضة 3'),
+      placeName: _lt('Room 3', 'غرفة 3'),
       customerId: 'u1',
       userName: 'Ahmed',
       createdAt: _now.subtract(const Duration(minutes: 42)),
@@ -727,16 +766,16 @@ class _DemoPlaceRepository implements PlaceRepository {
       status: StayStatus.running,
       options: _vipTariff,
       currentOptionCode: 'single',
-      currentOptionName: _lt('Single', 'سنجل'),
+      currentOptionName: _lt('Single', 'فردي'),
       members: [StayMember(customerId: 'u1', customerName: 'Ahmed', joinedAt: _now.subtract(const Duration(minutes: 42)), role: 'Owner')],
-      segments: [StaySegment(optionCode: 'single', optionName: _lt('Single', 'سنجل'), hourlyRate: 80, startTime: _now.subtract(const Duration(minutes: 42)))],
+      segments: [StaySegment(optionCode: 'single', optionName: _lt('Single', 'فردي'), hourlyRate: 80, startTime: _now.subtract(const Duration(minutes: 42)))],
     ),
   ];
   final List<Reservation> _reservations = [
     Reservation(
       id: 8,
       placeId: 2,
-      placeName: _lt('Room 2', 'اوضة 2'),
+      placeName: _lt('Room 2', 'غرفة 2'),
       placeIsTimed: true,
       customerName: 'Mona',
       createdAt: _now.subtract(const Duration(minutes: 3)),
@@ -944,7 +983,7 @@ class _DemoServiceRequestsRepository implements ServiceRequestsRepository {
       id: 51,
       userName: 'Ahmed',
       placeId: 3,
-      placeName: _lt('Room 3', 'اوضة 3'),
+      placeName: _lt('Room 3', 'غرفة 3'),
       requestType: ServiceRequestType.controllerChange,
       status: ServiceRequestStatus.pending,
       createdAt: _now.subtract(const Duration(minutes: 2)),
@@ -978,9 +1017,9 @@ class _DemoTablesRepository implements TablesRepository {
   @override
   Future<List<DiningTable>> getTables() async => [
         for (var n = 1; n <= 8; n++)
-          if (n != 4) DiningTable(id: 20 + n, name: _lt('Table $n', 'ترابيزة $n')),
-        DiningTable(id: 29, name: _lt('Garden 1', 'الجنينة 1')),
-        DiningTable(id: 30, name: _lt('Garden 2', 'الجنينة 2'), isActive: false),
+          if (n != 4) DiningTable(id: 20 + n, name: _lt('Table $n', 'طاولة $n')),
+        DiningTable(id: 29, name: _lt('Garden 1', 'الحديقة 1')),
+        DiningTable(id: 30, name: _lt('Garden 2', 'الحديقة 2'), isActive: false),
       ];
 }
 
@@ -1013,7 +1052,7 @@ class _DemoCatalogRepository implements CatalogRepository {
             ),
             ItemCustomization(
               id: 2,
-              name: _lt('Milk', 'اللبن'),
+              name: _lt('Milk', 'الحليب'),
               displayOrder: 1,
               options: [
                 CustomizationOption(id: 3, name: _lt('Oat', 'شوفان'), priceAdjustment: 15),
@@ -1084,7 +1123,7 @@ final List<TicketDetail> _sampleTickets = [
     type: TicketType.table,
     status: TicketStatus.settled,
     placeId: 21,
-    locationName: _lt('Table 1', 'ترابيزة 1'),
+    locationName: _lt('Table 1', 'طاولة 1'),
     openedAt: _now.subtract(const Duration(hours: 2)),
     settledAt: _now.subtract(const Duration(hours: 1, minutes: 10)),
     settledBy: 'Demo Cashier',
@@ -1100,7 +1139,7 @@ final List<TicketDetail> _sampleTickets = [
     type: TicketType.room,
     sessionId: 7,
     placeId: 3,
-    locationName: _lt('Room 3', 'اوضة 3'),
+    locationName: _lt('Room 3', 'غرفة 3'),
     label: 'Ahmed',
     openedAt: _now.subtract(const Duration(minutes: 42)),
     subtotal: 215,
@@ -1115,7 +1154,7 @@ final List<TicketDetail> _sampleTickets = [
     id: 102,
     type: TicketType.table,
     placeId: 25,
-    locationName: _lt('Table 5', 'ترابيزة 5'),
+    locationName: _lt('Table 5', 'طاولة 5'),
     openedAt: _now.subtract(const Duration(minutes: 18)),
     subtotal: 170,
     total: 170,
@@ -1141,7 +1180,7 @@ final List<TicketDetail> _sampleTickets = [
     id: 104,
     type: TicketType.table,
     placeId: 22,
-    locationName: _lt('Table 2', 'ترابيزة 2'),
+    locationName: _lt('Table 2', 'طاولة 2'),
     openedAt: _now.subtract(const Duration(minutes: 3)),
     subtotal: 60,
     total: 60,

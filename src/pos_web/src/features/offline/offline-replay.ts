@@ -43,6 +43,27 @@ export type OfflineSale = {
   /** Filled in as the replay progresses, so a retry picks up where it stopped */
   orderId: number | null
   ticketId: number | null
+  /**
+   * The shift open on this till when it was sold: the replay credits the
+   * sale to that drawer, not whichever is open when it arrives. Absent on a
+   * sale queued before the till kept it (the server then uses the open one).
+   */
+  shiftId?: number | null
+}
+
+/** The settle a replay sends: dated when it was sold, on the shift it was sold in */
+export function replaySettleBody(sale: OfflineSale) {
+  return {
+    payments: sale.payments.map((p) => ({
+      tender: p.tender,
+      amount: p.amount,
+      customerId: null,
+      customerName: null,
+    })),
+    settledAt: sale.placedAt,
+    provisionalReceiptNumber: sale.provisionalReceiptNumber,
+    ...(sale.shiftId != null ? { shiftId: sale.shiftId } : {}),
+  }
 }
 
 /** The three calls a replay makes; the real ones are in offline-queue.ts */

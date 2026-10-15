@@ -53,6 +53,15 @@ export function CloseShiftDialog({
     }
   }, [open])
 
+  // The expected cash shown for counting is the server's as of now: a sale,
+  // refund or tab payment from another till (or this one) since the last
+  // fetch would otherwise leave it behind
+  useEffect(() => {
+    if (open) {
+      void queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
+    }
+  }, [open, queryClient])
+
   const closeShift = useMutation({
     ...closeShiftMutation(),
     onSuccess: (data) => {

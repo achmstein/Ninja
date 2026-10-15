@@ -307,6 +307,8 @@ export function SettleDialog({
       }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+      // The drawer's expected cash and the shift's sales just moved
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
       // Whatever went on a tab changed what its holder owes
       for (const p of payments) {
         if (p.customerId) invalidateCustomer(queryClient, p.customerId)

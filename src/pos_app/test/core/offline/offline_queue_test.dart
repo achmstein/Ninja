@@ -63,11 +63,12 @@ class _FakeTickets implements TicketsRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
 }
 
-OfflineSale sale(String id, {int branchId = 1, List<SaleLine>? lines, String note = ''}) => OfflineSale(
+OfflineSale sale(String id, {int branchId = 1, int? shiftId, List<SaleLine>? lines, String note = ''}) => OfflineSale(
       id: id,
       settleRequestId: '$id-settle',
       placedAt: DateTime.utc(2026, 9, 5, 14, 30),
       branchId: branchId,
+      shiftId: shiftId,
       provisionalReceiptNumber: 'P-0001',
       lines: lines ?? const [SaleLine(productId: 2, nameEn: 'Cappuccino', nameAr: 'كابتشينو', price: 50, quantity: 2)],
       note: note,
@@ -124,6 +125,38 @@ void main() {
     expect(orders.branches, [4]);
     expect(tickets.branches, [4]);
     expect(branchInZone, isNull);
+  });
+
+  test('a replay settles against the shift that was open when the sale was made', () async {
+    final queue = container.read(offlineQueueProvider.notifier);
+    await queue.enqueue(sale('s1', shiftId: 41));
+    await queue.drain();
+
+    final (_, settle, _) = tickets.settled.single;
+    expect(settle.shiftId, 41);
+    expect(settle.toJson()['shiftId'], 41);
+  });
+
+  test('a sale queued before the till kept the shift replays without one, as it always did', () async {
+    // What an older till left in the queue: no shiftId key at all
+    final legacy = sale('s2').toJson()..remove('shiftId');
+    final restored = OfflineSale.fromJson(legacy);
+    expect(restored.shiftId, isNull);
+
+    final queue = container.read(offlineQueueProvider.notifier);
+    await queue.enqueue(restored);
+    await queue.drain();
+
+    final (_, settle, _) = tickets.settled.single;
+    expect(settle.shiftId, isNull);
+    // Left out of the body, so the server falls back to the open shift
+    expect(settle.toJson().containsKey('shiftId'), isFalse);
+  });
+
+  test('the shift survives the queue being saved and read back', () {
+    final restored = OfflineSale.fromJson(sale('s3', shiftId: 7).toJson());
+    expect(restored.shiftId, 7);
+    expect(restored.copyWith(orderId: 5).shiftId, 7);
   });
 
   test('the kitchen chit carries the provisional number, the lines and how to make them', () {

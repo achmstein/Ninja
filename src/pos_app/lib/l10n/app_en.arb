@@ -617,6 +617,18 @@
   "drawerOver": "Over",
   "drawerShort": "Short",
   "drawerBalanced": "Balanced",
+  "otherTender": "Other tender",
+  "grossSales": "Gross sales (before refunds)",
+  "netSales": "Net sales (after refunds)",
+  "refundsAllTenders": "Refunds (all tenders)",
+  "billTenders": "Bills by tender (cash after change)",
+  "drawerCashTitle": "Cash in the drawer",
+  "cashTakenNet": "Cash taken (after change)",
+  "cashTabPayments": "Cash tab payments",
+  "cashRefunds": "Cash refunds",
+  "expectedAtClose": "Expected at close",
+  "lateCash": "Late cash (offline sales received after close)",
+  "adjustedOverShort": "Over / short with late cash",
   "zReportTitle": "Z report — shift close",
   "xReportTitle": "X report — open shift",
   "shiftHistory": "Closed shifts",
@@ -1049,5 +1061,20 @@
   "deliveryLocationNotChecked": "Couldn't check that location. The rider will go by the address.",
   "deliveryTermsChecking": "Checking the branch's delivery terms…",
   "deliveryTermsUnknown": "Couldn't check delivery. Retry, or make it a counter sale.",
-  "deliveryNotOfferedNow": "This branch doesn't deliver now. Remove the delivery to charge."
+  "deliveryNotOfferedNow": "This branch doesn't deliver now. Remove the delivery to charge.",
+  "sending": "Sending",
+  "confirming": "Confirming…",
+  "notSent": "Not sent",
+  "sendNoConnection": "No connection to the server.",
+  "backToSale": "Back to the sale",
+  "sellOffline": "Sell offline",
+  "sendsFailed": "{count, plural, =1{1 not sent} other{{count} not sent}}",
+  "@sendsFailed": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sendsFailedHint": "These never reached the server, so the kitchen doesn't have them. Try again, or remove them."
 }

@@ -130,11 +130,11 @@ void main() {
     final tickets = _Tickets();
     await _open(tester, tickets, _Orders({41: true, 42: false}), [41, 42]);
 
-    expect(find.text('الأكل اتعمل؟'), findsOneWidget);
-    _expectChecked(tester, 'يتحسب هالك', true);
-    _expectChecked(tester, 'يرجع المخزن', false);
+    expect(find.text('هل حُضِّر الطعام؟'), findsOneWidget);
+    _expectChecked(tester, 'احتسابه هالكًا', true);
+    _expectChecked(tester, 'إعادته إلى المخزون', false);
 
-    await _voidFor(tester, 'مشي من غير ما يدفع');
+    await _voidFor(tester, 'غادر دون أن يدفع');
     expect(tickets.voided, isTrue);
     expect(tickets.disposition, 'Waste');
     expect(tester.takeException(), isNull);
@@ -144,13 +144,13 @@ void main() {
     final tickets = _Tickets();
     await _open(tester, tickets, _Orders({41: false}), [41]);
 
-    _expectChecked(tester, 'يرجع المخزن', true);
+    _expectChecked(tester, 'إعادته إلى المخزون', true);
 
-    await tester.tap(find.text('يتحسب هالك'));
+    await tester.tap(find.text('احتسابه هالكًا'));
     await tester.pumpAndSettle();
-    _expectChecked(tester, 'يتحسب هالك', true);
+    _expectChecked(tester, 'احتسابه هالكًا', true);
 
-    await _voidFor(tester, 'اتفتحت غلط');
+    await _voidFor(tester, 'فُتحت بالخطأ');
     expect(tickets.disposition, 'Waste');
   });
 
@@ -158,9 +158,9 @@ void main() {
     final tickets = _Tickets();
     await _open(tester, tickets, _Orders({}), const []);
 
-    expect(find.text('الأكل اتعمل؟'), findsNothing);
+    expect(find.text('هل حُضِّر الطعام؟'), findsNothing);
 
-    await _voidFor(tester, 'اتفتحت غلط');
+    await _voidFor(tester, 'فُتحت بالخطأ');
     expect(tickets.voided, isTrue);
     expect(tickets.disposition, isNull);
   });

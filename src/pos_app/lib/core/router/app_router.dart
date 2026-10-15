@@ -19,6 +19,7 @@ import '../../features/shifts/screens/shift_detail_screen.dart';
 import '../../features/shifts/screens/shift_history_screen.dart';
 import '../../features/shifts/screens/shift_screen.dart';
 import '../../features/ticket/screens/ticket_screen.dart';
+import '../sending/sending_ticket_screen.dart';
 
 /// What shows while the till reads its session and business: Ninja's own
 /// chrome, as control_web's splash draws it (the business's mark takes over once
@@ -175,6 +176,12 @@ final routerProvider = Provider<GoRouter>((ref) {
               final ticket = int.tryParse(state.uri.queryParameters['ticket'] ?? '');
               return NoTransitionPage(child: SalePadScreen(ticketId: ticket));
             },
+          ),
+          // A new counter sale charged a moment ago, before the server has made its ticket
+          GoRoute(
+            path: '/ticket/sending/:requestId',
+            pageBuilder: (context, state) =>
+                NoTransitionPage(child: SendingTicketScreen(requestId: state.pathParameters['requestId'] ?? '')),
           ),
           GoRoute(
             path: '/ticket/:ticketId',

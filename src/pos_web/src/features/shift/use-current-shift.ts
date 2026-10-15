@@ -1,8 +1,11 @@
+import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { AxiosError } from 'axios'
 import { getCurrentShiftOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@/api/sales/types.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { getActiveBranchId } from '@/stores/branch-store'
+import { rememberOpenShift } from './last-open-shift'
 
 /**
  * The branch's open drawer shift. A 404 is the server's normal "no shift
@@ -27,6 +30,19 @@ export function useCurrentShift(options?: { refetchInterval?: number }) {
     query.isError &&
     query.error instanceof AxiosError &&
     query.error.response?.status === 404
+
+  // Remembered for a sale rung up offline: it is credited to this drawer
+  const data = query.data as ShiftView | undefined
+  const openId =
+    !query.isError && data?.status === 'Open' && data.id != null ? Number(data.id) : null
+  const openBranch = data?.branchId != null ? Number(data.branchId) : null
+  useEffect(() => {
+    if (openId != null && openBranch != null) rememberOpenShift(openBranch, openId)
+  }, [openId, openBranch])
+  useEffect(() => {
+    const branchId = getActiveBranchId()
+    if (noShift && branchId != null) rememberOpenShift(branchId, null)
+  }, [noShift])
 
   return {
     // The error wins over retained data: a refetch that comes back 404 keeps

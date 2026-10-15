@@ -800,7 +800,8 @@ class AppLocalizationsAr extends AppLocalizations {
   String get noAccountNeeded => 'اسم فقط — دون حساب';
 
   @override
-  String get searchCustomersPlaceholder => 'الاسم أو رقم الموبايل أو الإيميل';
+  String get searchCustomersPlaceholder =>
+      'الاسم أو رقم الموبايل أو البريد الإلكتروني';
 
   @override
   String get noCustomersFound => 'لا يوجد عملاء مطابقون لهذا البحث';
@@ -1144,6 +1145,42 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get drawerBalanced => 'مطابق';
+
+  @override
+  String get otherTender => 'طريقة دفع أخرى';
+
+  @override
+  String get grossSales => 'إجمالي المبيعات قبل المرتجعات';
+
+  @override
+  String get netSales => 'صافي المبيعات بعد المرتجعات';
+
+  @override
+  String get refundsAllTenders => 'المرتجعات (جميع طرق الدفع)';
+
+  @override
+  String get billTenders => 'الفواتير حسب طريقة الدفع (النقد بعد خصم الباقي)';
+
+  @override
+  String get drawerCashTitle => 'النقدية في الدرج';
+
+  @override
+  String get cashTakenNet => 'النقد المحصَّل بعد خصم الباقي';
+
+  @override
+  String get cashTabPayments => 'سداد الحسابات الآجلة نقدًا';
+
+  @override
+  String get cashRefunds => 'المرتجعات النقدية';
+
+  @override
+  String get expectedAtClose => 'المتوقع عند الإغلاق';
+
+  @override
+  String get lateCash => 'نقد متأخر (مبيعات دون اتصال وصلت بعد الإغلاق)';
+
+  @override
+  String get adjustedOverShort => 'العجز والزيادة شاملًا النقد المتأخر';
 
   @override
   String get zReportTitle => 'تقرير إغلاق الوردية';
@@ -1614,7 +1651,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get tooManyLinks => 'روابط كثيرة خلال وقت قصير، حاول بعد دقيقة';
 
   @override
-  String get starting => 'جاري التشغيل…';
+  String get starting => 'جارٍ التشغيل…';
 
   @override
   String get onlineTender => 'أونلاين';
@@ -1724,7 +1761,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryBuilding => 'عمارة';
 
   @override
-  String get deliveryFloor => 'دور';
+  String get deliveryFloor => 'طابق';
 
   @override
   String get deliveryApartment => 'شقة';
@@ -1743,10 +1780,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveries => 'التوصيل';
 
   @override
-  String get deliveryNoRider => 'من غير مندوب';
+  String get deliveryNoRider => 'دون مندوب';
 
   @override
-  String get deliveryReadyNoRider => 'جاهز، من غير مندوب';
+  String get deliveryReadyNoRider => 'جاهز، دون مندوب';
 
   @override
   String deliveryWith(String name) {
@@ -1760,18 +1797,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String deliveryCashWith(String name) {
-    return 'اتسلّم، الكاش مع $name';
+    return 'سُلِّم، الكاش مع $name';
   }
 
   @override
-  String get deliveryGiveTo => 'سلّمه لـ';
+  String get deliveryGiveTo => 'سلّمه إلى';
 
   @override
   String get deliveryNoRiders =>
-      'مفيش مندوبين لسه. ضيف واحد من الموظفين في الإدارة، وبعدين يسجّل دخول في تطبيق المندوب.';
+      'لا يوجد مندوبون بعد. أضف مندوبًا من «الموظفون» في تطبيق الإدارة، ثم يسجّل دخوله في تطبيق المندوب.';
 
   @override
-  String get deliveryTakeBack => 'اسحبه من المندوب';
+  String get deliveryTakeBack => 'استرجعه من المندوب';
 
   @override
   String deliveryTakeCash(String amount, String name) {
@@ -1779,43 +1816,43 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get deliveryCashTaken => 'الكاش اتسلّم والفاتورة اتقفلت';
+  String get deliveryCashTaken => 'استُلم الكاش وأُغلقت الفاتورة';
 
   @override
-  String get deliveryActionFailed => 'محصلش. جرب تاني.';
+  String get deliveryActionFailed => 'لم تتم العملية. أعد المحاولة.';
 
   @override
   String get riderFree => 'متاح';
 
   @override
-  String get riderOffDuty => 'مش شغال دلوقتي';
+  String get riderOffDuty => 'خارج الدوام';
 
   @override
   String riderOut(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'معاه $count طلب',
-      few: 'معاه $count طلبات',
-      two: 'معاه طلبين',
-      one: 'معاه طلب',
+      other: 'معه $count طلب',
+      few: 'معه $count طلبات',
+      two: 'معه طلبان',
+      one: 'معه طلب واحد',
     );
     return '$_temp0';
   }
 
   @override
-  String get riderNotSignedIn => 'لسه مفتحش تطبيق المندوب';
+  String get riderNotSignedIn => 'لم يفتح تطبيق المندوب بعد';
 
   @override
   String deliveryForRider(String name) {
-    return 'لو موبايل $name مش هيقدر يقول:';
+    return 'إن لم يُبلغ هاتف $name بذلك:';
   }
 
   @override
   String get deliveryMarkOut => 'خرج مع المندوب';
 
   @override
-  String get deliveryMarkDelivered => 'اتسلّم للعميل';
+  String get deliveryMarkDelivered => 'سُلِّم إلى العميل';
 
   @override
   String get deliveryMap => 'الخريطة';
@@ -1840,7 +1877,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliverIt => 'توصيل';
 
   @override
-  String get deliveryFormTitle => 'طلب توصيل بالتليفون';
+  String get deliveryFormTitle => 'طلب توصيل عبر الهاتف';
 
   @override
   String get deliveryCustomerName => 'اسم العميل';
@@ -1852,7 +1889,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryBuildingLabel => 'العمارة';
 
   @override
-  String get deliveryFloorLabel => 'الدور';
+  String get deliveryFloorLabel => 'الطابق';
 
   @override
   String get deliveryApartmentLabel => 'الشقة';
@@ -1861,68 +1898,67 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryDirectionsLabel => 'وصف للمندوب';
 
   @override
-  String get deliveryDirectionsHint => 'علامة مميزة، البوابة، أي حاجة تساعد';
+  String get deliveryDirectionsHint => 'علامة مميزة، البوابة، أي شيء يساعد';
 
   @override
   String get deliveryPhoneLabel => 'رقم للمندوب';
 
   @override
-  String get deliveryLocationLabel => 'اللوكيشن (اختياري)';
+  String get deliveryLocationLabel => 'الموقع المُرسَل (اختياري)';
 
   @override
   String get deliveryLocationHint =>
-      'الصق لينك جوجل مابس اللي العميل بعته، على واتساب مثلاً';
+      'الصق رابط خرائط Google الذي أرسله العميل، عبر واتساب مثلًا';
 
   @override
-  String get deliverySearchAddress => 'أو دوّر على الشارع أو المنطقة';
+  String get deliverySearchAddress => 'أو ابحث عن الشارع أو المنطقة';
 
   @override
   String get deliverySearchFailed =>
-      'ملقيناش المكان ده. الصق لينك العميل بداله.';
+      'تعذّر العثور على هذا المكان. الصق رابط العميل بدلًا من ذلك.';
 
   @override
-  String get deliveryLocationReading => 'بنقرا اللوكيشن…';
+  String get deliveryLocationReading => 'جارٍ قراءة الموقع…';
 
   @override
   String deliveryLocationFound(String distance) {
-    return 'اللوكيشن اتحدد، على بعد $distance';
+    return 'تحدّد الموقع، على بُعد $distance';
   }
 
   @override
   String get deliveryLocationUnread =>
-      'ده مفيهوش لوكيشن. المندوب هيمشي بالعنوان.';
+      'لا يتضمن هذا موقعًا. سيعتمد المندوب على العنوان.';
 
   @override
-  String get deliveryNoPin => 'من غير لوكيشن: المندوب هيمشي بالعنوان';
+  String get deliveryNoPin => 'دون موقع: يعتمد المندوب على العنوان';
 
   @override
   String deliveryOutOfRange(String km) {
-    return 'برّه منطقة التوصيل ($km كم)';
+    return 'خارج منطقة التوصيل ($km كم)';
   }
 
   @override
-  String get deliveryOutOfArea => 'برّه منطقة توصيل الفرع';
+  String get deliveryOutOfArea => 'خارج منطقة توصيل الفرع';
 
   @override
-  String get callCentre => 'الكول سنتر';
+  String get callCentre => 'مركز الاتصال';
 
   @override
-  String get callCentreNextCaller => 'المتصل اللي بعده';
+  String get callCentreNextCaller => 'المتصل التالي';
 
   @override
-  String get callCentreCallerHint =>
-      'ابدأ من المتصل: رقمه، وبعدين هيتوصّل فين.';
+  String get callCentreCallerHint => 'ابدأ بالمتصل: رقمه، ثم عنوان التوصيل.';
 
   @override
-  String get callCentreFindBranch => 'شوف الفرع';
+  String get callCentreFindBranch => 'ابحث عن الفرع';
 
   @override
   String get callCentreNoBranch =>
-      'مفيش فرع بيوصّل هناك. خليه استلام من الفرع، أو راجع اللوكيشن.';
+      'لا يوجد فرع يوصّل إلى هناك. سجّله استلامًا من الفرع، أو راجع الموقع.';
 
   @override
   String get callCentreNeedsLocation =>
-      'حط لوكيشن المتصل، أو اختار عنوان من عناوينه، عشان نلاقي الفرع.';
+      'الصق موقع المتصل، أو اختر أحد عناوينه، للعثور على الفرع.';
 
   @override
   String callCentreBranchFor(String branch, String distance, String fee) {
@@ -1931,7 +1967,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String callCentreTakeAt(String branch) {
-    return 'خد الأوردر على $branch';
+    return 'سجّل الطلب في $branch';
   }
 
   @override
@@ -1944,12 +1980,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String callCentreOrderAt(String branch) {
-    return 'أوردر لـ $branch';
+    return 'طلب لـ $branch';
   }
 
   @override
   String callCentrePlaced(int orderId, String branch) {
-    return 'أوردر #$orderId اتعمل في $branch';
+    return 'سُجّل الطلب #$orderId في $branch';
   }
 
   @override
@@ -1958,29 +1994,29 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get deliveryKnownAddresses => 'اتوصّل له قبل كده';
+  String get deliveryKnownAddresses => 'عناوين سبق التوصيل إليها';
 
   @override
-  String get deliveryNeedsName => 'الطلب لمين؟';
+  String get deliveryNeedsName => 'لمن الطلب؟';
 
   @override
-  String get deliveryNeedsStreet => 'رايح فين؟';
+  String get deliveryNeedsStreet => 'إلى أين يُوصَّل؟';
 
   @override
-  String get deliveryPhoneInvalid => 'ده مش رقم تليفون صحيح';
+  String get deliveryPhoneInvalid => 'هذا ليس رقم هاتف صحيحًا';
 
   @override
   String get deliverySave => 'وصّل هنا';
 
   @override
-  String get deliveryNotADelivery => 'مش توصيل';
+  String get deliveryNotADelivery => 'ليس توصيلًا';
 
   @override
-  String get deliverySend => 'ابعت للتوصيل';
+  String get deliverySend => 'أرسل للتوصيل';
 
   @override
   String get deliveryPlaced =>
-      'طلب التوصيل اتسجّل. سلّمه لمندوب من التوصيل في الصالة.';
+      'سُجّل طلب التوصيل. سلّمه إلى مندوب من «التوصيل» في الصالة.';
 
   @override
   String get listSeparator => '، ';
@@ -1989,110 +2025,111 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryChange => 'غيّر التوصيل';
 
   @override
-  String get deliveryErrorOffline => 'مفيش اتصال. جرّب تاني بعد شوية.';
+  String get deliveryErrorOffline => 'لا يوجد اتصال. أعد المحاولة بعد قليل.';
 
   @override
-  String get deliveryErrorNotDelivering => 'النشاط ده مش بيوصّل دلوقتي.';
+  String get deliveryErrorNotDelivering => 'هذا النشاط لا يوفّر التوصيل الآن.';
 
   @override
-  String get deliveryErrorOutOfRange => 'العنوان ده برّه منطقة التوصيل.';
+  String get deliveryErrorOutOfRange => 'هذا العنوان خارج منطقة التوصيل.';
 
   @override
   String get deliveryErrorBelowMinimum => 'الطلب أقل من الحد الأدنى للتوصيل.';
 
   @override
   String get deliveryErrorPlaceConflict =>
-      'التوصيل بيبقى على فاتورة لوحده، مش على ترابيزة ولا فاتورة مفتوحة.';
+      'للتوصيل فاتورة مستقلة، لا على طاولة ولا على فاتورة مفتوحة.';
 
   @override
-  String get deliveryErrorTooLong => 'جزء من العنوان طويل قوي. اختصره.';
+  String get deliveryErrorTooLong => 'جزء من العنوان طويل جدًا. اختصره.';
 
   @override
-  String get deliveryErrorNotConfirmed => 'أكّد الطلب قبل ما يخرج.';
+  String get deliveryErrorNotConfirmed => 'أكّد الطلب قبل خروجه.';
 
   @override
-  String get deliveryErrorNoRider => 'سلّمه لمندوب الأول.';
+  String get deliveryErrorNoRider => 'سلّمه إلى مندوب أولًا.';
 
   @override
-  String get deliveryErrorAlreadyOut => 'الطلب خرج مع المندوب خلاص.';
+  String get deliveryErrorAlreadyOut => 'خرج الطلب مع المندوب بالفعل.';
 
   @override
-  String get deliveryErrorNotOut => 'الطلب لسه مخرجش.';
+  String get deliveryErrorNotOut => 'لم يخرج الطلب بعد.';
 
   @override
-  String get deliveryErrorNotDelivered => 'الطلب لسه متسلّمش.';
+  String get deliveryErrorNotDelivered => 'لم يُسلَّم الطلب بعد.';
 
   @override
-  String get deliveryErrorAlreadySettled => 'فلوسه اتسلّمت خلاص.';
+  String get deliveryErrorAlreadySettled => 'استُلم الكاش الخاص به بالفعل.';
 
   @override
-  String get deliveryErrorConflict => 'حد تاني غيّر التوصيل ده. اتحدّث دلوقتي.';
+  String get deliveryErrorConflict =>
+      'عدّل شخص آخر هذا التوصيل. تم تحديثه الآن.';
 
   @override
-  String get deliveryErrorUnknownRider => 'المندوب ده مش من مندوبين الفرع.';
+  String get deliveryErrorUnknownRider => 'هذا المندوب ليس من مندوبي الفرع.';
 
   @override
-  String get deliveryErrorPaused => 'الفرع مش بياخد طلبات دلوقتي.';
+  String get deliveryErrorPaused => 'هذا الفرع لا يستقبل طلبات الآن.';
 
   @override
   String deliveryNearerBranch(String branch, String distance, String fee) {
-    return '$branch على بعد $distance وبيوصّل هناك · التوصيل $fee';
+    return '$branch على بُعد $distance ويوصّل إلى هناك · التوصيل $fee';
   }
 
   @override
-  String get deliveryBranchPaused => 'واقف دلوقتي';
+  String get deliveryBranchPaused => 'متوقف الآن';
 
   @override
   String deliverySendTo(String branch) {
-    return 'ابعته لـ$branch';
+    return 'أرسله إلى $branch';
   }
 
   @override
   String deliverySendToPaused(String branch) {
-    return '$branch واقف. تبعته برضه؟';
+    return '$branch متوقف. أترسله على أي حال؟';
   }
 
   @override
-  String get deliveryKeepHere => 'خليه هنا';
+  String get deliveryKeepHere => 'أبقِه هنا';
 
   @override
   String deliveryWillSend(String branch) {
-    return 'رايح لـ$branch: هما يعملوه ويوصّلوه';
+    return 'يُرسل إلى $branch: يُحضَّر ويُوصَّل من هناك';
   }
 
   @override
   String deliverySaveSend(String branch) {
-    return 'يتوصّل من $branch';
+    return 'التوصيل من $branch';
   }
 
   @override
   String deliverySentTo(String branch, int orderId) {
-    return 'اتبعت لـ$branch · #$orderId';
+    return 'أُرسل إلى $branch · #$orderId';
   }
 
   @override
   String deliverySentFrom(String branch, String name) {
-    return 'جاي من $branch · $name';
+    return 'مُرسل من $branch · $name';
   }
 
   @override
   String deliverySentFromNoName(String branch) {
-    return 'جاي من $branch';
+    return 'مُرسل من $branch';
   }
 
   @override
   String newSentDeliveryToast(int orderId, String branch, String name) {
-    return 'توصيل تليفون جديد #$orderId من $branch ($name)';
+    return 'توصيل هاتفي جديد #$orderId من $branch ($name)';
   }
 
   @override
   String newSentDeliveryToastNoName(int orderId, String branch) {
-    return 'توصيل تليفون جديد #$orderId من $branch';
+    return 'توصيل هاتفي جديد #$orderId من $branch';
   }
 
   @override
   String priceReviewTitle(String branch) {
-    return 'منيو $branch مختلف';
+    return 'قائمة $branch مختلفة';
   }
 
   @override
@@ -2107,16 +2144,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String priceReviewSoldOut(String item, String branch) {
-    return '$item: خلصان في $branch';
+    return '$item: نفد في $branch';
   }
 
   @override
   String priceReviewOptionsOut(String item, String options, String branch) {
-    return '$item: $options خلصان في $branch';
+    return '$item: لا يتوفر $options في $branch';
   }
 
   @override
-  String get priceReviewDropped => 'الحاجات الخلصانة هتتشال من الطلب.';
+  String get priceReviewDropped => 'ستُحذف الأصناف النافدة من الطلب.';
 
   @override
   String priceReviewUse(String branch) {
@@ -2125,111 +2162,111 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String priceReviewNothingLeft(String branch) {
-    return 'مفيش حاجة في الطلب ده تتعمل في $branch.';
+    return 'لا يمكن تحضير أي شيء من هذا الطلب في $branch.';
   }
 
   @override
   String priceCheckFailed(String branch) {
-    return 'معرفناش نشوف منيو $branch. جرب تاني.';
+    return 'تعذّر التحقق من قائمة $branch. أعد المحاولة.';
   }
 
   @override
   String priceChecking(String branch) {
-    return 'بنشوف منيو $branch…';
+    return 'جارٍ التحقق من قائمة $branch…';
   }
 
   @override
   String get deliveryErrorSendNotDelivery =>
-      'التوصيل بس هو اللي يتبعت لفرع تاني.';
+      'لا يُرسل إلى فرع آخر إلا التوصيل.';
 
   @override
   String get deliveryErrorSendWithTicket =>
-      'اللي على فاتورة الفرع ده ميتبعتش لفرع تاني.';
+      'لا يمكن إرسال ما على فاتورة هذا الفرع إلى فرع آخر.';
 
   @override
   String get deliveryErrorSendBranchClosed =>
-      'الفرع ده مش بياخد توصيل. خليه هنا أو اختار فرع تاني.';
+      'هذا الفرع لا يستقبل طلبات توصيل. أبقِه هنا أو اختر فرعًا آخر.';
 
   @override
   String takenBy(String name) {
-    return 'اللي أخده $name';
+    return 'سجّله $name';
   }
 
   @override
   String takenByAt(String name, String branch) {
-    return 'اللي أخده $name في $branch';
+    return 'سجّله $name في $branch';
   }
 
   @override
-  String get failReasonNoAnswer => 'محدش رد';
+  String get failReasonNoAnswer => 'لم يرد أحد';
 
   @override
   String get failReasonRefused => 'العميل رفض الطلب';
 
   @override
-  String get failReasonWrongAddress => 'ملقاش العنوان';
+  String get failReasonWrongAddress => 'تعذّر العثور على العنوان';
 
   @override
-  String get failReasonOther => 'سبب تاني';
+  String get failReasonOther => 'سبب آخر';
 
   @override
   String deliveryFailedBecause(String reason) {
-    return 'متوصّلش: $reason';
+    return 'لم يُسلَّم: $reason';
   }
 
   @override
-  String get couldNotOpenMaps => 'معرفناش نفتح الخريطة';
+  String get couldNotOpenMaps => 'تعذّر فتح الخريطة';
 
   @override
-  String get couldNotOpenDialer => 'معرفناش نفتح التليفون';
+  String get couldNotOpenDialer => 'تعذّر فتح الهاتف';
 
   @override
   String deliveryDeliveredConfirm(String name) {
-    return '$name استلم الطلب؟';
+    return 'هل استلم $name الطلب؟';
   }
 
   @override
-  String get deliveryMarkFailed => 'متوصّلش';
+  String get deliveryMarkFailed => 'تعذّر التسليم';
 
   @override
-  String get deliveryFailReasonTitle => 'ليه الطلب متوصّلش؟';
+  String get deliveryFailReasonTitle => 'لماذا تعذّر التسليم؟';
 
   @override
-  String get deliveryMarkReturned => 'الشنطة رجعت';
+  String get deliveryMarkReturned => 'عاد الطلب إلى الفرع';
 
   @override
-  String get deliveryCancelReturned => 'الغي الطلب';
+  String get deliveryCancelReturned => 'ألغِ الطلب';
 
   @override
   String get deliveryCancelReturnedConfirm =>
-      'الشنطة رجعت ومحدش هياخدها. تلغي الطلب؟';
+      'عاد الطلب ولن يستلمه أحد. إلغاء الطلب؟';
 
   @override
-  String get stockWasMade => 'الأكل اتعمل؟';
+  String get stockWasMade => 'هل حُضِّر الطعام؟';
 
   @override
-  String get stockWaste => 'يتحسب هالك';
+  String get stockWaste => 'احتسابه هالكًا';
 
   @override
-  String get stockWasteHint => 'اتعمل: مكوناته تتحسب هالك';
+  String get stockWasteHint => 'حُضِّر: تُحتسب مكوناته هالكًا';
 
   @override
-  String get stockRestock => 'يرجع المخزن';
+  String get stockRestock => 'إعادته إلى المخزون';
 
   @override
-  String get stockRestockHint => 'ما اتعملش: مكوناته ترجع على الرف';
+  String get stockRestockHint => 'لم يُحضَّر: تعود مكوناته إلى المخزون';
 
   @override
   String deliveryComingBack(String name) {
-    return 'راجع مع $name';
+    return 'في طريق العودة مع $name';
   }
 
   @override
-  String get deliveryBackAtBranch => 'رجع الفرع';
+  String get deliveryBackAtBranch => 'عاد إلى الفرع';
 
   @override
   String deliveryCashCountTitle(String name) {
-    return 'استلم الفلوس من $name';
+    return 'استلم الكاش من $name';
   }
 
   @override
@@ -2238,13 +2275,13 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get deliveryCashCounted => 'المبلغ اللي اتعدّ';
+  String get deliveryCashCounted => 'المعدود';
 
   @override
-  String get deliveryCashInvalid => 'اكتب المبلغ اللي اتعدّ';
+  String get deliveryCashInvalid => 'أدخل المبلغ المعدود';
 
   @override
-  String get deliveryCashExact => 'قد الفاتورة بالظبط';
+  String get deliveryCashExact => 'مطابق للفاتورة تمامًا';
 
   @override
   String deliveryCashShort(String amount) {
@@ -2260,27 +2297,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryCashTakeAction => 'استلم';
 
   @override
-  String get laneWaiting => 'مستني مندوب';
+  String get laneWaiting => 'بانتظار مندوب';
 
   @override
-  String get laneWithRiders => 'مع المناديب';
+  String get laneWithRiders => 'مع المندوبين';
 
   @override
-  String get laneComingBack => 'راجعة';
+  String get laneComingBack => 'في طريق العودة';
 
   @override
-  String get laneCashDue => 'كاش لسه ما اتسلّمش';
+  String get laneCashDue => 'كاش لم يُستلم بعد';
 
   @override
-  String get laneEmpty => 'مفيش حاجة هنا';
+  String get laneEmpty => 'لا شيء هنا';
 
   @override
   String riderOrders(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: '$count توصيلات',
-      two: 'توصيلتين',
+      other: '$count توصيلة',
+      few: '$count توصيلات',
+      two: 'توصيلتان',
       one: 'توصيلة واحدة',
     );
     return '$_temp0';
@@ -2291,11 +2329,11 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String riderCashExpected(String amount) {
-    return 'الفواتير $amount';
+    return 'قيمة الفواتير $amount';
   }
 
   @override
-  String get riderCashDifferenceOn => 'الفرق على';
+  String get riderCashDifferenceOn => 'يُسجَّل الفرق على';
 
   @override
   String riderCashTakeIn(String amount) {
@@ -2303,32 +2341,68 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get riderCashNoneTicked => 'علّم التوصيلات اللي الكاش بتاعها';
+  String get riderCashNoneTicked => 'حدّد التوصيلات التي يخصها هذا الكاش';
 
   @override
   String riderCashTaken(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
       locale: localeName,
-      other: 'اتسلّم كاش $count توصيلات',
-      two: 'اتسلّم كاش توصيلتين',
-      one: 'اتسلّم كاش توصيلة واحدة',
+      other: 'استُلم كاش $count توصيلة',
+      few: 'استُلم كاش $count توصيلات',
+      two: 'استُلم كاش توصيلتين',
+      one: 'استُلم كاش توصيلة واحدة',
     );
     return '$_temp0';
   }
 
   @override
   String get deliveryLocationNotChecked =>
-      'معرفناش نتأكد من اللوكيشن ده. المندوب هيمشي بالعنوان.';
+      'تعذّر التحقق من هذا الموقع. سيعتمد المندوب على العنوان.';
 
   @override
-  String get deliveryTermsChecking => 'بنشوف شروط التوصيل في الفرع…';
+  String get deliveryTermsChecking => 'جارٍ التحقق من شروط التوصيل في الفرع…';
 
   @override
   String get deliveryTermsUnknown =>
-      'معرفناش نتأكد من التوصيل. جرّب تاني، أو خليه بيع عادي.';
+      'تعذّر التحقق من التوصيل. أعد المحاولة، أو اجعله بيعًا عاديًا.';
 
   @override
   String get deliveryNotOfferedNow =>
-      'الفرع ده مش بيوصّل دلوقتي. شيل التوصيل عشان تحاسب.';
+      'هذا الفرع لا يوفّر التوصيل الآن. أزل التوصيل لإتمام التحصيل.';
+
+  @override
+  String get sending => 'جارٍ الإرسال';
+
+  @override
+  String get confirming => 'جارٍ التأكيد…';
+
+  @override
+  String get notSent => 'لم يُرسل';
+
+  @override
+  String get sendNoConnection => 'لا يوجد اتصال بالخادم.';
+
+  @override
+  String get backToSale => 'العودة إلى البيع';
+
+  @override
+  String get sellOffline => 'البيع دون اتصال';
+
+  @override
+  String sendsFailed(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count طلبًا لم يُرسل',
+      few: '$count طلبات لم تُرسل',
+      two: 'طلبان لم يُرسلا',
+      one: 'طلب واحد لم يُرسل',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get sendsFailedHint =>
+      'لم تصل هذه الطلبات إلى الخادم، لذا لا يعلم بها المطبخ. أعد المحاولة أو احذفها.';
 }

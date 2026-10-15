@@ -11,6 +11,7 @@ import {
   drainSales,
   provisionalNumber,
   ReplayError,
+  replaySettleBody,
   type OfflineSale,
   type ReplayApi,
 } from './offline-replay'
@@ -148,16 +149,7 @@ const replayApi: ReplayApi = {
   settle: async (ticketId, sale) => {
     await apiClient.post(
       `/api/tickets/${ticketId}/settle`,
-      {
-        payments: sale.payments.map((p) => ({
-          tender: p.tender,
-          amount: p.amount,
-          customerId: null,
-          customerName: null,
-        })),
-        settledAt: sale.placedAt,
-        provisionalReceiptNumber: sale.provisionalReceiptNumber,
-      },
+      replaySettleBody(sale),
       {
         headers: { 'x-requestid': sale.settleRequestId, ...branchHeaders(sale) },
         timeout: REPLAY_TIMEOUT_MS,

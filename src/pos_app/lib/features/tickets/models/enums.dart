@@ -23,25 +23,29 @@ enum TicketType {
 /// at table): the server adds it at settle, the till never offers it, and
 /// it is never cash in the drawer. Talabat=5 is a Talabat order Talabat
 /// pays the business for: the server settles it when the order lands, and the
-/// till never offers it either.
+/// till never offers it either. [other] is a tender this till does not know
+/// yet (a newer server's): shown as "other tender", never taken for cash.
 enum PaymentTender {
   cash(0, 'Cash'),
   card(1, 'Card'),
   instaPay(2, 'InstaPay'),
   account(3, 'Account'),
   online(4, 'Online'),
-  talabat(5, 'Talabat');
+  talabat(5, 'Talabat'),
+  other(-1, '');
 
   final int value;
   final String name_;
 
   const PaymentTender(this.value, this.name_);
 
+  /// The tender the server named; one this till does not know is [other],
+  /// never cash — counting it as cash would put it in the drawer
   static PaymentTender fromName(String? name) {
     for (final tender in values) {
-      if (tender.name_ == name) return tender;
+      if (tender != PaymentTender.other && tender.name_ == name) return tender;
     }
-    return PaymentTender.cash;
+    return PaymentTender.other;
   }
 }
 

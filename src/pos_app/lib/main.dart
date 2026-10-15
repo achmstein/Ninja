@@ -14,6 +14,7 @@ import 'core/config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'core/demo/demo.dart';
 import 'core/offline/offline_queue.dart';
+import 'core/sending/sending.dart';
 import 'core/printing/printer_settings.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
@@ -45,6 +46,7 @@ void main() async {
   await initializeSale();
   await initializeCallCentre();
   await initializeOfflineQueue();
+  await initializeSending();
   await initializeBrand();
   // Which business this tablet serves; the connect screen asks when none is known
   await TenantConnection.initialize();

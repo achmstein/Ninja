@@ -12,6 +12,7 @@ import 'core/router/app_router.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'core/offline/offline_queue.dart';
 import 'core/offline/offline_sale.dart';
+import 'core/sending/sending.dart';
 import 'package:ninja_app_core/services/chime_service.dart';
 import 'core/services/branch_names.dart';
 import 'core/services/kiosk_service.dart';
@@ -48,6 +49,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
   /// minutes, as the web till does: a change saved in admin reaches it
   /// without a restart
   Timer? _brandRecheck;
+  Timer? _sendSweep;
 
   @override
   void initState() {
@@ -69,6 +71,11 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       if (ref.read(onlineProvider)) ref.read(offlineQueueProvider.notifier).drain();
     });
 
+    // Charges a restart cut off are sent again (features/sending); placed
+    // ones whose lines never showed are let go after a while
+    Future.microtask(() => ref.read(sendingProvider.notifier).resume());
+    _sendSweep = Timer.periodic(const Duration(seconds: 3), (_) => ref.read(sendingProvider.notifier).sweep());
+
     // When the cashier signs in, load branches and connect SignalR
     ref.listenManual(authServiceProvider, (previous, next) {
       if (previous != null && !previous.isAuthenticated && next.isAuthenticated) {
@@ -81,6 +88,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
   @override
   void dispose() {
     _brandRecheck?.cancel();
+    _sendSweep?.cancel();
     for (final sub in _signalRSubscriptions) {
       sub.cancel();
     }

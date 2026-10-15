@@ -3,6 +3,7 @@ import {
   drainSales,
   provisionalNumber,
   ReplayError,
+  replaySettleBody,
   type OfflineSale,
   type ReplayApi,
 } from './offline-replay'
@@ -190,5 +191,26 @@ describe('provisionalNumber', () => {
   it('pads to four digits', () => {
     expect(provisionalNumber(1)).toBe('P-0001')
     expect(provisionalNumber(12345)).toBe('P-12345')
+  })
+})
+
+describe('replaySettleBody', () => {
+  it('sends the shift the sale was rung up in', () => {
+    expect(replaySettleBody(sale('a', { shiftId: 41 }))).toEqual({
+      payments: [{ tender: 0, amount: 100, customerId: null, customerName: null }],
+      settledAt: '2026-10-14T09:30:00.000Z',
+      provisionalReceiptNumber: 'P-0001',
+      shiftId: 41,
+    })
+  })
+
+  it('leaves the shift out for a sale queued before the till kept it', () => {
+    // Stored by an older build: no shiftId key at all
+    const legacy = sale('b')
+    delete (legacy as Partial<OfflineSale>).shiftId
+    const body = replaySettleBody(legacy)
+    expect('shiftId' in body).toBe(false)
+    expect(body.settledAt).toBe('2026-10-14T09:30:00.000Z')
+    expect('shiftId' in replaySettleBody(sale('c', { shiftId: null }))).toBe(false)
   })
 })

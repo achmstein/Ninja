@@ -49,7 +49,10 @@ import { StayMembers } from '@/features/places/stay-members'
 import { isRunning, stayRoster } from '@/features/places/status'
 import { TimeSoFar } from '@/features/places/time-so-far'
 import { useStay, useStayActions } from '@/features/places/use-places'
-import type { SaleCustomer } from '@/features/sale/cart'
+import { saleTotal, type SaleCustomer } from '@/features/sale/cart'
+import { totalWith } from '@/features/sending/bill'
+import { landSend, sendsFor, useSending } from '@/features/sending/sending'
+import { SendingLines } from '@/features/sending/sending-lines'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import {
   CustomerCard,
@@ -127,11 +130,14 @@ function LineRow({
   selecting,
   selected,
   onToggle,
+  landed = false,
 }: {
   line: TicketLineView
   selecting: boolean
   selected: boolean
   onToggle: () => void
+  /** Just confirmed by the server: it fades up from how it was shown on its way, ticked */
+  landed?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -177,6 +183,11 @@ function LineRow({
               − {money(discount)} ({t('discount')})
             </span>
           )}
+          {/* Where the upload mark was while it was on its way: the price
+              stays put */}
+          {landed && (
+            <Check className='ms-1.5 inline size-3.5 align-[-2px] text-emerald-600 dark:text-emerald-400' />
+          )}
         </div>
       </div>
       <div
@@ -206,7 +217,14 @@ function LineRow({
   }
 
   return (
-    <div className='flex min-h-12 items-start gap-3 px-3 py-2'>{content}</div>
+    <div
+      className={cn(
+        'flex min-h-12 items-start gap-3 px-3 py-2',
+        landed && 'animate-in fade-in-70 duration-500',
+      )}
+    >
+      {content}
+    </div>
   )
 }
 
@@ -256,6 +274,15 @@ export function TicketScreen({
   // Voiding is Owner-only (the server enforces the same rule)
   const isOwner = getRealmRoles(auth.user).includes('Owner')
 
+  // Lines charged onto this bill that the server has not confirmed yet
+  // (features/sending): shown faded under the bill's own, in its total, and
+  // holding the payment until they are in
+  const sends = useSending((s) => s.sends)
+  const landed = useSending((s) => s.landed)
+  const mySends = sendsFor(sends, ticketId)
+  const onTheirWay = mySends.filter((x) => x.status !== 'failed')
+  const placedHere = mySends.some((x) => x.status === 'placed')
+
   const ticketQuery = useQuery({
     ...getTicketOptions({
       path: { id: ticketId },
@@ -266,10 +293,22 @@ export function TicketScreen({
     retry: (count, error) =>
       !(error instanceof AxiosError && error.response?.status === 404) &&
       count < 3,
-    // Poll fallback in case the SignalR connection is silently dead
-    refetchInterval: 20_000,
+    // Poll fallback in case the SignalR connection is silently dead; quick
+    // while an order the server took is still to show its lines here
+    refetchInterval: placedHere ? 700 : 20_000,
   })
   const ticket = ticketQuery.data
+
+  // An order's lines are on the bill: its faded copy goes, the real ones tick
+  useEffect(() => {
+    if (!ticket) return
+    const orderIds = new Set((ticket.lines ?? []).map((l) => toNumber(l.orderId)))
+    for (const send of mySends) {
+      if (send.status === 'placed' && send.orderId != null && orderIds.has(send.orderId)) {
+        landSend(send.requestId, send.orderId)
+      }
+    }
+  }, [ticket, mySends])
   const isLoading = ticketQuery.isLoading
   // Gone: an empty room ticket auto-discarded when its session ended, or any
   // ticket deleted out from under the screen. react-query keeps the last data
@@ -679,6 +718,7 @@ export function TicketScreen({
                 is discardable too, but only once its session has ended with
                 nothing on it — while it runs, there is time still to come. */}
             {lines.length === 0 &&
+            mySends.length === 0 &&
             (ticket.type !== 'Room' || ticket.sessionEndedAt != null) ? (
               <Button
                 variant='outline'
@@ -754,7 +794,8 @@ export function TicketScreen({
       )}
 
       {lines.length === 0 ? (
-        !runningStay && (
+        !runningStay &&
+        mySends.length === 0 && (
           <p className='text-muted-foreground py-16 text-center'>
             {t('emptyTicket')}
           </p>
@@ -771,6 +812,7 @@ export function TicketScreen({
                 selecting={selecting && !isSettled}
                 selected={selectedIds.has(toNumber(line.id))}
                 onToggle={() => toggleLine(toNumber(line.id))}
+                landed={landed.includes(toNumber(line.orderId))}
               />
             ))}
           </div>
@@ -823,6 +865,7 @@ export function TicketScreen({
                     selecting={selecting && !isSettled}
                     selected={selectedIds.has(toNumber(line.id))}
                     onToggle={() => toggleLine(toNumber(line.id))}
+                    landed={landed.includes(toNumber(line.orderId))}
                   />
                 ))}
               </div>
@@ -830,6 +873,8 @@ export function TicketScreen({
           ))}
         </div>
       )}
+
+      {!isSettled && !isVoided && <SendingLines sends={mySends} />}
 
       {!isSettled && !isVoided && (
         <OnlinePaymentsPanel
@@ -922,7 +967,14 @@ export function TicketScreen({
             <div className='min-w-0'>
               <div className='text-muted-foreground text-sm'>{t('total')}</div>
               <div className='text-2xl font-bold tabular-nums'>
-                {money(ticket.total)}
+                {money(
+                  onTheirWay.length > 0 && !isSettled
+                    ? totalWith(
+                        ticket,
+                        onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0),
+                      )
+                    : ticket.total,
+                )}
               </div>
               {toNumber(ticket.discount) > 0 && (
                 <div className='text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
@@ -1043,8 +1095,10 @@ export function TicketScreen({
               ) : (
                 <Button
                   size='lg'
-                  className='h-14 px-8 text-lg max-sm:px-6'
-                  disabled={lines.length === 0}
+                  className='h-14 gap-2 px-8 text-lg max-sm:px-6'
+                  // The money waits for every line charged here: never taken
+                  // against a bill the server has not got all of
+                  disabled={lines.length === 0 || mySends.length > 0}
                   onClick={() =>
                     runningStay
                       ? setSessionGuardOpen(true)
@@ -1053,7 +1107,14 @@ export function TicketScreen({
                         : setSettleOpen(true)
                   }
                 >
-                  {t('settleAction')}
+                  {onTheirWay.length > 0 ? (
+                    <>
+                      <Loader2 className='size-5 animate-spin' />
+                      {t('confirming')}
+                    </>
+                  ) : (
+                    t('settleAction')
+                  )}
                 </Button>
               )}
             </div>

@@ -65,6 +65,7 @@ export type BreakdownReport = {
     from?: string;
     to?: string;
     offsetMinutes?: number | string;
+    timeZone?: null | string;
     byHour?: Array<HourTotal>;
     byWeekday?: Array<WeekdayTotal>;
     byCashier?: Array<CashierTotal>;
@@ -79,6 +80,14 @@ export type CashierTotal = {
     discounts: number | string;
     voids: number | string;
     refunds: number | string;
+    kind?: string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
+    vatAdded?: number | string;
 };
 
 export type CashMovementKind = number;
@@ -115,8 +124,31 @@ export type CashMovementView = {
     categoryId?: null | number | string;
 };
 
+export type ChannelTotal = {
+    channel: string;
+    count: number | string;
+    gross: number | string;
+};
+
 export type CloseShiftRequest = {
     closingCount: number | string;
+};
+
+export type DailyReport = {
+    from?: string;
+    to?: string;
+    timeZone?: string;
+    dayStart?: string;
+    days?: Array<DailySales>;
+};
+
+export type DailySales = {
+    date: string;
+    tickets: number | string;
+    grossSales: number | string;
+    refunds: number | string;
+    netSales: number | string;
+    refundCount: number | string;
 };
 
 export type DiscountRequest = {
@@ -151,6 +183,11 @@ export type ItemTotal = {
     amount: number | string;
     tickets: number | string;
     catalogItemId?: null | number | string;
+    menuAmount?: number | string;
+    refundedQty?: number | string;
+    refundedAmount?: number | string;
+    netQty?: number | string;
+    netAmount?: number | string;
 };
 
 export type LocalizedText = {
@@ -297,6 +334,7 @@ export type PaymentRow = {
     recordedBy: string;
     recordedAt: string;
     settledAt: string;
+    netAmount?: number | string;
 };
 
 export type PaymentSettingsRequest = {
@@ -438,13 +476,24 @@ export type RangeReport = {
     to?: string;
     ticketsSettled?: number | string;
     net?: number | string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
     discounts?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
     changeGiven?: number | string;
     tenderTotals?: Array<TenderTotal>;
+    cashTendered?: number | string;
     byType?: Array<TypeTotal>;
+    byChannel?: Array<ChannelTotal>;
     subtotal?: number | string;
     serviceCharge?: number | string;
     vat?: number | string;
+    vatAdded?: number | string;
+    refundVat?: number | string;
+    deliveryFees?: number | string;
     refunds?: number | string;
     refundCount?: number | string;
     tabPayments?: number | string;
@@ -576,6 +625,7 @@ export type SettleRequest = {
     payments: Array<SettlePayment>;
     settledAt?: null | string;
     provisionalReceiptNumber?: null | string;
+    shiftId?: null | number | string;
 };
 
 export type SettleResult = {
@@ -598,8 +648,18 @@ export type ShiftView = {
     movements?: Array<CashMovementView>;
     ticketsSettled?: number | string;
     salesTotal?: number | string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
+    vat?: number | string;
+    vatAdded?: number | string;
+    refundVat?: number | string;
     discounts?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
     tenderTotals?: Array<TenderTotal>;
+    cashTendered?: number | string;
     changeGiven?: number | string;
     refundsTotal?: number | string;
     cashRefunds?: number | string;
@@ -610,6 +670,8 @@ export type ShiftView = {
     tabPaymentTenderTotals?: Array<TenderTotal>;
     tabPayments?: Array<TabPaymentView>;
     expectedInDrawer?: number | string;
+    lateCash?: number | string;
+    adjustedOverShort?: null | number | string;
 };
 
 export type SimulateRequest = {
@@ -676,6 +738,7 @@ export type TenderTotal = {
     tender: string;
     amount: number | string;
     count: number | string;
+    tendered?: number | string;
 };
 
 export type TicketDetail = {
@@ -1231,6 +1294,7 @@ export type GetBreakdownReportData = {
         from: string;
         to: string;
         offsetMinutes?: number | string;
+        tz?: string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -1264,6 +1328,48 @@ export type GetBreakdownReportResponses = {
 };
 
 export type GetBreakdownReportResponse = GetBreakdownReportResponses[keyof GetBreakdownReportResponses];
+
+export type GetDailyReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        tz?: string;
+        dayStart?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/reports/daily';
+};
+
+export type GetDailyReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetDailyReportError = GetDailyReportErrors[keyof GetDailyReportErrors];
+
+export type GetDailyReportResponses = {
+    /**
+     * OK
+     */
+    200: DailyReport;
+};
+
+export type GetDailyReportResponse = GetDailyReportResponses[keyof GetDailyReportResponses];
 
 export type GetItemPairsReportData = {
     body?: never;
