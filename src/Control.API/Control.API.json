@@ -370,6 +370,118 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/archived-backups": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "A destroyed tenant's archived backups, newest first: what bringing it back with its data can restore",
+        "operationId": "ListArchivedBackups",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/BackupInfo"
+                  }
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/bring-back": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Stamp a destroyed tenant again under its own slug: from an archived backup with its data, or empty",
+        "operationId": "BringBackTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/BringBackRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tenants/{slug}/stop": {
       "post": {
         "tags": [
@@ -4652,6 +4764,25 @@
                 "$ref": "#/components/schemas/BrandWordmark"
               }
             ]
+          }
+        }
+      },
+      "BringBackRequest": {
+        "type": "object",
+        "properties": {
+          "empty": {
+            "type": "boolean",
+            "default": false
+          },
+          "backupId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
           }
         }
       },

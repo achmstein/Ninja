@@ -23,6 +23,8 @@ public static partial class ControlApi
         api.MapPost("/tenants", CreateTenant).WithName("CreateTenant").WithSummary("Register a tenant and stamp its stack").RequireAuthorization("Platform");
         api.MapGet("/tenants/{slug}", GetTenant).WithName("GetTenant").WithSummary("One tenant with its latest run").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/provision", Provision).WithName("ProvisionTenant").WithSummary("Run (or retry) provisioning").RequireAuthorization("Platform");
+        api.MapGet("/tenants/{slug}/archived-backups", ListArchivedBackups).WithName("ListArchivedBackups").WithSummary("A destroyed tenant's archived backups, newest first: what bringing it back with its data can restore").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/bring-back", BringBack).WithName("BringBackTenant").WithSummary("Stamp a destroyed tenant again under its own slug: from an archived backup with its data, or empty").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/stop", Stop).WithName("StopTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/start", Start).WithName("StartTenant").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/upgrade", Upgrade).WithName("UpgradeTenant").WithSummary("Back up, re-stamp on a tag and pull; rolls back to the previous tag if the stack is not healthy within five minutes").RequireAuthorization("Platform");
@@ -244,6 +246,61 @@ public static partial class ControlApi
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
         // A destroyed tenant can be brought back under the same slug: the steps recreate everything
         return await Enqueue(context, queue, audit, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct, new { force });
+    }
+
+    public static async Task<Results<Ok<IReadOnlyList<BackupInfo>>, NotFound>> ListArchivedBackups(ControlContext context, BackupService backups, string slug, CancellationToken ct)
+    {
+        if (!await context.Tenants.AnyAsync(t => t.Slug == slug, ct)) return TypedResults.NotFound();
+        return TypedResults.Ok(backups.ListArchived(slug));
+    }
+
+    /// <summary>
+    /// A destroyed business back under its own slug, so its links, QR codes
+    /// and apps work again. With its data: the archived backup moves back
+    /// into its folder and the stamp restores it, as a restore into a new
+    /// slug does. Either way the realm is new: the owner gets a new
+    /// temporary password, everyone else signs up again.
+    /// </summary>
+    public static async Task<Results<Accepted, NotFound, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> BringBack(
+        ControlContext context, BackupService backups, ProvisioningQueue queue, IAuditWriter audit, CapacityCache capacity, IOptions<PlatformOptions> options,
+        string slug, BringBackRequest request, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        if (tenant.Status != TenantStatus.Destroyed)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Only a destroyed tenant is brought back; {slug} is {tenant.Status}." });
+        if (tenant.IsDrill)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = "A restore drill's scratch tenant is not brought back." });
+        if (!request.Force && !capacity.HasRoom)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
+
+        string? from = null;
+        if (!request.Empty)
+        {
+            var archived = backups.ListArchived(slug);
+            var backup = request.BackupId is { } id ? archived.FirstOrDefault(b => b.Id == id) : archived.FirstOrDefault();
+            if (backup is null)
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = request.BackupId is null
+                    ? $"{slug} has no archived backup left; bring it back empty instead."
+                    : $"{slug} has no archived backup {request.BackupId}." });
+            if (!backups.Unarchive(slug, backup.Id))
+                return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Backup {backup.Id} could not be moved back; try again." });
+            from = backup.Id;
+            tenant.RestoreFrom = $"{slug}/{backup.Id}";
+        }
+
+        // A new realm means a new first password, so the owner is welcomed again
+        tenant.WelcomeSentAt = null;
+        tenant.LastError = null;
+        // A demo that ran out would be swept straight back down
+        if (tenant.Kind == TenantKind.Demo && tenant.ExpiresAt is { } expires && expires <= DateTimeOffset.UtcNow.AddDays(1))
+            tenant.ExpiresAt = DateTimeOffset.UtcNow.AddDays(options.Value.DemoDays);
+        tenant.ExpiryWarnedAt = null;
+        tenant.DestroyWarnedAt = null;
+        await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.bring-back", slug, new { from = from ?? "empty", request.Force }, ct);
+        await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "provision"), ct);
+        return TypedResults.Accepted($"/api/control/tenants/{slug}");
     }
 
     private static string NoRoom(CapacityCache capacity, PlatformOptions options)
@@ -516,6 +573,11 @@ public record UpdatesResponse(DateTimeOffset CheckedAt, IReadOnlyList<string> Re
 public record FleetUpgradeResponse(int Queued, string? Canary);
 
 public record ExtendRequest(int Days);
+
+/// <param name="Empty">Stamp it with nothing in it rather than from its archived backup.</param>
+/// <param name="BackupId">Which archived backup; the newest when none is given.</param>
+/// <param name="Force">Stamp even when the box reports no room for another stack.</param>
+public record BringBackRequest(bool Empty = false, string? BackupId = null, bool Force = false);
 
 public record TenantHostsDto(string Customer, string Admin, string Pos, string Kds, string Api)
 {

@@ -185,7 +185,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     {
         var newest = List(slug).FirstOrDefault();
         if (newest is null) return null;
-        var target = Path.Combine(Platform.TenantsRoot, ArchiveSlug, slug, newest.Id);
+        var target = Path.Combine(ArchiveRoot(slug), newest.Id);
         Directory.CreateDirectory(Path.GetDirectoryName(target)!);
         if (Directory.Exists(target)) Directory.Delete(target, recursive: true);
         Directory.Move(Dir(slug, newest.Id), target);
@@ -213,9 +213,33 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         return gone;
     }
 
-    public IReadOnlyList<BackupInfo> List(string slug)
+    private string ArchiveRoot(string slug) => Path.Combine(Platform.TenantsRoot, ArchiveSlug, slug);
+
+    /// <summary>A destroyed tenant's archived backups, newest first: what bringing it back with its data restores.</summary>
+    public IReadOnlyList<BackupInfo> ListArchived(string slug) => ListIn(ArchiveRoot(slug));
+
+    /// <summary>
+    /// An archived backup back into the tenant's own folder, so a provision
+    /// restores it as any backup of the slug: a move on the same volume,
+    /// instant. False when there is no such backup.
+    /// </summary>
+    public bool Unarchive(string slug, string id)
     {
-        var root = Root(slug);
+        if (!IsValidId(id)) return false;
+        var source = Path.Combine(ArchiveRoot(slug), id);
+        if (!File.Exists(Path.Combine(source, Manifest))) return false;
+        var target = Dir(slug, id);
+        Directory.CreateDirectory(Root(slug));
+        if (Directory.Exists(target)) Directory.Delete(target, recursive: true);
+        Directory.Move(source, target);
+        if (!Directory.EnumerateFileSystemEntries(ArchiveRoot(slug)).Any()) Directory.Delete(ArchiveRoot(slug));
+        return true;
+    }
+
+    public IReadOnlyList<BackupInfo> List(string slug) => ListIn(Root(slug));
+
+    private static IReadOnlyList<BackupInfo> ListIn(string root)
+    {
         if (!Directory.Exists(root)) return [];
         var backups = new List<BackupInfo>();
         foreach (var dir in Directory.EnumerateDirectories(root))

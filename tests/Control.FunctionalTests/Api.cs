@@ -75,6 +75,8 @@ public sealed class Api
     public Task BackupAsync(string slug) => AcceptedAsync($"/api/control/tenants/{slug}/backups");
     public Task<List<BackupInfo>> BackupsAsync(string slug) => GetAsync<List<BackupInfo>>($"/api/control/tenants/{slug}/backups");
     public Task<TenantDetail> RestoreAsync(string slug, string id, string into) => PostAsync<TenantDetail>($"/api/control/tenants/{slug}/backups/{id}/restore", new RestoreRequest(into, Force: true), HttpStatusCode.Created);
+    public Task<List<BackupInfo>> ArchivedBackupsAsync(string slug) => GetAsync<List<BackupInfo>>($"/api/control/tenants/{slug}/archived-backups");
+    public Task BringBackAsync(string slug, bool empty = false) => AcceptedAsync($"/api/control/tenants/{slug}/bring-back", new BringBackRequest(empty, Force: true));
     public Task<QueueResponse> JobsAsync() => GetAsync<QueueResponse>("/api/control/platform/jobs?take=200");
     public Task<PlatformResponse> PlatformAsync() => GetAsync<PlatformResponse>("/api/control/platform");
     /// <summary>The box read now, not the last snapshot the monitor took.</summary>

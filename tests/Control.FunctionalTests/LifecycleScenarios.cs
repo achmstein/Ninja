@@ -1,5 +1,6 @@
 using System.Net;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform;
 
 namespace Ninja.Control.FunctionalTests;
 
@@ -117,6 +118,60 @@ public sealed class LifecycleScenarios
         Assert.AreEqual(HttpStatusCode.NoContent, status);
         (status, _) = await api.RefusedAsync(HttpMethod.Get, $"/api/control/tenants/{slug}");
         Assert.AreEqual(HttpStatusCode.NotFound, status);
+    }
+
+    [TestMethod]
+    public async Task A_destroyed_business_comes_back_under_its_own_slug_with_its_data_from_the_archived_backup()
+    {
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("back");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: true);
+        await api.SettledAsync(slug);
+
+        var (status, detail) = await api.RefusedAsync(HttpMethod.Post, $"/api/control/tenants/{slug}/bring-back", new { force = true });
+        Assert.AreEqual(HttpStatusCode.Conflict, status, "a live business is not brought back");
+        Assert.Contains("Only a destroyed tenant", detail);
+
+        await api.DestroyAsync(slug);
+        Assert.AreEqual(TenantStatus.Destroyed, (await api.SettledAsync(slug)).Status);
+        var archived = (await api.ArchivedBackupsAsync(slug)).Single();
+
+        await api.BringBackAsync(slug);
+        var back = await api.SettledAsync(slug);
+        Assert.AreEqual(TenantStatus.Running, back.Status, back.LastError);
+        CollectionAssert.Contains(back.Steps.Select(s => s.Name).ToArray(), "restore-databases");
+        CollectionAssert.Contains(back.Steps.Select(s => s.Name).ToArray(), "restore-uploads");
+        CollectionAssert.DoesNotContain(back.Steps.Select(s => s.Name).ToArray(), "photos", "its own pictures came back");
+        Assert.IsNotNull(back.OwnerInitialPassword, "a new realm, a new first password");
+        Assert.IsEmpty(await api.ArchivedBackupsAsync(slug), "the backup left the archive");
+        Assert.AreEqual(archived.Id, (await api.BackupsAsync(slug)).Single().Id, "and is the business's own backup again");
+        Assert.IsTrue((await api.AuditAsync(slug)).Any(a => a.Action == "tenant.bring-back"));
+    }
+
+    [TestMethod]
+    public async Task A_destroyed_business_comes_back_empty_when_asked_and_not_from_a_backup_it_does_not_have()
+    {
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("empty");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: true);
+        await api.SettledAsync(slug);
+        await api.DestroyAsync(slug);
+        await api.SettledAsync(slug);
+
+        await api.BringBackAsync(slug, empty: true);
+        var back = await api.SettledAsync(slug);
+        Assert.AreEqual(TenantStatus.Running, back.Status, back.LastError);
+        CollectionAssert.DoesNotContain(back.Steps.Select(s => s.Name).ToArray(), "restore-databases");
+        Assert.HasCount(1, await api.ArchivedBackupsAsync(slug), "the archived backup stays where it was");
+
+        await api.DestroyAsync(slug);
+        await api.SettledAsync(slug);
+        // The second destroy archives a fresh backup over nothing; with every archived one gone, only empty is left
+        foreach (var b in await api.ArchivedBackupsAsync(slug))
+            Directory.Delete(Path.Combine(ControlPlane.TenantsRoot, BackupService.ArchiveSlug, slug, b.Id), recursive: true);
+        var (status, detail) = await api.RefusedAsync(HttpMethod.Post, $"/api/control/tenants/{slug}/bring-back", new { force = true });
+        Assert.AreEqual(HttpStatusCode.BadRequest, status);
+        Assert.Contains("bring it back empty", detail);
     }
 
     [TestMethod]
