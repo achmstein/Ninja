@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
 import '../auth/sign_out.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 
 /// Shown instead of the deliveries when the signed-in account is assigned to no
@@ -27,9 +28,9 @@ class NoBranchScreen extends ConsumerWidget {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(FIcons.store, size: 48, color: muted),
+              Icon(FIcons.store, size: Sizes.iconHero, color: muted),
               const SizedBox(height: 16),
-              Text(l10n.noBranchTitle, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+              Text(l10n.noBranchTitle, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
               const SizedBox(height: 8),
               Text(l10n.noBranchDescription, style: theme.typography.base.copyWith(color: muted), textAlign: TextAlign.center),
               const SizedBox(height: 24),
@@ -37,7 +38,7 @@ class NoBranchScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
@@ -46,18 +47,18 @@ class NoBranchScreen extends ConsumerWidget {
                         await ref.read(authServiceProvider.notifier).refreshToken();
                         await ref.read(branchProvider.notifier).refresh();
                       },
-                      prefix: const Icon(FIcons.refreshCw, size: 20),
+                      prefix: const Icon(FIcons.refreshCw, size: Sizes.icon),
                       child: Text(l10n.retry, style: theme.typography.base.forButton),
                     ),
                   ),
                   const SizedBox(width: 12),
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.ghost,
                       mainAxisSize: MainAxisSize.min,
                       onPress: () => signOutRider(ref),
-                      prefix: const Icon(FIcons.logOut, size: 20),
+                      prefix: const Icon(FIcons.logOut, size: Sizes.icon),
                       child: Text(l10n.signOut, style: theme.typography.base.forButton),
                     ),
                   ),

@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -48,12 +49,12 @@ class DeliveriesScreen extends ConsumerWidget {
             icon: FIcons.wifiOff,
             title: describeError(e, l10n),
             action: SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: refresh,
-                prefix: const Icon(FIcons.refreshCw, size: 18),
+                prefix: const Icon(FIcons.refreshCw, size: Sizes.icon),
                 child: Text(l10n.retry, style: theme.typography.base.forButton),
               ),
             ),

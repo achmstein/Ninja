@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -48,7 +49,7 @@ Future<FailReason?> showFailReasonDialog(BuildContext context) {
               const SizedBox(height: 16),
               for (final reason in FailReason.values) ...[
                 SizedBox(
-                  height: 52,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => Navigator.of(context, rootNavigator: true).pop(reason),
@@ -58,7 +59,7 @@ Future<FailReason?> showFailReasonDialog(BuildContext context) {
                 const SizedBox(height: 8),
               ],
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.ghost,
                   onPress: () => Navigator.of(context, rootNavigator: true).pop(),

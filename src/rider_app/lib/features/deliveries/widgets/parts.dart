@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_order.dart';
 
@@ -81,7 +82,7 @@ class StatTile extends StatelessWidget {
         children: [
           Row(
             children: [
-              Icon(icon, size: 16, color: accent ?? muted),
+              Icon(icon, size: Sizes.iconSmall, color: accent ?? muted),
               const SizedBox(width: 6),
               Expanded(
                 child: Text(
@@ -128,7 +129,7 @@ class NoteBanner extends StatelessWidget {
         decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12)),
         child: Row(
           children: [
-            Icon(icon, size: 16, color: theme.colors.mutedForeground),
+            Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             const SizedBox(width: 8),
             Expanded(child: Text(text, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground))),
           ],
@@ -195,7 +196,7 @@ class EmptyState extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(color: theme.colors.muted, shape: BoxShape.circle),
-            child: Icon(icon, size: 32, color: muted),
+            child: Icon(icon, size: Sizes.iconHero, color: muted),
           ),
           const SizedBox(height: 16),
           Text(title, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600), textAlign: TextAlign.center),
@@ -246,7 +247,7 @@ class DoneRow extends StatelessWidget {
               color: (returned ? muted : green).withValues(alpha: 0.12),
               shape: BoxShape.circle,
             ),
-            child: Icon(returned ? FIcons.undo2 : FIcons.check, size: 20, color: returned ? muted : green),
+            child: Icon(returned ? FIcons.undo2 : FIcons.check, size: Sizes.icon, color: returned ? muted : green),
           ),
           const SizedBox(width: 12),
           Expanded(

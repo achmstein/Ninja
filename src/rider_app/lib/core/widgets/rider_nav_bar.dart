@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../features/deliveries/providers/deliveries_provider.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -36,7 +37,7 @@ class RiderNavBar extends ConsumerWidget {
       child: SafeArea(
         top: false,
         child: SizedBox(
-          height: 64,
+          height: Sizes.header,
           child: Row(
             children: [
               for (final tab in tabs)
@@ -103,7 +104,7 @@ class _Tab extends StatelessWidget {
                 clipBehavior: Clip.none,
                 alignment: Alignment.center,
                 children: [
-                  Icon(icon, size: 22, color: ink),
+                  Icon(icon, size: Sizes.iconNav, color: ink),
                   if (count > 0)
                     PositionedDirectional(
                       top: -2,

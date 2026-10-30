@@ -6,6 +6,7 @@ import 'package:ninja_app_core/brand/brand_provider.dart';
 import '../config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
@@ -46,7 +47,7 @@ class ConnectionRow extends ConsumerWidget {
       title: connection.businessName.isEmpty ? l10n.connectedTo : connection.businessName,
       subtitle: connection.host,
       trailing: SizedBox(
-        height: 44,
+        height: Sizes.control,
         child: FButton(
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,

@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/launcher.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/rider_toast.dart';
@@ -217,14 +218,14 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
             child: order.isFailed
                 ? Row(
                     children: [
-                      Icon(FIcons.undo2, size: 18, color: amber),
+                      Icon(FIcons.undo2, size: Sizes.icon, color: amber),
                       const SizedBox(width: 10),
                       Expanded(child: Text(l10n.bringItBackHint, style: theme.typography.sm)),
                     ],
                   )
                 : Row(
                     children: [
-                      Icon(FIcons.banknote, size: 20, color: muted),
+                      Icon(FIcons.banknote, size: Sizes.icon, color: muted),
                       const SizedBox(width: 10),
                       Text(l10n.collectCash, style: theme.typography.sm.copyWith(color: muted, fontWeight: FontWeight.w500)),
                       const SizedBox(width: 8),
@@ -235,7 +236,7 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                           child: Text(
                             widget.money(order.total),
                             maxLines: 1,
-                            style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                            style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
                           ),
                         ),
                       ),
@@ -252,11 +253,11 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                     children: [
                       Expanded(
                         child: SizedBox(
-                          height: 52,
+                          height: Sizes.control,
                           child: FButton(
                             variant: FButtonVariant.outline,
                             onPress: () => _open(order.directionsUri, (l10n) => l10n.couldNotOpenMaps),
-                            prefix: const Icon(FIcons.navigation, size: 18),
+                            prefix: const Icon(FIcons.navigation, size: Sizes.icon),
                             child: Text(l10n.navigate, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
                           ),
                         ),
@@ -264,11 +265,11 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: SizedBox(
-                          height: 52,
+                          height: Sizes.control,
                           child: FButton(
                             variant: FButtonVariant.outline,
                             onPress: order.phone.isEmpty ? null : () => _open(order.phoneUri, (l10n) => l10n.couldNotOpenDialer),
-                            prefix: const Icon(FIcons.phone, size: 18),
+                            prefix: const Icon(FIcons.phone, size: Sizes.icon),
                             child: Text(l10n.call, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
                           ),
                         ),
@@ -277,12 +278,12 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                   ),
                   const SizedBox(height: 10),
                   SizedBox(
-                    height: 60,
+                    height: Sizes.controlLarge,
                     child: FButton(
                       onPress: _busy ? null : _next,
                       prefix: _busy
                           ? const SizedBox.square(dimension: 20, child: FCircularProgress())
-                          : Icon(order.isOut ? FIcons.circleCheck : FIcons.motorbike, size: 24),
+                          : Icon(order.isOut ? FIcons.circleCheck : FIcons.motorbike, size: Sizes.icon),
                       child: Text(
                         order.isOut ? l10n.markDelivered : l10n.markOnTheWay,
                         style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton,
@@ -293,7 +294,7 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                   if (order.isOut) ...[
                     const SizedBox(height: 4),
                     SizedBox(
-                      height: 48,
+                      height: Sizes.control,
                       child: FButton(
                         variant: FButtonVariant.ghost,
                         onPress: _busy ? null : _couldNotDeliver,
@@ -332,7 +333,7 @@ class _Inset extends StatelessWidget {
           width: 32,
           height: 32,
           decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(10)),
-          child: Icon(icon, size: 16, color: theme.colors.foreground),
+          child: Icon(icon, size: Sizes.iconSmall, color: theme.colors.foreground),
         ),
         const SizedBox(width: 12),
         Expanded(

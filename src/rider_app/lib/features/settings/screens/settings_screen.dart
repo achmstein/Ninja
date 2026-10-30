@@ -8,6 +8,7 @@ import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../../core/services/push_service.dart';
 import 'package:ninja_app_core/services/update_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
@@ -40,7 +41,7 @@ class SettingsScreen extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // A tab of its own: a title, no way back to go
-          Text(l10n.settings, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.settings, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700)),
           const SizedBox(height: 16),
           SettingsSection(
             title: l10n.thisDevice,
@@ -49,20 +50,20 @@ class SettingsScreen extends ConsumerWidget {
                 title: l10n.language,
                 subtitle: locale.languageCode == 'ar' ? 'العربية' : 'English',
                 onPress: ref.read(localeProvider.notifier).toggleLocale,
-                trailing: Icon(FIcons.languages, size: 20, color: muted),
+                trailing: Icon(FIcons.languages, size: Sizes.icon, color: muted),
               ),
               SettingsRow(
                 title: l10n.theme,
                 subtitle: isDark ? l10n.themeDark : l10n.themeLight,
                 onPress: () => ref.read(themeProvider.notifier).setThemeMode(isDark ? AppThemeMode.light : AppThemeMode.dark),
-                trailing: Icon(isDark ? FIcons.moon : FIcons.sun, size: 20, color: muted),
+                trailing: Icon(isDark ? FIcons.moon : FIcons.sun, size: Sizes.icon, color: muted),
               ),
               SettingsRow(
                 title: l10n.notifications,
                 subtitle: notifications,
                 subtitleColor: pushAvailable && permission != AuthorizationStatus.denied ? AppColors.emerald(theme.colors.brightness) : null,
                 onPress: pushAvailable ? () => ref.read(pushServiceProvider).register() : null,
-                trailing: Icon(FIcons.bell, size: 20, color: muted),
+                trailing: Icon(FIcons.bell, size: Sizes.icon, color: muted),
               ),
               if (!AppConfig.isPinned && AppConfig.connection != null) const ConnectionRow(),
               const _UpdateRow(),
@@ -70,11 +71,11 @@ class SettingsScreen extends ConsumerWidget {
           ),
           const SizedBox(height: 24),
           SizedBox(
-            height: 52,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => signOutRider(ref),
-              prefix: Icon(FIcons.logOut, size: 20, color: theme.colors.destructive),
+              prefix: Icon(FIcons.logOut, size: Sizes.icon, color: theme.colors.destructive),
               child: Text(l10n.signOut, style: theme.typography.base.copyWith(color: theme.colors.destructive)),
             ),
           ),
@@ -113,12 +114,12 @@ class _UpdateRow extends ConsumerWidget {
       subtitle: [if (installed != null) l10n.appVersionInstalled(installed, update.installedBuild ?? 0), status].join(' · '),
       subtitleColor: update.phase == UpdatePhase.failed ? theme.colors.destructive : null,
       trailing: SizedBox(
-        height: 44,
+        height: Sizes.control,
         child: FButton(
           variant: canInstall ? null : FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
-          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: 18),
+          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
           child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
         ),
       ),

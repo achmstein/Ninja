@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/network/api_errors.dart';
@@ -64,7 +65,7 @@ class DutyCard extends ConsumerWidget {
                   width: 44,
                   height: 44,
                   decoration: BoxDecoration(color: theme.colors.muted, shape: BoxShape.circle),
-                  child: Icon(FIcons.moon, size: 20, color: theme.colors.mutedForeground),
+                  child: Icon(FIcons.moon, size: Sizes.icon, color: theme.colors.mutedForeground),
                 ),
                 const SizedBox(width: 12),
                 Expanded(
@@ -80,10 +81,10 @@ class DutyCard extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 56,
+              height: Sizes.controlLarge,
               child: FButton(
                 onPress: duty.pending ? null : () => _set(context, ref, true),
-                prefix: duty.pending ? spinner : const Icon(FIcons.power, size: 20),
+                prefix: duty.pending ? spinner : const Icon(FIcons.power, size: Sizes.icon),
                 child: Text(l10n.goOnDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton),
               ),
             ),
@@ -130,7 +131,7 @@ class DutyCard extends ConsumerWidget {
           ),
           const SizedBox(width: 8),
           SizedBox(
-            height: 44,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               mainAxisSize: MainAxisSize.min,

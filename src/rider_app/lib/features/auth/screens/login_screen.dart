@@ -7,6 +7,7 @@ import 'package:ninja_app_core/brand/brand_provider.dart';
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/config/app_config.dart';
 import 'package:ninja_app_core/widgets/app_text.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/connection_foot.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -117,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Center(
                     child: AppText(
                       business.isEmpty ? l10n.appName : business,
-                      style: theme.typography.xl2.copyWith(
+                      style: theme.typography.heading.copyWith(
                         fontWeight: FontWeight.w600,
                         letterSpacing: -0.5,
                         color: theme.colors.foreground,
@@ -175,7 +176,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
                   // Sign in button
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       onPress: _isLoading ? null : _signIn,
                       child: _isLoading ? const FCircularProgress() : AppText(l10n.signIn),

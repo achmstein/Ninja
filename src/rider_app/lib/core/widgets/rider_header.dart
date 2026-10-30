@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'branch_switcher.dart';
 
 /// The top bar: the business and the branch, and nothing else, so the
@@ -13,7 +14,7 @@ class RiderHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      height: 60,
+      height: Sizes.header,
       padding: const EdgeInsets.symmetric(horizontal: 4),
       decoration: BoxDecoration(
         color: theme.colors.background,

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -35,12 +36,12 @@ class TodayScreen extends ConsumerWidget {
             icon: FIcons.wifiOff,
             title: describeError(e, l10n),
             action: SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: refresh,
-                prefix: const Icon(FIcons.refreshCw, size: 18),
+                prefix: const Icon(FIcons.refreshCw, size: Sizes.icon),
                 child: Text(l10n.retry, style: theme.typography.base.forButton),
               ),
             ),
@@ -51,7 +52,7 @@ class TodayScreen extends ConsumerWidget {
           final handedIn = delivered.where((o) => !o.cashInHand).fold(0.0, (sum, o) => sum + (o.cashCollected ?? o.total));
           return RiderList(
             children: [
-              Text(l10n.navToday, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700)),
+              Text(l10n.navToday, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               _CashCard(amount: day.cashInHand, money: money),
               const SizedBox(height: 12),
@@ -103,7 +104,7 @@ class _CashCard extends StatelessWidget {
             width: 48,
             height: 48,
             decoration: BoxDecoration(color: tint.withValues(alpha: 0.16), shape: BoxShape.circle),
-            child: Icon(owed ? FIcons.wallet : FIcons.circleCheck, size: 22, color: tint),
+            child: Icon(owed ? FIcons.wallet : FIcons.circleCheck, size: Sizes.icon, color: tint),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -121,7 +122,7 @@ class _CashCard extends StatelessWidget {
                     child: Text(
                       money(amount),
                       maxLines: 1,
-                      style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                      style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
                     ),
                   ),
                   Text(l10n.cashInHandHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
