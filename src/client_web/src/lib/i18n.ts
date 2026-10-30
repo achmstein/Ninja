@@ -193,11 +193,11 @@ const webExtras = {
   // a customer with both does not read two different sentences.
   orderConfirmedToast: {
     en: 'Your order #{orderId} has been confirmed',
-    ar: 'الأوردر بتاعك #{orderId} اتأكد',
+    ar: 'الأوردر بتاعك \u2068#{orderId}\u2069 اتأكد',
   },
   orderCancelledToast: {
     en: 'Your order #{orderId} has been cancelled',
-    ar: 'الأوردر بتاعك #{orderId} اتلغى',
+    ar: 'الأوردر بتاعك \u2068#{orderId}\u2069 اتلغى',
   },
   // Toast titles (the pill headline; the message expands below it)
   toastSuccess: { en: 'Success', ar: 'تم بنجاح' },

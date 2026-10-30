@@ -48,7 +48,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         <span className='min-w-0 flex-1 truncate'>
           <bdi className='text-base font-semibold'>{order.customerName || t('guest')}</bdi>
           {/* In the till's direction, not forced left-to-right: Arabic reads the sign before the number */}
-          <span className='text-muted-foreground ms-2 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</span>
+          <bdi className='text-muted-foreground ms-2 text-sm tabular-nums'>#{toNumber(order.orderNumber)}</bdi>
         </span>
         <span className='shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>

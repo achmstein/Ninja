@@ -115,7 +115,7 @@ function Body({
                 )}
               >
                 <Box className={cn('size-5 shrink-0', !on && 'text-muted-foreground')} aria-hidden />
-                <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>#{b.orderNumber}</span>
+                <bdi className='text-muted-foreground shrink-0 text-sm tabular-nums'>#{b.orderNumber}</bdi>
                 <span className='min-w-0 flex-1 truncate font-medium'>{b.order.customerName || t('guest')}</span>
                 <span className='shrink-0 font-semibold tabular-nums'>{money(b.total)}</span>
               </button>

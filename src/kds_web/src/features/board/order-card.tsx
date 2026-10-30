@@ -134,9 +134,10 @@ export function OrderCard({
         className={cn('flex flex-col items-stretch gap-1 px-3 py-2', toneBandClass(tone))}
       >
         <div className='flex items-center gap-2'>
-          <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums'>
+          {/* bdi: in Arabic the hash would otherwise land after the number */}
+          <bdi className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums'>
             #{Number(order.orderNumber)}
-          </span>
+          </bdi>
           {platform ? (
             <span className='bg-card flex min-w-0 items-center gap-2 rounded-md border px-2 py-0.5'>
               {platformLogo ? (

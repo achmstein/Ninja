@@ -489,17 +489,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String posReceipt(int number) {
-    return 'إيصال كاشير #$number';
+    return 'إيصال كاشير ⁨#$number⁩';
   }
 
   @override
   String posCreditNote(int number) {
-    return 'مرتجع كاشير #$number';
+    return 'مرتجع كاشير ⁨#$number⁩';
   }
 
   @override
   String posTabPayment(int number) {
-    return 'سداد حساب #$number';
+    return 'سداد حساب ⁨#$number⁩';
   }
 
   @override
@@ -657,12 +657,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String pointsEarnedFromOrder(String orderId) {
-    return 'نقط مكتسبة من طلب #$orderId';
+    return 'نقط مكتسبة من طلب ⁨#$orderId⁩';
   }
 
   @override
   String pointsRedeemedForOrder(String orderId) {
-    return 'نقط مستخدمة في طلب #$orderId';
+    return 'نقط مستخدمة في طلب ⁨#$orderId⁩';
   }
 
   @override
@@ -863,7 +863,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String receiptShort(int number) {
-    return '#$number';
+    return '⁨#$number⁩';
   }
 
   @override
@@ -871,7 +871,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String receiptNumber(int number) {
-    return 'إيصال #$number';
+    return 'إيصال ⁨#$number⁩';
   }
 
   @override
@@ -906,7 +906,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String creditNote(int number) {
-    return 'إشعار استرجاع #$number';
+    return 'إشعار استرجاع ⁨#$number⁩';
   }
 
   @override

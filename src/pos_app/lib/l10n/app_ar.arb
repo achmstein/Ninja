@@ -58,7 +58,7 @@
     }
   },
   "pendingOrders": "بانتظار التأكيد",
-  "orderNumber": "طلب #{id}",
+  "orderNumber": "طلب \u2068#{id}\u2069",
   "@orderNumber": {
     "placeholders": {
       "id": {
@@ -80,7 +80,7 @@
   "orderCancelled": "تم إلغاء الطلب",
   "failedToConfirmOrder": "تعذّر تأكيد الطلب",
   "failedToCancelOrder": "تعذّر إلغاء الطلب",
-  "newOrderToast": "طلب جديد #{orderId}",
+  "newOrderToast": "طلب جديد \u2068#{orderId}\u2069",
   "@newOrderToast": {
     "placeholders": {
       "orderId": {
@@ -88,7 +88,7 @@
       }
     }
   },
-  "newOrderToastFrom": "طلب جديد #{orderId} من {name}",
+  "newOrderToastFrom": "طلب جديد \u2068#{orderId}\u2069 من {name}",
   "@newOrderToastFrom": {
     "placeholders": {
       "name": {
@@ -99,7 +99,7 @@
       }
     }
   },
-  "orderWaitingToast": "الطلب #{orderId} بانتظار منذ {minutes} دقيقة",
+  "orderWaitingToast": "الطلب \u2068#{orderId}\u2069 بانتظار منذ {minutes} دقيقة",
   "@orderWaitingToast": {
     "placeholders": {
       "minutes": {
@@ -270,7 +270,7 @@
     }
   },
   "refundTicket": "استرجاع",
-  "refundTitle": "استرجاع على الإيصال #{number}",
+  "refundTitle": "استرجاع على الإيصال \u2068#{number}\u2069",
   "@refundTitle": {
     "placeholders": {
       "number": {
@@ -304,7 +304,7 @@
       }
     }
   },
-  "ticketRefunded": "صدر إشعار الاسترجاع #{number} بقيمة {amount}",
+  "ticketRefunded": "صدر إشعار الاسترجاع \u2068#{number}\u2069 بقيمة {amount}",
   "@ticketRefunded": {
     "placeholders": {
       "amount": {
@@ -316,7 +316,7 @@
     }
   },
   "refundsTitle": "الاسترجاعات",
-  "creditNote": "إشعار استرجاع #{number}",
+  "creditNote": "إشعار استرجاع \u2068#{number}\u2069",
   "@creditNote": {
     "placeholders": {
       "number": {
@@ -371,7 +371,7 @@
     }
   },
   "findCustomer": "البحث عن عميل",
-  "ticketNumber": "فاتورة #{id}",
+  "ticketNumber": "فاتورة \u2068#{id}\u2069",
   "@ticketNumber": {
     "placeholders": {
       "id": {
@@ -453,7 +453,7 @@
   "noPaymentsYet": "لا توجد مدفوعات بعد",
   "confirmSettle": "تأكيد وإغلاق",
   "ticketSettled": "تم إغلاق الفاتورة",
-  "receiptNumber": "إيصال #{number}",
+  "receiptNumber": "إيصال \u2068#{number}\u2069",
   "@receiptNumber": {
     "placeholders": {
       "number": {
@@ -520,7 +520,7 @@
   "confirmTabPayment": "استلام",
   "tabPaymentRecorded": "تم تسجيل سداد الحساب",
   "tabPaymentSlip": "سداد حساب آجل",
-  "tabPaymentNumber": "سداد #{number}",
+  "tabPaymentNumber": "سداد \u2068#{number}\u2069",
   "@tabPaymentNumber": {
     "placeholders": {
       "number": {
@@ -545,7 +545,7 @@
   "takingReservations": "نستقبل الحجوزات",
   "paused": "متوقف",
   "shiftTitle": "الوردية",
-  "shiftNumber": "وردية #{id}",
+  "shiftNumber": "وردية \u2068#{id}\u2069",
   "@shiftNumber": {
     "placeholders": {
       "id": {
@@ -872,7 +872,7 @@
   "callCentrePickupAt": "استلام من…",
   "callCentrePickupAtBranch": "استلام من {branch}",
   "callCentreOrderAt": "طلب لـ {branch}",
-  "callCentrePlaced": "سُجّل الطلب #{orderId} في {branch}",
+  "callCentrePlaced": "سُجّل الطلب \u2068#{orderId}\u2069 في {branch}",
   "deliveryUnderMinimum": "أقل من الحد الأدنى للتوصيل {amount}",
   "deliveryKnownAddresses": "عناوين سبق التوصيل إليها",
   "deliveryNeedsName": "لمن الطلب؟",
@@ -906,11 +906,11 @@
   "deliveryKeepHere": "أبقِه هنا",
   "deliveryWillSend": "يُرسل إلى {branch}: يُحضَّر ويُوصَّل من هناك",
   "deliverySaveSend": "التوصيل من {branch}",
-  "deliverySentTo": "أُرسل إلى {branch} · #{orderId}",
+  "deliverySentTo": "أُرسل إلى {branch} · \u2068#{orderId}\u2069",
   "deliverySentFrom": "مُرسل من {branch} · {name}",
   "deliverySentFromNoName": "مُرسل من {branch}",
-  "newSentDeliveryToast": "توصيل هاتفي جديد #{orderId} من {branch} ({name})",
-  "newSentDeliveryToastNoName": "توصيل هاتفي جديد #{orderId} من {branch}",
+  "newSentDeliveryToast": "توصيل هاتفي جديد \u2068#{orderId}\u2069 من {branch} ({name})",
+  "newSentDeliveryToastNoName": "توصيل هاتفي جديد \u2068#{orderId}\u2069 من {branch}",
   "priceReviewTitle": "قائمة {branch} مختلفة",
   "priceReviewChanged": "{item}: {from} ← {to} في {branch}",
   "priceReviewSoldOut": "{item}: نفد في {branch}",

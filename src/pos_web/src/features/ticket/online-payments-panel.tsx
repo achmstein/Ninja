@@ -120,7 +120,7 @@ export function OnlinePaymentsPanel({
                 <div className='text-muted-foreground text-xs tabular-nums'>
                   {[
                     time(payment.refundedAt ?? payment.paidAt ?? payment.createdAt),
-                    payment.transactionId && `#${payment.transactionId}`,
+                    payment.transactionId && `⁨#${payment.transactionId}⁩`,
                   ]
                     .filter(Boolean)
                     .join(' · ')}

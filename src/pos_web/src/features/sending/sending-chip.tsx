@@ -80,7 +80,7 @@ export function SendingChip() {
                   }}
                 >
                   <span className='font-semibold underline-offset-4 hover:underline'>
-                    {send.ticketId != null ? `#${send.ticketId}` : t('newTicket')}
+                    {send.ticketId != null ? `⁨#${send.ticketId}⁩` : t('newTicket')}
                   </span>
                   <span className='font-semibold tabular-nums'>{money(saleTotal(send.lines))}</span>
                 </button>

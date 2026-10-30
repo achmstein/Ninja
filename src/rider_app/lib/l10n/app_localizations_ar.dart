@@ -246,7 +246,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String orderNumber(int number) {
-    return 'طلب #$number';
+    return 'طلب ⁨#$number⁩';
   }
 
   @override
@@ -401,12 +401,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newDelivery(int number) {
-    return 'طلب توصيل جديد #$number';
+    return 'طلب توصيل جديد ⁨#$number⁩';
   }
 
   @override
   String deliveryTakenBack(int number) {
-    return 'طلب #$number اتحول لمندوب تاني';
+    return 'طلب ⁨#$number⁩ اتحول لمندوب تاني';
   }
 
   @override

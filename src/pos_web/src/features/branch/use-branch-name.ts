@@ -14,7 +14,7 @@ export function useBranchName() {
   return (branchId: number | string | null | undefined): string => {
     if (branchId == null) return ''
     const branch = branches.find((b) => Number(b.id) === Number(branchId))
-    return localized(branch?.name) || `#${branchId}`
+    return localized(branch?.name) || `⁨#${branchId}⁩`
   }
 }
 

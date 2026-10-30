@@ -31,7 +31,7 @@ function sentFromBranchName(queryClient: QueryClient, branchId: number | undefin
   const branches = queryClient.getQueryData<BranchResponse[]>(getBranchesQueryKey()) ?? []
   const name = branches.find((b) => Number(b.id) === branchId)?.name
   const text = useLanguage.getState().language === 'ar' ? name?.ar || name?.en : name?.en || name?.ar
-  return text || (branchId != null ? `#${branchId}` : '')
+  return text || (branchId != null ? `⁨#${branchId}⁩` : '')
 }
 
 // Order events go to every staff connection, but the pending queue is

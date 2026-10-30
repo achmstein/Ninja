@@ -37,7 +37,7 @@
   "counter": "الكاشير",
   "pickup": "استلام",
   "walkIn": "زبون",
-  "newOrderToast": "طلب جديد #{orderId}",
+  "newOrderToast": "طلب جديد \u2068#{orderId}\u2069",
   "@newOrderToast": {
     "placeholders": {
       "orderId": {
@@ -45,7 +45,7 @@
       }
     }
   },
-  "newOrderToastFrom": "طلب جديد #{orderId} من {name}",
+  "newOrderToastFrom": "طلب جديد \u2068#{orderId}\u2069 من {name}",
   "@newOrderToastFrom": {
     "placeholders": {
       "name": {

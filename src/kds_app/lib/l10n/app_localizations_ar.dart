@@ -125,12 +125,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newOrderToast(int orderId) {
-    return 'طلب جديد #$orderId';
+    return 'طلب جديد ⁨#$orderId⁩';
   }
 
   @override
   String newOrderToastFrom(String name, int orderId) {
-    return 'طلب جديد #$orderId من $name';
+    return 'طلب جديد ⁨#$orderId⁩ من $name';
   }
 
   @override
