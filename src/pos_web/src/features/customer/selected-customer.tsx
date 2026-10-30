@@ -31,19 +31,28 @@ function CustomerPointsLine({ userId }: { userId: string }) {
  * a sale or a bill can be for someone — the sale pad and the new-bill
  * dialog open the same picker from the same button.
  */
-export function ChooseCustomerButton({ onClick }: { onClick: () => void }) {
+export function ChooseCustomerButton({
+  onClick,
+  showOptional = true,
+}: {
+  onClick: () => void
+  /** "(optional)" after the words; left off where the button shares its row */
+  showOptional?: boolean
+}) {
   const t = useT()
   return (
     <Button
       variant='outline'
-      className='h-12 w-full gap-2 text-base'
+      className='h-12 w-full min-w-0 gap-2 text-base'
       onClick={onClick}
     >
       <UserPlus className='size-5' />
-      {t('chooseCustomer')}
-      <span className='text-muted-foreground font-normal'>
-        ({t('optional')})
-      </span>
+      <span className='truncate'>{t('chooseCustomer')}</span>
+      {showOptional && (
+        <span className='text-muted-foreground font-normal'>
+          ({t('optional')})
+        </span>
+      )}
     </Button>
   )
 }

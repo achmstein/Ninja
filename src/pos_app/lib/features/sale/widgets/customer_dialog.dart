@@ -39,6 +39,8 @@ Future<SaleCustomer?> showCustomerDialog(
 }) {
   return showPosDialog<SaleCustomer>(
     context,
+    // A search: the results come up into view as they are typed for
+    aboveKeyboard: true,
     builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
   );
 }
@@ -142,10 +144,10 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
-      // The whole dialog scrolls when the keyboard squeezes it (half the
-      // screen on a landscape tablet); the results shrink-wrap inside it
-      child: DialogScroll(
-        child: Column(
+      // The title and the field stay put above the keyboard (half the screen
+      // on a landscape tablet); the results scroll under them
+      child: DialogSearchBody(
+        header: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -202,8 +204,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ),
             if (!widget.accountsOnly && typedName.isNotEmpty) ...[
               const SizedBox(height: 16),
-              SizedBox(
-                height: 56,
+              // At least 56, and as tall as its two lines need (a fixed 56 clipped the second)
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: 56),
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisAlignment: MainAxisAlignment.start,
@@ -226,7 +229,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
               ),
             ],
             const SizedBox(height: 8),
-            _search.isEmpty
+          ],
+        ),
+        results: _search.isEmpty
                 ? const SizedBox.shrink()
                 : _loading
                 ? Skeleton(
@@ -354,16 +359,16 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                       );
                     },
                   ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: 48,
-              child: FButton(
-                variant: FButtonVariant.outline,
-                onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: Text(l10n.cancel, style: theme.typography.base.forButton),
-              ),
+        footer: Padding(
+          padding: const EdgeInsets.only(top: 16),
+          child: SizedBox(
+            height: 48,
+            child: FButton(
+              variant: FButtonVariant.outline,
+              onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+              child: Text(l10n.cancel, style: theme.typography.base.forButton),
             ),
-          ],
+          ),
         ),
       ),
     );

@@ -118,6 +118,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   // The places column collapses so a busy floor gets the whole width; the
   // choice is remembered on this till
   bool _placesOpen = true;
+
+  /// The places' search, drawn as the column's header
+  final _placeSearch = TextEditingController();
   bool _openingTable = false;
   // A second-hand, only while a session runs or a reservation counts down
   Timer? _clock;
@@ -144,6 +147,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   void dispose() {
     _clock?.cancel();
     _fold?.cancel();
+    _placeSearch.dispose();
     super.dispose();
   }
 
@@ -327,23 +331,33 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         ),
     ];
 
-    return Padding(
-      padding: const EdgeInsets.all(16),
-      child: Row(
+    // A 64 header over each column, ruled off like the sale pad's: the
+    // places' rule and the bills' meet in one line, and a rule on the side
+    // the places meet the bills
+    BoxDecoration headerRule() => BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border)));
+    return Row(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // Places with no bill yet — scrolling on its own, collapsed away
           // when the cashier wants the full width
-          if (_placesOpen && !cloudKitchen) ...[
-            SizedBox(
-              width: _placesWidth,
+          if (_placesOpen && !cloudKitchen)
+            Container(
+              width: _placesWidth + 32,
+              decoration: BoxDecoration(border: BorderDirectional(end: BorderSide(color: theme.colors.border))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  Padding(padding: const EdgeInsets.only(top: 8), child: Heading(l10n.openPlace)),
-                  const SizedBox(height: 8),
+                  // The search is the column's header: the list needs no title
+                  Container(
+                    height: 64,
+                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    alignment: Alignment.center,
+                    decoration: headerRule(),
+                    child: PlaceSearchField(controller: _placeSearch),
+                  ),
                   Expanded(
                     child: SingleChildScrollView(
+                      padding: const EdgeInsets.all(16),
                       child: placesLoading
                           ? _placesSkeleton(context)
                           : PlaceList(
@@ -356,19 +370,22 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                               timeBilling: features.timeBilling,
                               onNewTab: _newTab,
                               onPick: (place) => _pickPlace(place.id),
+                              search: _placeSearch,
                             ),
                     ),
                   ),
                 ],
               ),
             ),
-            const SizedBox(width: 24),
-          ],
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Row(
+                Container(
+                  height: 64,
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  decoration: headerRule(),
+                  child: Row(
                   children: [
                     if (!cloudKitchen) SizedBox.square(
                       dimension: 40,
@@ -451,10 +468,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       ),
                     ),
                   ],
+                  ),
                 ),
-                const SizedBox(height: 20),
                 Expanded(
-                  child: tickets.when(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: tickets.when(
                     loading: () => Skeleton(
                       child: LayoutBuilder(
                         builder: (context, constraints) {
@@ -493,13 +512,13 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                       onFilter: (filter) => setState(() => _filter = filter),
                       rooms: rooms,
                     ),
+                    ),
                   ),
                 ),
               ],
             ),
           ),
         ],
-      ),
     );
   }
 }

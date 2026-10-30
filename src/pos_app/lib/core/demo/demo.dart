@@ -26,6 +26,8 @@ import '../../features/tickets/models/ticket_detail.dart';
 import '../../features/tickets/models/ticket_summary.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../../features/tickets/services/online_payments_service.dart';
+import '../../features/deliveries/models/delivery_order.dart';
+import '../../features/deliveries/providers/deliveries_provider.dart';
 import '../../features/tickets/models/online_payment.dart';
 import 'package:ninja_app_core/brand/brand_service.dart';
 import 'package:ninja_app_core/brand/tenant_brand.dart';
@@ -70,6 +72,8 @@ final demoOverrides = [
   serviceRequestsRepositoryProvider.overrideWithValue(_DemoServiceRequestsRepository()),
   placeRepositoryProvider.overrideWithValue(_DemoPlaceRepository()),
   customerSearchServiceProvider.overrideWithValue(_DemoCustomerSearchService()),
+  // The demo branch delivers, so the sale pad offers a rider beside the customer
+  tillDeliveryTermsProvider.overrideWith((ref) async => const TillDeliveryQuote(delivers: true, fee: 20)),
 ];
 
 class _DemoAuthService extends AuthService {
@@ -99,7 +103,11 @@ class _DemoAuthService extends AuthService {
 /// color, every feature on
 class _DemoTenantRepository implements TenantRepository {
   @override
-  Future<TenantBrand> getBrand() async => TenantBrand(name: LocalizedText.parse({'en': 'Chillax', 'ar': 'تشيلاكس'}));
+  Future<TenantBrand> getBrand() async => TenantBrand(
+        name: LocalizedText.parse({'en': 'Chillax', 'ar': 'تشيلاكس'}),
+        // `--dart-define=POS_DEMO_COMPACT=true` shows the long-menu till: text tiles, categories down the side
+        tillItems: const bool.fromEnvironment('POS_DEMO_COMPACT') ? 'compact' : 'photos',
+      );
 }
 
 class _DemoBranchRepository implements BranchRepository {

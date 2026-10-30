@@ -95,9 +95,19 @@ class SalePadScreen extends ConsumerStatefulWidget {
   ConsumerState<SalePadScreen> createState() => _SalePadScreenState();
 }
 
-class _SalePadScreenState extends ConsumerState<SalePadScreen> {
+class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindingObserver {
+  /// The keyboard opening or closing: whether the note is being typed changes
+  @override
+  void didChangeMetrics() {
+    if (_noteFocus.hasFocus) setState(() {});
+  }
+
   int? _activeCategory;
   final _note = TextEditingController();
+
+  /// While the note is typed into, the keyboard takes half the column: the
+  /// customer row and the suggestions step aside so the note stays in view
+  final _noteFocus = FocusNode();
 
   /// The compact pad's search, always in view over its category list
   final _search = TextEditingController();
@@ -133,6 +143,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     // Before the first frame: the cashier never sees another destination's cart
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -141,11 +152,14 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     });
     _note.addListener(() => ref.read(saleProvider.notifier).setNote(_note.text));
     _search.addListener(() => setState(() {}));
+    _noteFocus.addListener(() => setState(() {}));
   }
 
   @override
   void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
     _note.dispose();
+    _noteFocus.dispose();
     _search.dispose();
     super.dispose();
   }
@@ -591,6 +605,13 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
     final charge = synced ? _deliveryCharge(sale, watch: true) : DeliveryCharge.none;
     final deliveryBlocked = deliveryBlocksCharge(charge);
     final delivery = charge == DeliveryCharge.ready ? sale.delivery : null;
+    // The note being typed with the keyboard up: the column gives it the
+    // room. Put away with the system's back, the keyboard leaves the focus
+    // behind, so the keyboard itself is what is asked
+    // (the window's own insets: the shell's Scaffold hides them from its body)
+    final typingNote = _noteFocus.hasFocus && View.of(context).viewInsets.bottom > 0;
+    // The way to send it out with a rider, while it is not going out yet
+    final offerDelivery = canDeliver && !deliveryBlocked && delivery == null;
     // The fee of the branch that delivers it: this one, or the one it is sent to
     final deliveryFee = delivery != null ? delivery.feeWith(terms!.fee) : 0.0;
     final total = saleTotal(lines) + deliveryFee;
@@ -615,7 +636,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                     child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      // The search sits level with the back button; rows of chips hang from the top
+                      crossAxisAlignment: rail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                       children: [
                         SizedBox.square(
                           dimension: 48,
@@ -850,12 +872,14 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
             // ----- running sale -----
             Container(
               width: wide ? 380 : 340,
-              decoration: BoxDecoration(border: Border(left: BorderSide(color: theme.colors.border))),
+              // The rule on the side that meets the pad, whichever way the page runs
+              decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: theme.colors.border))),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
+                  // Built like the pad's header (8 + 48 + 8), so the two rules under them meet in one line
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                     child: Row(
                       children: [
@@ -877,7 +901,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                           ),
                         ),
                         SizedBox.square(
-                          dimension: 44,
+                          dimension: 48,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
                             onPress: lines.isEmpty && customer == null && sale.note.isEmpty && sale.delivery == null
@@ -892,8 +916,11 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                       ],
                     ),
                   ),
+                  // Who it is for and whether a rider takes it, side by side on
+                  // one row; out of the way while the note is typed into
+                  if (!typingNote)
                   Container(
-                    padding: const EdgeInsets.all(12),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
@@ -906,15 +933,23 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             onPick: (m) => _pickInRoom(SaleCustomer(id: m.id, name: m.name), roomSession),
                             onSomeoneElse: () => _chooseSomeoneElse(roomSession),
                           ),
-                          const SizedBox(height: 8),
+                          if (customer != null || offerDelivery) const SizedBox(height: 8),
                         ],
+                        if (customer != null || !showChips || offerDelivery)
+                        Row(
+                          children: [
                         if (customer != null)
-                          SelectedCustomerChip(
-                            customer: customer,
-                            onRemove: () => ref.read(saleProvider.notifier).setCustomer(null),
+                          Expanded(
+                            child: SelectedCustomerChip(
+                              customer: customer,
+                              onRemove: () => ref.read(saleProvider.notifier).setCustomer(null),
+                            ),
                           )
                         else if (!showChips)
-                          ChooseCustomerButton(
+                          Expanded(
+                            child: ChooseCustomerButton(
+                            // Beside the delivery button there is no room for "(optional)"
+                            showOptional: !offerDelivery,
                             onPress: () async {
                               // Adding to a room's bill: the people in the
                               // room are the first choice for whose round
@@ -932,7 +967,23 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                                 StayActions(ref, context).addMember(roomSession.id, id, picked.name);
                               }
                             },
+                            ),
                           ),
+                            if (offerDelivery) ...[
+                              if (customer != null || !showChips) const SizedBox(width: 8),
+                              SizedBox(
+                                height: 48,
+                                child: FButton(
+                                  variant: FButtonVariant.outline,
+                                  mainAxisSize: MainAxisSize.min,
+                                  onPress: _openDeliveryForm,
+                                  prefix: const Icon(FIcons.bike, size: 20),
+                                  child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
+                                ),
+                              ),
+                            ],
+                          ],
+                        ),
                         // A delivery the terms do not confirm: said, with the way out of it
                         if (deliveryBlocked) ...[
                           const SizedBox(height: 8),
@@ -941,27 +992,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                             onRetry: () => ref.invalidate(tillDeliveryTermsProvider),
                             onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
                           ),
-                        ] else if (canDeliver) ...[
+                        ] else if (canDeliver && delivery != null) ...[
                           const SizedBox(height: 8),
-                          if (delivery != null)
-                            DeliverySummary(
-                              delivery: delivery,
-                              sendToName: delivery.sendTo == null
-                                  ? null
-                                  : branchNameOf(ref.watch(allBranchesProvider).value, delivery.sendTo!.branchId, context),
-                              onEdit: _openDeliveryForm,
-                              onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
-                            )
-                          else
-                            SizedBox(
-                              height: 48,
-                              child: FButton(
-                                variant: FButtonVariant.outline,
-                                onPress: _openDeliveryForm,
-                                prefix: const Icon(FIcons.bike, size: 20),
-                                child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
-                              ),
-                            ),
+                          DeliverySummary(
+                            delivery: delivery,
+                            sendToName: delivery.sendTo == null
+                                ? null
+                                : branchNameOf(ref.watch(allBranchesProvider).value, delivery.sendTo!.branchId, context),
+                            onEdit: _openDeliveryForm,
+                            onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
+                          ),
                         ],
                       ],
                     ),
@@ -980,7 +1020,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                   ),
                   // What the item rung up last goes well with: one tap to offer it
                   if (tillSuggestions(_lastAdded, itemsAsync.value ?? const <CatalogItem>[], lines) case final suggestions
-                      when suggestions.isNotEmpty)
+                      when suggestions.isNotEmpty && !typingNote)
                     Container(
                       padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
                       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
@@ -1036,6 +1076,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> {
                         ],
                         FTextField(
                           control: FTextFieldControl.managed(controller: _note),
+                          focusNode: _noteFocus,
                           hint: l10n.orderNoteOptional,
                           maxLines: 1,
                         ),

@@ -14,7 +14,10 @@ import '../models/sale_line.dart';
 /// dialog open the same picker from the same button.
 class ChooseCustomerButton extends StatelessWidget {
   final VoidCallback onPress;
-  const ChooseCustomerButton({super.key, required this.onPress});
+
+  /// "(optional)" after the words; left off where the button shares its row
+  final bool showOptional;
+  const ChooseCustomerButton({super.key, required this.onPress, this.showOptional = true});
 
   @override
   Widget build(BuildContext context) {
@@ -31,12 +34,15 @@ class ChooseCustomerButton extends StatelessWidget {
             text: l10n.chooseCustomer,
             style: theme.typography.base.forButton,
             children: [
-              TextSpan(
-                text: ' (${l10n.optional})',
-                style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground),
-              ),
+              if (showOptional)
+                TextSpan(
+                  text: ' (${l10n.optional})',
+                  style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground),
+                ),
             ],
           ),
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
         ),
       ),
     );

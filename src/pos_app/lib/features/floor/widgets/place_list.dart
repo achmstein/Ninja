@@ -25,6 +25,11 @@ class PlaceList extends StatefulWidget {
   final VoidCallback onNewTab;
   final ValueChanged<Place> onPick;
 
+  /// The search over the list, when the screen draws its field elsewhere
+  /// (the floor puts it in the column's header); the list draws its own
+  /// without one
+  final TextEditingController? search;
+
   const PlaceList({
     super.key,
     required this.places,
@@ -35,6 +40,7 @@ class PlaceList extends StatefulWidget {
     this.timeBilling = true,
     required this.onNewTab,
     required this.onPick,
+    this.search,
   });
 
   @override
@@ -42,7 +48,8 @@ class PlaceList extends StatefulWidget {
 }
 
 class _PlaceListState extends State<PlaceList> {
-  final _term = TextEditingController();
+  final _own = TextEditingController();
+  TextEditingController get _term => widget.search ?? _own;
   Timer? _clock;
   // Places that were busy on an earlier build and are free now: the bill
   // there was just settled, so their row fades in and its dot turns green
@@ -52,13 +59,25 @@ class _PlaceListState extends State<PlaceList> {
   @override
   void initState() {
     super.initState();
-    _term.addListener(() => setState(() {}));
+    _term.addListener(_changed);
+  }
+
+  void _changed() => setState(() {});
+
+  @override
+  void didUpdateWidget(PlaceList old) {
+    super.didUpdateWidget(old);
+    if (old.search != widget.search) {
+      (old.search ?? _own).removeListener(_changed);
+      _term.addListener(_changed);
+    }
   }
 
   @override
   void dispose() {
     _clock?.cancel();
-    _term.dispose();
+    _term.removeListener(_changed);
+    _own.dispose();
     super.dispose();
   }
 
@@ -129,16 +148,10 @@ class _PlaceListState extends State<PlaceList> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        FTextField(
-          control: FTextFieldControl.managed(controller: _term),
-          hint: l10n.searchPlaces,
-          prefixBuilder: (context, style, _) => Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12),
-            child: Icon(FIcons.search, size: 16, color: theme.colors.mutedForeground),
-          ),
-          maxLines: 1,
-        ),
-        const SizedBox(height: 4),
+        if (widget.search == null) ...[
+          PlaceSearchField(controller: _term),
+          const SizedBox(height: 4),
+        ],
         if (needle.isEmpty)
           _PlaceRow(
             leading: Icon(FIcons.plus, size: 20, color: theme.colors.mutedForeground),
@@ -213,6 +226,26 @@ class _PlaceListState extends State<PlaceList> {
       };
 }
 
+/// The search over the places: in the list, or in the floor column's header
+class PlaceSearchField extends StatelessWidget {
+  final TextEditingController controller;
+  const PlaceSearchField({super.key, required this.controller});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    return FTextField(
+      control: FTextFieldControl.managed(controller: controller),
+      hint: AppLocalizations.of(context)!.searchPlaces,
+      prefixBuilder: (context, style, _) => Padding(
+        padding: const EdgeInsetsDirectional.only(start: 12),
+        child: Icon(FIcons.search, size: 16, color: theme.colors.mutedForeground),
+      ),
+      maxLines: 1,
+    );
+  }
+}
+
 class _StatusDot extends StatelessWidget {
   final Color color;
 
@@ -248,24 +281,37 @@ class _PlaceRow extends StatelessWidget {
       children: [
         SizedBox(width: 20, child: Center(child: leading)),
         const SizedBox(width: 12),
+        // The name and the detail share one box that always fills the row,
+        // so the kind icon keeps its place when a detail comes and goes (a
+        // loose detail beside an Expanded name left its unused room empty);
+        // the name has the larger share, the detail sits at the end
         Expanded(
-          child: Text(name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-        ),
-        if (detail != null) ...[
-          const SizedBox(width: 8),
-          Flexible(
-            child: Text(detail!,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: theme.typography.sm.copyWith(
-                  color: theme.colors.mutedForeground,
-                  fontFeatures: const [FontFeature.tabularFigures()],
-                )),
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Flexible(
+                flex: 3,
+                child: Text(name,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+              ),
+              if (detail != null) ...[
+                const SizedBox(width: 8),
+                Flexible(
+                  flex: 2,
+                  child: Text(detail!,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.sm.copyWith(
+                        color: theme.colors.mutedForeground,
+                        fontFeatures: const [FontFeature.tabularFigures()],
+                      )),
+                ),
+              ],
+            ],
           ),
-        ],
+        ),
         const SizedBox(width: 12),
         Icon(icon, size: 16, color: theme.colors.mutedForeground),
       ],

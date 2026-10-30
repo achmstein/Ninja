@@ -48,6 +48,33 @@ type PlaceListProps = {
   loading: boolean
   onNewTab: () => void
   onPick: (place: PlaceViewModel) => void
+  /** The search, when the screen draws its field elsewhere (the floor puts
+   *  it in the column's header, as {@link PlaceSearch}); the list draws its
+   *  own without it */
+  search?: string
+}
+
+/** The search over the places: in the list, or in the floor column's header */
+export function PlaceSearch({
+  value,
+  onChange,
+}: {
+  value: string
+  onChange: (value: string) => void
+}) {
+  const t = useT()
+  return (
+    <div className='relative w-full'>
+      <Search className='text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2' />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={t('searchPlaces')}
+        className='h-11 ps-9 text-base'
+        autoComplete='off'
+      />
+    </div>
+  )
 }
 
 function Heading({ children }: { children: React.ReactNode }) {
@@ -94,11 +121,13 @@ export function PlaceList({
   loading,
   onNewTab,
   onPick,
+  search,
 }: PlaceListProps) {
   const t = useT()
   const features = useFeatures()
   const localized = useLocalized()
-  const [term, setTerm] = useState('')
+  const [ownTerm, setTerm] = useState('')
+  const term = search ?? ownTerm
   const nowMs = useSecondsClock(true)
 
   const needle = term.trim().toLowerCase()
@@ -128,16 +157,11 @@ export function PlaceList({
 
   return (
     <div className='flex flex-col gap-1'>
-      <div className='relative mb-1'>
-        <Search className='text-muted-foreground absolute start-3 top-1/2 size-4 -translate-y-1/2' />
-        <Input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder={t('searchPlaces')}
-          className='h-11 ps-9 text-base'
-          autoComplete='off'
-        />
-      </div>
+      {search === undefined && (
+        <div className='mb-1'>
+          <PlaceSearch value={term} onChange={setTerm} />
+        </div>
+      )}
 
       {!needle && (
         <button type='button' onClick={onNewTab} className={rowClass}>

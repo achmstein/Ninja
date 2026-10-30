@@ -798,7 +798,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         </Button>
       </div>
 
-      <div className='border-b p-3'>
+      <div className='border-b px-3 py-2'>
         {addingToTicket && roomSession && roster.length >= 2 && (
           <div className='mb-2 flex flex-col gap-1.5'>
             <span className='text-muted-foreground text-xs font-medium'>
@@ -831,33 +831,44 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </div>
           </div>
         )}
-        {customer ? (
-          <SelectedCustomer
-            customer={customer}
-            onRemove={() => setCustomer(null)}
-          />
-        ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
-          <ChooseCustomerButton onClick={() => setCustomerOpen(true)} />
-        )}
-        {delivery ? (
-          <SaleDeliverySummary
-            delivery={delivery}
-            readiness={saleDelivery.readiness}
-            onEdit={() => saleDelivery.setFormOpen(true)}
-            onRemove={saleDelivery.remove}
-            onRetry={saleDelivery.retry}
-          />
-        ) : (
-          saleDelivery.canOffer && (
+        {/* Who it is for and whether a rider takes it, side by side on one row */}
+        <div className='flex items-center gap-2 empty:hidden'>
+          {customer ? (
+            <div className='min-w-0 flex-1'>
+              <SelectedCustomer
+                customer={customer}
+                onRemove={() => setCustomer(null)}
+              />
+            </div>
+          ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
+            <div className='min-w-0 flex-1'>
+              <ChooseCustomerButton
+                onClick={() => setCustomerOpen(true)}
+                showOptional={!(saleDelivery.canOffer && !delivery)}
+              />
+            </div>
+          )}
+          {!delivery && saleDelivery.canOffer && (
             <Button
               variant='outline'
-              className='mt-2 h-12 w-full gap-2 text-base'
+              className='h-12 shrink-0 gap-2 text-base'
               onClick={() => saleDelivery.setFormOpen(true)}
             >
               <Bike className='size-5' />
               {t('deliverIt')}
             </Button>
-          )
+          )}
+        </div>
+        {delivery && (
+          <div className='mt-2'>
+            <SaleDeliverySummary
+              delivery={delivery}
+              readiness={saleDelivery.readiness}
+              onEdit={() => saleDelivery.setFormOpen(true)}
+              onRemove={saleDelivery.remove}
+              onRetry={saleDelivery.retry}
+            />
+          </div>
         )}
       </div>
 

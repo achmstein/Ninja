@@ -126,7 +126,8 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 // Brand: the wordmark, or the mark then the name
                 Center(
                   child: BrandWordmark(
-                    height: 120,
+                    height: 64,
+                    maxWidth: 240,
                     nameStyle: TextStyle(
                       fontSize: 24,
                       fontWeight: FontWeight.w600,

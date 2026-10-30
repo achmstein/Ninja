@@ -292,6 +292,9 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       theme: materialTheme(Brightness.light),
       darkTheme: materialTheme(Brightness.dark),
       routerConfig: router,
+      // No overscroll effect: Android 12's stretch pulled the text out of
+      // shape at either end of every list, which on a till read as a glitch
+      scrollBehavior: const MaterialScrollBehavior().copyWith(overscroll: false),
       builder: (context, child) {
         return FTheme(
           data: themeState.getForuiTheme(context, locale: locale),

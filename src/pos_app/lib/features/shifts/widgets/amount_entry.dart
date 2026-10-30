@@ -21,7 +21,8 @@ class AmountEntry extends StatelessWidget {
         Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         Container(
-          height: 68,
+          // Sized to the figure: a taller box looked like an empty field around it
+          height: 56,
           alignment: AlignmentDirectional.centerEnd,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
@@ -37,7 +38,9 @@ class AmountEntry extends StatelessWidget {
               child: Text(
                 value.isEmpty ? '0' : value,
                 maxLines: 1,
-                style: theme.typography.xl4.copyWith(
+                style: theme.typography.xl3.copyWith(
+                  // The line as tall as the figures, so they sit in the box's middle
+                  height: 1,
                   fontWeight: FontWeight.w700,
                   fontFeatures: const [FontFeature.tabularFigures()],
                   color: value.isEmpty ? theme.colors.mutedForeground : null,

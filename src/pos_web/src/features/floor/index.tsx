@@ -61,7 +61,7 @@ import {
 } from '@/features/customer/customer-card'
 import { CustomerDialog } from '@/features/sale/customer-dialog'
 import { NewTicketDialog } from './new-ticket-dialog'
-import { PlaceList } from './place-list'
+import { PlaceList, PlaceSearch } from './place-list'
 import { TimerReset } from 'lucide-react'
 
 const typeIcon: Record<string, LucideIcon> = {
@@ -168,6 +168,8 @@ export function Floor() {
   const [startedPlaceId, setStartedPlaceId] = useState<number | null>(null)
   const [billSearch, setBillSearch] = useState('')
   const [searchOpen, setSearchOpen] = useState(false)
+  // The places' search, drawn as the column's header
+  const [placeSearch, setPlaceSearch] = useState('')
   // The places column collapses so a busy floor gets the whole width; the
   // choice is remembered on this till (localStorage may be blocked — default open)
   const [placesOpen, setPlacesOpen] = useState(() => {
@@ -338,24 +340,29 @@ export function Floor() {
   }
 
   return (
+    // A tablet rules the floor off like the sale pad: a 4rem header over each
+    // column whose rules meet in one line, and a rule where the places meet
+    // the bills. A phone stacks them with gaps, as before.
     <div
       className={
         placesOpen && !cloudKitchen
-          ? 'grid gap-6 p-4 max-sm:p-3 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)]'
-          : 'grid gap-6 p-4 max-sm:p-3'
+          ? 'grid gap-6 p-4 max-sm:p-3 md:grid-cols-[minmax(220px,1fr)_minmax(0,2.6fr)] md:gap-0 md:p-0'
+          : 'grid gap-6 p-4 max-sm:p-3 md:gap-0 md:p-0'
       }
     >
       {/* Places with no bill yet — sticky, scrolling on its own, last on a
           phone where the bills matter more. Collapsed away when the cashier
-          wants the full width; the header toggle brings it back. The scroll
-          box clips anything outside its edges, so a hair of inner padding
-          keeps the search box's focus ring whole. */}
+          wants the full width; the header toggle brings it back. */}
       {!cloudKitchen && (
         <aside
           hidden={!placesOpen}
-          className='order-2 flex flex-col gap-2 md:order-1 md:sticky md:top-20 md:-mx-1 md:max-h-[calc(100svh-6rem)] md:overflow-y-auto md:px-1'
+          className='order-2 flex flex-col gap-2 md:sticky md:top-16 md:order-1 md:h-[calc(100svh-4rem)] md:gap-0 md:overflow-y-auto md:border-e'
         >
-          <Heading>{t('openPlace')}</Heading>
+          {/* The search is the column's header: the list needs no title */}
+          <div className='md:flex md:h-16 md:shrink-0 md:items-center md:border-b md:px-4'>
+            <PlaceSearch value={placeSearch} onChange={setPlaceSearch} />
+          </div>
+          <div className='md:p-4'>
           <PlaceList
             places={places}
             stayForPlace={stayForPlace}
@@ -365,13 +372,15 @@ export function Floor() {
             onNewTab={() => setNewTabOpen(true)}
             loading={placesLoading}
             onPick={pickPlace}
+            search={placeSearch}
           />
+          </div>
         </aside>
       )}
 
-      <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2'>
+      <section className='order-1 flex min-w-0 flex-col gap-5 md:order-2 md:gap-0'>
         {/* A phone puts the buttons on a row of their own under the title */}
-        <div className='flex flex-wrap items-center justify-between gap-3'>
+        <div className='flex flex-wrap items-center justify-between gap-3 md:h-16 md:flex-nowrap md:border-b md:px-4'>
           <div className='flex items-center gap-2'>
             {!cloudKitchen && (
               <Button
@@ -446,6 +455,7 @@ export function Floor() {
           </div>
         </div>
 
+        <div className='flex flex-col gap-5 md:p-4'>
         {/* A customer in a room is waiting on each of these, so they lead the
             floor; the strip is gone when nothing is pending */}
         <ServiceRequestsStrip />
@@ -625,6 +635,7 @@ export function Floor() {
             </div>
           </div>
         )}
+        </div>
       </section>
 
       <NewTicketDialog open={newTabOpen} onOpenChange={setNewTabOpen} />

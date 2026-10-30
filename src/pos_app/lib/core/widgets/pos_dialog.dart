@@ -12,10 +12,16 @@ import 'package:forui/forui.dart';
 /// dimmed screen or the dialog's own blank space — only puts the keyboard
 /// away: the cashier tapped to see the dialog again, not to throw away what
 /// they typed. With no keyboard up, a tap outside dismisses, as before.
+///
+/// A search ([aboveKeyboard]) is the exception: what is typed is only worth
+/// it for the results under it, so the dialog rises into the space the
+/// keyboard leaves, its body sized to that space ([DialogSearchBody]): the
+/// field and the first results stay in view, the rest scrolls on its own.
 Future<T?> showPosDialog<T>(
   BuildContext context, {
   required WidgetBuilder builder,
   double maxWidth = 448,
+  bool aboveKeyboard = false,
 }) {
   return showFDialog<T>(
     context: context,
@@ -24,13 +30,14 @@ Future<T?> showPosDialog<T>(
     barrierDismissible: false,
     builder: (context, style, animation) {
       // Read the keyboard here, above the dialog, then hide it from the
-      // dialog so it stays put; the body gets it back through [_Keyboard]
+      // dialog so it stays put; the body gets it back through [_Keyboard].
+      // A search keeps it, so Forui lifts the dialog clear of the keyboard
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
       return MediaQuery.removeViewInsets(
         context: context,
-        removeBottom: true,
+        removeBottom: !aboveKeyboard,
         child: _Keyboard(
-          height: keyboard,
+          height: aboveKeyboard ? 0 : keyboard,
           child: Stack(
             children: [
               Positioned.fill(
@@ -81,6 +88,34 @@ class DialogScroll extends StatelessWidget {
     return SingleChildScrollView(
       padding: EdgeInsets.fromLTRB(24, 24, 24, 24 + keyboard),
       child: child,
+    );
+  }
+}
+
+/// The body of a search dialog ([showPosDialog] with `aboveKeyboard`): its
+/// [header] (title, field) and [footer] (the way out) always in view and
+/// the [results] scrolling between them, all within the room the dialog
+/// has, which shrinks to the space above the keyboard while it is up.
+class DialogSearchBody extends StatelessWidget {
+  final Widget header;
+  final Widget results;
+  final Widget footer;
+
+  const DialogSearchBody({super.key, required this.header, required this.results, required this.footer});
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          header,
+          Flexible(child: SingleChildScrollView(child: results)),
+          footer,
+        ],
+      ),
     );
   }
 }

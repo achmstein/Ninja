@@ -839,7 +839,7 @@ const TILL_ITEM_CHOICES: {
       <div className='grid grid-cols-3 gap-1'>
         {[0, 1, 2].map((i) => (
           <div key={i} className='bg-card overflow-hidden rounded-sm border'>
-            <div className='bg-muted-foreground/25 aspect-[4/3]' />
+            <div className='bg-muted-foreground/25 h-12' />
             <div className='bg-muted-foreground/40 m-1 h-1 w-3/4 rounded-full' />
           </div>
         ))}
@@ -898,7 +898,12 @@ function TillItemsChoice({
                 : 'hover:bg-muted/50'
             )}
           >
-            <div aria-hidden className='bg-muted rounded-md p-2'>
+            {/* One height for every sketch, the sketch centred in it, so the
+                names and hints under them start on one line */}
+            <div
+              aria-hidden
+              className='bg-muted flex h-24 flex-col justify-center rounded-md p-2'
+            >
               {choice.sketch}
             </div>
             <div className='grid gap-0.5'>

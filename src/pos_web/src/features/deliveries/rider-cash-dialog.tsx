@@ -155,7 +155,7 @@ function Body({
               value={counted}
               placeholder='0'
               dir='ltr'
-              className='h-16 text-end text-4xl font-bold tabular-nums'
+              className='h-14 text-end text-3xl font-bold tabular-nums'
               aria-describedby='rider-cash-difference'
             />
           </div>
