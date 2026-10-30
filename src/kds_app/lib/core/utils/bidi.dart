@@ -1,2 +1,4 @@
-/// Keeps "#123" whole in Arabic: a first-strong isolate stops the hash landing after the number
-String bidiIsolate(String text) => '\u2068$text\u2069';
+/// An order number with its hash, read first in either language: a
+/// right-to-left mark after the hash lets it take the line's direction, so
+/// in Arabic it sits on the number's right and in English stays "#123"
+String hashNumber(Object number) => '#\u200f$number';

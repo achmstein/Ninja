@@ -57,7 +57,7 @@ Widget _billCardSkeleton(BuildContext context) {
   return Container(
     height: 112,
     padding: const EdgeInsets.all(12),
-    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -81,7 +81,7 @@ Widget _placesSkeleton(BuildContext context) {
         for (var i = 0; i < 6; i++) ...[
           Container(
             padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
             child: Row(
               children: [
                 skeletonBox(context, width: 36, height: 36),
@@ -739,14 +739,14 @@ class _HoldsRow extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: theme.colors.background,
                       border: Border.all(color: theme.colors.border),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(Sizes.radiusCard),
                     ),
                     child: Row(
                       children: [
                         Container(
                           width: 44,
                           height: 44,
-                          decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                          decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(Sizes.radius)),
                           child: Icon(session.startOnConfirm ? FIcons.timerReset : FIcons.clock, size: Sizes.icon, color: amber),
                         ),
                         const SizedBox(width: 12),

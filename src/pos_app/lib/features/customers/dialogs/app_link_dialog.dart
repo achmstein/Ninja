@@ -80,7 +80,7 @@ class _AppLinkDialog extends ConsumerWidget {
             // White behind the code whatever the theme: phone cameras read dark on light
             child: Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(Sizes.radius)),
               child: QrImageView(data: url, size: 220, backgroundColor: Colors.white),
             ),
           ),

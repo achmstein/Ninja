@@ -213,7 +213,7 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
             decoration: BoxDecoration(
               color: order.isFailed ? amber.withValues(alpha: 0.1) : theme.colors.muted,
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Sizes.radiusCard),
             ),
             child: order.isFailed
                 ? Row(
@@ -332,7 +332,7 @@ class _Inset extends StatelessWidget {
         Container(
           width: 32,
           height: 32,
-          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(10)),
+          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radius)),
           child: Icon(icon, size: Sizes.iconSmall, color: theme.colors.foreground),
         ),
         const SizedBox(width: 12),

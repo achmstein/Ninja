@@ -69,8 +69,8 @@ const dictionary = {
   bringBack: { en: "Bring back", ar: "إرجاع" },
 
   // Toasts
-  newOrderToast: { en: "New order #{orderId}", ar: "طلب جديد \u2068#{orderId}\u2069" },
-  newOrderToastFrom: { en: "New order #{orderId} from {name}", ar: "طلب جديد \u2068#{orderId}\u2069 من {name}" },
+  newOrderToast: { en: "New order #{orderId}", ar: "طلب جديد #\u200F{orderId}" },
+  newOrderToastFrom: { en: "New order #{orderId} from {name}", ar: "طلب جديد #\u200F{orderId} من {name}" },
   failedToUpdate: { en: "Could not update the order", ar: "تعذّر تحديث الطلب" },
 
   // Toast titles

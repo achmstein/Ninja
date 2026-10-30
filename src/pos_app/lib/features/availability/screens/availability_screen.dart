@@ -141,7 +141,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               itemsAsync.when(
                 loading: () => Skeleton(
                   child: Container(
-                    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+                    decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
                     clipBehavior: Clip.antiAlias,
                     child: Column(
                       children: [
@@ -179,7 +179,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                     decoration: BoxDecoration(
                       color: theme.colors.background,
                       border: Border.all(color: theme.colors.border),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(Sizes.radiusCard),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Column(

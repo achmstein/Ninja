@@ -53,7 +53,7 @@ class ItemTile extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.colors.background,
             border: Border.all(color: theme.colors.border),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(Sizes.radiusCard),
           ),
           transform: states.contains(FTappableVariant.pressed) ? (Matrix4.identity()..scaleByDouble(0.98, 0.98, 1, 1)) : null,
           transformAlignment: Alignment.center,
@@ -108,7 +108,7 @@ class CompactItemTile extends StatelessWidget {
     final theme = context.theme;
     final available = item.isAvailable;
     final name = item.name.localized(context);
-    const radius = Radius.circular(10);
+    const radius = Radius.circular(Sizes.radius);
 
     return Opacity(
       opacity: available ? 1 : 0.4,

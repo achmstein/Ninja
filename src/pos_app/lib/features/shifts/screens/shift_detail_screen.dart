@@ -56,7 +56,7 @@ class ShiftDetailScreen extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               for (final (h, w) in const [(48.0, 256.0), (128.0, double.infinity), (256.0, double.infinity)]) ...[
-                Container(width: w, height: h, decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12))),
+                Container(width: w, height: h, decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius))),
                 const SizedBox(height: 12),
               ],
             ],

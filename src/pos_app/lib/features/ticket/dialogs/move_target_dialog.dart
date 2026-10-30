@@ -274,7 +274,7 @@ class _BillCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
             border: Border.all(color: theme.colors.border),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: child,
         ),
@@ -298,7 +298,7 @@ class _BillCard extends StatelessWidget {
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                Text(bidiIsolate('#${target.id}'),
+                Text(hashNumber(target.id),
                     style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                 Text(money(context, target.total),
                     style: theme.typography.base.copyWith(

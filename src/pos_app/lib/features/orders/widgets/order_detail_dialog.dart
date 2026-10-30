@@ -124,7 +124,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
             if (failed)
               Container(
                 padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                 child: Row(
                   children: [
                     Icon(FIcons.circleAlert, size: Sizes.icon, color: theme.colors.mutedForeground),
@@ -185,7 +185,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -232,7 +232,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 const SizedBox(height: 16),
                 Container(
                   padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [

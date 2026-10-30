@@ -96,7 +96,7 @@ function PendingOrderCard({
         {order.platform ? (
           <>
             <div className='text-muted-foreground mt-0.5 flex items-center gap-2 text-sm'>
-              <bdi>#{toNumber(order.orderNumber)}</bdi>
+              <span>{'#\u200F'}{toNumber(order.orderNumber)}</span>
               <PlatformBadge platform={order.platform} />
             </div>
             <PlatformHandover

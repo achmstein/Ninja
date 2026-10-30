@@ -208,7 +208,7 @@ class _Column extends ConsumerWidget {
     return Container(
       decoration: BoxDecoration(
         color: theme.colors.muted.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -231,7 +231,7 @@ class _Column extends ConsumerWidget {
                     alignment: Alignment.center,
                     decoration: BoxDecoration(
                       color: orders.isNotEmpty && tint != null ? tint.withValues(alpha: 0.15) : theme.colors.background,
-                      borderRadius: BorderRadius.circular(12),
+                      borderRadius: BorderRadius.circular(Sizes.radius),
                     ),
                     child: Text('${orders.length}',
                         style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
@@ -307,7 +307,7 @@ class _RiderBlockState extends ConsumerState<_RiderBlock> {
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

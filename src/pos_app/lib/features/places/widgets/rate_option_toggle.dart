@@ -19,6 +19,10 @@ class RateOptionToggle extends StatelessWidget {
   final bool disabled;
   final Map<String, String>? rates;
 
+  /// One option a row, the name at the start and the rate at the end: for a
+  /// narrow column (the bill's panel), where side by side they overflow
+  final bool stacked;
+
   const RateOptionToggle({
     super.key,
     required this.options,
@@ -26,12 +30,43 @@ class RateOptionToggle extends StatelessWidget {
     required this.onChange,
     this.disabled = false,
     this.rates,
+    this.stacked = false,
   });
 
   @override
   Widget build(BuildContext context) {
     if (options.length < 2) return const SizedBox.shrink();
     final theme = context.theme;
+    if (stacked) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (index, option) in options.indexed) ...[
+            if (index > 0) const SizedBox(height: Sizes.gapSm),
+            SizedBox(
+              height: Sizes.control,
+              child: FButton(
+                variant: value == option.code ? null : FButtonVariant.outline,
+                onPress: disabled ? null : () => onChange(option.code),
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                prefix: Icon(index == 0 ? FIcons.user : FIcons.users, size: Sizes.icon),
+                suffix: rates?[option.code] == null
+                    ? null
+                    : Text(rates![option.code]!,
+                        style: theme.typography.label.copyWith(
+                          color: value == option.code
+                              ? theme.colors.primaryForeground.withValues(alpha: 0.8)
+                              : theme.colors.mutedForeground,
+                          fontFeatures: const [FontFeature.tabularFigures()],
+                        )),
+                child: Text(option.name.localized(context),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+              ),
+            ),
+          ],
+        ],
+      );
+    }
     return Row(
       children: [
         for (final (index, option) in options.indexed) ...[

@@ -46,7 +46,7 @@ class _TradingSwitchesState extends ConsumerState<TradingSwitches> {
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,

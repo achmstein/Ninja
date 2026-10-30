@@ -180,7 +180,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                 if (bills == null)
                   Skeleton(
                     child: Container(
-                      decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+                      decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
                       clipBehavior: Clip.antiAlias,
                       child: Column(
                         children: [
@@ -204,7 +204,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     decoration: BoxDecoration(
                       color: theme.colors.background,
                       border: Border.all(color: theme.colors.border),
-                      borderRadius: BorderRadius.circular(14),
+                      borderRadius: BorderRadius.circular(Sizes.radiusCard),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Column(
@@ -264,7 +264,7 @@ class _ReceiptRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 56,
-            child: Text(bidiIsolate('#${bill.receiptNumber}'),
+            child: Text(hashNumber(bill.receiptNumber),
                 style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
           ),
           Icon(ticketTypeIcon(bill.type), size: Sizes.icon, color: theme.colors.mutedForeground),

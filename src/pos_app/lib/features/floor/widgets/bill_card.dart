@@ -62,7 +62,7 @@ class BillCard extends StatelessWidget {
               ? theme.colors.secondary.withValues(alpha: 0.5)
               : theme.colors.background,
           border: Border.all(color: theme.colors.border),
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Sizes.radiusCard),
         ),
         child: child,
       ),

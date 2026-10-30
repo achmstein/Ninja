@@ -68,7 +68,7 @@ class SelectedCustomerChip extends StatelessWidget {
       padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
       decoration: BoxDecoration(
         color: theme.colors.secondary.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Row(
         children: [

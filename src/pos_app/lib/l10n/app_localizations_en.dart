@@ -691,6 +691,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get selectLines => 'Select';
 
   @override
+  String selectedLinesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count selected',
+      one: '1 selected',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String moveLinesAction(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

@@ -735,7 +735,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                 itemBuilder: (_, _) => DecoratedBox(
                                   decoration: BoxDecoration(
                                     border: Border.all(color: theme.colors.border),
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(Sizes.radius),
                                   ),
                                   child: Padding(
                                     padding: const EdgeInsets.all(10),
@@ -773,7 +773,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                               itemBuilder: (_, _) => DecoratedBox(
                                 decoration: BoxDecoration(
                                   border: Border.all(color: theme.colors.border),
-                                  borderRadius: BorderRadius.circular(14),
+                                  borderRadius: BorderRadius.circular(Sizes.radiusCard),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -784,7 +784,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                       child: DecoratedBox(
                                         decoration: BoxDecoration(
                                           color: theme.colors.muted,
-                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(14)),
+                                          borderRadius: const BorderRadius.vertical(top: Radius.circular(Sizes.radiusCard)),
                                         ),
                                       ),
                                     ),
@@ -1247,7 +1247,7 @@ class _RailCategory extends StatelessWidget {
                 : states.contains(FTappableVariant.hovered) || states.contains(FTappableVariant.pressed)
                     ? theme.colors.secondary
                     : null,
-            borderRadius: BorderRadius.circular(8),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: child,
         ),

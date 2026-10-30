@@ -209,7 +209,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(Sizes.radius),
                   ),
                   child: child,
                 ),
@@ -287,7 +287,7 @@ class _ExistingCard extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colors.primary.withValues(alpha: 0.06),
         border: Border.all(color: theme.colors.primary.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

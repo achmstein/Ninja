@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/utils/bidi.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
@@ -139,7 +140,7 @@ class OrderCard extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: theme.colors.background,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Sizes.radius),
         border: Border.all(color: outline ?? theme.colors.border),
       ),
       child: Column(
@@ -153,13 +154,9 @@ class OrderCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    // Left to right on its own, so Arabic keeps the hash before the number
-                    Directionality(
-                      textDirection: TextDirection.ltr,
-                      child: Text(
-                        '#${order.orderNumber}',
-                        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
-                      ),
+                    Text(
+                      hashNumber(order.orderNumber),
+                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
                     ),
                     const SizedBox(width: 8),
                     // All the free width is the chip's to use (kds_web's ms-auto on the clock); a Flexible next to a
@@ -278,7 +275,7 @@ class OrderCard extends StatelessWidget {
                     decoration: BoxDecoration(
                       color: AppColors.amber500.withValues(alpha: 0.10),
                       border: Border.all(color: AppColors.amber500.withValues(alpha: 0.4)),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(Sizes.radius),
                     ),
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,

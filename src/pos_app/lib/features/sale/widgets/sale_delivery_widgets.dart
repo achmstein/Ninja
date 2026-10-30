@@ -27,7 +27,7 @@ class DeliverySummary extends StatelessWidget {
     final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground);
     return Container(
       padding: const EdgeInsetsDirectional.only(start: 10, top: 4, bottom: 4, end: 0),
-      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
       child: Row(
         children: [
           Icon(FIcons.bike, size: Sizes.icon, color: theme.colors.mutedForeground),
@@ -119,7 +119,7 @@ class DeliveryBlockedNote extends StatelessWidget {
     };
     return Container(
       padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(Sizes.radius)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [

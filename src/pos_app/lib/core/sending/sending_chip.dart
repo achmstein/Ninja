@@ -105,7 +105,7 @@ class _FailedSends extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    send.ticketId != null ? bidiIsolate('#${send.ticketId}') : l10n.newTicket,
+                                    send.ticketId != null ? hashNumber(send.ticketId!) : l10n.newTicket,
                                     style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),

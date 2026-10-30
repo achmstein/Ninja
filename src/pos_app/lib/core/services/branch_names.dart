@@ -20,5 +20,5 @@ String branchNameOf(List<Branch>? branches, int? branchId, BuildContext context)
       if (name.isNotEmpty) return name;
     }
   }
-  return bidiIsolate('#$branchId');
+  return hashNumber(branchId);
 }

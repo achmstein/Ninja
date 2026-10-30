@@ -211,7 +211,7 @@ class ShiftStatusPill extends StatelessWidget {
       alignment: Alignment.center,
       decoration: BoxDecoration(
         color: open ? AppColors.emerald500.withValues(alpha: 0.15) : theme.colors.secondary,
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Text(
         open ? l10n.shiftOpenBadge : l10n.shiftClosedBadge,
@@ -233,7 +233,7 @@ class _Skeleton extends StatelessWidget {
     Widget box(double height, {double? width}) => Container(
           width: width,
           height: height,
-          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12)),
+          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
         );
     return Align(
       alignment: Alignment.topCenter,

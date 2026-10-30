@@ -67,7 +67,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                         Container(
                           height: 64,
                           margin: const EdgeInsets.only(bottom: 8),
-                          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+                          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
                         ),
                     ],
                   ),
@@ -83,7 +83,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                 Container(
                   decoration: BoxDecoration(
                     border: Border.all(color: theme.colors.border),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(Sizes.radiusCard),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: Column(

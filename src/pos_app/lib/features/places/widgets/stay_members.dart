@@ -56,8 +56,10 @@ class _StayMembersState extends ConsumerState<StayMembers> {
       children: [
         for (final member in session.members)
           Container(
+            // As tall as the Add customer button beside it
+            constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
             padding: EdgeInsetsDirectional.fromSTEB(12, 6, member.isOwner ? 12 : 4, 6),
-            decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(999)),
+            decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radius)),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [

@@ -46,7 +46,7 @@ class OverShortPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
       decoration: BoxDecoration(
         color: (good ? AppColors.emerald500 : theme.colors.destructive).withValues(alpha: 0.15),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Text(
         overShortText(l10n, context, value),
@@ -78,7 +78,7 @@ class ShiftReport extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.colors.background,
             border: Border.all(color: theme.colors.border),
-            borderRadius: BorderRadius.circular(14),
+            borderRadius: BorderRadius.circular(Sizes.radiusCard),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -122,7 +122,7 @@ class ShiftReport extends StatelessWidget {
         // actually landed (Z)
         Container(
           padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
           child: shift.isClosed
               ? Row(
                   children: [
@@ -345,7 +345,7 @@ class _Bordered extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return Container(
-      decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

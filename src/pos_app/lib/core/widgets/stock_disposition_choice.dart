@@ -94,7 +94,7 @@ class _Option extends StatelessWidget {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     color: selected ? colors.primary.withValues(alpha: 0.06) : null,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(Sizes.radius),
                     border: Border.all(
                       color: selected || focused ? colors.primary : colors.border,
                       width: selected || focused ? 2 : 1,

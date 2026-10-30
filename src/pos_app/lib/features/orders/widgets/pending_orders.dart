@@ -180,7 +180,7 @@ class _PendingOrderCard extends StatelessWidget {
             OrderUrgency.fresh => theme.colors.border,
           },
         ),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Row(
         children: [
@@ -208,7 +208,7 @@ class _PendingOrderCard extends StatelessWidget {
                     // A delivery platform's order: its logo and the code the rider asks for, and how it leaves
                     Row(
                       children: [
-                        Text(bidiIsolate('#${order.id}'), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        Text(hashNumber(order.id), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                         const SizedBox(width: 8),
                         Flexible(child: PlatformBadge(platform: platform)),
                       ],
@@ -216,7 +216,7 @@ class _PendingOrderCard extends StatelessWidget {
                     PlatformHandover(platform: platform),
                   ] else
                     Text(
-                      subtitle == null || subtitle.isEmpty ? bidiIsolate('#${order.id}') : '${bidiIsolate('#${order.id}')} · $subtitle',
+                      subtitle == null || subtitle.isEmpty ? hashNumber(order.id) : '${hashNumber(order.id)} · $subtitle',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),

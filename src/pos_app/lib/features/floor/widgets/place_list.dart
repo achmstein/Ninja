@@ -326,7 +326,7 @@ class _PlaceRow extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary.withValues(alpha: 0.5) : null,
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: child,
         ),

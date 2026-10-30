@@ -56,13 +56,13 @@ class DeliveryCard extends StatelessWidget {
         color: Colors.transparent,
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(14),
+          borderRadius: BorderRadius.circular(Sizes.radiusCard),
           child: Container(
             width: width,
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
               border: Border.all(color: border),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Sizes.radiusCard),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -78,7 +78,7 @@ class DeliveryCard extends StatelessWidget {
                         TextSpan(children: [
                           TextSpan(text: name, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
                           TextSpan(
-                            text: '  ${bidiIsolate('#${order.orderNumber}')}',
+                            text: '  ${hashNumber(order.orderNumber)}',
                             style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
                           ),
                         ]),

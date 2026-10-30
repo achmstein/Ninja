@@ -302,7 +302,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                                    borderRadius: BorderRadius.circular(10),
+                                    borderRadius: BorderRadius.circular(Sizes.radius),
                                   ),
                                   child: child,
                                 ),

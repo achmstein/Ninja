@@ -4,6 +4,7 @@ import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/ticket_detail.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 /// The bill's parts, one label/value row each, a tap away from the total:
 /// menu money, the discount, service, VAT (out of the price or on top), and
@@ -54,7 +55,7 @@ class _BreakdownDialog extends StatelessWidget {
           Container(
             decoration: BoxDecoration(
               border: Border.all(color: theme.colors.border),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(Sizes.radius),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

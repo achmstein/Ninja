@@ -87,7 +87,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
           // the paper stays white in dark mode, as paper does
           Flexible(
             child: ClipRRect(
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(Sizes.radius),
               child: SingleChildScrollView(
                 child: ticket.when(
                   loading: () => Shimmer.fromColors(

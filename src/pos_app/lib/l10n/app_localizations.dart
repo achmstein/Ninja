@@ -1298,6 +1298,12 @@ abstract class AppLocalizations {
   /// **'Select'**
   String get selectLines;
 
+  /// No description provided for @selectedLinesCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 selected} other{{count} selected}}'**
+  String selectedLinesCount(int count);
+
   /// No description provided for @moveLinesAction.
   ///
   /// In en, this message translates to:

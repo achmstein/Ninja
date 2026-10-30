@@ -7,6 +7,7 @@ import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
+import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../stay_actions.dart';
@@ -24,7 +25,12 @@ import 'stay_members.dart';
 class StayBar extends ConsumerStatefulWidget {
   final Stay session;
 
-  const StayBar({super.key, required this.session});
+  /// Laid out down the bill's side panel: the clock large and centred, the
+  /// money under it, then the rate, the people and the way to end it, each
+  /// the panel's full width, with no card of its own
+  final bool panel;
+
+  const StayBar({super.key, required this.session, this.panel = false});
 
   @override
   ConsumerState<StayBar> createState() => _StayBarState();
@@ -112,12 +118,66 @@ class _StayBarState extends ConsumerState<StayBar> {
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
 
+    if (widget.panel) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // How long, and how much: the clock leads, the money answers
+          Text(formatClock(session.elapsedSeconds(now)),
+              textAlign: TextAlign.center,
+              style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+          if (used.length > 1)
+            Text(
+              used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, now))}').join(' · '),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: muted.copyWith(fontFeatures: tabular),
+            ),
+          const SizedBox(height: Sizes.gapSm),
+          Text('≈ ${money(context, estimate.amount)}',
+              textAlign: TextAlign.center,
+              style: theme.typography.title.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+          Text(hoursLabel,
+              textAlign: TextAlign.center,
+              style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+          if (session.hasOptions) ...[
+            const SizedBox(height: Sizes.gapLg),
+            RateOptionToggle(
+              options: session.options,
+              value: session.currentOptionCode,
+              disabled: _busy,
+              onChange: (code) {
+                if (code != session.currentOptionCode) _confirmOption(code);
+              },
+              rates: {for (final o in session.options) o.code: money(context, o.hourlyRate)},
+              stacked: true,
+            ),
+          ],
+          const SizedBox(height: Sizes.gapXl),
+          Heading(l10n.inTheRoom),
+          const SizedBox(height: Sizes.gapSm),
+          StayMembers(session: session),
+          const SizedBox(height: Sizes.gapXl),
+          SizedBox(
+            height: Sizes.control,
+            child: FButton(
+              variant: FButtonVariant.outline,
+              onPress: _busy ? null : () => _end(hoursLabel),
+              prefix: const Icon(FIcons.square, size: Sizes.icon),
+              child: Text(l10n.endSessionButton, style: theme.typography.body.forButton),
+            ),
+          ),
+        ],
+      );
+    }
+
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

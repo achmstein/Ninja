@@ -103,7 +103,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
                     variant: order.orderNumber == differenceOn ? null : FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => setState(() => _differenceOn = order.orderNumber),
-                    child: Text(bidiIsolate('#${order.orderNumber}'), style: theme.typography.sm.forButton),
+                    child: Text(hashNumber(order.orderNumber), style: theme.typography.sm.forButton),
                   ),
                 ),
             ],
@@ -215,13 +215,13 @@ class _OrderRow extends StatelessWidget {
           decoration: BoxDecoration(
             color: ticked ? theme.colors.secondary : null,
             border: Border.all(color: ticked ? theme.colors.foreground.withValues(alpha: 0.3) : theme.colors.border),
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: Row(
             children: [
               Icon(ticked ? FIcons.squareCheck : FIcons.square, size: Sizes.icon, color: ticked ? theme.colors.foreground : theme.colors.mutedForeground),
               const SizedBox(width: 12),
-              Text(bidiIsolate('#${order.orderNumber}'), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+              Text(hashNumber(order.orderNumber), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),

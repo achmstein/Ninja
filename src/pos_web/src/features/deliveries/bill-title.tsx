@@ -18,7 +18,7 @@ export function BillTitle({ title, className }: { title: string; className?: str
   }
   return (
     <span className={className}>
-      <bdi className='tabular-nums'>#{parts.number}</bdi>
+      <span className='tabular-nums'>{'#\u200F'}{parts.number}</span>
       {parts.name && (
         <>
           {' · '}

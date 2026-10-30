@@ -209,11 +209,11 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           filled: true,
                           fillColor: const Color(0xFF27272A),
                           border: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(Sizes.radius),
                             borderSide: const BorderSide(color: Color(0xFF3F3F46)),
                           ),
                           enabledBorder: OutlineInputBorder(
-                            borderRadius: BorderRadius.circular(12),
+                            borderRadius: BorderRadius.circular(Sizes.radius),
                             borderSide: const BorderSide(color: Color(0xFF3F3F46)),
                           ),
                         ),
@@ -226,7 +226,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           style: FilledButton.styleFrom(
                             backgroundColor: ink,
                             foregroundColor: const Color(0xFF18181B),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Sizes.radius)),
                           ),
                           child: _busy
                               ? const SizedBox.square(
@@ -244,7 +244,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           style: OutlinedButton.styleFrom(
                             foregroundColor: ink,
                             side: const BorderSide(color: Color(0xFF3F3F46)),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(Sizes.radius)),
                           ),
                           icon: const Icon(Icons.qr_code_scanner, size: Sizes.icon),
                           label: Text(l10n.scanConnectCode),
@@ -306,7 +306,7 @@ class _ScanScreenState extends State<_ScanScreen> {
               height: 240,
               decoration: BoxDecoration(
                 border: Border.all(color: Colors.white70, width: 2),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Sizes.radiusCard),
               ),
             ),
           ),

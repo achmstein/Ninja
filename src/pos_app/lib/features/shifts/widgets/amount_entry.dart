@@ -28,7 +28,7 @@ class AmountEntry extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             border: Border.all(color: theme.colors.border),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: Directionality(
             textDirection: TextDirection.ltr,

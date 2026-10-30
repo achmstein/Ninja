@@ -372,14 +372,14 @@ class _RiderRow extends StatelessWidget {
       excludeSemantics: true,
       child: InkWell(
         onTap: disabled || current ? null : onTap,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
         child: Container(
           height: Sizes.controlLarge,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: current ? theme.colors.primary.withValues(alpha: 0.05) : null,
             border: Border.all(color: current ? theme.colors.primary : theme.colors.border),
-            borderRadius: BorderRadius.circular(10),
+            borderRadius: BorderRadius.circular(Sizes.radius),
           ),
           child: Row(
             children: [

@@ -168,7 +168,7 @@ void main() {
     expect(find.byType(BumpExit), findsOneWidget);
 
     await tester.pump(const Duration(milliseconds: 350));
-    expect(find.text('Ready \u2068#101\u2069'), findsOneWidget);
+    expect(find.text('Ready #\u200f101'), findsOneWidget);
     // The board keeps its shape while the chip leaves
     expect(tester.getTopLeft(find.text('Mocha')), mochaBefore);
 

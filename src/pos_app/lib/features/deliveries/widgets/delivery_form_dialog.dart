@@ -218,7 +218,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                           color: a.address == _street.text.trim() && (a.building ?? '') == _building.text.trim()
                               ? theme.colors.primary
                               : theme.colors.border),
-                      borderRadius: BorderRadius.circular(10),
+                      borderRadius: BorderRadius.circular(Sizes.radius),
                     ),
                     child: child,
                   ),
@@ -401,7 +401,7 @@ class _NearerBranchesState extends State<NearerBranches> {
               decoration: BoxDecoration(
                 color: widget.chosen == a.branchId ? theme.colors.primary.withValues(alpha: 0.06) : null,
                 border: Border.all(color: widget.chosen == a.branchId ? theme.colors.primary : theme.colors.border),
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(Sizes.radius),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -488,7 +488,7 @@ class _Warning extends StatelessWidget {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-      decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
+      decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(Sizes.radius)),
       child: Row(
         children: [
           Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber),

@@ -65,7 +65,7 @@ class _CustomerCard extends ConsumerWidget {
 
     Widget block(IconData icon, String title, Widget body) => Container(
           padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+          decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [

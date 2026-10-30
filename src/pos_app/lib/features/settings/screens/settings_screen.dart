@@ -207,7 +207,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   ),
                   // Where the kitchen's chit goes when the network is down
                   Padding(
-                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+                    // The same all round as the row above: the section rules them apart
+                    padding: const EdgeInsets.all(Sizes.gapLg),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [

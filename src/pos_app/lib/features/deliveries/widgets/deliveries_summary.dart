@@ -38,7 +38,7 @@ class DeliveriesSummary extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12),
         decoration: BoxDecoration(
           color: tint?.withValues(alpha: 0.12) ?? theme.colors.secondary,
-          borderRadius: BorderRadius.circular(18),
+          borderRadius: BorderRadius.circular(Sizes.radiusCard),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
@@ -65,7 +65,7 @@ class DeliveriesSummary extends ConsumerWidget {
             padding: const EdgeInsetsDirectional.fromSTEB(14, 10, 8, 10),
             decoration: BoxDecoration(
               border: Border.all(color: theme.colors.border),
-              borderRadius: BorderRadius.circular(14),
+              borderRadius: BorderRadius.circular(Sizes.radiusCard),
             ),
             child: Row(
               children: [

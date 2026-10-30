@@ -150,7 +150,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
             Container(
               width: double.infinity,
               padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
               child: Column(
                 children: [
                   Text(l10n.newBalance, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
@@ -248,7 +248,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                   height: Sizes.controlLarge,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                   // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
                   child: FittedBox(
                     fit: BoxFit.scaleDown,

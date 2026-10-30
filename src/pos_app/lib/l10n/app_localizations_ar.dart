@@ -177,7 +177,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String orderNumber(int id) {
-    return 'طلب ⁨#$id⁩';
+    return 'طلب #‏$id';
   }
 
   @override
@@ -226,17 +226,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newOrderToast(int orderId) {
-    return 'طلب جديد ⁨#$orderId⁩';
+    return 'طلب جديد #‏$orderId';
   }
 
   @override
   String newOrderToastFrom(String name, int orderId) {
-    return 'طلب جديد ⁨#$orderId⁩ من $name';
+    return 'طلب جديد #‏$orderId من $name';
   }
 
   @override
   String orderWaitingToast(int minutes, int orderId) {
-    return 'الطلب ⁨#$orderId⁩ بانتظار منذ $minutes دقيقة';
+    return 'الطلب #‏$orderId بانتظار منذ $minutes دقيقة';
   }
 
   @override
@@ -501,7 +501,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String refundTitle(int number) {
-    return 'استرجاع على الإيصال ⁨#$number⁩';
+    return 'استرجاع على الإيصال #‏$number';
   }
 
   @override
@@ -535,7 +535,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ticketRefunded(String amount, int number) {
-    return 'صدر إشعار الاسترجاع ⁨#$number⁩ بقيمة $amount';
+    return 'صدر إشعار الاسترجاع #‏$number بقيمة $amount';
   }
 
   @override
@@ -543,7 +543,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String creditNote(int number) {
-    return 'إشعار استرجاع ⁨#$number⁩';
+    return 'إشعار استرجاع #‏$number';
   }
 
   @override
@@ -657,7 +657,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String ticketNumber(int id) {
-    return 'فاتورة ⁨#$id⁩';
+    return 'فاتورة #‏$id';
   }
 
   @override
@@ -695,6 +695,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get selectLines => 'تحديد';
+
+  @override
+  String selectedLinesCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count بندًا محددًا',
+      few: '$count بنود محددة',
+      two: 'بندان محددان',
+      one: 'بند واحد محدد',
+      zero: 'لم يُحدَّد شيء',
+    );
+    return '$_temp0';
+  }
 
   @override
   String moveLinesAction(int count) {
@@ -856,7 +870,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String receiptNumber(int number) {
-    return 'إيصال ⁨#$number⁩';
+    return 'إيصال #‏$number';
   }
 
   @override
@@ -943,7 +957,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String tabPaymentNumber(int number) {
-    return 'سداد ⁨#$number⁩';
+    return 'سداد #‏$number';
   }
 
   @override
@@ -999,7 +1013,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String shiftNumber(int id) {
-    return 'وردية ⁨#$id⁩';
+    return 'وردية #‏$id';
   }
 
   @override
@@ -1985,7 +1999,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String callCentrePlaced(int orderId, String branch) {
-    return 'سُجّل الطلب ⁨#$orderId⁩ في $branch';
+    return 'سُجّل الطلب #‏$orderId في $branch';
   }
 
   @override
@@ -2104,7 +2118,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String deliverySentTo(String branch, int orderId) {
-    return 'أُرسل إلى $branch · ⁨#$orderId⁩';
+    return 'أُرسل إلى $branch · #‏$orderId';
   }
 
   @override
@@ -2119,12 +2133,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String newSentDeliveryToast(int orderId, String branch, String name) {
-    return 'توصيل هاتفي جديد ⁨#$orderId⁩ من $branch ($name)';
+    return 'توصيل هاتفي جديد #‏$orderId من $branch ($name)';
   }
 
   @override
   String newSentDeliveryToastNoName(int orderId, String branch) {
-    return 'توصيل هاتفي جديد ⁨#$orderId⁩ من $branch';
+    return 'توصيل هاتفي جديد #‏$orderId من $branch';
   }
 
   @override

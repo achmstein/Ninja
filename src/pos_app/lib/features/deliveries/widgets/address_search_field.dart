@@ -119,7 +119,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
           for (final s in _suggestions)
             InkWell(
               onTap: _picking == null ? () => _pick(s) : null,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(Sizes.radius),
               child: Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 10),
                 child: Row(

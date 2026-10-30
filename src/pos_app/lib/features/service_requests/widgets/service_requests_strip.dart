@@ -143,7 +143,7 @@ class _RequestCard extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -154,7 +154,7 @@ class _RequestCard extends StatelessWidget {
               Container(
                 width: 44,
                 height: 44,
-                decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
+                decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(Sizes.radius)),
                 child: Icon(icon, size: Sizes.icon, color: amber),
               ),
               const SizedBox(width: 12),

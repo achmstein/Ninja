@@ -407,6 +407,12 @@
   "cancel": "Cancel",
   "close": "Close",
   "selectLines": "Select",
+  "selectedLinesCount": "{count, plural, =1{1 selected} other{{count} selected}}",
+  "@selectedLinesCount": {
+    "placeholders": {
+      "count": { "type": "int" }
+    }
+  },
   "moveLinesAction": "{count, plural, =1{Move 1 line…} other{Move {count} lines…}}",
   "@moveLinesAction": {
     "placeholders": {

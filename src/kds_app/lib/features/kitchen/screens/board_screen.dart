@@ -102,7 +102,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
         exitDuration: bumpDuration,
         enter: (context, key, child) => SlideInItem(distance: 40, highlight: primary.withValues(alpha: 0.55), child: child),
         exit: (context, key, child, exit) => key is ValueKey<int>
-            ? BumpExit(exit: exit, label: '${l10n.ready} ${bidiIsolate('#${key.value}')}', child: child)
+            ? BumpExit(exit: exit, label: '${l10n.ready} ${hashNumber(key.value)}', child: child)
             : FadeTransition(opacity: ReverseAnimation(exit), child: child),
         builder: (context, children) => OrderGrid(children: children),
         children: [
@@ -181,7 +181,7 @@ class _CardSkeleton extends StatelessWidget {
       decoration: BoxDecoration(
         color: theme.colors.card,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       clipBehavior: Clip.antiAlias,
       child: Shimmer.fromColors(

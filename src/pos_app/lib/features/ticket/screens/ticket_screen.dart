@@ -56,9 +56,6 @@ import '../dialogs/breakdown_dialog.dart';
 import '../lines.dart';
 import '../../../core/utils/bidi.dart';
 
-const _maxWidth = 768.0;
-const _actionBarHeight = 96.0;
-
 /// One bill: what is on it, who it was for, and the way to take the money.
 /// Arriving from the sale pad with `autoSettle`, the walk-in is standing at
 /// the till, so the settle dialog opens by itself — once, and only after
@@ -493,241 +490,214 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     final canDiscard = lines.isEmpty && sends.isEmpty && (ticket.sessionId == null || ticket.sessionEndedAt != null);
     final canVoid = !canDiscard && isOwner;
 
-    return Stack(
-      children: [
-        Align(
-          alignment: Alignment.topCenter,
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: _maxWidth),
-            child: SingleChildScrollView(
-              padding: EdgeInsets.fromLTRB(16, 16, 16, ticket.isVoided ? 16 : _actionBarHeight + 16),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _Header(
-                    ticket: ticket,
-                    title: title,
-                    backTo: widget.backTo,
-                    selecting: _selecting,
-                    canSelect: lines.isNotEmpty,
-                    canDiscard: canDiscard,
-                    canVoid: canVoid,
-                    onToggleSelecting: _toggleSelecting,
-                    onDiscard: _discard,
-                    onVoid: () => _voidGuarded(activeSession),
-                    onDiscount: () => _discount(ticket),
-                  ),
-                  // Who took the order that opened it, and where when another branch sent it here
-                  if ((ticket.takenBy ?? '').isNotEmpty)
-                    Padding(
-                      padding: const EdgeInsets.only(bottom: 8),
-                      child: Text(
-                        ticket.takenAtBranchId == null
-                            ? l10n.takenBy(ticket.takenBy!)
-                            : l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
-                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
-                      ),
-                    ),
-                  const FDivider(),
-                  if (sessionLoading) ...[
-                    const _SessionCardSkeleton(),
-                    const SizedBox(height: 16),
-                  ],
-                  if (activeSession != null) ...[
-                    StayBar(session: activeSession),
-                    const SizedBox(height: 16),
-                  ],
-                  if (endedSession != null) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: theme.colors.background,
-                        border: Border.all(color: theme.colors.border),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(FIcons.users, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                              const SizedBox(width: 8),
-                              Text(l10n.inTheRoom, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                            ],
-                          ),
-                          const SizedBox(height: 12),
-                          StayMembers(session: endedSession),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // Confirmed here, they land on this bill — which is why the
-                  // guard stops a settle while any are still waiting
-                  if (waiting.isNotEmpty) ...[
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: AppColors.amber500.withValues(alpha: 0.1),
-                        border: Border.all(color: AppColors.amber500.withValues(alpha: 0.5)),
-                        borderRadius: BorderRadius.circular(14),
-                      ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.stretch,
-                        children: [
-                          Row(
-                            children: [
-                              Icon(FIcons.clock, size: Sizes.icon, color: AppColors.amber(theme.colors.brightness)),
-                              const SizedBox(width: 8),
-                              Expanded(
-                                child: Text(l10n.ticketPendingOrders(waiting.length),
-                                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                          PendingOrders(orders: waiting),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(height: 16),
-                  ],
-                  // The time is not a line until the session ends; until
-                  // then the bill shows it as the row it will become, so the
-                  // running cost is read where the rest of the bill is
-                  if (activeSession != null)
-                    Container(
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-                      child: Row(
-                        children: [
-                          Icon(FIcons.timer, size: Sizes.icon, color: theme.colors.mutedForeground),
-                          const SizedBox(width: 12),
-                          Expanded(
-                            child: Text(l10n.roomTimeRunning,
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                          ),
-                          StayClock(
-                            session: activeSession,
-                            style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w600,
-                                fontFeatures: const [FontFeature.tabularFigures()]),
-                          ),
-                          const SizedBox(width: 12),
-                          Text('≈ ', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                          TimeSoFar(
-                            session: activeSession,
-                            style: theme.typography.base
-                                .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
-                          ),
-                        ],
-                      ),
-                    ),
-                  if (lines.isEmpty)
-                    // Nothing to say while a session runs: the time row above is
-                    // the bill so far; nor while lines are on their way
-                    if (activeSession == null && sends.isEmpty)
-                      Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 64),
-                        child: Text(l10n.emptyTicket,
-                            textAlign: TextAlign.center,
-                            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                      )
-                    else
-                      const SizedBox.shrink()
-                  else if (!shared)
-                    _LineList(
-                        lines: shown(lines), selecting: selecting, selected: _selected, onToggle: _toggleLine, landed: landed)
-                  else
-                    // Shared bill: one heading per person, each with its own
-                    // subtotal, so the cashier can read (and split) who owes
-                    // what. Lines nobody was named for stay together under
-                    // the table's own heading.
-                    Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        for (final (index, group) in groups.indexed) ...[
-                          if (index > 0) const SizedBox(height: 16),
-                          _GroupHeading(
-                            name: group.name ?? (group.unattributed ? location : l10n.guest),
-                            total: group.total,
-                            customerId: group.lines.isNotEmpty ? group.lines.first.customerId : null,
-                          ),
-                          _LineList(
-                            lines: shown(group.lines),
-                            selecting: selecting,
-                            selected: _selected,
-                            onToggle: _toggleLine,
-                            landed: landed,
-                          ),
-                        ],
-                      ],
-                    ),
-                  SendingLines(sends: sends),
-                  if (online.isNotEmpty && !ticket.isVoided) ...[
-                    const SizedBox(height: 16),
-                    OnlinePaymentsCard(
-                      ticket: ticket,
-                      payments: online,
-                      onRefund: _busy ? null : _refundOnline,
-                      onRelease: _busy ? null : _releaseOnline,
-                    ),
-                  ],
-                  if (ticket.isVoided) ...[
-                    const SizedBox(height: 16),
-                    _VoidTombstone(ticket: ticket),
-                  ],
-                  if (ticket.refunds.isNotEmpty) ...[
-                    const SizedBox(height: 16),
-                    Heading(l10n.refundsTitle),
-                    for (final refund in ticket.refunds) ...[
-                      const SizedBox(height: 8),
-                      _RefundCard(refund: refund),
-                    ],
-                  ],
-                ],
-              ),
-            ),
+    // The bill on the start side, the panel on the end side, ruled off like
+    // the sale pad: the room (its clock, rate, people, the way to end it)
+    // and the money with what is done with it stay in view however long
+    // the bill grows. A narrow screen stacks the room over the bill and
+    // keeps the money at the foot.
+    final size = MediaQuery.sizeOf(context);
+    final wide = size.width >= 900;
+    final rule = BorderSide(color: theme.colors.border);
+
+    final header = Container(
+      height: Sizes.header,
+      padding: const EdgeInsets.symmetric(horizontal: Sizes.gap, vertical: Sizes.gapSm),
+      decoration: BoxDecoration(border: Border(bottom: rule)),
+      child: _Header(
+        ticket: ticket,
+        title: title,
+        backTo: widget.backTo,
+        selecting: _selecting,
+        canSelect: lines.isNotEmpty,
+        canDiscard: canDiscard,
+        canVoid: canVoid,
+        onToggleSelecting: _toggleSelecting,
+        onDiscard: _discard,
+        onVoid: () => _voidGuarded(activeSession),
+        onDiscount: () => _discount(ticket),
+      ),
+    );
+
+    // The room, while there is one: running, its whole card; ended with the
+    // bill still open, the people, still editable so every share finds its tab
+    final room = <Widget>[
+      if (sessionLoading) const _SessionCardSkeleton(),
+      if (activeSession != null) StayBar(session: activeSession, panel: true),
+      if (endedSession != null) ...[
+        Heading(l10n.inTheRoom),
+        const SizedBox(height: Sizes.gapSm),
+        StayMembers(session: endedSession),
+      ],
+    ];
+
+    final bill = <Widget>[
+      // Who took the order that opened it, and where when another branch sent it here
+      if ((ticket.takenBy ?? '').isNotEmpty)
+        Padding(
+          padding: const EdgeInsets.only(bottom: Sizes.gap),
+          child: Text(
+            ticket.takenAtBranchId == null
+                ? l10n.takenBy(ticket.takenBy!)
+                : l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
+            style: theme.typography.label.copyWith(color: theme.colors.mutedForeground),
           ),
         ),
-        // A voided ticket keeps its lines for the record but loses every
-        // action — what remains is the audit trail
-        if (!ticket.isVoided)
-          Positioned(
-            left: 0,
-            right: 0,
-            bottom: 0,
-            child: _ActionBar(
-              ticket: ticket,
-              activeSession: activeSession,
-              selecting: selecting,
-              selectedCount: _selected.length,
-              busy: _busy,
-              canRefund: isOwner && ticket.refundedTotal < ticket.total,
-              paidOnline: online.paidOnline,
-              total: onTheirWay.isEmpty ? ticket.total : totalWith(ticket, onTheirWay.fold(0, (sum, s) => sum + s.total)),
-              confirming: onTheirWay.isNotEmpty,
-              // Not while a guest is at the provider's checkout, nor before
-              // every line charged here is in: the money is never taken
-              // against a bill the server has not got all of
-              onSettle: lines.isEmpty || online.anyPending || sends.isNotEmpty
-                  ? null
-                  : () => _settle(ticket, waiting: waiting, activeSession: activeSession, members: session?.members ?? const []),
-              onPrint: () => _print(ticket),
-              onRefund: () => _refund(ticket),
-              onAssign: () => _assign(ticket),
-              onMoveTo: () => _move(ticket, mode: MoveMode.move),
-              onNewBill: () => _move(ticket, mode: MoveMode.newBill),
-            ),
+      // Confirmed here, they land on this bill — which is why the guard
+      // stops a settle while any are still waiting
+      if (waiting.isNotEmpty) ...[
+        Container(
+          padding: const EdgeInsets.all(Sizes.gap),
+          decoration: BoxDecoration(
+            color: AppColors.amber500.withValues(alpha: 0.1),
+            border: Border.all(color: AppColors.amber500.withValues(alpha: 0.5)),
+            borderRadius: BorderRadius.circular(Sizes.radiusCard),
           ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Icon(FIcons.clock, size: Sizes.icon, color: AppColors.amber(theme.colors.brightness)),
+                  const SizedBox(width: Sizes.gapSm),
+                  Expanded(
+                    child: Text(l10n.ticketPendingOrders(waiting.length),
+                        style: theme.typography.body.copyWith(fontWeight: FontWeight.w600)),
+                  ),
+                ],
+              ),
+              const SizedBox(height: Sizes.gapSm),
+              PendingOrders(orders: waiting),
+            ],
+          ),
+        ),
+        const SizedBox(height: Sizes.gapLg),
+      ],
+      if (lines.isEmpty)
+        // Nothing to say while a session runs: the clock in the panel is the
+        // bill so far; nor while lines are on their way
+        if (activeSession == null && sends.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 64),
+            child: Text(l10n.emptyTicket,
+                textAlign: TextAlign.center, style: theme.typography.body.copyWith(color: theme.colors.mutedForeground)),
+          )
+        else
+          const SizedBox.shrink()
+      else if (!shared)
+        _LineList(lines: shown(lines), selecting: selecting, selected: _selected, onToggle: _toggleLine, landed: landed)
+      else
+        // Shared bill: one heading per person, each with its own subtotal,
+        // so the cashier can read (and split) who owes what. Lines nobody
+        // was named for stay together under the table's own heading.
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (index, group) in groups.indexed) ...[
+              if (index > 0) const SizedBox(height: Sizes.gapLg),
+              _GroupHeading(
+                name: group.name ?? (group.unattributed ? location : l10n.guest),
+                total: group.total,
+                customerId: group.lines.isNotEmpty ? group.lines.first.customerId : null,
+              ),
+              _LineList(
+                lines: shown(group.lines),
+                selecting: selecting,
+                selected: _selected,
+                onToggle: _toggleLine,
+                landed: landed,
+              ),
+            ],
+          ],
+        ),
+      SendingLines(sends: sends),
+      if (online.isNotEmpty && !ticket.isVoided) ...[
+        const SizedBox(height: Sizes.gapLg),
+        OnlinePaymentsCard(
+          ticket: ticket,
+          payments: online,
+          onRefund: _busy ? null : _refundOnline,
+          onRelease: _busy ? null : _releaseOnline,
+        ),
+      ],
+      if (ticket.isVoided) ...[
+        const SizedBox(height: Sizes.gapLg),
+        _VoidTombstone(ticket: ticket),
+      ],
+      if (ticket.refunds.isNotEmpty) ...[
+        const SizedBox(height: Sizes.gapLg),
+        Heading(l10n.refundsTitle),
+        for (final refund in ticket.refunds) ...[
+          const SizedBox(height: Sizes.gapSm),
+          _RefundCard(refund: refund),
+        ],
+      ],
+    ];
+
+    // Every bill is laid out the same: the header across the top, the money
+    // and what is done with it in the bar across the foot, so Settle, the
+    // Select actions and Print are always in the same place. A room adds
+    // only its panel (the clock, the rate, the people, the way to end it)
+    // beside the lines; a narrow screen puts it over them.
+    final withPanel = wide && room.isNotEmpty;
+
+    final foot = _ActionBar(
+      ticket: ticket,
+      activeSession: activeSession,
+      selecting: selecting,
+      selectedCount: _selected.length,
+      busy: _busy,
+      canRefund: isOwner && ticket.refundedTotal < ticket.total,
+      paidOnline: online.paidOnline,
+      total: onTheirWay.isEmpty ? ticket.total : totalWith(ticket, onTheirWay.fold(0, (sum, s) => sum + s.total)),
+      confirming: onTheirWay.isNotEmpty,
+      // Not while a guest is at the provider's checkout, nor before every
+      // line charged here is in: the money is never taken against a bill the
+      // server has not got all of
+      onSettle: lines.isEmpty || online.anyPending || sends.isNotEmpty
+          ? null
+          : () => _settle(ticket, waiting: waiting, activeSession: activeSession, members: session?.members ?? const []),
+      onPrint: () => _print(ticket),
+      onRefund: () => _refund(ticket),
+      onAssign: () => _assign(ticket),
+      onMoveTo: () => _move(ticket, mode: MoveMode.move),
+      onNewBill: () => _move(ticket, mode: MoveMode.newBill),
+    );
+
+    Widget scroll(List<Widget> children) => SingleChildScrollView(
+          padding: const EdgeInsets.all(Sizes.gapLg),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        );
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        header,
+        Expanded(
+          child: withPanel
+              ? Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Expanded(child: scroll(bill)),
+                    Container(
+                      width: size.width >= 1280 ? 380 : 340,
+                      decoration: BoxDecoration(border: BorderDirectional(start: rule)),
+                      child: scroll(room),
+                    ),
+                  ],
+                )
+              : scroll([...room, if (room.isNotEmpty) const SizedBox(height: Sizes.gapXl), ...bill]),
+        ),
+        foot,
       ],
     );
   }
 }
 
-class _Header extends StatelessWidget {
+/// The bill's header row, ruled off like the sale pad's: the way back, the
+/// place, then the two things a cashier does most (add, select) as buttons
+/// and the rest (discount, the kitchen's paper, discard or void) in ⋯, away
+/// from Settle in the panel so none of them can be fat-fingered
+class _Header extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final String title;
   final String backTo;
@@ -755,10 +725,63 @@ class _Header extends StatelessWidget {
   });
 
   @override
+  ConsumerState<_Header> createState() => _HeaderState();
+}
+
+class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderStateMixin {
+  late final FPopoverController _menu = FPopoverController(vsync: this);
+
+  @override
+  void dispose() {
+    _menu.dispose();
+    super.dispose();
+  }
+
+  void _pick(VoidCallback action) {
+    _menu.hide();
+    action();
+  }
+
+  @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final destructiveLabel = theme.typography.base.forButton.copyWith(color: theme.colors.destructive);
+    final ticket = widget.ticket;
+    final rowStyle = theme.typography.body;
+    final destructiveStyle = rowStyle.copyWith(color: theme.colors.destructive);
+    final reprint = canReprintKitchen(ref, ticket);
+
+    final menuItems = [
+      if (ticket.isOpen)
+        FItem(
+          prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),
+          title: Text(l10n.discount, style: rowStyle),
+          // Once applied, the row reads the amount; the panel repeats it under the total
+          suffix: ticket.discount > 0
+              ? Text('−${money(context, ticket.discount)}',
+                  style: rowStyle.copyWith(color: AppColors.successColor, fontFeatures: const [FontFeature.tabularFigures()]))
+              : null,
+          onPress: widget.canSelect ? () => _pick(widget.onDiscount) : null,
+        ),
+      if (reprint)
+        FItem(
+          prefix: const Icon(FIcons.printer, size: Sizes.icon),
+          title: Text(l10n.kitchenTickets, style: rowStyle),
+          onPress: () => _pick(() => showKitchenReprint(context, ticket)),
+        ),
+      if (ticket.isOpen && widget.canDiscard)
+        FItem(
+          prefix: Icon(FIcons.trash2, size: Sizes.icon, color: theme.colors.destructive),
+          title: Text(l10n.discardTicket, style: destructiveStyle),
+          onPress: () => _pick(widget.onDiscard),
+        )
+      else if (ticket.isOpen && widget.canVoid)
+        FItem(
+          prefix: Icon(FIcons.ban, size: Sizes.icon, color: theme.colors.destructive),
+          title: Text(l10n.voidTicket, style: destructiveStyle),
+          onPress: () => _pick(widget.onVoid),
+        ),
+    ];
 
     return Row(
       children: [
@@ -766,20 +789,20 @@ class _Header extends StatelessWidget {
           dimension: Sizes.control,
           child: FButton.icon(
             variant: FButtonVariant.ghost,
-            onPress: () => context.go(backTo),
+            onPress: () => context.go(widget.backTo),
             child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: Sizes.gapSm),
         Expanded(
           child: Text.rich(
             TextSpan(
-              text: title,
-              style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700),
+              text: widget.title,
+              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700),
               children: [
                 TextSpan(
-                  text: '  ${bidiIsolate('#${ticket.id}')}',
-                  style: theme.typography.base.copyWith(
+                  text: '  ${hashNumber(ticket.id)}',
+                  style: theme.typography.body.copyWith(
                     fontWeight: FontWeight.w500,
                     color: theme.colors.mutedForeground,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -791,12 +814,7 @@ class _Header extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
           ),
         ),
-        const SizedBox(width: 8),
-        // A paid table can still be waiting on the kitchen's paper
-        if (ticket.isSettled) ...[
-          KitchenReprintButton(ticket: ticket),
-          const SizedBox(width: 8),
-        ],
+        const SizedBox(width: Sizes.gapSm),
         if (ticket.isSettled)
           FBadge(
             variant: FBadgeVariant.secondary,
@@ -818,63 +836,37 @@ class _Header extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               onPress: () => context.go('/sale?ticket=${ticket.id}'),
               prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
-              child: Text(l10n.addItems, style: theme.typography.base.forButton),
+              child: Text(l10n.addItems, style: theme.typography.body.forButton),
             ),
           ),
-          const SizedBox(width: 4),
+          const SizedBox(width: Sizes.gapSm),
           SizedBox(
             height: Sizes.control,
             child: FButton(
-              variant: selecting ? FButtonVariant.secondary : FButtonVariant.outline,
+              variant: widget.selecting ? FButtonVariant.secondary : FButtonVariant.outline,
               mainAxisSize: MainAxisSize.min,
-              onPress: canSelect ? onToggleSelecting : null,
+              onPress: widget.canSelect ? widget.onToggleSelecting : null,
               prefix: const Icon(FIcons.listChecks, size: Sizes.icon),
-              child: Text(l10n.selectLines, style: theme.typography.base.forButton),
+              child: Text(l10n.selectLines, style: theme.typography.body.forButton),
             ),
           ),
-          const SizedBox(width: 4),
-          SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              variant: ticket.discount > 0 ? FButtonVariant.secondary : FButtonVariant.outline,
-              mainAxisSize: MainAxisSize.min,
-              onPress: canSelect ? onDiscount : null,
-              prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),
-              // Once applied, the button reads the amount so the discount is
-              // never missed — the bar repeats it under the total
-              child: Text(ticket.discount > 0 ? '−${money(context, ticket.discount)}' : l10n.discount,
-                  style: theme.typography.base.forButton),
+        ],
+        if (menuItems.isNotEmpty) ...[
+          const SizedBox(width: Sizes.gapSm),
+          FPopoverMenu(
+            control: FPopoverControl.managed(controller: _menu),
+            menuAnchor: AlignmentDirectional.topEnd,
+            childAnchor: AlignmentDirectional.bottomEnd,
+            menu: [FItemGroup(children: menuItems)],
+            builder: (context, controller, _) => SizedBox.square(
+              dimension: Sizes.control,
+              child: FButton.icon(
+                variant: FButtonVariant.outline,
+                onPress: controller.toggle,
+                child: const Icon(FIcons.ellipsis, size: Sizes.icon),
+              ),
             ),
           ),
-          // The kitchen's paper again, where a station prints
-          KitchenReprintButton(ticket: ticket),
-          // Both ways out live up here, deliberately far from the Settle
-          // button in the bottom bar, so neither can be fat-fingered
-          if (canDiscard) ...[
-            const SizedBox(width: 4),
-            SizedBox(
-              height: Sizes.control,
-              child: FButton(
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: onDiscard,
-                prefix: Icon(FIcons.trash2, size: Sizes.icon, color: theme.colors.destructive),
-                child: Text(l10n.discardTicket, style: destructiveLabel),
-              ),
-            ),
-          ] else if (canVoid) ...[
-            const SizedBox(width: 4),
-            SizedBox(
-              height: Sizes.control,
-              child: FButton(
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: onVoid,
-                prefix: Icon(FIcons.ban, size: Sizes.icon, color: theme.colors.destructive),
-                child: Text(l10n.voidTicket, style: destructiveLabel),
-              ),
-            ),
-          ],
         ],
       ],
     );
@@ -902,7 +894,7 @@ class _GroupHeading extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: theme.colors.muted.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Row(
         children: [
@@ -1047,7 +1039,7 @@ class _LineRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: selected ? theme.colors.secondary : null,
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: content,
     );
@@ -1133,7 +1125,7 @@ class _Rows extends StatelessWidget {
     return Container(
       decoration: BoxDecoration(
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -1170,7 +1162,7 @@ class _RefundCard extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1205,9 +1197,10 @@ class _RefundCard extends StatelessWidget {
   }
 }
 
-/// Sticky action bar: the running total is always in reach, and so is the
-/// primary action — Settle, Move while selecting, Print once the bill is
-/// paid, and an owner's Refund beside it
+/// The bar across every bill's foot, room or table alike: the money at the
+/// start, and at the end what is done with the bill — Settle; while lines
+/// are picked, where they go; once paid, Print and an owner's Refund. The
+/// actions give way before the total does.
 class _ActionBar extends StatelessWidget {
   final TicketDetail ticket;
   // The running session whose time will join the total when it ends
@@ -1255,169 +1248,144 @@ class _ActionBar extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
+    final muted = theme.typography.label.copyWith(color: theme.colors.mutedForeground);
 
     // The bill's parts (menu money, discount, service, VAT, what went back)
-    // are one tap away; the bar carries the total only
+    // are one tap away; the panel carries the total
     final hasParts =
         ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0 || ticket.refundedTotal > 0;
+    final none = selectedCount == 0 || busy;
 
-    Widget big(String label,
-            {VoidCallback? onPress,
-            FButtonVariant? variant,
-            IconData? icon,
-            Widget? prefix,
-            Color? color,
-            double padding = 16}) =>
-        SizedBox(
-          height: Sizes.controlLarge,
+    Widget action(String label,
+            {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix, Color? color, bool main = false}) =>
+        ConstrainedBox(
+          // Side by side in the bar, every action the main action's height;
+          // the main one wide enough to be the obvious one
+          constraints: BoxConstraints.tightFor(height: Sizes.controlLarge).copyWith(minWidth: main ? 240 : 160),
           child: FButton(
             variant: variant,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
             prefix: prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon, color: color)),
-            child: Flexible(
-              child: Padding(
-                padding: EdgeInsets.symmetric(horizontal: padding),
-                child: Text(label,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.typography.lg.forButton.copyWith(color: color)),
-              ),
-            ),
+            child: Text(label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: (main ? theme.typography.title : theme.typography.body).forButton.copyWith(color: color)),
           ),
         );
 
-    // While selecting, three actions share the row: they give way, not the total
-    Widget giving(Widget button) => Flexible(child: button);
-
-    final actions = ticket.isSettled
-        ? [
-            // Owner-only, like void: money goes back, so an owner says so.
-            // Gone once the whole receipt has been credited.
-            if (canRefund) ...[
-              big(l10n.refundTicket,
-                  onPress: onRefund,
-                  variant: FButtonVariant.outline,
-                  icon: FIcons.undo2,
-                  color: theme.colors.destructive,
-                  padding: 8),
-              const SizedBox(width: 8),
-            ],
-            big(l10n.print, onPress: onPrint, icon: FIcons.printer, padding: 8),
-          ]
-        : selecting
+    final actions = ticket.isVoided
+        ? const <Widget>[]
+        : ticket.isSettled
             ? [
-                giving(big(l10n.assignCustomer,
-                    onPress: selectedCount == 0 || busy ? null : onAssign,
-                    variant: FButtonVariant.outline,
-                    icon: FIcons.userPlus,
-                    padding: 8)),
-                const SizedBox(width: 8),
-                giving(big(l10n.moveToBill,
-                    onPress: selectedCount == 0 || busy ? null : onMoveTo,
-                    variant: FButtonVariant.outline,
-                    icon: FIcons.arrowRightLeft,
-                    padding: 8)),
-                const SizedBox(width: 8),
-                giving(big(l10n.newBill, onPress: selectedCount == 0 || busy ? null : onNewBill, icon: FIcons.plus, padding: 8)),
+                action(l10n.print, onPress: onPrint, icon: FIcons.printer, main: true),
+                // Owner-only, like void: money goes back, so an owner says so.
+                // Gone once the whole receipt has been credited.
+                if (canRefund)
+                  action(l10n.refundTicket,
+                      onPress: onRefund,
+                      variant: FButtonVariant.outline,
+                      icon: FIcons.undo2,
+                      color: theme.colors.destructive),
               ]
-            : [
-                confirming
-                    ? big(
-                        l10n.confirming,
-                        prefix: SizedBox.square(
-                          dimension: Sizes.icon,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
-                        ),
-                      )
-                    : big(l10n.settleAction, onPress: onSettle),
-              ];
+            : selecting
+                ? [
+                    action(l10n.assignCustomer,
+                        onPress: none ? null : onAssign, variant: FButtonVariant.outline, icon: FIcons.userPlus),
+                    action(l10n.moveToBill,
+                        onPress: none ? null : onMoveTo, variant: FButtonVariant.outline, icon: FIcons.arrowRightLeft),
+                    action(l10n.newBill, onPress: none ? null : onNewBill, icon: FIcons.plus, main: true),
+                  ]
+                : [
+                    confirming
+                        ? action(
+                            l10n.confirming,
+                            main: true,
+                            prefix: SizedBox.square(
+                              dimension: Sizes.iconSmall,
+                              child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
+                            ),
+                          )
+                        : action(l10n.settleAction, onPress: onSettle, main: true),
+                  ];
 
-    return Container(
-      height: _actionBarHeight,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
-      decoration: BoxDecoration(
-        color: theme.colors.background.withValues(alpha: 0.95),
-        border: Border(top: BorderSide(color: theme.colors.border)),
-      ),
-      child: Center(
-        child: ConstrainedBox(
-          constraints: const BoxConstraints(maxWidth: _maxWidth - 32),
-          child: Row(
+    final figures = <Widget>[
+          Row(
             children: [
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(l10n.total,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    // One line that shrinks to fit, so a narrow column never wraps it
-                    // past the bar's height
-                    FittedBox(
-                      fit: BoxFit.scaleDown,
-                      alignment: AlignmentDirectional.centerStart,
-                      child: Text(money(context, total),
-                          maxLines: 1,
-                          style: theme.typography.figure
-                              .copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular, height: 1.1)),
-                    ),
-                    if (ticket.discount > 0)
-                      Text(
-                        '${l10n.discount} −${money(context, ticket.discount)}'
-                        '${ticket.discountRate != null ? ' (${rateText(ticket.discountRate)}%)' : ''}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.xs.copyWith(
-                          color: AppColors.successColor,
-                          fontWeight: FontWeight.w500,
-                          fontFeatures: tabular,
-                        ),
-                      ),
-                    if (paidOnline > 0 && ticket.isOpen)
-                      Text(
-                        '${l10n.remaining} ${money(context, (ticket.total - paidOnline) < 0 ? 0 : ticket.total - paidOnline)}',
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
-                      ),
-                    if (hasParts)
-                      SizedBox(
-                        height: 32,
-                        child: FButton(
-                          variant: FButtonVariant.ghost,
-                          mainAxisSize: MainAxisSize.min,
-                          onPress: () => showBreakdownDialog(context, ticket),
-                          child: Text(l10n.breakdown,
-                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
-                        ),
-                      ),
-                    if (activeSession != null)
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Flexible(
-                            child: Text('+ ${l10n.timeSoFar} ≈ ',
-                                maxLines: 1,
-                                overflow: TextOverflow.ellipsis,
-                                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
-                          ),
-                          TimeSoFar(
-                            session: activeSession!,
-                            style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
-                          ),
-                        ],
-                      ),
-                  ],
-                ),
+              // While lines are picked, how many, where the actions for them are
+              Flexible(
+                child: Text(selecting ? l10n.selectedLinesCount(selectedCount) : l10n.total,
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
               ),
-              const SizedBox(width: 16),
-              ...actions,
+              if (hasParts)
+                SizedBox(
+                  height: Sizes.controlSmall,
+                  child: FButton(
+                    variant: FButtonVariant.ghost,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () => showBreakdownDialog(context, ticket),
+                    child: Text(l10n.breakdown, style: muted),
+                  ),
+                ),
             ],
           ),
-        ),
+          // One line whatever the amount: it shrinks rather than wraps
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: AlignmentDirectional.centerStart,
+            child: Text(money(context, total),
+                maxLines: 1,
+                style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+          ),
+          if (ticket.discount > 0)
+            Text(
+              '${l10n.discount} −${money(context, ticket.discount)}'
+              '${ticket.discountRate != null ? ' (${rateText(ticket.discountRate)}%)' : ''}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.typography.caption
+                  .copyWith(color: AppColors.successColor, fontWeight: FontWeight.w500, fontFeatures: tabular),
+            ),
+          if (paidOnline > 0 && ticket.isOpen)
+            Text(
+              '${l10n.remaining} ${money(context, (ticket.total - paidOnline) < 0 ? 0 : ticket.total - paidOnline)}',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.typography.caption.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
+            ),
+          if (activeSession != null)
+            Row(
+              children: [
+                Flexible(
+                  child: Text('+ ${l10n.timeSoFar} ≈ ',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+                ),
+                TimeSoFar(
+                  session: activeSession!,
+                  style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
+                ),
+              ],
+            ),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg, vertical: Sizes.gap),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
+      child: Row(
+        children: [
+          // The total takes what is left and shrinks; the actions keep their
+          // size at the bar's end (shared out with the total, they drifted
+          // into the middle)
+          Expanded(
+            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: figures),
+          ),
+          for (final child in actions) ...[
+            const SizedBox(width: Sizes.gapSm),
+            child,
+          ],
+        ],
       ),
     );
   }
@@ -1436,7 +1404,7 @@ class _SessionCardSkeleton extends StatelessWidget {
       highlightColor: theme.colors.background,
       child: Container(
         height: 180,
-        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
       ),
     );
   }
@@ -1451,7 +1419,7 @@ class _Skeleton extends StatelessWidget {
     return Align(
       alignment: Alignment.topCenter,
       child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: _maxWidth),
+        constraints: const BoxConstraints(),
         child: Padding(
           padding: const EdgeInsets.all(16),
           child: Shimmer.fromColors(
@@ -1463,12 +1431,12 @@ class _Skeleton extends StatelessWidget {
                 Container(
                   width: 256,
                   height: 48,
-                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(8)),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                 ),
                 const SizedBox(height: 12),
                 Container(
                   height: 256,
-                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+                  decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
                 ),
               ],
             ),

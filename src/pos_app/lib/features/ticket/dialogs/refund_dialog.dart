@@ -189,7 +189,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
                     border: Border.all(color: theme.colors.border),
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(Sizes.radiusCard),
                   ),
                   child: Row(
                     children: [

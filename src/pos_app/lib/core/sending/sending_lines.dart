@@ -67,7 +67,7 @@ class _SendBlock extends ConsumerWidget {
       decoration: BoxDecoration(
         color: theme.colors.destructive.withValues(alpha: 0.05),
         border: Border.all(color: theme.colors.destructive.withValues(alpha: 0.4)),
-        borderRadius: BorderRadius.circular(10),
+        borderRadius: BorderRadius.circular(Sizes.radius),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,

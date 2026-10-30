@@ -186,7 +186,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
       for (final b in branches) {
         if (b.id == id) return b.name.localized(context);
       }
-      return bidiIsolate('#$id');
+      return hashNumber(id);
     }
 
     Widget field(TextEditingController controller, String label, {String? hint, TextInputType? keyboard, TextDirection? direction}) =>
@@ -247,7 +247,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                       padding: const EdgeInsets.all(10),
                       decoration: BoxDecoration(
                         border: Border.all(color: a.address == _street.text.trim() ? theme.colors.primary : theme.colors.border),
-                        borderRadius: BorderRadius.circular(10),
+                        borderRadius: BorderRadius.circular(Sizes.radius),
                       ),
                       child: child,
                     ),
@@ -350,7 +350,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                         decoration: BoxDecoration(
                           color: chosen?.branchId == b.branchId ? theme.colors.primary.withValues(alpha: 0.06) : null,
                           border: Border.all(color: chosen?.branchId == b.branchId ? theme.colors.primary : theme.colors.border),
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(Sizes.radius),
                         ),
                         child: child,
                       ),

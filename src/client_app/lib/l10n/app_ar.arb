@@ -152,9 +152,9 @@
   "noTransactionsYet": "مفيش معاملات لسه",
   "charge": "رسوم",
   "payment": "دفع",
-  "posReceipt": "إيصال كاشير \u2068#{number}\u2069",
-  "posCreditNote": "مرتجع كاشير \u2068#{number}\u2069",
-  "posTabPayment": "سداد حساب \u2068#{number}\u2069",
+  "posReceipt": "إيصال كاشير #\u200F{number}",
+  "posCreditNote": "مرتجع كاشير #\u200F{number}",
+  "posTabPayment": "سداد حساب #\u200F{number}",
   "byPerson": "بواسطة {name}",
   "today": "النهاردة",
   "yesterday": "إمبارح",
@@ -202,8 +202,8 @@
   "transactionTypePromotion": "عرض",
   "transactionTypeRedemption": "استبدال",
   "transactionTypeAdjustment": "تعديل",
-  "pointsEarnedFromOrder": "نقط مكتسبة من طلب \u2068#{orderId}\u2069",
-  "pointsRedeemedForOrder": "نقط مستخدمة في طلب \u2068#{orderId}\u2069",
+  "pointsEarnedFromOrder": "نقط مكتسبة من طلب #\u200F{orderId}",
+  "pointsRedeemedForOrder": "نقط مستخدمة في طلب #\u200F{orderId}",
   "customizable": "قابل للتخصيص",
   "failedToJoinSession": "الدخول للاوضه فشل",
   "memberCountFormat": "{count} أعضاء",
@@ -272,7 +272,7 @@
   "back": "رجوع",
   "refunded": "مرتجع",
   "voided": "ملغي",
-  "receiptShort": "\u2068#{number}\u2069",
+  "receiptShort": "#\u200F{number}",
   "@receiptShort": {
     "placeholders": {
       "number": {
@@ -281,7 +281,7 @@
     }
   },
   "receipt": "الإيصال",
-  "receiptNumber": "إيصال \u2068#{number}\u2069",
+  "receiptNumber": "إيصال #\u200F{number}",
   "@receiptNumber": {
     "placeholders": {
       "number": {
@@ -318,7 +318,7 @@
   "cash": "كاش",
   "card": "بطاقة",
   "instapay": "إنستاباي",
-  "creditNote": "إشعار استرجاع \u2068#{number}\u2069",
+  "creditNote": "إشعار استرجاع #\u200F{number}",
   "@creditNote": {
     "placeholders": {
       "number": {

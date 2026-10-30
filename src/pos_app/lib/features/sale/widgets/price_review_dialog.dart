@@ -73,7 +73,7 @@ class _PriceReview extends StatelessWidget {
             Container(
               margin: const EdgeInsets.only(bottom: 6),
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(8)),
+              decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [

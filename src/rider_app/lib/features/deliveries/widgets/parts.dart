@@ -41,7 +41,7 @@ class StatusChip extends StatelessWidget {
     return Container(
       height: 28,
       padding: const EdgeInsetsDirectional.only(start: 10, end: 12),
-      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: color.withValues(alpha: 0.12), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -74,7 +74,7 @@ class StatTile extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
       decoration: BoxDecoration(
         color: accent?.withValues(alpha: 0.08) ?? theme.colors.card,
-        borderRadius: BorderRadius.circular(16),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
         border: Border.all(color: accent?.withValues(alpha: 0.35) ?? theme.colors.border),
       ),
       child: Column(
@@ -126,7 +126,7 @@ class NoteBanner extends StatelessWidget {
       padding: const EdgeInsets.only(bottom: 12),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(12)),
+        decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
         child: Row(
           children: [
             Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
@@ -161,7 +161,7 @@ class SectionTitle extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: 24),
               padding: const EdgeInsets.symmetric(horizontal: 8),
               alignment: Alignment.center,
-              decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(12)),
+              decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radius)),
               child: Text(
                 '$count',
                 style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular, height: 1),

@@ -57,7 +57,7 @@ class DeliveryDetails extends StatelessWidget {
 
     return Container(
       padding: const EdgeInsets.all(12),
-      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+      decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
@@ -111,7 +111,7 @@ class DeliveryDetails extends StatelessWidget {
                   excludeSemantics: true,
                   child: InkWell(
                     onTap: () => openOrSay(context, delivery.phoneUri, l10n.couldNotOpenDialer),
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(Sizes.radius),
                     child: ConstrainedBox(
                       // A thumb's target, though the line itself is small
                       constraints: const BoxConstraints(minHeight: Sizes.control),

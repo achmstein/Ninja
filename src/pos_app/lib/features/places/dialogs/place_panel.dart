@@ -246,8 +246,10 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             children: [
               for (final member in session.members)
                 Container(
+                  // As tall as the Add customer button beside it
+                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                   padding: EdgeInsetsDirectional.fromSTEB(12, 6, member.isOwner ? 12 : 4, 6),
-                  decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(999)),
+                  decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radius)),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -298,7 +300,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             const SizedBox(height: 16),
             Container(
               padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(14)),
+              decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radiusCard)),
               child: Column(
                 children: [
                   for (final c in session.costs)

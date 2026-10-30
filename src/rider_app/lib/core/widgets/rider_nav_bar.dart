@@ -98,7 +98,7 @@ class _Tab extends StatelessWidget {
               height: 32,
               decoration: BoxDecoration(
                 color: selected ? theme.colors.secondary : Colors.transparent,
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(Sizes.radiusCard),
               ),
               child: Stack(
                 clipBehavior: Clip.none,
@@ -116,7 +116,7 @@ class _Tab extends StatelessWidget {
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
                           color: theme.colors.primary,
-                          borderRadius: BorderRadius.circular(10),
+                          borderRadius: BorderRadius.circular(Sizes.radius),
                           border: Border.all(color: theme.colors.background, width: 2),
                         ),
                         child: Text(

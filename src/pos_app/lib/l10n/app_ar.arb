@@ -58,7 +58,7 @@
     }
   },
   "pendingOrders": "بانتظار التأكيد",
-  "orderNumber": "طلب \u2068#{id}\u2069",
+  "orderNumber": "طلب #\u200F{id}",
   "@orderNumber": {
     "placeholders": {
       "id": {
@@ -80,7 +80,7 @@
   "orderCancelled": "تم إلغاء الطلب",
   "failedToConfirmOrder": "تعذّر تأكيد الطلب",
   "failedToCancelOrder": "تعذّر إلغاء الطلب",
-  "newOrderToast": "طلب جديد \u2068#{orderId}\u2069",
+  "newOrderToast": "طلب جديد #\u200F{orderId}",
   "@newOrderToast": {
     "placeholders": {
       "orderId": {
@@ -88,7 +88,7 @@
       }
     }
   },
-  "newOrderToastFrom": "طلب جديد \u2068#{orderId}\u2069 من {name}",
+  "newOrderToastFrom": "طلب جديد #\u200F{orderId} من {name}",
   "@newOrderToastFrom": {
     "placeholders": {
       "name": {
@@ -99,7 +99,7 @@
       }
     }
   },
-  "orderWaitingToast": "الطلب \u2068#{orderId}\u2069 بانتظار منذ {minutes} دقيقة",
+  "orderWaitingToast": "الطلب #\u200F{orderId} بانتظار منذ {minutes} دقيقة",
   "@orderWaitingToast": {
     "placeholders": {
       "minutes": {
@@ -270,7 +270,7 @@
     }
   },
   "refundTicket": "استرجاع",
-  "refundTitle": "استرجاع على الإيصال \u2068#{number}\u2069",
+  "refundTitle": "استرجاع على الإيصال #\u200F{number}",
   "@refundTitle": {
     "placeholders": {
       "number": {
@@ -304,7 +304,7 @@
       }
     }
   },
-  "ticketRefunded": "صدر إشعار الاسترجاع \u2068#{number}\u2069 بقيمة {amount}",
+  "ticketRefunded": "صدر إشعار الاسترجاع #\u200F{number} بقيمة {amount}",
   "@ticketRefunded": {
     "placeholders": {
       "amount": {
@@ -316,7 +316,7 @@
     }
   },
   "refundsTitle": "الاسترجاعات",
-  "creditNote": "إشعار استرجاع \u2068#{number}\u2069",
+  "creditNote": "إشعار استرجاع #\u200F{number}",
   "@creditNote": {
     "placeholders": {
       "number": {
@@ -371,7 +371,7 @@
     }
   },
   "findCustomer": "البحث عن عميل",
-  "ticketNumber": "فاتورة \u2068#{id}\u2069",
+  "ticketNumber": "فاتورة #\u200F{id}",
   "@ticketNumber": {
     "placeholders": {
       "id": {
@@ -391,6 +391,7 @@
   "cancel": "إلغاء",
   "close": "إغلاق",
   "selectLines": "تحديد",
+  "selectedLinesCount": "{count, plural, =0{لم يُحدَّد شيء} one{بند واحد محدد} two{بندان محددان} few{{count} بنود محددة} other{{count} بندًا محددًا}}",
   "moveLinesAction": "{count, plural, one{نقل بند واحد…} two{نقل بندين…} few{نقل {count} بنود…} other{نقل {count} بند…}}",
   "@moveLinesAction": {
     "placeholders": {
@@ -453,7 +454,7 @@
   "noPaymentsYet": "لا توجد مدفوعات بعد",
   "confirmSettle": "تأكيد وإغلاق",
   "ticketSettled": "تم إغلاق الفاتورة",
-  "receiptNumber": "إيصال \u2068#{number}\u2069",
+  "receiptNumber": "إيصال #\u200F{number}",
   "@receiptNumber": {
     "placeholders": {
       "number": {
@@ -520,7 +521,7 @@
   "confirmTabPayment": "استلام",
   "tabPaymentRecorded": "تم تسجيل سداد الحساب",
   "tabPaymentSlip": "سداد حساب آجل",
-  "tabPaymentNumber": "سداد \u2068#{number}\u2069",
+  "tabPaymentNumber": "سداد #\u200F{number}",
   "@tabPaymentNumber": {
     "placeholders": {
       "number": {
@@ -545,7 +546,7 @@
   "takingReservations": "نستقبل الحجوزات",
   "paused": "متوقف",
   "shiftTitle": "الوردية",
-  "shiftNumber": "وردية \u2068#{id}\u2069",
+  "shiftNumber": "وردية #\u200F{id}",
   "@shiftNumber": {
     "placeholders": {
       "id": {
@@ -872,7 +873,7 @@
   "callCentrePickupAt": "استلام من…",
   "callCentrePickupAtBranch": "استلام من {branch}",
   "callCentreOrderAt": "طلب لـ {branch}",
-  "callCentrePlaced": "سُجّل الطلب \u2068#{orderId}\u2069 في {branch}",
+  "callCentrePlaced": "سُجّل الطلب #\u200F{orderId} في {branch}",
   "deliveryUnderMinimum": "أقل من الحد الأدنى للتوصيل {amount}",
   "deliveryKnownAddresses": "عناوين سبق التوصيل إليها",
   "deliveryNeedsName": "لمن الطلب؟",
@@ -906,11 +907,11 @@
   "deliveryKeepHere": "أبقِه هنا",
   "deliveryWillSend": "يُرسل إلى {branch}: يُحضَّر ويُوصَّل من هناك",
   "deliverySaveSend": "التوصيل من {branch}",
-  "deliverySentTo": "أُرسل إلى {branch} · \u2068#{orderId}\u2069",
+  "deliverySentTo": "أُرسل إلى {branch} · #\u200F{orderId}",
   "deliverySentFrom": "مُرسل من {branch} · {name}",
   "deliverySentFromNoName": "مُرسل من {branch}",
-  "newSentDeliveryToast": "توصيل هاتفي جديد \u2068#{orderId}\u2069 من {branch} ({name})",
-  "newSentDeliveryToastNoName": "توصيل هاتفي جديد \u2068#{orderId}\u2069 من {branch}",
+  "newSentDeliveryToast": "توصيل هاتفي جديد #\u200F{orderId} من {branch} ({name})",
+  "newSentDeliveryToastNoName": "توصيل هاتفي جديد #\u200F{orderId} من {branch}",
   "priceReviewTitle": "قائمة {branch} مختلفة",
   "priceReviewChanged": "{item}: {from} ← {to} في {branch}",
   "priceReviewSoldOut": "{item}: نفد في {branch}",

@@ -521,7 +521,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                             height: Sizes.controlLarge,
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
+                            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
                             // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
                             child: FittedBox(
                               fit: BoxFit.scaleDown,
@@ -562,7 +562,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                             padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
                               border: Border.all(color: theme.colors.border),
-                              borderRadius: BorderRadius.circular(10),
+                              borderRadius: BorderRadius.circular(Sizes.radius),
                             ),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -630,7 +630,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                               padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
                               decoration: BoxDecoration(
                                 color: theme.colors.secondary.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(10),
+                                borderRadius: BorderRadius.circular(Sizes.radius),
                               ),
                               child: Row(
                                 children: [
@@ -831,7 +831,7 @@ class _SettledView extends StatelessWidget {
     Widget box(String label, String value, TextStyle valueStyle) => Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(14)),
+      decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
       child: Column(
         children: [
           Text(label, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
@@ -870,7 +870,7 @@ class _SettledView extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: AppColors.amber500.withValues(alpha: 0.1),
                   border: Border.all(color: AppColors.amber500.withValues(alpha: 0.5)),
-                  borderRadius: BorderRadius.circular(10),
+                  borderRadius: BorderRadius.circular(Sizes.radius),
                 ),
                 child: Column(
                   children: [

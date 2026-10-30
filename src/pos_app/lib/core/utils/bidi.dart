@@ -8,6 +8,12 @@ import 'package:intl/intl.dart' show Bidi;
 /// in an Arabic line the number lands between the two words.
 String bidiIsolate(String text) => '\u2068$text\u2069';
 
+/// An order, bill or receipt number with its hash, read first in either
+/// language: a right-to-left mark after the hash lets it take the line's
+/// direction, so in Arabic it sits on the number's right and in English
+/// stays "#123"
+String hashNumber(Object number) => '#\u200f$number';
+
 /// The direction a [Text] should lay [text] out in: its own script's, as
 /// its first strong character says. Most customer names are English while
 /// the till runs in Arabic; laid out in the Arabic line's direction, a long

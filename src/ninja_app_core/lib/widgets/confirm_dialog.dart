@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import '../theme/sizes.dart';
 import '../theme/text_styles.dart';
 
 /// One question, two big buttons. The apps' answer to every "are you
@@ -36,55 +37,66 @@ Future<bool> showConfirmDialog(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+              Text(title, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600)),
               if (description != null) ...[
-                const SizedBox(height: 8),
-                Text(description, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                const SizedBox(height: Sizes.gapSm),
+                Text(description, style: theme.typography.body.copyWith(color: theme.colors.mutedForeground)),
               ],
-              const SizedBox(height: 16),
+              const SizedBox(height: Sizes.gapLg),
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  if (secondaryLabel != null && onSecondary != null) ...[
-                    SizedBox(
-                      height: 48,
+                  Flexible(
+                    child: SizedBox(
+                      height: Sizes.control,
                       child: FButton(
-                        variant: FButtonVariant.ghost,
+                        variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
-                        onPress: () {
-                          Navigator.of(context, rootNavigator: true).pop(false);
-                          onSecondary();
-                        },
-                        child: Text(secondaryLabel,
-                            style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                        onPress: () => Navigator.of(context, rootNavigator: true).pop(false),
+                        child: Text(cancelLabel,
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
                       ),
                     ),
-                    const Spacer(),
-                  ],
-                  SizedBox(
-                    height: 48,
-                    child: FButton(
-                      variant: FButtonVariant.outline,
-                      mainAxisSize: MainAxisSize.min,
-                      onPress: () => Navigator.of(context, rootNavigator: true).pop(false),
-                      child: Text(cancelLabel, style: theme.typography.base.forButton),
-                    ),
                   ),
-                  const SizedBox(width: 8),
-                  SizedBox(
-                    height: 48,
-                    child: FButton(
-                      variant: destructive ? FButtonVariant.destructive : null,
-                      mainAxisSize: MainAxisSize.min,
-                      onPress: () => Navigator.of(context, rootNavigator: true).pop(true),
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(actionLabel, style: theme.typography.base.forButton),
+                  const SizedBox(width: Sizes.gapSm),
+                  Flexible(
+                    child: SizedBox(
+                      height: Sizes.control,
+                      child: FButton(
+                        variant: destructive ? FButtonVariant.destructive : null,
+                        mainAxisSize: MainAxisSize.min,
+                        onPress: () => Navigator.of(context, rootNavigator: true).pop(true),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: Sizes.gapSm),
+                          child: Text(actionLabel,
+                              maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+                        ),
                       ),
                     ),
                   ),
                 ],
               ),
+              // The rare third answer on a row of its own under the two, so
+              // the three never have to share one (in Arabic they did not fit)
+              if (secondaryLabel != null && onSecondary != null) ...[
+                const SizedBox(height: Sizes.gapSm),
+                Align(
+                  alignment: AlignmentDirectional.centerStart,
+                  child: SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      variant: FButtonVariant.ghost,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () {
+                        Navigator.of(context, rootNavigator: true).pop(false);
+                        onSecondary();
+                      },
+                      child: Text(secondaryLabel,
+                          style: theme.typography.body.forButton.copyWith(color: theme.colors.destructive)),
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );

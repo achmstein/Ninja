@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../brand/brand_provider.dart';
 import '../config.dart';
+import 'sizes.dart';
 
 /// Get font family based on locale — the pair pos_web loads: Inter, and
 /// Alexandria for Arabic.
@@ -71,10 +72,12 @@ class ThemeState {
     );
 
     // Create style that inherits from colors and typography
+    // Forui's own corners (buttons, fields, popovers) on the apps' one
+    // radius, so a button and the chip beside it are the same shape
     final style = FStyle.inherit(
       colors: colors,
       typography: typography,
-    );
+    ).copyWith(borderRadius: const FLerpBorderRadius.all(Radius.circular(Sizes.radius), min: 24));
 
     // Build complete theme - widget styles will inherit from typography
     return FThemeData(

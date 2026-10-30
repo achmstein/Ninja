@@ -115,7 +115,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           // rate so the others stay in view
           Container(
             padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(14)),
+            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
             child: Column(
               children: [
                 Text(name, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),

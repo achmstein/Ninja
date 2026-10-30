@@ -156,7 +156,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-            decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(10)),
+            decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radius)),
             child: Row(
               children: [
                 Text(l10n.expectedInDrawer, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),

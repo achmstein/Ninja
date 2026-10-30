@@ -12,6 +12,15 @@ import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/ticket_detail.dart';
 
+/// Whether the bill can send its kitchen tickets again: the branch has a
+/// station that prints, and the bill has orders on it
+bool canReprintKitchen(WidgetRef ref, TicketDetail ticket) =>
+    (ref.watch(branchPrintsKitchenTicketsProvider).value ?? false) && ticket.lines.any((line) => line.orderId != null);
+
+/// The kitchen tickets again, from wherever the bill offers it (its ⋯ menu)
+Future<void> showKitchenReprint(BuildContext context, TicketDetail ticket) =>
+    showPosDialog<void>(context, builder: (_) => _KitchenReprintDialog(ticket: ticket));
+
 /// The bill's "Kitchen tickets" button: the paper jammed, or a cook lost a
 /// ticket. Only where the branch has a station that prints, and only for a
 /// bill that has orders on it.
