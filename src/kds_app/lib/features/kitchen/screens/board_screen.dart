@@ -5,7 +5,9 @@ import 'package:forui/forui.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/motion/motion.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/network/api_errors.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../core/widgets/kds_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
@@ -100,7 +102,7 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
         exitDuration: bumpDuration,
         enter: (context, key, child) => SlideInItem(distance: 40, highlight: primary.withValues(alpha: 0.55), child: child),
         exit: (context, key, child, exit) => key is ValueKey<int>
-            ? BumpExit(exit: exit, label: '${l10n.ready} #${key.value}', child: child)
+            ? BumpExit(exit: exit, label: '${l10n.ready} ${bidiIsolate('#${key.value}')}', child: child)
             : FadeTransition(opacity: ReverseAnimation(exit), child: child),
         builder: (context, children) => OrderGrid(children: children),
         children: [
@@ -136,7 +138,7 @@ class _NotInPlan extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(FIcons.lock, size: 48, color: muted.withValues(alpha: 0.6)),
+            Icon(FIcons.lock, size: Sizes.iconHero, color: muted.withValues(alpha: 0.6)),
             const SizedBox(height: 12),
             Text(
               l10n.kdsNotInPlan,
@@ -206,7 +208,7 @@ class _CardSkeleton extends StatelessWidget {
                   ],
                 ),
               ),
-            Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 12), child: bar(height: 48, radius: 8)),
+            Padding(padding: const EdgeInsets.fromLTRB(12, 4, 12, 12), child: bar(height: Sizes.controlLarge, radius: 8)),
           ],
         ),
       ),
@@ -229,11 +231,11 @@ class _EmptyBoard extends StatelessWidget {
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(FIcons.chefHat, size: 64, color: muted.withValues(alpha: 0.4)),
+            Icon(FIcons.chefHat, size: Sizes.iconHero, color: muted.withValues(alpha: 0.4)),
             const SizedBox(height: 12),
             Text(
               l10n.noOrders,
-              style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600, color: muted),
+              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600, color: muted),
               textAlign: TextAlign.center,
             ),
           ],

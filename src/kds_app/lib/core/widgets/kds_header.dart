@@ -8,6 +8,7 @@ import '../auth/auth_service.dart';
 import '../network/api_errors.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../features/kitchen/widgets/history_dialog.dart';
 import '../../features/kitchen/widgets/station_switcher.dart';
 import 'branch_switcher.dart';
@@ -66,7 +67,7 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
     final rowStyle = theme.typography.base;
 
     return Container(
-      height: 64,
+      height: Sizes.header,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: theme.colors.background,
@@ -79,11 +80,11 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
           const StationSwitcher(),
           const Spacer(),
           SizedBox.square(
-            dimension: 48,
+            dimension: Sizes.control,
             child: FButton.icon(
               variant: FButtonVariant.ghost,
               onPress: _openHistory,
-              child: const Icon(FIcons.history, size: 20),
+              child: const Icon(FIcons.history, size: Sizes.iconNav),
             ),
           ),
           FPopoverMenu(
@@ -97,7 +98,7 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
                   // stands and flips on tap — no submenu to chase on a
                   // touchscreen
                   FItem(
-                    prefix: const Icon(FIcons.languages, size: 20),
+                    prefix: const Icon(FIcons.languages, size: Sizes.icon),
                     title: Text(l10n.language, style: rowStyle),
                     suffix: Text(
                       locale.languageCode == 'ar' ? 'العربية' : 'English',
@@ -106,7 +107,7 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
                     onPress: () => _pick(ref.read(localeProvider.notifier).toggleLocale),
                   ),
                   FItem(
-                    prefix: Icon(isDark ? FIcons.moon : FIcons.sun, size: 20),
+                    prefix: Icon(isDark ? FIcons.moon : FIcons.sun, size: Sizes.icon),
                     title: Text(l10n.theme, style: rowStyle),
                     suffix: Text(
                       isDark ? l10n.themeDark : l10n.themeLight,
@@ -117,7 +118,7 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
                         )),
                   ),
                   FItem(
-                    prefix: const Icon(FIcons.lock, size: 20),
+                    prefix: const Icon(FIcons.lock, size: Sizes.icon),
                     title: Text(l10n.settings, style: rowStyle),
                     onPress: () => _pick(() => context.go('/settings')),
                   ),
@@ -126,7 +127,7 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
               FItemGroup(
                 children: [
                   FItem(
-                    prefix: Icon(FIcons.logOut, size: 20, color: theme.colors.destructive),
+                    prefix: Icon(FIcons.logOut, size: Sizes.icon, color: theme.colors.destructive),
                     title: Text(
                       l10n.signOut,
                       style: rowStyle.copyWith(color: theme.colors.destructive),
@@ -137,11 +138,11 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
               ),
             ],
             builder: (context, controller, _) => SizedBox.square(
-              dimension: 48,
+              dimension: Sizes.control,
               child: FButton.icon(
                 variant: FButtonVariant.ghost,
                 onPress: controller.toggle,
-                child: const Icon(FIcons.settings, size: 20),
+                child: const Icon(FIcons.settings, size: Sizes.iconNav),
               ),
             ),
           ),

@@ -3,6 +3,7 @@ import 'package:flutter/widgets.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 /// How long a bumped ticket takes to leave the board
 const bumpDuration = Duration(milliseconds: 700);
@@ -35,9 +36,9 @@ class BumpExit extends StatelessWidget {
       textScaler: MediaQuery.maybeTextScalerOf(context) ?? TextScaler.noScaling,
       maxLines: 1,
     )..layout();
-    final chipWidth = painter.width + 24 + 26;
+    final chipWidth = painter.width + 24 + Sizes.iconSmall + 8;
     painter.dispose();
-    const chipHeight = 40.0;
+    const chipHeight = Sizes.controlSmall;
 
     return AnimatedBuilder(
       animation: exit,
@@ -95,7 +96,7 @@ class BumpExit extends StatelessWidget {
                                     child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(FIcons.check, size: 18, color: const Color(0xFFFFFFFF)),
+                                        Icon(FIcons.check, size: Sizes.iconSmall, color: const Color(0xFFFFFFFF)),
                                         const SizedBox(width: 8),
                                         Text(label, maxLines: 1, softWrap: false, style: labelStyle),
                                       ],

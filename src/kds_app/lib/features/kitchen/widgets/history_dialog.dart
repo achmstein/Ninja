@@ -7,6 +7,7 @@ import '../providers/kitchen_orders_provider.dart';
 import 'order_card.dart';
 import 'order_grid.dart';
 import 'package:ninja_app_core/network/server_clock.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 /// The day's finished orders, behind the clock icon in the header: newest
 /// first, the same card the board showed, for a "was that with oat milk?"
@@ -55,11 +56,11 @@ class _HistoryDialog extends ConsumerWidget {
                 ),
               ),
               SizedBox.square(
-                dimension: 48,
+                dimension: Sizes.control,
                 child: FButton.icon(
                   variant: FButtonVariant.ghost,
                   onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: const Icon(FIcons.x, size: 20),
+                  child: const Icon(FIcons.x, size: Sizes.iconNav),
                 ),
               ),
             ],

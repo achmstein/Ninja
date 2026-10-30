@@ -6,6 +6,7 @@ import 'package:ninja_app_core/brand/brand_provider.dart';
 import '../brand/brand_mark.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 /// Header branch switcher, same contract as pos_web's: the business's mark and
 /// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the
@@ -67,14 +68,14 @@ class BranchSwitcher extends ConsumerWidget {
             ),
             if (withChevron) ...[
               const SizedBox(width: 8),
-              Icon(FIcons.chevronsUpDown, size: 16, color: theme.colors.mutedForeground),
+              Icon(FIcons.chevronsUpDown, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             ],
           ],
         );
 
     if (!switchable) {
       return SizedBox(
-        height: 48,
+        height: Sizes.control,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: brand(withChevron: false),
@@ -92,7 +93,7 @@ class BranchSwitcher extends ConsumerWidget {
               FItem(
                 title: Text(branch.name.localized(context), style: theme.typography.base),
                 suffix: branch.id == branchState.selectedBranchId
-                    ? const Icon(FIcons.check, size: 20)
+                    ? const Icon(FIcons.check, size: Sizes.icon)
                     : null,
                 onPress: () => ref.read(branchProvider.notifier).selectBranch(branch.id),
               ),
@@ -104,7 +105,7 @@ class BranchSwitcher extends ConsumerWidget {
       builder: (context, controller, _) => FTappable(
         onPress: controller.toggle,
         child: SizedBox(
-          height: 48,
+          height: Sizes.control,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: brand(withChevron: true),

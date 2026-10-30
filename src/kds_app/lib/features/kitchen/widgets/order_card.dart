@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_order.dart';
@@ -152,9 +153,13 @@ class OrderCard extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      '#${order.orderNumber}',
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
+                    // Left to right on its own, so Arabic keeps the hash before the number
+                    Directionality(
+                      textDirection: TextDirection.ltr,
+                      child: Text(
+                        '#${order.orderNumber}',
+                        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
+                      ),
                     ),
                     const SizedBox(width: 8),
                     // All the free width is the chip's to use (kds_web's ms-auto on the clock); a Flexible next to a
@@ -199,7 +204,7 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike, size: 16, color: theme.colors.foreground),
+                      Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike, size: Sizes.iconSmall, color: theme.colors.foreground),
                       const SizedBox(width: 6),
                       Expanded(child: Text(handover, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500))),
                     ],
@@ -209,7 +214,7 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(height: 4),
                   Row(
                     children: [
-                      Icon(FIcons.triangleAlert, size: 16, color: theme.colors.destructive),
+                      Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
                       const SizedBox(width: 6),
                       Expanded(
                         child: Text(l10n.platformCancelled,
@@ -278,7 +283,7 @@ class OrderCard extends StatelessWidget {
                     child: Row(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Icon(FIcons.messageSquareText, size: 16, color: amber),
+                        Icon(FIcons.messageSquareText, size: Sizes.iconSmall, color: amber),
                         const SizedBox(width: 8),
                         Expanded(child: Text(order.customerNote!, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: amber))),
                       ],
@@ -311,7 +316,7 @@ class OrderCard extends StatelessWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(icon, size: 14, color: theme.colors.mutedForeground),
+            Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             const SizedBox(width: 4),
             Flexible(
               child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.foreground), overflow: TextOverflow.ellipsis),
@@ -375,7 +380,7 @@ class OrderCard extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           children: [
             if (icon != null) ...[
-              Icon(icon, size: 14, color: done ? ink : theme.colors.mutedForeground),
+              Icon(icon, size: Sizes.iconSmall, color: done ? ink : theme.colors.mutedForeground),
               const SizedBox(width: 4),
             ],
             Flexible(
@@ -387,14 +392,14 @@ class OrderCard extends StatelessWidget {
     );
   }
 
-  /// A 48 dp button across the whole card — tapped with a wet finger
+  /// The card's main action across its whole width — tapped with a wet finger
   Widget _button(FThemeData theme, {required FButtonVariant? variant, required IconData icon, required String label, required VoidCallback onPress}) {
     return SizedBox(
-      height: 48,
+      height: Sizes.controlLarge,
       child: FButton(
         variant: variant,
         onPress: acting ? null : onPress,
-        prefix: Icon(icon, size: 20),
+        prefix: Icon(icon, size: Sizes.icon),
         child: Text(label, style: theme.typography.base.forButton),
       ),
     );

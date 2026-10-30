@@ -23,8 +23,9 @@ class _Kitchen implements KitchenRepository {
     return [
       KitchenOrder.fromJson({
         'orderNumber': 3121,
-        'date': '2026-09-05T19:50:00Z',
-        'confirmedAt': '2026-09-05T19:52:00Z',
+        // Minutes ago, so the card's clock stays short whatever day the test runs
+        'date': DateTime.now().toUtc().subtract(const Duration(minutes: 4)).toIso8601String(),
+        'confirmedAt': DateTime.now().toUtc().subtract(const Duration(minutes: 2)).toIso8601String(),
         'source': 'Customer',
         'items': [
           {

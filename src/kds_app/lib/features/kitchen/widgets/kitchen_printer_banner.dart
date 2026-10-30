@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../printing/kitchen_printing.dart';
 
@@ -33,7 +34,7 @@ class KitchenPrinterBanner extends ConsumerWidget {
       color: AppColors.amber500.withValues(alpha: 0.12),
       child: Row(
         children: [
-          Icon(FIcons.printer, size: 20, color: amber),
+          Icon(FIcons.printer, size: Sizes.icon, color: amber),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

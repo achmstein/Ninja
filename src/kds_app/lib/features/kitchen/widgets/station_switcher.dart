@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/kitchen_station.dart';
 import '../providers/station_provider.dart';
@@ -31,9 +32,9 @@ class StationSwitcher extends ConsumerWidget {
         FItemGroup(
           children: [
             FItem(
-              prefix: const Icon(FIcons.layoutGrid, size: 20),
+              prefix: const Icon(FIcons.layoutGrid, size: Sizes.icon),
               title: Text(l10n.allStations, style: theme.typography.base),
-              suffix: station == null ? const Icon(FIcons.check, size: 20) : null,
+              suffix: station == null ? const Icon(FIcons.check, size: Sizes.icon) : null,
               onPress: () => pick(null),
             ),
           ],
@@ -42,22 +43,22 @@ class StationSwitcher extends ConsumerWidget {
           children: [
             for (final s in screens)
               FItem(
-                prefix: const Icon(FIcons.chefHat, size: 20),
+                prefix: const Icon(FIcons.chefHat, size: Sizes.icon),
                 title: Text(s.name.localized(context), style: theme.typography.base),
-                suffix: s.id == station?.id ? const Icon(FIcons.check, size: 20) : null,
+                suffix: s.id == station?.id ? const Icon(FIcons.check, size: Sizes.icon) : null,
                 onPress: () => pick(s.id),
               ),
           ],
         ),
       ],
       builder: (context, controller, _) => SizedBox(
-        height: 48,
+        height: Sizes.control,
         child: FButton(
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: controller.toggle,
-          prefix: Icon(station == null ? FIcons.layoutGrid : FIcons.chefHat, size: 20),
-          suffix: Icon(FIcons.chevronsUpDown, size: 16, color: theme.colors.mutedForeground),
+          prefix: Icon(station == null ? FIcons.layoutGrid : FIcons.chefHat, size: Sizes.icon),
+          suffix: Icon(FIcons.chevronsUpDown, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 160),
             child: Text(
