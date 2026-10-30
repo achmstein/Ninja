@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPlatformUpdatesOptions } from '@/api/control/@tanstack/react-query.gen'
+import { getPlatformUpdatesOptions, listArchivedBackupsOptions } from '@/api/control/@tanstack/react-query.gen'
 import type { TenantUpdate } from '@/api/control'
 import {
   AlertDialog,
@@ -33,7 +33,9 @@ import {
 } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
+import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
 import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
 import { isValidTag, TagPicker } from './tag-picker'
 
@@ -397,6 +399,84 @@ export function DestroyDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+/**
+ * A destroyed tenant back under its own slug: with its data from the
+ * archived backup when there still is one (the default), or empty.
+ */
+export function BringBackDialog({
+  open,
+  onOpenChange,
+  isPending,
+  slug,
+  name,
+  onConfirm,
+}: DialogProps & { slug: string; name: string; onConfirm: (body: { empty: boolean; backupId?: string }) => void }) {
+  const t = useT()
+  const format = useFormat()
+  const archived = useQuery({ ...listArchivedBackupsOptions({ path: { slug } }), enabled: open })
+  const newest = archived.data?.[0]
+  const [empty, setEmpty] = useState(false)
+  useEffect(() => {
+    if (open) setEmpty(false)
+  }, [open])
+  // Nothing left to restore: only empty is on offer
+  const fromBackup = !!newest && !empty
+
+  const options = [
+    { key: 'data', on: fromBackup, disabled: !newest, title: t('bringBackWithData'), note: newest ? t('bringBackWithDataNote', { date: format.dateTime(newest.at) }) : t('bringBackNoBackup') },
+    { key: 'empty', on: !fromBackup, disabled: false, title: t('bringBackEmpty'), note: t('bringBackEmptyNote') },
+  ]
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent className='sm:max-w-md'>
+        <DialogHeader>
+          <DialogTitle>{t('bringBackTitle', { name })}</DialogTitle>
+          <DialogDescription>{t('bringBackNote')}</DialogDescription>
+        </DialogHeader>
+        {archived.isLoading ? (
+          <div className='flex justify-center py-6'>
+            <Spinner />
+          </div>
+        ) : (
+          <div className='grid gap-2' role='radiogroup' aria-label={t('bringBackTitle', { name })}>
+            {options.map((o) => (
+              <button
+                key={o.key}
+                type='button'
+                role='radio'
+                aria-checked={o.on}
+                disabled={o.disabled}
+                onClick={() => setEmpty(o.key === 'empty')}
+                className={cn(
+                  'grid gap-0.5 rounded-lg border p-3 text-start transition-colors disabled:cursor-not-allowed disabled:opacity-60',
+                  o.on ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted/50'
+                )}
+              >
+                <span className='text-sm font-medium'>{o.title}</span>
+                <span className='text-muted-foreground text-xs'>{o.note}</span>
+              </button>
+            ))}
+          </div>
+        )}
+        <p className='text-muted-foreground text-xs'>{t('bringBackSignIns')}</p>
+        <DialogFooter>
+          <Button variant='outline' onClick={() => onOpenChange(false)}>
+            {t('cancel')}
+          </Button>
+          <Button
+            disabled={isPending || archived.isLoading}
+            onClick={() => onConfirm(newest && !empty ? { empty: false, backupId: newest.id } : { empty: true })}
+          >
+            {isPending && <Spinner />}
+            {t('bringBack')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }
 

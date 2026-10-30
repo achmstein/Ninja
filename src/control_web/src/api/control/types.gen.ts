@@ -169,6 +169,12 @@ export type BrandWordmarks = {
     arDark: null | BrandWordmark;
 };
 
+export type BringBackRequest = {
+    empty?: boolean;
+    backupId?: null | string;
+    force?: boolean;
+};
+
 export type BusinessType = 'CoffeeShop' | 'Restaurant' | 'GameStation' | 'Other' | 'CloudKitchen';
 
 export type CapacityResponse = {
@@ -1126,6 +1132,80 @@ export type ProvisionTenantErrors = {
 export type ProvisionTenantError = ProvisionTenantErrors[keyof ProvisionTenantErrors];
 
 export type ProvisionTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type ListArchivedBackupsData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/archived-backups';
+};
+
+export type ListArchivedBackupsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ListArchivedBackupsResponses = {
+    /**
+     * OK
+     */
+    200: Array<BackupInfo>;
+};
+
+export type ListArchivedBackupsResponse = ListArchivedBackupsResponses[keyof ListArchivedBackupsResponses];
+
+export type BringBackTenantData = {
+    body: BringBackRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/bring-back';
+};
+
+export type BringBackTenantErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type BringBackTenantError = BringBackTenantErrors[keyof BringBackTenantErrors];
+
+export type BringBackTenantResponses = {
     /**
      * Accepted
      */

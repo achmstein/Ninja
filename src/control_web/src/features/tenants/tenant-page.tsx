@@ -11,6 +11,7 @@ import {
   Mail,
   MoreHorizontal,
   Play,
+  RotateCcw,
   RotateCw,
   Square,
   Trash2,
@@ -20,6 +21,7 @@ import {
   ImagePlus,
 } from 'lucide-react'
 import {
+  bringBackTenantMutation,
   convertTenantMutation,
   destroyTenantMutation,
   forgetTenantMutation,
@@ -57,6 +59,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
+  canBringBack,
   canConvert,
   canDestroy,
   canForget,
@@ -75,7 +78,7 @@ import {
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
+import { BringBackDialog, ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
 import { AuditTab } from './tabs/audit'
 import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
@@ -100,7 +103,7 @@ const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'convert' | 'rotate' | 'rollback' | null
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'bringBack' | 'convert' | 'rotate' | 'rollback' | null
 
 function Loading() {
   return (
@@ -162,6 +165,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     onError: failed,
   })
   const destroy = useMutation({ ...destroyTenantMutation(), onSuccess: queued, onError: failed })
+  const bringBack = useMutation({ ...bringBackTenantMutation(), onSuccess: queued, onError: failed })
   // A month of a business's life in a demo, once; the steps say what landed
   const fillDemo = useMutation({ ...fillDemoDataMutation(), onSuccess: queued, onError: failed })
   const photos = useMutation({ ...generateItemPhotosMutation(), onSuccess: queued, onError: failed })
@@ -240,7 +244,8 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
     start.isPending ||
     upgrade.isPending ||
     secure.isPending ||
-    destroy.isPending
+    destroy.isPending ||
+    bringBack.isPending
   const path = { path: { slug } }
   const alive = status !== 'Destroying' && status !== 'Destroyed'
   const showMore = (kind === 'Demo' && alive) || canUpgrade(status) || canConvert(kind, status) || canDestroy(status) || canForget(status) || canSecure(status) || canImpersonate(status)
@@ -277,6 +282,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
               <Button size='sm' disabled={busy} onClick={() => provision.mutate(path)}>
                 {status === 'Failed' ? <RotateCw /> : <Play />}
                 {status === 'Failed' ? t('retryProvision') : t('provision')}
+              </Button>
+            )}
+            {canBringBack(status, tenant.isDrill) && (
+              <Button size='sm' disabled={busy} onClick={() => setDialog('bringBack')}>
+                <RotateCcw />
+                {t('bringBack')}
               </Button>
             )}
             {canStop(status) && (
@@ -534,6 +545,14 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         slug={tenant.slug}
         name={name}
         onConfirm={() => destroy.mutate(path)}
+      />
+      <BringBackDialog
+        open={dialog === 'bringBack'}
+        onOpenChange={(v) => setDialog(v ? 'bringBack' : null)}
+        isPending={bringBack.isPending}
+        slug={tenant.slug}
+        name={name}
+        onConfirm={(body) => bringBack.mutate({ ...path, body })}
       />
       <ForgetDialog
         open={dialog === 'forget'}

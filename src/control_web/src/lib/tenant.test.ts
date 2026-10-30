@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   billingStanding,
+  canBringBack,
   canConvert,
   isBusy,
   moduleName,
@@ -42,6 +43,13 @@ describe('tenant enums', () => {
     expect(canConvert('Demo', 'Running')).toBe(true)
     expect(canConvert('Demo', 'Destroyed')).toBe(false)
     expect(canConvert('Customer', 'Running')).toBe(false)
+  })
+
+  it('only a destroyed tenant comes back, and never a drill', () => {
+    expect(canBringBack('Destroyed', false)).toBe(true)
+    expect(canBringBack('Destroyed', true)).toBe(false)
+    expect(canBringBack('Running', false)).toBe(false)
+    expect(canBringBack('Destroying', false)).toBe(false)
   })
 })
 

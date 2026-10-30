@@ -187,6 +187,8 @@ export const isBusy = (status: TenantStatusName) =>
 
 export const canProvision = (status: TenantStatusName) =>
   status === 'Requested' || status === 'Failed'
+/** Destroyed, it comes back under its own slug; a drill's scratch tenant does not. */
+export const canBringBack = (status: TenantStatusName, isDrill: boolean) => status === 'Destroyed' && !isDrill
 export const canStop = (status: TenantStatusName) => status === 'Running'
 export const canStart = (status: TenantStatusName) => status === 'Stopped'
 export const canUpgrade = (status: TenantStatusName) =>
