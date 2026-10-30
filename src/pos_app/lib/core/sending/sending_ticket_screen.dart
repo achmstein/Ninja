@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/sale/providers/sale_provider.dart';
 import '../../features/ticket/dialogs/settle_dialog.dart';
@@ -202,12 +203,12 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
     final title = (send.customer?.name ?? '').trim().isNotEmpty ? send.customer!.name : l10n.counter;
 
     Widget big(String label, {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix}) => SizedBox(
-          height: 56,
+          height: Sizes.controlLarge,
           child: FButton(
             variant: variant,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: prefix ?? (icon == null ? null : Icon(icon, size: 20)),
+            prefix: prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon)),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 8),
               child: Text(label, style: theme.typography.lg.forButton),
@@ -229,11 +230,11 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                   Row(
                     children: [
                       SizedBox.square(
-                        dimension: 48,
+                        dimension: Sizes.control,
                         child: FButton.icon(
                           variant: FButtonVariant.ghost,
                           onPress: () => context.go('/'),
-                          child: const Icon(FIcons.arrowLeft, size: 24),
+                          child: const Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -288,8 +289,9 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                           Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                           Text(
                             money(context, total),
-                            style: theme.typography.xl2.copyWith(
+                            style: theme.typography.figure.copyWith(
                               fontWeight: FontWeight.w700,
+                              height: 1.1,
                               fontFeatures: const [FontFeature.tabularFigures()],
                             ),
                           ),
@@ -312,7 +314,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                       big(
                         l10n.confirming,
                         prefix: SizedBox.square(
-                          dimension: 18,
+                          dimension: Sizes.icon,
                           child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
                         ),
                       ),

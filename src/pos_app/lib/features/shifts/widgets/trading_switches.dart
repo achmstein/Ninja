@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/services/branch_settings_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/shifts_provider.dart';
@@ -86,7 +87,7 @@ class _FlagRow extends StatelessWidget {
     return FTappable(
       onPress: disabled ? null : () => onChange(!on),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 56),
+        constraints: const BoxConstraints(minHeight: Sizes.control),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
           children: [

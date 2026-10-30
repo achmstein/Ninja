@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -77,7 +78,7 @@ class _PriceReview extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   if (item.kind != PriceReviewKind.changed) ...[
-                    Icon(FIcons.triangleAlert, size: 16, color: amber),
+                    Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber),
                     const SizedBox(width: 6),
                   ],
                   Expanded(
@@ -93,7 +94,7 @@ class _PriceReview extends StatelessWidget {
           ],
           const SizedBox(height: 16),
           SizedBox(
-            height: 52,
+            height: Sizes.controlLarge,
             child: FButton(
               onPress: nothingLeft ? null : () => close(PriceReviewChoice.useTheirs),
               child: Text(l10n.priceReviewUse(branch), style: theme.typography.base.forButton),
@@ -101,7 +102,7 @@ class _PriceReview extends StatelessWidget {
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 52,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => close(PriceReviewChoice.keepHere),

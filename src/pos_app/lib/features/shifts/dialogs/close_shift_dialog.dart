@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -116,7 +117,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                 children: [
                   Expanded(
                     child: SizedBox(
-                      height: 56,
+                      height: Sizes.controlLarge,
                       child: FButton(
                         variant: FButtonVariant.outline,
                         onPress: () => Navigator.of(context, rootNavigator: true).pop(result),
@@ -127,10 +128,10 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                   const SizedBox(width: 8),
                   Expanded(
                     child: SizedBox(
-                      height: 56,
+                      height: Sizes.controlLarge,
                       child: FButton(
                         onPress: () => _print(result),
-                        prefix: const Icon(FIcons.printer, size: 20),
+                        prefix: const Icon(FIcons.printer, size: Sizes.icon),
                         child: Text(l10n.print, style: theme.typography.base.forButton),
                       ),
                     ),
@@ -172,7 +173,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
@@ -183,7 +184,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.destructive,
                     onPress: canClose ? _close : null,

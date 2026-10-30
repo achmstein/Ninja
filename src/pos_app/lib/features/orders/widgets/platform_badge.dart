@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/models/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
@@ -64,7 +65,7 @@ class PlatformBadge extends StatelessWidget {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(FIcons.triangleAlert, size: 14, color: theme.colors.destructive),
+              Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
               const SizedBox(width: 4),
               Text(l10n.platformCancelled, style: theme.typography.sm.copyWith(color: theme.colors.destructive)),
             ],
@@ -110,7 +111,7 @@ class PlatformHandover extends StatelessWidget {
 
     return Row(
       children: [
-        Icon(icon, size: 14, color: theme.colors.mutedForeground),
+        Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
         const SizedBox(width: 4),
         Expanded(child: Text(text, maxLines: 2, overflow: TextOverflow.ellipsis, style: muted)),
       ],

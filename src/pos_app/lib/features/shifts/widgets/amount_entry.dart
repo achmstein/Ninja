@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 
 /// A labelled read-only amount box over the keypad — the only way to type
@@ -22,7 +23,7 @@ class AmountEntry extends StatelessWidget {
         const SizedBox(height: 6),
         Container(
           // Sized to the figure: a taller box looked like an empty field around it
-          height: 56,
+          height: Sizes.controlLarge,
           alignment: AlignmentDirectional.centerEnd,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(

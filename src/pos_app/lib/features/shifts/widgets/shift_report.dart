@@ -3,6 +3,7 @@ import 'package:forui/forui.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../ticket/tenders.dart';
 import '../models/shift.dart';
@@ -143,7 +144,7 @@ class ShiftReport extends StatelessWidget {
               : headline(
                   l10n.expectedInDrawer,
                   money(context, shift.expectedInDrawer),
-                  style: theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: _tabular),
+                  style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: _tabular),
                 ),
         ),
         const SizedBox(height: 16),

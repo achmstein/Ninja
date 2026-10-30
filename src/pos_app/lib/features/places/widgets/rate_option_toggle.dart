@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../models/place.dart';
 
@@ -37,12 +38,12 @@ class RateOptionToggle extends StatelessWidget {
           if (index > 0) const SizedBox(width: 8),
           Expanded(
             child: SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: value == option.code ? null : FButtonVariant.outline,
                 onPress: disabled ? null : () => onChange(option.code),
                 // The first option is the base rate, the rest the upgrades
-                prefix: Icon(index == 0 ? FIcons.user : FIcons.users, size: 20),
+                prefix: Icon(index == 0 ? FIcons.user : FIcons.users, size: Sizes.icon),
                 child: Text.rich(
                   TextSpan(
                     text: option.name.localized(context),

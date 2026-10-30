@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -214,7 +215,7 @@ Future<String?> showFailReasonPicker(BuildContext context) {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => Navigator.of(dialogContext, rootNavigator: true).pop(code),
@@ -289,10 +290,10 @@ class _CashInDialogState extends State<CashInDialog> {
           Text(note, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: color)),
           const SizedBox(height: 16),
           SizedBox(
-            height: 52,
+            height: Sizes.controlLarge,
             child: FButton(
               onPress: counted == null || counted < 0 ? null : () => Navigator.of(context, rootNavigator: true).pop(counted),
-              prefix: const Icon(FIcons.banknote, size: 20),
+              prefix: const Icon(FIcons.banknote, size: Sizes.icon),
               child: Text(l10n.deliveryCashTakeAction, style: theme.typography.base.forButton),
             ),
           ),
@@ -373,7 +374,7 @@ class _RiderRow extends StatelessWidget {
         onTap: disabled || current ? null : onTap,
         borderRadius: BorderRadius.circular(10),
         child: Container(
-          height: 56,
+          height: Sizes.controlLarge,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: current ? theme.colors.primary.withValues(alpha: 0.05) : null,
@@ -385,7 +386,7 @@ class _RiderRow extends StatelessWidget {
               Stack(
                 clipBehavior: Clip.none,
                 children: [
-                  const Icon(FIcons.userRound, size: 20),
+                  const Icon(FIcons.userRound, size: Sizes.icon),
                   PositionedDirectional(
                     end: -2,
                     bottom: -2,
@@ -412,7 +413,7 @@ class _RiderRow extends StatelessWidget {
                   ],
                 ),
               ),
-              if (current) Icon(FIcons.check, size: 20, color: theme.colors.primary),
+              if (current) Icon(FIcons.check, size: Sizes.icon, color: theme.colors.primary),
             ],
           ),
         ),

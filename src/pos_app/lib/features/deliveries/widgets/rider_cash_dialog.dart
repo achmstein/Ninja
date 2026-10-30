@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
@@ -96,8 +97,8 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
             runSpacing: 6,
             children: [
               for (final order in ticked)
-                SizedBox(
-                  height: 40,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                   child: FButton(
                     variant: order.orderNumber == differenceOn ? null : FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
@@ -158,7 +159,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 52,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => Navigator.of(context, rootNavigator: true).pop(),
@@ -170,12 +171,12 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
               Expanded(
                 flex: 2,
                 child: SizedBox(
-                  height: 52,
+                  height: Sizes.controlLarge,
                   child: FButton(
                     onPress: !canTake
                         ? null
                         : () => Navigator.of(context, rootNavigator: true).pop(splitCounted(ticked, counted, differenceOn: differenceOn)),
-                    prefix: const Icon(FIcons.banknote, size: 20),
+                    prefix: const Icon(FIcons.banknote, size: Sizes.icon),
                     child: Text(l10n.riderCashTakeIn(money(context, counted ?? 0)), style: theme.typography.base.forButton),
                   ),
                 ),
@@ -208,7 +209,7 @@ class _OrderRow extends StatelessWidget {
       child: FTappable(
         onPress: onTap,
         child: Container(
-          constraints: const BoxConstraints(minHeight: 56),
+          constraints: const BoxConstraints(minHeight: Sizes.control),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           margin: const EdgeInsets.only(bottom: 6),
           decoration: BoxDecoration(
@@ -218,7 +219,7 @@ class _OrderRow extends StatelessWidget {
           ),
           child: Row(
             children: [
-              Icon(ticked ? FIcons.squareCheck : FIcons.square, size: 22, color: ticked ? theme.colors.foreground : theme.colors.mutedForeground),
+              Icon(ticked ? FIcons.squareCheck : FIcons.square, size: Sizes.icon, color: ticked ? theme.colors.foreground : theme.colors.mutedForeground),
               const SizedBox(width: 12),
               Text(bidiIsolate('#${order.orderNumber}'), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
               const SizedBox(width: 8),

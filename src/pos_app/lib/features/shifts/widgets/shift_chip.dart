@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../dialogs/open_shift_dialog.dart';
@@ -39,8 +40,8 @@ class ShiftChip extends ConsumerWidget {
     final paused = shift != null && ref.watch(branchFlagsProvider).paused;
     final openedAt = shift?.openedAt;
 
-    return SizedBox(
-      height: 40,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
       child: FButton(
         variant: FButtonVariant.outline,
         mainAxisSize: MainAxisSize.min,

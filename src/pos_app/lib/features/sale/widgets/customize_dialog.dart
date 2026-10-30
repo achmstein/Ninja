@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -155,7 +156,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                 ),
                 if (_prefLoaded) ...[
                   const SizedBox(width: 8),
-                  Icon(FIcons.sparkles, size: 18, color: theme.colors.primary),
+                  Icon(FIcons.sparkles, size: Sizes.icon, color: theme.colors.primary),
                 ],
               ],
             ),
@@ -199,10 +200,10 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                 Text(l10n.quantity, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
                 SizedBox.square(
-                  dimension: 44,
+                  dimension: Sizes.controlSmall,
                   child: FButton.icon(
                     onPress: () => setState(() => _quantity = _quantity > 1 ? _quantity - 1 : 1),
-                    child: const Icon(FIcons.minus, size: 20),
+                    child: const Icon(FIcons.minus, size: Sizes.icon),
                   ),
                 ),
                 SizedBox(
@@ -211,10 +212,10 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                       style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
                 ),
                 SizedBox.square(
-                  dimension: 44,
+                  dimension: Sizes.controlSmall,
                   child: FButton.icon(
                     onPress: () => setState(() => _quantity++),
-                    child: const Icon(FIcons.plus, size: 20),
+                    child: const Icon(FIcons.plus, size: Sizes.icon),
                   ),
                 ),
               ],
@@ -227,7 +228,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 56,
+              height: Sizes.controlLarge,
               child: FButton(
                 onPress: !item.isAvailable || _missingRequired ? null : _add,
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -266,8 +267,8 @@ class _OptionChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final outOfStock = outOfStockLabel != null;
-    return SizedBox(
-      height: 44,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
       child: FButton(
         variant: selected ? null : FButtonVariant.outline,
         mainAxisSize: MainAxisSize.min,

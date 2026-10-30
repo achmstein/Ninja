@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -193,7 +194,7 @@ class _PendingOrderCard extends StatelessWidget {
                 children: [
                   Row(
                     children: [
-                      Icon(placeIcon, size: 16, color: theme.colors.mutedForeground),
+                      Icon(placeIcon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(title,
@@ -207,7 +208,7 @@ class _PendingOrderCard extends StatelessWidget {
                     // A delivery platform's order: its logo and the code the rider asks for, and how it leaves
                     Row(
                       children: [
-                        Text('#${order.id}', style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        Text(bidiIsolate('#${order.id}'), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                         const SizedBox(width: 8),
                         Flexible(child: PlatformBadge(platform: platform)),
                       ],
@@ -215,7 +216,7 @@ class _PendingOrderCard extends StatelessWidget {
                     PlatformHandover(platform: platform),
                   ] else
                     Text(
-                      subtitle == null || subtitle.isEmpty ? '#${order.id}' : '${bidiIsolate('#${order.id}')} · $subtitle',
+                      subtitle == null || subtitle.isEmpty ? bidiIsolate('#${order.id}') : '${bidiIsolate('#${order.id}')} · $subtitle',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
@@ -223,7 +224,7 @@ class _PendingOrderCard extends StatelessWidget {
                   if (history != null)
                     Row(
                       children: [
-                        Icon(FIcons.idCard, size: 14, color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
+                        Icon(FIcons.idCard, size: Sizes.iconSmall, color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(
@@ -249,11 +250,11 @@ class _PendingOrderCard extends StatelessWidget {
           ),
           const SizedBox(width: 12),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               mainAxisSize: MainAxisSize.min,
               onPress: acting ? null : onConfirm,
-              prefix: const Icon(FIcons.check, size: 20),
+              prefix: const Icon(FIcons.check, size: Sizes.icon),
               child: Text(l10n.confirmOrder, style: theme.typography.base.forButton),
             ),
           ),
@@ -280,7 +281,7 @@ class PendingOrdersStrip extends ConsumerWidget {
       children: [
         Row(
           children: [
-            Icon(FIcons.clock, size: 20, color: AppColors.amber(theme.colors.brightness)),
+            Icon(FIcons.clock, size: Sizes.icon, color: AppColors.amber(theme.colors.brightness)),
             const SizedBox(width: 8),
             Text(l10n.pendingOrders, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(width: 8),

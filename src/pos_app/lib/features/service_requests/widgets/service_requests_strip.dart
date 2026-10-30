@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -66,7 +67,7 @@ class _ServiceRequestsStripState extends ConsumerState<ServiceRequestsStrip> {
       children: [
         Row(
           children: [
-            Icon(FIcons.bell, size: 20, color: amber),
+            Icon(FIcons.bell, size: Sizes.icon, color: amber),
             const SizedBox(width: 8),
             Text(l10n.serviceRequests, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(width: 8),
@@ -154,7 +155,7 @@ class _RequestCard extends StatelessWidget {
                 width: 44,
                 height: 44,
                 decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                child: Icon(icon, size: 20, color: amber),
+                child: Icon(icon, size: Sizes.icon, color: amber),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -163,7 +164,7 @@ class _RequestCard extends StatelessWidget {
                   children: [
                     Row(
                       children: [
-                        Icon(atTable ? FIcons.armchair : FIcons.doorOpen, size: 16, color: theme.colors.mutedForeground),
+                        Icon(atTable ? FIcons.armchair : FIcons.doorOpen, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                         const SizedBox(width: 4),
                         Expanded(
                           child: Text(room,
@@ -190,11 +191,11 @@ class _RequestCard extends StatelessWidget {
                 Expanded(
                   flex: 3,
                   child: SizedBox(
-                    height: 44,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: acting ? null : onAcknowledge,
-                      prefix: const Icon(FIcons.check, size: 20),
+                      prefix: const Icon(FIcons.check, size: Sizes.icon),
                       child: Text(
                         l10n.acknowledgeRequest,
                         maxLines: 1,
@@ -209,7 +210,7 @@ class _RequestCard extends StatelessWidget {
               Expanded(
                 flex: 2,
                 child: SizedBox(
-                  height: 44,
+                  height: Sizes.control,
                   child: FButton(
                     onPress: acting ? null : onDone,
                     child: Text(l10n.done, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.forButton),

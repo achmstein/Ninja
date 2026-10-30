@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -74,7 +75,7 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -84,7 +85,7 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   mainAxisSize: MainAxisSize.min,

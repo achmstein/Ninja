@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
@@ -88,30 +89,30 @@ class _AppLinkDialog extends ConsumerWidget {
           const SizedBox(height: 16),
           if (phone case final number? when number.isNotEmpty) ...[
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 onPress: () => openWhatsApp(number, country: brand.locale.country, text: message),
-                prefix: const Icon(FIcons.messageCircle, size: 18),
+                prefix: const Icon(FIcons.messageCircle, size: Sizes.icon),
                 child: Text(l10n.sendOnWhatsApp, style: theme.typography.base.forButton),
               ),
             ),
             const SizedBox(height: 8),
           ],
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () async {
                 await Clipboard.setData(ClipboardData(text: url));
                 if (context.mounted) showSuccessToast(context, l10n.linkCopied);
               },
-              prefix: const Icon(FIcons.copy, size: 18),
+              prefix: const Icon(FIcons.copy, size: Sizes.icon),
               child: Text(l10n.copyLink, style: theme.typography.base.forButton),
             ),
           ),
           const SizedBox(height: 8),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.ghost,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),

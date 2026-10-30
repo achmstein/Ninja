@@ -8,6 +8,7 @@ import '../../core/config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../l10n/app_localizations.dart';
 
 /// The wall before the app: until this tablet knows which business it serves,
@@ -219,7 +220,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       ),
                       const SizedBox(height: 16),
                       SizedBox(
-                        height: 48,
+                        height: Sizes.control,
                         child: FilledButton(
                           onPressed: _busy ? null : () => _connect(_address.text),
                           style: FilledButton.styleFrom(
@@ -229,7 +230,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                           ),
                           child: _busy
                               ? const SizedBox.square(
-                                  dimension: 20,
+                                  dimension: Sizes.icon,
                                   child: CircularProgressIndicator(strokeWidth: 2, color: Color(0xFF18181B)),
                                 )
                               : Text(l10n.connect, style: const TextStyle(fontWeight: FontWeight.w600)),
@@ -237,7 +238,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                       ),
                       const SizedBox(height: 10),
                       SizedBox(
-                        height: 48,
+                        height: Sizes.control,
                         child: OutlinedButton.icon(
                           onPressed: _busy ? null : _scan,
                           style: OutlinedButton.styleFrom(
@@ -245,7 +246,7 @@ class _ConnectScreenState extends State<ConnectScreen> {
                             side: const BorderSide(color: Color(0xFF3F3F46)),
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                           ),
-                          icon: const Icon(Icons.qr_code_scanner, size: 20),
+                          icon: const Icon(Icons.qr_code_scanner, size: Sizes.icon),
                           label: Text(l10n.scanConnectCode),
                         ),
                       ),

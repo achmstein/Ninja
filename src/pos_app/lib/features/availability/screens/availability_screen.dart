@@ -6,6 +6,7 @@ import '../../../core/widgets/skeleton.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -96,11 +97,11 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               Row(
                 children: [
                   SizedBox.square(
-                    dimension: 48,
+                    dimension: Sizes.control,
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/'),
-                      child: Icon(FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -113,7 +114,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                 hint: l10n.searchItems,
                 prefixBuilder: (context, style, _) => Padding(
                   padding: const EdgeInsetsDirectional.only(start: 12),
-                  child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
+                  child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                 ),
                 maxLines: 1,
               ),
@@ -124,8 +125,8 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                   runSpacing: 8,
                   children: [
                     for (final category in categories)
-                      SizedBox(
-                        height: 44,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                         child: FButton(
                           variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
                           mainAxisSize: MainAxisSize.min,
@@ -216,7 +217,7 @@ class _ItemRow extends StatelessWidget {
     return FTappable(
       onPress: () => onChange(!available),
       child: Container(
-        constraints: const BoxConstraints(minHeight: 64),
+        constraints: const BoxConstraints(minHeight: Sizes.control),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [

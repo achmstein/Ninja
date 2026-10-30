@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
@@ -84,7 +85,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
     final room = widget.room;
     final session = widget.reservation;
     final name = room.name.localized(context);
-    final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: 20));
+    final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: Sizes.icon));
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -121,7 +122,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                 Text.rich(
                   TextSpan(
                     text: money(context, _chosen?.hourlyRate ?? 0),
-                    style: theme.typography.xl2.copyWith(
+                    style: theme.typography.heading.copyWith(
                       fontWeight: FontWeight.w700,
                       color: theme.colors.primary,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -152,12 +153,12 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
             children: [
               if (session == null) ...[
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: _busy ? null : _reserve,
-                    prefix: const Icon(FIcons.clock, size: 20),
+                    prefix: const Icon(FIcons.clock, size: Sizes.icon),
                     child: Text(l10n.reserve, style: theme.typography.base.forButton),
                   ),
                 ),
@@ -165,12 +166,12 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                 if (room.kind != PlaceKind.room) ...[
                   const SizedBox(width: 8),
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
                       onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.billOnly),
-                      prefix: const Icon(FIcons.receiptText, size: 20),
+                      prefix: const Icon(FIcons.receiptText, size: Sizes.icon),
                       child: Text(l10n.billOnly, style: theme.typography.base.forButton),
                     ),
                   ),
@@ -178,7 +179,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                 const Spacer(),
               ],
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -188,11 +189,11 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : _start,
-                  prefix: _busy ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : playIcon,
+                  prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : playIcon,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
                     child: Text(l10n.startSession, style: theme.typography.base.forButton),

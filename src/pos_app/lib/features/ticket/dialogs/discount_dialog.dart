@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -104,7 +105,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
     final l10n = AppLocalizations.of(context)!;
 
     Widget kind(_Kind k, String label) => SizedBox(
-          height: 48,
+          height: Sizes.control,
           child: FButton(
             variant: _kind == k ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
@@ -150,7 +151,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
             children: [
               if (_hasDiscount)
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.ghost,
                     mainAxisSize: MainAxisSize.min,
@@ -161,7 +162,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
                 ),
               const Spacer(),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -171,7 +172,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   mainAxisSize: MainAxisSize.min,
                   onPress: _canApply ? _apply : null,

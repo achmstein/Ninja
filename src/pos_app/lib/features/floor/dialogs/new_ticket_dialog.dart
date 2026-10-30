@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/network/api_errors.dart';
@@ -151,7 +152,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                         onPress: _label.clear,
                         child: Padding(
                           padding: const EdgeInsetsDirectional.only(end: 12),
-                          child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                          child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
                         ),
                       ),
             ),
@@ -161,7 +162,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -171,13 +172,13 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : _open,
                   prefix: _pending
-                      ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                      : const Icon(FIcons.shoppingBag, size: 20),
+                      ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2))
+                      : const Icon(FIcons.shoppingBag, size: Sizes.icon),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
                     child: Text(l10n.openTicketAction, style: theme.typography.base.forButton),

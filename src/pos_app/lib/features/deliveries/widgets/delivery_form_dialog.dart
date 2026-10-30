@@ -6,6 +6,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/money.dart';
 import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/phone.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -180,7 +181,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         children: [
           Row(
             children: [
-              const Icon(FIcons.bike, size: 22),
+              const Icon(FIcons.bike, size: Sizes.icon),
               const SizedBox(width: 8),
               Expanded(child: Text(l10n.deliveryFormTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600))),
             ],
@@ -198,7 +199,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             const SizedBox(height: 12),
             Row(
               children: [
-                Icon(FIcons.history, size: 14, color: theme.colors.mutedForeground),
+                Icon(FIcons.history, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 const SizedBox(width: 6),
                 Text(l10n.deliveryKnownAddresses, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
               ],
@@ -226,7 +227,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Icon(FIcons.mapPin, size: 14, color: theme.colors.mutedForeground),
+                        child: Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -288,7 +289,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           if (reading)
             Row(
               children: [
-                const SizedBox.square(dimension: 12, child: FCircularProgress()),
+                const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()),
                 const SizedBox(width: 6),
                 Text(l10n.deliveryLocationReading, style: muted),
               ],
@@ -298,7 +299,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           else if (pinned)
             Row(
               children: [
-                Icon(FIcons.mapPin, size: 14, color: theme.colors.foreground),
+                Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.foreground),
                 const SizedBox(width: 6),
                 Expanded(
                   child: Text(
@@ -335,7 +336,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           ],
           const SizedBox(height: 16),
           SizedBox(
-            height: 52,
+            height: Sizes.controlLarge,
             child: FButton(
               onPress: reading ? null : () => _save(form),
               child: Text(
@@ -410,7 +411,7 @@ class _NearerBranchesState extends State<NearerBranches> {
                     children: [
                       Padding(
                         padding: const EdgeInsets.only(top: 2),
-                        child: Icon(FIcons.store, size: 16, color: theme.colors.mutedForeground),
+                        child: Icon(FIcons.store, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       ),
                       const SizedBox(width: 8),
                       Expanded(
@@ -490,7 +491,7 @@ class _Warning extends StatelessWidget {
       decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(8)),
       child: Row(
         children: [
-          Icon(FIcons.triangleAlert, size: 16, color: amber),
+          Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber),
           const SizedBox(width: 6),
           Expanded(child: Text(text, style: theme.typography.sm.copyWith(color: amber))),
         ],

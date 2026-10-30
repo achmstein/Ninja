@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -65,7 +66,7 @@ class DeliveryDetails extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
+                child: Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               ),
               const SizedBox(width: 8),
               Expanded(
@@ -81,12 +82,12 @@ class DeliveryDetails extends StatelessWidget {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => openOrSay(context, delivery.directionsUri, l10n.couldNotOpenMaps),
-                  prefix: const Icon(FIcons.navigation, size: 16),
+                  prefix: const Icon(FIcons.navigation, size: Sizes.iconSmall),
                   child: Text(l10n.deliveryMap, style: theme.typography.sm.forButton),
                 ),
               ),
@@ -113,11 +114,11 @@ class DeliveryDetails extends StatelessWidget {
                     borderRadius: BorderRadius.circular(8),
                     child: ConstrainedBox(
                       // A thumb's target, though the line itself is small
-                      constraints: const BoxConstraints(minHeight: 48),
+                      constraints: const BoxConstraints(minHeight: Sizes.control),
                       child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(FIcons.phone, size: 14, color: theme.colors.foreground),
+                          Icon(FIcons.phone, size: Sizes.iconSmall, color: theme.colors.foreground),
                           const SizedBox(width: 6),
                           Text(delivery.phone,
                               textDirection: TextDirection.ltr, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),

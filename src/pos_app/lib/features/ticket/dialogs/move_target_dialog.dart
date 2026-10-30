@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -130,7 +131,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
           maxLines: 1,
           prefixBuilder: (context, style, _) => Padding(
             padding: const EdgeInsetsDirectional.only(start: 12),
-            child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
+            child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
           ),
           suffixBuilder: _search.text.isEmpty
               ? null
@@ -138,7 +139,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
                     onPress: () => setState(() => _search.clear()),
                     child: Padding(
                       padding: const EdgeInsetsDirectional.only(end: 12),
-                      child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                      child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
                     ),
                   ),
         ),
@@ -197,12 +198,12 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
             ),
             const SizedBox(width: 8),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => _pick(MoveToCounter(_label.text.trim().isEmpty ? null : _label.text.trim())),
-                prefix: const Icon(FIcons.plus, size: 20),
+                prefix: const Icon(FIcons.plus, size: Sizes.icon),
                 child: Text(l10n.newTab, style: theme.typography.base.forButton),
               ),
             ),
@@ -211,12 +212,12 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
         if (canSplit) ...[
           const SizedBox(height: 8),
           SizedBox(
-            height: 56,
+            height: Sizes.controlLarge,
             child: FButton(
               variant: FButtonVariant.outline,
               mainAxisAlignment: MainAxisAlignment.start,
               onPress: () => _pick(const MoveToSplit()),
-              prefix: Icon(FIcons.split, size: 20, color: theme.colors.mutedForeground),
+              prefix: Icon(FIcons.split, size: Sizes.icon, color: theme.colors.mutedForeground),
               child: Text(l10n.newTicketForPlace, style: theme.typography.base.forButton),
             ),
           ),
@@ -230,13 +231,13 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
             runSpacing: 8,
             children: [
               for (final table in freeTables)
-                SizedBox(
-                  height: 44,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => _pick(MoveToTable(table.id, table.name)),
-                    prefix: Icon(FIcons.armchair, size: 16, color: theme.colors.mutedForeground),
+                    prefix: Icon(FIcons.armchair, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     child: Text(table.name.localized(context), style: theme.typography.base.forButton),
                   ),
                 ),
@@ -283,7 +284,7 @@ class _BillCard extends StatelessWidget {
           children: [
             Row(
               children: [
-                Icon(ticketTypeIcon(target.type), size: 18, color: theme.colors.mutedForeground),
+                Icon(ticketTypeIcon(target.type), size: Sizes.icon, color: theme.colors.mutedForeground),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(title,

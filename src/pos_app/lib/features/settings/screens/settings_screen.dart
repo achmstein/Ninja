@@ -15,6 +15,7 @@ import '../../../core/printing/printer_settings.dart';
 import '../../../core/services/kiosk_service.dart';
 import 'package:ninja_app_core/services/update_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -136,12 +137,12 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         );
 
     Widget button(String label, VoidCallback? onPress, {IconData? icon, bool primary = false}) => SizedBox(
-          height: 44,
+          height: Sizes.control,
           child: FButton(
             variant: primary ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: icon == null ? null : Icon(icon, size: 18),
+            prefix: icon == null ? null : Icon(icon, size: Sizes.icon),
             child: Text(label, style: theme.typography.base.forButton),
           ),
         );
@@ -158,11 +159,11 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               Row(
                 children: [
                   SizedBox.square(
-                    dimension: 48,
+                    dimension: Sizes.control,
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/'),
-                      child: Icon(FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -287,12 +288,12 @@ class _UpdateRow extends ConsumerWidget {
       subtitle: [if (installed != null) l10n.appVersionInstalled(installed, update.installedBuild ?? 0), status].join(' · '),
       subtitleColor: update.phase == UpdatePhase.failed ? theme.colors.destructive : null,
       trailing: SizedBox(
-        height: 44,
+        height: Sizes.control,
         child: FButton(
           variant: canInstall ? null : FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
-          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: 18),
+          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
           child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
         ),
       ),
@@ -313,8 +314,8 @@ class _OfflineSales extends ConsumerWidget {
     final queued = sales.where((s) => s.status == OfflineSaleStatus.queued).length;
     const tabular = [FontFeature.tabularFigures()];
 
-    Widget button(String label, VoidCallback onPress, {bool primary = false, Color? color}) => SizedBox(
-          height: 40,
+    Widget button(String label, VoidCallback onPress, {bool primary = false, Color? color}) => ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
           child: FButton(
             variant: primary ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,

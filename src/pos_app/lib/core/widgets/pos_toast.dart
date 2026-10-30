@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 enum PosToastType { success, error, info, warning }
 
@@ -28,7 +29,7 @@ void showPosToast(
   showFToast(
     context: context,
     alignment: FToastAlignment.topCenter,
-    icon: Icon(icon, size: 20, color: color),
+    icon: Icon(icon, size: Sizes.icon, color: color),
     title: Text(hasDescription ? message : title),
     description: Text(hasDescription ? description : message),
   );

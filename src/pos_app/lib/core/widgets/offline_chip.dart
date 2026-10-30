@@ -7,6 +7,7 @@ import 'package:ninja_app_core/network/network_status.dart';
 import '../offline/offline_queue.dart';
 import '../offline/offline_sale.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 
 /// Header chip for the one state the cashier must know about: the network
@@ -34,8 +35,8 @@ class OfflineChip extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 8),
-      child: SizedBox(
-        height: 40,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
         child: FButton(
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,

@@ -5,6 +5,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../core/models/money.dart';
 import '../../core/network/api_errors.dart';
@@ -126,7 +127,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
           Row(
             children: [
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   onPress: _openBill,
@@ -135,7 +136,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
               ),
               const Spacer(),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   onPress: () => Navigator.of(context, rootNavigator: true).pop(),
@@ -144,10 +145,10 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   onPress: ticket.value == null || _printing ? null : () => _print(ticket.value!),
-                  prefix: Icon(FIcons.printer, size: 20),
+                  prefix: Icon(FIcons.printer, size: Sizes.icon),
                   child: Text(l10n.print),
                 ),
               ),

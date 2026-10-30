@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/widgets/customer_dialog.dart';
@@ -60,7 +61,7 @@ class _StayMembersState extends ConsumerState<StayMembers> {
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(member.isOwner ? FIcons.star : FIcons.user, size: 14, color: member.isOwner ? AppColors.amber500 : null),
+                Icon(member.isOwner ? FIcons.star : FIcons.user, size: Sizes.iconSmall, color: member.isOwner ? AppColors.amber500 : null),
                 const SizedBox(width: 6),
                 FTappable(
                   onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
@@ -69,11 +70,11 @@ class _StayMembersState extends ConsumerState<StayMembers> {
                 if (!member.isOwner) ...[
                   const SizedBox(width: 4),
                   SizedBox.square(
-                    dimension: 24,
+                    dimension: Sizes.controlSmall,
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: _busy ? null : () => _guarded((a) => a.removeMember(session.id, member.customerId)),
-                      child: Icon(FIcons.x, size: 14, color: theme.colors.mutedForeground),
+                      child: Icon(FIcons.x, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     ),
                   ),
                 ],
@@ -84,18 +85,18 @@ class _StayMembersState extends ConsumerState<StayMembers> {
           Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+              Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               const SizedBox(width: 4),
               Text(session.userName!, style: muted),
             ],
           ),
-        SizedBox(
-          height: 36,
+        ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
           child: FButton(
             variant: FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
             onPress: _busy ? null : _addMember,
-            prefix: Icon(FIcons.userPlus, size: 16, color: theme.colors.mutedForeground),
+            prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             child: Text(l10n.addCustomer, style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
           ),
         ),

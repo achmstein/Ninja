@@ -7,6 +7,7 @@ import '../auth/auth_service.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../features/shifts/widgets/shift_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'branch_switcher.dart';
 import 'offline_chip.dart';
 import '../sending/sending_chip.dart';
@@ -49,7 +50,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
     final rowStyle = theme.typography.base;
 
     return Container(
-      height: 64,
+      height: Sizes.header,
       padding: const EdgeInsets.symmetric(horizontal: 12),
       decoration: BoxDecoration(
         color: theme.colors.background,
@@ -74,7 +75,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
                   // stands and flips on tap — no submenu to chase on a
                   // touchscreen
                   FItem(
-                    prefix: const Icon(FIcons.languages, size: 20),
+                    prefix: const Icon(FIcons.languages, size: Sizes.icon),
                     title: Text(l10n.language, style: rowStyle),
                     suffix: Text(
                       locale.languageCode == 'ar' ? 'العربية' : 'English',
@@ -83,7 +84,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
                     onPress: () => _pick(ref.read(localeProvider.notifier).toggleLocale),
                   ),
                   FItem(
-                    prefix: Icon(isDark ? FIcons.moon : FIcons.sun, size: 20),
+                    prefix: Icon(isDark ? FIcons.moon : FIcons.sun, size: Sizes.icon),
                     title: Text(l10n.theme, style: rowStyle),
                     suffix: Text(
                       isDark ? l10n.themeDark : l10n.themeLight,
@@ -94,7 +95,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
                         )),
                   ),
                   FItem(
-                    prefix: const Icon(FIcons.printer, size: 20),
+                    prefix: const Icon(FIcons.printer, size: Sizes.icon),
                     title: Text(l10n.settings, style: rowStyle),
                     onPress: () => _pick(() => context.go('/settings')),
                   ),
@@ -103,7 +104,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
               FItemGroup(
                 children: [
                   FItem(
-                    prefix: Icon(FIcons.logOut, size: 20, color: theme.colors.destructive),
+                    prefix: Icon(FIcons.logOut, size: Sizes.icon, color: theme.colors.destructive),
                     title: Text(
                       l10n.signOut,
                       style: rowStyle.copyWith(color: theme.colors.destructive),
@@ -114,11 +115,11 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
               ),
             ],
             builder: (context, controller, _) => SizedBox.square(
-              dimension: 48,
+              dimension: Sizes.control,
               child: FButton.icon(
                 variant: FButtonVariant.ghost,
                 onPress: controller.toggle,
-                child: const Icon(FIcons.settings, size: 20),
+                child: const Icon(FIcons.settings, size: Sizes.icon),
               ),
             ),
           ),

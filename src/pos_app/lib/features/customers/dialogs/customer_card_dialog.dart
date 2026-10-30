@@ -7,6 +7,7 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/customer_card.dart';
@@ -69,7 +70,7 @@ class _CustomerCard extends ConsumerWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               Row(children: [
-                Icon(icon, size: 16, color: theme.colors.mutedForeground),
+                Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 const SizedBox(width: 8),
                 Text(title, style: muted),
               ]),
@@ -105,7 +106,7 @@ class _CustomerCard extends ConsumerWidget {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Row(children: [
-            const Icon(FIcons.user, size: 20),
+            const Icon(FIcons.user, size: Sizes.icon),
             const SizedBox(width: 8),
             Expanded(
               child: Text(customer.name.isNotEmpty ? customer.name : l10n.guest,
@@ -115,14 +116,14 @@ class _CustomerCard extends ConsumerWidget {
           if (customer.phone case final phone? when phone.isNotEmpty) ...[
             const SizedBox(height: 4),
             Row(children: [
-              Icon(FIcons.phone, size: 14, color: theme.colors.mutedForeground),
+              Icon(FIcons.phone, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               const SizedBox(width: 6),
               Directionality(textDirection: TextDirection.ltr, child: Text(phone, style: muted)),
               const SizedBox(width: 6),
               // The customer on WhatsApp, from the till's own account
               GestureDetector(
                 onTap: () => openWhatsApp(phone, country: ref.read(brandProvider).locale.country),
-                child: Icon(FIcons.messageCircle, size: 16, color: AppColors.emerald(brightness)),
+                child: Icon(FIcons.messageCircle, size: Sizes.iconSmall, color: AppColors.emerald(brightness)),
               ),
             ]),
           ],
@@ -156,7 +157,7 @@ class _CustomerCard extends ConsumerWidget {
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text(l10n.pointsBalance(account.pointsBalance),
-                                    style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                                    style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(l10n.pointsWorth(money(context, account.worth)), style: muted.copyWith(fontFeatures: tabular))),
                                 if (account.tier.isNotEmpty)
@@ -189,7 +190,7 @@ class _CustomerCard extends ConsumerWidget {
                                           : owed < 0
                                               ? l10n.creditAmount(money(context, -owed))
                                               : l10n.settledUp,
-                                      style: theme.typography.xl2.copyWith(
+                                      style: theme.typography.heading.copyWith(
                                         fontWeight: FontWeight.w700,
                                         fontFeatures: tabular,
                                         color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
@@ -201,7 +202,7 @@ class _CustomerCard extends ConsumerWidget {
                             // customer spends on account later - prepaid, money
                             // in the drawer before the sale. Same slip either way.
                             SizedBox(
-                              height: 44,
+                              height: Sizes.control,
                               child: FButton(
                                 mainAxisSize: MainAxisSize.min,
                                 onPress: () async {
@@ -221,11 +222,11 @@ class _CustomerCard extends ConsumerWidget {
           // Their account, theirs: a link to set an email and a password
           if (addedAtCounter && online) ...[
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 onPress: () => sendAppLink(context, ref, id: customer.id, name: customer.name, phone: customer.phone),
-                prefix: const Icon(FIcons.qrCode, size: 18),
+                prefix: const Icon(FIcons.qrCode, size: Sizes.icon),
                 child: Text(l10n.sendAppLink, style: theme.typography.base.forButton),
               ),
             ),
@@ -233,7 +234,7 @@ class _CustomerCard extends ConsumerWidget {
           ],
           const SizedBox(height: 4),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),

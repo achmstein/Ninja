@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
@@ -349,7 +350,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                 children: [
                   // The search is the column's header: the list needs no title
                   Container(
-                    height: 64,
+                    height: Sizes.header,
                     padding: const EdgeInsets.symmetric(horizontal: 16),
                     alignment: Alignment.center,
                     decoration: headerRule(),
@@ -382,13 +383,13 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Container(
-                  height: 64,
+                  height: Sizes.header,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: headerRule(),
                   child: Row(
                   children: [
                     if (!cloudKitchen) SizedBox.square(
-                      dimension: 40,
+                      dimension: Sizes.controlSmall,
                       child: FButton.icon(
                         variant: FButtonVariant.ghost,
                         onPress: _togglePlaces,
@@ -400,7 +401,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                           _placesOpen
                               ? (rtl ? FIcons.panelRightClose : FIcons.panelLeftClose)
                               : (rtl ? FIcons.panelRightOpen : FIcons.panelLeftOpen),
-                          size: 20,
+                          size: Sizes.icon,
                           color: theme.colors.mutedForeground,
                         ),
                       ),
@@ -409,11 +410,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     Text(l10n.openBills, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
                     const Spacer(),
                     SizedBox(
-                      height: 48,
+                      height: Sizes.control,
                       child: FButton(
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => context.go('/sale'),
-                        prefix: const Icon(FIcons.shoppingCart, size: 20),
+                        prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
                         child: Padding(
                           padding: const EdgeInsets.symmetric(horizontal: 4),
                           child: Text(l10n.newSale, style: theme.typography.base.forButton),
@@ -425,12 +426,12 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     if (cloudKitchen) ...[
                       const SizedBox(width: 8),
                       SizedBox(
-                        height: 48,
+                        height: Sizes.control,
                         child: FButton(
                           variant: FButtonVariant.outline,
                           mainAxisSize: MainAxisSize.min,
                           onPress: _newTab,
-                          prefix: const Icon(FIcons.plus, size: 20),
+                          prefix: const Icon(FIcons.plus, size: Sizes.icon),
                           child: Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 4),
                             child: Text(l10n.newTab, style: theme.typography.base.forButton),
@@ -440,31 +441,31 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
                     ],
                     const SizedBox(width: 8),
                     SizedBox.square(
-                      dimension: 48,
+                      dimension: Sizes.control,
                       child: FButton.icon(
                         variant: FButtonVariant.outline,
                         onPress: () => context.go('/receipts'),
-                        child: const Icon(FIcons.receiptText, size: 20),
+                        child: const Icon(FIcons.receiptText, size: Sizes.icon),
                       ),
                     ),
                     const SizedBox(width: 8),
                     // The customer who walked in only to pay their tab:
                     // search, then their card — no sale, no list of everyone
                     SizedBox.square(
-                      dimension: 48,
+                      dimension: Sizes.control,
                       child: FButton.icon(
                         variant: FButtonVariant.outline,
                         onPress: _findCustomer,
-                        child: const Icon(FIcons.idCard, size: 20),
+                        child: const Icon(FIcons.idCard, size: Sizes.icon),
                       ),
                     ),
                     const SizedBox(width: 8),
                     SizedBox.square(
-                      dimension: 48,
+                      dimension: Sizes.control,
                       child: FButton.icon(
                         variant: FButtonVariant.outline,
                         onPress: () => context.go('/availability'),
-                        child: const Icon(FIcons.packageCheck, size: 20),
+                        child: const Icon(FIcons.packageCheck, size: Sizes.icon),
                       ),
                     ),
                   ],
@@ -645,23 +646,23 @@ class _BillsState extends State<_Bills> {
                           maxLines: 1,
                           prefixBuilder: (context, style, _) => Padding(
                             padding: const EdgeInsetsDirectional.only(start: 12),
-                            child: Icon(FIcons.search, size: 18, color: theme.colors.mutedForeground),
+                            child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                           ),
                           suffixBuilder: (context, style, _) => FTappable(
                             onPress: _closeSearch,
                             child: Padding(
                               padding: const EdgeInsetsDirectional.only(end: 12),
-                              child: Icon(FIcons.x, size: 18, color: theme.colors.mutedForeground),
+                              child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
                             ),
                           ),
                         ),
                       )
                     : SizedBox.square(
-                        dimension: 40,
+                        dimension: Sizes.controlSmall,
                         child: FButton.icon(
                           variant: FButtonVariant.outline,
                           onPress: () => setState(() => _searchOpen = true),
-                          child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
+                          child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                         ),
                       ),
             ],
@@ -746,7 +747,7 @@ class _HoldsRow extends StatelessWidget {
                           width: 44,
                           height: 44,
                           decoration: BoxDecoration(color: AppColors.amber500.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(10)),
-                          child: Icon(session.startOnConfirm ? FIcons.timerReset : FIcons.clock, size: 20, color: amber),
+                          child: Icon(session.startOnConfirm ? FIcons.timerReset : FIcons.clock, size: Sizes.icon, color: amber),
                         ),
                         const SizedBox(width: 12),
                         Expanded(
@@ -803,8 +804,8 @@ class _FilterPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return SizedBox(
-      height: 44,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
       child: FButton(
         variant: selected ? null : FButtonVariant.outline,
         mainAxisSize: MainAxisSize.min,

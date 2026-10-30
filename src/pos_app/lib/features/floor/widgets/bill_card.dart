@@ -4,6 +4,7 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/ticket_summary.dart';
@@ -73,7 +74,7 @@ class BillCard extends StatelessWidget {
             children: [
               Padding(
                 padding: const EdgeInsets.only(top: 2),
-                child: Icon(ticketTypeIcon(ticket.type), size: 16, color: theme.colors.mutedForeground),
+                child: Icon(ticketTypeIcon(ticket.type), size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               ),
               const SizedBox(width: 8),
               // Two lines for a name, laid out in the name's own script so

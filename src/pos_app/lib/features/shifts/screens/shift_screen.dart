@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -40,12 +41,12 @@ class ShiftScreen extends ConsumerWidget {
         padding: const EdgeInsets.symmetric(vertical: 96),
         child: Column(
           children: [
-            Icon(FIcons.banknote, size: 48, color: theme.colors.mutedForeground),
+            Icon(FIcons.banknote, size: Sizes.iconHero, color: theme.colors.mutedForeground),
             const SizedBox(height: 16),
             Text(l10n.noShiftOpen, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
             const SizedBox(height: 16),
             SizedBox(
-              height: 56,
+              height: Sizes.controlLarge,
               child: FButton(
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => showOpenShiftDialog(context),
@@ -57,12 +58,12 @@ class ShiftScreen extends ConsumerWidget {
             ),
             const SizedBox(height: 16),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => context.go('/shifts'),
-                prefix: const Icon(FIcons.history, size: 20),
+                prefix: const Icon(FIcons.history, size: Sizes.icon),
                 child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
               ),
             ),
@@ -93,11 +94,11 @@ class ShiftScreen extends ConsumerWidget {
                   Row(
                     children: [
                       SizedBox.square(
-                        dimension: 48,
+                        dimension: Sizes.control,
                         child: FButton.icon(
                           variant: FButtonVariant.ghost,
                           onPress: () => context.go('/'),
-                          child: Icon(FIcons.arrowLeft, size: 24),
+                          child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -111,12 +112,12 @@ class ShiftScreen extends ConsumerWidget {
                       const ShiftStatusPill(open: true),
                       const SizedBox(width: 8),
                       SizedBox(
-                        height: 48,
+                        height: Sizes.control,
                         child: FButton(
                           variant: FButtonVariant.outline,
                           mainAxisSize: MainAxisSize.min,
                           onPress: () => context.go('/shifts'),
-                          prefix: const Icon(FIcons.history, size: 20),
+                          prefix: const Icon(FIcons.history, size: Sizes.icon),
                           child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
                         ),
                       ),
@@ -150,11 +151,11 @@ class ShiftScreen extends ConsumerWidget {
                   children: [
                     Expanded(
                       child: SizedBox(
-                        height: 56,
+                        height: Sizes.controlLarge,
                         child: FButton(
                           variant: FButtonVariant.outline,
                           onPress: () => showMovementDialog(context, shift.id, CashMovementType.payIn),
-                          prefix: const Icon(FIcons.arrowDownToLine, size: 20),
+                          prefix: const Icon(FIcons.arrowDownToLine, size: Sizes.icon),
                           child: Text(l10n.payIn, style: theme.typography.base.forButton),
                         ),
                       ),
@@ -162,11 +163,11 @@ class ShiftScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: SizedBox(
-                        height: 56,
+                        height: Sizes.controlLarge,
                         child: FButton(
                           variant: FButtonVariant.outline,
                           onPress: () => showMovementDialog(context, shift.id, CashMovementType.payOut),
-                          prefix: const Icon(FIcons.arrowUpFromLine, size: 20),
+                          prefix: const Icon(FIcons.arrowUpFromLine, size: Sizes.icon),
                           child: Text(l10n.payOut, style: theme.typography.base.forButton),
                         ),
                       ),
@@ -174,11 +175,11 @@ class ShiftScreen extends ConsumerWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: SizedBox(
-                        height: 56,
+                        height: Sizes.controlLarge,
                         child: FButton(
                           variant: FButtonVariant.destructive,
                           onPress: () => showCloseShiftDialog(context, shift),
-                          prefix: const Icon(FIcons.lock, size: 20),
+                          prefix: const Icon(FIcons.lock, size: Sizes.icon),
                           child: Text(l10n.closeShiftAction, style: theme.typography.base.forButton),
                         ),
                       ),

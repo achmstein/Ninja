@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/widgets/app_text.dart';
 
@@ -235,7 +236,7 @@ class EmptyState extends StatelessWidget {
           children: [
             Icon(
               icon,
-              size: 48,
+              size: Sizes.iconHero,
               color: theme.colors.mutedForeground,
             ),
             const SizedBox(height: 12),

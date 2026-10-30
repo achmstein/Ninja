@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/address_search.dart';
@@ -111,7 +112,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
             suffixBuilder: _searching
                 ? (context, style, states) => const Padding(
                       padding: EdgeInsetsDirectional.only(end: 10),
-                      child: SizedBox.square(dimension: 14, child: FCircularProgress()),
+                      child: SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()),
                     )
                 : null,
           ),
@@ -124,8 +125,8 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
                 child: Row(
                   children: [
                     _picking == s.placeId
-                        ? const SizedBox.square(dimension: 14, child: FCircularProgress())
-                        : Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
+                        ? const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress())
+                        : Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(

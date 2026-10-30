@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ninja_app_core/models/branch.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/services/branch_service.dart';
+import '../utils/bidi.dart';
 
 /// Every active branch of the business, off the public list: not only the
 /// ones this account works at (the switcher's), since a phone delivery is
@@ -19,5 +20,5 @@ String branchNameOf(List<Branch>? branches, int? branchId, BuildContext context)
       if (name.isNotEmpty) return name;
     }
   }
-  return '#$branchId';
+  return bidiIsolate('#$branchId');
 }

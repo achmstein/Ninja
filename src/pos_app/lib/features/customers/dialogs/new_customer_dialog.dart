@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/network/network_status.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/name_match.dart';
 import '../../../core/utils/phone.dart';
@@ -204,7 +205,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
               FTappable(
                 onPress: () => _use(user),
                 builder: (context, states, child) => Container(
-                  constraints: const BoxConstraints(minHeight: 48),
+                  constraints: const BoxConstraints(minHeight: Sizes.control),
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
                     color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
@@ -214,7 +215,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
                 ),
                 child: Row(
                   children: [
-                    Icon(FIcons.user, size: 18, color: theme.colors.mutedForeground),
+                    Icon(FIcons.user, size: Sizes.icon, color: theme.colors.mutedForeground),
                     const SizedBox(width: 10),
                     Expanded(
                       child: Column(
@@ -238,7 +239,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
             children: [
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => Navigator.of(context, rootNavigator: true).pop(),
@@ -249,7 +250,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
               const SizedBox(width: 12),
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     // With a match on screen, using them is the primary way on
                     variant: exact != null ? FButtonVariant.outline : null,
@@ -295,7 +296,7 @@ class _ExistingCard extends ConsumerWidget {
           const SizedBox(height: 4),
           Row(
             children: [
-              const Icon(FIcons.user, size: 18),
+              const Icon(FIcons.user, size: Sizes.icon),
               const SizedBox(width: 8),
               Expanded(
                 child: Column(
@@ -320,7 +321,7 @@ class _ExistingCard extends ConsumerWidget {
           ),
           const SizedBox(height: 10),
           SizedBox(
-            height: 44,
+            height: Sizes.control,
             child: FButton(
               onPress: onUse,
               child: Text(l10n.useThisCustomer, style: theme.typography.base.forButton),

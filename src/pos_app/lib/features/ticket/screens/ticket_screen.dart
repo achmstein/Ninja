@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:uuid/uuid.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
@@ -549,7 +550,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(FIcons.users, size: 16, color: theme.colors.mutedForeground),
+                              Icon(FIcons.users, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                               const SizedBox(width: 8),
                               Text(l10n.inTheRoom, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                             ],
@@ -576,7 +577,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                         children: [
                           Row(
                             children: [
-                              Icon(FIcons.clock, size: 20, color: AppColors.amber(theme.colors.brightness)),
+                              Icon(FIcons.clock, size: Sizes.icon, color: AppColors.amber(theme.colors.brightness)),
                               const SizedBox(width: 8),
                               Expanded(
                                 child: Text(l10n.ticketPendingOrders(waiting.length),
@@ -600,7 +601,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                       decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                       child: Row(
                         children: [
-                          Icon(FIcons.timer, size: 20, color: theme.colors.mutedForeground),
+                          Icon(FIcons.timer, size: Sizes.icon, color: theme.colors.mutedForeground),
                           const SizedBox(width: 12),
                           Expanded(
                             child: Text(l10n.roomTimeRunning,
@@ -762,11 +763,11 @@ class _Header extends StatelessWidget {
     return Row(
       children: [
         SizedBox.square(
-          dimension: 48,
+          dimension: Sizes.control,
           child: FButton.icon(
             variant: FButtonVariant.ghost,
             onPress: () => context.go(backTo),
-            child: Icon(FIcons.arrowLeft, size: 24),
+            child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
           ),
         ),
         const SizedBox(width: 8),
@@ -812,33 +813,33 @@ class _Header extends StatelessWidget {
           // The pad, pointed at this bill — same flow as a new sale, the
           // money just comes later
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               mainAxisSize: MainAxisSize.min,
               onPress: () => context.go('/sale?ticket=${ticket.id}'),
-              prefix: const Icon(FIcons.shoppingCart, size: 20),
+              prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
               child: Text(l10n.addItems, style: theme.typography.base.forButton),
             ),
           ),
           const SizedBox(width: 4),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: selecting ? FButtonVariant.secondary : FButtonVariant.outline,
               mainAxisSize: MainAxisSize.min,
               onPress: canSelect ? onToggleSelecting : null,
-              prefix: const Icon(FIcons.listChecks, size: 20),
+              prefix: const Icon(FIcons.listChecks, size: Sizes.icon),
               child: Text(l10n.selectLines, style: theme.typography.base.forButton),
             ),
           ),
           const SizedBox(width: 4),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: ticket.discount > 0 ? FButtonVariant.secondary : FButtonVariant.outline,
               mainAxisSize: MainAxisSize.min,
               onPress: canSelect ? onDiscount : null,
-              prefix: const Icon(FIcons.badgePercent, size: 20),
+              prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),
               // Once applied, the button reads the amount so the discount is
               // never missed — the bar repeats it under the total
               child: Text(ticket.discount > 0 ? '−${money(context, ticket.discount)}' : l10n.discount,
@@ -852,24 +853,24 @@ class _Header extends StatelessWidget {
           if (canDiscard) ...[
             const SizedBox(width: 4),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onDiscard,
-                prefix: Icon(FIcons.trash2, size: 20, color: theme.colors.destructive),
+                prefix: Icon(FIcons.trash2, size: Sizes.icon, color: theme.colors.destructive),
                 child: Text(l10n.discardTicket, style: destructiveLabel),
               ),
             ),
           ] else if (canVoid) ...[
             const SizedBox(width: 4),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onVoid,
-                prefix: Icon(FIcons.ban, size: 20, color: theme.colors.destructive),
+                prefix: Icon(FIcons.ban, size: Sizes.icon, color: theme.colors.destructive),
                 child: Text(l10n.voidTicket, style: destructiveLabel),
               ),
             ),
@@ -905,7 +906,7 @@ class _GroupHeading extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(FIcons.user, size: 16, color: theme.colors.foreground),
+          Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.foreground),
           const SizedBox(width: 8),
           Expanded(
             child: id != null && id.isNotEmpty
@@ -989,7 +990,7 @@ class _LineRow extends StatelessWidget {
               border: Border.all(color: selected ? theme.colors.primary : theme.colors.border),
               borderRadius: BorderRadius.circular(6),
             ),
-            child: selected ? Icon(FIcons.check, size: 16, color: theme.colors.primaryForeground) : null,
+            child: selected ? Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primaryForeground) : null,
           ),
           const SizedBox(width: 12),
         ],
@@ -1022,7 +1023,7 @@ class _LineRow extends StatelessWidget {
                   // Where the upload mark was while it was on its way: the price stays put
                   if (landed) ...[
                     const SizedBox(width: 6),
-                    Icon(FIcons.check, size: 14, color: emerald),
+                    Icon(FIcons.check, size: Sizes.iconSmall, color: emerald),
                   ],
                 ],
               ),
@@ -1042,7 +1043,7 @@ class _LineRow extends StatelessWidget {
     );
 
     final box = Container(
-      constraints: const BoxConstraints(minHeight: 48),
+      constraints: const BoxConstraints(minHeight: Sizes.control),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
         color: selected ? theme.colors.secondary : null,
@@ -1083,7 +1084,7 @@ class _VoidTombstone extends StatelessWidget {
     return _Rows(
       header: Row(
         children: [
-          Icon(FIcons.ban, size: 20, color: theme.colors.destructive),
+          Icon(FIcons.ban, size: Sizes.icon, color: theme.colors.destructive),
           const SizedBox(width: 8),
           Text(l10n.voidedBadge,
               style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
@@ -1268,18 +1269,26 @@ class _ActionBar extends StatelessWidget {
             Color? color,
             double padding = 16}) =>
         SizedBox(
-          height: 56,
+          height: Sizes.controlLarge,
           child: FButton(
             variant: variant,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: prefix ?? (icon == null ? null : Icon(icon, size: 20, color: color)),
-            child: Padding(
-              padding: EdgeInsets.symmetric(horizontal: padding),
-              child: Text(label, style: theme.typography.lg.forButton.copyWith(color: color)),
+            prefix: prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon, color: color)),
+            child: Flexible(
+              child: Padding(
+                padding: EdgeInsets.symmetric(horizontal: padding),
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.lg.forButton.copyWith(color: color)),
+              ),
             ),
           ),
         );
+
+    // While selecting, three actions share the row: they give way, not the total
+    Widget giving(Widget button) => Flexible(child: button);
 
     final actions = ticket.isSettled
         ? [
@@ -1298,26 +1307,26 @@ class _ActionBar extends StatelessWidget {
           ]
         : selecting
             ? [
-                big(l10n.assignCustomer,
+                giving(big(l10n.assignCustomer,
                     onPress: selectedCount == 0 || busy ? null : onAssign,
                     variant: FButtonVariant.outline,
                     icon: FIcons.userPlus,
-                    padding: 8),
+                    padding: 8)),
                 const SizedBox(width: 8),
-                big(l10n.moveToBill,
+                giving(big(l10n.moveToBill,
                     onPress: selectedCount == 0 || busy ? null : onMoveTo,
                     variant: FButtonVariant.outline,
                     icon: FIcons.arrowRightLeft,
-                    padding: 8),
+                    padding: 8)),
                 const SizedBox(width: 8),
-                big(l10n.newBill, onPress: selectedCount == 0 || busy ? null : onNewBill, icon: FIcons.plus, padding: 8),
+                giving(big(l10n.newBill, onPress: selectedCount == 0 || busy ? null : onNewBill, icon: FIcons.plus, padding: 8)),
               ]
             : [
                 confirming
                     ? big(
                         l10n.confirming,
                         prefix: SizedBox.square(
-                          dimension: 18,
+                          dimension: Sizes.icon,
                           child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
                         ),
                       )
@@ -1341,13 +1350,26 @@ class _ActionBar extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    Text(money(context, total),
-                        style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                    Text(l10n.total,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                    // One line that shrinks to fit, so a narrow column never wraps it
+                    // past the bar's height
+                    FittedBox(
+                      fit: BoxFit.scaleDown,
+                      alignment: AlignmentDirectional.centerStart,
+                      child: Text(money(context, total),
+                          maxLines: 1,
+                          style: theme.typography.figure
+                              .copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular, height: 1.1)),
+                    ),
                     if (ticket.discount > 0)
                       Text(
                         '${l10n.discount} −${money(context, ticket.discount)}'
                         '${ticket.discountRate != null ? ' (${rateText(ticket.discountRate)}%)' : ''}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.typography.xs.copyWith(
                           color: AppColors.successColor,
                           fontWeight: FontWeight.w500,
@@ -1357,6 +1379,8 @@ class _ActionBar extends StatelessWidget {
                     if (paidOnline > 0 && ticket.isOpen)
                       Text(
                         '${l10n.remaining} ${money(context, (ticket.total - paidOnline) < 0 ? 0 : ticket.total - paidOnline)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                         style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
                       ),
                     if (hasParts)
@@ -1374,8 +1398,12 @@ class _ActionBar extends StatelessWidget {
                       Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Text('+ ${l10n.timeSoFar} ≈ ',
-                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                          Flexible(
+                            child: Text('+ ${l10n.timeSoFar} ≈ ',
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                          ),
                           TimeSoFar(
                             session: activeSession!,
                             style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
@@ -1467,7 +1495,7 @@ class _NotFound extends StatelessWidget {
           Text(l10n.ticketNotFound, style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               mainAxisSize: MainAxisSize.min,
               onPress: () => context.go(backTo),

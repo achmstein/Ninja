@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
@@ -640,11 +641,11 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                       crossAxisAlignment: rail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                       children: [
                         SizedBox.square(
-                          dimension: 48,
+                          dimension: Sizes.control,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
                             onPress: () => context.go(_addingToTicket ? '/ticket/${widget.ticketId}' : '/'),
-                            child: Icon(FIcons.arrowLeft, size: 24),
+                            child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -657,7 +658,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                               textInputAction: TextInputAction.search,
                               prefixBuilder: (context, style, states) => Padding(
                                 padding: const EdgeInsetsDirectional.only(start: 10),
-                                child: Icon(FIcons.search, size: 18, color: theme.colors.mutedForeground),
+                                child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                               ),
                               clearable: (value) => value.text.isNotEmpty,
                             ),
@@ -671,19 +672,19 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                             runSpacing: 8,
                             children: [
                               if (usuals.isNotEmpty)
-                                SizedBox(
-                                  height: 44,
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                   child: FButton(
                                     variant: activeCategoryId == _usualsCategory ? null : FButtonVariant.outline,
                                     mainAxisSize: MainAxisSize.min,
                                     onPress: () => setState(() => _activeCategory = _usualsCategory),
-                                    prefix: const Icon(FIcons.sparkles, size: 16),
+                                    prefix: const Icon(FIcons.sparkles, size: Sizes.iconSmall),
                                     child: Text(l10n.usuals, style: theme.typography.base.forButton),
                                   ),
                                 ),
                               for (final category in categories)
-                                SizedBox(
-                                  height: 44,
+                                ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                   child: FButton(
                                     variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
                                     mainAxisSize: MainAxisSize.min,
@@ -901,7 +902,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                           ),
                         ),
                         SizedBox.square(
-                          dimension: 48,
+                          dimension: Sizes.control,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
                             onPress: lines.isEmpty && customer == null && sale.note.isEmpty && sale.delivery == null
@@ -910,7 +911,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                     ref.read(saleProvider.notifier).clear();
                                     _note.clear();
                                   },
-                            child: const Icon(FIcons.trash2, size: 20),
+                            child: const Icon(FIcons.trash2, size: Sizes.icon),
                           ),
                         ),
                       ],
@@ -972,12 +973,12 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                             if (offerDelivery) ...[
                               if (customer != null || !showChips) const SizedBox(width: 8),
                               SizedBox(
-                                height: 48,
+                                height: Sizes.control,
                                 child: FButton(
                                   variant: FButtonVariant.outline,
                                   mainAxisSize: MainAxisSize.min,
                                   onPress: _openDeliveryForm,
-                                  prefix: const Icon(FIcons.bike, size: 20),
+                                  prefix: const Icon(FIcons.bike, size: Sizes.icon),
                                   child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
                                 ),
                               ),
@@ -1036,13 +1037,13 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                 for (final item in suggestions)
                                   Padding(
                                     padding: const EdgeInsetsDirectional.only(end: 8, bottom: 4),
-                                    child: SizedBox(
-                                      height: 40,
+                                    child: ConstrainedBox(
+                                      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                       child: FButton(
                                         variant: FButtonVariant.outline,
                                         mainAxisSize: MainAxisSize.min,
                                         onPress: () => _tapItem(item, suggested: true),
-                                        prefix: const Icon(FIcons.plus, size: 16),
+                                        prefix: const Icon(FIcons.plus, size: Sizes.iconSmall),
                                         child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
                                             style: theme.typography.base.forButton),
                                       ),
@@ -1082,7 +1083,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                         ),
                         const SizedBox(height: 12),
                         SizedBox(
-                          height: 56,
+                          height: Sizes.controlLarge,
                           child: FButton(
                             onPress: lines.isEmpty || busy || deliveryBlocked ? null : _charge,
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1159,8 +1160,8 @@ class _WhoseRoundChips extends StatelessWidget {
           runSpacing: 8,
           children: [
             for (final member in roster)
-              SizedBox(
-                height: 40,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                 child: FButton(
                   variant: member.id == selectedId ? null : FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -1168,13 +1169,13 @@ class _WhoseRoundChips extends StatelessWidget {
                   child: Text(member.name.isEmpty ? l10n.guest : member.name, style: theme.typography.base.forButton),
                 ),
               ),
-            SizedBox(
-              height: 40,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onSomeoneElse,
-                prefix: Icon(FIcons.userPlus, size: 16, color: theme.colors.mutedForeground),
+                prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 child: Text(l10n.someoneElse, style: theme.typography.base.forButton),
               ),
             ),
@@ -1238,7 +1239,7 @@ class _RailCategory extends StatelessWidget {
       child: FTappable(
         onPress: onTap,
         builder: (context, states, child) => Container(
-          constraints: const BoxConstraints(minHeight: 48),
+          constraints: const BoxConstraints(minHeight: Sizes.control),
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
           decoration: BoxDecoration(
             color: active
@@ -1253,7 +1254,7 @@ class _RailCategory extends StatelessWidget {
         child: Row(
           children: [
             if (entry.icon != null) ...[
-              Icon(entry.icon, size: 16, color: ink),
+              Icon(entry.icon, size: Sizes.iconSmall, color: ink),
               const SizedBox(width: 8),
             ],
             Expanded(

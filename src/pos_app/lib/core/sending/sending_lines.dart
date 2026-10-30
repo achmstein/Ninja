@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/money.dart';
@@ -77,7 +78,7 @@ class _SendBlock extends ConsumerWidget {
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
             child: Row(
               children: [
-                Icon(FIcons.triangleAlert, size: 20, color: theme.colors.destructive),
+                Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Column(
@@ -91,23 +92,23 @@ class _SendBlock extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                SizedBox(
-                  height: 44,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => notifier.drop(send.requestId),
-                    prefix: const Icon(FIcons.trash2, size: 16),
+                    prefix: const Icon(FIcons.trash2, size: Sizes.iconSmall),
                     child: Text(l10n.remove, style: theme.typography.sm.forButton),
                   ),
                 ),
                 const SizedBox(width: 8),
-                SizedBox(
-                  height: 44,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                   child: FButton(
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => notifier.send(send.requestId),
-                    prefix: const Icon(FIcons.refreshCw, size: 16),
+                    prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
                     child: Text(l10n.retrySync, style: theme.typography.sm.forButton),
                   ),
                 ),
@@ -137,7 +138,7 @@ class _SendRow extends StatelessWidget {
     const tabular = [FontFeature.tabularFigures()];
     final options = details?.localized(context) ?? '';
     return Container(
-      constraints: const BoxConstraints(minHeight: 48),
+      constraints: const BoxConstraints(minHeight: Sizes.control),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -159,7 +160,7 @@ class _SendRow extends StatelessWidget {
                       const SizedBox(width: 6),
                       Semantics(
                         label: l10n.sending,
-                        child: Icon(FIcons.cloudUpload, size: 14, color: theme.colors.mutedForeground),
+                        child: Icon(FIcons.cloudUpload, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       ),
                     ],
                   ],

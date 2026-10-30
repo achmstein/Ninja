@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/sale_delivery.dart';
@@ -29,7 +30,7 @@ class DeliverySummary extends StatelessWidget {
       decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
       child: Row(
         children: [
-          Icon(FIcons.bike, size: 18, color: theme.colors.mutedForeground),
+          Icon(FIcons.bike, size: Sizes.icon, color: theme.colors.mutedForeground),
           const SizedBox(width: 8),
           Expanded(
             child: Semantics(
@@ -49,7 +50,7 @@ class DeliverySummary extends StatelessWidget {
                     Row(
                       children: [
                         if (delivery.hasPin) ...[
-                          Icon(FIcons.mapPin, size: 12, color: theme.colors.mutedForeground),
+                          Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                           const SizedBox(width: 4),
                         ],
                         Text(delivery.phone, textDirection: TextDirection.ltr, style: muted),
@@ -62,7 +63,7 @@ class DeliverySummary extends StatelessWidget {
                     if (sendToName != null)
                       Row(
                         children: [
-                          Icon(FIcons.store, size: 12, color: theme.colors.primary),
+                          Icon(FIcons.store, size: Sizes.iconSmall, color: theme.colors.primary),
                           const SizedBox(width: 4),
                           Flexible(
                             child: Text(
@@ -80,14 +81,14 @@ class DeliverySummary extends StatelessWidget {
             ),
           ),
           SizedBox.square(
-            dimension: 48,
+            dimension: Sizes.controlSmall,
             child: Semantics(
               label: l10n.deliveryNotADelivery,
               button: true,
               child: FButton.icon(
                 variant: FButtonVariant.ghost,
                 onPress: onRemove,
-                child: const Icon(FIcons.x, size: 18),
+                child: const Icon(FIcons.x, size: Sizes.icon),
               ),
             ),
           ),
@@ -125,7 +126,7 @@ class DeliveryBlockedNote extends StatelessWidget {
           Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Padding(padding: const EdgeInsets.only(top: 2), child: Icon(FIcons.triangleAlert, size: 16, color: amber)),
+              Padding(padding: const EdgeInsets.only(top: 2), child: Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber)),
               const SizedBox(width: 6),
               Expanded(child: Text(text, style: theme.typography.sm.copyWith(color: amber, fontWeight: FontWeight.w500))),
             ],
@@ -136,7 +137,7 @@ class DeliveryBlockedNote extends StatelessWidget {
               if (charge == DeliveryCharge.failed) ...[
                 Expanded(
                   child: SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: onRetry,
@@ -148,7 +149,7 @@ class DeliveryBlockedNote extends StatelessWidget {
               ],
               Expanded(
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: onRemove,

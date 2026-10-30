@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/money.dart';
@@ -81,11 +82,11 @@ class _DeliveriesBoardScreenState extends ConsumerState<DeliveriesBoardScreen> {
           Row(
             children: [
               SizedBox.square(
-                dimension: 48,
+                dimension: Sizes.control,
                 child: FButton.icon(
                   variant: FButtonVariant.ghost,
                   onPress: () => context.go('/'),
-                  child: const Icon(FIcons.arrowLeft, size: 24),
+                  child: const Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                 ),
               ),
               const SizedBox(width: 8),
@@ -94,11 +95,11 @@ class _DeliveriesBoardScreenState extends ConsumerState<DeliveriesBoardScreen> {
               FBadge(child: Text('$total', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]))),
               const Spacer(),
               SizedBox.square(
-                dimension: 48,
+                dimension: Sizes.control,
                 child: FButton.icon(
                   variant: FButtonVariant.outline,
                   onPress: () => ref.read(deliveriesProvider.notifier).refresh(),
-                  child: const Icon(FIcons.refreshCw, size: 20),
+                  child: const Icon(FIcons.refreshCw, size: Sizes.icon),
                 ),
               ),
             ],
@@ -168,13 +169,13 @@ class _LaneChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    return SizedBox(
-      height: 44,
+    return ConstrainedBox(
+      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
       child: FButton(
         variant: selected ? null : FButtonVariant.outline,
         mainAxisSize: MainAxisSize.min,
         onPress: onPress,
-        prefix: Icon(lane.icon, size: 16),
+        prefix: Icon(lane.icon, size: Sizes.iconSmall),
         child: Text('${lane.label(l10n)} · $count', style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600).forButton),
       ),
     );
@@ -217,7 +218,7 @@ class _Column extends ConsumerWidget {
               padding: const EdgeInsets.fromLTRB(14, 14, 14, 10),
               child: Row(
                 children: [
-                  Icon(lane.icon, size: 18, color: tint ?? theme.colors.mutedForeground),
+                  Icon(lane.icon, size: Sizes.icon, color: tint ?? theme.colors.mutedForeground),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(lane.label(l10n),
@@ -341,10 +342,10 @@ class _RiderBlockState extends ConsumerState<_RiderBlock> {
           if (widget.cash) ...[
             const SizedBox(height: 10),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 onPress: _busy ? null : _takeCash,
-                prefix: _busy ? const SizedBox.square(dimension: 18, child: FCircularProgress()) : const Icon(FIcons.banknote, size: 18),
+                prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: FCircularProgress()) : const Icon(FIcons.banknote, size: Sizes.icon),
                 child: Text(l10n.riderCashTake, style: theme.typography.base.forButton),
               ),
             ),

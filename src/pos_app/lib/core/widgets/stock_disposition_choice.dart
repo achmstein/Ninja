@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/orders/models/stock_disposition.dart';
 import '../../l10n/app_localizations.dart';
@@ -104,9 +105,9 @@ class _Option extends StatelessWidget {
                     children: [
                       Row(
                         children: [
-                          Icon(selected ? FIcons.circleCheck : FIcons.circle, size: 18, color: selected ? colors.primary : colors.mutedForeground),
+                          Icon(selected ? FIcons.circleCheck : FIcons.circle, size: Sizes.icon, color: selected ? colors.primary : colors.mutedForeground),
                           const SizedBox(width: 8),
-                          Icon(icon, size: 18, color: colors.foreground),
+                          Icon(icon, size: Sizes.icon, color: colors.foreground),
                           const SizedBox(width: 6),
                           Expanded(child: Text(label, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600))),
                         ],
@@ -170,7 +171,7 @@ class _StockDispositionDialogState extends State<_StockDispositionDialog> {
             mainAxisAlignment: MainAxisAlignment.end,
             children: [
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
@@ -180,7 +181,7 @@ class _StockDispositionDialogState extends State<_StockDispositionDialog> {
               ),
               const SizedBox(width: 8),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   mainAxisSize: MainAxisSize.min,

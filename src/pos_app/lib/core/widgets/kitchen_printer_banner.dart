@@ -5,6 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
 import '../printing/kitchen_printing.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 
 /// A strip under the header while kitchen tickets wait past a minute for
 /// their printer: which station, and what the printer said. A till that
@@ -33,7 +34,7 @@ class KitchenPrinterBanner extends ConsumerWidget {
       color: AppColors.amber500.withValues(alpha: 0.12),
       child: Row(
         children: [
-          Icon(FIcons.printer, size: 20, color: amber),
+          Icon(FIcons.printer, size: Sizes.icon, color: amber),
           const SizedBox(width: 12),
           Expanded(
             child: Column(

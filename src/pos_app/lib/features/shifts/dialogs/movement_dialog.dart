@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
@@ -176,7 +177,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                       const SizedBox(height: 6),
                       _ButtonGrid(
                         columns: _isOut ? 3 : 2,
-                        height: 44,
+                        height: Sizes.control,
                         children: [
                           for (final kind in _kinds)
                             _CellButton(
@@ -226,7 +227,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
@@ -236,7 +237,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     mainAxisSize: MainAxisSize.min,
                     onPress: _canSubmit ? _submit : null,
@@ -333,7 +334,7 @@ class _PickList extends ConsumerWidget {
           child: SingleChildScrollView(
             child: _ButtonGrid(
               columns: 1,
-              height: 44,
+              height: Sizes.control,
               children: [
                 for (final item in items)
                   _PickButton(

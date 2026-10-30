@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -207,11 +208,11 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                       ),
                       const SizedBox(width: 12),
                       SizedBox.square(
-                        dimension: 44,
+                        dimension: Sizes.controlSmall,
                         child: FButton.icon(
                           variant: FButtonVariant.outline,
                           onPress: (_picked[entry.line.id] ?? 0) <= 0 ? null : () => _setQty(entry, (_picked[entry.line.id] ?? 0) - 1),
-                          child: const Icon(FIcons.minus, size: 16),
+                          child: const Icon(FIcons.minus, size: Sizes.iconSmall),
                         ),
                       ),
                       SizedBox(
@@ -221,11 +222,11 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                             style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
                       ),
                       SizedBox.square(
-                        dimension: 44,
+                        dimension: Sizes.controlSmall,
                         child: FButton.icon(
                           variant: FButtonVariant.outline,
                           onPress: (_picked[entry.line.id] ?? 0) >= entry.left ? null : () => _setQty(entry, (_picked[entry.line.id] ?? 0) + 1),
-                          child: const Icon(FIcons.plus, size: 16),
+                          child: const Icon(FIcons.plus, size: Sizes.iconSmall),
                         ),
                       ),
                     ],
@@ -236,7 +237,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
               Align(
                 alignment: AlignmentDirectional.centerEnd,
                 child: SizedBox(
-                  height: 44,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.ghost,
                     mainAxisSize: MainAxisSize.min,
@@ -264,11 +265,11 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: _tender == PaymentTender.cash ? null : FButtonVariant.outline,
                       onPress: () => setState(() => _tender = PaymentTender.cash),
-                      prefix: const Icon(FIcons.banknote, size: 20),
+                      prefix: const Icon(FIcons.banknote, size: Sizes.icon),
                       child: Text(l10n.cash, style: theme.typography.base.forButton),
                     ),
                   ),
@@ -276,11 +277,11 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: _tender == PaymentTender.account ? null : FButtonVariant.outline,
                       onPress: _holders.isEmpty ? null : () => setState(() => _tender = PaymentTender.account),
-                      prefix: const Icon(FIcons.user, size: 20),
+                      prefix: const Icon(FIcons.user, size: Sizes.icon),
                       child: Text(l10n.account, style: theme.typography.base.forButton),
                     ),
                   ),
@@ -294,8 +295,8 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                 runSpacing: 8,
                 children: [
                   for (final h in _holders)
-                    SizedBox(
-                      height: 40,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                       child: FButton(
                         variant: _holder?.id == h.id ? null : FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
@@ -311,7 +312,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
               mainAxisAlignment: MainAxisAlignment.end,
               children: [
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
@@ -321,12 +322,12 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.destructive,
                     mainAxisSize: MainAxisSize.min,
                     onPress: _canRefund ? _submit : null,
-                    prefix: _pending ? const SizedBox.square(dimension: 20, child: CircularProgressIndicator(strokeWidth: 2)) : null,
+                    prefix: _pending ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : null,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                       child: Text(l10n.confirmRefund(money(context, _preview)), style: theme.typography.base.forButton),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
@@ -44,11 +45,11 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
               Row(
                 children: [
                   SizedBox.square(
-                    dimension: 48,
+                    dimension: Sizes.control,
                     child: FButton.icon(
                       variant: FButtonVariant.ghost,
                       onPress: () => context.go('/shift'),
-                      child: Icon(FIcons.arrowLeft, size: 24),
+                      child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -99,7 +100,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                 Row(
                   children: [
                     SizedBox(
-                      height: 48,
+                      height: Sizes.control,
                       child: FButton(
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
@@ -109,7 +110,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                     ),
                     const Spacer(),
                     SizedBox(
-                      height: 48,
+                      height: Sizes.control,
                       child: FButton(
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
@@ -142,7 +143,7 @@ class _ShiftRow extends StatelessWidget {
     return FTappable(
       onPress: onTap,
       builder: (context, states, child) => Container(
-        constraints: const BoxConstraints(minHeight: 64),
+        constraints: const BoxConstraints(minHeight: Sizes.control),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary.withValues(alpha: 0.5) : null,
         child: child,
@@ -160,7 +161,7 @@ class _ShiftRow extends StatelessWidget {
                 if (shift.openedBy != null && shift.openedBy!.isNotEmpty)
                   Row(
                     children: [
-                      Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                      Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(shift.openedBy!,

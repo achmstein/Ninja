@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -133,7 +134,7 @@ class _StayBarState extends ConsumerState<StayBar> {
                     // whatever the font's line height turns out to be
                     Row(
                       children: [
-                        Icon(FIcons.timer, size: 24, color: theme.colors.mutedForeground),
+                        Icon(FIcons.timer, size: Sizes.icon, color: theme.colors.mutedForeground),
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(formatClock(session.elapsedSeconds(now)),
@@ -161,7 +162,7 @@ class _StayBarState extends ConsumerState<StayBar> {
                 children: [
                   Text(l10n.timeSoFar, style: muted),
                   Text(money(context, estimate.amount),
-                      style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                      style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
                   Text(hoursLabel,
                       style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
                 ],
@@ -190,12 +191,12 @@ class _StayBarState extends ConsumerState<StayBar> {
               ] else
                 const Spacer(),
               SizedBox(
-                height: 48,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _end(hoursLabel),
-                  prefix: const Icon(FIcons.square, size: 20),
+                  prefix: const Icon(FIcons.square, size: Sizes.icon),
                   child: Text(l10n.endSessionButton, style: theme.typography.base.forButton),
                 ),
               ),

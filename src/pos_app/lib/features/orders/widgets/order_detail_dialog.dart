@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -113,7 +114,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
               const SizedBox(height: 4),
               Row(
                 children: [
-                  Icon(FIcons.idCard, size: 16, color: identityColor),
+                  Icon(FIcons.idCard, size: Sizes.iconSmall, color: identityColor),
                   const SizedBox(width: 6),
                   Expanded(child: Text(identity, style: theme.typography.sm.copyWith(color: identityColor))),
                 ],
@@ -126,17 +127,17 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
                 child: Row(
                   children: [
-                    Icon(FIcons.circleAlert, size: 20, color: theme.colors.mutedForeground),
+                    Icon(FIcons.circleAlert, size: Sizes.icon, color: theme.colors.mutedForeground),
                     const SizedBox(width: 8),
                     Expanded(child: Text(l10n.orderDetailsFailed, style: theme.typography.sm)),
                     const SizedBox(width: 8),
-                    SizedBox(
-                      height: 40,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                       child: FButton(
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => ref.invalidate(orderDetailsProvider(widget.orderId)),
-                        prefix: const Icon(FIcons.refreshCw, size: 16),
+                        prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
                         child: Text(l10n.retry, style: theme.typography.sm.forButton),
                       ),
                     ),
@@ -191,7 +192,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       Row(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Icon(FIcons.mapPin, size: 16, color: theme.colors.mutedForeground),
+                          Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
@@ -235,7 +236,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Icon(FIcons.messageSquare, size: 16, color: theme.colors.mutedForeground),
+                      Icon(FIcons.messageSquare, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       const SizedBox(width: 8),
                       Expanded(child: Text(order.customerNote!, style: theme.typography.sm)),
                     ],
@@ -273,8 +274,8 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   runSpacing: 8,
                   children: [
                     for (final reason in platformRejectReasons)
-                      SizedBox(
-                        height: 40,
+                      ConstrainedBox(
+                        constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                         child: FButton(
                           // The picked one filled, the rest outlined
                           variant: _reason == reason ? null : FButtonVariant.outline,
@@ -291,7 +292,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
@@ -301,12 +302,12 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.destructive,
                       mainAxisSize: MainAxisSize.min,
                       onPress: () => pick(OrderDetailAction.cancel),
-                      prefix: const Icon(FIcons.x, size: 20),
+                      prefix: const Icon(FIcons.x, size: Sizes.icon),
                       child: Text(l10n.cancelOrder, style: theme.typography.base.forButton),
                     ),
                   ),
@@ -317,11 +318,11 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
               if (guestAtPlace) ...[
                 const SizedBox(height: 8),
                 SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => pick(OrderDetailAction.rejectGuest),
-                    prefix: Icon(FIcons.userX, size: 20, color: theme.colors.destructive),
+                    prefix: Icon(FIcons.userX, size: Sizes.icon, color: theme.colors.destructive),
                     child: Text(l10n.nobodyAtTheTable,
                         style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
                   ),
@@ -332,23 +333,23 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
                       onPress: canAct ? () => setState(() => _cancelling = true) : null,
-                      prefix: Icon(FIcons.x, size: 20, color: theme.colors.destructive),
+                      prefix: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.destructive),
                       child: Text(l10n.cancelOrder,
                           style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
                     ),
                   ),
                   const SizedBox(width: 8),
                   SizedBox(
-                    height: 48,
+                    height: Sizes.control,
                     child: FButton(
                       mainAxisSize: MainAxisSize.min,
                       onPress: canAct ? () => pick(OrderDetailAction.confirm) : null,
-                      prefix: const Icon(FIcons.check, size: 20),
+                      prefix: const Icon(FIcons.check, size: Sizes.icon),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
                         child: Text(l10n.confirmOrder, style: theme.typography.base.forButton),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/network/network_status.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
@@ -24,11 +25,11 @@ class ChooseCustomerButton extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     return SizedBox(
-      height: 48,
+      height: Sizes.control,
       child: FButton(
         variant: FButtonVariant.outline,
         onPress: onPress,
-        prefix: const Icon(FIcons.userPlus, size: 20),
+        prefix: const Icon(FIcons.userPlus, size: Sizes.icon),
         child: Text.rich(
           TextSpan(
             text: l10n.chooseCustomer,
@@ -71,7 +72,7 @@ class SelectedCustomerChip extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(FIcons.user, size: 16),
+          const Icon(FIcons.user, size: Sizes.iconSmall),
           const SizedBox(width: 8),
           Expanded(
             child: (customer.id ?? '').isNotEmpty
@@ -88,11 +89,11 @@ class SelectedCustomerChip extends StatelessWidget {
                 : name,
           ),
           SizedBox.square(
-            dimension: 40,
+            dimension: Sizes.controlSmall,
             child: FButton.icon(
               variant: FButtonVariant.ghost,
               onPress: onRemove,
-              child: const Icon(FIcons.x, size: 16),
+              child: const Icon(FIcons.x, size: Sizes.iconSmall),
             ),
           ),
         ],

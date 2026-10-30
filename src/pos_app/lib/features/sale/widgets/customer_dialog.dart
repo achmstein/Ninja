@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/widgets/skeleton.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -161,13 +162,13 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                 runSpacing: 8,
                 children: [
                   for (final person in widget.quickPicks)
-                    SizedBox(
-                      height: 44,
+                    ConstrainedBox(
+                      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                       child: FButton(
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => _pick(SaleCustomer(id: person.id, name: person.name)),
-                        prefix: Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                        prefix: Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                         child: Text(
                           person.name.isNotEmpty ? person.name : l10n.guest,
                           maxLines: 1,
@@ -191,12 +192,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                 ),
                 const SizedBox(width: 8),
                 SizedBox(
-                  height: 44,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: _newCustomer,
-                    prefix: const Icon(FIcons.userPlus, size: 18),
+                    prefix: const Icon(FIcons.userPlus, size: Sizes.icon),
                     child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
                   ),
                 ),
@@ -206,12 +207,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
               const SizedBox(height: 16),
               // At least 56, and as tall as its two lines need (a fixed 56 clipped the second)
               ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: 56),
+                constraints: const BoxConstraints(minHeight: Sizes.controlLarge),
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisAlignment: MainAxisAlignment.start,
                   onPress: () => _pick(SaleCustomer(name: typedName)),
-                  prefix: Icon(FIcons.userPlus, size: 20, color: theme.colors.mutedForeground),
+                  prefix: Icon(FIcons.userPlus, size: Sizes.icon, color: theme.colors.mutedForeground),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     mainAxisSize: MainAxisSize.min,
@@ -271,10 +272,10 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                     children: [
                       centered(l10n.noCustomersFound),
                       SizedBox(
-                        height: 48,
+                        height: Sizes.control,
                         child: FButton(
                           onPress: _newCustomer,
-                          prefix: const Icon(FIcons.userPlus, size: 18),
+                          prefix: const Icon(FIcons.userPlus, size: Sizes.icon),
                           child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
                         ),
                       ),
@@ -297,7 +298,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                               builder: (context, states, child) => Opacity(
                                 opacity: onBill == null ? 1 : 0.6,
                                 child: Container(
-                                  constraints: const BoxConstraints(minHeight: 56),
+                                  constraints: const BoxConstraints(minHeight: Sizes.control),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                                   decoration: BoxDecoration(
                                     color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
@@ -308,7 +309,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                               ),
                               child: Row(
                                 children: [
-                                  Icon(FIcons.user, size: 20, color: theme.colors.mutedForeground),
+                                  Icon(FIcons.user, size: Sizes.icon, color: theme.colors.mutedForeground),
                                   const SizedBox(width: 12),
                                   Expanded(
                                     child: Column(
@@ -348,11 +349,11 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                           ),
                           // A look before the pick: points and tab, without attaching
                           SizedBox.square(
-                            dimension: 44,
+                            dimension: Sizes.controlSmall,
                             child: FButton.icon(
                               variant: FButtonVariant.ghost,
                               onPress: () => showCustomerCard(context, id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter),
-                              child: Icon(FIcons.info, size: 20, color: theme.colors.mutedForeground),
+                              child: Icon(FIcons.info, size: Sizes.icon, color: theme.colors.mutedForeground),
                             ),
                           ),
                         ],
@@ -362,7 +363,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
         footer: Padding(
           padding: const EdgeInsets.only(top: 16),
           child: SizedBox(
-            height: 48,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),

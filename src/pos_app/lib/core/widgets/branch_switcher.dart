@@ -6,6 +6,7 @@ import '../brand/brand_provider.dart';
 import '../brand/brand_mark.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../features/call_centre/call_centre_mode.dart';
 
 /// Header branch switcher, same contract as pos_web's: the business's mark and
@@ -74,14 +75,14 @@ class BranchSwitcher extends ConsumerWidget {
             ),
             if (withChevron) ...[
               const SizedBox(width: 8),
-              Icon(FIcons.chevronsUpDown, size: 16, color: theme.colors.mutedForeground),
+              Icon(FIcons.chevronsUpDown, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             ],
           ],
         );
 
     if (!switchable) {
       return SizedBox(
-        height: 48,
+        height: Sizes.control,
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 12),
           child: brand(withChevron: false),
@@ -99,7 +100,7 @@ class BranchSwitcher extends ConsumerWidget {
               FItem(
                 title: Text(branch.name.localized(context), style: theme.typography.base),
                 suffix: !inCallCentre && branch.id == branchState.selectedBranchId
-                    ? const Icon(FIcons.check, size: 20)
+                    ? const Icon(FIcons.check, size: Sizes.icon)
                     : null,
                 onPress: () {
                   if (inCallCentre) ref.read(callCentreModeSwitchProvider).set(false);
@@ -112,9 +113,9 @@ class BranchSwitcher extends ConsumerWidget {
           FItemGroup(
             children: [
               FItem(
-                prefix: const Icon(FIcons.headset, size: 20),
+                prefix: const Icon(FIcons.headset, size: Sizes.icon),
                 title: Text(l10n.callCentre, style: theme.typography.base),
-                suffix: inCallCentre ? const Icon(FIcons.check, size: 20) : null,
+                suffix: inCallCentre ? const Icon(FIcons.check, size: Sizes.icon) : null,
                 onPress: () => ref.read(callCentreModeSwitchProvider).set(true),
               ),
             ],
@@ -125,7 +126,7 @@ class BranchSwitcher extends ConsumerWidget {
       builder: (context, controller, _) => FTappable(
         onPress: controller.toggle,
         child: SizedBox(
-          height: 48,
+          height: Sizes.control,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12),
             child: brand(withChevron: true),

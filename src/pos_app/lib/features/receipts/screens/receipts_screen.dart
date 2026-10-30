@@ -8,7 +8,9 @@ import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import '../../../core/utils/bidi.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
 import '../../receipt/receipt_preview_dialog.dart';
@@ -26,7 +28,7 @@ const _searchDebounce = Duration(milliseconds: 250);
 // A receipt row's shape: the number, the type icon, then the place and meta.
 Widget _receiptRowSkeleton(BuildContext context) {
   return SizedBox(
-    height: 64,
+    height: Sizes.header,
     child: Padding(
       padding: const EdgeInsets.symmetric(horizontal: 12),
       child: Row(
@@ -151,11 +153,11 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                 Row(
                   children: [
                     SizedBox.square(
-                      dimension: 48,
+                      dimension: Sizes.control,
                       child: FButton.icon(
                         variant: FButtonVariant.ghost,
                         onPress: () => context.go('/'),
-                        child: Icon(FIcons.arrowLeft, size: 24),
+                        child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -170,7 +172,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                   inputFormatters: [FilteringTextInputFormatter.digitsOnly],
                   prefixBuilder: (context, style, _) => Padding(
                     padding: const EdgeInsetsDirectional.only(start: 12),
-                    child: Icon(FIcons.search, size: 20, color: theme.colors.mutedForeground),
+                    child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                   ),
                   maxLines: 1,
                 ),
@@ -253,7 +255,7 @@ class _ReceiptRow extends StatelessWidget {
     return FTappable(
       onPress: onTap,
       builder: (context, states, child) => Container(
-        height: 64,
+        height: Sizes.header,
         padding: const EdgeInsets.symmetric(horizontal: 12),
         color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary.withValues(alpha: 0.5) : null,
         child: child,
@@ -262,10 +264,10 @@ class _ReceiptRow extends StatelessWidget {
         children: [
           SizedBox(
             width: 56,
-            child: Text('#${bill.receiptNumber}',
+            child: Text(bidiIsolate('#${bill.receiptNumber}'),
                 style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
           ),
-          Icon(ticketTypeIcon(bill.type), size: 20, color: theme.colors.mutedForeground),
+          Icon(ticketTypeIcon(bill.type), size: Sizes.icon, color: theme.colors.mutedForeground),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -287,7 +289,7 @@ class _ReceiptRow extends StatelessWidget {
           Text(money(context, bill.total),
               style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
           const SizedBox(width: 8),
-          Icon(FIcons.chevronRight, size: 20, color: theme.colors.mutedForeground),
+          Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),
         ],
       ),
     );

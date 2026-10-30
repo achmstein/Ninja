@@ -3,6 +3,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/motion/motion.dart';
@@ -517,7 +518,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                         Directionality(
                           textDirection: TextDirection.ltr,
                           child: Container(
-                            height: 56,
+                            height: Sizes.controlLarge,
                             alignment: Alignment.centerRight,
                             padding: const EdgeInsets.symmetric(horizontal: 16),
                             decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
@@ -537,7 +538,7 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                         NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
                         const SizedBox(height: 12),
                         SizedBox(
-                          height: 48,
+                          height: Sizes.control,
                           child: FButton(
                             variant: FButtonVariant.secondary,
                             onPress: _entered > 0 ? _addPayment : null,
@@ -661,14 +662,14 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
                                   ),
                                   const SizedBox(width: 4),
                                   SizedBox.square(
-                                    dimension: 40,
+                                    dimension: Sizes.controlSmall,
                                     child: FButton.icon(
                                       variant: FButtonVariant.ghost,
                                       onPress: () => setState(() {
                                         _payments.removeAt(index);
                                         _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
                                       }),
-                                      child: const Icon(FIcons.x, size: 16),
+                                      child: const Icon(FIcons.x, size: Sizes.iconSmall),
                                     ),
                                   ),
                                 ],
@@ -757,7 +758,7 @@ class _HolderButton extends ConsumerWidget {
     final small = theme.typography.sm.forButton.copyWith(fontFeatures: tabular);
 
     return ConstrainedBox(
-      constraints: const BoxConstraints(minHeight: 44),
+      constraints: const BoxConstraints(minHeight: Sizes.control),
       child: FButton(
         variant: chosen ? null : FButtonVariant.outline,
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -847,12 +848,12 @@ class _SettledView extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(FIcons.circleCheck, size: 56, color: AppColors.emerald500),
+            const Icon(FIcons.circleCheck, size: Sizes.iconHero, color: AppColors.emerald500),
             const SizedBox(height: 12),
             Text(
               l10n.ticketSettled,
               textAlign: TextAlign.center,
-              style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600),
+              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600),
             ),
             const SizedBox(height: 12),
             Text(
@@ -883,7 +884,7 @@ class _SettledView extends StatelessWidget {
               box(
                 l10n.changeDue,
                 money(context, result.change),
-                theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
               ),
             ],
             if (accountAmount > 0) ...[
@@ -899,7 +900,7 @@ class _SettledView extends StatelessWidget {
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: Sizes.controlLarge,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context, rootNavigator: true).pop(result),
@@ -910,10 +911,10 @@ class _SettledView extends StatelessWidget {
                 const SizedBox(width: 8),
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: Sizes.controlLarge,
                     child: FButton(
                       onPress: onPrint,
-                      prefix: const Icon(FIcons.printer, size: 20),
+                      prefix: const Icon(FIcons.printer, size: Sizes.icon),
                       child: Text(l10n.print, style: theme.typography.base.forButton),
                     ),
                   ),

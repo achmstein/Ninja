@@ -2,9 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/money.dart';
+import '../utils/bidi.dart';
 import 'sending.dart';
 
 /// Header chip, red, while a charge never reached the server: wherever the
@@ -22,13 +24,13 @@ class SendingChip extends ConsumerWidget {
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 8),
-      child: SizedBox(
-        height: 40,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
         child: FButton(
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: () => _showFailed(context),
-          prefix: Icon(FIcons.triangleAlert, size: 16, color: theme.colors.destructive),
+          prefix: Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
           child: Text(
             l10n.sendsFailed(failed),
             style: theme.typography.sm.forButton.copyWith(
@@ -103,7 +105,7 @@ class _FailedSends extends ConsumerWidget {
                               children: [
                                 Expanded(
                                   child: Text(
-                                    send.ticketId != null ? '#${send.ticketId}' : l10n.newTicket,
+                                    send.ticketId != null ? bidiIsolate('#${send.ticketId}') : l10n.newTicket,
                                     style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
@@ -123,23 +125,23 @@ class _FailedSends extends ConsumerWidget {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
-                              SizedBox(
-                                height: 44,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                 child: FButton(
                                   variant: FButtonVariant.outline,
                                   mainAxisSize: MainAxisSize.min,
                                   onPress: () => notifier.drop(send.requestId),
-                                  prefix: const Icon(FIcons.trash2, size: 16),
+                                  prefix: const Icon(FIcons.trash2, size: Sizes.iconSmall),
                                   child: Text(l10n.remove, style: theme.typography.sm.forButton),
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              SizedBox(
-                                height: 44,
+                              ConstrainedBox(
+                                constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                 child: FButton(
                                   mainAxisSize: MainAxisSize.min,
                                   onPress: () => notifier.send(send.requestId),
-                                  prefix: const Icon(FIcons.refreshCw, size: 16),
+                                  prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
                                   child: Text(l10n.retrySync, style: theme.typography.sm.forButton),
                                 ),
                               ),

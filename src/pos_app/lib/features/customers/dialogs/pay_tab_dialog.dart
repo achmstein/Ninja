@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/printing/print_service.dart';
@@ -136,9 +137,9 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            const Icon(FIcons.circleCheck, size: 56, color: AppColors.emerald500),
+            const Icon(FIcons.circleCheck, size: Sizes.iconHero, color: AppColors.emerald500),
             const SizedBox(height: 12),
-            Text(l10n.tabPaymentRecorded, textAlign: TextAlign.center, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.tabPaymentRecorded, textAlign: TextAlign.center, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600)),
             if (slip.number > 0) ...[
               const SizedBox(height: 8),
               Text(l10n.tabPaymentNumber(slip.number),
@@ -157,7 +158,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                       slip.balanceAfter < 0
                           ? l10n.creditAmount(money(context, -slip.balanceAfter))
                           : money(context, slip.balanceAfter),
-                      style: theme.typography.xl4.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                      style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
                 ],
               ),
             ),
@@ -166,7 +167,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
               children: [
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: Sizes.controlLarge,
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context, rootNavigator: true).pop(slip),
@@ -177,10 +178,10 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: SizedBox(
-                    height: 56,
+                    height: Sizes.controlLarge,
                     child: FButton(
                       onPress: () => _print(slip),
-                      prefix: const Icon(FIcons.printer, size: 20),
+                      prefix: const Icon(FIcons.printer, size: Sizes.icon),
                       child: Text(l10n.print, style: theme.typography.base.forButton),
                     ),
                   ),
@@ -244,7 +245,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
               Directionality(
                 textDirection: TextDirection.ltr,
                 child: Container(
-                  height: 56,
+                  height: Sizes.controlLarge,
                   alignment: Alignment.centerRight,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(10)),
@@ -264,7 +265,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
               NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
               const SizedBox(height: 12),
               SizedBox(
-                height: 56,
+                height: Sizes.controlLarge,
                 child: FButton(
                   onPress: _amount > 0 && !_saving ? _confirm : null,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,

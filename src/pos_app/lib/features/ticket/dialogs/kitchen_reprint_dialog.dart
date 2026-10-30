@@ -5,6 +5,7 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/printing/kitchen_printing.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -29,12 +30,12 @@ class KitchenReprintButton extends ConsumerWidget {
     return Padding(
       padding: const EdgeInsetsDirectional.only(start: 4),
       child: SizedBox(
-        height: 48,
+        height: Sizes.control,
         child: FButton(
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: () => showPosDialog<void>(context, builder: (_) => _KitchenReprintDialog(ticket: ticket)),
-          prefix: const Icon(FIcons.printer, size: 20),
+          prefix: const Icon(FIcons.printer, size: Sizes.icon),
           child: Text(l10n.kitchenTickets, style: theme.typography.base.forButton),
         ),
       ),
@@ -130,12 +131,12 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
                           ),
                           const SizedBox(width: 12),
                           SizedBox(
-                            height: 48,
+                            height: Sizes.control,
                             child: FButton(
                               variant: _sent.contains(entry.key) ? FButtonVariant.secondary : FButtonVariant.outline,
                               mainAxisSize: MainAxisSize.min,
                               onPress: _sending.contains(entry.key) ? null : () => _reprint(entry.key),
-                              prefix: Icon(_sent.contains(entry.key) ? FIcons.check : FIcons.printer, size: 20),
+                              prefix: Icon(_sent.contains(entry.key) ? FIcons.check : FIcons.printer, size: Sizes.icon),
                               child: Text(l10n.reprint, style: theme.typography.base.forButton),
                             ),
                           ),
@@ -151,7 +152,7 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
           Align(
             alignment: AlignmentDirectional.centerEnd,
             child: SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,

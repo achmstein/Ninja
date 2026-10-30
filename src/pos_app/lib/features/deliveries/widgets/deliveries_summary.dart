@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/money.dart';
 import '../../../l10n/app_localizations.dart';
@@ -42,7 +43,7 @@ class DeliveriesSummary extends ConsumerWidget {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(lane.icon, size: 16, color: color),
+            Icon(lane.icon, size: Sizes.iconSmall, color: color),
             const SizedBox(width: 6),
             Text(
               lane == BoardLane.cashDue && count > 0 ? '${lane.label(l10n)} $count · ${money(context, cash)}' : '${lane.label(l10n)} $count',
@@ -68,7 +69,7 @@ class DeliveriesSummary extends ConsumerWidget {
             ),
             child: Row(
               children: [
-                Icon(FIcons.bike, size: 20, color: theme.colors.primary),
+                Icon(FIcons.bike, size: Sizes.icon, color: theme.colors.primary),
                 const SizedBox(width: 8),
                 Text(l10n.deliveries, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
                 const SizedBox(width: 12),
@@ -87,7 +88,7 @@ class DeliveriesSummary extends ConsumerWidget {
                   ),
                 ),
                 const SizedBox(width: 8),
-                Icon(FIcons.chevronRight, size: 20, color: theme.colors.mutedForeground),
+                Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),
               ],
             ),
           ),

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -71,7 +72,7 @@ class ShiftDetailScreen extends ConsumerWidget {
                 style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
             const SizedBox(height: 16),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => context.go('/shifts'),
@@ -89,11 +90,11 @@ class ShiftDetailScreen extends ConsumerWidget {
         Row(
           children: [
             SizedBox.square(
-              dimension: 48,
+              dimension: Sizes.control,
               child: FButton.icon(
                 variant: FButtonVariant.ghost,
                 onPress: () => context.go('/shifts'),
-                child: Icon(FIcons.arrowLeft, size: 24),
+                child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
               ),
             ),
             const SizedBox(width: 8),
@@ -105,11 +106,11 @@ class ShiftDetailScreen extends ConsumerWidget {
             ShiftStatusPill(open: !shift.isClosed),
             const SizedBox(width: 8),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => _print(context, ref, shift),
-                prefix: const Icon(FIcons.printer, size: 20),
+                prefix: const Icon(FIcons.printer, size: Sizes.icon),
                 child: Text(l10n.print, style: theme.typography.base.forButton),
               ),
             ),

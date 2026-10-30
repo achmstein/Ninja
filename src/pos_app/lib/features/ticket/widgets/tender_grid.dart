@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
@@ -33,7 +34,7 @@ class TenderGrid extends StatelessWidget {
                 if (index > 0) const SizedBox(width: 8),
                 Expanded(
                   child: SizedBox(
-                    height: 44,
+                    height: Sizes.control,
                     child: FButton(
                       variant: tender == selected ? null : FButtonVariant.outline,
                       onPress: () => onSelect(tender),

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../models/sale_line.dart';
 
 /// One line of the running sale: name, options, note, and the quantity
@@ -22,11 +23,11 @@ class CartLineRow extends ConsumerWidget {
     final options = line.customizations.map((c) => c.optionName.getText(locale)).join(' · ');
 
     Widget stepButton(IconData icon, VoidCallback onPress, {Color? color}) => SizedBox.square(
-          dimension: 36,
+          dimension: Sizes.controlSmall,
           child: FButton.icon(
             variant: FButtonVariant.outline,
             onPress: onPress,
-            child: Icon(icon, size: 16, color: color),
+            child: Icon(icon, size: Sizes.iconSmall, color: color),
           ),
         );
 

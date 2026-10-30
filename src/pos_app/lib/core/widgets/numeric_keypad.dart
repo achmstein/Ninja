@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 
 const _maxLength = 9;
@@ -47,7 +48,7 @@ class NumericKeypad extends StatelessWidget {
     void press(String key) => onChange(applyKeypadKey(value, key));
 
     Widget keyButton(String key) => SizedBox(
-      height: 56,
+      height: Sizes.controlLarge,
       child: FButton(
         variant: FButtonVariant.outline,
         onPress: () => press(key),
@@ -92,7 +93,7 @@ class NumericKeypad extends StatelessWidget {
               child: FButton(
                 variant: FButtonVariant.outline,
                 onPress: () => press('backspace'),
-                child: const Icon(FIcons.delete, size: 24),
+                child: const Icon(FIcons.delete, size: Sizes.icon),
               ),
             ),
           ],

@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../places/models/place.dart';
@@ -154,7 +155,7 @@ class _PlaceListState extends State<PlaceList> {
         ],
         if (needle.isEmpty)
           _PlaceRow(
-            leading: Icon(FIcons.plus, size: 20, color: theme.colors.mutedForeground),
+            leading: Icon(FIcons.plus, size: Sizes.icon, color: theme.colors.mutedForeground),
             name: l10n.newTab,
             icon: FIcons.shoppingBag,
             onTap: widget.onNewTab,
@@ -239,7 +240,7 @@ class PlaceSearchField extends StatelessWidget {
       hint: AppLocalizations.of(context)!.searchPlaces,
       prefixBuilder: (context, style, _) => Padding(
         padding: const EdgeInsetsDirectional.only(start: 12),
-        child: Icon(FIcons.search, size: 16, color: theme.colors.mutedForeground),
+        child: Icon(FIcons.search, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
       ),
       maxLines: 1,
     );
@@ -313,7 +314,7 @@ class _PlaceRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
-        Icon(icon, size: 16, color: theme.colors.mutedForeground),
+        Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
       ],
     );
     return Opacity(
@@ -321,7 +322,7 @@ class _PlaceRow extends StatelessWidget {
       child: FTappable(
         onPress: onTap,
         builder: (context, states, child) => Container(
-          height: 48,
+          height: Sizes.control,
           padding: const EdgeInsets.symmetric(horizontal: 12),
           decoration: BoxDecoration(
             color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary.withValues(alpha: 0.5) : null,

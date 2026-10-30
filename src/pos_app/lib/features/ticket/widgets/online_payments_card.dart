@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/online_payment.dart';
 import '../../tickets/models/ticket_detail.dart';
@@ -52,7 +53,7 @@ class OnlinePaymentsCard extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         child: Row(
           children: [
-            Icon(FIcons.smartphone, size: 16, color: theme.colors.mutedForeground),
+            Icon(FIcons.smartphone, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             const SizedBox(width: 8),
             Text(l10n.onlinePayments, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
           ],
@@ -75,7 +76,7 @@ class OnlinePaymentsCard extends StatelessWidget {
           color: AppColors.amber500.withValues(alpha: 0.1),
           child: Row(
             children: [
-              Icon(FIcons.clock, size: 16, color: AppColors.amber(brightness)),
+              Icon(FIcons.clock, size: Sizes.iconSmall, color: AppColors.amber(brightness)),
               const SizedBox(width: 8),
               Expanded(child: Text(l10n.guestPayingOnline, style: theme.typography.sm)),
             ],
@@ -164,28 +165,28 @@ class _OnlinePaymentRow extends StatelessWidget {
           ),
           if (onRelease != null) ...[
             const SizedBox(width: 8),
-            SizedBox(
-              height: 40,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
               child: FButton(
                 key: ValueKey('release-${payment.key}'),
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onRelease,
-                prefix: const Icon(FIcons.lockOpen, size: 16),
+                prefix: const Icon(FIcons.lockOpen, size: Sizes.iconSmall),
                 child: Text(l10n.releaseOnline, style: theme.typography.sm),
               ),
             ),
           ],
           if (onRefund != null) ...[
             const SizedBox(width: 4),
-            SizedBox(
-              height: 40,
+            ConstrainedBox(
+              constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
               child: FButton(
                 key: ValueKey('refund-${payment.key}'),
                 variant: FButtonVariant.ghost,
                 mainAxisSize: MainAxisSize.min,
                 onPress: onRefund,
-                prefix: Icon(FIcons.undo2, size: 16, color: theme.colors.destructive),
+                prefix: Icon(FIcons.undo2, size: Sizes.iconSmall, color: theme.colors.destructive),
                 child: Text(l10n.refundOnline, style: theme.typography.sm.copyWith(color: theme.colors.destructive)),
               ),
             ),

@@ -9,6 +9,7 @@ import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -177,7 +178,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     final amber = AppColors.amber(theme.colors.brightness);
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
-    final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: 20));
+    final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: Sizes.icon));
     final dot = switch (room.status) {
       PlaceStatus.available => AppColors.successColor,
       PlaceStatus.occupied => AppColors.red500,
@@ -189,11 +190,11 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           width: 64,
           height: 64,
           decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-          child: Icon(icon, size: 28, color: color),
+          child: Icon(icon, size: Sizes.iconNav, color: color),
         );
 
     Widget bigButton(String label, {required VoidCallback? onPress, FButtonVariant? variant, Widget? icon}) => SizedBox(
-          height: 48,
+          height: Sizes.control,
           child: FButton(
             variant: variant,
             onPress: onPress,
@@ -214,7 +215,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           Text(formatClock(elapsed),
               textAlign: TextAlign.center,
-              style: theme.typography.xl4.copyWith(fontWeight: FontWeight.w300, letterSpacing: 4, fontFeatures: tabular)),
+              style: theme.typography.figure.copyWith(fontWeight: FontWeight.w300, letterSpacing: 4, fontFeatures: tabular)),
           if (used.isNotEmpty && session.hasOptions) ...[
             const SizedBox(height: 4),
             Text(
@@ -250,7 +251,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Icon(member.isOwner ? FIcons.star : FIcons.user, size: 14, color: member.isOwner ? AppColors.amber500 : null),
+                      Icon(member.isOwner ? FIcons.star : FIcons.user, size: Sizes.iconSmall, color: member.isOwner ? AppColors.amber500 : null),
                       const SizedBox(width: 6),
                       FTappable(
                         onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
@@ -259,11 +260,11 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                       if (!member.isOwner) ...[
                         const SizedBox(width: 4),
                         SizedBox.square(
-                          dimension: 24,
+                          dimension: Sizes.controlSmall,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
                             onPress: _busy ? null : () => _guarded((a) => a.removeMember(session.id, member.customerId)),
-                            child: Icon(FIcons.x, size: 14, color: theme.colors.mutedForeground),
+                            child: Icon(FIcons.x, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                           ),
                         ),
                       ],
@@ -274,18 +275,18 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                 Row(
                   mainAxisSize: MainAxisSize.min,
                   children: [
-                    Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                    Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     const SizedBox(width: 4),
                     Text(session.userName!, style: muted),
                   ],
                 ),
-              SizedBox(
-                height: 36,
+              ConstrainedBox(
+                constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _pickCustomer(session: session, assign: false),
-                  prefix: Icon(FIcons.userPlus, size: 16, color: theme.colors.mutedForeground),
+                  prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                   child: Text(l10n.addCustomer, style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
                 ),
               ),
@@ -322,7 +323,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             bigButton(
               '${l10n.openTicketAction} · ${money(context, ticket.total)}',
               variant: FButtonVariant.outline,
-              icon: const Icon(FIcons.receipt, size: 20),
+              icon: const Icon(FIcons.receipt, size: Sizes.icon),
               onPress: () {
                 _close();
                 context.go('/ticket/${ticket.id}');
@@ -331,14 +332,14 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             const SizedBox(height: 8),
           ],
           bigButton(l10n.endSessionButton,
-              variant: FButtonVariant.destructive, icon: const Icon(FIcons.square, size: 20), onPress: _busy ? null : () => _confirmEnd(session)),
+              variant: FButtonVariant.destructive, icon: const Icon(FIcons.square, size: Sizes.icon), onPress: _busy ? null : () => _confirmEnd(session)),
           const SizedBox(height: 4),
           SizedBox(
-            height: 44,
+            height: Sizes.control,
             child: FButton(
               variant: FButtonVariant.ghost,
               onPress: _busy ? null : () => _confirmCancel(session: session),
-              prefix: Icon(FIcons.x, size: 16, color: theme.colors.mutedForeground),
+              prefix: Icon(FIcons.x, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               child: Text(l10n.cancelSessionButton, style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground)),
             ),
           ),
@@ -357,7 +358,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+              Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               const SizedBox(width: 4),
               Text('$who$party', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
             ],
@@ -373,13 +374,13 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               Expanded(
                 child: bigButton(l10n.openTicketAction,
                     variant: FButtonVariant.outline,
-                    icon: const Icon(FIcons.receipt, size: 20),
+                    icon: const Icon(FIcons.receipt, size: Sizes.icon),
                     onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(PlacePanelOutcome.bill)),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: bigButton(l10n.partyLeft,
-                    icon: Transform.flip(flipX: rtl, child: const Icon(FIcons.logOut, size: 20)),
+                    icon: Transform.flip(flipX: rtl, child: const Icon(FIcons.logOut, size: Sizes.icon)),
                     onPress: _busy ? null : () => _partyLeft(seated)),
               ),
             ],
@@ -400,7 +401,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(FIcons.user, size: 16, color: theme.colors.mutedForeground),
+                Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 const SizedBox(width: 4),
                 Text(reservation.customerName!, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
               ],
@@ -408,12 +409,12 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           else
             Center(
               child: SizedBox(
-                height: 44,
+                height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _pickCustomer(reservation: reservation, assign: true),
-                  prefix: const Icon(FIcons.userPlus, size: 16),
+                  prefix: const Icon(FIcons.userPlus, size: Sizes.iconSmall),
                   child: Text(l10n.assignCustomer, style: theme.typography.base.forButton),
                 ),
               ),
@@ -430,7 +431,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Icon(FIcons.timerReset, size: 16, color: theme.colors.mutedForeground),
+                Icon(FIcons.timerReset, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 const SizedBox(width: 6),
                 Text(l10n.startsOnConfirm, style: muted),
                 if (reservation.requestedOptionName != null) ...[
@@ -449,14 +450,14 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               Expanded(
                 child: bigButton(l10n.cancel,
                     variant: FButtonVariant.outline,
-                    icon: const Icon(FIcons.x, size: 20),
+                    icon: const Icon(FIcons.x, size: Sizes.icon),
                     onPress: _busy ? null : () => _confirmCancel(reservation: reservation)),
               ),
               const SizedBox(width: 8),
               Expanded(
                 child: !timed
                     ? bigButton(l10n.seatParty,
-                        icon: const Icon(FIcons.circleCheck, size: 20), onPress: _busy ? null : () => _seatAtTable(reservation))
+                        icon: const Icon(FIcons.circleCheck, size: Sizes.icon), onPress: _busy ? null : () => _seatAtTable(reservation))
                     : reservation.startOnConfirm
                         ? bigButton(l10n.confirmHold, icon: playIcon, onPress: _busy ? null : () => _confirmHold(reservation))
                         : bigButton(l10n.startSession,
@@ -492,7 +493,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               Expanded(
                 child: bigButton(l10n.reserve,
                     variant: FButtonVariant.outline,
-                    icon: const Icon(FIcons.clock, size: 20),
+                    icon: const Icon(FIcons.clock, size: Sizes.icon),
                     onPress: _busy ? null : () => _guarded((a) => a.reserve(room.id))),
               ),
               const SizedBox(width: 8),

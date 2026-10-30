@@ -2,6 +2,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import '../../catalog/models/catalog_item.dart';
@@ -18,7 +19,7 @@ class ItemImage extends StatelessWidget {
     final theme = context.theme;
     final fallback = ColoredBox(
       color: theme.colors.muted,
-      child: Center(child: Icon(FIcons.utensils, size: 32, color: theme.colors.mutedForeground)),
+      child: Center(child: Icon(FIcons.utensils, size: Sizes.iconHero, color: theme.colors.mutedForeground)),
     );
     if (url == null) return fallback;
     return CachedNetworkImage(

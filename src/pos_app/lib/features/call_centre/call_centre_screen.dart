@@ -7,10 +7,12 @@ import 'package:ninja_app_core/models/branch.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../core/brand/brand_provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/models/money.dart';
+import '../../core/utils/bidi.dart';
 import '../../core/utils/phone.dart';
 import '../../core/widgets/pos_dialog.dart';
 import '../../core/widgets/pos_toast.dart';
@@ -151,7 +153,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               Padding(
                 padding: const EdgeInsets.only(bottom: 8),
                 child: SizedBox(
-                  height: 48,
+                  height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
                     prefix: const Icon(FIcons.store),
@@ -184,7 +186,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
       for (final b in branches) {
         if (b.id == id) return b.name.localized(context);
       }
-      return '#$id';
+      return bidiIsolate('#$id');
     }
 
     Widget field(TextEditingController controller, String label, {String? hint, TextInputType? keyboard, TextDirection? direction}) =>
@@ -207,9 +209,9 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
           children: [
             Row(
               children: [
-                const Icon(FIcons.headset, size: 24),
+                const Icon(FIcons.headset, size: Sizes.icon),
                 const SizedBox(width: 8),
-                Expanded(child: Text(l10n.callCentreNextCaller, style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700))),
+                Expanded(child: Text(l10n.callCentreNextCaller, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700))),
               ],
             ),
             const SizedBox(height: 4),
@@ -222,7 +224,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             if (call.customer != null)
               Row(
                 children: [
-                  Icon(FIcons.userCheck, size: 16, color: theme.colors.primary),
+                  Icon(FIcons.userCheck, size: Sizes.iconSmall, color: theme.colors.primary),
                   const SizedBox(width: 6),
                   Expanded(child: Text(call.customer!.displayName, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600))),
                 ],
@@ -251,7 +253,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                     ),
                     child: Row(
                       children: [
-                        Icon(FIcons.mapPin, size: 14, color: theme.colors.mutedForeground),
+                        Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
@@ -305,7 +307,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               child: FButton(
                 variant: FButtonVariant.secondary,
                 mainAxisSize: MainAxisSize.min,
-                prefix: call.resolving ? const SizedBox.square(dimension: 14, child: FCircularProgress()) : const Icon(FIcons.search),
+                prefix: call.resolving ? const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()) : const Icon(FIcons.search),
                 onPress: call.resolving
                     ? null
                     : () {
@@ -354,7 +356,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                       ),
                       child: Row(
                         children: [
-                          Icon(chosen?.branchId == b.branchId ? FIcons.circleCheck : FIcons.store, size: 16),
+                          Icon(chosen?.branchId == b.branchId ? FIcons.circleCheck : FIcons.store, size: Sizes.iconSmall),
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text.rich(
@@ -382,7 +384,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             const SizedBox(height: 16),
             if (chosen != null)
               SizedBox(
-                height: 52,
+                height: Sizes.controlLarge,
                 child: FButton(
                   prefix: const Icon(FIcons.bike),
                   onPress: () => _take(branchId: chosen.branchId, delivery: true),
@@ -391,7 +393,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               ),
             const SizedBox(height: 8),
             SizedBox(
-              height: 48,
+              height: Sizes.control,
               child: FButton(
                 variant: FButtonVariant.outline,
                 prefix: const Icon(FIcons.shoppingBag),

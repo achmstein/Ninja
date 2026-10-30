@@ -5,6 +5,7 @@ import '../../../core/config/app_config.dart';
 import '../../../core/models/money.dart';
 import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/status.dart';
@@ -93,7 +94,7 @@ class DeliveryCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Row(
                   children: [
-                    Icon(FIcons.mapPin, size: 14, color: theme.colors.mutedForeground),
+                    Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(addressLine(l10n, order.delivery),
@@ -112,7 +113,7 @@ class DeliveryCard extends StatelessWidget {
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Padding(padding: const EdgeInsets.only(top: 2), child: Icon(icon, size: 14, color: color)),
+                    Padding(padding: const EdgeInsets.only(top: 2), child: Icon(icon, size: Sizes.iconSmall, color: color)),
                     const SizedBox(width: 4),
                     Expanded(child: Text(stage, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: color))),
                     if (since != null) ...[
@@ -145,7 +146,7 @@ class SentFromLine extends ConsumerWidget {
     final taker = order.takenByName;
     return Row(
       children: [
-        Icon(FIcons.store, size: 14, color: theme.colors.primary),
+        Icon(FIcons.store, size: Sizes.iconSmall, color: theme.colors.primary),
         const SizedBox(width: 6),
         Expanded(
           child: Text(
