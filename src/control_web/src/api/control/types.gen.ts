@@ -254,6 +254,10 @@ export type CreateTenantRequest = {
      * Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off
      */
     googleMaps?: null | boolean;
+    /**
+     * The node to stamp it on; placement picks one when left out
+     */
+    nodeId?: null | number | string;
 };
 
 export type ExtendRequest = {
@@ -409,6 +413,55 @@ export type MetricsTopItem = {
 };
 
 export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery' | 'Ai' | 'CallCentre';
+
+export type NodeDto = {
+    id: number | string;
+    name: string;
+    kind: NodeKind;
+    status: NodeStatus;
+    architecture: string;
+    labels: Array<string>;
+    /**
+     * Tenants that live here, destroyed ones left out
+     */
+    tenants: number | string;
+    /**
+     * Tenants whose stack runs here now
+     */
+    running: number | string;
+    /**
+     * How many more stacks fit, on its last reading; null before its first
+     */
+    roomFor: null | number | string;
+    /**
+     * Why it takes no more, when it does not
+     */
+    whyNoRoom: null | string;
+    /**
+     * When it was last read
+     */
+    readAt: null | string;
+    memTotalMb: null | number | string;
+    memAvailableMb: null | number | string;
+    diskFreeMb: null | number | string;
+    diskTotalMb: null | number | string;
+    /**
+     * Its own settings; null is the platform's
+     */
+    reserveMb: null | number | string;
+    stackFootprintMb: null | number | string;
+    postgresMaxConnections: null | number | string;
+    maxStacks: null | number | string;
+    agentUrl: null | string;
+    agentVersion: null | string;
+    lastSeenAt: null | string;
+    lastError: null | string;
+    createdAt: string;
+};
+
+export type NodeKind = 'Local' | 'Agent';
+
+export type NodeStatus = 'Active' | 'Cordoned' | 'Draining' | 'Unreachable' | 'Retired';
 
 export type OperatorInvitedResponse = {
     id: string;
@@ -672,6 +725,14 @@ export type TenantDetail = {
      * Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing
      */
     googleMapsAvailable?: boolean;
+    /**
+     * The node its stack runs on
+     */
+    nodeId?: number | string;
+    /**
+     * The node it is being moved to, while a move runs
+     */
+    movingToNodeId?: null | number | string;
 };
 
 export type TenantHostsDto = {
@@ -751,6 +812,7 @@ export type TenantSummary = {
     paidThrough: null | string;
     update: null | TenantUpdate;
     isDrill: boolean;
+    nodeId?: number | string;
 };
 
 export type TenantTalabatDto = {
@@ -788,6 +850,21 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
+};
+
+export type UpdateNodeRequest = {
+    status?: null | NodeStatus;
+    /**
+     * What it is for: demo, customer
+     */
+    labels?: null | Array<string>;
+    reserveMb?: null | number | string;
+    stackFootprintMb?: null | number | string;
+    postgresMaxConnections?: null | number | string;
+    /**
+     * No more stacks than this; 0 for no cap
+     */
+    maxStacks?: null | number | string;
 };
 
 export type UpdatesResponse = {
@@ -3673,6 +3750,72 @@ export type TestMapsSearchResponses = {
 };
 
 export type TestMapsSearchResponse = TestMapsSearchResponses[keyof TestMapsSearchResponses];
+
+export type ListNodesData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/nodes';
+};
+
+export type ListNodesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListNodesResponses = {
+    /**
+     * OK
+     */
+    200: Array<NodeDto>;
+};
+
+export type ListNodesResponse = ListNodesResponses[keyof ListNodesResponses];
+
+export type UpdateNodeData = {
+    body: UpdateNodeRequest;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/nodes/{id}';
+};
+
+export type UpdateNodeErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateNodeError = UpdateNodeErrors[keyof UpdateNodeErrors];
+
+export type UpdateNodeResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UpdateNodeResponse = UpdateNodeResponses[keyof UpdateNodeResponses];
 
 export type TlsAskData = {
     body?: never;

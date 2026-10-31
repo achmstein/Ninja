@@ -50,6 +50,7 @@ import { AiSettings } from './ai-settings'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
+import { NodesTable } from './nodes-table'
 import { MapsSettings } from './maps-settings'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
@@ -57,7 +58,7 @@ import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'backups' | 'audit' | 'team' | 'ai' | 'maps'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -217,7 +218,7 @@ export function PlatformPage() {
           navigate({ search: { tab: v as Tab }, replace: true })
         }
       >
-        {/* Eight tabs are wider than a phone: the list scrolls sideways in
+        {/* Nine tabs are wider than a phone: the list scrolls sideways in
             its own box rather than pushing the page past the screen, as the
             tenant page's tabs do */}
         <div className='max-w-full overflow-x-auto'>
@@ -225,6 +226,7 @@ export function PlatformPage() {
             <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
             <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
             <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
+            <TabsTrigger value='nodes'>{t('tabNodes')}</TabsTrigger>
             <TabsTrigger value='backups'>{t('tabBackups')}</TabsTrigger>
             <TabsTrigger value='audit'>{t('tabAudit')}</TabsTrigger>
             <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
@@ -255,6 +257,9 @@ export function PlatformPage() {
             capacity={capacity.data}
             loading={capacity.isLoading}
           />
+        </TabsContent>
+        <TabsContent value='nodes'>
+          <NodesTable />
         </TabsContent>
         <TabsContent value='backups'>
           <PlatformBackups />

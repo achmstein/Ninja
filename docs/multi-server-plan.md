@@ -3,6 +3,7 @@
 Status: written 2026-10-31. Line numbers are as of that date.
 
 - **Phase 1 done (2026-11-01).** Every docker call goes through `Platform/Nodes` (`INodes`, `INodeClient`, `LocalNodeClient`; `SingleNode` until a second node joins). Stack addresses come from `NodeEndpoints`, the edge from `IEdgeRouter`, and seed files from `PlatformOptions.ControlRoot`. `tests/Control.UnitTests/GoldenCommandsTests.cs` holds the line: the box hears what it heard before, and stacks are stamped word for word.
+- **Phase 2 done (2026-11-01).** Covers `Model/Node.cs` and the `AddNodes` migration (it inserts node 1 itself and moves the identity past it), `NodeDirectory` (the record, read at start and after each change), `NodeLimits`, `SpreadPlacement` behind `Placement`, `/platform/nodes` (list, PATCH), and the control app's Nodes tab. The tenants table gets no node column until a second node exists.
 - **Departure from section 3:** a node is composed of parts (`Stacks`, `Data`, `Databases`, `Broker`, `Capacity`, `Images`, `RouteTo`) rather than one interface inheriting three. The agent client can implement each part separately.
 
 ## Findings that shape the design
