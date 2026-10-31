@@ -50,6 +50,9 @@ public interface INodeClient
 {
     NodeRef Node { get; }
 
+    /// <summary>The shared services as this node's stacks reach them, stamped into their compose files.</summary>
+    NodeEndpoints Endpoints { get; }
+
     IStackRuntime Stacks { get; }
 }
 

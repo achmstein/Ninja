@@ -12,6 +12,8 @@ public sealed class LocalNodeClient(IShell shell, IOptions<PlatformOptions> opti
 {
     public NodeRef Node { get; } = new(1, "node-1");
 
+    public NodeEndpoints Endpoints => NodeEndpoints.From(options.Value);
+
     public IStackRuntime Stacks { get; } = new LocalStackRuntime(shell, options);
 }
 

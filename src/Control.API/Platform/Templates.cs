@@ -6,6 +6,8 @@ using System.Text.RegularExpressions;
 using Ninja.Control.API.Model;
 using Ninja.ServiceDefaults;
 
+using Ninja.Control.API.Platform.Nodes;
+
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
@@ -464,9 +466,11 @@ public static partial class Templates
     /// broker (its own vhost) and the shared Keycloak (its own realm).
     /// <paramref name="maps"/> is the Google Maps tab's settings; none stamps no keys.
     /// </summary>
-    public static string Compose(Tenant tenant, TenantHosts hosts, PlatformOptions platform, MapsSettings? maps = null)
+    public static string Compose(Tenant tenant, TenantHosts hosts, PlatformOptions platform, MapsSettings? maps = null, NodeEndpoints? endpoints = null)
     {
         maps ??= new MapsSettings();
+        // The shared services as the node the stack runs on reaches them
+        var node = endpoints ?? NodeEndpoints.From(platform);
         var slug = tenant.Slug;
         var entitled = PlanCatalog.Entitlements(tenant);
         var services = PlanCatalog.Services(entitled);
@@ -491,8 +495,8 @@ public static partial class Templates
             sb.AppendLine("      ASPNETCORE_FORWARDEDHEADERS_ENABLED: \"true\"");
             sb.AppendLine("      HTTP_PORTS: \"8080\"");
             // Its own broker user and database role, allowed nothing beyond this vhost and these databases
-            sb.AppendLine($"      ConnectionStrings__eventbus: \"amqp://{TenantNaming.BrokerUser(slug)}:${{BROKER_PASSWORD}}@{platform.RabbitHost}:5672/{TenantNaming.VHost(slug)}\"");
-            sb.AppendLine($"      Identity__Url: \"{platform.KeycloakInternalUrl}/realms/{TenantNaming.Realm(slug)}\"");
+            sb.AppendLine($"      ConnectionStrings__eventbus: \"amqp://{TenantNaming.BrokerUser(slug)}:${{BROKER_PASSWORD}}@{node.RabbitHost}:5672/{TenantNaming.VHost(slug)}\"");
+            sb.AppendLine($"      Identity__Url: \"{node.KeycloakInternalUrl}/realms/{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      Keycloak__Realm: \"{TenantNaming.Realm(slug)}\"");
             sb.AppendLine($"      OTEL_SERVICE_NAME: \"{name}\"");
             sb.AppendLine($"      Seed__Profile: \"{tenant.Seed.ToString().ToLowerInvariant()}\"");
@@ -515,23 +519,23 @@ public static partial class Templates
             if (db is not null)
             {
                 // A bounded pool per service, so the shared Postgres has a budget the capacity guard can count
-                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={platform.PostgresHost};Port={platform.PostgresPort};Username={TenantNaming.DbRole(slug)};Password=${{DB_PASSWORD}};Database={TenantNaming.Database(slug, db)};Maximum Pool Size={platform.ServicePoolSize};Minimum Pool Size=0\"");
+                sb.AppendLine($"      ConnectionStrings__{db}: \"Host={node.PostgresHost};Port={node.PostgresPort};Username={TenantNaming.DbRole(slug)};Password=${{DB_PASSWORD}};Database={TenantNaming.Database(slug, db)};Maximum Pool Size={platform.ServicePoolSize};Minimum Pool Size=0\"");
             }
 
             switch (service)
             {
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
-                    AppendChatModel(sb, tenant, platform);
+                    AppendChatModel(sb, tenant, platform, node);
                     // Talabat: the menu and what is sold out go out through the relay, like the orders' answers
-                    if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, platform);
+                    if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, node);
                     // Uploaded pictures are written under the content root; without a volume an upgrade loses them
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{TenantNaming.PicsVolume(slug)}:/app/Pics\"");
                     break;
                 case "inventory":
                 case "finance":
-                    AppendChatModel(sb, tenant, platform);
+                    AppendChatModel(sb, tenant, platform, node);
                     break;
                 case "identity":
                     sb.AppendLine("      Keycloak__AdminClientId: \"identity-api-service\"");
@@ -557,14 +561,14 @@ public static partial class Templates
                     // A demo tries online payments with pretend payments until it has a Paymob account; a customer never can
                     if (tenant.Kind == TenantKind.Demo) sb.AppendLine("      Payments__Simulated: \"true\"");
                     break;
-                case "notification" when !string.IsNullOrWhiteSpace(platform.FirebaseCredentialsPath):
+                case "notification" when !string.IsNullOrWhiteSpace(node.FirebaseCredentialsPath):
                     // Push: the platform's Firebase account, read where the service looks for it
                     sb.AppendLine("    volumes:");
-                    sb.AppendLine($"      - \"{platform.FirebaseCredentialsPath}:/app/firebase-credentials.json:ro\"");
+                    sb.AppendLine($"      - \"{node.FirebaseCredentialsPath}:/app/firebase-credentials.json:ro\"");
                     break;
                 case "ordering" when platform.Talabat.Configured:
                     // Talabat: what the business does with its orders goes back through the platform's relay, which holds Ninja's account
-                    AppendTalabatRelay(sb, slug, platform);
+                    AppendTalabatRelay(sb, slug, node);
                     break;
                 case "tenant":
                     if (!string.IsNullOrEmpty(tenant.NameEn)) sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
@@ -591,7 +595,7 @@ public static partial class Templates
             }
 
             sb.AppendLine("    networks:");
-            sb.AppendLine($"      - \"{platform.Network}\"");
+            sb.AppendLine($"      - \"{node.Network}\"");
         }
 
         // The gateway: the same YARP the single stack ran, routes as the AppHost declares them, destinations prefixed
@@ -633,10 +637,10 @@ public static partial class Templates
         foreach (var service in services)
             sb.AppendLine($"      REVERSEPROXY__CLUSTERS__{service}__DESTINATIONS__d1__ADDRESS: \"http://{TenantNaming.Service(slug, service)}:8080\"");
         sb.AppendLine("    networks:");
-        sb.AppendLine($"      - \"{platform.Network}\"");
+        sb.AppendLine($"      - \"{node.Network}\"");
 
         sb.AppendLine("networks:");
-        sb.AppendLine($"  {platform.Network}:");
+        sb.AppendLine($"  {node.Network}:");
         sb.AppendLine("    external: true");
         sb.AppendLine("volumes:");
         sb.AppendLine($"  {TenantNaming.UploadsVolume(slug)}: {{}}");
@@ -716,20 +720,20 @@ public static partial class Templates
         sb.AppendLine($"        max-file: \"{platform.LogMaxFile}\"");
     }
 
-    private static void AppendTalabatRelay(StringBuilder sb, string slug, PlatformOptions platform)
+    private static void AppendTalabatRelay(StringBuilder sb, string slug, NodeEndpoints node)
     {
-        sb.AppendLine($"      Talabat__RelayUrl: \"{platform.Talabat.RelayUrl}\"");
+        sb.AppendLine($"      Talabat__RelayUrl: \"{node.TalabatRelayUrl}\"");
         sb.AppendLine($"      Talabat__Tenant: \"{slug}\"");
         sb.AppendLine("      Talabat__RelayKey: \"${TALABAT_RELAY_KEY}\"");
     }
 
-    private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform)
+    private static void AppendChatModel(StringBuilder sb, Tenant tenant, PlatformOptions platform, NodeEndpoints node)
     {
         // No connection string, no assistant: the services report it off and answer 503
         if (!platform.AssistantFor(tenant))
             return;
         // The gateway, which answers each role with whatever model the control panel points it at now: the stack names roles, not models
-        sb.AppendLine($"      ConnectionStrings__chatModel: \"Endpoint={platform.AiGatewayUrl};Key=${{AI_GATEWAY_KEY}};Model={AiRoles.Main}\"");
+        sb.AppendLine($"      ConnectionStrings__chatModel: \"Endpoint={node.AiGatewayUrl};Key=${{AI_GATEWAY_KEY}};Model={AiRoles.Main}\"");
         sb.AppendLine($"      AI__FallbackModel: \"{AiRoles.Fallback}\"");
         sb.AppendLine($"      AI__VisionModel: \"{AiRoles.Vision}\"");
     }

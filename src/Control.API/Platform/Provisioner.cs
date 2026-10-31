@@ -354,8 +354,9 @@ public sealed class Provisioner(
     {
         // Google Maps as the panel's tab has it now: every stamp reads the saved keys afresh
         var maps = await MapsStore.LoadAsync(context, ct);
-        var files = new StackFiles(Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps), Templates.Env(tenant, Platform, maps));
-        await Stacks(tenant).WriteStackAsync(tenant.Slug, files, ct);
+        var node = nodes.For(tenant);
+        var files = new StackFiles(Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps, node.Endpoints), Templates.Env(tenant, Platform, maps));
+        await node.Stacks.WriteStackAsync(tenant.Slug, files, ct);
     }
 
     private const string NothingStamped = "nothing stamped";
