@@ -1,0 +1,70 @@
+## provision
+docker compose -p ninja-blue up -d --remove-orphans
+docker exec ninja-caddy-1 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker exec ninja-caddy-1 caddy reload --config /etc/caddy/Caddyfile
+## stop
+docker compose -p ninja-blue stop
+## start
+docker compose -p ninja-blue up -d --remove-orphans
+## entitlements
+docker compose -p ninja-blue up -d --remove-orphans
+## backup
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_accountsdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_catalogdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_orderingdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_spacesdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_salesdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_inventorydb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_payrolldb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_financedb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_loyaltydb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_tenantdb
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_notificationdb
+docker run --rm -v ninja-blue_blue-branch-uploads:/from:ro alpine tar czf - -C /from .
+docker run --rm -v ninja-blue_blue-catalog-pics:/from:ro alpine tar czf - -C /from .
+## upgrade
+docker exec -e PGPASSWORD=postgres ninja-postgres-1 pg_dump -U postgres -Fc blue_branchdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role blue_app --clean --if-exists -d blue_tenantdb
+docker compose -p ninja-blue up -d --remove-orphans
+## rollback
+docker compose -p ninja-blue up -d --remove-orphans
+## edge
+## containers
+docker compose -p ninja-blue ps -a --format json
+## logs
+docker compose -p ninja-blue logs --no-color --timestamps --tail 50 blue-catalog-api
+## restore-databases
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_accountsdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_catalogdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_orderingdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_spacesdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_salesdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_inventorydb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_payrolldb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_financedb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_loyaltydb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_tenantdb
+docker exec -i -e PGPASSWORD=postgres ninja-postgres-1 pg_restore -U postgres --no-owner --role green_app --clean --if-exists -d green_notificationdb
+## restore-uploads
+docker run -i --rm -v ninja-green_green-branch-uploads:/to alpine tar xzf - -C /to
+docker run -i --rm -v ninja-green_green-catalog-pics:/to alpine tar xzf - -C /to
+## broker
+docker exec ninja-eventbus-1 rabbitmqctl list_users --quiet --no-table-headers
+docker exec ninja-eventbus-1 rabbitmqctl add_user blue secret
+docker exec ninja-eventbus-1 rabbitmqctl set_user_tags blue
+docker exec ninja-eventbus-1 rabbitmqctl list_vhosts --quiet --no-table-headers
+docker exec ninja-eventbus-1 rabbitmqctl add_vhost blue
+docker exec ninja-eventbus-1 rabbitmqctl set_permissions -p blue blue .* .* .*
+docker exec ninja-eventbus-1 rabbitmqctl set_policy -p blue dead-letter .* {"dead-letter-exchange":"ninja_dead_letters"} --apply-to queues
+docker exec ninja-eventbus-1 rabbitmqctl delete_queue -p blue catalog
+docker exec ninja-eventbus-1 rabbitmqctl clear_permissions -p blue blue
+docker exec ninja-eventbus-1 rabbitmqctl delete_vhost blue
+docker exec ninja-eventbus-1 rabbitmqctl delete_user blue
+## capacity
+docker system df --format {{json .}}
+docker ps -a --format {{.Names}}	{{.Label "com.docker.compose.project"}}	{{.State}}
+docker stats --no-stream --format {{json .}}
+## destroy
+docker compose -p ninja-blue down -v --remove-orphans
+docker exec ninja-caddy-1 caddy validate --config /etc/caddy/Caddyfile --adapter caddyfile
+docker exec ninja-caddy-1 caddy reload --config /etc/caddy/Caddyfile
