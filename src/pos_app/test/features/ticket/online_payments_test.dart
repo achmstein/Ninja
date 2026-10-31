@@ -9,7 +9,7 @@ import 'package:ninja_app_core/brand/brand_service.dart';
 import 'package:ninja_app_core/brand/tenant_brand.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:pos_app/features/ticket/dialogs/settle_dialog.dart';
+import 'package:pos_app/features/ticket/screens/settle_screen.dart';
 import 'package:pos_app/features/ticket/widgets/online_payments_card.dart';
 import 'package:pos_app/features/tickets/models/enums.dart';
 import 'package:pos_app/features/tickets/models/online_payment.dart';
@@ -95,7 +95,8 @@ void main() {
     expect(find.textContaining('fee 1.50 EGP'), findsOneWidget);
     // Paid online is the shares that landed; the pending one still owes
     expect(find.text('Remaining'), findsOneWidget);
-    expect(find.text('60.00 EGP'), findsOneWidget);
+    // What is left, in the foot (the Settle button names it too)
+    expect(find.text('60.00 EGP'), findsWidgets);
     expect(find.text('A guest is paying online. Settle once they finish.'), findsOneWidget);
 
     // Only a paid payment on an open bill can go back
@@ -146,7 +147,7 @@ void main() {
     await tester.pumpWidget(_app(
       Builder(
         builder: (context) => TextButton(
-          onPressed: () => showSettleDialog(context, _bill, onlinePaid: 100),
+          onPressed: () => showSettle(context, _bill, onlinePaid: 100),
           child: const Text('open'),
         ),
       ),
@@ -158,7 +159,7 @@ void main() {
     expect(find.text('Paid online'), findsOneWidget);
     expect(find.text('−100.00 EGP'), findsOneWidget);
     // Nothing left to take: confirm straight away, with no till payment
-    await tester.tap(find.text('Confirm & settle'));
+    await tester.tap(find.byType(MorphButton));
     await tester.pumpAndSettle();
     expect(tickets.settled, isNotNull);
     expect(tickets.settled!.payments, isEmpty);
@@ -173,7 +174,7 @@ void main() {
     await tester.pumpWidget(_app(
       Builder(
         builder: (context) => TextButton(
-          onPressed: () => showSettleDialog(context, _bill, onlinePaid: 40),
+          onPressed: () => showSettle(context, _bill, onlinePaid: 40),
           child: const Text('open'),
         ),
       ),
@@ -184,9 +185,10 @@ void main() {
 
     // The keypad is prefilled with what is left, not the whole bill
     expect(find.text('60'), findsOneWidget);
-    expect(find.text('60.00 EGP'), findsOneWidget);
+    // What is left, in the foot (the Settle button names it too)
+    expect(find.text('60.00 EGP'), findsWidgets);
     // Nothing added yet: the till still owes the rest
-    final confirm = tester.widget<MorphButton>(find.ancestor(of: find.text('Confirm & settle'), matching: find.byType(MorphButton)));
+    final confirm = tester.widget<MorphButton>(find.byType(MorphButton));
     expect(confirm.onPressed, isNull);
   });
 }
