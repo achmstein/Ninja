@@ -1261,7 +1261,13 @@ export function TicketScreen({
         onlinePayments={online.payments}
         members={liveStay?.members}
         open={settleOpen}
-        onOpenChange={setSettleOpen}
+        onOpenChange={(open) => {
+          setSettleOpen(open)
+          // Paid, the bill is done: Done (or the way back) from the settled
+          // page goes on to the open bills, not back to a closed bill with
+          // nothing left to do on it. Left unpaid, the cashier is back on it
+          if (!open && settleOutcome) navigate({ to: '/' })
+        }}
         onSettled={setSettleOutcome}
       />
       <VoidTicketDialog

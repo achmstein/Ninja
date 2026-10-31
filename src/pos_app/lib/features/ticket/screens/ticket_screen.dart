@@ -219,7 +219,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // The settle page refreshes the floor and this ticket itself on success
     final place = ticket.locationName?.localized(context) ?? '';
     final title = place.isNotEmpty ? place : (ticket.label ?? ticketTypeLabel(AppLocalizations.of(context)!, ticket.type));
-    await showSettle(context, ticket, title: title, members: members, onlinePaid: online.paidOnline);
+    final outcome = await showSettle(context, ticket, title: title, members: members, onlinePaid: online.paidOnline);
+    // Paid, the bill is done: Done (or the way back) from the settled page goes on to the open bills, not
+    // back to a closed bill with nothing left to do on it. Left unpaid, the cashier is back on the bill
+    if (outcome != null && mounted) context.go('/');
   }
 
   // Same rule for Void, server-enforced too: time that has not landed yet
