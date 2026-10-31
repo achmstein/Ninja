@@ -32,7 +32,8 @@ export function TrayExtras({ extras }: { extras: CheckoutExtras }) {
 
   return (
     <div className='flex flex-col gap-2'>
-      <div className='flex flex-wrap gap-2'>
+      {/* One line: the pills share it, a long label truncated rather than pushed onto a line of its own */}
+      <div className='flex gap-2'>
         <Pill icon={NotebookPen} on={open === 'note'} set={extras.note.trim() !== ''} onClick={() => toggle('note')}>
           {extras.note.trim() ? <span className='max-w-28 truncate'>{extras.note.trim()}</span> : t('ninjaAddNote')}
         </Pill>
@@ -122,12 +123,12 @@ function Pill({
       aria-expanded={on}
       onClick={onClick}
       className={cn(
-        'flex h-9 max-w-full items-center gap-1.5 rounded-full px-3 text-caption font-semibold whitespace-nowrap transition-colors duration-200',
+        'flex h-9 min-w-0 max-w-full items-center gap-1.5 rounded-full px-3 text-caption font-semibold whitespace-nowrap transition-colors duration-200',
         set ? 'bg-emerald-500/20 text-emerald-300' : on ? 'bg-background/20' : 'bg-background/10 opacity-80'
       )}
     >
       <Icon className='size-3.5 shrink-0' />
-      {children}
+      <span className='min-w-0 truncate'>{children}</span>
     </motion.button>
   )
 }
