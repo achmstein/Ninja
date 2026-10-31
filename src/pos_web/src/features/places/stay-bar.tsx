@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Square, Timer } from 'lucide-react'
+import { Square } from 'lucide-react'
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
@@ -20,13 +20,13 @@ import {
 import { useSecondsClock, useStayActions } from './use-places'
 
 /**
- * The running clock on a bill. Its time is not on the bill yet — it lands
- * as lines when the clock stops — so the card answers the two questions
- * the cashier has while it runs: how long, and how much so far. The rate
- * option switches right here (the customers' most common mid-stay ask,
- * where the tariff has options), the people there are listed and added
- * right here, and the clock stops from here. On the bill itself,
- * customers go on lines with the ticket's own Assign customer.
+ * The running clock on a bill, the room's panel beside its lines. Its time
+ * is not on the bill yet — it lands as lines when the clock stops — so the
+ * panel answers the two questions the cashier has while it runs: how long,
+ * and how much so far. The rate option switches right here (the customers'
+ * most common mid-stay ask, where the tariff has options), the people there
+ * are listed and added right here, and the clock stops from here. On the
+ * bill itself, customers go on lines with the ticket's own Assign customer.
  */
 export function StayBar({ stay }: { stay: StayViewModel }) {
   const t = useT()
@@ -50,66 +50,60 @@ export function StayBar({ stay }: { stay: StayViewModel }) {
 
   return (
     <>
-      <div className='bg-card text-card-foreground flex flex-col gap-3 rounded-xl border p-3 shadow-xs'>
-        {/* How long, and how much: the clock leads, the money answers */}
-        <div className='flex items-start gap-3'>
-          <Timer className='text-muted-foreground mt-1 size-6 shrink-0' />
-          <div className='min-w-0 flex-1'>
-            <div className='font-mono text-3xl tabular-nums'>
-              {formatClock(elapsedSeconds(stay, now))}
-            </div>
-            {used.length > 1 && (
-              <div className='text-muted-foreground truncate text-sm tabular-nums'>
-                {used
-                  .map(
-                    (o) =>
-                      `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, now))}`,
-                  )
-                  .join(' · ')}
-              </div>
-            )}
+      {/* Three groups, each from the start edge and the same space apart:
+          the time (the clock leads, the money answers on one line under
+          it), the rate, the people; then the way to end it */}
+      <div className='flex flex-col gap-6'>
+        <div className='min-w-0'>
+          <div className='text-3xl leading-[1.4] font-bold tabular-nums'>
+            {formatClock(elapsedSeconds(stay, now))}
           </div>
-          <div className='shrink-0 text-end'>
-            <div className='text-muted-foreground text-sm'>
-              {t('timeSoFar')}
-            </div>
-            <div className='text-2xl font-bold tabular-nums'>
-              {money(estimate.amount)}
-            </div>
-            <div className='text-muted-foreground text-xs tabular-nums'>
-              {hoursLabel}
-            </div>
+          <div className='text-muted-foreground truncate text-base tabular-nums'>
+            ≈ {money(estimate.amount)} · {hoursLabel}
           </div>
-        </div>
-
-        <StayMembers stay={stay} />
-
-        {/* Switching the rate is the common ask; ending is the last one */}
-        <div className='flex items-center gap-2'>
-          {hasOptions(stay.tariff) && (
-            <RateOptionToggle
-              className='min-w-0 flex-1'
-              options={options}
-              value={currentCode}
-              disabled={actions.isBusy}
-              onChange={(code) => {
-                if (code !== currentCode) setPendingOption(code)
-              }}
-              rates={Object.fromEntries(
-                options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
-              )}
-            />
+          {used.length > 1 && (
+            <div className='text-muted-foreground truncate text-sm tabular-nums'>
+              {used
+                .map(
+                  (o) =>
+                    `${localized(o.name)} ${formatClock(optionSeconds(stay, o.code, now))}`,
+                )
+                .join(' · ')}
+            </div>
           )}
-          <Button
-            variant='outline'
-            className='h-12 shrink-0 gap-2 px-3'
-            disabled={actions.isBusy}
-            onClick={() => setConfirmEnd(true)}
-          >
-            <Square className='size-5' />
-            <span className='hidden sm:inline'>{t('endSessionButton')}</span>
-          </Button>
         </div>
+
+        {hasOptions(stay.tariff) && (
+          <RateOptionToggle
+            stacked
+            options={options}
+            value={currentCode}
+            disabled={actions.isBusy}
+            onChange={(code) => {
+              if (code !== currentCode) setPendingOption(code)
+            }}
+            rates={Object.fromEntries(
+              options.map((o) => [o.code ?? '', money(o.hourlyRate)]),
+            )}
+          />
+        )}
+
+        <div className='flex flex-col gap-2'>
+          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+            {t('inTheRoom')}
+          </h2>
+          <StayMembers stay={stay} />
+        </div>
+
+        <Button
+          variant='outline'
+          className='bg-background h-12 gap-2'
+          disabled={actions.isBusy}
+          onClick={() => setConfirmEnd(true)}
+        >
+          <Square className='size-5' />
+          {t('endSessionButton')}
+        </Button>
       </div>
 
       <ConfirmDialog

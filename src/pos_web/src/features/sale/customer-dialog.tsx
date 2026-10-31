@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Info, User, UserPlus } from 'lucide-react'
+import { Info, User, UserPlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
+  Sheet,
+  SheetClose,
+  SheetContent,
+  SheetDescription,
+  SheetTitle,
+} from '@/components/ui/sheet'
 import { Input } from '@/components/ui/input'
 import { apiClient } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -15,9 +16,15 @@ import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
+import {
+  CustomerCard,
+  type CardCustomer,
+} from '@/features/customer/customer-card'
 import { NewCustomerDialog } from '@/features/customer/new-customer-dialog'
-import { customerName, type IdentityCustomer } from '@/features/customer/counter-customers'
+import {
+  customerName,
+  type IdentityCustomer,
+} from '@/features/customer/counter-customers'
 import type { SaleCustomer } from './cart'
 import { useDebounced } from '@/lib/use-debounced'
 
@@ -44,7 +51,6 @@ function displayName(user: IdentityUser): string {
 
 const SEARCH_DEBOUNCE_MS = 300
 const MIN_SEARCH_LENGTH = 2
-
 
 type CustomerDialogProps = {
   open: boolean
@@ -98,12 +104,16 @@ export function CustomerDialog({
   }, [open])
 
   const search = debouncedTerm.length >= MIN_SEARCH_LENGTH ? debouncedTerm : ''
-  const { data: users = [], isFetching, isError } = useQuery({
+  const {
+    data: users = [],
+    isFetching,
+    isError,
+  } = useQuery({
     queryKey: ['identityUserSearch', search],
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
         '/api/identity/users',
-        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } }
+        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } },
       )
       return response.data
     },
@@ -143,64 +153,97 @@ export function CustomerDialog({
   }
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      {/* On a phone the picker takes the whole height: the results get the
-          room between the search box and the buttons, and scroll there */}
-      <DialogContent className='flex max-h-[85svh] flex-col gap-4 max-sm:h-[calc(100svh-1.5rem)] max-sm:overflow-hidden sm:max-w-md'>
-        <DialogHeader>
-          <DialogTitle className='text-xl'>{t(titleKey)}</DialogTitle>
-        </DialogHeader>
+    <Sheet open={open} onOpenChange={onOpenChange}>
+      {/* A sheet down the screen's end side, the whole height: the field
+          stays at its top and the results fill it down to the keyboard,
+          which on a landscape tablet leaves a dialog no room between itself
+          and the top */}
+      <SheetContent side='end' showCloseButton={false}>
+        {/* A header row like every screen's: the title, and the way out */}
+        <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
+          <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+            {t(titleKey)}
+          </SheetTitle>
+          <SheetClose asChild>
+            <Button
+              variant='ghost'
+              size='icon'
+              className='size-12'
+              aria-label={t('cancel')}
+            >
+              <X className='size-6' />
+            </Button>
+          </SheetClose>
+        </div>
+        <SheetDescription className='sr-only'>
+          {t('searchCustomersPlaceholder')}
+        </SheetDescription>
 
-        {quickPicks.length > 0 && (
-          <div className='flex flex-col gap-2'>
-            <p className='text-muted-foreground text-sm'>{t('inTheRoom')}</p>
-            <div className='flex flex-wrap gap-2'>
-              {quickPicks.map((person) => (
-                <Button
-                  key={person.id}
-                  variant='outline'
-                  className='h-11 max-w-full gap-2 px-3 text-base'
-                  onClick={() => {
-                    onSelect({ id: person.id, name: person.name })
-                    onOpenChange(false)
-                  }}
-                >
-                  <User className='text-muted-foreground size-4 shrink-0' />
-                  <span className='truncate'>{person.name || t('guest')}</span>
-                </Button>
-              ))}
+        <div className='flex shrink-0 flex-col gap-4 p-4 pb-2'>
+          {quickPicks.length > 0 && (
+            <div className='flex flex-col gap-2'>
+              <p className='text-muted-foreground text-sm'>{t('inTheRoom')}</p>
+              <div className='flex flex-wrap gap-2'>
+                {quickPicks.map((person) => (
+                  <Button
+                    key={person.id}
+                    variant='outline'
+                    className='h-10 max-w-full gap-2 px-3 text-base'
+                    onClick={() => {
+                      onSelect({ id: person.id, name: person.name })
+                      onOpenChange(false)
+                    }}
+                  >
+                    <User className='text-muted-foreground size-4 shrink-0' />
+                    <span className='truncate'>
+                      {person.name || t('guest')}
+                    </span>
+                  </Button>
+                ))}
+              </div>
             </div>
+          )}
+
+          <div className='flex gap-2'>
+            <Input
+              value={term}
+              onChange={(e) => setTerm(e.target.value)}
+              placeholder={t('searchCustomersPlaceholder')}
+              className='h-12 min-w-0 flex-1 text-base'
+              autoComplete='off'
+              autoFocus
+            />
+            <Button
+              variant='outline'
+              className='h-12 shrink-0 gap-2'
+              onClick={() => setAdding(true)}
+            >
+              <UserPlus className='size-5' />
+              {t('newCustomer')}
+            </Button>
           </div>
-        )}
 
-        <Input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder={t('searchCustomersPlaceholder')}
-          className='h-12 text-base'
-          autoComplete='off'
-          autoFocus
-        />
-
-        {!accountsOnly && typedName.length > 0 && (
-          <Button
-            variant='outline'
-            className='h-14 w-full justify-start gap-3 text-base'
-            onClick={useTypedName}
-          >
-            <UserPlus className='text-muted-foreground size-5 shrink-0' />
-            <span className='min-w-0 text-start'>
-              <span className='block truncate font-medium'>
-                {t('useNameAction', { name: typedName })}
+          {!accountsOnly && typedName.length > 0 && (
+            <Button
+              variant='outline'
+              className='h-auto min-h-14 w-full justify-start gap-3 py-2 text-base'
+              onClick={useTypedName}
+            >
+              <UserPlus className='text-muted-foreground size-5 shrink-0' />
+              <span className='min-w-0 text-start'>
+                <span className='block truncate font-medium'>
+                  {t('useNameAction', { name: typedName })}
+                </span>
+                <span className='text-muted-foreground block text-sm font-normal'>
+                  {t('noAccountNeeded')}
+                </span>
               </span>
-              <span className='text-muted-foreground block text-sm font-normal'>
-                {t('noAccountNeeded')}
-              </span>
-            </span>
-          </Button>
-        )}
+            </Button>
+          )}
+        </div>
 
-        <div className='-mx-2 min-h-0 flex-1 overflow-y-auto'>
+        {/* The results get every row between the field and the bottom */}
+        <div className='min-h-0 flex-1 overflow-y-auto px-2 pb-4'>
           {search.length === 0 ? null : isFetching && users.length === 0 ? (
             <div className='flex flex-col'>
               {Array.from({ length: 5 }).map((_, i) => (
@@ -240,91 +283,71 @@ export function CustomerDialog({
               {users.map((user) => {
                 const onBill = busy?.get(user.id)
                 return (
-                <div key={user.id} className='flex items-center gap-1'>
-                <button
-                  type='button'
-                  disabled={!!onBill}
-                  onClick={() => pick(user)}
-                  className={cn(
-                    'hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start',
-                    'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent'
-                  )}
-                >
-                  <User className='text-muted-foreground size-5 shrink-0' />
-                  <span className='min-w-0'>
-                    {/* The letters that matched, marked, so the eye lands on
+                  <div key={user.id} className='flex items-center gap-1'>
+                    <button
+                      type='button'
+                      disabled={!!onBill}
+                      onClick={() => pick(user)}
+                      className={cn(
+                        'hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start',
+                        'disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent',
+                      )}
+                    >
+                      <User className='text-muted-foreground size-5 shrink-0' />
+                      <span className='min-w-0'>
+                        {/* The letters that matched, marked, so the eye lands on
                         the right Ahmed without reading every row */}
-                    <span className='block truncate text-base font-medium'>
-                      <Highlight
-                        text={displayName(user)}
-                        ranges={matchRanges(displayName(user), term)}
-                      />
-                    </span>
-                    {onBill ? (
-                      <span className='text-muted-foreground block truncate text-sm'>
-                        {t('alreadyOnBill', { where: onBill })}
+                        <span className='block truncate text-base font-medium'>
+                          <Highlight
+                            text={displayName(user)}
+                            ranges={matchRanges(displayName(user), term)}
+                          />
+                        </span>
+                        {onBill ? (
+                          <span className='text-muted-foreground block truncate text-sm'>
+                            {t('alreadyOnBill', { where: onBill })}
+                          </span>
+                        ) : user.phoneNumber ? (
+                          <span className='text-muted-foreground block truncate text-sm'>
+                            <Highlight
+                              text={user.phoneNumber}
+                              ranges={phoneRanges(user.phoneNumber, term)}
+                            />
+                          </span>
+                        ) : user.email ? (
+                          <span className='text-muted-foreground block truncate text-sm'>
+                            <Highlight
+                              text={user.email}
+                              ranges={matchRanges(user.email, term)}
+                            />
+                          </span>
+                        ) : null}
                       </span>
-                    ) : user.phoneNumber ? (
-                      <span className='text-muted-foreground block truncate text-sm'>
-                        <Highlight
-                          text={user.phoneNumber}
-                          ranges={phoneRanges(user.phoneNumber, term)}
-                        />
-                      </span>
-                    ) : user.email ? (
-                      <span className='text-muted-foreground block truncate text-sm'>
-                        <Highlight
-                          text={user.email}
-                          ranges={matchRanges(user.email, term)}
-                        />
-                      </span>
-                    ) : null}
-                  </span>
-                </button>
-                {/* A look before the pick: points and tab, without attaching */}
-                <Button
-                  variant='ghost'
-                  size='icon'
-                  className='size-11 shrink-0'
-                  aria-label={t('customerDetails')}
-                  onClick={() =>
-                    setCardFor({
-                      id: user.id,
-                      name: displayName(user),
-                      phone: user.phoneNumber,
-                      addedAtCounter: !!user.addedAtCounter,
-                    })
-                  }
-                >
-                  <Info className='text-muted-foreground size-5' />
-                </Button>
-                </div>
+                    </button>
+                    {/* A look before the pick: points and tab, without attaching */}
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='size-11 shrink-0'
+                      aria-label={t('customerDetails')}
+                      onClick={() =>
+                        setCardFor({
+                          id: user.id,
+                          name: displayName(user),
+                          phone: user.phoneNumber,
+                          addedAtCounter: !!user.addedAtCounter,
+                        })
+                      }
+                    >
+                      <Info className='text-muted-foreground size-5' />
+                    </Button>
+                  </div>
                 )
               })}
             </div>
           )}
         </div>
-
-        <div className='grid grid-cols-2 gap-2'>
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
-            {t('cancel')}
-          </Button>
-          <Button
-            variant='secondary'
-            size='lg'
-            className='h-12 gap-2'
-            onClick={() => setAdding(true)}
-          >
-            <UserPlus className='size-4' />
-            {t('newCustomer')}
-          </Button>
-        </div>
-      </DialogContent>
+      </SheetContent>
       <CustomerCard
         customer={cardFor}
         onOpenChange={(open) => !open && setCardFor(null)}
@@ -335,6 +358,6 @@ export function CustomerDialog({
         initialText={typedName}
         onPick={pickNew}
       />
-    </Dialog>
+    </Sheet>
   )
 }

@@ -208,6 +208,8 @@ const dictionary = {
   creditNote: { en: "Credit note #{number}", ar: "إشعار استرجاع #\u200F{number}" },
   refundedSoFar: { en: "Refunded", ar: "مسترجع" },
   breakdown: { en: "Breakdown", ar: "التفاصيل" },
+  selectedLinesCount: { plural: "count", en: {"=1":"1 selected","other":"{count} selected"}, ar: {"=0":"لم يُحدَّد شيء","one":"بند واحد محدد","two":"بندان محددان","few":"{count} بنود محددة","other":"{count} بندًا محددًا"} },
+  moreActions: { en: "More", ar: "المزيد" },
   none: { en: "None", ar: "لا شيء" },
 
   // The floor: what is happening, never what exists

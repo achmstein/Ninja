@@ -299,7 +299,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     lines,
     note,
     customer,
-    add,
+    add: addToSale,
     setQuantity,
     setNote,
     setCustomer,
@@ -527,6 +527,24 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const itemsTotal = saleTotal(lines)
   const total = itemsTotal + deliveryFee
   const count = saleCount(lines)
+
+  // The sale's rows by line, so the one just rung up can be scrolled to
+  const rowRefs = useRef(new Map<string, HTMLDivElement>())
+
+  /** Adds the line and brings its row into view: a new line lands at the end
+   * of a long sale, an extra one of a line already there anywhere in it */
+  const add = (line: SaleLine) => {
+    addToSale(line)
+    const key = lineKey(line)
+    // Two frames: the row is rendered by the first, laid out by the second
+    requestAnimationFrame(() =>
+      requestAnimationFrame(() =>
+        rowRefs.current
+          .get(key)
+          ?.scrollIntoView({ block: 'nearest', behavior: 'smooth' }),
+      ),
+    )
+  }
 
   const tapItem = (item: CatalogItemDto, suggested = false) => {
     if (item.customizations?.length) {
@@ -876,11 +894,15 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         {lines.length === 0 ? null : (
           <div className='flex flex-col divide-y'>
             {lines.map((line) => (
-              <CartLineRow
+              <div
                 key={lineKey(line)}
-                line={line}
-                onSetQuantity={setQuantity}
-              />
+                ref={(el) => {
+                  if (el) rowRefs.current.set(lineKey(line), el)
+                  else rowRefs.current.delete(lineKey(line))
+                }}
+              >
+                <CartLineRow line={line} onSetQuantity={setQuantity} />
+              </div>
             ))}
           </div>
         )}

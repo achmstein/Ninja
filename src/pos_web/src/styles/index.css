@@ -134,6 +134,41 @@
   }
 }
 
+/* Lines on their way to a bill breathe: a slow pulse between faint and
+   nearly full, so "still going" reads without a mark. Still, at the middle
+   of the pulse, where the system asks for less motion */
+@keyframes breathe {
+  from {
+    opacity: 0.45;
+  }
+  to {
+    opacity: 0.85;
+  }
+}
+
+@utility animate-breathe {
+  animation: breathe 900ms ease-in-out infinite alternate;
+  @media (prefers-reduced-motion: reduce) {
+    animation: none;
+    opacity: 0.65;
+  }
+}
+
+/* A line just in: a soft tint behind it fades out, so the eye finds what
+   was added; no mark to read */
+@keyframes landed {
+  from {
+    background-color: color-mix(in oklab, var(--primary) 8%, transparent);
+  }
+  to {
+    background-color: transparent;
+  }
+}
+
+@utility animate-landed {
+  animation: landed 1200ms ease-out both;
+}
+
 @utility no-scrollbar {
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {

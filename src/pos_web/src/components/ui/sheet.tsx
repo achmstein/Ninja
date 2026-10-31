@@ -5,8 +5,10 @@ import { cn } from '@/lib/utils'
 
 /**
  * A panel that slides up from the bottom edge — the phone's home for what a
- * tablet shows beside the content (the running order on the sale pad). The
- * same Radix dialog underneath, so focus, Escape and scroll-lock behave like
+ * tablet shows beside the content (the running order on the sale pad) — or,
+ * with `side='end'`, one the whole height of the screen's end side (a
+ * search, whose field stays at its top and results fill it). The same Radix
+ * dialog underneath, so focus, Escape and scroll-lock behave like
  * every other dialog in the till.
  */
 function Sheet(props: React.ComponentProps<typeof SheetPrimitive.Root>) {
@@ -21,9 +23,11 @@ function SheetContent({
   className,
   children,
   showCloseButton = true,
+  side = 'bottom',
   ...props
 }: React.ComponentProps<typeof SheetPrimitive.Content> & {
   showCloseButton?: boolean
+  side?: 'bottom' | 'end'
 }) {
   return (
     <SheetPrimitive.Portal>
@@ -34,17 +38,22 @@ function SheetContent({
       <SheetPrimitive.Content
         data-slot='sheet-content'
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom fixed inset-x-0 bottom-0 z-50 flex max-h-[calc(100svh-1rem)] flex-col rounded-t-2xl border-t shadow-lg duration-200',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out fixed z-50 flex flex-col shadow-lg duration-200',
           'pb-[env(safe-area-inset-bottom)]',
+          side === 'bottom'
+            ? 'data-[state=closed]:slide-out-to-bottom data-[state=open]:slide-in-from-bottom inset-x-0 bottom-0 max-h-[calc(100svh-1rem)] rounded-t-2xl border-t'
+            : 'data-[state=closed]:slide-out-to-end data-[state=open]:slide-in-from-end inset-y-0 end-0 h-svh w-full max-w-[480px] border-s',
           className,
         )}
         {...props}
       >
         {/* The grab handle: reads as "this came up from below" */}
-        <div
-          aria-hidden
-          className='bg-muted-foreground/30 mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full'
-        />
+        {side === 'bottom' && (
+          <div
+            aria-hidden
+            className='bg-muted-foreground/30 mx-auto mt-2 h-1.5 w-10 shrink-0 rounded-full'
+          />
+        )}
         {children}
         {showCloseButton && (
           <SheetPrimitive.Close className='ring-offset-background focus-visible:ring-ring absolute end-2 top-3 flex size-11 items-center justify-center rounded-md opacity-70 transition-opacity hover:opacity-100 focus-visible:ring-2 focus-visible:outline-hidden'>

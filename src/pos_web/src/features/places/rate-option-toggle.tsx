@@ -8,7 +8,9 @@ import { cn } from '@/lib/utils'
  * the tills always had, now one button per option, sized for a thumb.
  * `rates` prints each option's hourly price after its name, so the cashier
  * sees them all while choosing. Renders nothing for a one-rate tariff:
- * there is nothing to pick.
+ * there is nothing to pick. `stacked` puts one option a row, the name at
+ * the start and the rate at the end: for a narrow column (the bill's
+ * panel), where side by side they overflow.
  */
 export function RateOptionToggle({
   options,
@@ -17,6 +19,7 @@ export function RateOptionToggle({
   disabled,
   className,
   rates,
+  stacked = false,
 }: {
   options: RateOptionViewModel[]
   value: string | null
@@ -24,9 +27,53 @@ export function RateOptionToggle({
   disabled?: boolean
   className?: string
   rates?: Record<string, string>
+  stacked?: boolean
 }) {
   const localized = useLocalized()
   if (options.length < 2) return null
+
+  if (stacked) {
+    return (
+      <div className={cn('flex flex-col gap-2', className)}>
+        {options.map((option, index) => {
+          const code = option.code ?? ''
+          const selected = value === code
+          const Icon = index === 0 ? User : Users
+          return (
+            <button
+              key={code}
+              type='button'
+              disabled={disabled}
+              onClick={() => onChange(code)}
+              className={cn(
+                'flex h-12 items-center gap-2 rounded-lg border px-4 text-base transition-colors disabled:opacity-50',
+                // The one in force a light fill, not the page's darkest
+                // block: in the panel the clock leads, not the rate
+                selected
+                  ? 'bg-secondary text-secondary-foreground border-transparent font-semibold'
+                  : 'bg-background hover:bg-muted',
+              )}
+            >
+              <Icon className='size-5 shrink-0' />
+              <span className='min-w-0 flex-1 truncate text-start'>
+                {localized(option.name)}
+              </span>
+              {rates?.[code] && (
+                <span
+                  className={cn(
+                    'shrink-0 text-sm font-normal tabular-nums',
+                    selected ? 'text-foreground' : 'text-muted-foreground',
+                  )}
+                >
+                  {rates[code]}
+                </span>
+              )}
+            </button>
+          )
+        })}
+      </div>
+    )
+  }
 
   return (
     <div

@@ -6,20 +6,21 @@ import { useAuth } from 'react-oidc-context'
 import {
   ArrowLeft,
   ArrowRight,
+  ArrowRightLeft,
   Ban,
   BadgePercent,
   Check,
   Clock,
+  Ellipsis,
   ListChecks,
   Loader2,
+  Plus,
   Printer,
   ShoppingCart,
-  Timer,
   Trash2,
   Undo2,
   User,
   UserPlus,
-  Users,
 } from 'lucide-react'
 import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
 import {
@@ -30,7 +31,12 @@ import {
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Separator } from '@/components/ui/separator'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTakenByText } from '@/features/branch/use-branch-name'
 import { BillTitle } from '@/features/deliveries/bill-title'
@@ -73,7 +79,7 @@ import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { orderIdsOn } from '@/lib/stock-disposition'
 import { VoidTicketDialog } from './void-dialog'
 import { DiscountDialog } from './discount-dialog'
-import { KitchenReprintButton } from './kitchen-reprint'
+import { KitchenReprintDialog, useCanReprintKitchen } from './kitchen-reprint'
 import { printSheets } from '@/features/printing/print-sheets'
 import { BreakdownDialog } from './breakdown-dialog'
 import { onlineSummary } from './online-payments'
@@ -136,7 +142,7 @@ function LineRow({
   selecting: boolean
   selected: boolean
   onToggle: () => void
-  /** Just confirmed by the server: it fades up from how it was shown on its way, ticked */
+  /** Just confirmed by the server: a soft tint behind it fades out */
   landed?: boolean
 }) {
   const t = useT()
@@ -183,11 +189,6 @@ function LineRow({
               − {money(discount)} ({t('discount')})
             </span>
           )}
-          {/* Where the upload mark was while it was on its way: the price
-              stays put */}
-          {landed && (
-            <Check className='ms-1.5 inline size-3.5 align-[-2px] text-emerald-600 dark:text-emerald-400' />
-          )}
         </div>
       </div>
       <div
@@ -219,8 +220,10 @@ function LineRow({
   return (
     <div
       className={cn(
-        'flex min-h-12 items-start gap-3 px-3 py-2',
-        landed && 'animate-in fade-in-70 duration-500',
+        'flex min-h-12 items-start gap-3 rounded-lg px-3 py-2',
+        // Just in: it stops breathing (features/sending) and a soft tint
+        // behind it fades out, so the eye finds what was added
+        landed && 'animate-landed',
       )}
     >
       {content}
@@ -258,6 +261,7 @@ export function TicketScreen({
   const [voidOpen, setVoidOpen] = useState(false)
   const [voidGuardOpen, setVoidGuardOpen] = useState(false)
   const [discountOpen, setDiscountOpen] = useState(false)
+  const [reprintOpen, setReprintOpen] = useState(false)
   const [selecting, setSelecting] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set())
   const [settleOutcome, setSettleOutcome] = useState<SettleOutcome | null>(null)
@@ -298,13 +302,31 @@ export function TicketScreen({
     refetchInterval: placedHere ? 700 : 20_000,
   })
   const ticket = ticketQuery.data
+  const canReprint = useCanReprintKitchen(ticket?.lines ?? [])
+
+  // Lines just charged to this bill sit at its end: brought into view as
+  // they arrive, so the cashier sees them breathe and land without scrolling
+  const sendingRef = useRef<HTMLDivElement>(null)
+  const shownSends = useRef(0)
+  useEffect(() => {
+    const grew = mySends.length > shownSends.current
+    shownSends.current = mySends.length
+    if (grew)
+      sendingRef.current?.scrollIntoView({ block: 'end', behavior: 'smooth' })
+  }, [mySends.length])
 
   // An order's lines are on the bill: its faded copy goes, the real ones tick
   useEffect(() => {
     if (!ticket) return
-    const orderIds = new Set((ticket.lines ?? []).map((l) => toNumber(l.orderId)))
+    const orderIds = new Set(
+      (ticket.lines ?? []).map((l) => toNumber(l.orderId)),
+    )
     for (const send of mySends) {
-      if (send.status === 'placed' && send.orderId != null && orderIds.has(send.orderId)) {
+      if (
+        send.status === 'placed' &&
+        send.orderId != null &&
+        orderIds.has(send.orderId)
+      ) {
         landSend(send.requestId, send.orderId)
       }
     }
@@ -487,8 +509,7 @@ export function TicketScreen({
   const runningStay = liveStay && isRunning(liveStay) ? liveStay : undefined
   // Ended, bill still open: the time has landed and the roster stays
   // editable so every share can find its tab
-  const endedStay =
-    liveStay && !isRunning(liveStay) ? liveStay : undefined
+  const endedStay = liveStay && !isRunning(liveStay) ? liveStay : undefined
   const onlinePaid = onlineSummary(ticket.total, online.payments)
 
   // Lines in arrival order, grouped by whoever they were rung up for. Insertion
@@ -620,21 +641,80 @@ export function TicketScreen({
   const paymentsOverride: ReceiptPayment[] | undefined =
     settleOutcome && !ticket.settledAt ? settleOutcome.payments : undefined
 
+  const isOpen = !isSettled && !isVoided
+  const choosing = selecting && isOpen
+  const discount = toNumber(ticket.discount)
+  // Nothing on the ticket yet means nothing to audit, so any cashier can
+  // discard it. A room ticket is discardable too, but only once its session
+  // has ended with nothing on it — while it runs, there is time still to
+  // come. Once a line lands, only an owner's void (with its reason) takes it
+  // off the floor.
+  const canDiscard =
+    lines.length === 0 &&
+    mySends.length === 0 &&
+    (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
+  const canVoid = !canDiscard && isOwner
+  const hasMenu = isOpen || canReprint
+  // The bill's parts (menu money, discount, service, VAT, what went back)
+  // are one tap away; the bar carries the total
+  const hasParts =
+    discount > 0 ||
+    toNumber(ticket.serviceCharge) > 0 ||
+    toNumber(ticket.vat) > 0 ||
+    toNumber(ticket.refundedTotal) > 0
+  const total =
+    onTheirWay.length > 0 && !isSettled
+      ? totalWith(
+          ticket,
+          onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0),
+        )
+      : ticket.total
+  const noneChosen = selectedIds.size === 0
+
+  // The room, while there is one: running, its whole panel; ended with the
+  // bill still open, the people, still editable so every share finds its tab.
+  // Until the stay arrives, its shape
+  const stayLoading = isOpen && ticket.sessionId != null && stay === undefined
+  const room = stayLoading ? (
+    <Skeleton className='h-44 rounded-xl' />
+  ) : runningStay ? (
+    <StayBar stay={runningStay} />
+  ) : endedStay ? (
+    <div className='flex flex-col gap-2'>
+      <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+        {t('inTheRoom')}
+      </h2>
+      <StayMembers stay={endedStay} />
+    </div>
+  ) : null
+
+  // Side by side in the bar, every action the main action's height; the
+  // main one wide enough to be the obvious one
+  const actionClass = (main = false) =>
+    cn(
+      'h-14 gap-2 max-sm:min-w-0 max-sm:flex-1 max-sm:px-3 max-sm:text-base',
+      main ? 'min-w-60 px-6 text-lg' : 'min-w-40 px-5 text-base',
+    )
+
+  // Every bill is laid out the same: the header across the top, the money
+  // and what is done with it in the bar across the foot, so Settle, the
+  // Select actions and Print are always in the same place. A room adds only
+  // its panel (the clock, the rate, the people, the way to end it) beside
+  // the lines; a narrow screen puts it over them.
   return (
-    <div
-      className={cn(
-        'mx-auto flex min-h-[calc(100svh-4rem)] max-w-3xl flex-col p-4 pb-28 max-sm:p-3',
-        // The phone's bar stacks its actions under the total while they
-        // are more than one button, so the list keeps clear of a taller bar
-        isSettled || selecting
-          ? 'max-sm:pb-[calc(14.5rem+env(safe-area-inset-bottom))]'
-          : 'max-sm:pb-[calc(7.5rem+env(safe-area-inset-bottom))]',
-      )}
-    >
-      {/* On a phone the bill's tools drop to a row of their own under the
-          title, which keeps the whole width for the place's name */}
-      <div className='flex flex-wrap items-center gap-2'>
-        <Button asChild variant='ghost' size='icon' className='size-12'>
+    <div className='flex h-[calc(100svh-4rem)] flex-col'>
+      {/* The header row, ruled off like the sale pad's: the way back, the
+          place, then the two things a cashier does most (add, select) as
+          buttons and the rest (discount, the kitchen's paper, discard or
+          void) in ⋯, far from Settle in the bar so none of them can be
+          fat-fingered */}
+      <div className='flex h-16 shrink-0 items-center gap-2 border-b px-3 max-sm:px-2'>
+        <Button
+          asChild
+          variant='ghost'
+          size='icon'
+          className='size-12 shrink-0'
+        >
           <Link
             to={backTo}
             aria-label={backTo === '/' ? t('backToFloor') : t('goBack')}
@@ -642,485 +722,471 @@ export function TicketScreen({
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <div className='min-w-0 flex-1'>
-          {/* Flex + gap rather than a margin on an inline span: with a Latin
-              place name in Arabic the bidi algorithm lays the whole line out
-              left-to-right and an inline start margin ends up on the outer
-              edge, not between the two */}
-          <h1 className='flex items-baseline gap-2 text-xl font-bold'>
-            <BillTitle title={title} className='truncate' />
-            <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
-              #{toNumber(ticket.id)}
-            </span>
-          </h1>
-          {takenBy && <p className='text-muted-foreground truncate text-sm'>{takenBy}</p>}
-        </div>
-        {/* A paid table can still be waiting on the kitchen's paper */}
-        {isSettled && <KitchenReprintButton lines={ticket.lines ?? []} />}
+        {/* Flex + gap rather than a margin on an inline span: with a Latin
+            place name in Arabic the bidi algorithm lays the whole line out
+            left-to-right and an inline start margin ends up on the outer
+            edge, not between the two */}
+        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 text-xl font-bold'>
+          <BillTitle title={title} className='truncate' />
+          <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
+            #{toNumber(ticket.id)}
+          </span>
+        </h1>
         {isSettled ? (
-          <Badge className='h-8 px-3 text-sm' variant='secondary'>
+          <Badge className='h-8 shrink-0 px-3 text-sm' variant='secondary'>
             {t('settledBadge')}
             {ticket.receiptNumber != null &&
               ` · ${t('receiptNumber', { number: toNumber(ticket.receiptNumber) })}`}
           </Badge>
         ) : isVoided ? (
-          <Badge className='h-8 px-3 text-sm' variant='destructive'>
+          <Badge className='h-8 shrink-0 px-3 text-sm' variant='destructive'>
             {t('voidedBadge')}
           </Badge>
         ) : (
-          <div className='flex gap-1 max-sm:basis-full max-sm:justify-end'>
+          <>
             {/* The pad, pointed at this bill — same flow as a new sale, the
-                money just comes later. Everything sold here is on the menu,
-                so there is no typed-in line beside it. */}
+                money just comes later */}
             <Button
-              className='h-12 gap-2 px-3'
+              className='h-12 shrink-0 gap-2 px-3'
               aria-label={t('addItems')}
               onClick={() =>
                 navigate({ to: '/sale', search: { ticket: ticketId } })
               }
             >
               <ShoppingCart className='size-5' />
-              <span className='hidden sm:inline'>{t('addItems')}</span>
+              <span className='max-sm:hidden'>{t('addItems')}</span>
             </Button>
             <Button
               variant={selecting ? 'secondary' : 'outline'}
-              className='h-12 gap-2 px-3'
+              className='h-12 shrink-0 gap-2 px-3'
               aria-label={t('selectLines')}
               disabled={lines.length === 0}
               onClick={toggleSelecting}
             >
               <ListChecks className='size-5' />
-              <span className='hidden sm:inline'>{t('selectLines')}</span>
+              <span className='max-sm:hidden'>{t('selectLines')}</span>
             </Button>
-            <Button
-              variant={toNumber(ticket.discount) > 0 ? 'secondary' : 'outline'}
-              className='h-12 gap-2 px-3'
-              aria-label={t('discount')}
-              disabled={lines.length === 0}
-              onClick={() => setDiscountOpen(true)}
-            >
-              <BadgePercent className='size-5' />
-              {/* Once applied, the button reads the amount so the discount
-                  is never missed — the bar repeats it under the total */}
-              {toNumber(ticket.discount) > 0 ? (
-                <span className='tabular-nums'>−{money(ticket.discount)}</span>
-              ) : (
-                <span className='hidden sm:inline'>{t('discount')}</span>
-              )}
-            </Button>
-            {/* The kitchen's paper again, where a station prints */}
-            <KitchenReprintButton lines={lines} />
-            {/* Both ways out live up here, deliberately far from the Settle
-                button in the bottom bar, so neither can be fat-fingered.
-                Nothing on the ticket yet means nothing to audit, so any
-                cashier can discard it; once a line lands, only an owner's
-                void (with its reason) takes it off the floor. A room ticket
-                is discardable too, but only once its session has ended with
-                nothing on it — while it runs, there is time still to come. */}
-            {lines.length === 0 &&
-            mySends.length === 0 &&
-            (ticket.type !== 'Room' || ticket.sessionEndedAt != null) ? (
+          </>
+        )}
+        {hasMenu && (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
               <Button
                 variant='outline'
-                className='text-destructive hover:text-destructive h-12 gap-2 px-3'
-                aria-label={t('discardTicket')}
-                onClick={() => setDiscardOpen(true)}
+                size='icon'
+                className='size-12 shrink-0'
+                aria-label={t('moreActions')}
               >
-                <Trash2 className='size-5' />
-                <span className='hidden sm:inline'>{t('discardTicket')}</span>
+                <Ellipsis className='size-5' />
               </Button>
-            ) : (
-              isOwner && (
-                <Button
-                  variant='outline'
-                  className='text-destructive hover:text-destructive h-12 gap-2 px-3'
-                  aria-label={t('voidTicket')}
-                  onClick={() =>
-                    runningStay ? setVoidGuardOpen(true) : setVoidOpen(true)
-                  }
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align='end' className='min-w-56'>
+              {isOpen && (
+                <DropdownMenuItem
+                  className='h-12 gap-3 px-3 text-base'
+                  disabled={lines.length === 0}
+                  onSelect={() => setDiscountOpen(true)}
                 >
-                  <Ban className='size-5' />
-                  <span className='hidden sm:inline'>{t('voidTicket')}</span>
-                </Button>
-              )
-            )}
-          </div>
+                  <BadgePercent className='size-5' />
+                  <span className='flex-1'>{t('discount')}</span>
+                  {/* Once applied, the row reads the amount; the bar repeats
+                      it under the total */}
+                  {discount > 0 && (
+                    <span className='text-emerald-600 tabular-nums dark:text-emerald-400'>
+                      −{money(ticket.discount)}
+                    </span>
+                  )}
+                </DropdownMenuItem>
+              )}
+              {canReprint && (
+                <DropdownMenuItem
+                  className='h-12 gap-3 px-3 text-base'
+                  onSelect={() => setReprintOpen(true)}
+                >
+                  <Printer className='size-5' />
+                  {t('kitchenTickets')}
+                </DropdownMenuItem>
+              )}
+              {isOpen && canDiscard ? (
+                <DropdownMenuItem
+                  variant='destructive'
+                  className='h-12 gap-3 px-3 text-base'
+                  onSelect={() => setDiscardOpen(true)}
+                >
+                  <Trash2 className='size-5' />
+                  {t('discardTicket')}
+                </DropdownMenuItem>
+              ) : (
+                isOpen &&
+                canVoid && (
+                  <DropdownMenuItem
+                    variant='destructive'
+                    className='h-12 gap-3 px-3 text-base'
+                    onSelect={() =>
+                      runningStay ? setVoidGuardOpen(true) : setVoidOpen(true)
+                    }
+                  >
+                    <Ban className='size-5' />
+                    {t('voidTicket')}
+                  </DropdownMenuItem>
+                )
+              )}
+            </DropdownMenuContent>
+          </DropdownMenu>
         )}
       </div>
 
-      <Separator className='my-3' />
+      <div className='flex min-h-0 flex-1 flex-col overflow-y-auto min-[900px]:flex-row min-[900px]:overflow-hidden'>
+        {room && (
+          // A light tint: the room's own surface beside the bill, not more
+          // of its list
+          <aside className='shrink-0 p-4 pb-2 min-[900px]:order-last min-[900px]:w-[340px] min-[900px]:overflow-y-auto min-[900px]:border-s min-[900px]:bg-muted/40 min-[900px]:pb-4 xl:w-[380px]'>
+            {room}
+          </aside>
+        )}
 
-      {runningStay && (
-        <div className='mb-4'>
-          <StayBar stay={runningStay} />
-        </div>
-      )}
+        <div className='flex flex-col p-4 min-[900px]:min-w-0 min-[900px]:flex-1 min-[900px]:overflow-y-auto'>
+          {/* Who took it, only when another branch did (a phone order sent
+              here): why a bill nobody here rang up is on the floor, and whom
+              to ask. Taken here, everyone on shift knows */}
+          {takenBy && ticket.takenAtBranchId != null && (
+            <p className='text-muted-foreground mb-3 text-sm'>{takenBy}</p>
+          )}
 
-      {endedStay && (
-        <div className='bg-card text-card-foreground mb-4 flex flex-col gap-3 rounded-xl border p-3 shadow-xs'>
-          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-            <Users className='size-4' />
-            {t('inTheRoom')}
-          </div>
-          <StayMembers stay={endedStay} />
-        </div>
-      )}
-
-      {/* Confirmed here, they land on this bill — which is why the guard
-          below stops a settle while any are still waiting */}
-      {waiting.length > 0 && (
-        <div className='border-amber-500/50 bg-amber-500/10 mb-4 flex flex-col gap-2 rounded-xl border p-3'>
-          <div className='flex items-center gap-2 font-semibold'>
-            <Clock className='size-5 text-amber-600 dark:text-amber-500' />
-            {t('ticketPendingOrders', { count: waiting.length })}
-          </div>
-          <PendingOrders orders={waiting} />
-        </div>
-      )}
-
-      {/* The time is not a line until the session ends; until then the
-          bill shows it as the row it will become, so the running cost is
-          read where the rest of the bill is */}
-      {runningStay && (
-        <div className='text-muted-foreground flex items-center gap-3 border-b border-dashed py-3'>
-          <Timer className='size-5 shrink-0' />
-          <span className='min-w-0 flex-1 truncate'>
-            {t('roomTimeRunning')}
-          </span>
-          <span className='shrink-0 tabular-nums'>
-            ≈ <TimeSoFar stay={runningStay} />
-          </span>
-        </div>
-      )}
-
-      {lines.length === 0 ? (
-        !runningStay &&
-        mySends.length === 0 && (
-          <p className='text-muted-foreground py-16 text-center'>
-            {t('emptyTicket')}
-          </p>
-        )
-      ) : groups.length === 1 && groups[0].key === null ? (
-        <div className='flex flex-col'>
-          <div className='flex flex-col divide-y'>
-            {/* Selecting moves individual lines to another ticket, so the rounds
-                come back apart the moment the cashier is choosing between them */}
-            {(selecting ? lines : mergeIdenticalLines(lines)).map((line) => (
-              <LineRow
-                key={String(line.id)}
-                line={line}
-                selecting={selecting && !isSettled}
-                selected={selectedIds.has(toNumber(line.id))}
-                onToggle={() => toggleLine(toNumber(line.id))}
-                landed={landed.includes(toNumber(line.orderId))}
-              />
-            ))}
-          </div>
-          {/* Nobody was named: the till forgot, and the whole bill is one
-              "whose was this?" away from grouping under them */}
-        </div>
-      ) : (
-        /* Shared bill: one heading per person, each with its own subtotal, so
-           the cashier can read (and split) who owes what. Lines nobody was
-           named for stay together under the table's own heading. */
-        <div className='flex flex-col gap-4'>
-          {groups.map((group) => (
-            <div key={group.key ?? '__unattributed__'}>
-              <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'>
-                {group.lines[0]?.customerId ? (
-                  /* An account holder: tap the name for their card */
-                  <button
-                    type='button'
-                    className='flex min-w-0 items-center gap-2 font-semibold underline-offset-4 hover:underline'
-                    onClick={() =>
-                      setCardFor({
-                        id: String(group.lines[0].customerId),
-                        name: group.name ?? '',
-                      })
-                    }
-                  >
-                    <User className='size-4 shrink-0' />
-                    <span className='truncate'>{group.name ?? t('guest')}</span>
-                  </button>
-                ) : (
-                  <span className='flex min-w-0 items-center gap-2 font-semibold'>
-                    <User className='size-4 shrink-0' />
-                    <span className='truncate'>
-                      {group.name ?? (group.key ? t('guest') : location)}
-                    </span>
-                  </span>
-                )}
-                <span className='shrink-0 tabular-nums'>
-                  {money(group.total)}
-                </span>
+          {/* Confirmed here, they land on this bill — which is why the guard
+              stops a settle while any are still waiting */}
+          {waiting.length > 0 && (
+            <div className='border-amber-500/50 bg-amber-500/10 mb-4 flex flex-col gap-2 rounded-xl border p-3'>
+              <div className='flex items-center gap-2 font-semibold'>
+                <Clock className='size-5 text-amber-600 dark:text-amber-500' />
+                {t('ticketPendingOrders', { count: waiting.length })}
               </div>
-              <div className='flex flex-col divide-y'>
-                {(selecting
-                  ? group.lines
-                  : mergeIdenticalLines(group.lines)
-                ).map((line) => (
-                  <LineRow
-                    key={String(line.id)}
-                    line={line}
-                    selecting={selecting && !isSettled}
-                    selected={selectedIds.has(toNumber(line.id))}
-                    onToggle={() => toggleLine(toNumber(line.id))}
-                    landed={landed.includes(toNumber(line.orderId))}
-                  />
+              <PendingOrders orders={waiting} />
+            </div>
+          )}
+
+          {lines.length === 0 ? (
+            // Nothing to say while a session runs: the clock in the panel is
+            // the bill so far; nor while lines are on their way
+            !runningStay &&
+            mySends.length === 0 && (
+              <p className='text-muted-foreground py-16 text-center'>
+                {t('emptyTicket')}
+              </p>
+            )
+          ) : groups.length === 1 && groups[0].key === null ? (
+            <div className='flex flex-col divide-y'>
+              {/* Selecting moves individual lines to another ticket, so the
+                  rounds come back apart the moment the cashier is choosing
+                  between them */}
+              {(choosing ? lines : mergeIdenticalLines(lines)).map((line) => (
+                <LineRow
+                  key={String(line.id)}
+                  line={line}
+                  selecting={choosing}
+                  selected={selectedIds.has(toNumber(line.id))}
+                  onToggle={() => toggleLine(toNumber(line.id))}
+                  landed={landed.includes(toNumber(line.orderId))}
+                />
+              ))}
+            </div>
+          ) : (
+            /* Shared bill: one heading per person, each with its own
+               subtotal, so the cashier can read (and split) who owes what.
+               Lines nobody was named for stay together under the table's own
+               heading. */
+            <div className='flex flex-col gap-4'>
+              {groups.map((group) => (
+                <div key={group.key ?? '__unattributed__'}>
+                  <div className='bg-muted/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'>
+                    {group.lines[0]?.customerId ? (
+                      /* An account holder: tap the name for their card */
+                      <button
+                        type='button'
+                        className='flex min-w-0 items-center gap-2 font-semibold underline-offset-4 hover:underline'
+                        onClick={() =>
+                          setCardFor({
+                            id: String(group.lines[0].customerId),
+                            name: group.name ?? '',
+                          })
+                        }
+                      >
+                        <User className='size-4 shrink-0' />
+                        <span className='truncate'>
+                          {group.name ?? t('guest')}
+                        </span>
+                      </button>
+                    ) : (
+                      <span className='flex min-w-0 items-center gap-2 font-semibold'>
+                        <User className='size-4 shrink-0' />
+                        <span className='truncate'>
+                          {group.name ?? (group.key ? t('guest') : location)}
+                        </span>
+                      </span>
+                    )}
+                    <span className='shrink-0 tabular-nums'>
+                      {money(group.total)}
+                    </span>
+                  </div>
+                  <div className='flex flex-col divide-y'>
+                    {(choosing
+                      ? group.lines
+                      : mergeIdenticalLines(group.lines)
+                    ).map((line) => (
+                      <LineRow
+                        key={String(line.id)}
+                        line={line}
+                        selecting={choosing}
+                        selected={selectedIds.has(toNumber(line.id))}
+                        onToggle={() => toggleLine(toNumber(line.id))}
+                        landed={landed.includes(toNumber(line.orderId))}
+                      />
+                    ))}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+
+          {isOpen && <SendingLines ref={sendingRef} sends={mySends} />}
+
+          {isOpen && (
+            <OnlinePaymentsPanel
+              payments={online.payments}
+              summary={onlinePaid}
+              billOpen
+            />
+          )}
+
+          {/* A voided ticket keeps its lines for the record but loses every
+              action — what remains is the audit trail */}
+          {isVoided && (
+            <div className='mt-4 divide-y rounded-lg border text-base'>
+              <div className='text-destructive flex items-center gap-2 px-3 py-2 font-semibold'>
+                <Ban className='size-5' />
+                {t('voidedBadge')}
+              </div>
+              {ticket.voidReason && (
+                <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
+                  <span className='text-muted-foreground'>{t('reason')}</span>
+                  <span className='text-end'>{ticket.voidReason}</span>
+                </div>
+              )}
+              {(ticket.voidedBy || ticket.voidedAt) && (
+                <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
+                  <span className='text-muted-foreground'>{t('voidedBy')}</span>
+                  <span className='text-end tabular-nums'>
+                    {[
+                      ticket.voidedBy,
+                      ticket.voidedAt &&
+                        new Intl.DateTimeFormat(locale, {
+                          dateStyle: 'medium',
+                          timeStyle: 'short',
+                        }).format(new Date(ticket.voidedAt)),
+                    ]
+                      .filter(Boolean)
+                      .join(' · ')}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Credit notes: money that went back, each with its reason */}
+          {(ticket.refunds?.length ?? 0) > 0 && (
+            <div className='mt-4 flex flex-col gap-2'>
+              <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+                {t('refundsTitle')}
+              </h2>
+              <div className='divide-y rounded-lg border'>
+                {ticket.refunds!.map((refund) => (
+                  <div
+                    key={String(refund.id)}
+                    className='flex flex-col gap-0.5 px-3 py-2'
+                  >
+                    <div className='flex items-baseline justify-between gap-4'>
+                      <span className='font-medium'>
+                        {t('creditNote', { number: toNumber(refund.number) })}
+                      </span>
+                      <span className='text-destructive font-semibold tabular-nums'>
+                        −{money(refund.amount)}
+                      </span>
+                    </div>
+                    <p className='text-sm'>{refund.reason}</p>
+                    <p className='text-muted-foreground text-xs tabular-nums'>
+                      {[
+                        refund.tender === 'Account' ? t('account') : t('cash'),
+                        refund.customerName,
+                        refund.refundedBy,
+                        refund.refundedAt &&
+                          new Intl.DateTimeFormat(locale, {
+                            dateStyle: 'medium',
+                            timeStyle: 'short',
+                          }).format(new Date(refund.refundedAt)),
+                      ]
+                        .filter(Boolean)
+                        .join(' · ')}
+                    </p>
+                  </div>
                 ))}
               </div>
             </div>
-          ))}
-        </div>
-      )}
-
-      {!isSettled && !isVoided && <SendingLines sends={mySends} />}
-
-      {!isSettled && !isVoided && (
-        <OnlinePaymentsPanel
-          payments={online.payments}
-          summary={onlinePaid}
-          billOpen
-        />
-      )}
-
-      {/* A voided ticket keeps its lines for the record but loses every
-          action — what remains is the audit trail */}
-      {isVoided && (
-        <div className='mt-4 divide-y rounded-lg border text-base'>
-          <div className='text-destructive flex items-center gap-2 px-3 py-2 font-semibold'>
-            <Ban className='size-5' />
-            {t('voidedBadge')}
-          </div>
-          {ticket.voidReason && (
-            <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
-              <span className='text-muted-foreground'>{t('reason')}</span>
-              <span className='text-end'>{ticket.voidReason}</span>
-            </div>
-          )}
-          {(ticket.voidedBy || ticket.voidedAt) && (
-            <div className='flex items-baseline justify-between gap-4 px-3 py-2'>
-              <span className='text-muted-foreground'>{t('voidedBy')}</span>
-              <span className='text-end tabular-nums'>
-                {[
-                  ticket.voidedBy,
-                  ticket.voidedAt &&
-                    new Intl.DateTimeFormat(locale, {
-                      dateStyle: 'medium',
-                      timeStyle: 'short',
-                    }).format(new Date(ticket.voidedAt)),
-                ]
-                  .filter(Boolean)
-                  .join(' · ')}
-              </span>
-            </div>
           )}
         </div>
-      )}
+      </div>
 
-      {/* Credit notes: money that went back, each with its reason */}
-      {(ticket.refunds?.length ?? 0) > 0 && (
-        <div className='mt-4 flex flex-col gap-2'>
-          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
-            {t('refundsTitle')}
-          </h2>
-          <div className='divide-y rounded-lg border'>
-            {ticket.refunds!.map((refund) => (
-              <div
-                key={String(refund.id)}
-                className='flex flex-col gap-0.5 px-3 py-2'
+      {/* The bar across every bill's foot, room or table alike: the money at
+          the start, and at the end what is done with the bill — Settle;
+          while lines are picked, where they go; once paid, Print and an
+          owner's Refund. A phone puts several actions on a row of their own */}
+      <div className='flex shrink-0 flex-wrap items-center gap-x-4 gap-y-2 border-t px-4 py-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))]'>
+        <div className='min-w-0 flex-1'>
+          <div className='flex h-10 items-center gap-1'>
+            {/* While lines are picked, how many, where the actions for them are */}
+            <span className='text-muted-foreground truncate text-sm'>
+              {choosing
+                ? t('selectedLinesCount', { count: selectedIds.size })
+                : t('total')}
+            </span>
+            {hasParts && (
+              <Button
+                variant='ghost'
+                className='text-muted-foreground h-10 px-2 text-sm'
+                onClick={() => setBreakdownOpen(true)}
               >
-                <div className='flex items-baseline justify-between gap-4'>
-                  <span className='font-medium'>
-                    {t('creditNote', { number: toNumber(refund.number) })}
-                  </span>
-                  <span className='text-destructive font-semibold tabular-nums'>
-                    −{money(refund.amount)}
-                  </span>
-                </div>
-                <p className='text-sm'>{refund.reason}</p>
-                <p className='text-muted-foreground text-xs tabular-nums'>
-                  {[
-                    refund.tender === 'Account' ? t('account') : t('cash'),
-                    refund.customerName,
-                    refund.refundedBy,
-                    refund.refundedAt &&
-                      new Intl.DateTimeFormat(locale, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      }).format(new Date(refund.refundedAt)),
-                  ]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
-            ))}
+                {t('breakdown')}
+              </Button>
+            )}
           </div>
-        </div>
-      )}
-
-      {/* Sticky action bar: the running total is always in reach, and so is
-          the primary action (Settle, or Move while selecting) */}
-      {!isVoided && (
-        <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur'>
-          <div className='mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2'>
-            <div className='min-w-0'>
-              <div className='text-muted-foreground text-sm'>{t('total')}</div>
-              <div className='text-2xl font-bold tabular-nums'>
-                {money(
-                  onTheirWay.length > 0 && !isSettled
-                    ? totalWith(
-                        ticket,
-                        onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0),
-                      )
-                    : ticket.total,
-                )}
-              </div>
-              {toNumber(ticket.discount) > 0 && (
-                <div className='text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
-                  {t('discount')} −{money(ticket.discount)}
-                  {ticket.discountRate != null &&
-                    ` (${percent(ticket.discountRate)}%)`}
-                </div>
-              )}
-              {/* The rest of the bill's parts (menu money, service, VAT, what
-                went back) are one tap away; the bar carries the total and
-                the discount, which the cashier must not miss */}
-              {(toNumber(ticket.discount) > 0 ||
-                toNumber(ticket.serviceCharge) > 0 ||
-                toNumber(ticket.vat) > 0 ||
-                toNumber(ticket.refundedTotal) > 0) && (
-                <Button
-                  variant='ghost'
-                  size='sm'
-                  className='text-muted-foreground -ms-2 h-7 px-2 text-xs'
-                  onClick={() => setBreakdownOpen(true)}
-                >
-                  {t('breakdown')}
-                </Button>
-              )}
-              {runningStay && (
-                <div className='text-muted-foreground truncate text-xs tabular-nums'>
-                  + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
-                </div>
-              )}
-              {/* Guests paid part (or all) of it from their phones: what the
-                till still takes is the rest */}
-              {!isSettled && onlinePaid.paid > 0 && (
-                <div className='text-sm font-medium tabular-nums'>
-                  {onlinePaid.covered
-                    ? t('paidOnlineClosing')
-                    : t('remainingAfterOnline', {
-                        amount: money(onlinePaid.remaining),
-                      })}
-                </div>
-              )}
-              {!isSettled && onlinePaid.pending && (
-                <div className='flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500'>
-                  <Loader2 className='size-3 animate-spin' />
-                  {t('guestPayingOnline')}
-                </div>
-              )}
+          <div className='truncate text-3xl leading-[1.4] font-bold tabular-nums'>
+            {money(total)}
+          </div>
+          {discount > 0 && (
+            <div className='truncate text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+              {t('discount')} −{money(ticket.discount)}
+              {ticket.discountRate != null &&
+                ` (${percent(ticket.discountRate)}%)`}
             </div>
-            <div
-              className={cn(
-                'ms-auto',
-                // Several actions: a row of their own under the total, each
-                // an equal share of the width
-                (isSettled || selecting) && 'max-sm:w-full',
-              )}
+          )}
+          {/* Guests paid part (or all) of it from their phones: what the
+              till still takes is the rest */}
+          {isOpen && onlinePaid.paid > 0 && (
+            <div className='truncate text-sm font-medium tabular-nums'>
+              {onlinePaid.covered
+                ? t('paidOnlineClosing')
+                : t('remainingAfterOnline', {
+                    amount: money(onlinePaid.remaining),
+                  })}
+            </div>
+          )}
+          {isOpen && onlinePaid.pending && (
+            <div className='flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500'>
+              <Loader2 className='size-3 animate-spin' />
+              {t('guestPayingOnline')}
+            </div>
+          )}
+          {runningStay && (
+            <div className='text-muted-foreground truncate text-xs tabular-nums'>
+              + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
+            </div>
+          )}
+        </div>
+
+        {isVoided ? null : isSettled ? (
+          <div className='flex gap-2 max-sm:w-full'>
+            <Button
+              size='lg'
+              className={actionClass(true)}
+              onClick={() => void printSheets()}
             >
-              {isSettled ? (
-                <div className='flex gap-2'>
-                  {/* Owner-only, like void: money goes back, so an owner says
-                    so. Gone once the whole receipt has been credited. */}
-                  {isOwner &&
-                    toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
-                      <Button
-                        size='lg'
-                        variant='outline'
-                        className='text-destructive hover:text-destructive h-14 px-5 text-lg max-sm:h-12 max-sm:flex-1 max-sm:px-3 max-sm:text-base'
-                        onClick={() => setRefundOpen(true)}
-                      >
-                        <Undo2 className='size-5' />
-                        {t('refundTicket')}
-                      </Button>
-                    )}
-                  <Button
-                    size='lg'
-                    className='h-14 px-6 text-lg max-sm:h-12 max-sm:flex-1 max-sm:px-3 max-sm:text-base'
-                    onClick={() => void printSheets()}
-                  >
-                    <Printer className='size-5' />
-                    {t('print')}
-                  </Button>
-                </div>
-              ) : selecting ? (
-                <div className='flex items-center gap-2 max-sm:grid max-sm:grid-cols-2'>
-                  <Button
-                    variant='outline'
-                    size='lg'
-                    className='h-14 gap-2 px-5 text-lg max-sm:col-span-2 max-sm:h-12 max-sm:px-3 max-sm:text-base'
-                    disabled={
-                      selectedIds.size === 0 ||
-                      assignCustomer.isPending ||
-                      assignLines.isPending
-                    }
-                    onClick={assignSelected}
-                  >
-                    <UserPlus className='size-5' />
-                    {t('assignCustomer')}
-                  </Button>
-                  <Button
-                    variant='outline'
-                    size='lg'
-                    className='h-14 gap-2 px-5 text-lg max-sm:h-12 max-sm:px-3 max-sm:text-base'
-                    disabled={selectedIds.size === 0 || moveLines.isPending}
-                    onClick={() => setMoveMode('move')}
-                  >
-                    {t('moveToBill')}
-                  </Button>
-                  <Button
-                    size='lg'
-                    className='h-14 gap-2 px-6 text-lg max-sm:h-12 max-sm:px-3 max-sm:text-base'
-                    disabled={selectedIds.size === 0 || moveLines.isPending}
-                    onClick={() => setMoveMode('new')}
-                  >
-                    {moveLines.isPending && (
-                      <Loader2 className='size-5 animate-spin' />
-                    )}
-                    {t('newBill')}
-                  </Button>
-                </div>
-              ) : (
+              <Printer className='size-5' />
+              {t('print')}
+            </Button>
+            {/* Owner-only, like void: money goes back, so an owner says so.
+                Gone once the whole receipt has been credited. */}
+            {isOwner &&
+              toNumber(ticket.refundedTotal) < toNumber(ticket.total) && (
                 <Button
                   size='lg'
-                  className='h-14 gap-2 px-8 text-lg max-sm:px-6'
-                  // The money waits for every line charged here: never taken
-                  // against a bill the server has not got all of
-                  disabled={lines.length === 0 || mySends.length > 0}
-                  onClick={() =>
-                    runningStay
-                      ? setSessionGuardOpen(true)
-                      : waiting.length > 0
-                        ? setSettleGuardOpen(true)
-                        : setSettleOpen(true)
-                  }
-                >
-                  {onTheirWay.length > 0 ? (
-                    <>
-                      <Loader2 className='size-5 animate-spin' />
-                      {t('confirming')}
-                    </>
-                  ) : (
-                    t('settleAction')
+                  variant='outline'
+                  className={cn(
+                    actionClass(),
+                    'text-destructive hover:text-destructive',
                   )}
+                  onClick={() => setRefundOpen(true)}
+                >
+                  <Undo2 className='size-5' />
+                  {t('refundTicket')}
                 </Button>
               )}
-            </div>
           </div>
-        </div>
-      )}
+        ) : choosing ? (
+          <div className='flex gap-2 max-sm:grid max-sm:w-full max-sm:grid-cols-2'>
+            <Button
+              variant='outline'
+              size='lg'
+              className={cn(actionClass(), 'max-sm:col-span-2')}
+              disabled={
+                noneChosen || assignCustomer.isPending || assignLines.isPending
+              }
+              onClick={assignSelected}
+            >
+              <UserPlus className='size-5' />
+              {t('assignCustomer')}
+            </Button>
+            <Button
+              variant='outline'
+              size='lg'
+              className={actionClass()}
+              disabled={noneChosen || moveLines.isPending}
+              onClick={() => setMoveMode('move')}
+            >
+              <ArrowRightLeft className='size-5' />
+              {t('moveToBill')}
+            </Button>
+            <Button
+              size='lg'
+              className={actionClass(true)}
+              disabled={noneChosen || moveLines.isPending}
+              onClick={() => setMoveMode('new')}
+            >
+              {moveLines.isPending ? (
+                <Loader2 className='size-5 animate-spin' />
+              ) : (
+                <Plus className='size-5' />
+              )}
+              {t('newBill')}
+            </Button>
+          </div>
+        ) : (
+          <Button
+            size='lg'
+            className={actionClass(true)}
+            // Not while a guest is at the provider's checkout, nor before
+            // every line charged here is in: the money is never taken
+            // against a bill the server has not got all of
+            disabled={
+              lines.length === 0 || mySends.length > 0 || onlinePaid.pending
+            }
+            onClick={() =>
+              runningStay
+                ? setSessionGuardOpen(true)
+                : waiting.length > 0
+                  ? setSettleGuardOpen(true)
+                  : setSettleOpen(true)
+            }
+          >
+            {onTheirWay.length > 0 ? (
+              <>
+                <Loader2 className='size-5 animate-spin' />
+                {t('confirming')}
+              </>
+            ) : (
+              t('settleAction')
+            )}
+          </Button>
+        )}
+      </div>
 
       <DiscardTicketDialog
         ticketId={ticketId}
@@ -1202,6 +1268,11 @@ export function TicketScreen({
         ticket={ticket}
         open={discountOpen}
         onOpenChange={setDiscountOpen}
+      />
+      <KitchenReprintDialog
+        lines={lines}
+        open={reprintOpen}
+        onOpenChange={setReprintOpen}
       />
       {/* The sale pad's own picker, reused: an account, or just a name —
           with the room's people first when this is a room's bill */}
