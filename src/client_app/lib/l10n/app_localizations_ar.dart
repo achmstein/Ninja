@@ -57,15 +57,6 @@ class AppLocalizationsAr extends AppLocalizations {
   String get orContinueWith => 'أو سجل بـ';
 
   @override
-  String get continueWithGoogle => 'سجل بجوجل';
-
-  @override
-  String get continueWithApple => 'سجل بأبل';
-
-  @override
-  String get orWithEmail => 'أو بإيميلك';
-
-  @override
   String get google => 'جوجل';
 
   @override
@@ -1944,15 +1935,6 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get orContinueWith => 'أو تابع باستخدام';
-
-  @override
-  String get continueWithGoogle => 'المتابعة باستخدام جوجل';
-
-  @override
-  String get continueWithApple => 'المتابعة باستخدام أبل';
-
-  @override
-  String get orWithEmail => 'أو ببريدك الإلكتروني';
 
   @override
   String get dontHaveAccount => 'ليس لديك حساب؟ ';

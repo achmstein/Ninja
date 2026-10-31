@@ -57,15 +57,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get orContinueWith => 'or continue with';
 
   @override
-  String get continueWithGoogle => 'Continue with Google';
-
-  @override
-  String get continueWithApple => 'Continue with Apple';
-
-  @override
-  String get orWithEmail => 'or with your email';
-
-  @override
   String get google => 'Google';
 
   @override

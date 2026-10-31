@@ -110,12 +110,12 @@ function groupByKind(places: PlaceViewModel[], look: PlacesStyle): { heading?: T
 }
 
 /**
- * The list's places in one panel, a hairline between them: many to a screen, read down like a list, where
- * a card each made a stack of boxes. The cards and the grid's tiles stand on their own
+ * The list's places flat on the page like the app's other lists, a hairline between them: many to a screen,
+ * read down like a list, where a card each made a stack of boxes. The cards and the grid's tiles stand on their own
  */
 function PanelOf({ look, children }: { look: PlacesStyle; children: ReactNode }) {
   if (look !== 'list') return <>{children}</>
-  return <div className='surface divide-border/60 flex flex-col divide-y overflow-hidden rounded-3xl'>{children}</div>
+  return <div className='divide-border/60 flex flex-col divide-y'>{children}</div>
 }
 
 function PlaceSkeletons({ look, count }: { look: PlacesStyle; count: number }) {

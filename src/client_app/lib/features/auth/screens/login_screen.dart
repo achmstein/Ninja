@@ -118,85 +118,92 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final note = context.localeText(theme.typography.note.copyWith(color: colors.mutedForeground));
     final link = context.localeText(theme.typography.note.copyWith(color: colors.foreground, fontWeight: FontWeight.w700));
 
-    // A page like every other: the large title, the business under it, then the blocks rising
-    // in. Google and Apple first, as on the web, each a full-width pill; then the email form
+    // The way every sign-in page reads: the business's mark in the middle, the email form and
+    // its button, then the other ways in (Google, Apple) side by side, and the links at the foot
     return Scaffold(
       backgroundColor: colors.background,
       body: SafeArea(
-        bottom: false,
-        child: NinjaPage(
-          title: l10n.signIn,
-          subtitle: Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: BrandWordmark(
-                height: 36,
-                maxWidth: 200,
-                nameStyle: context.localeText(theme.typography.title.copyWith(color: colors.mutedForeground)),
-              ),
-            ),
-          ),
-          gap: 16,
-          children: [
-            if (_error != null)
-              NinjaAlert(
-                variant: NinjaAlertVariant.destructive,
-                icon: const Icon(LucideIcons.circleAlert),
-                title: AppText(l10n.error),
-                subtitle: AppText(_error!),
-              ),
-            if (google || apple)
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (google)
-                    NinjaButton(
-                      variant: NinjaButtonVariant.outline,
-                      busy: _loadingProvider == SocialProvider.google,
-                      onPress: busy ? null : () => _handleSocialSignIn(SocialProvider.google),
-                      prefix: SvgPicture.asset('assets/images/google_g.svg', width: 18, height: 18),
-                      child: AppText(l10n.continueWithGoogle),
-                    ),
-                  if (google && apple) const SizedBox(height: 10),
-                  if (apple)
-                    NinjaButton(
-                      variant: NinjaButtonVariant.inverse,
-                      busy: _loadingProvider == SocialProvider.apple,
-                      onPress: busy ? null : () => _handleSocialSignIn(SocialProvider.apple),
-                      prefix: const Icon(Icons.apple, size: 20),
-                      child: AppText(l10n.continueWithApple),
-                    ),
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: Ninja.pagePadding, vertical: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Center(
+                  child: BrandWordmark(
+                    height: 64,
+                    maxWidth: 240,
+                    nameStyle: context.localeText(theme.typography.title.copyWith(color: colors.foreground)),
+                  ),
+                ),
+                const SizedBox(height: 40),
+                if (_error != null) ...[
+                  NinjaAlert(
+                    variant: NinjaAlertVariant.destructive,
+                    icon: const Icon(LucideIcons.circleAlert),
+                    title: AppText(l10n.error),
+                    subtitle: AppText(_error!),
+                  ),
                   const SizedBox(height: 16),
+                ],
+                NinjaField.email(
+                  controller: _emailController,
+                  label: AppText(l10n.email),
+                  hint: l10n.enterEmail,
+                  textInputAction: TextInputAction.next,
+                ),
+                const SizedBox(height: 16),
+                NinjaField.password(
+                  controller: _passwordController,
+                  label: AppText(l10n.password),
+                  hint: l10n.enterPassword,
+                  textInputAction: TextInputAction.done,
+                  onSubmit: (_) => _handleSignIn(),
+                ),
+                const SizedBox(height: 24),
+                NinjaButton(lifted: true, busy: _isLoading, onPress: busy ? null : _handleSignIn, child: AppText(l10n.signIn)),
+                if (google || apple) ...[
+                  const SizedBox(height: 28),
                   Row(
                     children: [
                       Expanded(child: Divider(color: colors.border, height: 1)),
                       Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 12),
-                        child: Text(l10n.orWithEmail, style: note),
+                        child: Text(l10n.orContinueWith, style: note),
                       ),
                       Expanded(child: Divider(color: colors.border, height: 1)),
                     ],
                   ),
+                  const SizedBox(height: 20),
+                  // The provider's name alone: the line above already says what they are for
+                  Row(
+                    children: [
+                      if (google)
+                        Expanded(
+                          child: NinjaButton(
+                            variant: NinjaButtonVariant.outline,
+                            busy: _loadingProvider == SocialProvider.google,
+                            onPress: busy ? null : () => _handleSocialSignIn(SocialProvider.google),
+                            prefix: SvgPicture.asset('assets/images/google_g.svg', width: 18, height: 18),
+                            child: AppText(l10n.google),
+                          ),
+                        ),
+                      if (google && apple) const SizedBox(width: 12),
+                      if (apple)
+                        Expanded(
+                          child: NinjaButton(
+                            variant: NinjaButtonVariant.inverse,
+                            busy: _loadingProvider == SocialProvider.apple,
+                            onPress: busy ? null : () => _handleSocialSignIn(SocialProvider.apple),
+                            prefix: const Icon(Icons.apple, size: 20),
+                            child: AppText(l10n.apple),
+                          ),
+                        ),
+                    ],
+                  ),
                 ],
-              ),
-            NinjaField.email(
-              controller: _emailController,
-              label: AppText(l10n.email),
-              hint: l10n.enterEmail,
-              textInputAction: TextInputAction.next,
-            ),
-            NinjaField.password(
-              controller: _passwordController,
-              label: AppText(l10n.password),
-              hint: l10n.enterPassword,
-              textInputAction: TextInputAction.done,
-              onSubmit: (_) => _handleSignIn(),
-            ),
-            NinjaButton(lifted: true, busy: _isLoading, onPress: busy ? null : _handleSignIn, child: AppText(l10n.signIn)),
-            // The other ways in: a new account, or the one the counter made for them
-            Column(
-              children: [
+                const SizedBox(height: 32),
+                // The other ways to an account: a new one, or the one the counter made for them
                 Wrap(
                   alignment: WrapAlignment.center,
                   crossAxisAlignment: WrapCrossAlignment.center,
@@ -211,13 +218,15 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 const SizedBox(height: 12),
                 // Added at the counter by name and phone: the till's QR or
                 // link turns that into an account they can sign in to
-                GestureDetector(
-                  onTap: () => context.push('/claim'),
-                  child: Text(l10n.haveBusinessCode(businessName), textAlign: TextAlign.center, style: link),
+                Center(
+                  child: GestureDetector(
+                    onTap: () => context.push('/claim'),
+                    child: Text(l10n.haveBusinessCode(businessName), textAlign: TextAlign.center, style: link),
+                  ),
                 ),
               ],
             ),
-          ],
+          ),
         ),
       ),
     );

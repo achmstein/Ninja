@@ -567,7 +567,8 @@ class TenantBrand {
         cover: TenantCover.parse(json['cover']),
         theme: TenantTheme.parse(json['theme']),
         locale: TenantLocale.parse(json['locale']),
-        defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : json['defaultThemeMode']),
+        // The cache keeps it at the top (toJson); the API's shape has it in the theme
+        defaultThemeMode: _mode(json['defaultThemeMode'] ?? (json['theme'] is Map ? (json['theme'] as Map)['mode'] : null)),
         features: json['features'] is Map<String, dynamic>
             ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
             : TenantFeatures.all,

@@ -78,7 +78,7 @@ export function PlaceCard({
       style={{ borderRadius: look === 'list' ? 0 : look === 'grid' ? 24 : 28 }}
       className={cn(
         'relative isolate overflow-hidden',
-        // A line of the list has no box of its own: the panel it is in is the card. A tile is light whether
+        // A line of the list has no box of its own: it lies flat on the page. A tile is light whether
         // free or not (its green dot and its plus say it can be booked); a big card that is free is on the slab
         look === 'list' ? 'text-foreground' : free && look === 'cards' ? 'slab shadow-(--slab-shadow)' : 'surface text-foreground'
       )}
@@ -153,7 +153,14 @@ export function PlaceCard({
             onAnimationComplete={reveal}
             className='overflow-hidden'
           >
-            <div className={cn('bg-background text-foreground m-1.5 mt-0 rounded-[1.4rem] p-4', handedOver && 'invisible')}>
+            {/* A line of the flat list boxes its booking under it, on the page's colour, with an edge to read apart by */}
+            <div
+              className={cn(
+                'bg-background text-foreground p-4',
+                look === 'list' ? 'mb-3 rounded-3xl border' : 'm-1.5 mt-0 rounded-[1.4rem]',
+                handedOver && 'invisible',
+              )}
+            >
               <HoldForm place={place} onDone={onDone} />
             </div>
           </motion.div>
@@ -202,7 +209,7 @@ function PlaceRow({ place, tappable, open, onToggle }: FaceProps) {
       onClick={() => onToggle(place)}
       whileTap={tappable && !open ? { scale: 0.99 } : undefined}
       transition={spring}
-      className='flex min-h-15 w-full items-center gap-3 ps-4 pe-4 py-3 text-start disabled:cursor-default'
+      className='flex min-h-15 w-full items-center gap-3 py-3 text-start disabled:cursor-default'
     >
       <span className={cn('size-2 shrink-0 rounded-full', free ? 'bg-emerald-400' : cn('bg-current', status.className))} />
       <span className='flex min-w-0 flex-1 flex-col gap-0.5'>
@@ -321,7 +328,7 @@ export function TariffLine({ place }: { place: Pick<PlaceViewModel, 'tariff'> })
 export function PlaceCardSkeleton({ look = 'cards' }: { look?: PlacesStyle }) {
   if (look === 'list') {
     return (
-      <div className='flex min-h-15 items-center gap-3 ps-4 pe-4 py-3'>
+      <div className='flex min-h-15 items-center gap-3 py-3'>
         <Skeleton className='size-2 rounded-full' />
         <div className='flex flex-1 flex-col gap-1.5'>
           <Skeleton className='h-4 w-32' />
