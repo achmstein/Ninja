@@ -1,0 +1,2 @@
+# Tenants whose stacks run on another node, written by the control plane; do not edit.
+# One a line: the slug, then that node's ingress. Anyone not listed is on this box.

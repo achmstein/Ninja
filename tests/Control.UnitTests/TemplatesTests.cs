@@ -412,7 +412,7 @@ public sealed class TemplatesTests
         var snippet = Templates.CustomDomains([platformHosted, own], Platform);
 
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
-        StringAssert.Contains(snippet, "import tenant_api blue-gateway");
+        StringAssert.Contains(snippet, $"import tenant_api blue{Environment.NewLine}", "by slug: the edge's map finds the node it runs on");
         // The customer app's security headers, framed only by the control app and this business's admin
         StringAssert.Contains(snippet, "import csp_client https://admin.blue.ninja.app");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted business needs no site of its own");

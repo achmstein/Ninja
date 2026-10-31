@@ -54,3 +54,33 @@ public sealed class NodesTests
         Assert.AreEqual("/data/tenants", platform.TenantsRoot);
     }
 }
+
+/// <summary>The edge's map of tenants on other nodes: who is listed, and how.</summary>
+[TestClass]
+public sealed class TenantRoutesTests
+{
+    [TestMethod]
+    public void Only_a_tenant_on_a_node_with_an_ingress_is_listed_by_slug_and_host_port()
+    {
+        var routes = Templates.TenantRoutes([("red", null), ("blue", "http://10.66.0.2:8088"), ("amber", "http://10.66.0.3:8088/")]);
+        var lines = routes.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(l => !l.StartsWith('#')).ToList();
+
+        CollectionAssert.AreEqual(new[] { "amber 10.66.0.3:8088", "blue 10.66.0.2:8088" }, lines, "sorted, red on this box is not listed");
+    }
+
+    [TestMethod]
+    public void Everyone_on_this_box_leaves_the_comment_alone()
+    {
+        var routes = Templates.TenantRoutes([("red", null), ("blue", null)]);
+        Assert.IsTrue(routes.Split('\n', StringSplitOptions.RemoveEmptyEntries).All(l => l.StartsWith('#')));
+    }
+
+    [TestMethod]
+    public void The_routes_file_sits_beside_the_custom_domains_unless_set()
+    {
+        var platform = new PlatformOptions { EdgeSnippetPath = "/opt/ninja/platform/custom-domains.caddy" };
+        Assert.AreEqual(Path.Combine(Path.GetDirectoryName(platform.EdgeSnippetPath)!, "tenant-routes.caddy"), platform.EdgeRoutesPath);
+        platform.EdgeRoutesPath = "/elsewhere/routes.caddy";
+        Assert.AreEqual("/elsewhere/routes.caddy", platform.EdgeRoutesPath);
+    }
+}

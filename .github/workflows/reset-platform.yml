@@ -64,6 +64,7 @@ jobs:
             docker volume rm ninja_postgres-data ninja_rabbitmq-data || true
             # Custom domains belong to tenants that are gone
             : > custom-domains.caddy
+            : > tenant-routes.caddy
             docker volume ls --format '{{.Name}}' | grep '^ninja' || true
             echo "Reset done. Run Deploy Platform."
 

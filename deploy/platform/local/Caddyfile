@@ -22,13 +22,27 @@
 	header Cache-Control "no-cache"
 }
 
+# Where a tenant's stack answers, in {tenant_upstream}: its gateway by container name on
+# this box, or the ingress of the node it runs on when tenant-routes.caddy names one.
+# The control plane writes that file (one "slug host:port" a line) and reloads, as it
+# does custom-domains.caddy. args: the tenant's slug
+(tenant_upstream) {
+	map {args[0]} {tenant_upstream} {
+		import tenant-routes.caddy
+		default {args[0]}-gateway:5000
+	}
+}
+
 (tenant_api) {
+	# args: the tenant's slug
+	import tenant_upstream {args[0]}
 	handle /api/* {
+		# The menu's JSON compresses five to ten times; the live hub below is left as it is
 		encode zstd gzip
-		reverse_proxy {args[0]}:5000
+		reverse_proxy {tenant_upstream}
 	}
 	handle /hub/* {
-		reverse_proxy {args[0]}:5000
+		reverse_proxy {tenant_upstream}
 	}
 }
 
@@ -106,7 +120,7 @@ https:// {
 
 	@admin host admin.*.localhost
 	handle @admin {
-		import tenant_api {labels.1}-gateway
+		import tenant_api {labels.1}
 		handle {
 			import spa /srv/admin-web
 		}
@@ -114,7 +128,7 @@ https:// {
 
 	@pos host pos.*.localhost
 	handle @pos {
-		import tenant_api {labels.1}-gateway
+		import tenant_api {labels.1}
 		handle {
 			import spa /srv/pos-web
 		}
@@ -122,7 +136,7 @@ https:// {
 
 	@kds host kds.*.localhost
 	handle @kds {
-		import tenant_api {labels.1}-gateway
+		import tenant_api {labels.1}
 		handle {
 			import spa /srv/kds-web
 		}
@@ -130,7 +144,8 @@ https:// {
 
 	@api host api.*.localhost
 	handle @api {
-		reverse_proxy {labels.1}-gateway:5000
+		import tenant_upstream {labels.1}
+		reverse_proxy {tenant_upstream}
 	}
 
 	# The customer app on the platform host is the catch-all; only the
@@ -138,7 +153,7 @@ https:// {
 	@customer host *.localhost
 	handle @customer {
 		header Content-Security-Policy "frame-ancestors 'self' https://control.localhost https://admin.{host}"
-		import tenant_api {labels.1}-gateway
+		import tenant_api {labels.1}
 		# A business's own app's link files, from its record (deploy/platform/Caddyfile)
 		import app_links
 		handle {

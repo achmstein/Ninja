@@ -158,6 +158,7 @@ jobs:
           cp deploy/platform/README.md platform-artifacts/
           # The control plane rewrites this file; only seed it when the server has none
           cp deploy/platform/custom-domains.caddy platform-artifacts/custom-domains.caddy.seed
+          cp deploy/platform/tenant-routes.caddy platform-artifacts/tenant-routes.caddy.seed
           # The login theme every realm uses, from where the AppHost mounts it
           cp -r src/Ninja.AppHost/KeycloakConfiguration/themes/ninja platform-artifacts/themes/ninja
           # The native apps' download page; the APKs land beside it from mobile-deploy.yml
@@ -354,6 +355,7 @@ jobs:
               fi
             fi
             [ -f custom-domains.caddy ] || cp custom-domains.caddy.seed custom-domains.caddy
+            [ -f tenant-routes.caddy ] || cp tenant-routes.caddy.seed tenant-routes.caddy
 
             # The web builds are bind-mounted into Caddy: sync INTO the folders,
             # never replace them, or Caddy keeps serving the detached inode

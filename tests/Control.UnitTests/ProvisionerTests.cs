@@ -601,6 +601,7 @@ public sealed class ProvisionerTests
         await _provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
 
         Assert.AreEqual("# before\n", await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "the file Caddy could not parse is gone");
+        Assert.IsFalse(File.Exists(_platform.EdgeRoutesPath), "the routes file it never had is not left behind");
         StringAssert.Contains(_tenant.LastError, "Caddy refused");
         Assert.IsTrue(_audit.Entries.Any(e => e.Action == "tenant.edge.failed"));
         Assert.IsFalse(_shell.Commands.Any(c => c.Contains("caddy reload")), "nothing was reloaded");
@@ -608,6 +609,8 @@ public sealed class ProvisionerTests
         // With Caddy happy, the file is written and reloaded
         await _provisioner.EdgeAsync(_tenant.Id, CancellationToken.None);
         StringAssert.Contains(await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "https://menu.blue.test {");
+        StringAssert.Contains(await File.ReadAllTextAsync(_platform.EdgeSnippetPath), "import tenant_api blue", "by slug: the edge's map finds its node");
+        Assert.IsTrue(File.Exists(_platform.EdgeRoutesPath), "the routes file is written with the domains");
         Assert.IsTrue(_shell.Commands.Any(c => c.Contains("caddy validate")));
         Assert.IsTrue(_shell.Commands.Any(c => c.Contains("caddy reload")));
     }

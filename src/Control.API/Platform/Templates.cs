@@ -689,7 +689,8 @@ public static partial class Templates
             sb.AppendLine("\t}");
             // The customer app's security headers, as on {slug}.{domain}: only the control app and the business's own admin may frame it (their live brand previews)
             sb.AppendLine($"\timport csp_client {TenantHosts.For(tenant, platform).AdminUrl}");
-            sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
+            // Its stack wherever it runs: tenant_api looks the slug up in tenant-routes.caddy
+            sb.AppendLine($"\timport tenant_api {tenant.Slug}");
             // Its own app's link files, as on {slug}.{domain}: the printed QR codes carry this host
             sb.AppendLine("\timport app_links");
             sb.AppendLine("\thandle {");
@@ -700,6 +701,25 @@ public static partial class Templates
             // or its app shows a bare 502 while the stack is suspended
             sb.AppendLine("\timport paused_api");
             sb.AppendLine("}");
+        }
+        return sb.ToString();
+    }
+
+    /// <summary>
+    /// The tenants whose stacks run on another node, for the edge's map: one
+    /// "slug host:port" a line, the node's ingress. A tenant on the box the
+    /// edge shares with the stacks is not listed: the map falls back to its
+    /// gateway by container name. Nothing listed, the file is its comment alone.
+    /// </summary>
+    public static string TenantRoutes(IEnumerable<(string Slug, string? IngressUrl)> placed)
+    {
+        var sb = new StringBuilder();
+        sb.AppendLine("# Tenants whose stacks run on another node, written by the control plane; do not edit.");
+        sb.AppendLine("# One a line: the slug, then that node's ingress. Anyone not listed is on this box.");
+        foreach (var (slug, ingress) in placed.Where(p => !string.IsNullOrEmpty(p.IngressUrl)).OrderBy(p => p.Slug, StringComparer.Ordinal))
+        {
+            var uri = new Uri(ingress!);
+            sb.AppendLine($"{slug} {uri.Host}:{uri.Port}");
         }
         return sb.ToString();
     }

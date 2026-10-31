@@ -171,6 +171,7 @@ services:
       - /opt/ninja/tenants:/opt/ninja/tenants
       # The custom-domain sites it writes for Caddy
       - ./custom-domains.caddy:/opt/ninja/platform/custom-domains.caddy
+      - ./tenant-routes.caddy:/opt/ninja/platform/tenant-routes.caddy
     depends_on:
       postgres:
         condition: service_healthy
@@ -198,6 +199,7 @@ services:
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./custom-domains.caddy:/etc/caddy/custom-domains.caddy:ro
+      - ./tenant-routes.caddy:/etc/caddy/tenant-routes.caddy:ro
       - ./web/admin-web:/srv/admin-web:ro
       - ./web/client-web:/srv/client-web:ro
       - ./web/pos-web:/srv/pos-web:ro

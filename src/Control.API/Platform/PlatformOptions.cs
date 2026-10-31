@@ -114,6 +114,18 @@ public sealed class PlatformOptions
 
     public string EdgeContainer { get; set; } = "ninja-caddy-1";
 
+    private string? _edgeRoutesPath;
+
+    /// <summary>
+    /// The Caddy snippet mapping each tenant on another node to that node's ingress; written with the custom
+    /// domains, one reload for both. Beside the custom-domains file unless set.
+    /// </summary>
+    public string EdgeRoutesPath
+    {
+        get => _edgeRoutesPath ?? Path.Combine(Path.GetDirectoryName(EdgeSnippetPath) ?? "", "tenant-routes.caddy");
+        set => _edgeRoutesPath = value;
+    }
+
     /// <summary>The shared Postgres container (for pg_dump and pg_restore through docker exec).</summary>
     public string PostgresContainer { get; set; } = "ninja-postgres-1";
 

@@ -15,35 +15,53 @@ public interface IEdgeRouter
     Task<string> ApplyAsync(CancellationToken ct);
 }
 
-/// <summary>The Caddy beside the control plane, reached with docker exec.</summary>
+/// <summary>
+/// The Caddy beside the control plane, reached with docker exec. Two files it
+/// imports are the record's: the businesses' own domains, and the tenants on
+/// another node with that node's ingress. Written together, checked by Caddy
+/// together, put back together when it refuses them, reloaded once.
+/// </summary>
 public sealed class CaddyEdgeRouter(ControlContext context, IShell shell, IOptions<PlatformOptions> options) : IEdgeRouter
 {
     private PlatformOptions Platform => options.Value;
 
-    /// <summary>The custom-domain sites of every live tenant, then a Caddy reload; nothing when no business has its own domain yet.</summary>
     public async Task<string> ApplyAsync(CancellationToken ct)
     {
-        var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying && t.CustomerDomain != null).ToListAsync(ct);
-        var snippet = Templates.CustomDomains(live, Platform);
-        var path = Platform.EdgeSnippetPath;
-        var previous = File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : null;
-        if (previous == snippet)
-            return "unchanged";
-        if (Platform.DryRun && !Directory.Exists(Path.GetDirectoryName(path)!))
-            return $"(dry run) {live.Count} custom domain(s)";
+        var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying).ToListAsync(ct);
+        var withDomain = live.Where(t => t.CustomerDomain != null).ToList();
+        var ingress = await context.Nodes.AsNoTracking().Where(n => n.IngressUrl != null).ToDictionaryAsync(n => n.Id, n => n.IngressUrl, ct);
+        var placed = live.Select(t => (t.Slug, IngressUrl: ingress.GetValueOrDefault(t.NodeId))).ToList();
 
-        // The file is what Caddy reads on its next start too, so a snippet it cannot parse must never stay on disk:
-        // written, checked by Caddy itself, and put back the way it was when the check fails
-        await File.WriteAllTextAsync(path, snippet, ct);
+        var files = new[]
+        {
+            (Path: Platform.EdgeSnippetPath, Text: Templates.CustomDomains(withDomain, Platform)),
+            (Path: Platform.EdgeRoutesPath, Text: Templates.TenantRoutes(placed)),
+        };
+        var said = $"{withDomain.Count} custom domain(s), {placed.Count(p => p.IngressUrl is not null)} tenant(s) on other nodes";
+        var previous = new List<(string Path, string? Text)>();
+        foreach (var file in files)
+            previous.Add((file.Path, File.Exists(file.Path) ? await File.ReadAllTextAsync(file.Path, ct) : null));
+        if (files.Zip(previous).All(p => p.First.Text == p.Second.Text))
+            return "unchanged";
+        if (Platform.DryRun && !Directory.Exists(Path.GetDirectoryName(Platform.EdgeSnippetPath)!))
+            return $"(dry run) {said}";
+
+        // Each file is what Caddy reads on its next start too, so files it cannot parse must never stay on disk:
+        // written, checked by Caddy itself, and put back the way they were when the check fails
+        foreach (var file in files)
+            await File.WriteAllTextAsync(file.Path, file.Text, ct);
         var validate = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"], null, CancellationToken.None);
         if (!validate.Ok)
         {
-            if (previous is null) File.Delete(path);
-            else await File.WriteAllTextAsync(path, previous, CancellationToken.None);
-            throw new InvalidOperationException($"Caddy refused the custom domains; the previous file is back: {validate.Output}");
+            foreach (var (path, text) in previous)
+            {
+                if (text is null) File.Delete(path);
+                else await File.WriteAllTextAsync(path, text, CancellationToken.None);
+            }
+            throw new InvalidOperationException($"Caddy refused the edge files; the previous ones are back: {validate.Output}");
         }
         var reload = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "reload", "--config", "/etc/caddy/Caddyfile"], null, ct);
         if (!reload.Ok) throw new ShellException(reload.Output);
-        return $"{live.Count} custom domain(s)";
+        return said;
     }
 }
