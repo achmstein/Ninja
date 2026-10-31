@@ -6,6 +6,7 @@ using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Apis;
 
@@ -52,6 +53,7 @@ public static partial class ControlApi
         MapTalabatSettingsApi(api);
         MapAiApi(api);
         MapMapsApi(api);
+        MapNodesApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);
@@ -122,7 +124,7 @@ public static partial class ControlApi
         ControlContext context,
         ProvisioningQueue queue,
         IAuditWriter audit,
-        CapacityCache capacity,
+        Placement placement,
         IOptions<PlatformOptions> options,
         CreateTenantRequest request,
         CancellationToken ct)
@@ -169,12 +171,15 @@ public static partial class ControlApi
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{slug} is taken." });
         if (domain is not null && await context.Tenants.AnyAsync(t => t.CustomerDomain == domain && t.Status != TenantStatus.Destroyed, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{domain} already belongs to another tenant." });
-        if ((request.Provision ?? true) && !(request.Force ?? false) && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
+        // The node it goes to: one asked for, or the one placement picks; room counts only when it is stamped now
+        var placed = await placement.PlaceAsync(new PlacementRequest(request.Kind, request.NodeId, Force: (request.Force ?? false) || !(request.Provision ?? true)), ct);
+        if (placed.NodeId is not int nodeId)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"No room for another stack: {placed.Reason} Pass force=true to stamp anyway." });
 
         var tenant = new Tenant
         {
             Slug = slug,
+            NodeId = nodeId,
             NameEn = nameEn,
             NameAr = nameAr,
             Kind = request.Kind,
@@ -242,8 +247,8 @@ public static partial class ControlApi
         // A stack that is already up takes no more room; a new one must fit
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
-        if (tenant.Status is not (TenantStatus.Running or TenantStatus.Stopped) && !force && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
+        if (tenant.Status is not (TenantStatus.Running or TenantStatus.Stopped) && !force && !capacity.HasRoomOn(tenant.NodeId))
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, tenant.NodeId) });
         // A destroyed tenant can be brought back under the same slug: the steps recreate everything
         return await Enqueue(context, queue, audit, slug, "provision", [TenantStatus.Requested, TenantStatus.Failed, TenantStatus.Stopped, TenantStatus.Running, TenantStatus.Destroyed], ct, new { force });
     }
@@ -272,8 +277,10 @@ public static partial class ControlApi
         if (tenant.IsDrill)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = "A restore drill's scratch tenant is not brought back." });
         if (!request.Force && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, Node.HomeId) });
 
+        // Back where its archived backup is kept: the box the control plane runs on, until backups leave it (phase 5)
+        tenant.NodeId = Node.HomeId;
         string? from = null;
         if (!request.Empty)
         {
@@ -303,8 +310,8 @@ public static partial class ControlApi
         return TypedResults.Accepted($"/api/control/tenants/{slug}");
     }
 
-    private static string NoRoom(CapacityCache capacity, PlatformOptions options)
-        => $"No room for another stack: {(capacity.Latest is { } s ? capacity.WhyNoRoom(s) : "the box has not been read yet.")} Pass force=true to stamp anyway.";
+    private static string NoRoom(CapacityCache capacity, int nodeId)
+        => $"No room for another stack: {capacity.WhyNoRoomOn(nodeId)} Pass force=true to stamp anyway.";
 
     public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> FillDemo(ControlContext context, ProvisioningQueue queue, IAuditWriter audit, string slug, CancellationToken ct)
     {
@@ -556,7 +563,8 @@ public record CreateTenantRequest(
     [property: Description("The dock's colour: brand (a deep shade of the brand colour) or neutral (black); null is brand")] string? Slab = null,
     [property: Description("Whether customers may sign in with Google and Apple (the platform's apps, through the hub realm); null is on")] bool? SocialSignIn = null,
     [property: Description("both, ar or en: the languages the business writes its menu, places and stock in; null is both")] string? ContentLanguages = null,
-    [property: Description("Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off")] bool? GoogleMaps = null);
+    [property: Description("Whether the business uses Google Maps with the platform's keys (address search, Google's map in its apps); null is off")] bool? GoogleMaps = null,
+    [property: Description("The node to stamp it on; placement picks one when left out")] int? NodeId = null);
 
 public record UpgradeRequest(string? ImageTag);
 
@@ -588,12 +596,12 @@ public record TenantHostsDto(string Customer, string Admin, string Pos, string K
 /// <param name="HasOwnCredentials">False for a stack stamped before tenants had a database role and broker user of their own; secure gives it them.</param>
 /// <param name="Update">Where the stack stands against what its tag points to now; null until the first check.</param>
 /// <param name="IsDrill">A scratch tenant the restore drill stamped; destroyed by the drill, never mailed about.</param>
-public record TenantSummary(string Slug, string? NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update, bool IsDrill)
+public record TenantSummary(string Slug, string? NameEn, string? NameAr, TenantKind Kind, TenantStatus Status, TenantSeed Seed, TenantPlan Plan, string Country, string Currency, string CustomerUrl, string? LogoUrl, DateTimeOffset CreatedAt, DateTimeOffset? ExpiresAt, string ImageTag, string? LastError, bool HasOwnCredentials, SubscriptionStatus Subscription, DateTimeOffset? PaidThrough, TenantUpdate? Update, bool IsDrill, int NodeId = Node.HomeId)
 {
     public static TenantSummary From(Tenant t, PlatformOptions p, TenantUpdate? update = null)
     {
         var hosts = TenantHosts.For(t, p);
-        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough, update, t.IsDrill);
+        return new(t.Slug, t.NameEn, t.NameAr, t.Kind, t.Status, t.Seed, t.Plan, t.Country, t.Currency, hosts.CustomerUrl, LogoUrlOf(t, hosts), t.CreatedAt, t.ExpiresAt, t.ImageTag, t.LastError, t.HasOwnCredentials, t.Subscription, t.PaidThrough, update, t.IsDrill, t.NodeId);
     }
 
     /// <summary>The stack's public mark; the light one, which the customer app's icons are cut from.</summary>
@@ -655,7 +663,9 @@ public record TenantDetail(
     [property: Description("The SHA-256 fingerprints its own app is signed with on Android, AA:BB:…")] IReadOnlyList<string>? AndroidCertFingerprints = null,
     [property: Description("Its own domain when the web's Google map is on and the browser key does not list it yet: add https://{domain}/* to the key's referrers in Google Cloud, then to the referrer domains on the platform's Google Maps tab; until then that domain shows the free map")] string? MapsDomainToAdd = null,
     [property: Description("Whether the business uses Google Maps with the platform's keys; off, or with no keys on the platform, its apps keep the free map")] bool GoogleMaps = false,
-    [property: Description("Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing")] bool GoogleMapsAvailable = false)
+    [property: Description("Whether the platform has Google Maps keys at all (the Google Maps tab); without them the business's switch does nothing")] bool GoogleMapsAvailable = false,
+    [property: Description("The node its stack runs on")] int NodeId = Node.HomeId,
+    [property: Description("The node it is being moved to, while a move runs")] int? MovingToNodeId = null)
 {
     /// <param name="maps">The Google Maps tab's settings; none reads as no keys.</param>
     public static TenantDetail From(Tenant t, IReadOnlyList<ProvisioningStep> steps, IReadOnlyList<string> seedImages, PlatformOptions p, TenantUpdate? update = null, IReadOnlyList<JobDto>? jobs = null, MapsSettings? maps = null)
@@ -685,7 +695,9 @@ public record TenantDetail(
             AppLinks.Fingerprints(t.AndroidCertFingerprints),
             maps.PendingDomain(t),
             t.GoogleMaps,
-            maps.Available);
+            maps.Available,
+            t.NodeId,
+            t.MovingToNodeId);
     }
 }
 

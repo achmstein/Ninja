@@ -94,6 +94,12 @@ public class Tenant
 
     public TenantStatus Status { get; set; } = TenantStatus.Requested;
 
+    /// <summary>The node its stack runs on; the box the control plane runs on for every tenant from before there were nodes.</summary>
+    public int NodeId { get; set; } = Node.HomeId;
+
+    /// <summary>The node it is being moved to, while a move runs; none otherwise.</summary>
+    public int? MovingToNodeId { get; set; }
+
     /// <summary>Chosen at creation (demos default to the sample business); the stack reads it once, on its first boot.</summary>
     public TenantSeed Seed { get; set; }
 

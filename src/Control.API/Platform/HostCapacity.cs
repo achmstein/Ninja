@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
@@ -104,20 +105,34 @@ public sealed class DryRunHostCapacity(IServiceScopeFactory scopes, IOptions<Pla
     }
 }
 
-/// <summary>The last snapshot, refreshed on a timer so the control app can poll without probing the box each time.</summary>
+/// <summary>
+/// Each node's last reading, refreshed on a timer so the control app can poll
+/// without probing a box each time. What callers knew as "the box" is node 1,
+/// the box the control plane runs on, where every tenant lives until a second
+/// node joins.
+/// </summary>
 public sealed class CapacityCache(INodes nodes, IOptions<PlatformOptions> options)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
+    private readonly ConcurrentDictionary<int, CapacitySnapshot> _byNode = new();
 
-    public CapacitySnapshot? Latest { get; private set; }
+    /// <summary>The box the control plane runs on, as last read.</summary>
+    public CapacitySnapshot? Latest => For(Node.HomeId);
 
+    /// <summary>A node as last read; none before its first reading.</summary>
+    public CapacitySnapshot? For(int nodeId) => _byNode.GetValueOrDefault(nodeId);
+
+    /// <summary>The box the control plane runs on, read now.</summary>
     public async Task<CapacitySnapshot> RefreshAsync(CancellationToken ct)
     {
         await _gate.WaitAsync(ct);
         try
         {
-            Latest = await nodes.Home.Capacity.ProbeAsync(ct);
-            return Latest;
+            var snapshot = await nodes.Home.Capacity.ProbeAsync(ct);
+            // Every node that is this box reads the same: the record may name the box more than once only by mistake, but it stays consistent
+            foreach (var node in nodes.Known.Where(n => n.Kind == NodeKind.Local).Select(n => n.Id).Append(Node.HomeId).Distinct())
+                _byNode[node] = snapshot;
+            return snapshot;
         }
         finally
         {
@@ -129,30 +144,39 @@ public sealed class CapacityCache(INodes nodes, IOptions<PlatformOptions> option
     public async Task<CapacitySnapshot> GetAsync(bool refresh, CancellationToken ct)
         => Latest is { } latest && !refresh ? latest : await RefreshAsync(ct);
 
-    /// <summary>How many more stacks fit: the memory, the connection budget and the drive, whichever says least.</summary>
-    public int RoomFor(CapacitySnapshot snapshot)
+    /// <summary>What a node allows: its own settings, the platform's where it has none.</summary>
+    public NodeLimits LimitsFor(int nodeId) => NodeLimits.For(nodes.Known.FirstOrDefault(n => n.Id == nodeId), options.Value);
+
+    /// <summary>How many more stacks fit on the box the control plane runs on.</summary>
+    public int RoomFor(CapacitySnapshot snapshot) => LimitsFor(Node.HomeId).RoomFor(snapshot);
+
+    /// <summary>Why a stamp is refused on the box the control plane runs on, in words.</summary>
+    public string WhyNoRoom(CapacitySnapshot snapshot) => LimitsFor(Node.HomeId).WhyNoRoom(snapshot);
+
+    /// <summary>
+    /// Every node on the record as placement weighs it, with how many live tenants each holds. A node never read
+    /// counts as having room: better a stamp than a guess, as before there were nodes.
+    /// </summary>
+    public IReadOnlyList<NodeCapacity> Weigh(IReadOnlyDictionary<int, int> placed)
     {
-        var o = options.Value;
-        var memory = CapacityMath.RoomFor(snapshot.MemAvailableMb, o.ReserveMb, o.StackFootprintMb);
-        var connections = CapacityMath.ConnectionRoomFor(CapacityMath.RunningStacks(snapshot.Projects, snapshot.PlatformProject), o.ServiceConnectionsEstimate, o.PostgresMaxConnections);
-        var disk = CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb) ? int.MaxValue : 0;
-        return Math.Min(memory, Math.Min(connections, disk));
+        var known = nodes.Known.Count > 0 ? nodes.Known : [new Node { Id = Node.HomeId, Name = "node-1", Kind = NodeKind.Local }];
+        return known.Select(node =>
+        {
+            var snapshot = For(node.Id);
+            var limits = NodeLimits.For(node, options.Value);
+            var room = snapshot is null ? int.MaxValue : limits.RoomFor(snapshot);
+            return new NodeCapacity(node, snapshot, room, snapshot is null || room > 0 ? null : limits.WhyNoRoom(snapshot), placed.GetValueOrDefault(node.Id));
+        }).ToList();
     }
 
-    /// <summary>Why a stamp is refused, in words: memory, connections or the drive.</summary>
-    public string WhyNoRoom(CapacitySnapshot snapshot)
-    {
-        var o = options.Value;
-        if (!CapacityMath.DiskRoom(snapshot.TenantsDiskFreeMb, snapshot.TenantsDiskTotalMb, o.MinFreeDiskMb, o.StackFootprintMb))
-            return $"{snapshot.TenantsDiskFreeMb} MB free on the tenants drive; the floor is {o.MinFreeDiskMb} MB and a stack needs room above it for its backups.";
-        var stacks = CapacityMath.RunningStacks(snapshot.Projects, snapshot.PlatformProject);
-        if (CapacityMath.ConnectionRoomFor(stacks, o.ServiceConnectionsEstimate, o.PostgresMaxConnections) == 0)
-            return $"Postgres allows {o.PostgresMaxConnections} connections and the running stacks typically hold {CapacityMath.ConnectionsEstimate(stacks, o.ServiceConnectionsEstimate)}.";
-        return $"{snapshot.MemAvailableMb} MB free, {o.ReserveMb} MB kept for the shared services, {o.StackFootprintMb} MB per stack.";
-    }
+    /// <summary>Whether another stack fits on the box the control plane runs on, on its last reading; true when it has never been read.</summary>
+    public bool HasRoom => HasRoomOn(Node.HomeId);
 
-    /// <summary>Whether another stack fits, on the last snapshot; true when the box has never been read (better a stamp than a guess).</summary>
-    public bool HasRoom => Latest is null || RoomFor(Latest) > 0;
+    /// <summary>Whether another stack fits on a node, on its last reading; true when it has never been read.</summary>
+    public bool HasRoomOn(int nodeId) => For(nodeId) is not { } snapshot || LimitsFor(nodeId).RoomFor(snapshot) > 0;
+
+    /// <summary>Why a node takes no more stacks, in words; empty when it has never been read.</summary>
+    public string WhyNoRoomOn(int nodeId) => For(nodeId) is { } snapshot ? LimitsFor(nodeId).WhyNoRoom(snapshot) : "the node has not been read yet.";
 }
 
 public sealed class CapacityMonitor(CapacityCache cache, IOptions<PlatformOptions> options, ILogger<CapacityMonitor> logger) : BackgroundService

@@ -110,14 +110,14 @@ public static partial class CapacityMath
     public const int PlatformConnections = 40;
 
     /// <summary>What the shared Postgres is typically holding: every running stack's eleven services at their usual few connections each, plus the platform's own.</summary>
-    public static int ConnectionsEstimate(int runningStacks, int perService)
-        => PlatformConnections + runningStacks * TenantNaming.Databases.Length * perService;
+    public static int ConnectionsEstimate(int runningStacks, int perService, int platformConnections = PlatformConnections)
+        => platformConnections + runningStacks * TenantNaming.Databases.Length * perService;
 
     /// <summary>How many more stacks fit in the connection budget, never negative.</summary>
-    public static int ConnectionRoomFor(int runningStacks, int perService, int maxConnections)
+    public static int ConnectionRoomFor(int runningStacks, int perService, int maxConnections, int platformConnections = PlatformConnections)
     {
         var perStack = TenantNaming.Databases.Length * perService;
-        return perStack <= 0 ? 0 : Math.Max(0, (maxConnections - ConnectionsEstimate(runningStacks, perService)) / perStack);
+        return perStack <= 0 ? 0 : Math.Max(0, (maxConnections - ConnectionsEstimate(runningStacks, perService, platformConnections)) / perStack);
     }
 
     /// <summary>Whether the tenants drive can take one more stack's worth of backups and uploads: the floor plus a quarter of a footprint above it. A drive that was never read (total 0) passes.</summary>

@@ -10,6 +10,8 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<Tenant> Tenants => Set<Tenant>();
 
+    public DbSet<Node> Nodes => Set<Node>();
+
     public DbSet<ProvisioningStep> Steps => Set<ProvisioningStep>();
 
     public DbSet<PlatformAudit> Audits => Set<PlatformAudit>();
@@ -71,6 +73,24 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.HasIndex(e => e.Day);
         });
 
+        modelBuilder.Entity<Node>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(32).IsRequired();
+            entity.HasIndex(e => e.Name).IsUnique();
+            entity.Property(e => e.Kind).HasConversion<string>().HasMaxLength(8);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(12);
+            entity.Property(e => e.AgentUrl).HasMaxLength(200);
+            entity.Property(e => e.IngressUrl).HasMaxLength(200);
+            entity.Property(e => e.CertThumbprint).HasMaxLength(64);
+            entity.Property(e => e.Architecture).HasMaxLength(8).IsRequired();
+            entity.Property(e => e.KeycloakInternalUrl).HasMaxLength(200);
+            entity.Property(e => e.AiGatewayUrl).HasMaxLength(200);
+            entity.Property(e => e.TalabatRelayUrl).HasMaxLength(200);
+            entity.Property(e => e.AgentVersion).HasMaxLength(40);
+            entity.Property(e => e.LastError).HasMaxLength(2000);
+        });
+
         modelBuilder.Entity<Job>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -83,6 +103,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             // What a worker asks for: the next queued job in its lane
             entity.HasIndex(e => new { e.Status, e.Lane, e.Priority, e.Id });
             entity.HasIndex(e => new { e.TenantId, e.Status });
+            entity.HasIndex(e => new { e.Status, e.Lane, e.NodeId });
         });
 
         modelBuilder.Entity<OutboxMail>(entity =>
@@ -101,6 +122,10 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
         modelBuilder.Entity<Tenant>(entity =>
         {
             entity.HasKey(e => e.Id);
+            // A node with tenants on it cannot go; a move or a destroy takes them off first
+            entity.Property(e => e.NodeId).HasDefaultValue(Node.HomeId);
+            entity.HasOne<Node>().WithMany().HasForeignKey(e => e.NodeId).OnDelete(DeleteBehavior.Restrict);
+            entity.HasOne<Node>().WithMany().HasForeignKey(e => e.MovingToNodeId).OnDelete(DeleteBehavior.Restrict);
             entity.Property(e => e.Slug).HasMaxLength(24).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.NameEn).HasMaxLength(80);

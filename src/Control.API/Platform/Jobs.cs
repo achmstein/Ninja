@@ -53,9 +53,12 @@ public sealed class ProvisioningQueue(IServiceScopeFactory scopes, IHttpContextA
         }
 
         var (actor, _, _) = AuditWriter.Attribute(http.HttpContext?.User, null);
+        // The node it works on, as the tenant stands now: what lets nodes work side by side, one job each
+        var node = await context.Tenants.Where(t => t.Id == job.TenantId).Select(t => (int?)t.NodeId).FirstOrDefaultAsync(ct);
         var row = new Job
         {
             TenantId = job.TenantId,
+            NodeId = node,
             Action = job.Action,
             ImageTag = job.ImageTag,
             CanaryId = job.CanaryId,

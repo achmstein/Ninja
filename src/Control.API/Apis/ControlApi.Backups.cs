@@ -80,7 +80,7 @@ public static partial class ControlApi
         if (await context.Tenants.AnyAsync(t => t.Slug == into, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{into} is taken; a restore makes a new tenant." });
         if (!request.Force && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, options.Value) });
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, Node.HomeId) });
 
         // A restored business is the same business under a new slug: its name, look, locale and record come along; the realm and the owner are new
         var tenant = new Tenant

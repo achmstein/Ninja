@@ -46,6 +46,9 @@ public class Job
 
     public JobLane Lane { get; set; }
 
+    /// <summary>The node the job works on (the tenant's, when it was queued): a lane runs one job at a time per node.</summary>
+    public int? NodeId { get; set; }
+
     /// <summary>Lower runs first within a lane: 0 for what an admin or a sweep needs now (stop, suspend, destroy), 10 for a stamp, 20 for a backup.</summary>
     public int Priority { get; set; }
 

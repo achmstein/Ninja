@@ -81,6 +81,15 @@ public sealed class Api
     public Task<PlatformResponse> PlatformAsync() => GetAsync<PlatformResponse>("/api/control/platform");
     /// <summary>The box read now, not the last snapshot the monitor took.</summary>
     public Task<CapacityResponse> CapacityAsync() => GetAsync<CapacityResponse>("/api/control/platform/capacity?refresh=true");
+
+    public Task<List<NodeDto>> NodesAsync() => GetAsync<List<NodeDto>>("/api/control/platform/nodes");
+
+    /// <summary>A node changed, or why not: the status the API answered.</summary>
+    public async Task<HttpStatusCode> UpdateNodeAsync(int id, UpdateNodeRequest request)
+    {
+        using var response = await _http.PatchAsJsonAsync($"/api/control/platform/nodes/{id}", request, Json);
+        return response.StatusCode;
+    }
     public Task<PlanCatalogResponse> PlansAsync() => GetAsync<PlanCatalogResponse>("/api/control/platform/plans");
     public Task<UpdatesResponse> UpdatesAsync() => GetAsync<UpdatesResponse>("/api/control/platform/updates");
     public Task<FleetUpgradeResponse> FleetUpgradeAsync(string tag, string? canary, params string[] slugs)

@@ -85,7 +85,11 @@ public static class Extensions
         builder.Services.AddSingleton<PlatformWarnings>();
         // The boxes tenants live on: the one the control plane runs on, until a second joins (docs/multi-server-plan.md)
         builder.Services.AddSingleton<LocalNodeClient>();
-        builder.Services.AddSingleton<INodes, SingleNode>();
+        builder.Services.AddSingleton<NodeDirectory>();
+        builder.Services.AddSingleton<INodes>(sp => sp.GetRequiredService<NodeDirectory>());
+        builder.Services.AddHostedService<NodeDirectoryLoader>();
+        builder.Services.AddSingleton<IPlacementPolicy, SpreadPlacement>();
+        builder.Services.AddScoped<Placement>();
         builder.Services.AddScoped<IEdgeRouter, CaddyEdgeRouter>();
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddScoped<DemoData>();

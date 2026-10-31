@@ -114,6 +114,11 @@ public interface INodes
 {
     INodeClient For(Tenant tenant);
 
+    INodeClient For(int nodeId);
+
+    /// <summary>The nodes on the record, as last read; empty before the first read.</summary>
+    IReadOnlyList<Node> Known { get; }
+
     /// <summary>The box the control plane runs on, with the platform's own databases (controldb, keycloak).</summary>
     INodeClient Home { get; }
 }
@@ -122,6 +127,10 @@ public interface INodes
 public sealed class SingleNode(LocalNodeClient local) : INodes
 {
     public INodeClient For(Tenant tenant) => local;
+
+    public INodeClient For(int nodeId) => local;
+
+    public IReadOnlyList<Node> Known => [];
 
     public INodeClient Home => local;
 }
