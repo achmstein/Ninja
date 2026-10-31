@@ -1,3 +1,4 @@
+using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform.Nodes;
@@ -45,6 +46,26 @@ public interface IStackRuntime
     Task WriteMarkerAsync(string slug, string name, string content, CancellationToken ct);
 }
 
+/// <summary>
+/// A node's data: its Postgres and its docker volumes, streamed in and out.
+/// What the command said comes back as it is, for the caller to put in its
+/// own words; nothing here throws for a command that failed.
+/// </summary>
+public interface INodeData
+{
+    /// <summary>One database in Postgres's custom format, as the superuser.</summary>
+    Task<ShellResult> DumpDatabaseAsync(string database, Stream output, CancellationToken ct);
+
+    /// <summary>A custom-format dump into one database, replacing what is there, its tables owned by <paramref name="role"/>.</summary>
+    Task<ShellResult> RestoreDatabaseAsync(string database, string role, Stream input, CancellationToken ct);
+
+    /// <summary>A volume's files as a gzipped tar; fails when the volume is not there.</summary>
+    Task<ShellResult> ExportVolumeAsync(string volume, Stream output, CancellationToken ct);
+
+    /// <summary>A gzipped tar unpacked into a volume, made when it is not there.</summary>
+    Task<ShellResult> ImportVolumeAsync(string volume, Stream input, CancellationToken ct);
+}
+
 /// <summary>One node, its parts each behind its own interface.</summary>
 public interface INodeClient
 {
@@ -54,16 +75,26 @@ public interface INodeClient
     NodeEndpoints Endpoints { get; }
 
     IStackRuntime Stacks { get; }
+
+    INodeData Data { get; }
 }
 
 /// <summary>Which node a tenant lives on, and the way to it.</summary>
 public interface INodes
 {
     INodeClient For(Tenant tenant);
+
+    /// <summary>The box the control plane runs on, with the platform's own databases (controldb, keycloak).</summary>
+    INodeClient Home { get; }
 }
 
 /// <summary>Every tenant on the one box the control plane runs on: the platform as it is until a second node joins.</summary>
 public sealed class SingleNode(LocalNodeClient local) : INodes
 {
     public INodeClient For(Tenant tenant) => local;
+
+    public INodeClient Home => local;
+
+    /// <summary>The one box, reached through <paramref name="shell"/>: the tests' and the dry run's way to a node.</summary>
+    public static SingleNode Over(IShell shell, IOptions<PlatformOptions> options) => new(new LocalNodeClient(shell, options));
 }

@@ -6,6 +6,8 @@ using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 
+using Ninja.Control.API.Platform.Nodes;
+
 namespace Ninja.Control.API.Platform;
 
 /// <summary>
@@ -23,7 +25,7 @@ public sealed record BackupInfo(string Id, DateTimeOffset At, long SizeBytes, IR
 /// alpine for the uploads volume, everything streamed: the tenants root may
 /// be a named volume (it is on a laptop), so nothing is bind-mounted.
 /// </summary>
-public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<PlatformOptions> options, ILogger<BackupService> logger)
+public sealed class BackupService(INodes nodes, IOffsiteStore store, IOptions<PlatformOptions> options, ILogger<BackupService> logger)
 {
     private const string Manifest = "manifest.json";
     private const string Uploads = "uploads.tar.gz";
@@ -59,14 +61,12 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         try
         {
             foreach (var db in TenantNaming.Databases)
-                await DumpAsync(TenantNaming.Database(tenant.Slug, db), Path.Combine(dir, $"{db}.dump"), ct);
+                await DumpAsync(nodes.For(tenant), TenantNaming.Database(tenant.Slug, db), Path.Combine(dir, $"{db}.dump"), ct);
 
             var hasUploads = true;
             await using (var archive = File.Create(Path.Combine(dir, Uploads)))
             {
-                var result = await shell.RunAsync("docker",
-                    ["run", "--rm", "-v", $"{TenantNaming.UploadsVolumeOnDocker(tenant.Slug)}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."],
-                    null, null, archive, ct);
+                var result = await nodes.For(tenant).Data.ExportVolumeAsync(TenantNaming.UploadsVolumeOnDocker(tenant.Slug), archive, ct);
                 if (!result.Ok)
                 {
                     // A stack that never uploaded anything may have no volume yet; the databases are the backup
@@ -80,9 +80,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
             var hasPics = true;
             await using (var archive = File.Create(Path.Combine(dir, Pics)))
             {
-                var result = await shell.RunAsync("docker",
-                    ["run", "--rm", "-v", $"{TenantNaming.PicsVolumeOnDocker(tenant.Slug)}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."],
-                    null, null, archive, ct);
+                var result = await nodes.For(tenant).Data.ExportVolumeAsync(TenantNaming.PicsVolumeOnDocker(tenant.Slug), archive, ct);
                 if (!result.Ok)
                 {
                     // A stack created before catalog had a volume has none until its next upgrade
@@ -114,7 +112,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
         try
         {
             foreach (var db in PlatformDatabases)
-                await DumpAsync(db, Path.Combine(dir, $"{db}.dump"), ct);
+                await DumpAsync(nodes.Home, db, Path.Combine(dir, $"{db}.dump"), ct);
             var info = new BackupInfo(id, DateTimeOffset.UtcNow, Size(dir), PlatformDatabases, HasUploads: false, ImageTag: "", Sha256: await ChecksumsAsync(dir, ct));
             await File.WriteAllTextAsync(Path.Combine(dir, Manifest), JsonSerializer.Serialize(info, Json), ct);
             return info;
@@ -306,10 +304,8 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     public async Task RestoreDumpAsync(string dump, Tenant into, string db, CancellationToken ct)
     {
         await using var file = File.OpenRead(dump);
-        var result = await shell.RunAsync("docker",
-            // As the new tenant's role, or the superuser would own every restored table and the role could not migrate or write them
-            ["exec", "-i", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_restore", "-U", Platform.PostgresUser, "--no-owner", "--role", TenantNaming.DbRole(into.Slug), "--clean", "--if-exists", "-d", TenantNaming.Database(into.Slug, db)],
-            null, file, Stream.Null, ct);
+        // As the new tenant's role, or the superuser would own every restored table and the role could not migrate or write them
+        var result = await nodes.For(into).Data.RestoreDatabaseAsync(TenantNaming.Database(into.Slug, db), TenantNaming.DbRole(into.Slug), file, ct);
         if (!result.Ok) throw new InvalidOperationException($"pg_restore {db}: {result.Output}");
     }
 
@@ -328,7 +324,7 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
             string? source = null;
             try
             {
-                await DumpAsync(TenantNaming.Database(tenant.Slug, from), scratch, ct);
+                await DumpAsync(nodes.For(tenant), TenantNaming.Database(tenant.Slug, from), scratch, ct);
                 source = TenantNaming.Database(tenant.Slug, from);
             }
             catch (InvalidOperationException ex)
@@ -358,18 +354,17 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
     /// <summary>The uploads into <paramref name="into"/>'s volume, which exists once its stack is up.</summary>
     public async Task<bool> RestoreUploadsAsync(string fromSlug, string id, Tenant into, CancellationToken ct)
     {
-        var restored = await RestoreArchiveAsync(Path.Combine(Dir(fromSlug, id), Uploads), TenantNaming.UploadsVolumeOnDocker(into.Slug), "uploads", ct);
-        restored |= await RestoreArchiveAsync(Path.Combine(Dir(fromSlug, id), Pics), TenantNaming.PicsVolumeOnDocker(into.Slug), "pictures", ct);
+        var node = nodes.For(into);
+        var restored = await RestoreArchiveAsync(node, Path.Combine(Dir(fromSlug, id), Uploads), TenantNaming.UploadsVolumeOnDocker(into.Slug), "uploads", ct);
+        restored |= await RestoreArchiveAsync(node, Path.Combine(Dir(fromSlug, id), Pics), TenantNaming.PicsVolumeOnDocker(into.Slug), "pictures", ct);
         return restored;
     }
 
-    private async Task<bool> RestoreArchiveAsync(string archive, string volume, string what, CancellationToken ct)
+    private static async Task<bool> RestoreArchiveAsync(INodeClient node, string archive, string volume, string what, CancellationToken ct)
     {
         if (!File.Exists(archive)) return false;
         await using var file = File.OpenRead(archive);
-        var result = await shell.RunAsync("docker",
-            ["run", "-i", "--rm", "-v", $"{volume}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"],
-            null, file, Stream.Null, ct);
+        var result = await node.Data.ImportVolumeAsync(volume, file, ct);
         if (!result.Ok) throw new InvalidOperationException($"{what}: {result.Output}");
         return true;
     }
@@ -424,13 +419,11 @@ public sealed class BackupService(IShell shell, IOffsiteStore store, IOptions<Pl
 
     private static string NewId() => DateTimeOffset.UtcNow.ToString("yyyyMMdd-HHmmss", CultureInfo.InvariantCulture);
 
-    /// <summary>One database, custom format, streamed out of the shared Postgres container as the superuser.</summary>
-    private async Task DumpAsync(string database, string path, CancellationToken ct)
+    /// <summary>One database, custom format, streamed out of the node's Postgres as the superuser.</summary>
+    private static async Task DumpAsync(INodeClient node, string database, string path, CancellationToken ct)
     {
         await using var file = File.Create(path);
-        var result = await shell.RunAsync("docker",
-            ["exec", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_dump", "-U", Platform.PostgresUser, "-Fc", database],
-            null, null, file, ct);
+        var result = await node.Data.DumpDatabaseAsync(database, file, ct);
         if (!result.Ok) throw new InvalidOperationException($"pg_dump {database}: {result.Output}");
     }
 

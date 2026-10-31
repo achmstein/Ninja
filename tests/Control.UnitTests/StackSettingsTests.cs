@@ -48,7 +48,7 @@ public sealed class StackSettingsTests
             new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             new HttpTenantStack(_stack, NullLogger<HttpTenantStack>.Instance), new NoAudit(),
-            new BackupService(shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance),
+            new BackupService(SingleNode.Over(shell, options), new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance),
             NullLogger<Provisioner>.Instance);
 
         _tenant = new Tenant

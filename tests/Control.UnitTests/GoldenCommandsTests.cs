@@ -62,7 +62,7 @@ public sealed class GoldenCommandsTests
         var options = Options.Create(_platform);
         _context = new ControlContext(new DbContextOptionsBuilder<ControlContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
-        _backups = new BackupService(_shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        _backups = new BackupService(SingleNode.Over(_shell, options), new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
         _provisioner = new Provisioner(_context, options,
             new SingleNode(new LocalNodeClient(_shell, options)), new CaddyEdgeRouter(_context, _shell, options),
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),

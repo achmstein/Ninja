@@ -2,6 +2,7 @@ using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.UnitTests;
 
@@ -19,7 +20,8 @@ public sealed class BackupTests
         _root = Path.Combine(Path.GetTempPath(), "ninja-backup-tests", Guid.NewGuid().ToString("N"));
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
         _store = new RecordingOffsiteStore();
-        _backups = new BackupService(_shell, _store, Options.Create(new PlatformOptions { TenantsRoot = _root, Offsite = { Prefix = "ninja/" } }), NullLogger<BackupService>.Instance);
+        var options = Options.Create(new PlatformOptions { TenantsRoot = _root, Offsite = { Prefix = "ninja/" } });
+        _backups = new BackupService(SingleNode.Over(_shell, options), _store, options, NullLogger<BackupService>.Instance);
     }
 
     [TestCleanup]

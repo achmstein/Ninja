@@ -92,7 +92,7 @@ public sealed class ProvisionerTests
         _box = new FailingShell(_shell);
         _stack = new FailingStack();
         _audit = new CollectingAudit();
-        var backups = new BackupService(_box, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        var backups = new BackupService(SingleNode.Over(_box, options), new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
         _broker = new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance);
         _databases = new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance);
         _provisioner = new Provisioner(_context, options,

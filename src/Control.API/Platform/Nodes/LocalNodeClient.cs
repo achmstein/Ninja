@@ -15,6 +15,30 @@ public sealed class LocalNodeClient(IShell shell, IOptions<PlatformOptions> opti
     public NodeEndpoints Endpoints => NodeEndpoints.From(options.Value);
 
     public IStackRuntime Stacks { get; } = new LocalStackRuntime(shell, options);
+
+    public INodeData Data { get; } = new LocalNodeData(shell, options);
+}
+
+/// <summary>This box's Postgres through docker exec into its container, its volumes through a throwaway alpine.</summary>
+public sealed class LocalNodeData(IShell shell, IOptions<PlatformOptions> options) : INodeData
+{
+    private PlatformOptions Platform => options.Value;
+
+    public Task<ShellResult> DumpDatabaseAsync(string database, Stream output, CancellationToken ct)
+        => shell.RunAsync("docker",
+            ["exec", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_dump", "-U", Platform.PostgresUser, "-Fc", database],
+            null, null, output, ct);
+
+    public Task<ShellResult> RestoreDatabaseAsync(string database, string role, Stream input, CancellationToken ct)
+        => shell.RunAsync("docker",
+            ["exec", "-i", "-e", $"PGPASSWORD={Platform.PostgresPassword}", Platform.PostgresContainer, "pg_restore", "-U", Platform.PostgresUser, "--no-owner", "--role", role, "--clean", "--if-exists", "-d", database],
+            null, input, Stream.Null, ct);
+
+    public Task<ShellResult> ExportVolumeAsync(string volume, Stream output, CancellationToken ct)
+        => shell.RunAsync("docker", ["run", "--rm", "-v", $"{volume}:/from:ro", "alpine", "tar", "czf", "-", "-C", "/from", "."], null, null, output, ct);
+
+    public Task<ShellResult> ImportVolumeAsync(string volume, Stream input, CancellationToken ct)
+        => shell.RunAsync("docker", ["run", "-i", "--rm", "-v", $"{volume}:/to", "alpine", "tar", "xzf", "-", "-C", "/to"], null, input, Stream.Null, ct);
 }
 
 /// <summary>docker compose on this box, one project per tenant, its files in {TenantsRoot}/{slug}.</summary>
