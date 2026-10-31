@@ -42,6 +42,9 @@ public interface INodeClient
 
     /// <summary>Where the control plane reaches this tenant's gateway.</summary>
     StackRoute RouteTo(string slug);
+
+    /// <summary>Whether the node answers, what it runs and whether its docker does.</summary>
+    Task<AgentPing> PingAsync(CancellationToken ct);
 }
 
 /// <summary>Which node a tenant lives on, and the way to it.</summary>

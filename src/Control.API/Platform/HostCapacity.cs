@@ -59,6 +59,28 @@ public sealed class CapacityCache(INodes nodes, IOptions<PlatformOptions> option
         }
     }
 
+    /// <summary>
+    /// Every node reached through its agent, read now, each on its own: one that does not answer keeps its last
+    /// reading and is named in what comes back, the others are read regardless.
+    /// </summary>
+    public async Task<IReadOnlyList<(Node Node, Exception Error)>> RefreshAgentsAsync(CancellationToken ct)
+    {
+        var agents = nodes.Known.Where(n => n.Kind == NodeKind.Agent && n.Status != NodeStatus.Retired && n.AgentUrl is not null).ToList();
+        var failed = new List<(Node, Exception)>();
+        await Task.WhenAll(agents.Select(async node =>
+        {
+            try
+            {
+                _byNode[node.Id] = await nodes.For(node.Id).Capacity.ProbeAsync(ct);
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                lock (failed) failed.Add((node, ex));
+            }
+        }));
+        return failed;
+    }
+
     /// <summary>The cached snapshot, or a fresh one when there is none yet.</summary>
     public async Task<CapacitySnapshot> GetAsync(bool refresh, CancellationToken ct)
         => Latest is { } latest && !refresh ? latest : await RefreshAsync(ct);
@@ -113,6 +135,8 @@ public sealed class CapacityMonitor(CapacityCache cache, IOptions<PlatformOption
             {
                 logger.LogWarning(ex, "Could not read the box's capacity");
             }
+            foreach (var (node, error) in await cache.RefreshAgentsAsync(stoppingToken))
+                logger.LogWarning(error, "Could not read {Node}'s capacity through its agent", node.Name);
         } while (await timer.WaitForNextTickAsync(stoppingToken));
     }
 }

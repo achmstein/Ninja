@@ -28,5 +28,13 @@ public sealed class LocalNodeClient(IShell shell, IOptions<PlatformOptions> opti
 
     /// <summary>The gateway by its container name, on the docker network the control plane shares with the stacks.</summary>
     public StackRoute RouteTo(string slug) => new(new Uri($"http://{TenantNaming.Gateway(slug)}:5000"));
+
+    /// <summary>This box answers as an agent would: the API version it speaks, its architecture, whether its docker does.</summary>
+    public async Task<AgentPing> PingAsync(CancellationToken ct)
+    {
+        var docker = await shell.RunAsync("docker", ["version", "--format", "{{.Server.Version}}"], null, ct);
+        var arch = System.Runtime.InteropServices.RuntimeInformation.OSArchitecture == System.Runtime.InteropServices.Architecture.Arm64 ? "arm64" : "amd64";
+        return new AgentPing(AgentApi.Version, arch, docker.Ok, docker.Ok ? null : docker.Output);
+    }
 }
 

@@ -84,6 +84,19 @@ public sealed class Api
 
     public Task<List<NodeDto>> NodesAsync() => GetAsync<List<NodeDto>>("/api/control/platform/nodes");
 
+    /// <summary>A node put on the record, or why not: the status and what came back.</summary>
+    public async Task<(HttpStatusCode Status, string Body)> RegisterNodeAsync(RegisterNodeRequest request)
+    {
+        using var response = await _http.PostAsJsonAsync("/api/control/platform/nodes", request, Json);
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
+    public async Task<(HttpStatusCode Status, string Body)> PingNodeAsync(int id)
+    {
+        using var response = await _http.PostAsync($"/api/control/platform/nodes/{id}/ping", null);
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
     /// <summary>A node changed, or why not: the status the API answered.</summary>
     public async Task<HttpStatusCode> UpdateNodeAsync(int id, UpdateNodeRequest request)
     {

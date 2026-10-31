@@ -3964,6 +3964,64 @@
         "security": [
           { }
         ]
+      },
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Put a node reached through its agent on the record, cordoned: it takes tenants once it answers and is made active",
+        "operationId": "RegisterNode",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RegisterNodeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "Created",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NodeDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
       }
     },
     "/api/control/platform/nodes/{id}": {
@@ -4024,6 +4082,51 @@
         ]
       }
     },
+    "/api/control/platform/nodes/{id}/ping": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Ask the node whether it answers: its agent's version, its architecture, whether its docker runs; the record keeps when it last did",
+        "operationId": "PingNode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AgentPing"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -4055,6 +4158,31 @@
   },
   "components": {
     "schemas": {
+      "AgentPing": {
+        "required": [
+          "version",
+          "architecture",
+          "docker"
+        ],
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          },
+          "architecture": {
+            "type": "string"
+          },
+          "docker": {
+            "type": "boolean"
+          },
+          "error": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "AiProviderDto": {
         "required": [
           "id",
@@ -6658,6 +6786,77 @@
             ]
           },
           "note": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "RegisterNodeRequest": {
+        "required": [
+          "name",
+          "agentUrl",
+          "ingressUrl",
+          "certThumbprint"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "node-2, node-3: unique"
+          },
+          "agentUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "https://10.66.0.2:7443"
+          },
+          "ingressUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "http://10.66.0.2:8088"
+          },
+          "certThumbprint": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The agent certificate's SHA-256 thumbprint, as setup-node printed it"
+          },
+          "architecture": {
+            "type": "string",
+            "default": "amd64"
+          },
+          "labels": {
+            "type": [
+              "null",
+              "array"
+            ],
+            "items": {
+              "type": "string"
+            }
+          },
+          "keycloakInternalUrl": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Keycloak as the node's stacks reach it: the control box's internal edge"
+          },
+          "aiGatewayUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "talabatRelayUrl": {
             "type": [
               "null",
               "string"

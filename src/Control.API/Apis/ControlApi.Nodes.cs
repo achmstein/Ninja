@@ -36,6 +36,18 @@ public sealed record NodeDto(
     string? LastError,
     DateTimeOffset CreatedAt);
 
+/// <summary>A node reached through its agent, as its setup reports it (deploy/cell): where its agent and ingress answer on the private network, the agent's pinned certificate, and the platform's services as it reaches them.</summary>
+public sealed record RegisterNodeRequest(
+    [property: Description("node-2, node-3: unique")] string? Name,
+    [property: Description("https://10.66.0.2:7443")] string? AgentUrl,
+    [property: Description("http://10.66.0.2:8088")] string? IngressUrl,
+    [property: Description("The agent certificate's SHA-256 thumbprint, as setup-node printed it")] string? CertThumbprint,
+    string Architecture = "amd64",
+    IReadOnlyList<string>? Labels = null,
+    [property: Description("Keycloak as the node's stacks reach it: the control box's internal edge")] string? KeycloakInternalUrl = null,
+    string? AiGatewayUrl = null,
+    string? TalabatRelayUrl = null);
+
 /// <summary>What an operator may change on a node now. Left out stays as it is; a limit set to 0 goes back to the platform's.</summary>
 public sealed record UpdateNodeRequest(
     [property: Description("Active takes new tenants; Cordoned keeps its own and takes none")] NodeStatus? Status = null,
@@ -51,6 +63,77 @@ public static partial class ControlApi
     {
         api.MapGet("/platform/nodes", ListNodes).WithName("ListNodes").WithSummary("The boxes tenant stacks run on: each one's status, labels, limits, tenants and room").RequireAuthorization("Platform");
         api.MapPatch("/platform/nodes/{id:int}", UpdateNode).WithName("UpdateNode").WithSummary("Cordon a node or make it active again, label it, or set its own limits").RequireAuthorization("Platform");
+        api.MapPost("/platform/nodes", RegisterNode).WithName("RegisterNode").WithSummary("Put a node reached through its agent on the record, cordoned: it takes tenants once it answers and is made active").RequireAuthorization("Platform");
+        api.MapPost("/platform/nodes/{id:int}/ping", PingNode).WithName("PingNode").WithSummary("Ask the node whether it answers: its agent's version, its architecture, whether its docker runs; the record keeps when it last did").RequireAuthorization("Platform");
+    }
+
+    public static async Task<Results<Created<NodeDto>, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> RegisterNode(
+        ControlContext context, NodeDirectory directory, IAuditWriter audit, RegisterNodeRequest request, CancellationToken ct)
+    {
+        var name = request.Name?.Trim().ToLowerInvariant();
+        if (name is null || !AgentNames.IsValid(name) || name.Length > 32)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The name is 1–32 lower-case letters, digits and dashes (node-2)." });
+        if (!Absolute(request.AgentUrl, "https") || !Absolute(request.IngressUrl, "http"))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The agent is reached at an https:// address and the ingress at an http:// one, both on the private network." });
+        var pin = request.CertThumbprint?.Replace(":", "").Trim().ToUpperInvariant();
+        if (pin is null || pin.Length != 64 || !pin.All(Uri.IsHexDigit))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The agent's certificate is pinned by its SHA-256 thumbprint: 64 hex digits." });
+        if (request.Architecture is not ("amd64" or "arm64"))
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The architecture is amd64 or arm64." });
+        foreach (var url in new[] { request.KeycloakInternalUrl, request.AiGatewayUrl, request.TalabatRelayUrl }.Where(u => u is not null))
+            if (!Absolute(url, "http") && !Absolute(url, "https"))
+                return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"{url} is not an address." });
+        if (await context.Nodes.AnyAsync(n => n.Name == name, ct))
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{name} is on the record already." });
+
+        var node = new Node
+        {
+            Name = name,
+            Kind = NodeKind.Agent,
+            // Cordoned until it has answered and someone has looked: no tenant lands on a node nobody has seen work
+            Status = NodeStatus.Cordoned,
+            AgentUrl = request.AgentUrl!.TrimEnd('/'),
+            IngressUrl = request.IngressUrl!.TrimEnd('/'),
+            CertThumbprint = pin,
+            Architecture = request.Architecture,
+            Labels = request.Labels?.Select(l => l.Trim().ToLowerInvariant()).Where(l => l.Length is > 0 and <= 20).Distinct().ToList() ?? [],
+            KeycloakInternalUrl = request.KeycloakInternalUrl,
+            AiGatewayUrl = request.AiGatewayUrl,
+            TalabatRelayUrl = request.TalabatRelayUrl,
+            // A node of its own keeps its Postgres for its stacks: a handful of connections for anything else
+            PlatformConnections = 5,
+        };
+        context.Nodes.Add(node);
+        await context.SaveChangesAsync(ct);
+        await directory.RefreshAsync(ct);
+        await audit.WriteAsync("node.registered", null, new { node.Id, node.Name, node.AgentUrl, node.IngressUrl }, ct);
+        return TypedResults.Created($"/api/control/platform/nodes/{node.Id}", ToDto(node, 0, 0, null, null, null));
+
+        static bool Absolute(string? url, string scheme) => Uri.TryCreate(url, UriKind.Absolute, out var u) && u.Scheme == scheme;
+    }
+
+    public static async Task<Results<Ok<AgentPing>, NotFound, ProblemHttpResult>> PingNode(
+        ControlContext context, NodeDirectory directory, int id, CancellationToken ct)
+    {
+        var node = await context.Nodes.SingleOrDefaultAsync(n => n.Id == id, ct);
+        if (node is null) return TypedResults.NotFound();
+        try
+        {
+            var ping = await directory.For(id).PingAsync(ct);
+            node.LastSeenAt = DateTimeOffset.UtcNow;
+            node.AgentVersion = ping.Version;
+            node.LastError = ping.Docker ? null : $"docker: {ping.Error}";
+            if (node.Status == NodeStatus.Unreachable) node.Status = NodeStatus.Cordoned;
+            await context.SaveChangesAsync(ct);
+            await directory.RefreshAsync(ct);
+            return TypedResults.Ok(ping);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            node.LastError = ex.Message;
+            await context.SaveChangesAsync(ct);
+            return TypedResults.Problem(detail: $"{node.Name} does not answer: {ex.Message}", statusCode: StatusCodes.Status502BadGateway);
+        }
     }
 
     public static async Task<Ok<List<NodeDto>>> ListNodes(ControlContext context, CapacityCache capacity, CancellationToken ct)
@@ -67,14 +150,15 @@ public static partial class ControlApi
             var snapshot = capacity.For(n.Id);
             var limits = capacity.LimitsFor(n.Id);
             var room = snapshot is null ? (int?)null : limits.RoomFor(snapshot);
-            return new NodeDto(n.Id, n.Name, n.Kind, n.Status, n.Architecture, n.Labels,
-                count?.Tenants ?? 0, count?.Running ?? 0,
-                room, room == 0 && snapshot is not null ? limits.WhyNoRoom(snapshot) : null,
-                snapshot?.At, snapshot?.MemTotalMb, snapshot?.MemAvailableMb, snapshot?.TenantsDiskFreeMb, snapshot?.TenantsDiskTotalMb,
-                n.ReserveMb, n.StackFootprintMb, n.PostgresMaxConnections, n.MaxStacks,
-                n.AgentUrl, n.AgentVersion, n.LastSeenAt, n.LastError, n.CreatedAt);
+            return ToDto(n, count?.Tenants ?? 0, count?.Running ?? 0, room, room == 0 && snapshot is not null ? limits.WhyNoRoom(snapshot) : null, snapshot);
         }).ToList());
     }
+
+    private static NodeDto ToDto(Node n, int tenants, int running, int? room, string? whyNoRoom, CapacitySnapshot? snapshot)
+        => new(n.Id, n.Name, n.Kind, n.Status, n.Architecture, n.Labels, tenants, running, room, whyNoRoom,
+            snapshot?.At, snapshot?.MemTotalMb, snapshot?.MemAvailableMb, snapshot?.TenantsDiskFreeMb, snapshot?.TenantsDiskTotalMb,
+            n.ReserveMb, n.StackFootprintMb, n.PostgresMaxConnections, n.MaxStacks,
+            n.AgentUrl, n.AgentVersion, n.LastSeenAt, n.LastError, n.CreatedAt);
 
     public static async Task<Results<NoContent, NotFound, BadRequest<ProblemDetails>>> UpdateNode(
         ControlContext context, NodeDirectory directory, IAuditWriter audit, int id, UpdateNodeRequest request, CancellationToken ct)

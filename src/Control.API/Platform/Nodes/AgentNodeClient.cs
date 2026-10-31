@@ -21,12 +21,13 @@ public sealed class AgentNodeClient : INodeClient
 {
     private readonly Node _node;
     private readonly PlatformOptions _platform;
+    private readonly AgentHttp _agent;
 
     public AgentNodeClient(Node node, HttpClient http, PlatformOptions platform)
     {
         _node = node;
         _platform = platform;
-        var agent = new AgentHttp(http);
+        var agent = _agent = new AgentHttp(http);
         Stacks = new AgentStackRuntime(agent);
         Data = new AgentNodeData(agent);
         Databases = new AgentDatabaseAdmin(agent);
@@ -56,6 +57,8 @@ public sealed class AgentNodeClient : INodeClient
     public IHostCapacity Capacity { get; }
 
     public IImageInventory Images { get; }
+
+    public Task<AgentPing> PingAsync(CancellationToken ct) => _agent.GetAsync<AgentPing>(AgentHttp.Path("ping"), ct);
 
     /// <summary>The node's ingress, asked for the tenant's API host: it routes by host to the stack's gateway.</summary>
     public StackRoute RouteTo(string slug)
