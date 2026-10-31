@@ -130,8 +130,8 @@ export function StayHistory() {
     listPlacesOptions({ query: { timed: true } })
   )
   const timedPlaces = useMemo(
-    () => [...places].sort(comparePlaces(localized)),
-    [places, localized]
+    () => [...places].sort(comparePlaces()),
+    [places]
   )
 
   const historyQuery = useQuery({

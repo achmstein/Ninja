@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { bilingual, useLocalized, useT } from '@/lib/i18n'
+import { bilingual, useT } from '@/lib/i18n'
 import { useCustomerOrigin } from '@/lib/brand'
 import { placeQrUrl } from '@/lib/qr'
 import { QrSheet } from '@/components/qr-sheet'
@@ -9,7 +9,6 @@ import { comparePlaces } from './status'
 /** One printed card per place: rooms, then tables, then stations. */
 export function PlaceQrSheet() {
   const t = useT()
-  const localized = useLocalized()
   const customerOrigin = useCustomerOrigin()
   const { data: places = [], isLoading } = useQuery(listPlacesOptions())
 
@@ -17,7 +16,7 @@ export function PlaceQrSheet() {
   // that is out of service keeps its card — the code stays on its door
   const cards = places
     .filter((place) => place.isActive)
-    .sort(comparePlaces(localized))
+    .sort(comparePlaces())
     .map((place) => ({
       id: String(place.id),
       name: place.name,

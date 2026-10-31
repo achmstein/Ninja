@@ -830,7 +830,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cash => 'كاش';
 
   @override
-  String get exactCash => 'كاش بالمظبوط';
+  String get exactCash => 'كاش بالمبلغ كاملًا';
 
   @override
   String get card => 'بطاقة';

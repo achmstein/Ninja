@@ -29,7 +29,7 @@ import {
   startWalkInMutation,
 } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { comparePlaces, reservationForPlace, stayForPlace } from './status'
 
@@ -45,7 +45,6 @@ const NO_ORDERS: OrderSummary[] = []
  * update path (see use-admin-notifications); the polls are fallbacks.
  */
 export function usePlaces() {
-  const localized = useLocalized()
   const placesQuery = useQuery({
     ...listPlacesOptions(),
     refetchInterval: 60_000,
@@ -60,8 +59,8 @@ export function usePlaces() {
   })
 
   const places = useMemo(
-    () => [...(placesQuery.data ?? NO_PLACES)].sort(comparePlaces(localized)),
-    [placesQuery.data, localized]
+    () => [...(placesQuery.data ?? NO_PLACES)].sort(comparePlaces()),
+    [placesQuery.data]
   )
   const stays = staysQuery.data ?? NO_STAYS
   const reservations = reservationsQuery.data ?? NO_RESERVATIONS

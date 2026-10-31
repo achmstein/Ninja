@@ -24,7 +24,7 @@ import type {
   ReservationViewModel,
   StayViewModel,
 } from '@/api/spaces/types.gen'
-import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
+import { useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { isOpenReservation, PLACE_ROOM, STAY_RUNNING } from './status'
@@ -37,6 +37,11 @@ import { isOpenReservation, PLACE_ROOM, STAY_RUNNING } from './status'
  */
 /** Orders names the way people read them: digit runs compare by value, so
  *  "Room 2" comes before "Room 10", and letter case does not matter. */
+/** The name places are ordered by in either language: the English one, else the Arabic (as the server orders them) */
+export function orderName(name: { en?: string | null; ar?: string | null } | null | undefined): string {
+  return name?.en?.trim() || name?.ar?.trim() || ''
+}
+
 export function naturalCompare(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 }
@@ -59,16 +64,17 @@ export function usePlaces({ enabled = true }: { enabled?: boolean } = {}) {
   })
 
   // In the order people count them: Room 2 before Room 10; rooms first,
-  // then tables, then stations
-  const localized = useLocalized()
+  // then tables, then stations. By one name whatever the till's language,
+  // as the server orders them: by the screen's own, the order changed with
+  // the language
   const places = useMemo(
     () =>
       [...(placesQuery.data ?? [])].sort(
         (a, b) =>
           Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) ||
-          naturalCompare(localized(a.name), localized(b.name)),
+          naturalCompare(orderName(a.name), orderName(b.name)),
       ),
-    [placesQuery.data, localized],
+    [placesQuery.data],
   )
   const stays = useMemo(() => staysQuery.data ?? [], [staysQuery.data])
   // The server sends them soonest first: the ones keeping a place now, then the ones due later

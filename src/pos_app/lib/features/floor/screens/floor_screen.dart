@@ -275,7 +275,9 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     final sortedRooms = [...placesState.places]
       ..sort((a, b) {
         final byKind = a.kind.value.compareTo(b.kind.value);
-        return byKind != 0 ? byKind : naturalCompare(a.name.localized(context), b.name.localized(context));
+        // By one name whatever the till's language, as the server orders them: by the screen's own the
+        // order changed with the language (Arabic names sort apart from the English ones)
+        return byKind != 0 ? byKind : naturalCompare(a.name.primary, b.name.primary);
       });
     final placeOrder = {for (final (i, place) in sortedRooms.indexed) place.id: i};
     int placeRank(TicketSummary b) => switch (b.type) {

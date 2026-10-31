@@ -162,13 +162,19 @@ export function naturalCompare(a: string, b: string): number {
   return a.localeCompare(b, undefined, { numeric: true, sensitivity: 'base' })
 }
 
-/** Rooms, then tables, then stations; by name within a kind. */
-export function comparePlaces(
-  localized: (text: LocalizedText | null | undefined) => string
-) {
+/** The name places are ordered by in either language: the English one, else the Arabic (as the server orders them) */
+export function orderName(name: LocalizedText | null | undefined): string {
+  return name?.en?.trim() || name?.ar?.trim() || ''
+}
+
+/**
+ * Rooms, then tables, then stations; by name within a kind, one name whatever
+ * the screen's language: by the screen's own, the order changed with it.
+ */
+export function comparePlaces() {
   return (a: PlaceViewModel, b: PlaceViewModel) =>
     Number(a.kind ?? PLACE_ROOM) - Number(b.kind ?? PLACE_ROOM) ||
-    naturalCompare(localized(a.name), localized(b.name))
+    naturalCompare(orderName(a.name), orderName(b.name))
 }
 
 export function formatClock(totalSeconds: number): string {

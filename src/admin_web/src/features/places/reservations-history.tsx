@@ -114,8 +114,8 @@ export function ReservationHistory() {
   // Any place can have been reserved; the filter lists them all
   const { data: places = [] } = useQuery(listPlacesOptions())
   const sortedPlaces = useMemo(
-    () => [...places].sort(comparePlaces(localized)),
-    [places, localized]
+    () => [...places].sort(comparePlaces()),
+    [places]
   )
 
   const historyQuery = useQuery({
