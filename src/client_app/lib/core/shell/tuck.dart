@@ -58,6 +58,7 @@ class TuckOnScroll extends ConsumerStatefulWidget {
 
 class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
   double _from = 0;
+  double? _max;
   DateTime _quietUntil = DateTime.fromMillisecondsSinceEpoch(0);
 
   // No page is moved to its end here: the dock never changes a page's length or its list's height
@@ -92,8 +93,12 @@ class _TuckOnScrollState extends ConsumerState<TuckOnScroll> {
       return false;
     }
     if (n is! ScrollUpdateNotification) return false;
+    // The page grew or shrank under the scroll (the top bar going or coming): the scroll that follows is
+    // the page settling, not the customer's
+    final resized = _max != null && (max - _max!).abs() > 0.5;
+    _max = max;
     // The dock folding can move the page under it; that scroll is not the customer's
-    if (DateTime.now().isBefore(_quietUntil)) {
+    if (resized || DateTime.now().isBefore(_quietUntil)) {
       _from = y;
       return false;
     }

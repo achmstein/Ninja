@@ -30,7 +30,7 @@ import { Recede } from '@/components/motion/recede'
 import { useRecede } from '@/components/motion/use-recede'
 import { SignInSheet } from '@/components/auth/sign-in-options'
 import { cn } from '@/lib/utils'
-import { DirectionsLink, UseMyLocation } from '@/components/branch-switcher'
+import { UseMyLocation } from '@/components/branch-switcher'
 import { useAtBranch, useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
 import type { TranslationKey } from '@/lib/i18n'
 
@@ -251,11 +251,9 @@ function PlacesList({ atTable, stay, look }: { atTable: boolean; stay?: StayView
                     onSelect={setViewId}
                     panelId='branch-places'
                   />
-                  {/* Under the dial: the customer's position on their word, and the way to the chosen branch */}
-                  <div className='flex items-center justify-between gap-3'>
-                    {anyPoint && !location.here ? <UseMyLocation location={location} /> : <span />}
-                    {viewed && <DirectionsLink branch={viewed.branch} />}
-                  </div>
+                  {/* Under the dial, while the position is unknown, the way to give it (the distances and the
+                      order come with it); the way to a branch is on its own chip once it is chosen */}
+                  {anyPoint && !location.here && <UseMyLocation location={location} className='self-start' />}
                 </div>
               </Recede>
             </RiseItem>

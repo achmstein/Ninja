@@ -1,9 +1,10 @@
 import { useRef, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
+import { Navigation } from 'lucide-react'
 import type { BranchResponse } from '@/api/tenant'
 import type { PlaceViewModel } from '@/api/spaces'
 import { PLACE_AVAILABLE } from '@/lib/places'
-import { useDistance } from '@/lib/geo'
+import { directionsUrl, pointOf, useDistance } from '@/lib/geo'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 
@@ -84,8 +85,12 @@ function DialChip({
   const id = Number(dial.branch.id)
   const total = dial.places.length
   const free = dial.places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+  // The way there, on the branch it leads to: the chosen one, when it is on the map. Beside the chip's
+  // button rather than in it (a link cannot sit inside a button), over its top end corner
+  const point = selected ? pointOf(dial.branch) : null
 
   return (
+    <div className='relative shrink-0 snap-start'>
     <button
       type='button'
       role='tab'
@@ -94,7 +99,7 @@ function DialChip({
       tabIndex={selected ? 0 : -1}
       onClick={() => onSelect(id)}
       className={cn(
-        'relative flex w-40 shrink-0 snap-start flex-col gap-2 rounded-[1.25rem] border p-3 text-start transition-colors',
+        'relative flex w-40 flex-col gap-2 rounded-[1.25rem] border p-3 text-start transition-colors',
         selected ? 'text-primary-foreground border-transparent' : 'bg-background border-border',
       )}
     >
@@ -107,7 +112,10 @@ function DialChip({
           aria-hidden
         />
       )}
-      <span className='relative truncate text-body font-semibold'>{localized(dial.branch.name)}</span>
+      {/* One height on every chip, the chosen one's way there or not */}
+      <span className={cn('relative flex h-8 items-center truncate text-body font-semibold', point && 'pe-9')}>
+        <span className='truncate'>{localized(dial.branch.name)}</span>
+      </span>
       <SeatMeter free={free} total={total} selected={selected} />
       <span className={cn('relative flex items-baseline justify-between gap-2 text-caption', selected ? 'opacity-90' : 'text-muted-foreground')}>
         <span>{t('bookFreeShort', { count: free })}</span>
@@ -118,6 +126,18 @@ function DialChip({
         )}
       </span>
     </button>
+    {point && (
+      <a
+        href={directionsUrl(point)}
+        target='_blank'
+        rel='noopener noreferrer'
+        aria-label={t('directions')}
+        className='bg-primary-foreground/20 text-primary-foreground active:bg-primary-foreground/30 absolute end-3 top-3 grid size-8 place-items-center rounded-full transition-colors'
+      >
+        <Navigation className='size-4' />
+      </a>
+    )}
+    </div>
   )
 }
 

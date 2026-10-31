@@ -4,6 +4,7 @@ import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_style.dart';
 import '../motion/motion.dart';
+import '../shell/tuck.dart';
 import '../theme/ninja_theme.dart';
 import '../theme/theme_provider.dart';
 import 'ninja_button.dart';
@@ -69,7 +70,9 @@ class _NinjaPageState extends State<NinjaPage> {
     final bottom = MediaQuery.paddingOf(context).bottom;
     Widget list = ListView(
       controller: _scroll,
-      physics: const AlwaysScrollableScrollPhysics(),
+      // At its end it stays at its end as the top bar goes or comes back, as the menu does: left where it
+      // was, the page's last block slid under the dock
+      physics: const StayAtEndPhysics(parent: AlwaysScrollableScrollPhysics()),
       // The page's room at its end: the dock over it on a tab, the phone's own edge on a pushed page
       padding: EdgeInsets.fromLTRB(Ninja.pagePadding, 12, Ninja.pagePadding, 24 + bottom),
       children: [

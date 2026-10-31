@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
 import '../widgets/hold_form.dart';
@@ -174,13 +175,15 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       );
     }
 
+    // Across branches, every branch on the dial: the heading said this one's alone, under a dial of them all
+    final freeShown = multi ? ordered.fold(0, (sum, g) => sum + g.places.where((p) => p.canBookNow).length) : free;
     return NinjaPage(
       title: l10n.rooms,
       // In a room the heading says where; otherwise how many places are free
       subtitle: stay != null
           ? AppText(l10n.ninjaYoureIn(stay.placeName.localized(context)))
           : reservedSession == null && rooms.isNotEmpty && reservationsEnabled
-              ? AppText(l10n.bookFreeNow(free))
+              ? AppText(l10n.bookFreeNow(freeShown))
               : null,
       action: HeaderAction(icon: const Icon(LucideIcons.history), onPress: () => context.push('/stays')),
       gap: 16,
@@ -196,8 +199,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
         if (allBusy && reservedSession == null) const NotifyMeBanner(),
-        // Booking across branches: the dial, nearest first once the customer's position is known; under it
-        // their position on their word, and the way to the chosen branch
+        // Booking across branches: the dial, nearest first once the customer's position is known, the way
+        // to a branch on its own chip once it is chosen; under it, while the position is unknown, the way
+        // to give it (the distances and the order come with it)
         if (multi && viewed != null)
           Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -210,14 +214,10 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                   _openId = null;
                 }),
               ),
-              const SizedBox(height: 8),
-              Row(
-                children: [
-                  if (anyPoint && here == null) const UseMyLocationButton(),
-                  const Spacer(),
-                  DirectionsButton(branch: viewed.branch),
-                ],
-              ),
+              if (anyPoint && here == null) ...[
+                const SizedBox(height: 4),
+                const Align(alignment: AlignmentDirectional.centerStart, child: UseMyLocationButton()),
+              ],
             ],
           ),
         // One branch taking bookings: the branch changed by hand
@@ -1694,11 +1694,38 @@ class _DialChip extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             spacing: 8,
             children: [
-              AppText(
-                dial.branch.name.localized(context),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: ink)),
+              // One height on every chip, the chosen one's way there or not
+              SizedBox(
+                height: 32,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppText(
+                        dial.branch.name.localized(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: ink)),
+                      ),
+                    ),
+                    // The way there, on the branch it leads to: the chosen one, when it is on the map
+                    if (selected && dial.branch.point != null) ...[
+                      const SizedBox(width: 6),
+                      Semantics(
+                        button: true,
+                        label: l10n.directions,
+                        child: Pressable(
+                          onTap: () => launchUrl(directionsUri(dial.branch.point!), mode: LaunchMode.externalApplication),
+                          child: Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(color: c.primaryForeground.withValues(alpha: 0.18), shape: BoxShape.circle),
+                            child: Icon(LucideIcons.navigation, size: 16, color: ink),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ],
+                ),
               ),
               _SeatMeter(free: free, total: dial.places.length, selected: selected),
               Row(

@@ -134,6 +134,7 @@ class TopBarOnScroll extends ConsumerStatefulWidget {
 
 class _TopBarOnScrollState extends ConsumerState<TopBarOnScroll> {
   double _from = 0;
+  double? _max;
   DateTime _quietUntil = DateTime.fromMillisecondsSinceEpoch(0);
 
   @override
@@ -149,8 +150,12 @@ class _TopBarOnScrollState extends ConsumerState<TopBarOnScroll> {
     if (ref.read(deckCompactProvider) != null) return false;
     final y = n.metrics.pixels;
     final hidden = ref.read(topBarHiddenProvider);
+    // The page grew or shrank under the scroll (the bar going takes the room it leaves): the scroll that
+    // follows is the page settling, not the customer turning back up, which brought the bar back mid-fling
+    final resized = _max != null && (n.metrics.maxScrollExtent - _max!).abs() > 0.5;
+    _max = n.metrics.maxScrollExtent;
     // The bar going or coming moves the page under it; that scroll is not the customer's
-    if (DateTime.now().isBefore(_quietUntil)) {
+    if (resized || DateTime.now().isBefore(_quietUntil)) {
       _from = y;
       return false;
     }
