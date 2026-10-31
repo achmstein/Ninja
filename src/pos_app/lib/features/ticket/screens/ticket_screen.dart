@@ -531,14 +531,14 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     ];
 
     final bill = <Widget>[
-      // Who took the order that opened it, and where when another branch sent it here
-      if ((ticket.takenBy ?? '').isNotEmpty)
+      // Who took it, only when another branch did (a phone order sent here):
+      // why a bill nobody here rang up is on the floor, and whom to ask.
+      // Taken here, everyone on shift knows, and the line was noise
+      if ((ticket.takenBy ?? '').isNotEmpty && ticket.takenAtBranchId != null)
         Padding(
           padding: const EdgeInsets.only(bottom: Sizes.gap),
           child: Text(
-            ticket.takenAtBranchId == null
-                ? l10n.takenBy(ticket.takenBy!)
-                : l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
+            l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
             style: theme.typography.label.copyWith(color: theme.colors.mutedForeground),
           ),
         ),
@@ -1012,11 +1012,6 @@ class _LineRow extends StatelessWidget {
                       style: muted.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
                     ),
                   ),
-                  // Where the upload mark was while it was on its way: the price stays put
-                  if (landed) ...[
-                    const SizedBox(width: 6),
-                    Icon(FIcons.check, size: Sizes.iconSmall, color: emerald),
-                  ],
                 ],
               ),
             ],
@@ -1045,10 +1040,19 @@ class _LineRow extends StatelessWidget {
     );
     if (selectable) return FTappable(onPress: onToggle, child: box);
     if (!landed) return box;
+    // Just in: it stops breathing (core/sending) and a soft tint behind it
+    // fades out, so the eye finds what was added; no mark to read
     return TweenAnimationBuilder<double>(
-      tween: Tween(begin: 0.7, end: 1),
-      duration: const Duration(milliseconds: 500),
-      builder: (context, opacity, child) => Opacity(opacity: opacity, child: child),
+      tween: Tween(begin: 1, end: 0),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeOut,
+      builder: (context, t, child) => DecoratedBox(
+        decoration: BoxDecoration(
+          color: theme.colors.primary.withValues(alpha: 0.08 * t),
+          borderRadius: BorderRadius.circular(Sizes.radius),
+        ),
+        child: child,
+      ),
       child: box,
     );
   }

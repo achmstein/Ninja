@@ -6,7 +6,6 @@ import '../../../core/widgets/skeleton.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
-import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/phone.dart';
@@ -38,10 +37,16 @@ Future<SaleCustomer?> showCustomerDialog(
   String? title,
   Map<String, String> busy = const {},
 }) {
-  return showPosDialog<SaleCustomer>(
-    context,
-    // A search: the results come up into view as they are typed for
-    aboveKeyboard: true,
+  // A sheet down the screen's end side, the whole height: the field stays at
+  // its top and the results fill it down to the keyboard, which on a
+  // landscape tablet leaves a dialog no room between itself and the top
+  return showFSheet<SaleCustomer>(
+    context: context,
+    useRootNavigator: true,
+    side: Directionality.of(context) == TextDirection.rtl ? FLayout.ltr : FLayout.rtl,
+    mainAxisMaxRatio: null,
+    constraints: const BoxConstraints(maxWidth: 480),
+    draggable: false,
     builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
   );
 }
@@ -143,17 +148,48 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
       child: Text(text, textAlign: TextAlign.center, style: muted),
     );
 
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.85),
-      // The title and the field stay put above the keyboard (half the screen
-      // on a landscape tablet); the results scroll under them
-      child: DialogSearchBody(
-        header: Column(
+    // The sheet ends where the keyboard starts: the results list gets every
+    // row between the field and the keyboard, and scrolls only past that
+    final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+    return Container(
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        border: BorderDirectional(start: BorderSide(color: theme.colors.border)),
+      ),
+      padding: EdgeInsets.only(bottom: keyboard),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // A header row like every screen's: the title, and the way out
+          Container(
+            height: Sizes.header,
+            padding: const EdgeInsetsDirectional.only(start: Sizes.gapLg, end: Sizes.gapSm),
+            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Text(widget.title ?? l10n.chooseCustomer,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600)),
+                ),
+                SizedBox.square(
+                  dimension: Sizes.control,
+                  child: FButton.icon(
+                    variant: FButtonVariant.ghost,
+                    onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+                    child: const Icon(FIcons.x, size: Sizes.iconNav),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(Sizes.gapLg, Sizes.gapLg, Sizes.gapLg, 0),
+            child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(widget.title ?? l10n.chooseCustomer, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 16),
             if (widget.quickPicks.isNotEmpty) ...[
               Text(l10n.inTheRoom, style: muted),
               const SizedBox(height: 8),
@@ -231,8 +267,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ],
             const SizedBox(height: 8),
           ],
-        ),
-        results: _search.isEmpty
+            ),
+          ),
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(Sizes.gapLg, 0, Sizes.gapLg, Sizes.gapLg),
+              child: _search.isEmpty
                 ? const SizedBox.shrink()
                 : _loading
                 ? Skeleton(
@@ -360,17 +400,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                       );
                     },
                   ),
-        footer: Padding(
-          padding: const EdgeInsets.only(top: 16),
-          child: SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              variant: FButtonVariant.outline,
-              onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-              child: Text(l10n.cancel, style: theme.typography.base.forButton),
             ),
           ),
-        ),
+        ],
       ),
     );
   }

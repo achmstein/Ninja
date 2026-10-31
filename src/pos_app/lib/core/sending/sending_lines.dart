@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/motion/motion.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
@@ -61,7 +62,7 @@ class _SendBlock extends ConsumerWidget {
       ],
     );
 
-    if (!failed) return Opacity(opacity: 0.7, child: rows);
+    if (!failed) return _Breathing(child: rows);
 
     return Container(
       decoration: BoxDecoration(
@@ -121,6 +122,38 @@ class _SendBlock extends ConsumerWidget {
   }
 }
 
+/// Lines on their way, breathing: a slow pulse between faint and nearly
+/// full, so "still going" reads without a mark. Still, at the middle of the
+/// pulse, where the system asks for less motion.
+class _Breathing extends StatefulWidget {
+  final Widget child;
+
+  const _Breathing({required this.child});
+
+  @override
+  State<_Breathing> createState() => _BreathingState();
+}
+
+class _BreathingState extends State<_Breathing> with SingleTickerProviderStateMixin {
+  late final AnimationController _pulse =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 900))..repeat(reverse: true);
+
+  @override
+  void dispose() {
+    _pulse.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    if (reduceMotion(context)) return Opacity(opacity: 0.65, child: widget.child);
+    return FadeTransition(
+      opacity: _pulse.drive(Tween(begin: 0.45, end: 0.85).chain(CurveTween(curve: Curves.easeInOut))),
+      child: widget.child,
+    );
+  }
+}
+
 class _SendRow extends StatelessWidget {
   final LocalizedText name;
   final LocalizedText? details;
@@ -150,20 +183,10 @@ class _SendRow extends StatelessWidget {
                 Text(name.localized(context),
                     maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
                 if (options.isNotEmpty) Text(options, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
-                // The mark rides on this line, not after the price, so the
-                // price never moves when it comes and goes
-                Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text('$quantity × ${money(context, price)}', style: muted.copyWith(fontFeatures: tabular)),
-                    if (!failed) ...[
-                      const SizedBox(width: 6),
-                      Semantics(
-                        label: l10n.sending,
-                        child: Icon(FIcons.cloudUpload, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                      ),
-                    ],
-                  ],
+                // On its way it breathes (no mark); a reader is told in words
+                Semantics(
+                  label: failed ? null : l10n.sending,
+                  child: Text('$quantity × ${money(context, price)}', style: muted.copyWith(fontFeatures: tabular)),
                 ),
               ],
             ),
