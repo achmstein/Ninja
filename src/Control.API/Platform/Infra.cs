@@ -110,6 +110,15 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureRememberMeAsync(string realm, CancellationToken ct);
     /// <summary>
+    /// The web apps' sign-in hardened in a realm made before: five-minute access
+    /// tokens, each
+    /// refresh token taken once, and each app's client sending its code back to
+    /// its one callback (not anything under its host), signing out to its one
+    /// page, and its sign-ins ending after two idle weeks or thirty days. A
+    /// client's other redirects (a business's own app) stay. Idempotent.
+    /// </summary>
+    Task EnsureWebSignInAsync(string realm, IReadOnlyList<WebSignInClient> clients, CancellationToken ct);
+    /// <summary>
     /// Signs the user in without their password, as the master admin may: a
     /// browser session in their realm, returned as the Set-Cookie headers a
     /// browser on <paramref name="publicAuthHost"/> would have received.
@@ -847,6 +856,56 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             throw new InvalidOperationException($"Keycloak refused Remember me for {realm} ({(int)response.StatusCode}): {await response.Content.ReadAsStringAsync(ct)}");
     }
 
+    public async Task EnsureWebSignInAsync(string realm, IReadOnlyList<WebSignInClient> clients, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var admin = $"{Base}/admin/realms/{realm}";
+
+        // The realm's tokens: five-minute access tokens whatever the realm said before, and a
+        // refresh token that works once (the renewal that uses it gets the next)
+        var current = await client.GetFromJsonAsync<JsonObject>(admin, ct);
+        var realmUpdate = new JsonObject();
+        if (current?["accessTokenLifespan"]?.GetValue<int>() != Templates.AccessTokenSeconds)
+        {
+            realmUpdate["accessTokenLifespan"] = Templates.AccessTokenSeconds;
+            realmUpdate["accessTokenLifespanForImplicitFlow"] = Templates.AccessTokenSeconds;
+        }
+        if (current?["revokeRefreshToken"]?.GetValue<bool>() != true || current?["refreshTokenMaxReuse"]?.GetValue<int>() != 0)
+        {
+            realmUpdate["revokeRefreshToken"] = true;
+            realmUpdate["refreshTokenMaxReuse"] = 0;
+        }
+        if (realmUpdate.Count > 0)
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync(admin, realmUpdate, ct), $"the token settings of {realm}", ct);
+
+        foreach (var wanted in clients)
+        {
+            var found = await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId={Uri.EscapeDataString(wanted.ClientId)}", ct) ?? [];
+            if (found.FirstOrDefault()?["id"]?.GetValue<string>() is not { } id) continue;
+            var rep = await client.GetFromJsonAsync<JsonObject>($"{admin}/clients/{id}", ct);
+            if (rep is null) continue;
+
+            // The wildcard under the app's host gives way to its callback; every other redirect stays
+            var redirects = (rep["redirectUris"] as JsonArray ?? [])
+                .Select(r => r?.GetValue<string>())
+                .OfType<string>()
+                .Where(r => r != wanted.Wildcard && r != wanted.Callback)
+                .Prepend(wanted.Callback)
+                .ToList();
+            rep["redirectUris"] = new JsonArray(redirects.Select(r => (JsonNode)JsonValue.Create(r)!).ToArray());
+
+            var attributes = rep["attributes"] as JsonObject ?? new JsonObject();
+            attributes["post.logout.redirect.uris"] = wanted.PostLogout;
+            if (wanted.Limited)
+            {
+                attributes["client.session.idle.timeout"] = Templates.WebClientIdleSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+                attributes["client.session.max.lifespan"] = Templates.WebClientMaxSeconds.ToString(System.Globalization.CultureInfo.InvariantCulture);
+            }
+            rep["attributes"] = attributes;
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/clients/{id}", rep, ct), $"client {wanted.ClientId} in {realm}", ct);
+        }
+    }
+
     public async Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)
     {
         var client = await AdminClientAsync(ct);
@@ -1045,6 +1104,13 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     public Task EnsureRememberMeAsync(string realm, CancellationToken ct)
     {
         logger.LogInformation("(dry run) remember me in {Realm}", realm);
+        return Task.CompletedTask;
+    }
+    public List<string> WebSignInsEnsured { get; } = [];
+    public Task EnsureWebSignInAsync(string realm, IReadOnlyList<WebSignInClient> clients, CancellationToken ct)
+    {
+        WebSignInsEnsured.Add(realm);
+        logger.LogInformation("(dry run) web sign-in hardened in {Realm}: {Clients}", realm, string.Join(", ", clients.Select(c => c.Callback)));
         return Task.CompletedTask;
     }
     public Task EnsureAccountConsoleAsync(string realm, CancellationToken ct)

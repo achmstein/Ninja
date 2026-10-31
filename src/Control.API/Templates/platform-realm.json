@@ -38,7 +38,9 @@
       "priority": 30
     }
   ],
-  "accessTokenLifespan": 900,
+  "accessTokenLifespan": 300,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 28800,
   "ssoSessionMaxLifespan": 86400,
   "rememberMe": true,
@@ -261,15 +263,14 @@
       "directAccessGrantsEnabled": false,
       "rootUrl": "{{controlUrl}}",
       "redirectUris": [
-        "{{controlUrl}}/*",
-        "http://localhost:5177/*"
+        "{{controlUrl}}/auth/callback"
       ],
       "webOrigins": [
-        "{{controlUrl}}",
-        "http://localhost:5177"
+        "{{controlUrl}}"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "{{controlUrl}}/signed-out"
       },
       "defaultClientScopes": [
         "openid",

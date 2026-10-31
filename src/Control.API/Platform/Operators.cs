@@ -2,6 +2,7 @@ using System.Net;
 using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
 
 namespace Ninja.Control.API.Platform;
 
@@ -236,10 +237,11 @@ public sealed class DryRunOperatorDirectory(ILogger<DryRunOperatorDirectory> log
 /// The platform realm is imported once and never stamped, so what the
 /// template gained since is put on at start: Keycloak's account pages (the
 /// control app's "Authenticator &amp; sessions") given a token that says who
-/// is asking, and the login page's "Remember me". Retried each minute until
+/// is asking, the login page's "Remember me", and the control app's sign-in
+/// hardened (short tokens, one-use refresh tokens, its one callback). Retried each minute until
 /// Keycloak answers, then done.
 /// </summary>
-public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, ILogger<PlatformRealmService> logger) : BackgroundService
+public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, IOptions<PlatformOptions> options, ILogger<PlatformRealmService> logger) : BackgroundService
 {
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -250,6 +252,7 @@ public sealed class PlatformRealmService(KeycloakRestAdmin keycloak, ILogger<Pla
             {
                 await keycloak.EnsureAccountConsoleAsync(KeycloakOperatorDirectory.Realm, stoppingToken);
                 await keycloak.EnsureRememberMeAsync(KeycloakOperatorDirectory.Realm, stoppingToken);
+                await keycloak.EnsureWebSignInAsync(KeycloakOperatorDirectory.Realm, [Templates.ControlSignInClient(options.Value.ControlUrl)], stoppingToken);
                 logger.LogInformation("Account console and remember me ensured in the {Realm} realm", KeycloakOperatorDirectory.Realm);
                 return;
             }

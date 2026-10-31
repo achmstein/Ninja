@@ -42,6 +42,49 @@
 	header @nonassets Cache-Control "no-cache"
 }
 
+# Every app's security headers. HTTPS only, for a year, on every host of
+# the platform; no sniffing a response into another type; the address bar's
+# path never leaks to another site; and a Content-Security-Policy that runs
+# only the app's own scripts (none inline), talks only to its own host, the
+# sign-in host and what the app names, and lets no other site frame it.
+# args: the app's extra sources, appended as written to the base policy
+(security_headers) {
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "strict-origin-when-cross-origin"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(self), payment=(self)"
+		Content-Security-Policy "default-src 'self'; base-uri 'self'; object-src 'none'; form-action 'self'; manifest-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' data: https://fonts.gstatic.com; {args[0]}"
+		-Server
+	}
+}
+
+# The policies' app-specific halves. Images may come from any https host (a
+# business's photos, a guest's avatar); scripts never do.
+# The till: its print connector on this PC; html-to-image reads the fonts to draw a receipt
+(csp_pos) {
+	import security_headers "script-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' wss://{host} https://auth.{$PLATFORM_DOMAIN} http://127.0.0.1:17777 https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'none'; frame-ancestors 'none'"
+}
+(csp_kds) {
+	import security_headers "script-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' wss://{host} https://auth.{$PLATFORM_DOMAIN} https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src 'none'; frame-ancestors 'none'"
+}
+# Admin: Google Maps and the open map's tiles, push (Firebase, whose service
+# worker loads from gstatic), the customer app in the brand preview, an
+# uploaded receipt shown from a blob
+(csp_admin) {
+	import security_headers "script-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.google.com; img-src 'self' data: blob: https:; connect-src 'self' wss://{host} https://auth.{$PLATFORM_DOMAIN} https://*.googleapis.com https://*.gstatic.com https://*.google.com https://tiles.openfreemap.org https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src https: blob:; frame-ancestors 'none'"
+}
+# The customer app: maps and push as admin; framed only by the control app
+# and the business's own admin (their live brand previews).
+# args: the business's admin origin
+(csp_client) {
+	import security_headers "script-src 'self' https://*.googleapis.com https://*.gstatic.com https://*.google.com; img-src 'self' data: blob: https:; connect-src 'self' wss://{host} https://auth.{$PLATFORM_DOMAIN} https://*.googleapis.com https://*.gstatic.com https://*.google.com https://tiles.openfreemap.org https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src https://*.google.com; frame-ancestors 'self' https://control.{$PLATFORM_DOMAIN} {args[0]}"
+}
+# The control app: the customer app in its brand preview
+(csp_control) {
+	import security_headers "script-src 'self'; img-src 'self' data: blob: https:; connect-src 'self' wss://{host} https://auth.{$PLATFORM_DOMAIN} https://fonts.googleapis.com https://fonts.gstatic.com; worker-src 'self' blob:; frame-src https:; frame-ancestors 'none'"
+}
+
 (tenant_api) {
 	# args: the tenant's gateway host
 	handle /api/* {
@@ -159,6 +202,7 @@ control.{$PLATFORM_DOMAIN} {
 	tls {
 		on_demand
 	}
+	import csp_control
 	handle /api/* {
 		reverse_proxy control-api:8080
 	}
@@ -186,6 +230,7 @@ https://*.*.{$PLATFORM_DOMAIN} {
 
 	@admin host admin.*.{$PLATFORM_DOMAIN}
 	handle @admin {
+		import csp_admin
 		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
 		handle {
 			import spa /srv/admin-web
@@ -194,6 +239,7 @@ https://*.*.{$PLATFORM_DOMAIN} {
 
 	@pos host pos.*.{$PLATFORM_DOMAIN}
 	handle @pos {
+		import csp_pos
 		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
 		handle {
 			import spa /srv/pos-web
@@ -202,6 +248,7 @@ https://*.*.{$PLATFORM_DOMAIN} {
 
 	@kds host kds.*.{$PLATFORM_DOMAIN}
 	handle @kds {
+		import csp_kds
 		import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
 		handle {
 			import spa /srv/kds-web
@@ -241,7 +288,7 @@ https://*.{$PLATFORM_DOMAIN} {
 	tls {
 		on_demand
 	}
-	header Content-Security-Policy "frame-ancestors 'self' https://control.{$PLATFORM_DOMAIN} https://admin.{host}"
+	import csp_client https://admin.{host}
 	import tenant_api {labels.{$PLATFORM_SLUG_LABEL}}-gateway
 	import app_links
 	handle {

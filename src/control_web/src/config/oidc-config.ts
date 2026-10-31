@@ -1,5 +1,5 @@
 import { User, WebStorageStateStore } from 'oidc-client-ts'
-import type { AuthProviderProps } from 'react-oidc-context'
+import type { AuthProviderNoUserManagerProps as AuthProviderProps } from 'react-oidc-context'
 
 // OIDC configuration for Keycloak. The control panel signs in against the
 // platform's own realm (`ninja`), not a tenant's. In development
@@ -32,7 +32,8 @@ export const oidcConfig: AuthProviderProps = {
   post_logout_redirect_uri: `${appUrl}/signed-out`,
   response_type: 'code',
   scope: 'openid profile email roles',
-  automaticSilentRenew: true,
+  // Renewed by SessionKeeper (session.tsx), one tab at a time
+  automaticSilentRenew: false,
   loadUserInfo: true,
   // localStorage (not the sessionStorage default) so sign-in survives new
   // tabs and browser restarts.

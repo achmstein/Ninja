@@ -71,8 +71,10 @@
       "priority": 20
     }
   ],
-  "accessTokenLifespan": 7200,
-  "accessTokenLifespanForImplicitFlow": 7200,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 300,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 7776000,
   "offlineSessionIdleTimeout": 2592000,
@@ -434,7 +436,7 @@
       "rootUrl": "{{adminUrl}}",
       "baseUrl": "/",
       "redirectUris": [
-        "{{adminUrl}}/*"
+        "{{adminUrl}}/auth/callback"
       ],
       "webOrigins": [
         "{{adminUrl}}",
@@ -454,7 +456,10 @@
         "offline_access"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "{{adminUrl}}/signed-out",
+        "client.session.idle.timeout": "1209600",
+        "client.session.max.lifespan": "2592000"
       },
       "protocolMappers": [
         {
@@ -482,7 +487,7 @@
       "rootUrl": "{{customerUrl}}",
       "baseUrl": "/",
       "redirectUris": [
-        "{{customerUrl}}/*"
+        "{{customerUrl}}/auth/callback"
       ],
       "webOrigins": [
         "{{customerUrl}}",
@@ -501,7 +506,10 @@
         "offline_access"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "{{customerUrl}}",
+        "client.session.idle.timeout": "1209600",
+        "client.session.max.lifespan": "2592000"
       },
       "protocolMappers": [
         {
@@ -529,7 +537,7 @@
       "rootUrl": "{{posUrl}}",
       "baseUrl": "/",
       "redirectUris": [
-        "{{posUrl}}/*"
+        "{{posUrl}}/auth/callback"
       ],
       "webOrigins": [
         "{{posUrl}}",
@@ -549,7 +557,10 @@
         "offline_access"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "{{posUrl}}/signed-out",
+        "client.session.idle.timeout": "1209600",
+        "client.session.max.lifespan": "2592000"
       },
       "protocolMappers": [
         {
@@ -577,7 +588,7 @@
       "rootUrl": "{{kdsUrl}}",
       "baseUrl": "/",
       "redirectUris": [
-        "{{kdsUrl}}/*"
+        "{{kdsUrl}}/auth/callback"
       ],
       "webOrigins": [
         "{{kdsUrl}}",
@@ -595,7 +606,10 @@
         "offline_access"
       ],
       "attributes": {
-        "pkce.code.challenge.method": "S256"
+        "pkce.code.challenge.method": "S256",
+        "post.logout.redirect.uris": "{{kdsUrl}}/signed-out",
+        "client.session.idle.timeout": "1209600",
+        "client.session.max.lifespan": "2592000"
       },
       "protocolMappers": [
         {

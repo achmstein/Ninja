@@ -537,8 +537,15 @@ class AuthService extends Notifier<AuthState> {
     });
   }
 
-  /// Refresh access token
-  Future<bool> refreshToken() async {
+  /// The refresh in flight, shared by every caller that asks meanwhile
+  Future<bool>? _refreshing;
+
+  /// Refresh the access token; callers at the same moment share the one
+  /// refresh. Keycloak takes each refresh token once, so a second refresh
+  /// with the same token would be refused and sign the customer out
+  Future<bool> refreshToken() => _refreshing ??= _refresh().whenComplete(() => _refreshing = null);
+
+  Future<bool> _refresh() async {
     if (state.refreshToken == null) {
       debugPrint('Token refresh - no refresh token available');
       return false;

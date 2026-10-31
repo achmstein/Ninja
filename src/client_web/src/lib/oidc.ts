@@ -1,5 +1,5 @@
 import { User, WebStorageStateStore } from 'oidc-client-ts'
-import type { AuthProviderProps } from 'react-oidc-context'
+import type { AuthProviderNoUserManagerProps as AuthProviderProps } from 'react-oidc-context'
 
 // In development, VITE_KEYCLOAK_URL is injected by the Aspire AppHost
 const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
@@ -51,7 +51,8 @@ export function getOidcConfig(): AuthProviderProps {
   post_logout_redirect_uri: window.location.origin,
   response_type: 'code',
   scope: 'openid profile email roles orders spaces catalog',
-  automaticSilentRenew: true,
+  // Renewed by SessionKeeper (session.tsx), one tab at a time
+  automaticSilentRenew: false,
   loadUserInfo: true,
   // localStorage (not the sessionStorage default) so sign-in survives new
   // tabs and browser restarts; combined with silent renew and long Keycloak

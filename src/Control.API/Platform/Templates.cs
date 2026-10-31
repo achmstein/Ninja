@@ -683,8 +683,8 @@ public static partial class Templates
             sb.AppendLine("\ttls {");
             sb.AppendLine("\t\ton_demand");
             sb.AppendLine("\t}");
-            // Only the control app and the business's own admin may frame the customer app (their live brand previews)
-            sb.AppendLine($"\theader Content-Security-Policy \"frame-ancestors 'self' {platform.ControlUrl.TrimEnd('/')} {TenantHosts.For(tenant, platform).AdminUrl}\"");
+            // The customer app's security headers, as on {slug}.{domain}: only the control app and the business's own admin may frame it (their live brand previews)
+            sb.AppendLine($"\timport csp_client {TenantHosts.For(tenant, platform).AdminUrl}");
             sb.AppendLine($"\timport tenant_api {TenantNaming.Gateway(tenant.Slug)}");
             // Its own app's link files, as on {slug}.{domain}: the printed QR codes carry this host
             sb.AppendLine("\timport app_links");

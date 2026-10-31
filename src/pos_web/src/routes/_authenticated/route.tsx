@@ -15,6 +15,7 @@ import { KitchenPrinterBanner } from '@/components/layout/kitchen-printer-banner
 import { PosHeader } from '@/components/layout/pos-header'
 import { useOfflineSync } from '@/features/offline/use-offline-sync'
 import { usePosNotifications } from '@/hooks/use-pos-notifications'
+import { renewSession } from '@/context/session'
 import { useT } from '@/lib/i18n'
 import { networkStatus, useNetworkStatus } from '@/lib/network-status'
 
@@ -68,20 +69,20 @@ function AuthenticatedRoute() {
     if (!online || !renewalPending || renewing.current || !user) return
     renewing.current = true
     const token = user.access_token
-    auth
-      .signinSilent()
+    // Through the shared renewal, so a second tab of the till never spends
+    // the same refresh token
+    renewSession()
       .catch((error: unknown) => {
-        // Keycloak said no: the session is over, and the dead sign-in goes
-        // with it, so the cashier signs in afresh. Anything else is the network.
-        if (error instanceof ErrorResponse) {
-          setRefusedFor(token)
-          void auth.removeUser()
-        } else networkStatus.reportFailure()
+        // Keycloak said no: the session is over, and the dead sign-in is
+        // already dropped, so the cashier signs in afresh. Anything else is
+        // the network.
+        if (error instanceof ErrorResponse) setRefusedFor(token)
+        else networkStatus.reportFailure()
       })
       .finally(() => {
         renewing.current = false
       })
-  }, [online, renewalPending, user, auth])
+  }, [online, renewalPending, user])
   const keepsOfflineSession = !!user && (!online || renewalPending)
 
   const needsSignIn =

@@ -2,11 +2,10 @@ import { StrictMode } from 'react'
 import ReactDOM from 'react-dom/client'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createRouter } from '@tanstack/react-router'
-import { AuthProvider } from 'react-oidc-context'
 import { bootBrand } from './lib/brand'
 import { App } from './app'
 import { getOidcConfig } from './lib/oidc'
-import { DropRefusedSession } from './lib/drop-refused-session'
+import { SessionProvider } from './lib/session'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
@@ -42,12 +41,11 @@ if (!rootElement.innerHTML) {
   const root = ReactDOM.createRoot(rootElement)
   root.render(
     <StrictMode>
-      <AuthProvider {...getOidcConfig()}>
-        <DropRefusedSession />
+      <SessionProvider config={getOidcConfig()}>
         <QueryClientProvider client={queryClient}>
           <App router={router} />
         </QueryClientProvider>
-      </AuthProvider>
+      </SessionProvider>
     </StrictMode>
   )
 }

@@ -67,8 +67,10 @@
       "priority": 20
     }
   ],
-  "accessTokenLifespan": 7200,
-  "accessTokenLifespanForImplicitFlow": 7200,
+  "accessTokenLifespan": 300,
+  "accessTokenLifespanForImplicitFlow": 300,
+  "revokeRefreshToken": true,
+  "refreshTokenMaxReuse": 0,
   "ssoSessionIdleTimeout": 2592000,
   "ssoSessionMaxLifespan": 7776000,
   "offlineSessionIdleTimeout": 0,

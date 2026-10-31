@@ -60,8 +60,23 @@ public sealed class TemplatesTests
         CollectionAssert.AreEquivalent(
             new[] { "mobile-app", "admin-panel", "client-web", "pos-web", "kds-web", "pos-app", "kds-app", "rider-app", "identity-api-service", "ninja-control", "ninja-mcp", "assistant-api" },
             clients.Keys.ToArray());
-        Assert.AreEqual("https://admin.blue.ninja.app/*", clients["admin-panel"]["redirectUris"]![0]!.GetValue<string>());
-        Assert.AreEqual("https://blue.ninja.app/*", clients["client-web"]["redirectUris"]![0]!.GetValue<string>());
+        Assert.AreEqual("https://admin.blue.ninja.app/auth/callback", clients["admin-panel"]["redirectUris"]![0]!.GetValue<string>());
+        Assert.AreEqual("https://blue.ninja.app/auth/callback", clients["client-web"]["redirectUris"]![0]!.GetValue<string>());
+
+        // Five-minute access tokens, refresh tokens taken once, and each web app's sign-in exactly as
+        // the upgrade step puts it on an older realm: its one callback, its sign-out page, its limits
+        Assert.AreEqual(Templates.AccessTokenSeconds, realm["accessTokenLifespan"]!.GetValue<int>());
+        Assert.IsTrue(realm["revokeRefreshToken"]!.GetValue<bool>());
+        Assert.AreEqual(0, realm["refreshTokenMaxReuse"]!.GetValue<int>());
+        foreach (var web in Templates.WebSignInClients(TenantHosts.For(tenant, Platform)))
+        {
+            var webClient = clients[web.ClientId];
+            CollectionAssert.AreEqual(new[] { web.Callback }, webClient["redirectUris"]!.AsArray().Select(r => r!.GetValue<string>()).ToArray(), web.ClientId);
+            var attributes = webClient["attributes"]!.AsObject();
+            Assert.AreEqual(web.PostLogout, attributes["post.logout.redirect.uris"]!.GetValue<string>(), web.ClientId);
+            Assert.AreEqual(Templates.WebClientIdleSeconds.ToString(), attributes["client.session.idle.timeout"]!.GetValue<string>(), web.ClientId);
+            Assert.AreEqual(Templates.WebClientMaxSeconds.ToString(), attributes["client.session.max.lifespan"]!.GetValue<string>(), web.ClientId);
+        }
         Assert.AreEqual(tenant.IdentitySecret, clients["identity-api-service"]["secret"]!.GetValue<string>());
         Assert.AreEqual(tenant.ControlSecret, clients["ninja-control"]["secret"]!.GetValue<string>());
         Assert.IsTrue(clients["ninja-control"]["serviceAccountsEnabled"]!.GetValue<bool>());
@@ -275,7 +290,7 @@ public sealed class TemplatesTests
         Assert.AreEqual("ninja", realm["realm"]!.GetValue<string>());
         // The same login theme as the tenants; with no HTML display name it shows the N tile and "Ninja"
         Assert.AreEqual("ninja", realm["loginTheme"]!.GetValue<string>());
-        Assert.AreEqual("https://control.ninja.app/*", realm["clients"]![0]!["redirectUris"]![0]!.GetValue<string>());
+        Assert.AreEqual("https://control.ninja.app/auth/callback", realm["clients"]![0]!["redirectUris"]![0]!.GetValue<string>());
         Assert.AreEqual("Pa$$w0rd\"quoted", realm["users"]![0]!["credentials"]![0]!["value"]!.GetValue<string>());
         Assert.IsFalse(json.Contains("{{"));
     }
@@ -398,7 +413,8 @@ public sealed class TemplatesTests
 
         StringAssert.Contains(snippet, "https://menu.bluebottle.com {");
         StringAssert.Contains(snippet, "import tenant_api blue-gateway");
-        StringAssert.Contains(snippet, "frame-ancestors 'self' https://control.ninja.app https://admin.blue.ninja.app");
+        // The customer app's security headers, framed only by the control app and this business's admin
+        StringAssert.Contains(snippet, "import csp_client https://admin.blue.ninja.app");
         Assert.IsFalse(snippet.Contains("red"), "a platform-hosted business needs no site of its own");
         // tenant_api proxies; the paused answer is a snippet of its own, and a business on its
         // own domain needs it as much as one on {slug}.{domain} -- without it a suspended
