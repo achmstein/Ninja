@@ -242,6 +242,13 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             // record said so. A snapshot from minutes ago would call a just-destroyed stack
             // an orphan for the hour until the next reconciliation
             var records = await context.Tenants.AsNoTracking().Select(t => new { t.Slug, t.Status, t.NodeId }).ToListAsync(ct);
+            // A moved tenant's old copy, stopped on its old node until its clean-up: kept on purpose, not an orphan
+            var quarantined = (await context.Jobs.AsNoTracking()
+                    .Where(j => j.Action == "move-cleanup" && (j.Status == JobStatus.Queued || j.Status == JobStatus.Running))
+                    .Join(context.Tenants.AsNoTracking(), j => j.TenantId, t => t.Id, (j, t) => new { j.NodeId, t.Slug })
+                    .ToListAsync(ct))
+                .Select(q => (NodeId: q.NodeId ?? Node.HomeId, Project: TenantNaming.Project(q.Slug)))
+                .ToHashSet();
             var box = await capacity.RefreshAsync(ct);
             var unread = (await capacity.RefreshAgentsAsync(ct)).Select(f => f.Node.Id).ToHashSet();
             var readings = new List<(int NodeId, string? Name, CapacitySnapshot Box)> { (Node.HomeId, null, box) };
@@ -256,7 +263,7 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
                 var on = name is null ? "the box" : name;
                 foreach (var slug in down)
                     findings.Add(($"down:{slug}", $"{slug} is Running on the record but none of its containers run on {on}", "tenant.stack-down", new { slug, node = on }, MailTemplates.OpsStackDown(slug, platform)));
-                foreach (var project in orphans)
+                foreach (var project in orphans.Where(p => !quarantined.Contains((nodeId, p))))
                     findings.Add(($"orphan:{project}", $"Compose project {project} runs on {on} but no tenant record there explains it", "platform.orphan-stack", new { project, node = on }, null));
             }
         }

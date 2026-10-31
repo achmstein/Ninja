@@ -21,6 +21,8 @@ public enum TenantStatus
     Upgrading = 7,
     /// <summary>Stopped for non-payment; comes back with a payment or a resume, never a plain start.</summary>
     Suspended = 8,
+    /// <summary>Its stack is being moved to another node: down for minutes, then back as it was (<see cref="Tenant.StatusBeforeMove"/>) on the new node, or on the old one if the move is undone.</summary>
+    Moving = 9,
 }
 
 /// <summary>Where the business stands with its subscription; the stack's own status is separate (a PastDue business keeps running until its grace is over).</summary>
@@ -99,6 +101,17 @@ public class Tenant
 
     /// <summary>The node it is being moved to, while a move runs; none otherwise.</summary>
     public int? MovingToNodeId { get; set; }
+
+    /// <summary>Running or Stopped, as it was when its move began: what it goes back to on either node.</summary>
+    public TenantStatus? StatusBeforeMove { get; set; }
+
+    /// <summary>The same tenant as seen on another node: what a step on a move's target is done to.</summary>
+    public Tenant On(int nodeId)
+    {
+        var copy = (Tenant)MemberwiseClone();
+        copy.NodeId = nodeId;
+        return copy;
+    }
 
     /// <summary>Chosen at creation (demos default to the sample business); the stack reads it once, on its first boot.</summary>
     public TenantSeed Seed { get; set; }

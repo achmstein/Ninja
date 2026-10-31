@@ -30,6 +30,9 @@ public interface IBrokerAdmin
     Task DeleteUserAsync(string user, CancellationToken ct);
     /// <summary>A service's durable queue off the vhost, with whatever it holds; nothing when there is none (the module was never on, or is gone twice).</summary>
     Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct);
+
+    /// <summary>Every queue in the vhost and how many messages wait in it, ready or not yet acknowledged.</summary>
+    Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct);
 }
 
 /// <summary>As the superuser: roles and databases in and out, and the hand-over of a database created before its tenant had a role of its own.</summary>
@@ -237,6 +240,19 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<NodeSettings> op
     public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct)
         => CtlAsync(["delete_queue", "-p", vhost, queue], ct, tolerate: true);
 
+    public async Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
+    {
+        // name, then ready plus unacknowledged, a tab between, one queue a line
+        var output = await CtlAsync(["list_queues", "-p", vhost, "name", "messages", "--quiet", "--no-table-headers"], ct);
+        var depths = new Dictionary<string, long>(StringComparer.Ordinal);
+        foreach (var line in output.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries))
+        {
+            var parts = line.Split('\t', StringSplitOptions.TrimEntries);
+            if (parts.Length == 2 && long.TryParse(parts[1], out var messages)) depths[parts[0]] = messages;
+        }
+        return depths;
+    }
+
     /// <summary>rabbitmqctl in the broker's container; <paramref name="tolerate"/> lets "already gone" pass on a delete.</summary>
     private async Task<string> CtlAsync(string[] args, CancellationToken ct, bool tolerate = false)
     {
@@ -267,6 +283,9 @@ public sealed class DryRunDatabaseAdmin(ILogger<DryRunDatabaseAdmin> logger) : I
 /// <summary>Dry run: the user and the vhost exist as soon as they are asked for.</summary>
 public sealed class DryRunBrokerAdmin(ILogger<DryRunBrokerAdmin> logger) : IBrokerAdmin
 {
+    public Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
+        => Task.FromResult<IReadOnlyDictionary<string, long>>(new Dictionary<string, long>());
+
     public List<string> Users { get; } = [];
     public Task EnsureUserAsync(string user, string password, CancellationToken ct) { if (!Users.Contains(user)) Users.Add(user); logger.LogInformation("(dry run) broker user {User}", user); return Task.CompletedTask; }
     public Task EnsureVHostAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) vhost {VHost} for {User}", vhost, user); return Task.CompletedTask; }

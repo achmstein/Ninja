@@ -12,7 +12,7 @@ namespace Ninja.Control.API.Platform;
 /// of named steps, each idempotent, each recorded, so a failed run is
 /// retried from the top and the control app can show where it stands.
 /// </summary>
-public sealed class Provisioner(
+public sealed partial class Provisioner(
     ControlContext context,
     IOptions<PlatformOptions> options,
     INodes nodes,
@@ -348,11 +348,12 @@ public sealed class Provisioner(
         }
     }
 
-    private async Task WriteStackFilesAsync(Tenant tenant, CancellationToken ct)
+    /// <summary>The stack's files from the record, on its node or on <paramref name="on"/> (a move's target).</summary>
+    private async Task WriteStackFilesAsync(Tenant tenant, CancellationToken ct, INodeClient? on = null)
     {
         // Google Maps as the panel's tab has it now: every stamp reads the saved keys afresh
         var maps = await MapsStore.LoadAsync(context, ct);
-        var node = nodes.For(tenant);
+        var node = on ?? nodes.For(tenant);
         var files = new StackFiles(Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps, node.Endpoints), Templates.Env(tenant, Platform, maps));
         await node.Stacks.WriteStackAsync(tenant.Slug, files, ct);
     }

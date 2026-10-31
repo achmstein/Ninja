@@ -48,6 +48,12 @@ public sealed record RegisterNodeRequest(
     string? AiGatewayUrl = null,
     string? TalabatRelayUrl = null);
 
+/// <summary>Where to move a business: a node by its id, or wherever placement finds room when left out; forced onto a full or cordoned node only when asked.</summary>
+public sealed record MoveTenantRequest(int? NodeId = null, bool Force = false);
+
+/// <summary>A drain's start: the tenants whose move is queued, and those that cannot move now, each with why.</summary>
+public sealed record DrainResult(IReadOnlyList<string> Moving, IReadOnlyList<string> Stuck);
+
 /// <summary>What an operator may change on a node now. Left out stays as it is; a limit set to 0 goes back to the platform's.</summary>
 public sealed record UpdateNodeRequest(
     [property: Description("Active takes new tenants; Cordoned keeps its own and takes none")] NodeStatus? Status = null,
@@ -65,6 +71,94 @@ public static partial class ControlApi
         api.MapPatch("/platform/nodes/{id:int}", UpdateNode).WithName("UpdateNode").WithSummary("Cordon a node or make it active again, label it, or set its own limits").RequireAuthorization("Platform");
         api.MapPost("/platform/nodes", RegisterNode).WithName("RegisterNode").WithSummary("Put a node reached through its agent on the record, cordoned: it takes tenants once it answers and is made active").RequireAuthorization("Platform");
         api.MapPost("/platform/nodes/{id:int}/ping", PingNode).WithName("PingNode").WithSummary("Ask the node whether it answers: its agent's version, its architecture, whether its docker runs; the record keeps when it last did").RequireAuthorization("Platform");
+        api.MapPost("/platform/nodes/{id:int}/drain", DrainNode).WithName("DrainNode").WithSummary("Move every tenant off the node, one at a time, each where placement finds room; the node takes no new ones").RequireAuthorization("Platform");
+        api.MapPost("/platform/nodes/{id:int}/retire", RetireNode).WithName("RetireNode").WithSummary("Let an empty node go: no tenant on it and no old copy waiting to be cleared there").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/move", MoveTenant).WithName("MoveTenant").WithSummary("Move the business's stack to another node with its data, realm and passwords: minutes of downtime, undone if anything fails before the switch").RequireAuthorization("Platform");
+    }
+
+    public static async Task<Results<Accepted, NotFound, Conflict<ProblemDetails>>> MoveTenant(
+        ControlContext context, Placement placement, ProvisioningQueue queue, IAuditWriter audit, string slug, MoveTenantRequest request, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
+        if (tenant is null) return TypedResults.NotFound();
+        var refused = await MoveRefusalAsync(context, tenant, ct);
+        if (refused is not null) return TypedResults.Conflict<ProblemDetails>(new() { Detail = refused });
+
+        var placed = await placement.PlaceAsync(new PlacementRequest(tenant.Kind, request.NodeId, request.Force, ExcludeNodeId: tenant.NodeId), ct);
+        if (placed.NodeId is not int target)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Nowhere to move it: {placed.Reason}" });
+        tenant.MovingToNodeId = target;
+        await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.move", slug, new { from = tenant.NodeId, to = target, placed.Reason }, ct);
+        await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "move"), ct);
+        return TypedResults.Accepted($"/api/control/tenants/{slug}");
+    }
+
+    /// <summary>Why the tenant cannot be moved now, or nothing: only a settled stack moves, and one move at a time.</summary>
+    private static async Task<string?> MoveRefusalAsync(ControlContext context, Tenant tenant, CancellationToken ct)
+    {
+        if (tenant.Status is not (TenantStatus.Running or TenantStatus.Stopped))
+            return $"Only a running or stopped business moves; {tenant.Slug} is {tenant.Status}.";
+        if (tenant.MovingToNodeId is not null)
+            return $"{tenant.Slug} is moving already.";
+        if (await context.Jobs.AnyAsync(j => j.TenantId == tenant.Id && (j.Status == JobStatus.Queued || j.Status == JobStatus.Running) && j.Action != "move-cleanup", ct))
+            return $"{tenant.Slug} has a job waiting or running; move it once that is done.";
+        if (!tenant.HasOwnCredentials)
+            return $"{tenant.Slug} has no credentials of its own yet; secure it first.";
+        return null;
+    }
+
+    public static async Task<Results<Ok<DrainResult>, NotFound, Conflict<ProblemDetails>>> DrainNode(
+        ControlContext context, NodeDirectory directory, Placement placement, ProvisioningQueue queue, IAuditWriter audit, int id, CancellationToken ct)
+    {
+        var node = await context.Nodes.SingleOrDefaultAsync(n => n.Id == id, ct);
+        if (node is null) return TypedResults.NotFound();
+        if (node.Status is NodeStatus.Retired or NodeStatus.Unreachable)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{node.Name} is {node.Status.ToString().ToLowerInvariant()}: a drain needs it answering." });
+        node.Status = NodeStatus.Draining;
+        await context.SaveChangesAsync(ct);
+        await directory.RefreshAsync(ct);
+
+        var queued = new List<string>();
+        var stuck = new List<string>();
+        var tenants = await context.Tenants.Where(t => t.NodeId == id && t.Status != TenantStatus.Destroyed).OrderBy(t => t.Slug).ToListAsync(ct);
+        foreach (var tenant in tenants)
+        {
+            if (tenant.MovingToNodeId is not null) { queued.Add(tenant.Slug); continue; }
+            var refused = await MoveRefusalAsync(context, tenant, ct);
+            var placed = refused is null ? await placement.PlaceAsync(new PlacementRequest(tenant.Kind, ExcludeNodeId: id), ct) : null;
+            if (placed?.NodeId is not int target)
+            {
+                stuck.Add($"{tenant.Slug}: {refused ?? placed!.Reason}");
+                continue;
+            }
+            tenant.MovingToNodeId = target;
+            await context.SaveChangesAsync(ct);
+            await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "move"), ct);
+            queued.Add(tenant.Slug);
+        }
+        await audit.WriteAsync("node.drain", null, new { node.Id, node.Name, queued, stuck }, ct);
+        return TypedResults.Ok(new DrainResult(queued, stuck));
+    }
+
+    public static async Task<Results<NoContent, NotFound, Conflict<ProblemDetails>>> RetireNode(
+        ControlContext context, NodeDirectory directory, IAuditWriter audit, int id, CancellationToken ct)
+    {
+        var node = await context.Nodes.SingleOrDefaultAsync(n => n.Id == id, ct);
+        if (node is null) return TypedResults.NotFound();
+        if (node.Id == Node.HomeId)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = "The box the control plane runs on is not retired." });
+        var living = await context.Tenants.CountAsync(t => (t.NodeId == id || t.MovingToNodeId == id) && t.Status != TenantStatus.Destroyed, ct);
+        if (living > 0)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{living} tenant(s) still live on {node.Name}; drain it first." });
+        var waiting = await context.Jobs.CountAsync(j => j.NodeId == id && j.Action == "move-cleanup" && j.Status == JobStatus.Queued, ct);
+        if (waiting > 0)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{waiting} moved tenant(s) still have their old copy on {node.Name}, kept in case a move is undone; it is cleared when their time is up." });
+        node.Status = NodeStatus.Retired;
+        await context.SaveChangesAsync(ct);
+        await directory.RefreshAsync(ct);
+        await audit.WriteAsync("node.retired", null, new { node.Id, node.Name }, ct);
+        return TypedResults.NoContent();
     }
 
     public static async Task<Results<Created<NodeDto>, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> RegisterNode(

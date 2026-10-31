@@ -22,6 +22,9 @@ public interface IStackRuntime
 
     Task<string> StopAsync(string slug, CancellationToken ct);
 
+    /// <summary>One compose service stopped, the rest left running: the gateway, so a stack takes no new requests while its queues drain.</summary>
+    Task<string> StopServiceAsync(string slug, string service, CancellationToken ct);
+
     /// <summary>Down with its volumes, then the stack's folder gone.</summary>
     Task<string> DownAsync(string slug, CancellationToken ct);
 

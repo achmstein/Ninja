@@ -285,7 +285,7 @@ public sealed class BackupService(INodes nodes, IOffsiteStore store, IOptions<Pl
     }
 
     /// <summary>The dumps into <paramref name="into"/>'s empty databases, before its services boot and migrate.</summary>
-    public async Task RestoreDatabasesAsync(string fromSlug, string id, Tenant into, CancellationToken ct)
+    public async Task RestoreDatabasesAsync(string fromSlug, string id, Tenant into, CancellationToken ct, INodeClient? on = null)
     {
         var dir = Dir(fromSlug, id);
         if (Find(fromSlug, id) is { } info) await VerifyAsync(fromSlug, info, ct);
@@ -296,16 +296,16 @@ public sealed class BackupService(INodes nodes, IOffsiteStore store, IOptions<Pl
             if (!File.Exists(dump) && TenantNaming.RenamedDatabases.FirstOrDefault(r => r.To == db) is { From: { } old })
                 dump = Path.Combine(dir, $"{old}.dump");
             if (!File.Exists(dump)) throw new FileNotFoundException($"{db}.dump is missing from backup {id}");
-            await RestoreDumpAsync(dump, into, db, ct);
+            await RestoreDumpAsync(dump, into, db, ct, on);
         }
     }
 
     /// <summary>One dump into one of <paramref name="into"/>'s databases, replacing what is there.</summary>
-    public async Task RestoreDumpAsync(string dump, Tenant into, string db, CancellationToken ct)
+    public async Task RestoreDumpAsync(string dump, Tenant into, string db, CancellationToken ct, INodeClient? on = null)
     {
         await using var file = File.OpenRead(dump);
         // As the new tenant's role, or the superuser would own every restored table and the role could not migrate or write them
-        var result = await nodes.For(into).Data.RestoreDatabaseAsync(TenantNaming.Database(into.Slug, db), TenantNaming.DbRole(into.Slug), file, ct);
+        var result = await (on ?? nodes.For(into)).Data.RestoreDatabaseAsync(TenantNaming.Database(into.Slug, db), TenantNaming.DbRole(into.Slug), file, ct);
         if (!result.Ok) throw new InvalidOperationException($"pg_restore {db}: {result.Output}");
     }
 
@@ -352,9 +352,9 @@ public sealed class BackupService(INodes nodes, IOffsiteStore store, IOptions<Pl
     }
 
     /// <summary>The uploads into <paramref name="into"/>'s volume, which exists once its stack is up.</summary>
-    public async Task<bool> RestoreUploadsAsync(string fromSlug, string id, Tenant into, CancellationToken ct)
+    public async Task<bool> RestoreUploadsAsync(string fromSlug, string id, Tenant into, CancellationToken ct, INodeClient? on = null)
     {
-        var node = nodes.For(into);
+        var node = on ?? nodes.For(into);
         var restored = await RestoreArchiveAsync(node, Path.Combine(Dir(fromSlug, id), Uploads), TenantNaming.UploadsVolumeOnDocker(into.Slug), "uploads", ct);
         restored |= await RestoreArchiveAsync(node, Path.Combine(Dir(fromSlug, id), Pics), TenantNaming.PicsVolumeOnDocker(into.Slug), "pictures", ct);
         return restored;

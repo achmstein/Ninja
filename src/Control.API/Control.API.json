@@ -4127,6 +4127,165 @@
         ]
       }
     },
+    "/api/control/platform/nodes/{id}/drain": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Move every tenant off the node, one at a time, each where placement finds room; the node takes no new ones",
+        "operationId": "DrainNode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrainResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/platform/nodes/{id}/retire": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Let an empty node go: no tenant on it and no old copy waiting to be cleared there",
+        "operationId": "RetireNode",
+        "parameters": [
+          {
+            "name": "id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/move": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Move the business's stack to another node with its data, realm and passwords: minutes of downtime, undone if anything fails before the switch",
+        "operationId": "MoveTenant",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MoveTenantRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "description": "Accepted"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tls/ask": {
       "get": {
         "tags": [
@@ -5444,6 +5603,27 @@
           }
         }
       },
+      "DrainResult": {
+        "required": [
+          "moving",
+          "stuck"
+        ],
+        "type": "object",
+        "properties": {
+          "moving": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "stuck": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ExtendRequest": {
         "required": [
           "days"
@@ -6066,6 +6246,24 @@
           "Ai",
           "CallCentre"
         ]
+      },
+      "MoveTenantRequest": {
+        "type": "object",
+        "properties": {
+          "nodeId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "force": {
+            "type": "boolean",
+            "default": false
+          }
+        }
       },
       "NodeDto": {
         "required": [
@@ -7694,7 +7892,8 @@
           "Destroying",
           "Destroyed",
           "Upgrading",
-          "Suspended"
+          "Suspended",
+          "Moving"
         ]
       },
       "TenantSubscriptionDto": {

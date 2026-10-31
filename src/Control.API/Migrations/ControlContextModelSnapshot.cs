@@ -735,6 +735,10 @@ namespace Ninja.Control.API.Migrations
                         .HasMaxLength(16)
                         .HasColumnType("character varying(16)");
 
+                    b.Property<string>("StatusBeforeMove")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
                     b.Property<string>("Subscription")
                         .IsRequired()
                         .HasMaxLength(16)

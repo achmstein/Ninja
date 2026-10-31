@@ -7,7 +7,9 @@ namespace Ninja.Control.API.Platform;
 /// <summary>What a caller asks for; the row it becomes carries the rest.</summary>
 /// <param name="ImageTag">For an upgrade: the tag to move to (null keeps the record's).</param>
 /// <param name="CanaryId">For a fleet upgrade: the tenant that went first; the rest run only while it stands Running on the tag.</param>
-public sealed record ProvisioningJob(Guid TenantId, string Action, string? ImageTag = null, Guid? CanaryId = null)
+/// <param name="NodeId">The node it works on when that is not the tenant's own (a moved tenant's old node, for its clean-up).</param>
+/// <param name="NotBefore">Not run before then (a moved tenant's old copy, kept a while in case the move is to be undone).</param>
+public sealed record ProvisioningJob(Guid TenantId, string Action, string? ImageTag = null, Guid? CanaryId = null, int? NodeId = null, DateTimeOffset? NotBefore = null)
 {
     /// <summary>Backups sit beside a stamp; everything else is a stamp or touches the stack.</summary>
     public static JobLane LaneOf(string action) => action switch
@@ -59,12 +61,13 @@ public sealed class ProvisioningQueue(IServiceScopeFactory scopes, IHttpContextA
         }
 
         var (actor, _, _) = AuditWriter.Attribute(http.HttpContext?.User, null);
-        // The node it works on, as the tenant stands now: what lets nodes work side by side, one job each
-        var node = await context.Tenants.Where(t => t.Id == job.TenantId).Select(t => (int?)t.NodeId).FirstOrDefaultAsync(ct);
+        // The node it works on, as the tenant stands now unless the job names another: what lets nodes work side by side, one job each
+        var node = job.NodeId ?? await context.Tenants.Where(t => t.Id == job.TenantId).Select(t => (int?)t.NodeId).FirstOrDefaultAsync(ct);
         var row = new Job
         {
             TenantId = job.TenantId,
             NodeId = node,
+            NotBefore = job.NotBefore,
             Action = job.Action,
             ImageTag = job.ImageTag,
             CanaryId = job.CanaryId,
@@ -227,7 +230,7 @@ public sealed class JobRecoveryService(ProvisioningQueue queue) : IHostedService
 public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, WorkerHeartbeat heartbeat, ILogger logger) : BackgroundService
 {
     /// <summary>The statuses a job leaves a tenant in while it works; a job that dies mid-way must not leave one there.</summary>
-    internal static readonly TenantStatus[] Transitional = [TenantStatus.Provisioning, TenantStatus.Upgrading, TenantStatus.Destroying];
+    internal static readonly TenantStatus[] Transitional = [TenantStatus.Provisioning, TenantStatus.Upgrading, TenantStatus.Destroying, TenantStatus.Moving];
 
     private static readonly TimeSpan Poll = TimeSpan.FromSeconds(15);
 
@@ -322,6 +325,8 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
         "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
         "demo-data" => provisioner.DemoDataAsync(job.TenantId, ct),
         "photos" => provisioner.PhotosAsync(job.TenantId, ct),
+        "move" => provisioner.MoveAsync(job.TenantId, ct),
+        "move-cleanup" => provisioner.MoveCleanupAsync(job.TenantId, job.NodeId ?? throw new InvalidOperationException("A clean-up names the node it clears."), ct),
         _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
     };
 

@@ -86,4 +86,38 @@ public sealed class NodeScenarios
         // A cordoned node takes no new tenant, even one placed there by name, unless forced
         await api.UpdateNodeAsync(node.Id, new UpdateNodeRequest(Status: NodeStatus.Cordoned));
     }
+
+    [TestMethod]
+    public async Task A_move_with_nowhere_to_go_is_refused_and_says_why()
+    {
+        var api = Api.AsPlatformAdmin();
+        var slug = Api.Slug("moving");
+        await api.CreateAsync(slug, TenantKind.Customer, TenantPlan.Starter, provision: true);
+        await api.SettledAsync(slug);
+
+        var (status, body) = await api.PostAsync($"/api/control/tenants/{slug}/move", new MoveTenantRequest(NodeId: Node.HomeId));
+        Assert.AreEqual(HttpStatusCode.Conflict, status);
+        StringAssert.Contains(body, "on that node already");
+
+        (status, body) = await api.PostAsync($"/api/control/tenants/{slug}/move", new MoveTenantRequest());
+        Assert.AreEqual(HttpStatusCode.Conflict, status, "node 1 is the only active node");
+        StringAssert.Contains(body, "Nowhere to move it");
+        Assert.IsNull((await api.TenantAsync(slug)).MovingToNodeId, "nothing pending");
+    }
+
+    [TestMethod]
+    public async Task Only_an_empty_node_is_retired_and_never_the_control_planes_own()
+    {
+        var api = Api.AsPlatformAdmin();
+        Assert.AreEqual(HttpStatusCode.Conflict, (await api.PostAsync($"/api/control/platform/nodes/{Node.HomeId}/retire")).Status);
+
+        var name = $"node-{Guid.NewGuid():N}"[..14];
+        var (status, body) = await api.RegisterNodeAsync(new RegisterNodeRequest(name, "https://10.66.0.8:7443", "http://10.66.0.8:8088", new string('B', 64)));
+        Assert.AreEqual(HttpStatusCode.Created, status, body);
+        var node = (await api.NodesAsync()).Single(n => n.Name == name);
+
+        Assert.AreEqual(HttpStatusCode.NoContent, (await api.PostAsync($"/api/control/platform/nodes/{node.Id}/retire")).Status, "nothing lives there");
+        Assert.AreEqual(NodeStatus.Retired, (await api.NodesAsync()).Single(n => n.Id == node.Id).Status);
+        Assert.AreEqual(HttpStatusCode.Conflict, (await api.PostAsync($"/api/control/platform/nodes/{node.Id}/drain")).Status, "a retired node drains no more");
+    }
 }

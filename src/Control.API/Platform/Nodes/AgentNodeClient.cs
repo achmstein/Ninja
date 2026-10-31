@@ -170,6 +170,9 @@ internal sealed class AgentStackRuntime(AgentHttp agent) : IStackRuntime
 
     public async Task<string> DownAsync(string slug, CancellationToken ct) => (await agent.SendAsync<AgentOutput>(HttpMethod.Post, AgentHttp.Path("stacks", slug, "down"), null, ct)).Output;
 
+    public async Task<string> StopServiceAsync(string slug, string service, CancellationToken ct)
+        => (await agent.SendAsync<AgentOutput>(HttpMethod.Post, AgentHttp.Path("stacks", slug, "services", service, "stop"), null, ct)).Output;
+
     public async Task<IReadOnlyList<ContainerInfo>> PsAsync(string slug, CancellationToken ct) => await agent.GetAsync<List<ContainerInfo>>(AgentHttp.Path("stacks", slug, "containers"), ct);
 
     public Task<string> LogsAsync(string slug, string? service, int tail, CancellationToken ct)
@@ -218,6 +221,9 @@ internal sealed class AgentBrokerAdmin(AgentHttp agent) : IBrokerAdmin
     public Task DeleteUserAsync(string user, CancellationToken ct) => agent.SendAsync(HttpMethod.Delete, AgentHttp.Path("broker", "users", user), null, ct);
 
     public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct) => agent.SendAsync(HttpMethod.Delete, AgentHttp.Path("broker", "vhosts", vhost, "queues", queue), null, ct);
+
+    public async Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
+        => await agent.GetAsync<Dictionary<string, long>>(AgentHttp.Path("broker", "vhosts", vhost, "queues"), ct);
 }
 
 internal sealed class AgentCapacity(AgentHttp agent) : IHostCapacity

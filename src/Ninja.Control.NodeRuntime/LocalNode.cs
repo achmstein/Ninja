@@ -94,6 +94,9 @@ public sealed class LocalStackRuntime(IShell shell, IOptions<NodeSettings> optio
     public Task<string> StopAsync(string slug, CancellationToken ct)
         => ComposeAsync(slug, ["compose", "-p", TenantNaming.Project(slug), "stop"], ct);
 
+    public Task<string> StopServiceAsync(string slug, string service, CancellationToken ct)
+        => ComposeAsync(slug, ["compose", "-p", TenantNaming.Project(slug), "stop", service == "gateway" ? TenantNaming.Gateway(slug) : TenantNaming.Service(slug, service)], ct);
+
     public async Task<string> DownAsync(string slug, CancellationToken ct)
     {
         var output = await ComposeAsync(slug, ["compose", "-p", TenantNaming.Project(slug), "down", "-v", "--remove-orphans"], ct);

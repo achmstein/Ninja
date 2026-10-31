@@ -177,6 +177,9 @@ public sealed class PlatformOptions
     /// </summary>
     public int LaneConcurrency { get; set; } = 1;
 
+    /// <summary>How long a moved tenant's old copy is kept, stopped, before it is cleared: the time there is to undo a move by hand.</summary>
+    public int MoveQuarantineDays { get; set; } = 7;
+
     /// <summary>
     /// What the shared Postgres allows (its max_connections), the most one
     /// service's pool may open (stamped into its connection string, the

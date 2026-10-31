@@ -53,8 +53,8 @@ public sealed record NodeLimits(
 /// <summary>A node as placement weighs it: its record, its last reading, the room that leaves and how many tenants already live there.</summary>
 public sealed record NodeCapacity(Node Node, CapacitySnapshot? Snapshot, int RoomFor, string? WhyNoRoom, int Placed);
 
-/// <summary>What is being placed: a demo or a business, on a node asked for or wherever fits, and whether a full node will do.</summary>
-public sealed record PlacementRequest(TenantKind Kind, int? PinnedNodeId = null, bool Force = false);
+/// <summary>What is being placed: a demo or a business, on a node asked for or wherever fits, whether a full node will do, and a node it may not go to (the one it is moving off).</summary>
+public sealed record PlacementRequest(TenantKind Kind, int? PinnedNodeId = null, bool Force = false, int? ExcludeNodeId = null);
 
 /// <summary>The node chosen, or none and why.</summary>
 public sealed record PlacementDecision(int? NodeId, string Reason)
@@ -78,6 +78,11 @@ public sealed class SpreadPlacement : IPlacementPolicy
 {
     public PlacementDecision Place(PlacementRequest request, IReadOnlyList<NodeCapacity> nodes)
     {
+        if (request.ExcludeNodeId is int excluded)
+        {
+            if (request.PinnedNodeId == excluded) return new(null, "It is on that node already.");
+            nodes = nodes.Where(n => n.Node.Id != excluded).ToList();
+        }
         if (request.PinnedNodeId is int pinned)
         {
             var asked = nodes.FirstOrDefault(n => n.Node.Id == pinned);

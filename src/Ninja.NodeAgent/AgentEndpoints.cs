@@ -33,6 +33,8 @@ internal static class AgentEndpoints
         v1.MapGet("/stacks/{slug}/stamped", async (string slug, IStackRuntime stacks, CancellationToken ct) => new AgentStamped(await stacks.IsStampedAsync(Slug(slug), ct)));
         v1.MapPost("/stacks/{slug}/up", async (string slug, bool pull, IStackRuntime stacks, CancellationToken ct) => new AgentOutput(await stacks.UpAsync(Slug(slug), pull, ct)));
         v1.MapPost("/stacks/{slug}/stop", async (string slug, IStackRuntime stacks, CancellationToken ct) => new AgentOutput(await stacks.StopAsync(Slug(slug), ct)));
+        v1.MapPost("/stacks/{slug}/services/{service}/stop", async (string slug, string service, IStackRuntime stacks, CancellationToken ct) =>
+            new AgentOutput(await stacks.StopServiceAsync(Slug(slug), AgentNames.Check(service, "The service"), ct)));
         v1.MapPost("/stacks/{slug}/down", async (string slug, IStackRuntime stacks, CancellationToken ct) => new AgentOutput(await stacks.DownAsync(Slug(slug), ct)));
         v1.MapGet("/stacks/{slug}/containers", async (string slug, IStackRuntime stacks, CancellationToken ct) => await stacks.PsAsync(Slug(slug), ct));
         v1.MapGet("/stacks/{slug}/logs", async (string slug, string? service, int tail, IStackRuntime stacks, CancellationToken ct) =>
@@ -119,6 +121,9 @@ internal static class AgentEndpoints
             await broker.DeleteQueueAsync(AgentNames.Check(vhost, "The vhost"), AgentNames.Check(queue, "The queue"), ct);
             return Results.NoContent();
         });
+
+        v1.MapGet("/broker/vhosts/{vhost}/queues", (string vhost, IBrokerAdmin broker, CancellationToken ct) =>
+            broker.QueueDepthsAsync(AgentNames.Check(vhost, "The vhost"), ct));
 
         // --- what the node has
         v1.MapGet("/capacity", (IHostCapacity capacity, CancellationToken ct) => capacity.ProbeAsync(ct));

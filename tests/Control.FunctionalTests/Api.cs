@@ -91,6 +91,12 @@ public sealed class Api
         return (response.StatusCode, await response.Content.ReadAsStringAsync());
     }
 
+    public async Task<(HttpStatusCode Status, string Body)> PostAsync(string path, object? body = null)
+    {
+        using var response = body is null ? await _http.PostAsync(path, null) : await _http.PostAsJsonAsync(path, body, Json);
+        return (response.StatusCode, await response.Content.ReadAsStringAsync());
+    }
+
     public async Task<(HttpStatusCode Status, string Body)> PingNodeAsync(int id)
     {
         using var response = await _http.PostAsync($"/api/control/platform/nodes/{id}/ping", null);

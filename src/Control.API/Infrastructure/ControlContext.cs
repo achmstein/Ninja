@@ -126,6 +126,7 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.NodeId).HasDefaultValue(Node.HomeId);
             entity.HasOne<Node>().WithMany().HasForeignKey(e => e.NodeId).OnDelete(DeleteBehavior.Restrict);
             entity.HasOne<Node>().WithMany().HasForeignKey(e => e.MovingToNodeId).OnDelete(DeleteBehavior.Restrict);
+            entity.Property(e => e.StatusBeforeMove).HasConversion<string>().HasMaxLength(16);
             entity.Property(e => e.Slug).HasMaxLength(24).IsRequired();
             entity.HasIndex(e => e.Slug).IsUnique();
             entity.Property(e => e.NameEn).HasMaxLength(80);
