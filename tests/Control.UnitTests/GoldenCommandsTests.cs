@@ -8,6 +8,7 @@ using Ninja.Control.API.Extensions;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.UnitTests;
 
@@ -62,7 +63,8 @@ public sealed class GoldenCommandsTests
         _context = new ControlContext(new DbContextOptionsBuilder<ControlContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
         _backups = new BackupService(_shell, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
-        _provisioner = new Provisioner(_context, options, _shell,
+        _provisioner = new Provisioner(_context, options,
+            new SingleNode(new LocalNodeClient(_shell, options)), new CaddyEdgeRouter(_context, _shell, options),
             new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
             new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
@@ -112,7 +114,7 @@ public sealed class GoldenCommandsTests
         await Phase("rollback", () => _provisioner.RollbackAsync(blue.Id, ct));
         await Phase("edge", () => _provisioner.EdgeAsync(blue.Id, ct));
 
-        var ops = new TenantOps(_shell, null!);
+        var ops = new TenantOps(new SingleNode(new LocalNodeClient(_shell, Options.Create(_platform))), null!);
         await Phase("containers", () => ops.ContainersAsync(blue, ct));
         await Phase("logs", () => ops.LogsAsync(blue, "catalog", 50, ct));
 
@@ -137,7 +139,42 @@ public sealed class GoldenCommandsTests
 
         await Phase("destroy", () => _provisioner.DestroyAsync(blue.Id, ct));
 
-        await CompareAsync(Normalize(heard, blue, green, backupId));
+        await CompareAsync("box-commands.txt", Normalize(heard, blue, green, backupId));
+    }
+
+    /// <summary>
+    /// A stack with every part switched on (the assistant, Talabat, push credentials, social sign-in), its compose
+    /// file and .env word for word: where a stack finds the shared services moves behind the node it runs on, and
+    /// for the box the control plane runs on nothing may change.
+    /// </summary>
+    [TestMethod]
+    public async Task A_full_stacks_files_are_what_they_were()
+    {
+        var platform = new PlatformOptions
+        {
+            Domain = "ninja.app",
+            ControlUrl = "https://control.ninja.app",
+            KeycloakPublicUrl = "https://auth.ninja.app",
+            GeminiApiKey = "k",
+            EncryptionKey = "encryption-key-12345678901234567890",
+            FirebaseCredentialsPath = "/opt/ninja/platform/firebase.json",
+            Talabat = new TalabatOptions { MiddlewareUrl = "https://talabat.test", Username = "u", Password = "p", Secret = "s" },
+            Social = new SocialOptions { Google = new() { ClientId = "google-id", ClientSecret = "google-secret" } },
+        };
+        var tenant = new Tenant
+        {
+            Slug = "blue", NameEn = "Blue", NameAr = "بلو", Kind = TenantKind.Customer, Plan = TenantPlan.Pro, ImageTag = "v1",
+            BusinessType = BusinessType.Restaurant, Country = "SA", Currency = "SAR", TimeZone = "Asia/Riyadh", DefaultLanguage = "en",
+            OwnerEmail = "owner@blue.test", SocialSignIn = true, GoogleMaps = true, CustomerDomain = "menu.blue.test",
+            IdentitySecret = "identity-secret-1234567890123456",
+            ControlSecret = "control-secret-12345678901234567",
+            PaymentsKey = "payments-key-12345678901234567890",
+            DbPassword = "db-password-123456789012345678",
+            BrokerPassword = "broker-password-1234567890123456",
+        };
+        var maps = new MapsSettings();
+        var files = $"## docker-compose.yaml\n{Templates.Compose(tenant, TenantHosts.For(tenant, platform), platform, maps)}\n## .env\n{Templates.Env(tenant, platform, maps)}";
+        await CompareAsync("stack-files.txt", files.Replace("\r\n", "\n"));
     }
 
     /// <summary>What differs run to run (the temp folder, secrets, ids, times) put in words, so only the commands are compared.</summary>
@@ -154,9 +191,9 @@ public sealed class GoldenCommandsTests
         return text + '\n';
     }
 
-    private static async Task CompareAsync(string actual, [CallerFilePath] string here = "")
+    private static async Task CompareAsync(string name, string actual, [CallerFilePath] string here = "")
     {
-        var golden = Path.Combine(Path.GetDirectoryName(here)!, "Golden", "box-commands.txt");
+        var golden = Path.Combine(Path.GetDirectoryName(here)!, "Golden", name);
         if (!File.Exists(golden))
         {
             Directory.CreateDirectory(Path.GetDirectoryName(golden)!);

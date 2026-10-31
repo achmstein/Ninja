@@ -29,6 +29,15 @@ public sealed class PlatformOptions
     /// <summary>Where each tenant's compose project, env and uploads are written on the host.</summary>
     public string TenantsRoot { get; set; } = "/opt/ninja/tenants";
 
+    private string? _controlRoot;
+
+    /// <summary>
+    /// Where the control plane keeps what is its own for each tenant (the seed images and menu waiting for the
+    /// next provision), apart from what is the stack's. The tenants folder unless set: on the box the control
+    /// plane shares with node 1 they are one place.
+    /// </summary>
+    public string ControlRoot { get => _controlRoot ?? TenantsRoot; set => _controlRoot = value; }
+
     /// <summary>Image name prefix; the twelve services are {ImageRegistry}-{service}:{tag}.</summary>
     public string ImageRegistry { get; set; } = "ghcr.io/achmstein/ninja";
 

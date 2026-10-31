@@ -3,6 +3,7 @@ using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -14,7 +15,8 @@ namespace Ninja.Control.API.Platform;
 public sealed class Provisioner(
     ControlContext context,
     IOptions<PlatformOptions> options,
-    IShell shell,
+    INodes nodes,
+    IEdgeRouter edge,
     IDatabaseAdmin databases,
     IBrokerAdmin broker,
     IKeycloakAdmin keycloak,
@@ -33,13 +35,20 @@ public sealed class Provisioner(
 
     private PlatformOptions Platform => options.Value;
 
-    private string Dir(Tenant tenant) => Path.Combine(Platform.TenantsRoot, tenant.Slug);
+    /// <summary>The tenant's stack on the node it lives on.</summary>
+    private IStackRuntime Stacks(Tenant tenant) => nodes.For(tenant).Stacks;
 
-    /// <summary>Where an image uploaded before provisioning waits for the brand step: {tenants}/{slug}/seed/{slot}.png.</summary>
-    public string SeedImagePath(Tenant tenant, string slot) => Path.Combine(Dir(tenant), "seed", $"{slot}.png");
+    /// <summary>
+    /// What the control plane keeps for a tenant before and beside its stack (the seed images and menu): the
+    /// control plane's own folder, which is the tenants folder on the box it shares with node 1.
+    /// </summary>
+    private string ControlDir(Tenant tenant) => Path.Combine(Platform.ControlRoot, tenant.Slug);
 
-    /// <summary>Where a menu read while the business was created waits for the menu step: {tenants}/{slug}/seed/menu.json, Catalog's import request.</summary>
-    public string SeedMenuPath(Tenant tenant) => Path.Combine(Dir(tenant), "seed", "menu.json");
+    /// <summary>Where an image uploaded before provisioning waits for the brand step: {control}/{slug}/seed/{slot}.png.</summary>
+    public string SeedImagePath(Tenant tenant, string slot) => Path.Combine(ControlDir(tenant), "seed", $"{slot}.png");
+
+    /// <summary>Where a menu read while the business was created waits for the menu step: {control}/{slug}/seed/menu.json, Catalog's import request.</summary>
+    public string SeedMenuPath(Tenant tenant) => Path.Combine(ControlDir(tenant), "seed", "menu.json");
 
     /// <summary>The seed images on disk, by slot.</summary>
     public IReadOnlyDictionary<string, string> SeedImages(Tenant tenant)
@@ -100,7 +109,7 @@ public sealed class Provisioner(
 
             await StackStepAsync(tenant, runId, "stack", ct);
 
-            await Step(tenant, runId, "edge", () => WriteEdgeAsync(ct), ct);
+            await Step(tenant, runId, "edge", () => edge.ApplyAsync(ct), ct);
 
             await HealthStepAsync(tenant, runId, ct);
 
@@ -287,11 +296,8 @@ public sealed class Provisioner(
     private Task<string> StackStepAsync(Tenant tenant, Guid runId, string name, CancellationToken ct)
         => Step(tenant, runId, name, async () =>
         {
-            var dir = Dir(tenant);
             await WriteStackFilesAsync(tenant, ct);
-            var result = await shell.RunAsync("docker", UpArgs(tenant), dir, ct);
-            if (!result.Ok) throw new ShellException(result.Output);
-            return result.Output;
+            return await Stacks(tenant).UpAsync(tenant.Slug, Platform.PullImages, ct);
         }, ct);
 
     private Task<string> HealthStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
@@ -324,16 +330,7 @@ public sealed class Provisioner(
         var runId = Guid.NewGuid();
         try
         {
-            await Step(tenant, runId, "stack", async () =>
-            {
-                var dir = Dir(tenant);
-                if (!Directory.Exists(dir)) return "nothing stamped";
-                await WriteStackFilesAsync(tenant, ct);
-                if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
-                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new ShellException(result.Output);
-                return result.Output;
-            }, ct);
+            await Step(tenant, runId, "stack", () => RestampAsync(tenant, ct), ct);
             await QueuesStepAsync(tenant, runId, ct);
             if (tenant.Status == TenantStatus.Running)
             {
@@ -355,25 +352,30 @@ public sealed class Provisioner(
 
     private async Task WriteStackFilesAsync(Tenant tenant, CancellationToken ct)
     {
-        var dir = Dir(tenant);
-        Directory.CreateDirectory(dir);
         // Google Maps as the panel's tab has it now: every stamp reads the saved keys afresh
         var maps = await MapsStore.LoadAsync(context, ct);
-        await File.WriteAllTextAsync(Path.Combine(dir, "docker-compose.yaml"), Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps), ct);
-        var env = Path.Combine(dir, ".env");
-        await File.WriteAllTextAsync(env, Templates.Env(tenant, Platform, maps), ct);
-        // The stack's secrets: the control plane (root) and docker read it, nobody else on the box
-        OwnerOnly(env);
+        var files = new StackFiles(Templates.Compose(tenant, TenantHosts.For(tenant, Platform), Platform, maps), Templates.Env(tenant, Platform, maps));
+        await Stacks(tenant).WriteStackAsync(tenant.Slug, files, ct);
+    }
+
+    private const string NothingStamped = "nothing stamped";
+    private const string FilesOnly = "files rewritten; applied on start";
+
+    /// <summary>
+    /// The stack re-stamped from the record: its files rewritten and, while it runs, up again (compose recreates
+    /// only what changed). A stack that is not running gets its files now and the rest on start; one never stamped,
+    /// nothing.
+    /// </summary>
+    private async Task<string> RestampAsync(Tenant tenant, CancellationToken ct)
+    {
+        if (!await Stacks(tenant).IsStampedAsync(tenant.Slug, ct)) return NothingStamped;
+        await WriteStackFilesAsync(tenant, ct);
+        if (tenant.Status != TenantStatus.Running) return FilesOnly;
+        return await Stacks(tenant).UpAsync(tenant.Slug, pull: false, ct);
     }
 
     /// <summary>0600 for a file, 0700 for a folder; nothing on Windows, where the dry run lives.</summary>
-    internal static void OwnerOnly(string path)
-    {
-        if (OperatingSystem.IsWindows()) return;
-        File.SetUnixFileMode(path, Directory.Exists(path)
-            ? UnixFileMode.UserRead | UnixFileMode.UserWrite | UnixFileMode.UserExecute
-            : UnixFileMode.UserRead | UnixFileMode.UserWrite);
-    }
+    internal static void OwnerOnly(string path) => LocalStackRuntime.OwnerOnly(path);
 
     /// <summary>
     /// The queues of the services the plan does not run. A consumer that is
@@ -406,20 +408,20 @@ public sealed class Provisioner(
             var said = new List<string>();
             foreach (var (from, to) in TenantNaming.RenamedDatabases)
             {
-                var marker = Path.Combine(Dir(tenant), $"{to}.carried");
-                if (File.Exists(marker))
+                var marker = $"{to}.carried";
+                if (await Stacks(tenant).ReadMarkerAsync(tenant.Slug, marker, ct) is not null)
                 {
                     said.Add($"{to} carried before");
                     continue;
                 }
                 if (TenantNaming.CarriedByHand.Contains(tenant.Slug))
                 {
-                    await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} restored by hand", ct);
+                    await Stacks(tenant).WriteMarkerAsync(tenant.Slug, marker, $"{DateTimeOffset.UtcNow:O} restored by hand", ct);
                     said.Add($"{to} restored by hand; left as it is");
                     continue;
                 }
                 var source = await backups.CarryAsync(tenant, from, to, ct);
-                await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} {source ?? "nothing to carry"}", ct);
+                await Stacks(tenant).WriteMarkerAsync(tenant.Slug, marker, $"{DateTimeOffset.UtcNow:O} {source ?? "nothing to carry"}", ct);
                 said.Add(source is null ? $"no {from} to carry" : $"{to} from {source}");
             }
             return string.Join("; ", said);
@@ -433,14 +435,13 @@ public sealed class Provisioner(
     private Task<string> DemoDataStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "demo-data", async () =>
         {
-            var marker = Path.Combine(Dir(tenant), "demo-data.filled");
-            if (File.Exists(marker)) return "filled before";
+            const string marker = "demo-data.filled";
+            if (await Stacks(tenant).ReadMarkerAsync(tenant.Slug, marker, ct) is not null) return "filled before";
             if (demoData is null) return "not available here";
             try
             {
                 var said = await demoData.FillAsync(tenant, ct);
-                Directory.CreateDirectory(Dir(tenant));
-                await File.WriteAllTextAsync(marker, $"{DateTimeOffset.UtcNow:O} {said}", ct);
+                await Stacks(tenant).WriteMarkerAsync(tenant.Slug, marker, $"{DateTimeOffset.UtcNow:O} {said}", ct);
                 return said;
             }
             catch (Exception ex) when (!ct.IsCancellationRequested)
@@ -494,7 +495,7 @@ public sealed class Provisioner(
             // for a stack that was up (its databases are still there to dump), whatever exists otherwise
             await Step(tenant, runId, "last-backup", async () =>
             {
-                if (!Directory.Exists(Dir(tenant))) return "nothing stamped";
+                if (!await Stacks(tenant).IsStampedAsync(tenant.Slug, ct)) return NothingStamped;
                 var dumped = "";
                 if (was is TenantStatus.Running or TenantStatus.Stopped && !backups.IsFresh(tenant.Slug, Platform.BackupFreshMinutes, out _))
                 {
@@ -512,18 +513,14 @@ public sealed class Provisioner(
 
             await Step(tenant, runId, "stack-down", async () =>
             {
-                var dir = Dir(tenant);
-                if (!Directory.Exists(dir)) return "nothing stamped";
-                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "down", "-v", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new ShellException(result.Output);
-                Directory.Delete(dir, recursive: true);
-                return result.Output;
+                if (!await Stacks(tenant).IsStampedAsync(tenant.Slug, ct)) return NothingStamped;
+                return await Stacks(tenant).DownAsync(tenant.Slug, ct);
             }, ct);
 
             await Step(tenant, runId, "edge", async () =>
             {
                 tenant.CustomerDomain = null;
-                return await WriteEdgeAsync(ct);
+                return await edge.ApplyAsync(ct);
             }, ct);
 
             await Step(tenant, runId, "realm-delete", async () =>
@@ -761,27 +758,20 @@ public sealed class Provisioner(
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
         var runId = Guid.NewGuid();
-        var dir = Dir(tenant);
+        var stacks = Stacks(tenant);
         try
         {
             switch (action)
             {
                 case "stop" or "suspend":
-                    await Step(tenant, runId, action, async () =>
-                    {
-                        var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "stop"], Directory.Exists(dir) ? dir : null, ct);
-                        if (!result.Ok) throw new ShellException(result.Output);
-                        return result.Output;
-                    }, ct);
+                    await Step(tenant, runId, action, () => stacks.StopAsync(tenant.Slug, ct), ct);
                     break;
                 case "start" or "resume":
                     // up rather than start: a compose rewritten while the stack was down (a plan change) is applied; the images are already here
                     await Step(tenant, runId, action, async () =>
                     {
-                        if (Directory.Exists(dir)) await WriteStackFilesAsync(tenant, ct);
-                        var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], Directory.Exists(dir) ? dir : null, ct);
-                        if (!result.Ok) throw new ShellException(result.Output);
-                        return result.Output;
+                        if (await stacks.IsStampedAsync(tenant.Slug, ct)) await WriteStackFilesAsync(tenant, ct);
+                        return await stacks.UpAsync(tenant.Slug, pull: false, ct);
                     }, ct);
                     break;
                 default:
@@ -913,16 +903,7 @@ public sealed class Provisioner(
                 var app = tenant.AppId is null ? "" : $"; its own app {tenant.AppId}";
                 return (tenant.SocialSignIn ? "Google and Apple through the hub" : "off") + app;
             }, ct);
-            await Step(tenant, runId, "stack", async () =>
-            {
-                var dir = Dir(tenant);
-                if (!Directory.Exists(dir)) return "nothing stamped";
-                await WriteStackFilesAsync(tenant, ct);
-                if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
-                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new ShellException(result.Output);
-                return result.Output;
-            }, ct);
+            await Step(tenant, runId, "stack", () => RestampAsync(tenant, ct), ct);
             await audit.WriteAsync("tenant.social.done", tenant.Slug, new { on = tenant.SocialSignIn }, ct, Source);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
@@ -947,13 +928,8 @@ public sealed class Provisioner(
         {
             await Step(tenant, Guid.NewGuid(), "maps", async () =>
             {
-                var dir = Dir(tenant);
-                if (!Directory.Exists(dir)) return "nothing stamped";
-                await WriteStackFilesAsync(tenant, ct);
-                if (tenant.Status != TenantStatus.Running) return "files rewritten; applied on start";
-                var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"], dir, ct);
-                if (!result.Ok) throw new ShellException(result.Output);
-                return (tenant.GoogleMaps ? "on" : "off") + "\n" + result.Output;
+                var said = await RestampAsync(tenant, ct);
+                return said is NothingStamped or FilesOnly ? said : (tenant.GoogleMaps ? "on" : "off") + "\n" + said;
             }, ct);
             await audit.WriteAsync("tenant.maps.done", tenant.Slug, new { on = tenant.GoogleMaps }, ct, Source);
         }
@@ -971,7 +947,7 @@ public sealed class Provisioner(
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
         try
         {
-            await Step(tenant, Guid.NewGuid(), "edge", () => WriteEdgeAsync(ct), ct);
+            await Step(tenant, Guid.NewGuid(), "edge", () => edge.ApplyAsync(ct), ct);
             await audit.WriteAsync("tenant.edge.done", tenant.Slug, null, ct, Source);
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
@@ -981,38 +957,6 @@ public sealed class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.edge.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
         }
-    }
-
-    private string[] UpArgs(Tenant tenant)
-        => Platform.PullImages
-            ? ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--pull", "always", "--remove-orphans"]
-            : ["compose", "-p", TenantNaming.Project(tenant.Slug), "up", "-d", "--remove-orphans"];
-
-    /// <summary>The custom-domain sites of every live tenant, then a Caddy reload; nothing when no business has its own domain yet.</summary>
-    private async Task<string> WriteEdgeAsync(CancellationToken ct)
-    {
-        var live = await context.Tenants.AsNoTracking().Where(t => t.Status != TenantStatus.Destroyed && t.Status != TenantStatus.Destroying && t.CustomerDomain != null).ToListAsync(ct);
-        var snippet = Templates.CustomDomains(live, Platform);
-        var path = Platform.EdgeSnippetPath;
-        var previous = File.Exists(path) ? await File.ReadAllTextAsync(path, ct) : null;
-        if (previous == snippet)
-            return "unchanged";
-        if (Platform.DryRun && !Directory.Exists(Path.GetDirectoryName(path)!))
-            return $"(dry run) {live.Count} custom domain(s)";
-
-        // The file is what Caddy reads on its next start too, so a snippet it cannot parse must never stay on disk:
-        // written, checked by Caddy itself, and put back the way it was when the check fails
-        await File.WriteAllTextAsync(path, snippet, ct);
-        var validate = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "validate", "--config", "/etc/caddy/Caddyfile", "--adapter", "caddyfile"], null, CancellationToken.None);
-        if (!validate.Ok)
-        {
-            if (previous is null) File.Delete(path);
-            else await File.WriteAllTextAsync(path, previous, CancellationToken.None);
-            throw new InvalidOperationException($"Caddy refused the custom domains; the previous file is back: {validate.Output}");
-        }
-        var reload = await shell.RunAsync("docker", ["exec", Platform.EdgeContainer, "caddy", "reload", "--config", "/etc/caddy/Caddyfile"], null, ct);
-        if (!reload.Ok) throw new ShellException(reload.Output);
-        return $"{live.Count} custom domain(s)";
     }
 
     /// <summary>Runs one step and records it; returns what the step said.</summary>

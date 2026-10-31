@@ -9,6 +9,7 @@ using Ninja.Catalog.API.Assist;
 using Ninja.Control.API.Apis;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 using Ninja.ServiceDefaults;
 
 namespace Ninja.Control.API.Extensions;
@@ -82,6 +83,10 @@ public static class Extensions
         builder.Services.AddSingleton<ProvisioningQueue>();
         builder.Services.AddSingleton<WorkerHeartbeat>();
         builder.Services.AddSingleton<PlatformWarnings>();
+        // The boxes tenants live on: the one the control plane runs on, until a second joins (docs/multi-server-plan.md)
+        builder.Services.AddSingleton<LocalNodeClient>();
+        builder.Services.AddSingleton<INodes, SingleNode>();
+        builder.Services.AddScoped<IEdgeRouter, CaddyEdgeRouter>();
         builder.Services.AddScoped<Provisioner>();
         builder.Services.AddScoped<DemoData>();
         builder.Services.AddScoped<SubscriptionService>();

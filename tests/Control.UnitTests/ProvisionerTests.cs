@@ -6,6 +6,7 @@ using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Extensions;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.UnitTests;
 
@@ -94,7 +95,8 @@ public sealed class ProvisionerTests
         var backups = new BackupService(_box, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
         _broker = new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance);
         _databases = new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance);
-        _provisioner = new Provisioner(_context, options, _box,
+        _provisioner = new Provisioner(_context, options,
+            new SingleNode(new LocalNodeClient(_box, options)), new CaddyEdgeRouter(_context, _box, options),
             _databases,
             _broker,
             _keycloak = new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),

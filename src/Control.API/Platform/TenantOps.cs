@@ -5,6 +5,8 @@ using System.Text.Json;
 using System.Text.Json.Nodes;
 using Ninja.Control.API.Model;
 
+using Ninja.Control.API.Platform.Nodes;
+
 namespace Ninja.Control.API.Platform;
 
 /// <summary>One container of a tenant's stack, as docker compose ps reports it.</summary>
@@ -61,28 +63,17 @@ public static class ComposePs
 }
 
 /// <summary>Runs docker compose against one tenant's project and probes its services through the gateway.</summary>
-public sealed class TenantOps(IShell shell, IStackProxy proxy)
+public sealed class TenantOps(INodes nodes, IStackProxy proxy)
 {
     /// <summary>What has a log on this stack: the services the plan stamps, and the gateway.</summary>
     public static string[] LogSources(Tenant tenant) => [.. PlanCatalog.Services(tenant), "gateway"];
 
-    public async Task<IReadOnlyList<ContainerInfo>> ContainersAsync(Tenant tenant, CancellationToken ct)
-    {
-        var result = await shell.RunAsync("docker", ["compose", "-p", TenantNaming.Project(tenant.Slug), "ps", "-a", "--format", "json"], null, ct);
-        if (!result.Ok) throw new InvalidOperationException(result.Output);
-        return ComposePs.Parse(result.Stdout);
-    }
+    public Task<IReadOnlyList<ContainerInfo>> ContainersAsync(Tenant tenant, CancellationToken ct)
+        => nodes.For(tenant).Stacks.PsAsync(tenant.Slug, ct);
 
     /// <summary>The last lines of one service's log, or of the whole stack's when none is named.</summary>
-    public async Task<string> LogsAsync(Tenant tenant, string? service, int tail, CancellationToken ct)
-    {
-        var args = new List<string> { "compose", "-p", TenantNaming.Project(tenant.Slug), "logs", "--no-color", "--timestamps", "--tail", tail.ToString(CultureInfo.InvariantCulture) };
-        if (service is not null)
-            args.Add(service == "gateway" ? TenantNaming.Gateway(tenant.Slug) : TenantNaming.Service(tenant.Slug, service));
-        var result = await shell.RunAsync("docker", args, null, ct);
-        if (!result.Ok) throw new InvalidOperationException(result.Output);
-        return result.Output;
-    }
+    public Task<string> LogsAsync(Tenant tenant, string? service, int tail, CancellationToken ct)
+        => nodes.For(tenant).Stacks.LogsAsync(tenant.Slug, service, tail, ct);
 
     public async Task<IReadOnlyList<ServiceHealth>> HealthAsync(Tenant tenant, CancellationToken ct)
     {
