@@ -6,6 +6,7 @@ import '../../../core/ui/ui.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/loyalty_info.dart';
+import '../../../core/ui/skeleton.dart';
 import '../providers/loyalty_provider.dart';
 
 /// A tier's name in the app's language
@@ -81,7 +82,8 @@ class _LoyaltyScreenState extends ConsumerState<LoyaltyScreen> {
         title: l10n.loyaltyRewards,
         back: true,
         children: [
-          Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+          const Skeleton(child: SkeletonCard(height: 176, action: false)),
+          const SkeletonList(rows: 3),
         ],
       );
     }

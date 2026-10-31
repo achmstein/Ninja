@@ -11,6 +11,7 @@ import '../../bills/models/bill.dart';
 import '../../bills/services/bills_service.dart';
 import '../../bills/widgets/bill_slip.dart';
 import '../models/receipt.dart';
+import '../../../core/ui/skeleton.dart';
 import '../services/receipt_service.dart';
 
 /// The bill, on its own page. Paid, it is the customer's copy of the
@@ -61,12 +62,11 @@ class BillReceipt extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    final colors = context.theme.colors;
     // The printed receipt exists once the bill is settled; a bill known to be open is not asked for
     final askPrinted = bill == null || bill!.isSettled;
     final printed = askPrinted ? ref.watch(receiptProvider(ticketId)) : null;
     if ((printed?.isLoading ?? false) || (bill == null && loadingBill)) {
-      return Container(height: 360, decoration: BoxDecoration(color: colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
+      return const _ReceiptSkeleton();
     }
     if (printed?.value != null) return _ReceiptBody(receipt: printed!.value!);
     if (bill != null) return BillSlip(bill: bill!);
@@ -199,4 +199,38 @@ class _ReceiptBody extends ConsumerWidget {
       ),
     );
   }
+}
+
+/// The receipt while it comes: its heading, a line an item with its amount at the end, the total under a rule
+class _ReceiptSkeleton extends StatelessWidget {
+  const _ReceiptSkeleton();
+
+  @override
+  Widget build(BuildContext context) => Skeleton(
+    child: Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(color: context.theme.colors.muted.withValues(alpha: 0.45), borderRadius: BorderRadius.circular(Ninja.panelRadius)),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          const BoneLine(widthFactor: 0.4, height: 18),
+          const SizedBox(height: 8),
+          const BoneLine(widthFactor: 0.28, height: 11),
+          const SizedBox(height: 24),
+          for (var i = 0; i < 4; i++) ...[
+            if (i > 0) const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(child: BoneLine(widthFactor: const [0.55, 0.42, 0.62, 0.36][i], height: 13)),
+                const SizedBox(width: 12),
+                const Bone(width: 52, height: 13, radius: 6),
+              ],
+            ),
+          ],
+          const SizedBox(height: 24),
+          const Row(children: [Expanded(child: BoneLine(widthFactor: 0.3, height: 16)), Bone(width: 72, height: 16, radius: 8)]),
+        ],
+      ),
+    ),
+  );
 }

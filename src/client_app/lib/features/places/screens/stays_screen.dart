@@ -17,6 +17,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';
 import '../models/place.dart';
 import '../services/place_service.dart';
+import '../../../core/ui/skeleton.dart';
 import '../../../core/utils/business_day.dart';
 
 /// Screen showing user's sessions with Today / Previous tabs
@@ -33,14 +34,18 @@ class _StaysScreenState extends ConsumerState<StaysScreen> {
     final stays = ref.watch(myStaysProvider);
     final currentUserId = ref.watch(authServiceProvider).userId;
     final l10n = AppLocalizations.of(context)!;
-    final c = context.theme.colors;
     final locale = ref.watch(localeProvider);
     Future<void> refresh() => ref.read(myStaysProvider.notifier).refresh();
 
     final List<Widget> children = stays.when(
       skipLoadingOnRefresh: true,
       loading: () => [
-        for (var i = 0; i < 3; i++) Container(height: 120, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius))),
+        Skeleton(
+          child: Column(
+            spacing: 12,
+            children: [for (var i = 0; i < 3; i++) const SkeletonCard(height: 120, radius: Ninja.panelRadius, action: false)],
+          ),
+        ),
       ],
       error: (_, _) => [
         EmptyState(

@@ -9,6 +9,7 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/account_balance.dart';
 import '../providers/account_provider.dart';
+import '../../../core/ui/skeleton.dart';
 import '../services/account_service.dart';
 
 /// Amounts in the ledger always in western digits
@@ -50,7 +51,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
       onRefresh: _reload,
       children: [
         if (account.isLoading && account.account == null)
-          Container(height: 160, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius)))
+          const Skeleton(child: SkeletonCard(height: 160, action: false))
         else
           _BalanceSlab(balance: balance),
         Column(
@@ -61,7 +62,7 @@ class _TransactionsScreenState extends ConsumerState<TransactionsScreen> {
               future: _transactions,
               builder: (context, snapshot) {
                 if (snapshot.connectionState != ConnectionState.done) {
-                  return Container(height: 192, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)));
+                  return const SkeletonList(rows: 4, padding: EdgeInsets.symmetric(vertical: 8));
                 }
                 final list = snapshot.data ?? const [];
                 if (list.isEmpty) {

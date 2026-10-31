@@ -20,6 +20,7 @@ import '../models/bill.dart';
 import '../services/bills_service.dart';
 import '../widgets/open_bills.dart';
 import '../widgets/bill_tile.dart';
+import '../../../core/ui/skeleton.dart';
 import '../widgets/order_tile.dart';
 
 /// Your bills (client_web's routes/bills.tsx), reached from You: the bill
@@ -59,7 +60,6 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
   @override
   Widget build(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final c = context.theme.colors;
     final bills = ref.watch(myBillsProvider);
     final orders = ref.watch(ordersProvider);
     final all = bills.value ?? const <Bill>[];
@@ -71,7 +71,7 @@ class _BillsScreenState extends ConsumerState<BillsScreen> {
     final List<Widget> children;
     if (bills.isLoading && all.isEmpty) {
       children = [
-        for (var i = 0; i < 2; i++) Container(height: 168, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
+        Skeleton(child: Column(spacing: 16, children: [for (var i = 0; i < 2; i++) const SkeletonCard(height: 168)])),
       ];
     } else if (bills.hasError && all.isEmpty) {
       children = [

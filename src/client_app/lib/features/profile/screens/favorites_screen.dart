@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../menu/models/menu_item.dart';
 import '../../menu/services/menu_service.dart';
 import '../../menu/providers/favorites_provider.dart';
+import '../../menu/widgets/menu_skeleton.dart';
 import '../../menu/widgets/item.dart';
 
 /// The favourites as the branch the app is at serves them: its prices, and
@@ -47,10 +48,8 @@ class FavoritesScreen extends ConsumerWidget {
       onRefresh: refresh,
       children: items.when(
         skipLoadingOnRefresh: true,
-        loading: () => [
-          for (var i = 0; i < 3; i++)
-            Container(height: 80, decoration: BoxDecoration(color: context.theme.colors.muted, borderRadius: BorderRadius.circular(Ninja.tileRadius))),
-        ],
+        // Shaped as the rows they will be
+        loading: () => const [MenuRowsSkeleton()],
         error: (error, _) => [
           EmptyState(
             icon: LucideIcons.circleAlert,

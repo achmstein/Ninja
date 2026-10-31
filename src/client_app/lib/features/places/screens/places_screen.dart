@@ -6,6 +6,7 @@ import 'package:url_launcher/url_launcher.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/ui/ui.dart';
 import '../widgets/hold_form.dart';
+import '../widgets/places_skeleton.dart';
 import '../widgets/reservation_panel.dart';
 import '../../service_request/widgets/request_tiles.dart';
 import '../../bills/widgets/open_bills.dart';
@@ -248,47 +249,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         ...roomsAsync.when(
           skipLoadingOnRefresh: true,
           // The skeletons take the shape the places will
-          loading: () => switch (layout) {
-            PlacesLayout.cards => [
-                for (var i = 0; i < 3; i++)
-                  Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
-              ],
-            // Flat rows, as the list is
-            PlacesLayout.list => [
-                for (var i = 0; i < 6; i++)
-                  Row(
-                    children: [
-                      Container(width: 8, height: 8, decoration: BoxDecoration(color: c.muted, shape: BoxShape.circle)),
-                      const SizedBox(width: 12),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        spacing: 6,
-                        children: [
-                          Container(width: 128, height: 14, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(7))),
-                          Container(width: 80, height: 10, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(5))),
-                        ],
-                      ),
-                    ],
-                  ),
-              ],
-            PlacesLayout.grid => [
-                Column(
-                  spacing: 12,
-                  children: [
-                    for (var i = 0; i < 2; i++)
-                      Row(
-                        spacing: 12,
-                        children: [
-                          for (var j = 0; j < 2; j++)
-                            Expanded(
-                              child: Container(height: 124, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(24))),
-                            ),
-                        ],
-                      ),
-                  ],
-                ),
-              ],
-          },
+          loading: () => [PlacesSkeleton(layout: layout)],
           // A stale socket after a resume: the places known stay up while the poll catches up
           error: (_, _) => roomsAsync.hasValue
               ? (multi && viewed != null ? _byBranch([viewed], stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout))

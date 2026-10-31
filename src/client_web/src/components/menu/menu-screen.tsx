@@ -36,6 +36,7 @@ import { FlightLayer, type Flight } from './flights'
 import { itemPictureUrl } from './item-picture'
 import { MenuGrid } from './list/menu-grid'
 import { createMenuScreenStore, type MenuScreenStore, type Tuning } from './menu-screen-store'
+import { MenuSkeleton } from './menu-skeleton'
 import { useMenuStyle } from './menu-style'
 import { MAX_ON_SHEET, menuById, pairedFor } from './paired-items'
 import { NearestBranchPrimer } from '@/components/nearest-branch-primer'
@@ -436,9 +437,8 @@ export function MenuScreen({ menu }: HomeProps) {
             }
           >
             {loading ? (
-              <div className='h-full px-4 pb-14' style={{ paddingTop: DECK_TOP }}>
-                <div className='bg-muted h-full animate-pulse rounded-[28px] motion-reduce:animate-none' />
-              </div>
+              // In the shape the menu's style will take, so it lands where its placeholder stood
+              <MenuSkeleton style={style} />
             ) : columns.length === 0 ? (
               <p className='text-muted-foreground grid h-full place-items-center px-8 text-center'>{t('noItemsAvailable')}</p>
             ) : (

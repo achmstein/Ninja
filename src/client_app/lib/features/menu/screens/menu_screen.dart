@@ -21,6 +21,7 @@ import '../models/menu_item.dart';
 import '../paired_items.dart';
 import '../services/menu_service.dart';
 import '../widgets/deck.dart';
+import '../widgets/menu_skeleton.dart';
 import '../widgets/item.dart';
 import '../widgets/pinch.dart';
 import '../widgets/zoom_flight.dart';
@@ -467,7 +468,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
     final ordering = ref.watch(branchProvider).selectedBranch?.isOrderingEnabled ?? true;
     final layout = BrandStyle.of(context).layout.menuItem;
     final c = context.theme.colors;
-    if (branchId == null) return const _Loading();
+    if (branchId == null) return MenuSkeleton(layout: layout);
 
     final grouped = ref.watch(groupedMenuItemsProvider((locale, branchId)));
     final sections = menuSections(grouped.value ?? const {}, locale);
@@ -502,7 +503,7 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
 
     final body = grouped.when(
       skipLoadingOnRefresh: true,
-      loading: () => const _Loading(),
+      loading: () => MenuSkeleton(layout: layout),
       error: (error, _) => Center(
         child: EmptyState(
           icon: LucideIcons.circleAlert,
@@ -761,18 +762,6 @@ class _MenuScreenState extends ConsumerState<MenuScreen> with TickerProviderStat
   }
 }
 
-class _Loading extends StatelessWidget {
-  const _Loading();
-
-  @override
-  Widget build(BuildContext context) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
-    child: DecoratedBox(
-      decoration: BoxDecoration(color: context.theme.colors.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius)),
-      child: const SizedBox.expand(),
-    ),
-  );
-}
 
 /// The page's large title, and a word over the whole menu while ordering is paused
 class _Head extends StatelessWidget {
