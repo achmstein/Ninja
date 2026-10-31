@@ -16,7 +16,7 @@ import { TrayExtras } from './tray-extras'
 import { TrayNudge } from './tray-nudge'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
-import { DeliveryChoice } from '@/components/delivery/delivery-choice'
+import { DeliveryChoice, PickupFrom } from '@/components/delivery/delivery-choice'
 import { PayChoice } from '@/components/pay/pay-choice'
 import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
@@ -590,6 +590,8 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
             <p className='opacity-80'>{t('tableOrdersNeedAccount')}</p>
           ) : (
             <>
+              {/* No delivery, more than one branch: which one it is collected from, a tap from choosing another */}
+              <PickupFrom onlyWithChoice />
               {order.isGuest && (
                 <div className='flex items-center gap-2 opacity-70'>
                   <ShoppingBag className='size-4' />

@@ -91,7 +91,7 @@ class DeliveryChoiceView extends ConsumerWidget {
         ),
         if (!delivery.active) ...[
           const SizedBox(height: 8),
-          const _PickupFrom(),
+          const PickupFrom(),
         ],
         if (delivery.active) ...[
           const SizedBox(height: 8),
@@ -219,9 +219,11 @@ class _OutOfRange extends ConsumerWidget {
 
 /// Collected: from which branch, said before the order goes, with how far
 /// it is when the phone already gives the position (never asked for here)
-/// and the branch a tap away to change, unless the customer is at this one
-class _PickupFrom extends ConsumerWidget {
-  const _PickupFrom();
+/// and the branch a tap away to change, unless the customer is at this one.
+/// In the delivery choice, and on its own in the order of a business that
+/// does not deliver but has more than one branch to collect from
+class PickupFrom extends ConsumerWidget {
+  const PickupFrom({super.key});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {

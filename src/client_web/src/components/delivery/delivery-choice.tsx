@@ -183,9 +183,11 @@ function OutOfRange({ delivery }: { delivery: DeliveryState }) {
 /**
  * Collected: from which branch, said before the order goes, with how far it
  * is when the customer's position is known (never asked for here) and the
- * branch a tap away to change, unless the customer is at this one.
+ * branch a tap away to change, unless the customer is at this one. In the
+ * delivery choice, and on its own in the order of a business that does not
+ * deliver ([onlyWithChoice]: there only when there is more than one branch).
  */
-function PickupFrom() {
+export function PickupFrom({ onlyWithChoice = false }: { onlyWithChoice?: boolean } = {}) {
   const t = useT()
   const localized = useLocalized()
   const distance = useDistance()
@@ -194,7 +196,7 @@ function PickupFrom() {
   const atBranch = useAtBranch()
   const { sorted } = useBranchesByDistance(false)
   const [open, setOpen] = useState(false)
-  if (!branch) return null
+  if (!branch || (onlyWithChoice && branches.length < 2)) return null
   const meters = sorted.find((s) => s.item.id === branch.id)?.meters ?? null
   const canChange = branches.length > 1 && !atBranch
   const body = (

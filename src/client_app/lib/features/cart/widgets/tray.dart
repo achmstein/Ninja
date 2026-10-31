@@ -566,6 +566,10 @@ class TraySheet extends ConsumerWidget {
                 // Not at a table: collect it or have it brought, where the branch delivers
                 else if (destination == null && ref.watch(deliveryStateProvider.select((d) => d.offered)))
                   const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: DeliveryChoiceView())
+                // Not at a table, no delivery, more than one branch: which one it is collected from,
+                // a tap from choosing another, as booking says which branch its places are at
+                else if (destination == null && ref.watch(branchProvider.select((b) => b.branches.length)) > 1)
+                  const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: PickupFrom())
                 else if (destination != null)
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
