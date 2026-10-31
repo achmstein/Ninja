@@ -1,19 +1,23 @@
 import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, CloudOff, Loader2, Printer, Smartphone, X } from 'lucide-react'
+import * as DialogPrimitive from '@radix-ui/react-dialog'
+import {
+  ArrowLeft,
+  Banknote,
+  CheckCircle2,
+  CloudOff,
+  Loader2,
+  Plus,
+  Printer,
+  Smartphone,
+  X,
+} from 'lucide-react'
 import {
   assignTicketLinesCustomerMutation,
   settleTicketMutation,
 } from '@/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView, TicketDetail } from '@/api/sales/types.gen'
-import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog'
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { invalidateCustomer, useTab } from '@/features/customer/use-customer-card'
 import type { OfflinePayment } from '@/features/offline/offline-replay'
@@ -115,6 +119,8 @@ function HolderButton({
 
 type SettleDialogProps = {
   ticket: TicketDetail
+  /** Names the bill in the header: the place, or the bill's label */
+  title?: string
   /**
    * What guests paid from their phones. The server adds every paid one to
    * the settle itself, so the till takes only the rest; while one is still
@@ -142,13 +148,17 @@ type SettleDialogProps = {
 }
 
 /**
- * Take one or more payments against the ticket total, then settle. The
- * keypad is the only way to type amounts (no OS keyboard on the till).
+ * Take one or more payments against the ticket total, then settle: a page of
+ * its own over the bill, framed as the bill is (the header across the top,
+ * the money and the Settle across the foot), with what is being paid beside
+ * how it is paid on a wide screen. The keypad is the only way to type
+ * amounts (no OS keyboard on the till).
  * When cash exceeds the remainder, the change due is shown live; the
  * server recomputes it authoritatively on settle.
  */
 export function SettleDialog({
   ticket,
+  title,
   onlinePayments,
   members,
   open,
@@ -271,17 +281,21 @@ export function SettleDialog({
     }
   }, [open])
 
+  // The payments a settle went out with: the exact-cash shortcut sends its
+  // own before the list on screen has caught up
+  const sentRef = useRef<PendingPayment[]>([])
   const settle = useMutation({
     ...settleTicketMutation(),
     onSuccess: (data, variables) => {
+      const sent = sentRef.current
       const outcome: SettleOutcome = {
         receiptNumber: toNumber(data.receiptNumber),
         change: toNumber(data.change),
         payments: [
           ...(variables.body?.payments ?? []).map((p, i) => ({
-            tender: payments[i]?.tenderName ?? 'Cash',
+            tender: sent[i]?.tenderName ?? 'Cash',
             amount: toNumber(p.amount),
-            customerName: payments[i]?.customerName,
+            customerName: sent[i]?.customerName,
           })),
           // The server added these to the settle; the receipt shows them
           ...(onlinePayments ?? [])
@@ -302,7 +316,7 @@ export function SettleDialog({
       onSettled?.(outcome)
       // Cash opens the drawer though the receipt waits for Print: the
       // cashier needs to make change (pos_app's _openDrawerForCash)
-      if (takesCash(payments.map((p) => ({ tender: p.tenderValue })))) {
+      if (takesCash(sent.map((p) => ({ tender: p.tenderValue })))) {
         void openCashDrawer()
       }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
@@ -310,7 +324,7 @@ export function SettleDialog({
       // The drawer's expected cash and the shift's sales just moved
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
       // Whatever went on a tab changed what its holder owes
-      for (const p of payments) {
+      for (const p of sent) {
         if (p.customerId) invalidateCustomer(queryClient, p.customerId)
       }
     },
@@ -392,22 +406,22 @@ export function SettleDialog({
     if (!open) requestIdRef.current = null
   }, [open])
 
-  const settleOffline = async () => {
+  const settleOffline = async (list: PendingPayment[], change: number) => {
     if (!offline) return
     setSavingOffline(true)
     try {
       const number = await offline.settle(
-        payments.map((p) => ({
+        list.map((p) => ({
           tender: p.tenderValue,
           tenderName: p.tenderName,
           amount: p.amount,
         })),
-        changeDue,
+        change,
       )
       setResult({
         receiptNumber: 0,
         provisionalNumber: number,
-        change: changeDue,
+        change,
         accountAmount: 0,
       })
     } catch {
@@ -417,13 +431,15 @@ export function SettleDialog({
     }
   }
 
-  const doSettle = () => {
+  const doSettle = (list = payments) => {
+    sentRef.current = list
     if (offline) {
-      void settleOffline()
+      const paidNow = list.reduce((sum, p) => sum + p.amount, 0)
+      void settleOffline(list, Math.max(0, +(paidNow - due).toFixed(2)))
       return
     }
     const signature = JSON.stringify(
-      payments.map((p) => [p.tenderValue, p.amount, p.customerId ?? null])
+      list.map((p) => [p.tenderValue, p.amount, p.customerId ?? null])
     )
     if (requestIdRef.current?.signature !== signature) {
       requestIdRef.current = { signature, id: crypto.randomUUID() }
@@ -433,7 +449,7 @@ export function SettleDialog({
       path: { id: toNumber(ticket.id) },
       query: { 'api-version': API_VERSION },
       body: {
-        payments: payments.map((p) => ({
+        payments: list.map((p) => ({
           tender: p.tenderValue,
           amount: p.amount,
           customerId: p.customerId ?? null,
@@ -444,267 +460,337 @@ export function SettleDialog({
   }
 
   const tenderLabel = (name: TenderName) => t(tenderLabelKey[name] ?? 'cash')
+  const busy = settle.isPending || savingOffline
 
-  // ----- settled view -----
-  if (result) {
-    return (
-      <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='gap-5 sm:max-w-md'>
-          <div className='flex flex-col items-center gap-3 py-4 text-center'>
-            <CheckCircle2 className='size-14 text-emerald-500' />
-            <DialogTitle className='text-2xl'>{t('ticketSettled')}</DialogTitle>
-            <div className='text-3xl font-bold tabular-nums'>
-              {t('receiptNumber', {
-                number: result.provisionalNumber ?? result.receiptNumber,
-              })}
-            </div>
-            {result.provisionalNumber && (
-              <div className='text-muted-foreground flex items-center gap-2 text-sm'>
-                <CloudOff className='size-4' />
-                {t('offlineSettledHint')}
-              </div>
-            )}
-            {result.change > 0 && (
-              <div className='bg-accent w-full rounded-xl p-4'>
-                <div className='text-muted-foreground text-sm'>
-                  {t('changeDue')}
-                </div>
-                <div className='text-4xl font-bold tabular-nums'>
-                  {money(result.change)}
-                </div>
-              </div>
-            )}
-            {result.accountAmount > 0 && (
-              <div className='bg-accent w-full rounded-xl p-4'>
-                <div className='text-muted-foreground text-sm'>
-                  {t('onCustomerTab')}
-                </div>
-                <div className='text-3xl font-bold tabular-nums'>
-                  {money(result.accountAmount)}
-                </div>
-              </div>
-            )}
-          </div>
-          <div className='grid grid-cols-2 gap-2'>
-            <Button
-              variant='outline'
-              size='lg'
-              className='h-14 text-base'
-              onClick={() => onOpenChange(false)}
-            >
-              {t('done')}
-            </Button>
-            <Button
-              size='lg'
-              className='h-14 text-base'
-              onClick={() => void printSheets()}
-            >
-              <Printer className='size-5' />
-              {t('print')}
-            </Button>
-          </div>
-        </DialogContent>
-      </Dialog>
-    )
+  // The one-cash-payment happy path in one tap: what is still owed, in cash,
+  // and settled
+  const cash = tenders.find((option) => option.name === 'Cash')
+  const offersExactCash = payments.length === 0 && remaining > 0 && !!cash && !online.pending
+  const exactCash = () => {
+    if (!cash || remaining <= 0 || busy) return
+    const list: PendingPayment[] = [
+      { tenderValue: cash.value, tenderName: cash.name, amount: remaining },
+    ]
+    setPayments(list)
+    doSettle(list)
   }
 
-  // ----- payment entry view -----
-  // Two columns from the sm breakpoint: how much and how on the start side
-  // (tender, amount, keypad), what has been taken and what is left on the
-  // end side — so the whole modal fits a tablet in landscape without a
-  // scrollbar. On a phone it stacks in the same order it always did.
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
-        {/* Padded at the end so the total stops short of the close icon */}
-        <DialogHeader className='border-b px-5 py-3 pe-14'>
-          <DialogTitle className='flex items-baseline justify-between gap-4 text-lg'>
-            <span>{t('settleTitle')}</span>
-            <span className='text-xl font-bold tabular-nums'>{money(total)}</span>
-          </DialogTitle>
-        </DialogHeader>
+  const header = (
+    <div className='flex h-16 shrink-0 items-center gap-2 border-b px-3'>
+      <Button
+        variant='ghost'
+        size='icon'
+        className='size-12'
+        aria-label={t('goBack')}
+        // Not while the money is on its way: the settle finishes first
+        disabled={busy}
+        onClick={() => onOpenChange(false)}
+      >
+        {result ? <X className='size-6' /> : <ArrowLeft className='size-6 rtl:rotate-180' />}
+      </Button>
+      <DialogPrimitive.Title className='min-w-0 flex-1 truncate text-xl font-bold'>
+        {t('settleTitle')}
+        {title && (
+          <span className='text-muted-foreground font-normal'> · {title}</span>
+        )}
+      </DialogPrimitive.Title>
+      <span className='text-xl font-bold tabular-nums'>{money(total)}</span>
+    </div>
+  )
 
-        {/* Guests paid part of it online: the till takes only what is due */}
-        {(online.paid > 0 || online.pending) && (
-          <div className='grid gap-1 border-b px-5 py-2 text-sm'>
-            {online.paid > 0 && (
-              <div className='flex items-center justify-between gap-4'>
-                <span className='text-muted-foreground flex items-center gap-2'>
-                  <Smartphone className='size-4' />
-                  {t('paidOnlineTotal')}
-                </span>
-                <span className='font-semibold tabular-nums'>
-                  −{money(online.paid)}
-                </span>
-              </div>
-            )}
-            <div className='flex items-center justify-between gap-4 text-base'>
-              <span className='font-medium'>{t('amountDue')}</span>
-              <span className='font-bold tabular-nums'>{money(due)}</span>
-            </div>
-            {online.pending && (
-              <div className='flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400'>
-                <Loader2 className='size-4 animate-spin' />
-                {t('guestPayingOnline')}
-              </div>
-            )}
+  // ----- settled view -----
+  const settled = result && (
+    <div className='flex flex-1 items-center justify-center overflow-y-auto p-6'>
+      <div className='flex w-full max-w-md flex-col items-center gap-3 text-center'>
+        <CheckCircle2 className='size-14 text-emerald-500' />
+        <div className='text-2xl font-semibold'>{t('ticketSettled')}</div>
+        <div className='text-3xl font-bold tabular-nums'>
+          {t('receiptNumber', {
+            number: result.provisionalNumber ?? result.receiptNumber,
+          })}
+        </div>
+        {result.provisionalNumber && (
+          <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+            <CloudOff className='size-4' />
+            {t('offlineSettledHint')}
           </div>
         )}
+        {result.change > 0 && (
+          <div className='bg-accent w-full rounded-xl p-4'>
+            <div className='text-muted-foreground text-sm'>{t('changeDue')}</div>
+            <div className='text-4xl font-bold tabular-nums'>{money(result.change)}</div>
+          </div>
+        )}
+        {result.accountAmount > 0 && (
+          <div className='bg-accent w-full rounded-xl p-4'>
+            <div className='text-muted-foreground text-sm'>{t('onCustomerTab')}</div>
+            <div className='text-3xl font-bold tabular-nums'>{money(result.accountAmount)}</div>
+          </div>
+        )}
+        <div className='mt-2 grid w-full grid-cols-2 gap-2'>
+          <Button variant='outline' className='h-14 text-base' onClick={() => onOpenChange(false)}>
+            {t('done')}
+          </Button>
+          <Button className='h-14 text-base' onClick={() => void printSheets()}>
+            <Printer className='size-5' />
+            {t('print')}
+          </Button>
+        </div>
+      </div>
+    </div>
+  )
 
-        <div className='grid gap-4 p-4 sm:grid-cols-2'>
-          <div className='flex flex-col gap-3'>
-            <div
-              className={cn(
-                'grid gap-2',
-                tenders.length === 4 ? 'grid-cols-2' : 'grid-cols-3'
-              )}
-            >
-              {tenders.map((option) => (
+  // ----- how it is paid: the tender, whose tab, the amount, the keypad -----
+  const howPaid = (
+    <div className='flex flex-col gap-3'>
+      <div className={cn('grid gap-2', tenders.length === 4 ? 'grid-cols-2' : 'grid-cols-3')}>
+        {tenders.map((option) => (
+          <Button
+            key={option.value}
+            variant={tender.value === option.value ? 'default' : 'outline'}
+            className='h-12 text-base'
+            onClick={() => pickTender(option)}
+          >
+            {t(option.labelKey)}
+          </Button>
+        ))}
+      </div>
+
+      {/* Whose tab. Always in view, even when there is only one person to
+          choose: a charge must never land on a tab nobody saw. */}
+      {tender.name === 'Account' && (
+        <div className='grid gap-2'>
+          <p className='text-muted-foreground text-sm'>{t('whoseAccount')}</p>
+          {accountHolders.map((holder) => (
+            <HolderButton
+              key={holder.id}
+              holder={holder}
+              chosen={chosenHolder?.id === holder.id}
+              onChoose={() => chooseHolder(holder)}
+            />
+          ))}
+        </div>
+      )}
+
+      <div
+        dir='ltr'
+        className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
+      >
+        {amountStr || '0'}
+      </div>
+
+      <NumericKeypad value={amountStr} onChange={setAmountStr} />
+
+      <Button
+        variant='secondary'
+        className='h-12 text-base'
+        disabled={busy || !Number.isFinite(enteredAmount) || enteredAmount <= 0}
+        onClick={addPayment}
+      >
+        <Plus className='size-5' />
+        {t('addPayment')}
+      </Button>
+    </div>
+  )
+
+  // ----- what is being paid: the lines, what guests paid online, whose
+  // rounds, and the payments taken so far -----
+  const whatPaid = (withLines: boolean) => (
+    <div className='flex flex-col gap-4'>
+      {withLines && (ticket.lines ?? []).length > 0 && (
+        <div className='divide-y'>
+          {(ticket.lines ?? []).map((line) => (
+            <div key={String(line.id)} className='flex items-start gap-3 py-2 text-base'>
+              <span className='text-muted-foreground w-10 shrink-0 tabular-nums'>
+                {toNumber(line.qty)}×
+              </span>
+              <span className='min-w-0 flex-1'>
+                <span className='line-clamp-2'>{localized(line.description)}</span>
+                {line.customerName && (
+                  <span className='text-muted-foreground block truncate text-sm'>
+                    {line.customerName}
+                  </span>
+                )}
+              </span>
+              <span className='shrink-0 tabular-nums'>{money(toNumber(line.total))}</span>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Guests paid part of it online: the till takes only what is due */}
+      {(online.paid > 0 || online.pending) && (
+        <div className='grid gap-1 rounded-lg bg-emerald-500/10 p-3 text-sm'>
+          {online.paid > 0 && (
+            <div className='flex items-center justify-between gap-4'>
+              <span className='flex items-center gap-2'>
+                <Smartphone className='size-4' />
+                {t('paidOnlineTotal')}
+              </span>
+              <span className='font-semibold text-emerald-600 tabular-nums dark:text-emerald-400'>
+                −{money(online.paid)}
+              </span>
+            </div>
+          )}
+          <div className='flex items-center justify-between gap-4 text-base'>
+            <span className='font-medium'>{t('amountDue')}</span>
+            <span className='font-bold tabular-nums'>{money(due)}</span>
+          </div>
+          {online.pending && (
+            <div className='flex items-center gap-2 rounded-md bg-amber-500/10 px-3 py-2 text-amber-700 dark:text-amber-400'>
+              <Loader2 className='size-4 animate-spin' />
+              {t('guestPayingOnline')}
+            </div>
+          )}
+        </div>
+      )}
+
+      {nudge && (
+        <div className='grid gap-2 rounded-lg border p-3'>
+          <p className='text-muted-foreground text-sm'>{t('whoseRounds')}</p>
+          {unnamed.map((line) => (
+            <div key={String(line.id)} className='flex flex-wrap items-center gap-2'>
+              <span className='min-w-0 flex-1 truncate text-sm'>
+                {localized(line.description)} · {money(toNumber(line.total))}
+              </span>
+              {accountHolders.map((holder) => (
                 <Button
-                  key={option.value}
-                  variant={tender.value === option.value ? 'default' : 'outline'}
-                  className='h-11 text-base'
-                  onClick={() => pickTender(option)}
+                  key={holder.id}
+                  variant='outline'
+                  className='h-10'
+                  disabled={nameLine.isPending}
+                  onClick={() => nameLineFor(toNumber(line.id), holder)}
                 >
-                  {t(option.labelKey)}
+                  {holder.name || t('guest')}
                 </Button>
               ))}
             </div>
-
-            {/* Whose tab. Always in view, even when there is only one person
-                to choose: a charge must never land on a tab nobody saw. */}
-            {tender.name === 'Account' && (
-              <div className='grid gap-2'>
-                <p className='text-muted-foreground text-sm'>{t('whoseAccount')}</p>
-                <div className='grid gap-2'>
-                  {accountHolders.map((holder) => (
-                    <HolderButton
-                      key={holder.id}
-                      holder={holder}
-                      chosen={chosenHolder?.id === holder.id}
-                      onChoose={() => chooseHolder(holder)}
-                    />
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div
-              dir='ltr'
-              className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
-            >
-              {amountStr || '0'}
-            </div>
-
-            <NumericKeypad value={amountStr} onChange={setAmountStr} />
-
-            <Button
-              variant='secondary'
-              size='lg'
-              className='h-12 text-base'
-              disabled={!Number.isFinite(enteredAmount) || enteredAmount <= 0}
-              onClick={addPayment}
-            >
-              {t('addPayment')}
-            </Button>
-          </div>
-
-          <div className='flex flex-col gap-3'>
-            {nudge && (
-              <div className='grid gap-2 rounded-lg border p-3'>
-                <p className='text-muted-foreground text-sm'>{t('whoseRounds')}</p>
-                {unnamed.map((line) => (
-                  <div
-                    key={String(line.id)}
-                    className='flex flex-wrap items-center gap-2'
-                  >
-                    <span className='min-w-0 flex-1 truncate text-sm'>
-                      {localized(line.description)} · {money(toNumber(line.total))}
-                    </span>
-                    {accountHolders.map((holder) => (
-                      <Button
-                        key={holder.id}
-                        size='sm'
-                        variant='outline'
-                        disabled={nameLine.isPending}
-                        onClick={() => nameLineFor(toNumber(line.id), holder)}
-                      >
-                        {holder.name || t('guest')}
-                      </Button>
-                    ))}
-                  </div>
-                ))}
-              </div>
-            )}
-            {payments.length > 0 ? (
-              <div className='grid gap-2'>
-                {payments.map((payment, index) => (
-                  <div
-                    key={index}
-                    className='bg-accent/50 flex items-center justify-between gap-2 rounded-lg px-3 py-2'
-                  >
-                    <Badge
-                      variant='secondary'
-                      className='min-w-0 max-w-full shrink truncate'
-                    >
-                      {tenderLabel(payment.tenderName)}
-                      {payment.customerName && ` · ${payment.customerName}`}
-                    </Badge>
-                    <div className='flex shrink-0 items-center gap-1'>
-                      <span className='font-semibold whitespace-nowrap tabular-nums'>
-                        {money(payment.amount)}
-                      </span>
-                      <Button
-                        variant='ghost'
-                        size='icon'
-                        className='size-10'
-                        onClick={() => removePayment(index)}
-                      >
-                        <X className='size-4' />
-                      </Button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <p className='text-muted-foreground hidden py-6 text-center text-sm sm:block'>
-                {t('noPaymentsYet')}
-              </p>
-            )}
-
-            <div className='mt-auto grid gap-1 text-lg'>
-              <div className='flex items-center justify-between'>
-                <span className='text-muted-foreground'>{t('remaining')}</span>
-                <span
-                  className={cn(
-                    'font-bold tabular-nums',
-                    remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400'
-                  )}
-                >
-                  {money(remaining)}
-                </span>
-              </div>
-              {changeDue > 0 && (
-                <div className='flex items-center justify-between'>
-                  <span className='text-muted-foreground'>{t('changeDue')}</span>
-                  <span className='font-bold tabular-nums text-emerald-600 dark:text-emerald-400'>
-                    {money(changeDue)}
-                  </span>
-                </div>
-              )}
-            </div>
-
-            <Button
-              size='lg'
-              className='h-14 w-full text-lg'
-              disabled={!canSettle}
-              onClick={doSettle}
-            >
-              {t('confirmSettle')}
-            </Button>
-          </div>
+          ))}
         </div>
-      </DialogContent>
-    </Dialog>
+      )}
+
+      <div className='grid gap-2'>
+        <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+          {t('payments')}
+        </h2>
+        {payments.length > 0 ? (
+          payments.map((payment, index) => (
+            <div
+              key={index}
+              className='bg-accent/50 flex min-h-12 items-center justify-between gap-2 rounded-lg ps-3 pe-1'
+            >
+              <span className='min-w-0 flex-1 truncate text-base'>
+                {tenderLabel(payment.tenderName)}
+                {payment.customerName && ` · ${payment.customerName}`}
+              </span>
+              <span className='font-semibold whitespace-nowrap tabular-nums'>
+                {money(payment.amount)}
+              </span>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-10'
+                disabled={busy}
+                onClick={() => removePayment(index)}
+              >
+                <X className='size-4' />
+              </Button>
+            </div>
+          ))
+        ) : (
+          <p className='text-muted-foreground py-3 text-sm'>{t('noPaymentsYet')}</p>
+        )}
+      </div>
+    </div>
+  )
+
+  // ----- the bar across the foot, as on the bill: what is left (and the
+  // change) at the start, Settle at the end, exact cash before it -----
+  const foot = (
+    <div className='flex shrink-0 items-center gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:flex-col max-sm:items-stretch'>
+      <div className='grid min-w-0 flex-1 gap-0.5 text-lg sm:max-w-sm'>
+        <div className='flex items-center justify-between gap-4'>
+          <span className='text-muted-foreground'>{t('remaining')}</span>
+          <span
+            className={cn(
+              'font-bold tabular-nums transition-colors',
+              remaining > 0 ? 'text-destructive' : 'text-emerald-600 dark:text-emerald-400',
+            )}
+          >
+            {money(remaining)}
+          </span>
+        </div>
+        {changeDue > 0 && (
+          <div className='flex items-center justify-between gap-4'>
+            <span className='text-muted-foreground'>{t('changeDue')}</span>
+            <span className='font-bold text-emerald-600 tabular-nums dark:text-emerald-400'>
+              {money(changeDue)}
+            </span>
+          </div>
+        )}
+      </div>
+      <div className='flex gap-2 sm:ms-auto'>
+        {offersExactCash && (
+          <Button
+            variant='outline'
+            className='h-14 gap-2 px-5 text-base max-sm:min-w-0 max-sm:flex-1'
+            disabled={busy}
+            onClick={exactCash}
+          >
+            <Banknote className='size-5' />
+            <span className='truncate'>{t('exactCash')}</span>
+          </Button>
+        )}
+        <Button
+          className='h-14 min-w-72 gap-2 px-6 text-lg max-sm:min-w-0 max-sm:flex-[2]'
+          disabled={!canSettle}
+          onClick={() => doSettle()}
+        >
+          {busy && <Loader2 className='size-5 animate-spin' />}
+          <span className='truncate'>{t('settleAction')}</span>
+          <span className='tabular-nums'>· {money(due)}</span>
+        </Button>
+      </div>
+    </div>
+  )
+
+  return (
+    <DialogPrimitive.Root
+      open={open}
+      // Escape and the way back close it, never while the money is on its way
+      onOpenChange={(next) => {
+        if (!next && busy) return
+        onOpenChange(next)
+      }}
+    >
+      <DialogPrimitive.Portal>
+        <DialogPrimitive.Content
+          aria-describedby={undefined}
+          className='bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=open]:slide-in-from-bottom-4 fixed inset-0 z-50 flex flex-col duration-200 outline-none'
+        >
+          {header}
+          {settled || (
+            <>
+              {/* Wide: what is paid beside how, as the bill's lines sit
+                  beside the room's panel. Narrow: how first (the keypad is
+                  what the hand is after), then the payments taken */}
+              <div className='flex min-h-0 flex-1 max-lg:flex-col max-lg:overflow-y-auto'>
+                <div className='p-4 lg:hidden'>
+                  {howPaid}
+                  <div className='mt-6'>{whatPaid(false)}</div>
+                </div>
+                <div className='min-w-0 flex-1 overflow-y-auto p-4 max-lg:hidden'>
+                  {whatPaid(true)}
+                </div>
+                <div className='bg-muted/40 w-[400px] shrink-0 overflow-y-auto border-s p-4 max-lg:hidden xl:w-[440px]'>
+                  {howPaid}
+                </div>
+              </div>
+              {foot}
+            </>
+          )}
+        </DialogPrimitive.Content>
+      </DialogPrimitive.Portal>
+    </DialogPrimitive.Root>
   )
 }

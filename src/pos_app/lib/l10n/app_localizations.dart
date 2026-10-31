@@ -1514,6 +1514,12 @@ abstract class AppLocalizations {
   /// **'Cash'**
   String get cash;
 
+  /// No description provided for @exactCash.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact cash'**
+  String get exactCash;
+
   /// No description provided for @card.
   ///
   /// In en, this message translates to:

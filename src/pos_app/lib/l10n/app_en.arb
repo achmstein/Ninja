@@ -462,6 +462,7 @@
   "settleTitle": "Settle ticket",
   "payments": "Payments",
   "cash": "Cash",
+  "exactCash": "Exact cash",
   "card": "Card",
   "instapay": "InstaPay",
   "account": "On account",

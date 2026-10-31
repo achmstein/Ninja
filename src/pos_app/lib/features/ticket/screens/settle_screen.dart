@@ -30,6 +30,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../tenders.dart';
+import 'package:ninja_app_core/widgets/heading.dart';
 import '../widgets/tender_grid.dart';
 
 /// Someone on this bill with an account, and what their share comes to.
@@ -52,8 +53,11 @@ class SettleOutcome {
   const SettleOutcome({required this.receiptNumber, this.provisionalReceiptNumber, required this.change, required this.payments});
 }
 
-/// Take one or more payments against the ticket total, then settle. The
-/// keypad is the only way to type amounts (no OS keyboard on the till).
+/// Take one or more payments against the ticket total, then settle: a page of
+/// its own over the bill, framed as the bill is (the header across the top,
+/// the money and the Settle across the foot), with what is being paid beside
+/// how it is paid on a wide screen. The keypad is the only way to type
+/// amounts (no OS keyboard on the till).
 /// When cash exceeds the remainder, the change due is shown live; the
 /// server recomputes it authoritatively on settle.
 ///
@@ -68,37 +72,47 @@ class SettleOutcome {
 /// `onlinePaid` is what guests already paid from their phones (pay at
 /// table): the server adds those as Online tenders at settle by itself, so
 /// the till only takes what is left.
-Future<SettleOutcome?> showSettleDialog(
+///
+/// `title` names the bill in the header (the place, or the bill's label).
+Future<SettleOutcome?> showSettle(
   BuildContext context,
   TicketDetail ticket, {
+  String? title,
   OfflineSaleDraft? offline,
   List<StayMember> members = const [],
   double onlinePaid = 0,
 }) {
-  return showFDialog<SettleOutcome>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 672),
-      builder: (context, _) => _SettleDialog(ticket: ticket, offline: offline, members: members, onlinePaid: onlinePaid),
+  return Navigator.of(context, rootNavigator: true).push<SettleOutcome>(
+    PageRouteBuilder(
+      // Over the bill it settles: it rises a little as it fades in, and goes the same way
+      transitionDuration: Motion.slow,
+      reverseTransitionDuration: Motion.base,
+      pageBuilder: (context, _, _) =>
+          _SettleScreen(ticket: ticket, title: title, offline: offline, members: members, onlinePaid: onlinePaid),
+      transitionsBuilder: (context, animation, _, child) {
+        final t = CurvedAnimation(parent: animation, curve: Motion.enter, reverseCurve: Motion.exit);
+        return FadeTransition(
+          opacity: t,
+          child: SlideTransition(position: Tween(begin: const Offset(0, 0.03), end: Offset.zero).animate(t), child: child),
+        );
+      },
     ),
   );
 }
 
-class _SettleDialog extends ConsumerStatefulWidget {
+class _SettleScreen extends ConsumerStatefulWidget {
   final TicketDetail ticket;
+  final String? title;
   final OfflineSaleDraft? offline;
   final List<StayMember> members;
   final double onlinePaid;
-  const _SettleDialog({required this.ticket, this.offline, this.members = const [], this.onlinePaid = 0});
+  const _SettleScreen({required this.ticket, this.title, this.offline, this.members = const [], this.onlinePaid = 0});
 
   @override
-  ConsumerState<_SettleDialog> createState() => _SettleDialogState();
+  ConsumerState<_SettleScreen> createState() => _SettleScreenState();
 }
 
-class _SettleDialogState extends ConsumerState<_SettleDialog> {
+class _SettleScreenState extends ConsumerState<_SettleScreen> {
   final List<SettlePayment> _payments = [];
   _AccountHolder? _accountHolder;
 
@@ -407,328 +421,480 @@ class _SettleDialogState extends ConsumerState<_SettleDialog> {
     }
   }
 
+  // The one-cash-payment happy path in one tap: what is still owed, in cash,
+  // and settled
+  void _exactCash() {
+    if (_remaining <= 0 || _settling) return;
+    setState(() => _payments.add(SettlePayment(tender: PaymentTender.cash, amount: _remaining)));
+    _settle();
+  }
+
+  bool get _offersExactCash =>
+      _payments.isEmpty && _remaining > 0 && _tenders.contains(PaymentTender.cash) && _phase == MorphPhase.idle;
+
+  void _close() => Navigator.of(context, rootNavigator: true).pop(_result);
+
   @override
   Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
     final result = _result;
-    // The form gives way to the settled view with a fade and the dialog
-    // resizing, not a cut
-    return AnimatedSize(
-      duration: Motion.slow,
-      curve: Motion.enter,
-      alignment: Alignment.topCenter,
-      child: AnimatedSwitcher(
-        duration: Motion.base,
-        switchInCurve: Motion.enter,
-        switchOutCurve: Motion.exit,
-        child: result != null
-            ? KeyedSubtree(key: const ValueKey('settled'), child: _SettledView(result: result, onPrint: () => _print(result)))
-            : KeyedSubtree(key: const ValueKey('form'), child: _form(context)),
+    final rule = BorderSide(color: theme.colors.border);
+    const tabular = [FontFeature.tabularFigures()];
+
+    // The bill's frame: the way back, what is settled and its total
+    final header = Container(
+      height: Sizes.header,
+      padding: const EdgeInsets.symmetric(horizontal: Sizes.gap, vertical: Sizes.gapSm),
+      decoration: BoxDecoration(border: Border(bottom: rule)),
+      child: Row(
+        children: [
+          SizedBox.square(
+            dimension: Sizes.control,
+            child: FButton.icon(
+              variant: FButtonVariant.ghost,
+              // Not while the money is on its way: the settle finishes first
+              onPress: _settling ? null : _close,
+              child: Icon(result != null ? FIcons.x : FIcons.arrowLeft, size: Sizes.iconNav),
+            ),
+          ),
+          const SizedBox(width: Sizes.gapSm),
+          Expanded(
+            child: Text.rich(
+              TextSpan(
+                text: l10n.settleTitle,
+                style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700),
+                children: [
+                  if ((widget.title ?? '').isNotEmpty)
+                    TextSpan(
+                      text: ' · ${widget.title}',
+                      style: theme.typography.heading.copyWith(fontWeight: FontWeight.w400, color: theme.colors.mutedForeground),
+                    ),
+                ],
+              ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(width: Sizes.gap),
+          Text(money(context, _total),
+              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+        ],
+      ),
+    );
+
+    return PopScope(
+      // Back is the header's way back: never mid-settle, and once settled it
+      // carries the outcome as Done does
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop && !_settling) _close();
+      },
+      child: ColoredBox(
+        color: theme.colors.background,
+        child: SafeArea(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              header,
+              Expanded(
+                // The form gives way to the settled view with a fade, not a cut
+                child: AnimatedSwitcher(
+                  duration: Motion.base,
+                  switchInCurve: Motion.enter,
+                  switchOutCurve: Motion.exit,
+                  child: result != null
+                      ? KeyedSubtree(
+                          key: const ValueKey('settled'),
+                          child: Center(
+                            child: SingleChildScrollView(
+                              child: _SettledView(result: result, onPrint: () => _print(result), onDone: _close),
+                            ),
+                          ),
+                        )
+                      : KeyedSubtree(key: const ValueKey('form'), child: _form(context)),
+                ),
+              ),
+              if (result == null) _foot(context),
+            ],
+          ),
+        ),
       ),
     );
   }
 
-  Widget _form(BuildContext context) {
+  /// How it is paid: the tender, whose tab, the amount, the keypad
+  List<Widget> _howPaid(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    const tabular = [FontFeature.tabularFigures()];
+    return [
+      TenderGrid(tenders: _tenders, selected: _tender, onSelect: _pickTender),
+      // Whose tab. Always in view, even when there is only one person to
+      // choose: a charge must never land on a tab nobody saw.
+      if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
+        const SizedBox(height: Sizes.gap),
+        Text(l10n.whoseAccount, style: theme.typography.label.copyWith(color: theme.colors.mutedForeground)),
+        const SizedBox(height: Sizes.gapSm),
+        for (final holder in _holders) ...[
+          _HolderButton(
+            holder: holder,
+            chosen: _chosenHolder?.id == holder.id,
+            showBalance: widget.offline == null,
+            onChoose: () => _chooseHolder(holder),
+          ),
+          const SizedBox(height: Sizes.gapSm),
+        ],
+      ],
+      const SizedBox(height: Sizes.gap),
+      // The amount being typed, always LTR
+      Directionality(
+        textDirection: TextDirection.ltr,
+        child: Container(
+          height: Sizes.controlLarge,
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg),
+          decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
+          // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            alignment: Alignment.centerRight,
+            child: Text(
+              _amountStr.isEmpty ? '0' : _amountStr,
+              maxLines: 1,
+              style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+            ),
+          ),
+        ),
+      ),
+      const SizedBox(height: Sizes.gap),
+      NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
+      const SizedBox(height: Sizes.gap),
+      SizedBox(
+        height: Sizes.control,
+        child: FButton(
+          variant: FButtonVariant.secondary,
+          onPress: _entered > 0 && !_settling ? _addPayment : null,
+          prefix: const Icon(FIcons.plus, size: Sizes.icon),
+          child: Text(l10n.addPayment, style: theme.typography.body.forButton),
+        ),
+      ),
+    ];
+  }
 
+  /// What is being paid: the bill's lines, what guests paid online, whose
+  /// rounds, and the payments taken so far
+  List<Widget> _whatPaid(BuildContext context, {required bool withLines}) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
-    final tabular = const [FontFeature.tabularFigures()];
-
-    // Cap the height and scroll: on a shorter tablet the keypad, holders and
-    // payment list together run past the dialog, and the confirm button was
-    // overflowing off the bottom.
-    return ConstrainedBox(
-      constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Header: what is being settled and how much
-            Container(
-              padding: const EdgeInsetsDirectional.fromSTEB(20, 12, 20, 12),
-              decoration: BoxDecoration(
-                border: Border(bottom: BorderSide(color: theme.colors.border)),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.baseline,
-                textBaseline: TextBaseline.alphabetic,
-                children: [
-                  Text(l10n.settleTitle, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
-                  const Spacer(),
-                  Text(
-                    money(context, _total),
-                    style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+    const tabular = [FontFeature.tabularFigures()];
+    final muted = theme.typography.label.copyWith(color: theme.colors.mutedForeground);
+    final lines = widget.ticket.lines;
+    return [
+      if (withLines && lines.isNotEmpty) ...[
+        for (final (index, line) in lines.indexed) ...[
+          if (index > 0) Container(height: 1, color: theme.colors.border),
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: Sizes.gapSm),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                SizedBox(
+                  width: 40,
+                  child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
+                      style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(line.description?.localized(context) ?? '',
+                          maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.body),
+                      if ((line.customerName ?? '').isNotEmpty)
+                        Text(line.customerName!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                    ],
                   ),
+                ),
+                const SizedBox(width: Sizes.gap),
+                Text(money(context, line.total), style: theme.typography.body.copyWith(fontFeatures: tabular)),
+              ],
+            ),
+          ),
+        ],
+        const SizedBox(height: Sizes.gapLg),
+      ],
+      // Guests paid part from their phones: the server adds it, the till takes the rest
+      if (widget.onlinePaid > 0) ...[
+        Container(
+          padding: const EdgeInsets.all(Sizes.gap),
+          decoration: BoxDecoration(
+            color: AppColors.emerald(brightness).withValues(alpha: 0.08),
+            borderRadius: BorderRadius.circular(Sizes.radius),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                children: [
+                  Expanded(child: Text(l10n.paidOnline, style: theme.typography.body)),
+                  Text('−${money(context, widget.onlinePaid)}',
+                      style: theme.typography.body
+                          .copyWith(fontWeight: FontWeight.w600, color: AppColors.emerald(brightness), fontFeatures: tabular)),
                 ],
               ),
-            ),
-            // Guests paid part from their phones: the server adds it, the
-            // till takes the rest
-            if (widget.onlinePaid > 0)
-              Container(
-                padding: const EdgeInsetsDirectional.fromSTEB(20, 8, 20, 8),
-                decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
+              Text(l10n.settleRemainingOnly, style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+            ],
+          ),
+        ),
+        const SizedBox(height: Sizes.gapLg),
+      ],
+      // A round the till named nobody for, on a bill with more than one tab:
+      // whose is it? A tap names it; ignoring it is fine, the bill settles
+      // either way.
+      if (widget.offline == null && _holders.length > 1 && _unnamed.isNotEmpty) ...[
+        Container(
+          padding: const EdgeInsets.all(Sizes.gap),
+          decoration: BoxDecoration(
+            border: Border.all(color: theme.colors.border),
+            borderRadius: BorderRadius.circular(Sizes.radius),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Text(l10n.whoseRounds, style: muted),
+              for (final line in _unnamed) ...[
+                const SizedBox(height: Sizes.gapSm),
+                Text(
+                  '${line.description?.localized(context) ?? ''} · ${money(context, line.total)}',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.typography.label,
+                ),
+                const SizedBox(height: Sizes.gapXs),
+                Wrap(
+                  spacing: Sizes.gapSm,
+                  runSpacing: Sizes.gapSm,
                   children: [
-                    Row(
-                      children: [
-                        Text(l10n.paidOnline, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                        const Spacer(),
-                        Text('−${money(context, widget.onlinePaid)}',
-                            style: theme.typography.base.copyWith(
-                                fontWeight: FontWeight.w600, color: AppColors.emerald(brightness), fontFeatures: tabular)),
-                      ],
-                    ),
-                    Text(l10n.settleRemainingOnly, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                    for (final holder in _holders)
+                      SizedBox(
+                        height: Sizes.controlSmall,
+                        child: FButton(
+                          variant: FButtonVariant.outline,
+                          mainAxisSize: MainAxisSize.min,
+                          onPress: _naming ? null : () => _nameLine(line, holder),
+                          child: Text(holder.name.isEmpty ? l10n.guest : holder.name, style: theme.typography.label.forButton),
+                        ),
+                      ),
                   ],
                 ),
-              ),
-            Padding(
-              padding: const EdgeInsets.all(16),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // How much and how: tender, amount, keypad
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        TenderGrid(tenders: _tenders, selected: _tender, onSelect: _pickTender),
-                        // Whose tab. Always in view, even when there is only one
-                        // person to choose: a charge must never land on a tab
-                        // nobody saw.
-                        if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
-                          const SizedBox(height: 12),
-                          Text(l10n.whoseAccount, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                          const SizedBox(height: 8),
-                          for (final holder in _holders) ...[
-                            _HolderButton(
-                              holder: holder,
-                              chosen: _chosenHolder?.id == holder.id,
-                              showBalance: widget.offline == null,
-                              onChoose: () => _chooseHolder(holder),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
-                        ],
-                        const SizedBox(height: 12),
-                        // The amount being typed, always LTR
-                        Directionality(
-                          textDirection: TextDirection.ltr,
-                          child: Container(
-                            height: Sizes.controlLarge,
-                            alignment: Alignment.centerRight,
-                            padding: const EdgeInsets.symmetric(horizontal: 16),
-                            decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
-                            // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
-                            child: FittedBox(
-                              fit: BoxFit.scaleDown,
-                              alignment: Alignment.centerRight,
-                              child: Text(
-                                _amountStr.isEmpty ? '0' : _amountStr,
-                                maxLines: 1,
-                                style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
-                              ),
-                            ),
-                          ),
-                        ),
-                        const SizedBox(height: 12),
-                        NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          height: Sizes.control,
-                          child: FButton(
-                            variant: FButtonVariant.secondary,
-                            onPress: _entered > 0 ? _addPayment : null,
-                            child: Text(l10n.addPayment, style: theme.typography.base.forButton),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 16),
-                  // What has been taken and what is left
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        // A round the till named nobody for, on a bill with
-                        // more than one tab: whose is it? A tap names it;
-                        // ignoring it is fine, the bill settles either way.
-                        if (widget.offline == null && _holders.length > 1 && _unnamed.isNotEmpty) ...[
-                          Container(
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              border: Border.all(color: theme.colors.border),
-                              borderRadius: BorderRadius.circular(Sizes.radius),
-                            ),
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                Text(l10n.whoseRounds, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                                for (final line in _unnamed) ...[
-                                  const SizedBox(height: 8),
-                                  Text(
-                                    '${line.description?.localized(context) ?? ''} · ${money(context, line.total)}',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: theme.typography.sm,
-                                  ),
-                                  const SizedBox(height: 4),
-                                  Wrap(
-                                    spacing: 8,
-                                    runSpacing: 8,
-                                    children: [
-                                      for (final holder in _holders)
-                                        FButton(
-                                          variant: FButtonVariant.outline,
-                                          onPress: _naming ? null : () => _nameLine(line, holder),
-                                          child: Text(holder.name.isEmpty ? l10n.guest : holder.name),
-                                        ),
-                                    ],
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                        ],
-                        if (_payments.isEmpty)
-                          Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 24),
-                            child: Text(
-                              l10n.noPaymentsYet,
-                              textAlign: TextAlign.center,
-                              style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
-                            ),
-                          )
-                        else
-                          // A payment slides in from the reading edge; one
-                          // taken off folds away and the others close up
-                          Presence(
-                            exitDuration: Motion.base,
-                            enter: (context, key, child) => SlideInItem(distance: 16, child: child),
-                            exit: (context, key, child, exit) => AnimatedBuilder(
-                              animation: exit,
-                              child: child,
-                              builder: (context, child) => Opacity(
-                                opacity: 1 - Motion.exit.transform(exit.value),
-                                child: Transform.scale(scale: 1 - 0.06 * exit.value, child: child),
-                              ),
-                            ),
-                            builder: (context, children) => ReflowScope(
-                              child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
-                            ),
-                            children: [
-                          for (final (index, payment) in _payments.indexed)
-                            Padding(
-                            key: ObjectKey(payment),
-                            padding: const EdgeInsets.only(bottom: 8),
-                            child: Container(
-                              padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
-                              decoration: BoxDecoration(
-                                color: theme.colors.secondary.withValues(alpha: 0.5),
-                                borderRadius: BorderRadius.circular(Sizes.radius),
-                              ),
-                              child: Row(
-                                children: [
-                                  // Takes the leading space and ellipsizes a
-                                  // long account label ("على الحساب · Name")
-                                  // so it never pushes the amount onto a new
-                                  // line.
-                                  Expanded(
-                                    child: Align(
-                                      alignment: AlignmentDirectional.centerStart,
-                                      child: FBadge(
-                                        variant: FBadgeVariant.secondary,
-                                        child: Text(
-                                          payment.customerName != null
-                                              ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
-                                              : tenderLabel(l10n, payment.tender),
-                                          maxLines: 1,
-                                          overflow: TextOverflow.ellipsis,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 8),
-                                  Text(
-                                    money(context, payment.amount),
-                                    maxLines: 1,
-                                    softWrap: false,
-                                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
-                                  ),
-                                  const SizedBox(width: 4),
-                                  SizedBox.square(
-                                    dimension: Sizes.controlSmall,
-                                    child: FButton.icon(
-                                      variant: FButtonVariant.ghost,
-                                      onPress: () => setState(() {
-                                        _payments.removeAt(index);
-                                        _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
-                                      }),
-                                      child: const Icon(FIcons.x, size: Sizes.iconSmall),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                            ),
-                            ),
-                            ],
-                          ),
-                        const SizedBox(height: 8),
-                        _TotalsRow(
-                          label: l10n.remaining,
-                          value: money(context, _remaining),
-                          amount: _remaining,
-                          color: _remaining > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
-                        ),
-                        AnimatedSize(
-                          duration: Motion.base,
-                          curve: Motion.enter,
-                          child: _changeDue > 0
-                              ? _TotalsRow(
-                                  label: l10n.changeDue,
-                                  value: money(context, _changeDue),
-                                  amount: _changeDue,
-                                  color: AppColors.emerald(brightness))
-                              : const SizedBox(width: double.infinity),
-                        ),
-                        const SizedBox(height: 12),
-                        // Outline until the money is all there, solid the
-                        // moment it can settle; then it becomes the settle
-                        // itself: spinner, tick, receipt number
-                        MorphButton(
-                          phase: _phase,
-                          solid: _canSettle || _phase != MorphPhase.idle,
-                          // Online payments alone may cover the bill: nothing to take here then
-                          onPressed: _canSettle ? _settle : null,
-                          doneLabel: _doneLabel,
-                          doneIcon: FIcons.receipt,
-                          color: theme.colors.primary,
-                          onColor: theme.colors.primaryForeground,
-                          successColor: AppColors.emerald(brightness),
-                          labelStyle: theme.typography.lg.forButton,
-                          semanticsLabel: l10n.confirmSettle,
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Flexible(child: Text(l10n.confirmSettle, overflow: TextOverflow.ellipsis)),
-                              Text(' · ${money(context, _due)}'),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
-              ),
+              ],
+            ],
+          ),
+        ),
+        const SizedBox(height: Sizes.gapLg),
+      ],
+      Heading(l10n.payments),
+      const SizedBox(height: Sizes.gapSm),
+      if (_payments.isEmpty)
+        Padding(
+          padding: const EdgeInsets.symmetric(vertical: Sizes.gap),
+          child: Text(l10n.noPaymentsYet, style: muted),
+        )
+      else
+        // A payment slides in from the reading edge; one taken off folds
+        // away and the others close up
+        Presence(
+          exitDuration: Motion.base,
+          enter: (context, key, child) => SlideInItem(distance: 16, child: child),
+          exit: (context, key, child, exit) => AnimatedBuilder(
+            animation: exit,
+            child: child,
+            builder: (context, child) => Opacity(
+              opacity: 1 - Motion.exit.transform(exit.value),
+              child: Transform.scale(scale: 1 - 0.06 * exit.value, child: child),
             ),
+          ),
+          builder: (context, children) => ReflowScope(
+            child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+          ),
+          children: [
+            for (final (index, payment) in _payments.indexed)
+              Padding(
+                key: ObjectKey(payment),
+                padding: const EdgeInsets.only(bottom: Sizes.gapSm),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: Sizes.control),
+                  padding: const EdgeInsetsDirectional.fromSTEB(Sizes.gap, 4, 4, 4),
+                  decoration: BoxDecoration(
+                    color: theme.colors.secondary.withValues(alpha: 0.5),
+                    borderRadius: BorderRadius.circular(Sizes.radius),
+                  ),
+                  child: Row(
+                    children: [
+                      // Takes the leading space and ellipsizes a long account
+                      // label (the tab and its holder) so it never pushes the
+                      // amount onto a new line
+                      Expanded(
+                        child: Text(
+                          payment.customerName != null
+                              ? '${tenderLabel(l10n, payment.tender)} · ${payment.customerName}'
+                              : tenderLabel(l10n, payment.tender),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.typography.body,
+                        ),
+                      ),
+                      const SizedBox(width: Sizes.gapSm),
+                      Text(
+                        money(context, payment.amount),
+                        maxLines: 1,
+                        softWrap: false,
+                        style: theme.typography.body.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
+                      ),
+                      const SizedBox(width: 4),
+                      SizedBox.square(
+                        dimension: Sizes.controlSmall,
+                        child: FButton.icon(
+                          variant: FButtonVariant.ghost,
+                          onPress: _settling
+                              ? null
+                              : () => setState(() {
+                                    _payments.removeAt(index);
+                                    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+                                  }),
+                          child: const Icon(FIcons.x, size: Sizes.iconSmall),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
           ],
         ),
+    ];
+  }
+
+  Widget _form(BuildContext context) {
+    final theme = context.theme;
+    final width = MediaQuery.sizeOf(context).width;
+    Widget scroll(List<Widget> children) => SingleChildScrollView(
+          padding: const EdgeInsets.all(Sizes.gapLg),
+          child: Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children),
+        );
+    // Wide: what is paid beside how, as the bill's lines sit beside the room's
+    // panel. Narrow: how first (the keypad is what the hand is after), then
+    // the payments taken; the lines are on the bill behind
+    if (width < 900) {
+      return scroll([..._howPaid(context), const SizedBox(height: Sizes.gapXl), ..._whatPaid(context, withLines: false)]);
+    }
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: scroll(_whatPaid(context, withLines: true))),
+        Container(
+          width: width >= 1280 ? 440 : 400,
+          decoration: BoxDecoration(
+            color: theme.colors.muted.withValues(alpha: 0.4),
+            border: BorderDirectional(start: BorderSide(color: theme.colors.border)),
+          ),
+          child: scroll(_howPaid(context)),
+        ),
+      ],
+    );
+  }
+
+  /// The bar across the foot, as on the bill: what is left (and the change)
+  /// at the start, Settle at the end, and the exact-cash shortcut before it
+  Widget _foot(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final brightness = Theme.of(context).brightness;
+    final phone = MediaQuery.sizeOf(context).width < 600;
+
+    final settle = MorphButton(
+      phase: _phase,
+      solid: _canSettle || _phase != MorphPhase.idle,
+      // Online payments alone may cover the bill: nothing to take here then
+      onPressed: _canSettle ? _settle : null,
+      doneLabel: _doneLabel,
+      doneIcon: FIcons.receipt,
+      color: theme.colors.primary,
+      onColor: theme.colors.primaryForeground,
+      successColor: AppColors.emerald(brightness),
+      labelStyle: theme.typography.title.forButton,
+      semanticsLabel: l10n.confirmSettle,
+      label: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Flexible(child: Text(l10n.settleAction, overflow: TextOverflow.ellipsis)),
+          Text(' · ${money(context, _due)}'),
+        ],
       ),
+    );
+
+    final exact = SizedBox(
+      height: Sizes.controlLarge,
+      child: FButton(
+        variant: FButtonVariant.outline,
+        mainAxisSize: MainAxisSize.min,
+        onPress: _exactCash,
+        prefix: const Icon(FIcons.banknote, size: Sizes.icon),
+        child: Text(l10n.exactCash, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+      ),
+    );
+
+    final figures = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _TotalsRow(
+          label: l10n.remaining,
+          value: money(context, _remaining),
+          amount: _remaining,
+          color: _remaining > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
+        ),
+        AnimatedSize(
+          duration: Motion.base,
+          curve: Motion.enter,
+          child: _changeDue > 0
+              ? _TotalsRow(
+                  label: l10n.changeDue,
+                  value: money(context, _changeDue),
+                  amount: _changeDue,
+                  color: AppColors.emerald(brightness))
+              : const SizedBox(width: double.infinity),
+        ),
+      ],
+    );
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg, vertical: Sizes.gap),
+      decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
+      // A phone stacks the figures over the actions; wider, one row
+      child: phone
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                figures,
+                const SizedBox(height: Sizes.gap),
+                Row(
+                  children: [
+                    if (_offersExactCash) ...[Flexible(child: exact), const SizedBox(width: Sizes.gapSm)],
+                    Expanded(flex: 2, child: settle),
+                  ],
+                ),
+              ],
+            )
+          : Row(
+              children: [
+                Expanded(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures)),
+                const SizedBox(width: Sizes.gapLg),
+                if (_offersExactCash) ...[exact, const SizedBox(width: Sizes.gapSm)],
+                SizedBox(width: 300, child: settle),
+              ],
+            ),
     );
   }
 }
@@ -819,7 +985,8 @@ class _TotalsRow extends StatelessWidget {
 class _SettledView extends StatelessWidget {
   final SettleOutcome result;
   final VoidCallback onPrint;
-  const _SettledView({required this.result, required this.onPrint});
+  final VoidCallback onDone;
+  const _SettledView({required this.result, required this.onPrint, required this.onDone});
 
   @override
   Widget build(BuildContext context) {
@@ -903,7 +1070,7 @@ class _SettledView extends StatelessWidget {
                     height: Sizes.controlLarge,
                     child: FButton(
                       variant: FButtonVariant.outline,
-                      onPress: () => Navigator.of(context, rootNavigator: true).pop(result),
+                      onPress: onDone,
                       child: Text(l10n.done, style: theme.typography.base.forButton),
                     ),
                   ),

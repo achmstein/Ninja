@@ -361,7 +361,7 @@
       }
     }
   },
-  "newTab": "حساب جديد",
+  "newTab": "فاتورة جديدة",
   "alreadyOnBill": "لديه فاتورة مفتوحة · {where}",
   "@alreadyOnBill": {
     "placeholders": {
@@ -441,6 +441,7 @@
   "settleTitle": "إغلاق الفاتورة",
   "payments": "المدفوعات",
   "cash": "كاش",
+  "exactCash": "كاش بالمظبوط",
   "card": "بطاقة",
   "instapay": "إنستاباي",
   "account": "على الحساب",

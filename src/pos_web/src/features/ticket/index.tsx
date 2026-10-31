@@ -1257,6 +1257,7 @@ export function TicketScreen({
       />
       <SettleDialog
         ticket={ticket}
+        title={title}
         onlinePayments={online.payments}
         members={liveStay?.members}
         open={settleOpen}

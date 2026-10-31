@@ -645,7 +645,7 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get newTab => 'حساب جديد';
+  String get newTab => 'فاتورة جديدة';
 
   @override
   String alreadyOnBill(String where) {
@@ -828,6 +828,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cash => 'كاش';
+
+  @override
+  String get exactCash => 'كاش بالمظبوط';
 
   @override
   String get card => 'بطاقة';

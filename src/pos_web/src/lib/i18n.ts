@@ -303,6 +303,7 @@ const dictionary = {
   settleTitle: { en: "Settle ticket", ar: "إغلاق الفاتورة" },
   payments: { en: "Payments", ar: "المدفوعات" },
   cash: { en: "Cash", ar: "كاش" },
+  exactCash: { en: "Exact cash", ar: "كاش بالمظبوط" },
   card: { en: "Card", ar: "بطاقة" },
   instapay: { en: "InstaPay", ar: "إنستاباي" },
   account: { en: "On account", ar: "على الحساب" },

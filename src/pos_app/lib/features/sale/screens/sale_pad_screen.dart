@@ -34,7 +34,7 @@ import '../../places/models/place.dart';
 import '../../places/providers/places_provider.dart';
 import '../../places/stay_actions.dart';
 import '../../places/status.dart';
-import '../../ticket/dialogs/settle_dialog.dart';
+import '../../ticket/screens/settle_screen.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/pricing.dart';
 import '../../tickets/models/ticket_detail.dart';
@@ -484,7 +484,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       ],
     );
     final requestId = _requestId!;
-    await showSettleDialog(
+    await showSettle(
       context,
       ticket,
       offline: OfflineSaleDraft(

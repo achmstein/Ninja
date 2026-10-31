@@ -48,7 +48,7 @@ import '../../tickets/services/tickets_service.dart';
 import '../dialogs/discard_dialog.dart';
 import '../dialogs/move_target_dialog.dart';
 import '../dialogs/refund_dialog.dart';
-import '../dialogs/settle_dialog.dart';
+import 'settle_screen.dart';
 import '../dialogs/void_dialog.dart';
 import '../dialogs/discount_dialog.dart';
 import '../dialogs/kitchen_reprint_dialog.dart';
@@ -216,8 +216,10 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       );
       if (!anyway || !mounted) return;
     }
-    // The dialog refreshes the floor and this ticket itself on success
-    await showSettleDialog(context, ticket, members: members, onlinePaid: online.paidOnline);
+    // The settle page refreshes the floor and this ticket itself on success
+    final place = ticket.locationName?.localized(context) ?? '';
+    final title = place.isNotEmpty ? place : (ticket.label ?? ticketTypeLabel(AppLocalizations.of(context)!, ticket.type));
+    await showSettle(context, ticket, title: title, members: members, onlinePaid: online.paidOnline);
   }
 
   // Same rule for Void, server-enforced too: time that has not landed yet

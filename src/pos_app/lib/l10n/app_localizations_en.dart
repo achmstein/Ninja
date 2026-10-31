@@ -818,6 +818,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cash => 'Cash';
 
   @override
+  String get exactCash => 'Exact cash';
+
+  @override
   String get card => 'Card';
 
   @override

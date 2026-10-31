@@ -6,7 +6,7 @@ import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/sale/providers/sale_provider.dart';
-import '../../features/ticket/dialogs/settle_dialog.dart';
+import '../../features/ticket/screens/settle_screen.dart';
 import '../../features/tickets/models/enums.dart';
 import '../../features/tickets/models/pricing.dart';
 import '../../features/tickets/models/ticket_detail.dart';
@@ -165,7 +165,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
       ],
     );
     setState(() => _takingOffline = true);
-    await showSettleDialog(
+    await showSettle(
       context,
       ticket,
       offline: OfflineSaleDraft(
