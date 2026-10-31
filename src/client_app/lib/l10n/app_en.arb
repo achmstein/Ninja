@@ -749,6 +749,8 @@
   "@ninjaMonthVisits": {"placeholders": {"count": {"type": "int"}}},
   "ninjaThisMonth": "this month",
   "yourBalance": "Your balance",
+  "bookFreeShort": "{count, plural, =0{Full} other{{count} free}}",
+  "@bookFreeShort": {"placeholders": {"count": {"type": "int"}}},
   "bookFreeNow": "{count, plural, =0{Nothing free right now} =1{1 free now} other{{count} free now}}",
   "@bookFreeNow": {"placeholders": {"count": {"type": "int"}}},
   "ninjaYoureIn": "You're in {name}",

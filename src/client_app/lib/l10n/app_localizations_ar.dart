@@ -1365,6 +1365,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yourBalance => 'رصيدك';
 
   @override
+  String bookFreeShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فاضيين',
+      one: 'واحدة فاضية',
+      zero: 'مليان',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String bookFreeNow(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2899,6 +2911,19 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaThisMonth => 'هذا الشهر';
+
+  @override
+  String bookFreeShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count متاحة',
+      two: 'مكانان متاحان',
+      one: 'مكان متاح',
+      zero: 'ممتلئ',
+    );
+    return '$_temp0';
+  }
 
   @override
   String bookFreeNow(int count) {

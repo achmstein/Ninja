@@ -47,6 +47,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
   /// The place whose booking is open under its card: one at a time
   int? _openId;
 
+  /// The branch picked on the dial; until then the one the customer is at, else the nearest
+  int? _viewId;
+
   @override
   void initState() {
     super.initState();
@@ -154,6 +157,11 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       for (final (:item, :meters) in branchesByDistance([for (final g in groups) g.branch], branchId, here))
         (branch: item, places: groups.firstWhere((g) => g.branch.id == item.id).places, meters: meters),
     ];
+    // One branch at a time, chosen on the dial (client_web's places.tsx): the one picked, else the one
+    // the customer is at, else the nearest
+    final viewed = ordered.where((g) => g.branch.id == _viewId).firstOrNull ??
+        ordered.where((g) => g.branch.id == branchId).firstOrNull ??
+        ordered.firstOrNull;
     // Another branch's places book only while the customer is at none (a bill, a scanned table)
     bool canReserveAt(Branch b) =>
         reservedSession == null && stay == null && features.reservations && b.isReservationsEnabled && (b.id == branchId || !atBranch);
@@ -188,11 +196,34 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
         if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
         if (allBusy && reservedSession == null) const NotifyMeBanner(),
-        // Booking across branches: the customer's position on their word, and the branch changed by hand
-        if ((multi && anyPoint && here == null) || (branches.length > 1 && !atBranch))
+        // Booking across branches: the dial, nearest first once the customer's position is known; under it
+        // their position on their word, and the way to the chosen branch
+        if (multi && viewed != null)
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              BranchDial(
+                branches: ordered,
+                selectedId: viewed.branch.id,
+                onSelect: (id) => setState(() {
+                  _viewId = id;
+                  _openId = null;
+                }),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  if (anyPoint && here == null) const UseMyLocationButton(),
+                  const Spacer(),
+                  DirectionsButton(branch: viewed.branch),
+                ],
+              ),
+            ],
+          ),
+        // One branch taking bookings: the branch changed by hand
+        if (!multi && branches.length > 1 && !atBranch)
           Row(
             children: [
-              if (multi && anyPoint) const UseMyLocationButton(),
               const Spacer(),
               if (branches.length > 1 && !atBranch)
                 Pressable(
@@ -222,9 +253,23 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                 for (var i = 0; i < 3; i++)
                   Container(height: 176, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(Ninja.cardRadius))),
               ],
-            // One panel, as the list is
+            // Flat rows, as the list is
             PlacesLayout.list => [
-                Container(height: 5 * 60, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(24))),
+                for (var i = 0; i < 6; i++)
+                  Row(
+                    children: [
+                      Container(width: 8, height: 8, decoration: BoxDecoration(color: c.muted, shape: BoxShape.circle)),
+                      const SizedBox(width: 12),
+                      Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        spacing: 6,
+                        children: [
+                          Container(width: 128, height: 14, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(7))),
+                          Container(width: 80, height: 10, decoration: BoxDecoration(color: c.muted, borderRadius: BorderRadius.circular(5))),
+                        ],
+                      ),
+                    ],
+                  ),
               ],
             PlacesLayout.grid => [
                 Column(
@@ -246,7 +291,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
           },
           // A stale socket after a resume: the places known stay up while the poll catches up
           error: (_, _) => roomsAsync.hasValue
-              ? (multi ? _byBranch(ordered, stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout))
+              ? (multi && viewed != null ? _byBranch([viewed], stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout))
               : [
                   EmptyState(
                     icon: LucideIcons.circleAlert,
@@ -259,7 +304,7 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
                     ),
                   ),
                 ],
-          data: (rooms) => multi ? _byBranch(ordered, stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout),
+          data: (rooms) => multi && viewed != null ? _byBranch([viewed], stay, canReserveAt, layout) : _cards(rooms, stay, canReserve, layout),
         ),
       ],
     );
@@ -277,8 +322,9 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     });
   }
 
-  /// Booking across branches: each branch under its heading, closest first; in a room, that room
-  /// leads as the hero and every other place follows quieter
+  /// Booking across branches: the branch chosen on the dial, its places straight under it (the dial names
+  /// it, how many are free and how far); in a room, that room leads as the hero and every other place
+  /// follows quieter
   List<Widget> _byBranch(
     List<({Branch branch, List<Place> places, double? meters})> ordered,
     Stay? stay,
@@ -293,7 +339,6 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     return [
       if (stay != null && mine != null) YourRoomCard(stay: stay, place: mine),
       for (final group in ordered) ...[
-        Opacity(opacity: quiet ? 0.6 : 1, child: _BranchHeading(branch: group.branch, places: group.places, meters: group.meters)),
         ..._laidOut(
           [for (final p in group.places) if (p != mine) p],
           !quiet && canReserveAt(group.branch),
@@ -1588,48 +1633,119 @@ String tariffLine(BuildContext context, MoneyFormat money, List<RateOption> opti
 
 /// A branch's heading over its places, when booking spans branches: its name,
 /// how many are free and how far, and the way there
-class _BranchHeading extends StatelessWidget {
-  final Branch branch;
-  final List<Place> places;
-  final double? meters;
+/// Where there is room, across the business's branches, at a glance (client_web's branch-dial.tsx):
+/// one chip a branch, nearest first, each with a meter lit for every free place; the chosen branch's
+/// places are listed under it. A row that swipes when the branches do not fit
+class BranchDial extends StatelessWidget {
+  final List<({Branch branch, List<Place> places, double? meters})> branches;
+  final int? selectedId;
+  final ValueChanged<int> onSelect;
 
-  const _BranchHeading({required this.branch, required this.places, required this.meters});
+  const BranchDial({super.key, required this.branches, required this.selectedId, required this.onSelect});
+
+  @override
+  Widget build(BuildContext context) {
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      // The chips swipe out to the screen's edges, starting where the page does
+      clipBehavior: Clip.none,
+      child: Row(
+        spacing: 10,
+        children: [for (final b in branches) _DialChip(dial: b, selected: b.branch.id == selectedId, onSelect: onSelect)],
+      ),
+    );
+  }
+}
+
+class _DialChip extends StatelessWidget {
+  final ({Branch branch, List<Place> places, double? meters}) dial;
+  final bool selected;
+  final ValueChanged<int> onSelect;
+
+  const _DialChip({required this.dial, required this.selected, required this.onSelect});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    final c = theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.colors.mutedForeground;
+    final free = dial.places.where((p) => p.canBookNow).length;
+    final ink = selected ? c.primaryForeground : c.foreground;
+    final muted = selected ? c.primaryForeground.withValues(alpha: 0.9) : c.mutedForeground;
     final caption = context.localeText(theme.typography.caption.copyWith(color: muted));
-    return Padding(
-      padding: const EdgeInsets.only(top: 8),
-      child: Row(
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                AppText(
-                  branch.name.localized(context),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: context.localeText(theme.typography.headline.copyWith(fontWeight: FontWeight.w800, color: theme.colors.foreground)),
-                ),
-                Row(
-                  children: [
-                    AppText(l10n.bookFreeNow(places.where((p) => p.canBookNow).length), style: caption),
-                    if (meters != null) ...[
-                      AppText(' · ', style: caption),
-                      Text(distanceText(context, meters!), textDirection: TextDirection.ltr, style: caption.copyWith(fontFeatures: NinjaTypography.tabular)),
-                    ],
-                  ],
-                ),
-              ],
-            ),
+    return Semantics(
+      selected: selected,
+      button: true,
+      child: Pressable(
+        onTap: () => onSelect(dial.branch.id),
+        scale: 0.97,
+        // The chosen chip filled with the brand's colour, the others outlined on the page
+        child: AnimatedContainer(
+          duration: Motion.fast,
+          curve: Motion.enter,
+          width: 160,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: selected ? c.primary : c.background,
+            border: Border.all(color: selected ? c.primary : c.border),
+            borderRadius: BorderRadius.circular(20),
           ),
-          DirectionsButton(branch: branch),
-        ],
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              AppText(
+                dial.branch.name.localized(context),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: ink)),
+              ),
+              _SeatMeter(free: free, total: dial.places.length, selected: selected),
+              Row(
+                children: [
+                  Expanded(child: AppText(l10n.bookFreeShort(free), maxLines: 1, overflow: TextOverflow.ellipsis, style: caption)),
+                  if (dial.meters != null)
+                    Text(distanceText(context, dial.meters!), textDirection: TextDirection.ltr, style: caption.copyWith(fontFeatures: NinjaTypography.tabular)),
+                ],
+              ),
+            ],
+          ),
+        ),
       ),
+    );
+  }
+}
+
+/// The branch's places as a row of segments, each lit while free; with more places than fit, a bar filled
+/// by the share that is free
+class _SeatMeter extends StatelessWidget {
+  final int free;
+  final int total;
+  final bool selected;
+
+  const _SeatMeter({required this.free, required this.total, required this.selected});
+
+  /// More places than this and the meter shows a share instead of a segment each
+  static const _maxSegments = 10;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.theme.colors;
+    final lit = selected ? c.primaryForeground : NinjaColors.success;
+    final dim = selected ? c.primaryForeground.withValues(alpha: 0.25) : c.muted;
+    Widget bar(Color color) => Container(height: 6, decoration: BoxDecoration(color: color, borderRadius: BorderRadius.circular(3)));
+    if (total == 0) return bar(dim);
+    if (total > _maxSegments) {
+      return Stack(
+        children: [
+          bar(dim),
+          FractionallySizedBox(alignment: AlignmentDirectional.centerStart, widthFactor: free / total, child: bar(lit)),
+        ],
+      );
+    }
+    return Row(
+      spacing: 4,
+      children: [for (var i = 0; i < total; i++) Expanded(child: bar(i < free ? lit : dim))],
     );
   }
 }

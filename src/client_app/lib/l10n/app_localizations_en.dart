@@ -1371,6 +1371,17 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourBalance => 'Your balance';
 
   @override
+  String bookFreeShort(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count free',
+      zero: 'Full',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String bookFreeNow(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

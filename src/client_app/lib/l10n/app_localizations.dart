@@ -2535,6 +2535,12 @@ abstract class AppLocalizations {
   /// **'Your balance'**
   String get yourBalance;
 
+  /// No description provided for @bookFreeShort.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =0{Full} other{{count} free}}'**
+  String bookFreeShort(int count);
+
   /// No description provided for @bookFreeNow.
   ///
   /// In en, this message translates to:
