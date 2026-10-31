@@ -1,4 +1,6 @@
+import 'dart:io' show Platform;
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../brand/brand_fonts.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -34,8 +36,7 @@ extension LocaleFontExtension on BuildContext {
 
   /// [style] in the face this text should set in: the tenant's font above
   /// this context, when there is one, else the bundled family
-  TextStyle localeText(TextStyle style) =>
-      localeTextStyle(Localizations.localeOf(this), style, brandFont: BrandFont.of(this));
+  TextStyle localeText(TextStyle style) => localeTextStyle(Localizations.localeOf(this), style, brandFont: BrandFont.of(this));
 }
 
 class ThemeState {
@@ -43,18 +44,14 @@ class ThemeState {
   final bool isLoading;
 
   const ThemeState({
-    this.themeMode = AppThemeMode.light,
+    // Until the saved choice and the business's theme are read: what the launch screen
+    // showed, which on Android 12+ is the app's last light or dark (see ThemeNotifier._apply)
+    this.themeMode = AppThemeMode.system,
     this.isLoading = true,
   });
 
-  ThemeState copyWith({
-    AppThemeMode? themeMode,
-    bool? isLoading,
-  }) {
-    return ThemeState(
-      themeMode: themeMode ?? this.themeMode,
-      isLoading: isLoading ?? this.isLoading,
-    );
+  ThemeState copyWith({AppThemeMode? themeMode, bool? isLoading}) {
+    return ThemeState(themeMode: themeMode ?? this.themeMode, isLoading: isLoading ?? this.isLoading);
   }
 
   /// The neutral slate theme with the tenant's seeds on top: its colours
@@ -63,11 +60,7 @@ class ThemeState {
   static NinjaTheme themeFor(Brightness brightness, TenantBrand brand) {
     final colors = brandedColors(NinjaColors.of(brightness), brand);
     final style = BrandStyle.fromTheme(brand.theme);
-    return NinjaTheme(
-      colors: colors,
-      typography: NinjaTypography.scaled(style.headings.scale),
-      radius: style.radius,
-    );
+    return NinjaTheme(colors: colors, typography: NinjaTypography.scaled(style.headings.scale), radius: style.radius);
   }
 
   String get displayName {
@@ -92,18 +85,33 @@ class ThemeNotifier extends Notifier<ThemeState> {
   ThemeState build() {
     // Until someone chooses, the app follows the business's starting theme
     ref.listen(brandProvider.select((b) => b.defaultThemeMode), (_, mode) {
-      if (!_chosen) state = state.copyWith(themeMode: _businessDefault(mode));
+      if (!_chosen) _apply(state.copyWith(themeMode: _businessDefault(mode)));
     });
     _loadTheme();
     return const ThemeState();
   }
 
-  /// The business's starting theme; light where it has not said (following the phone only when it asks to)
+  /// The business's starting theme; the phone's own where it has not said, as admin's
+  /// "Follow device" means
   AppThemeMode _businessDefault(String? mode) => switch (mode) {
-        'dark' => AppThemeMode.dark,
-        'system' => AppThemeMode.system,
-        _ => AppThemeMode.light,
-      };
+    'light' => AppThemeMode.light,
+    'dark' => AppThemeMode.dark,
+    _ => AppThemeMode.system,
+  };
+
+  static const _platform = MethodChannel('com.chillax.client/theme');
+
+  /// The mode last handed to Android, so it is told only of a change
+  AppThemeMode? _told;
+
+  /// The new state, and Android told of its mode: from Android 12 the system draws the
+  /// next launch screen in the app's light or dark rather than the phone's
+  void _apply(ThemeState next) {
+    state = next;
+    if (next.isLoading || _told == next.themeMode || !Platform.isAndroid) return;
+    _told = next.themeMode;
+    _platform.invokeMethod<void>('setNightMode', next.themeMode.name).catchError((_) {});
+  }
 
   Future<void> _loadTheme() async {
     try {
@@ -115,19 +123,19 @@ class ThemeNotifier extends Notifier<ThemeState> {
       if (savedTheme != null) {
         mode = AppThemeMode.values.firstWhere(
           (e) => e.name == savedTheme,
-          orElse: () => AppThemeMode.system,
+          orElse: () => _businessDefault(ref.read(brandProvider).defaultThemeMode),
         );
       }
 
-      state = state.copyWith(themeMode: mode, isLoading: false);
+      _apply(state.copyWith(themeMode: mode, isLoading: false));
     } catch (e) {
-      state = state.copyWith(isLoading: false);
+      _apply(state.copyWith(isLoading: false));
     }
   }
 
   Future<void> setThemeMode(AppThemeMode mode) async {
     _chosen = true;
-    state = state.copyWith(themeMode: mode);
+    _apply(state.copyWith(themeMode: mode));
 
     try {
       final prefs = await SharedPreferences.getInstance();
@@ -138,6 +146,4 @@ class ThemeNotifier extends Notifier<ThemeState> {
   }
 }
 
-final themeProvider = NotifierProvider<ThemeNotifier, ThemeState>(
-  ThemeNotifier.new,
-);
+final themeProvider = NotifierProvider<ThemeNotifier, ThemeState>(ThemeNotifier.new);

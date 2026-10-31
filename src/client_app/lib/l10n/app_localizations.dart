@@ -195,6 +195,24 @@ abstract class AppLocalizations {
   /// **'or continue with'**
   String get orContinueWith;
 
+  /// No description provided for @continueWithGoogle.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Google'**
+  String get continueWithGoogle;
+
+  /// No description provided for @continueWithApple.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with Apple'**
+  String get continueWithApple;
+
+  /// No description provided for @orWithEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or with your email'**
+  String get orWithEmail;
+
   /// No description provided for @google.
   ///
   /// In en, this message translates to:

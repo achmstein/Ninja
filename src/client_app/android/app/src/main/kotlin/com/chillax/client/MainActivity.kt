@@ -2,6 +2,7 @@ package com.chillax.client
 
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.UiModeManager
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
@@ -58,6 +59,24 @@ class MainActivity : FlutterActivity() {
                 }
                 else -> result.notImplemented()
             }
+        }
+
+        // The app's own light or dark (the person's choice, else the business's starting theme),
+        // kept by the system for the app: from Android 12 the next launch screen is drawn in it
+        // rather than in the phone's mode. uiMode is in the manifest's configChanges, so the
+        // change reaches Flutter without recreating the activity
+        MethodChannel(flutterEngine.dartExecutor.binaryMessenger, "com.chillax.client/theme").setMethodCallHandler { call, result ->
+            if (call.method != "setNightMode") return@setMethodCallHandler result.notImplemented()
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                val mode = when (call.arguments as? String) {
+                    "light" -> UiModeManager.MODE_NIGHT_NO
+                    "dark" -> UiModeManager.MODE_NIGHT_YES
+                    else -> UiModeManager.MODE_NIGHT_AUTO
+                }
+                // The app asks only when its theme changes; the system keeps it across launches
+                getSystemService(UiModeManager::class.java).setApplicationNightMode(mode)
+            }
+            result.success(null)
         }
 
         // Handle navigation from notification tap if app was launched with intent

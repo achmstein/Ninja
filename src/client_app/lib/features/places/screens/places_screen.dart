@@ -1259,22 +1259,19 @@ class PlacesLaidOut extends StatelessWidget {
 
   Widget _group(List<Place> group) {
     if (layout == PlacesLayout.list) {
-      // One panel for the kind, a hairline between its places: many to a screen, read down like a list
+      // Flat on the page like the app's other lists, a hairline between the places from under
+      // their names: many to a screen, read down like a list
       return Builder(
         builder: (context) {
           final theme = context.theme;
-          return Container(
-            clipBehavior: Clip.antiAlias,
-            decoration: theme.surface(radius: 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final (i, place) in group.indexed) ...[
-                  if (i > 0) Divider(height: 1, thickness: 1, indent: 36, color: theme.colors.border.withValues(alpha: 0.6)),
-                  _row(place),
-                ],
+          return Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              for (final (i, place) in group.indexed) ...[
+                if (i > 0) Divider(height: 1, thickness: 1, indent: 20, color: theme.colors.border.withValues(alpha: 0.6)),
+                _row(place),
               ],
-            ),
+            ],
           );
         },
       );
@@ -1437,7 +1434,8 @@ class PlaceRow extends ConsumerWidget {
       child: ConstrainedBox(
         constraints: const BoxConstraints(minHeight: 60),
         child: Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 12, 16, 12),
+          // Flat on the page: the row starts and ends at the page's own edges
+          padding: const EdgeInsets.symmetric(vertical: 12),
           child: Row(
             children: [
               Container(width: 8, height: 8, decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle)),
@@ -1488,10 +1486,16 @@ class PlaceRow extends ConsumerWidget {
           top,
           if (open)
             Reveal(
+              // Boxed under the row so the booking reads apart from the list; on the page's own colour,
+              // as its fields are filled with the muted one
               child: Container(
-                margin: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                margin: const EdgeInsets.only(bottom: 12),
                 padding: const EdgeInsets.all(16),
-                decoration: BoxDecoration(color: c.background, borderRadius: BorderRadius.circular(18)),
+                decoration: BoxDecoration(
+                  color: c.background,
+                  border: Border.all(color: c.border),
+                  borderRadius: BorderRadius.circular(Ninja.panelRadius),
+                ),
                 child: HoldForm(place: room, onDone: (booked) => onDone?.call(booked)),
               ),
             ),

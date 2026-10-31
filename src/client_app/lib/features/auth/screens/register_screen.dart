@@ -138,80 +138,83 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
       children: [
         if (_success != null) NinjaAlert(icon: const Icon(LucideIcons.check), title: AppText(l10n.success), subtitle: AppText(_success!)),
         if (_error != null)
-          NinjaAlert(variant: NinjaAlertVariant.destructive, icon: const Icon(LucideIcons.circleAlert), title: AppText(l10n.error), subtitle: AppText(_error!)),
-        Panel(
-          padding: const EdgeInsets.all(20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              // First and last name, side by side
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Expanded(
-                    child: NinjaField(
-                      controller: _firstNameController,
-                      label: AppText(l10n.firstName),
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  Expanded(
-                    child: NinjaField(
-                      controller: _lastNameController,
-                      label: AppText(l10n.lastName),
-                      textInputAction: TextInputAction.next,
-                      textCapitalization: TextCapitalization.words,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
-              // Email field
-              NinjaField.email(controller: _emailController, label: AppText(l10n.email), hint: l10n.enterEmail, textInputAction: TextInputAction.next),
-              const SizedBox(height: 16),
-
-              // Phone field
-              NinjaField(
-                controller: _phoneController,
-                label: AppText(l10n.phoneNumber),
-                hint: l10n.enterPhoneNumber,
-                textInputAction: TextInputAction.next,
-                keyboardType: TextInputType.phone,
-              ),
-              const SizedBox(height: 16),
-
-              // Password field
-              NinjaField.password(
-                controller: _passwordController,
-                label: AppText(l10n.password),
-                hint: l10n.createPassword,
-                textInputAction: TextInputAction.next,
-              ),
-              const SizedBox(height: 16),
-
-              // Confirm password field
-              NinjaField.password(
-                controller: _confirmPasswordController,
-                label: AppText(l10n.confirmPassword),
-                hint: l10n.confirmYourPassword,
-                textInputAction: TextInputAction.done,
-                onSubmit: (_) => _handleRegister(),
-              ),
-              const SizedBox(height: 24),
-
-              // Register button
-              NinjaButton(
-                lifted: true,
-                onPress: _isLoading ? null : _handleRegister,
-                child: _isLoading
-                    ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: colors.primaryForeground))
-                    : AppText(l10n.register),
-              ),
-            ],
+          NinjaAlert(
+            variant: NinjaAlertVariant.destructive,
+            icon: const Icon(LucideIcons.circleAlert),
+            title: AppText(l10n.error),
+            subtitle: AppText(_error!),
           ),
+        // On the page itself, as on sign-in: the fields are filled with the
+        // muted colour, and on a muted card they had no edge to be seen by
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // First and last name, side by side
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Expanded(
+                  child: NinjaField(
+                    controller: _firstNameController,
+                    label: AppText(l10n.firstName),
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: NinjaField(
+                    controller: _lastNameController,
+                    label: AppText(l10n.lastName),
+                    textInputAction: TextInputAction.next,
+                    textCapitalization: TextCapitalization.words,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+
+            // Email field
+            NinjaField.email(
+              controller: _emailController,
+              label: AppText(l10n.email),
+              hint: l10n.enterEmail,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+
+            // Phone field
+            NinjaField(
+              controller: _phoneController,
+              label: AppText(l10n.phoneNumber),
+              hint: l10n.enterPhoneNumber,
+              textInputAction: TextInputAction.next,
+              keyboardType: TextInputType.phone,
+            ),
+            const SizedBox(height: 16),
+
+            // Password field
+            NinjaField.password(
+              controller: _passwordController,
+              label: AppText(l10n.password),
+              hint: l10n.createPassword,
+              textInputAction: TextInputAction.next,
+            ),
+            const SizedBox(height: 16),
+
+            // Confirm password field
+            NinjaField.password(
+              controller: _confirmPasswordController,
+              label: AppText(l10n.confirmPassword),
+              hint: l10n.confirmYourPassword,
+              textInputAction: TextInputAction.done,
+              onSubmit: (_) => _handleRegister(),
+            ),
+            const SizedBox(height: 24),
+
+            // Register button
+            NinjaButton(lifted: true, busy: _isLoading, onPress: _isLoading ? null : _handleRegister, child: AppText(l10n.register)),
+          ],
         ),
         Wrap(
           alignment: WrapAlignment.center,
