@@ -17,5 +17,5 @@ internal static class TestNodes
         => new(new LocalNodeClient(shell, options,
             databases ?? new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
             broker ?? new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
-            new ProcHostCapacity(shell, options, NullLogger<ProcHostCapacity>.Instance)));
+            new ProcHostCapacity(shell, new PlatformNodeSettings(options), NullLogger<ProcHostCapacity>.Instance)));
 }

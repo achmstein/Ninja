@@ -7,6 +7,7 @@ COPY ["Directory.Packages.props", "./"]
 COPY ["src/Control.API/Control.API.csproj", "Control.API/"]
 COPY ["src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj", "Ninja.ServiceDefaults/"]
 COPY ["src/Ninja.AI/Ninja.AI.csproj", "Ninja.AI/"]
+COPY ["src/Ninja.Control.NodeRuntime/Ninja.Control.NodeRuntime.csproj", "Ninja.Control.NodeRuntime/"]
 COPY ["src/Shared/", "Shared/"]
 
 RUN dotnet restore "Control.API/Control.API.csproj"
@@ -14,6 +15,8 @@ RUN dotnet restore "Control.API/Control.API.csproj"
 COPY ["src/Control.API/", "Control.API/"]
 COPY ["src/Ninja.ServiceDefaults/", "Ninja.ServiceDefaults/"]
 COPY ["src/Ninja.AI/", "Ninja.AI/"]
+# What runs on a node: the control plane runs it for the box it lives on
+COPY ["src/Ninja.Control.NodeRuntime/", "Ninja.Control.NodeRuntime/"]
 # The menu scanner is Catalog's, linked into the control plane (Control.API.csproj)
 COPY ["src/Catalog.API/Assist/MenuScanContracts.cs", "src/Catalog.API/Assist/MenuScanner.cs", "src/Catalog.API/Assist/MenuProposalValidator.cs", "src/Catalog.API/Assist/MenuScannerFake.cs", "Catalog.API/Assist/"]
 

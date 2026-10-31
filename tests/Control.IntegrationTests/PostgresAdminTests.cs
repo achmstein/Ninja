@@ -1,4 +1,5 @@
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 using Npgsql;
 
 namespace Ninja.Control.IntegrationTests;
@@ -7,7 +8,7 @@ namespace Ninja.Control.IntegrationTests;
 [TestClass]
 public sealed class PostgresAdminTests
 {
-    private static NpgsqlDatabaseAdmin Admin() => new(Containers.Options);
+    private static NpgsqlDatabaseAdmin Admin() => new(new PlatformNodeSettings(Containers.Options));
 
     private static string ConnectionString(string database, string user, string password)
         => new NpgsqlConnectionStringBuilder { Host = Containers.Platform.PostgresHost, Port = Containers.Platform.PostgresPort, Username = user, Password = password, Database = database, Pooling = false }.ConnectionString;

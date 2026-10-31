@@ -1,7 +1,8 @@
+using Microsoft.Extensions.Logging;
 using System.Diagnostics;
 using System.Text;
 
-namespace Ninja.Control.API.Platform;
+namespace Ninja.Control.NodeRuntime;
 
 /// <param name="Output">What the command printed on both streams, in order: a log, not something to parse.</param>
 /// <param name="Stdout">Its standard output alone, for output that is data (JSON, a dump).</param>

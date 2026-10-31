@@ -11,7 +11,7 @@ public sealed class InfraTests
     private static (RabbitCtlBrokerAdmin Admin, RecordingShell Shell) Broker()
     {
         var shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
-        return (new RabbitCtlBrokerAdmin(shell, Options.Create(new PlatformOptions { RabbitContainer = "broker" })), shell);
+        return (new RabbitCtlBrokerAdmin(shell, Options.Create(new NodeSettings { RabbitContainer = "broker" })), shell);
     }
 
     [TestMethod]
@@ -50,7 +50,7 @@ public sealed class InfraTests
     [TestMethod]
     public async Task A_queue_that_is_already_gone_is_nothing_but_any_other_refusal_is_an_error()
     {
-        static RabbitCtlBrokerAdmin With(int code, string output) => new(new AnsweringShell(code, output), Options.Create(new PlatformOptions { RabbitContainer = "broker" }));
+        static RabbitCtlBrokerAdmin With(int code, string output) => new(new AnsweringShell(code, output), Options.Create(new NodeSettings { RabbitContainer = "broker" }));
 
         // RabbitMQ 4.2, the second time a plan drops the same module
         await With(64, "Deleting queue 'Payroll' on vhost 'lucaffe' ...\nError:\nNo such queue was found\n").DeleteQueueAsync("lucaffe", "Payroll", CancellationToken.None);

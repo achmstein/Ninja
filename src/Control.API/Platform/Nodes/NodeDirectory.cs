@@ -10,7 +10,7 @@ namespace Ninja.Control.API.Platform.Nodes;
 /// box the control plane runs on, is answered before the first read too: every
 /// tenant lived there before there were nodes.
 /// </summary>
-public sealed class NodeDirectory(LocalNodeClient local, IServiceScopeFactory scopes, ILogger<NodeDirectory> logger) : INodes
+public sealed class NodeDirectory(LocalNodeClient local, AgentConnections agents, IServiceScopeFactory scopes, ILogger<NodeDirectory> logger) : INodes
 {
     private volatile IReadOnlyList<Node> _nodes = [];
 
@@ -29,8 +29,7 @@ public sealed class NodeDirectory(LocalNodeClient local, IServiceScopeFactory sc
         return node.Kind switch
         {
             NodeKind.Local => local,
-            // The agent comes with the cells (phase 4); until then a node elsewhere can be put on the record, not used
-            _ => throw new NotSupportedException($"{node.Name} is reached through its agent, which this control plane does not speak to yet."),
+            _ => agents.For(node),
         };
     }
 

@@ -84,7 +84,10 @@ public static class Extensions
         builder.Services.AddSingleton<WorkerHeartbeat>();
         builder.Services.AddSingleton<PlatformWarnings>();
         // The boxes tenants live on: the one the control plane runs on, until a second joins (docs/multi-server-plan.md)
+        // Node 1's own settings are the platform's
+        builder.Services.AddSingleton<IOptions<NodeSettings>, PlatformNodeSettings>();
         builder.Services.AddSingleton<LocalNodeClient>();
+        builder.Services.AddSingleton<AgentConnections>();
         builder.Services.AddSingleton<NodeDirectory>();
         builder.Services.AddSingleton<INodes>(sp => sp.GetRequiredService<NodeDirectory>());
         builder.Services.AddHostedService<NodeDirectoryLoader>();
@@ -234,15 +237,3 @@ public static class Extensions
     public const string AppBuilderRole = "AppBuilder";
 }
 
-/// <summary>Dry run: the user and the vhost exist as soon as they are asked for.</summary>
-public sealed class DryRunBrokerAdmin(ILogger<DryRunBrokerAdmin> logger) : IBrokerAdmin
-{
-    public List<string> Users { get; } = [];
-    public Task EnsureUserAsync(string user, string password, CancellationToken ct) { if (!Users.Contains(user)) Users.Add(user); logger.LogInformation("(dry run) broker user {User}", user); return Task.CompletedTask; }
-    public Task EnsureVHostAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) vhost {VHost} for {User}", vhost, user); return Task.CompletedTask; }
-    public Task ClearPermissionsAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) {User} off vhost {VHost}", user, vhost); return Task.CompletedTask; }
-    public Task DeleteVHostAsync(string vhost, CancellationToken ct) { logger.LogInformation("(dry run) delete vhost {VHost}", vhost); return Task.CompletedTask; }
-    public Task DeleteUserAsync(string user, CancellationToken ct) { Users.Remove(user); logger.LogInformation("(dry run) delete broker user {User}", user); return Task.CompletedTask; }
-    public List<string> DeletedQueues { get; } = [];
-    public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct) { DeletedQueues.Add($"{vhost}/{queue}"); logger.LogInformation("(dry run) delete queue {Queue} on {VHost}", queue, vhost); return Task.CompletedTask; }
-}

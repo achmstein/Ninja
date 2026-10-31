@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <!-- The node agent: on every node but the control plane's own box, the control plane's only way in.
+       It runs the same node runtime the control plane runs for node 1, behind a narrow, versioned API
+       that answers only the control plane's certificate, on the private network. -->
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+    <RootNamespace>Ninja.NodeAgent</RootNamespace>
+    <InvariantGlobalization>true</InvariantGlobalization>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Ninja.Control.NodeRuntime\Ninja.Control.NodeRuntime.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <InternalsVisibleTo Include="Control.UnitTests" />
+  </ItemGroup>
+
+</Project>

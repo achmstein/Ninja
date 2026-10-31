@@ -94,6 +94,8 @@ jobs:
               # The AI gateway and the menu scanner it links from Catalog
               - 'src/Ninja.AI/**'
               - 'src/Catalog.API/Assist/**'
+              # What runs on a node, node 1 included
+              - 'src/Ninja.Control.NodeRuntime/**'
             shared:
               - 'src/Ninja.ServiceDefaults/**'
               - 'src/EventBus/**'

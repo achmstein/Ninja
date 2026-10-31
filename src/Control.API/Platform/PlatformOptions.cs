@@ -214,6 +214,9 @@ public sealed class PlatformOptions
     /// <summary>Where a copy of every backup goes, off the box: any S3-compatible bucket. Off until a bucket and keys are set.</summary>
     public OffsiteOptions Offsite { get; set; } = new();
 
+    /// <summary>How the control plane speaks to the agents on other nodes (docs/multi-server-plan.md).</summary>
+    public AgentClientOptions Agents { get; set; } = new();
+
     /// <summary>The weekly proof that a backup restores: one tenant's latest backup into a scratch stack, then destroyed.</summary>
     public RestoreDrillOptions RestoreDrill { get; set; } = new();
 
@@ -342,4 +345,22 @@ public sealed class RestoreDrillOptions
 
     /// <summary>How long the scratch stack gets to come up healthy before the drill counts as failed.</summary>
     public int TimeoutMinutes { get; set; } = 15;
+}
+
+/// <summary>
+/// The control plane's side of the agents' mutual TLS: its client certificate
+/// (a PFX on the box, written by the deploy), which every agent pins, and how
+/// long a call to an agent may take. Each agent's own certificate is pinned on
+/// its node's record.
+/// </summary>
+public sealed class AgentClientOptions
+{
+    public string? ClientCertificatePath { get; set; }
+
+    public string? ClientCertificatePassword { get; set; }
+
+    /// <summary>A command's longest wait; a stack's up pulls images, and a dump streams a database.</summary>
+    public int TimeoutSeconds { get; set; } = 900;
+
+    public bool Configured => !string.IsNullOrWhiteSpace(ClientCertificatePath);
 }

@@ -122,7 +122,7 @@ public sealed class GoldenCommandsTests
         await Phase("restore-databases", () => _backups.RestoreDatabasesAsync("blue", backupId, green, ct));
         await Phase("restore-uploads", () => _backups.RestoreUploadsAsync("blue", backupId, green, ct));
 
-        var broker = new RabbitCtlBrokerAdmin(_shell, Options.Create(_platform));
+        var broker = new RabbitCtlBrokerAdmin(_shell, new PlatformNodeSettings(Options.Create(_platform)));
         await Phase("broker", async () =>
         {
             await broker.EnsureUserAsync("blue", "secret", ct);
@@ -133,7 +133,7 @@ public sealed class GoldenCommandsTests
             await broker.DeleteUserAsync("blue", ct);
         });
 
-        var capacity = new ProcHostCapacity(_shell, Options.Create(_platform), NullLogger<ProcHostCapacity>.Instance);
+        var capacity = new ProcHostCapacity(_shell, new PlatformNodeSettings(Options.Create(_platform)), NullLogger<ProcHostCapacity>.Instance);
         await Phase("capacity", () => capacity.ProbeAsync(ct));
 
         await Phase("destroy", () => _provisioner.DestroyAsync(blue.Id, ct));

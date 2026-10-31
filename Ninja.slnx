@@ -11,6 +11,8 @@
     <Project Path="src/Tenant.API/Tenant.API.csproj" />
     <Project Path="src/Catalog.API/Catalog.API.csproj" />
     <Project Path="src/Control.API/Control.API.csproj" />
+    <Project Path="src/Ninja.Control.NodeRuntime/Ninja.Control.NodeRuntime.csproj" />
+    <Project Path="src/Ninja.NodeAgent/Ninja.NodeAgent.csproj" />
     <Project Path="src/Ninja.AI/Ninja.AI.csproj" />
     <Project Path="src/Ninja.AppHost/Ninja.AppHost.csproj" />
     <Project Path="src/Ninja.ServiceDefaults/Ninja.ServiceDefaults.csproj" />
@@ -67,6 +69,7 @@
   </Folder>
   <Folder Name="/tests/">
     <Project Path="tests/Ninja.AI.UnitTests/Ninja.AI.UnitTests.csproj" />
+    <Project Path="tests/Ninja.NodeAgent.Tests/Ninja.NodeAgent.Tests.csproj" />
     <Project Path="tests/Ninja.AppHost.UnitTests/Ninja.AppHost.UnitTests.csproj" />
     <Project Path="tests/Ninja.Contracts.Tests/Ninja.Contracts.Tests.csproj" />
     <Project Path="tests/Ninja.E2E/Ninja.E2E.csproj" />

@@ -1,4 +1,5 @@
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.IntegrationTests;
 
@@ -6,7 +7,7 @@ namespace Ninja.Control.IntegrationTests;
 [TestClass]
 public sealed class BrokerAdminTests
 {
-    private static RabbitCtlBrokerAdmin Admin() => new(Containers.Shell, Containers.Options);
+    private static RabbitCtlBrokerAdmin Admin() => new(Containers.Shell, new PlatformNodeSettings(Containers.Options));
 
     private static async Task<string> CtlAsync(params string[] args)
     {

@@ -2,7 +2,7 @@ using System.Globalization;
 using System.Text.Json;
 using System.Text.RegularExpressions;
 
-namespace Ninja.Control.API.Platform;
+namespace Ninja.Control.NodeRuntime;
 
 /// <summary>What one compose project's containers weigh right now.</summary>
 public sealed record ProjectUsage(string Project, int Containers, int Running, long MemoryMb, double CpuPercent);

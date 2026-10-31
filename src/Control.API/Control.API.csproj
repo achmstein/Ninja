@@ -41,6 +41,7 @@
     <ProjectReference Include="..\Ninja.ServiceDefaults\Ninja.ServiceDefaults.csproj" />
     <!-- The AI gateway, and the menu read while a business is created -->
     <ProjectReference Include="..\Ninja.AI\Ninja.AI.csproj" />
+    <ProjectReference Include="..\Ninja.Control.NodeRuntime\Ninja.Control.NodeRuntime.csproj" />
   </ItemGroup>
 
   <ItemGroup>
