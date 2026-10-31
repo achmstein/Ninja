@@ -492,7 +492,8 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
-        await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, request.NewName!));
+        // The name as saved: an app sending first and last sends no NewName
+        await eventBus.PublishAsync(UserProfileUpdatedIntegrationEvent.From(userId, userJson));
         if (httpContext.User.GetRoles().Any(r => RoleNames.Staff.Contains(r))) await staff.AnnounceAsync(userId);
         return Results.Ok(new { message = "Name updated successfully" });
     }
@@ -507,7 +508,7 @@ app.MapPost("/api/identity/update-name", async (UpdateNameRequest request, HttpC
 }).RequireAuthorization();
 
 // Update profile (name + phone) - used from settings
-app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country) =>
+app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request, HttpContext httpContext, IHttpClientFactory httpClientFactory, IConfiguration config, IEventBus eventBus, TenantCountry country, StaffAccounts staff) =>
 {
     if (!PhoneInput.TryRead(request.PhoneNumber, country, out var phone, out var phoneProblem))
     {
@@ -594,11 +595,13 @@ app.MapPost("/api/identity/update-profile", async (UpdateProfileRequest request,
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
-        var displayName = string.IsNullOrEmpty(lastName) ? firstName : $"{firstName} {lastName}";
-        if (!string.IsNullOrWhiteSpace(displayName))
+        var profile = UserProfileUpdatedIntegrationEvent.From(userId, userJson);
+        if (!string.IsNullOrWhiteSpace(profile.DisplayName))
         {
-            await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, displayName));
+            await eventBus.PublishAsync(profile);
         }
+        // A member of staff renamed themselves: the riders' list and the like say the new name
+        if (httpContext.User.GetRoles().Any(r => RoleNames.Staff.Contains(r))) await staff.AnnounceAsync(userId);
         return Results.Ok(new { message = "Profile updated successfully" });
     }
 
@@ -687,7 +690,7 @@ app.MapPut("/api/identity/users/{userId}/profile", async (string userId, UpdateP
 
     if (updateResponse.IsSuccessStatusCode || updateResponse.StatusCode == System.Net.HttpStatusCode.NoContent)
     {
-        await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, PersonName.Display(firstName, lastName)));
+        await eventBus.PublishAsync(UserProfileUpdatedIntegrationEvent.From(userId, userJson));
         // A member of staff renamed: the riders' list and the like say the new name
         await staff.AnnounceAsync(userId);
         return Results.Ok(new { message = "Profile updated successfully" });

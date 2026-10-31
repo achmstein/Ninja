@@ -33,6 +33,9 @@ public interface ITicketRepository : IRepository<Ticket>
     /// </summary>
     Task<Ticket?> FindOpenCounterForCustomerAsync(int branchId, string? customerId, string? guestId);
 
+    /// <summary>Every open ticket with a line for this customer's account, in any branch.</summary>
+    Task<IReadOnlyCollection<Ticket>> FindOpenWithCustomerAsync(string customerId);
+
     /// <summary>
     /// Whether any ticket already carries a confirmed order's lines — the
     /// dedupe for a redelivered confirmation, across tickets because the

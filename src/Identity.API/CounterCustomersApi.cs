@@ -166,7 +166,7 @@ public static class CounterCustomersApi
                 return Results.Problem("Customer added but could not be read back", statusCode: 500);
             }
 
-            await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, name));
+            await eventBus.PublishAsync(UserProfileUpdatedIntegrationEvent.From(userId, payload));
             logger.LogInformation("Counter customer {UserId} added by {StaffId}", userId, staffId);
 
             return Results.Created($"/api/identity/users/{userId}", UserDto.From(UserDirectory.FromKeycloak(added, [], country.Code)));
@@ -287,10 +287,10 @@ public static class CounterCustomersApi
                     return Results.Problem($"Could not claim the account: {error}", statusCode: (int)saved.StatusCode);
                 }
 
-                var displayName = $"{user["firstName"]?.GetValue<string>()} {user["lastName"]?.GetValue<string>()}".Trim();
-                if (displayName.Length > 0)
+                var profile = UserProfileUpdatedIntegrationEvent.From(userId, user);
+                if (profile.DisplayName.Length > 0)
                 {
-                    await eventBus.PublishAsync(new UserProfileUpdatedIntegrationEvent(userId, displayName));
+                    await eventBus.PublishAsync(profile);
                 }
                 logger.LogInformation("Counter customer {UserId} claimed their account", userId);
                 return Results.Ok(new ClaimedResponse(email));

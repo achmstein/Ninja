@@ -252,9 +252,10 @@ public static class LoyaltyApi
             context.Accounts.Add(account);
             await context.SaveChangesAsync();
         }
-        else if (request.UserDisplayName != null && account.UserDisplayName != request.UserDisplayName)
+        else if (!string.IsNullOrEmpty(request.UserDisplayName) && string.IsNullOrEmpty(account.UserDisplayName))
         {
-            // Update display name if provided and different
+            // Fill in a missing name only: the name follows the customer's profile,
+            // and a caller may still hold the one from before a rename
             account.UserDisplayName = request.UserDisplayName;
         }
 

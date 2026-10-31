@@ -180,6 +180,23 @@ public class Reservation : Entity, IAggregateRoot
         CustomerName = customerName;
     }
 
+    /// <summary>
+    /// The customer renamed themselves: a reservation still to come, or the
+    /// party sitting on it now, says the new name. One that is over keeps the
+    /// name it was made under. Whether anything changed.
+    /// </summary>
+    public bool RenameCustomer(string customerId, string customerName)
+    {
+        if (string.IsNullOrWhiteSpace(customerName) || CustomerId != customerId)
+            return false;
+        if (!IsOpen && !IsSeated)
+            return false;
+        if (CustomerName == customerName)
+            return false;
+        CustomerName = customerName;
+        return true;
+    }
+
     /// <summary>Given up before anyone was seated, by the customer or the staff.</summary>
     public void Cancel()
     {

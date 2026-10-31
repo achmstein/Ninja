@@ -22,4 +22,12 @@ public class StayMember : Entity
         JoinedAt = DateTime.UtcNow;
         Role = role;
     }
+
+    internal bool Rename(string customerName)
+    {
+        if (CustomerName == customerName)
+            return false;
+        CustomerName = customerName;
+        return true;
+    }
 }

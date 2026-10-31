@@ -43,15 +43,17 @@ const fresh = (expiresIn: number | undefined) => (expiresIn ?? 0) > 60
  * Renews the sign-in unless another tab just did. Resolves true with a
  * usable sign-in, false with none; rejects with the renewal's error (an
  * ErrorResponse when Keycloak refused it, by which time it is dropped).
+ * Forced, it renews a sign-in that is still fresh too: for a token that must
+ * say something new, as the name after the customer changed it.
  */
-export async function renewSession(): Promise<boolean> {
+export async function renewSession(force = false): Promise<boolean> {
   const um = manager
   if (!um) return false
   const run = async () => {
     // Read from storage, where another tab's renewal lands, and hand it to this tab
     const stored = await um.getUser(true)
     if (!stored) return false
-    if (!stored.expired && fresh(stored.expires_in)) return true
+    if (!force && !stored.expired && fresh(stored.expires_in)) return true
     try {
       await um.signinSilent()
       return true

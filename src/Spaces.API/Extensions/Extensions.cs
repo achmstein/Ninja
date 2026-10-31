@@ -71,6 +71,8 @@ public static class Extensions
             // Sales' receipt, projected onto the stay it covered: the
             // customer sees the cost as paid without a call to Sales
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
+            // A customer renamed: what is still to come or running says the new name
+            .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SpacesIntegrationEventContext.Default));
     }
@@ -89,6 +91,7 @@ public static class Extensions
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(SessionPaidIntegrationEvent))]
+[JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext
 {
 }

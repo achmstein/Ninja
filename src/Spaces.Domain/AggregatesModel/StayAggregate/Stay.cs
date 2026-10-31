@@ -277,6 +277,29 @@ public class Stay : Entity, IAggregateRoot
         return _members.FirstOrDefault(m => m.CustomerId == customerId)?.Role;
     }
 
+    /// <summary>
+    /// The customer renamed themselves: a running stay says the new name, as
+    /// its owner and in its party. One that is over keeps the name it had.
+    /// Whether anything changed.
+    /// </summary>
+    public bool RenameCustomer(string customerId, string customerName)
+    {
+        if (string.IsNullOrWhiteSpace(customerId) || string.IsNullOrWhiteSpace(customerName) || Status != StayStatus.Running)
+            return false;
+
+        var changed = false;
+        if (CustomerId == customerId && CustomerName != customerName)
+        {
+            CustomerName = customerName;
+            changed = true;
+        }
+        foreach (var member in _members.Where(m => m.CustomerId == customerId))
+        {
+            changed |= member.Rename(customerName);
+        }
+        return changed;
+    }
+
     /// <summary>Give an unclaimed stay its owner (the till's action).</summary>
     public void AssignCustomer(string customerId, string? customerName)
     {

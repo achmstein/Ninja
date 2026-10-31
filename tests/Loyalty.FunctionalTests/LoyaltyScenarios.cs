@@ -170,6 +170,26 @@ public sealed class LoyaltyScenarios
     }
 
     [TestMethod]
+    public async Task An_order_placed_under_the_old_name_does_not_undo_a_rename()
+    {
+        var admin = Suite.Loyalty.As(Persona.Admin());
+        var userId = NewCustomer();
+        await admin.PostAsync<AccountView>("/api/loyalty/accounts?api-version=1.0", new CreateAccountRequest(userId, "Mona"), HttpStatusCode.Created);
+
+        await HandleAsync<UserProfileUpdatedIntegrationEventHandler, UserProfileUpdatedIntegrationEvent>(
+            new(userId, "Mona Adel", "Mona", "Adel", "+201000000000"));
+
+        // The order still carries the name it was placed under
+        await HandleAsync<OrderStatusChangedToConfirmedIntegrationEventHandler, OrderStatusChangedToConfirmedIntegrationEvent>(new()
+        {
+            OrderId = Random.Shared.Next(2_000_000, 3_000_000), BuyerIdentityGuid = userId, BuyerName = "Mona", OrderTotal = 100m,
+        });
+
+        var account = await admin.GetAsync<AccountView>($"/api/loyalty/accounts/{userId}?api-version=1.0");
+        Assert.AreEqual("Mona Adel", account.UserDisplayName, "the card says the name on the profile");
+    }
+
+    [TestMethod]
     public async Task A_voided_bill_gives_back_the_points_spent_on_it_and_takes_back_those_it_earned()
     {
         var admin = Suite.Loyalty.As(Persona.Admin());

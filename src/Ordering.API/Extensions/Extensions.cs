@@ -121,5 +121,8 @@ internal static class Extensions
 
         // An order paid ahead online: Sales took the customer's payment, and the order goes to the till
         eventBus.AddSubscription<OrderPaidOnlineIntegrationEvent, OrderPaidOnlineIntegrationEventHandler>();
+
+        // A customer renamed: their buyer, and so every order they placed, says the new name
+        eventBus.AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>();
     }
 }

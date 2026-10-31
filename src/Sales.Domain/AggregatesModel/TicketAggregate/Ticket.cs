@@ -513,6 +513,30 @@ public class Ticket : Entity, IAggregateRoot
     }
 
     /// <summary>
+    /// The customer renamed themselves: while the bill is open, their lines say
+    /// the new name. A settled or voided bill keeps the names it was printed
+    /// with, and so does the bill's own <see cref="Label"/>, which is never a
+    /// customer. Whether anything changed.
+    /// </summary>
+    public bool RenameCustomer(string customerId, string customerName)
+    {
+        if (Status != TicketStatus.Open || string.IsNullOrWhiteSpace(customerId) || string.IsNullOrWhiteSpace(customerName))
+            return false;
+
+        var name = customerName.Trim();
+        var lines = _lines.Where(l => l.CustomerId == customerId && l.CustomerName != name).ToList();
+        if (lines.Count == 0)
+            return false;
+
+        foreach (var line in lines)
+            line.SetCustomer(customerId, name);
+
+        // Not a Touch, as with a re-tag: the open ticket screen and the floor tile refetch
+        AddDomainEvent(new TicketChangedDomainEvent(this));
+        return true;
+    }
+
+    /// <summary>
     /// Name who some of the lines were for — the split-bill fix when several
     /// people were rung up as one sale. Only the snapshot moves: the order,
     /// and the loyalty points it earned, stay with whoever placed it; a whole

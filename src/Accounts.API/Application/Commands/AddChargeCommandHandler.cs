@@ -35,7 +35,10 @@ public class AddChargeCommandHandler : IRequestHandler<AddChargeCommand, bool>
             if (account == null)
                 throw new AccountsDomainException("Failed to create customer account");
         }
-        else if (request.CustomerName != null && account.CustomerName != request.CustomerName)
+        // The name a posting carries is the one the till had when it rang the bill:
+        // the account's name follows the customer's profile, so a posting only
+        // fills it in when the account has none
+        else if (!string.IsNullOrWhiteSpace(request.CustomerName) && string.IsNullOrWhiteSpace(account.CustomerName))
         {
             account.UpdateCustomerName(request.CustomerName);
         }

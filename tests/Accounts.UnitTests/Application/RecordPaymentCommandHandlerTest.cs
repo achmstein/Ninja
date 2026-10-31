@@ -78,15 +78,29 @@ public class RecordPaymentCommandHandlerTest
     }
 
     [TestMethod]
-    public async Task The_tills_name_refreshes_a_stale_one()
+    public async Task The_tills_name_does_not_undo_a_rename()
     {
-        var account = new CustomerAccount("u1", "Ahmd");
+        // The customer renamed themselves after the bill was rung: the slip
+        // still carries the name the till had then
+        var account = new CustomerAccount("u1", "Ahmed Fathy");
+        _repository.GetWithTransactionsByCustomerIdAsync("u1").Returns(Task.FromResult<CustomerAccount?>(account));
+
+        var handler = new RecordPaymentCommandHandler(_repository, _logger);
+        await handler.Handle(FromTill(), CancellationToken.None);
+
+        Assert.AreEqual("Ahmed Fathy", account.CustomerName);
+        Assert.AreEqual(-100m, account.Balance);
+    }
+
+    [TestMethod]
+    public async Task The_tills_name_fills_in_a_tab_without_one()
+    {
+        var account = new CustomerAccount("u1", null);
         _repository.GetWithTransactionsByCustomerIdAsync("u1").Returns(Task.FromResult<CustomerAccount?>(account));
 
         var handler = new RecordPaymentCommandHandler(_repository, _logger);
         await handler.Handle(FromTill(), CancellationToken.None);
 
         Assert.AreEqual("Ahmed", account.CustomerName);
-        Assert.AreEqual(-100m, account.Balance);
     }
 }

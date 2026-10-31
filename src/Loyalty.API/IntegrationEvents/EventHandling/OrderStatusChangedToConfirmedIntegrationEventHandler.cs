@@ -46,8 +46,9 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
             return;
         }
 
-        // Keep display name in sync (handles Apple hidden email → real name updates)
-        if (!string.IsNullOrEmpty(@event.BuyerName) && account.UserDisplayName != @event.BuyerName)
+        // Only fill in a missing name: the order carries the name it was placed
+        // under, which a later rename (UserProfileUpdated) has already replaced
+        if (!string.IsNullOrEmpty(@event.BuyerName) && string.IsNullOrEmpty(account.UserDisplayName))
         {
             account.UserDisplayName = @event.BuyerName;
         }

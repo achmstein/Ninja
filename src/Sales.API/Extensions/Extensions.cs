@@ -104,6 +104,8 @@ public static class Extensions
             .AddSubscription<OrderOnlinePaymentRefusedIntegrationEvent, OrderOnlinePaymentRefusedIntegrationEventHandler>()
             // Whether guests may pay online: Sales keeps its own copy of the switch
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
+            // A customer renamed: their lines on the bills still open say the new name
+            .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));
     }
@@ -126,6 +128,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
 [JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
+[JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 [JsonSerializable(typeof(CashPaidOutIntegrationEvent))]

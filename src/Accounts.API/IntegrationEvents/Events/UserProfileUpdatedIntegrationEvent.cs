@@ -2,6 +2,10 @@ using Ninja.EventBus.Events;
 
 namespace Ninja.Accounts.API.IntegrationEvents.Events;
 
+// FirstName, LastName and PhoneNumber come from newer publishers; DisplayName is always there
 public record UserProfileUpdatedIntegrationEvent(
     string UserId,
-    string DisplayName) : IntegrationEvent;
+    string DisplayName,
+    string? FirstName = null,
+    string? LastName = null,
+    string? PhoneNumber = null) : IntegrationEvent;

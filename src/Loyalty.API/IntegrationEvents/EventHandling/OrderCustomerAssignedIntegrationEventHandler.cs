@@ -126,7 +126,8 @@ public class OrderCustomerAssignedIntegrationEventHandler(
             return;
         }
 
-        if (!string.IsNullOrEmpty(@event.CustomerName) && account.UserDisplayName != @event.CustomerName)
+        // Only fill in a missing name, never undo a rename with the order's older one
+        if (!string.IsNullOrEmpty(@event.CustomerName) && string.IsNullOrEmpty(account.UserDisplayName))
         {
             account.UserDisplayName = @event.CustomerName;
         }

@@ -1,4 +1,5 @@
 import { apiClient } from '../api-client'
+import { renewSession } from '../session'
 
 // Handwritten client for Identity.API (no OpenAPI document is emitted for
 // it). Mirrors client_app/lib/features/settings/services/settings_service.dart.
@@ -55,6 +56,10 @@ export async function updateProfile(
   phoneNumber: string
 ): Promise<void> {
   await apiClient.post(`${BASE}/update-profile`, { firstName, lastName, phoneNumber })
+  // The token carries the name every order and bill is made under: renewed
+  // now, the next one says the new name rather than the old one until it
+  // runs out. Saved either way; a renewal that fails is left to the next.
+  await renewSession(true).catch(() => {})
 }
 
 export async function changePassword(newPassword: string): Promise<void> {

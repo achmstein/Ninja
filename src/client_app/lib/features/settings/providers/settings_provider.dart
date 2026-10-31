@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/providers/locale_provider.dart';
@@ -123,8 +124,14 @@ class SettingsNotifier extends Notifier<SettingsState> {
       await _service.updateProfile(firstName, lastName, phoneNumber);
       // Update cached auth state so profile gate sees the new values immediately
       ref.read(authServiceProvider.notifier).setProfile(firstName, lastName, phoneNumber);
-      // Also refresh token to pick up any JWT claim changes
-      await ref.read(authServiceProvider.notifier).refreshToken();
+      // The token carries the name every order is placed under: refreshed now,
+      // the next order says the new name rather than the old one until the
+      // token runs out. Saved either way; a refresh that fails (a network
+      // blip) is tried once more, and failing again is left to the next one
+      final auth = ref.read(authServiceProvider.notifier);
+      if (!await auth.refreshToken() && !await auth.refreshToken()) {
+        debugPrint('Profile saved, but the token was not refreshed: it carries the old name until the next refresh');
+      }
       state = state.copyWith(isSaving: false);
       return true;
     } catch (e) {
