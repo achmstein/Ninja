@@ -4,6 +4,13 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AgentPing = {
+    version: string;
+    architecture: string;
+    docker: boolean;
+    error?: null | string;
+};
+
 export type AiProviderDto = {
     id: number | string;
     name: string;
@@ -260,6 +267,11 @@ export type CreateTenantRequest = {
     nodeId?: null | number | string;
 };
 
+export type DrainResult = {
+    moving: Array<string>;
+    stuck: Array<string>;
+};
+
 export type ExtendRequest = {
     days: number | string;
 };
@@ -413,6 +425,11 @@ export type MetricsTopItem = {
 };
 
 export type Module = 'Reservations' | 'TimeBilling' | 'Loyalty' | 'Tabs' | 'Inventory' | 'Finance' | 'Payroll' | 'Kds' | 'OnlinePayments' | 'Delivery' | 'Ai' | 'CallCentre';
+
+export type MoveTenantRequest = {
+    nodeId?: null | number | string;
+    force?: boolean;
+};
 
 export type NodeDto = {
     id: number | string;
@@ -572,6 +589,33 @@ export type RecordPaymentRequest = {
     periodStart?: null | string;
     reference?: null | string;
     note?: null | string;
+};
+
+export type RegisterNodeRequest = {
+    /**
+     * node-2, node-3: unique
+     */
+    name: null | string;
+    /**
+     * https://10.66.0.2:7443
+     */
+    agentUrl: null | string;
+    /**
+     * http://10.66.0.2:8088
+     */
+    ingressUrl: null | string;
+    /**
+     * The agent certificate's SHA-256 thumbprint, as setup-node printed it
+     */
+    certThumbprint: null | string;
+    architecture?: string;
+    labels?: null | Array<string>;
+    /**
+     * Keycloak as the node's stacks reach it: the control box's internal edge
+     */
+    keycloakInternalUrl?: null | string;
+    aiGatewayUrl?: null | string;
+    talabatRelayUrl?: null | string;
 };
 
 export type RestoreRequest = {
@@ -780,7 +824,7 @@ export type TenantRecordDto = {
 
 export type TenantSeed = 'None' | 'Sample';
 
-export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed' | 'Upgrading' | 'Suspended';
+export type TenantStatus = 'Requested' | 'Provisioning' | 'Running' | 'Stopped' | 'Failed' | 'Destroying' | 'Destroyed' | 'Upgrading' | 'Suspended' | 'Moving';
 
 export type TenantSubscriptionDto = {
     status: SubscriptionStatus;
@@ -3778,6 +3822,43 @@ export type ListNodesResponses = {
 
 export type ListNodesResponse = ListNodesResponses[keyof ListNodesResponses];
 
+export type RegisterNodeData = {
+    body: RegisterNodeRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/platform/nodes';
+};
+
+export type RegisterNodeErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RegisterNodeError = RegisterNodeErrors[keyof RegisterNodeErrors];
+
+export type RegisterNodeResponses = {
+    /**
+     * Created
+     */
+    201: NodeDto;
+};
+
+export type RegisterNodeResponse = RegisterNodeResponses[keyof RegisterNodeResponses];
+
 export type UpdateNodeData = {
     body: UpdateNodeRequest;
     path: {
@@ -3816,6 +3897,154 @@ export type UpdateNodeResponses = {
 };
 
 export type UpdateNodeResponse = UpdateNodeResponses[keyof UpdateNodeResponses];
+
+export type PingNodeData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/nodes/{id}/ping';
+};
+
+export type PingNodeErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type PingNodeResponses = {
+    /**
+     * OK
+     */
+    200: AgentPing;
+};
+
+export type PingNodeResponse = PingNodeResponses[keyof PingNodeResponses];
+
+export type DrainNodeData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/nodes/{id}/drain';
+};
+
+export type DrainNodeErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type DrainNodeError = DrainNodeErrors[keyof DrainNodeErrors];
+
+export type DrainNodeResponses = {
+    /**
+     * OK
+     */
+    200: DrainResult;
+};
+
+export type DrainNodeResponse = DrainNodeResponses[keyof DrainNodeResponses];
+
+export type RetireNodeData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/nodes/{id}/retire';
+};
+
+export type RetireNodeErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type RetireNodeError = RetireNodeErrors[keyof RetireNodeErrors];
+
+export type RetireNodeResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type RetireNodeResponse = RetireNodeResponses[keyof RetireNodeResponses];
+
+export type MoveTenantData = {
+    body: MoveTenantRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/move';
+};
+
+export type MoveTenantErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type MoveTenantError = MoveTenantErrors[keyof MoveTenantErrors];
+
+export type MoveTenantResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
 
 export type TlsAskData = {
     body?: never;

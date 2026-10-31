@@ -2,10 +2,22 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { NodeDto, NodeStatus } from '@/api/control'
 import {
+  drainNodeMutation,
   listNodesOptions,
   listNodesQueryKey,
+  retireNodeMutation,
   updateNodeMutation,
 } from '@/api/control/@tanstack/react-query.gen'
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import {
@@ -60,6 +72,26 @@ export function NodesTable() {
     onSuccess: () => {
       setEditing(null)
       toast.success(t('nodeSaved'))
+      refresh()
+    },
+    onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
+  })
+
+  const [asking, setAsking] = useState<{ node: NodeDto; action: 'drain' | 'retire' } | null>(null)
+  const drain = useMutation({
+    ...drainNodeMutation(),
+    onSuccess: (r) => {
+      setAsking(null)
+      toast.success(t('nodeDrained', { count: String(r.moving.length), stuck: String(r.stuck.length) }))
+      refresh()
+    },
+    onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
+  })
+  const retire = useMutation({
+    ...retireNodeMutation(),
+    onSuccess: () => {
+      setAsking(null)
+      toast.success(t('nodeRetired'))
       refresh()
     },
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
@@ -156,6 +188,16 @@ export function NodesTable() {
                       {t('nodeMakeActive')}
                     </Button>
                   )}
+                  {node.kind === 'Agent' && (node.status === 'Active' || node.status === 'Cordoned') && (
+                    <Button variant='ghost' size='sm' onClick={() => setAsking({ node, action: 'drain' })}>
+                      {t('nodeDrain')}
+                    </Button>
+                  )}
+                  {node.kind === 'Agent' && node.status !== 'Retired' && Number(node.tenants) === 0 && (
+                    <Button variant='ghost' size='sm' onClick={() => setAsking({ node, action: 'retire' })}>
+                      {t('nodeRetire')}
+                    </Button>
+                  )}
                   <Button variant='outline' size='sm' className='ms-1' onClick={() => setEditing(node)}>
                     {t('edit')}
                   </Button>
@@ -165,6 +207,31 @@ export function NodesTable() {
           </TableBody>
         </Table>
       </div>
+      <AlertDialog open={asking !== null} onOpenChange={(open) => !open && setAsking(null)}>
+        <AlertDialogContent size='sm'>
+          <AlertDialogHeader>
+            <AlertDialogTitle>
+              {asking?.action === 'drain' ? t('nodeDrainTitle', { name: asking.node.name }) : t('nodeRetireTitle', { name: asking?.node.name ?? '' })}
+            </AlertDialogTitle>
+            <AlertDialogDescription>{asking?.action === 'drain' ? t('nodeDrainNote') : t('nodeRetireNote')}</AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={drain.isPending || retire.isPending}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogAction
+              disabled={drain.isPending || retire.isPending}
+              onClick={(e) => {
+                e.preventDefault()
+                if (!asking) return
+                const path = { path: { id: Number(asking.node.id) } }
+                if (asking.action === 'drain') drain.mutate(path)
+                else retire.mutate(path)
+              }}
+            >
+              {asking?.action === 'drain' ? t('nodeDrain') : t('nodeRetire')}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
       {editing && (
         <NodeDialog
           node={editing}

@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPlatformUpdatesOptions, listArchivedBackupsOptions } from '@/api/control/@tanstack/react-query.gen'
+import { getPlatformUpdatesOptions, listArchivedBackupsOptions, listNodesOptions } from '@/api/control/@tanstack/react-query.gen'
 import type { TenantUpdate } from '@/api/control'
 import {
   AlertDialog,
@@ -682,5 +682,66 @@ export function SuspendDialog({
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+  )
+}
+
+/**
+ * The business's stack to another node, with its data, realm and passwords:
+ * minutes of downtime, undone if anything fails before the switch. The node
+ * is picked here, or left to placement (the most room, one labelled for its
+ * kind first); its own node is never offered.
+ */
+export function MoveDialog({
+  open,
+  onOpenChange,
+  isPending,
+  name,
+  currentNodeId,
+  onConfirm,
+}: DialogProps & {
+  name: string
+  currentNodeId: number
+  onConfirm: (nodeId: number | null) => void
+}) {
+  const t = useT()
+  const nodes = useQuery({ ...listNodesOptions(), enabled: open })
+  const [nodeId, setNodeId] = useState<string>('auto')
+  const choices = (nodes.data ?? []).filter((n) => Number(n.id) !== currentNodeId && n.status === 'Active')
+
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t('moveTitle', { name })}</DialogTitle>
+          <DialogDescription>{t('moveNote')}</DialogDescription>
+        </DialogHeader>
+        <div className='grid gap-1.5'>
+          <Label>{t('moveTo')}</Label>
+          <Select value={nodeId} onValueChange={setNodeId}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value='auto'>{t('moveWhereRoom')}</SelectItem>
+              {choices.map((n) => (
+                <SelectItem key={String(n.id)} value={String(n.id)}>
+                  {n.name}
+                  {n.roomFor !== null && ` · ${t('nodeRoom').toLowerCase()} ${Number(n.roomFor) > 999 ? '∞' : String(n.roomFor)}`}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+        <DialogFooter>
+          <Button variant='outline' disabled={isPending} onClick={() => onOpenChange(false)}>
+            {t('cancel')}
+          </Button>
+          <Button disabled={isPending} onClick={() => onConfirm(nodeId === 'auto' ? null : Number(nodeId))}>
+            {isPending && <Spinner />}
+            {t('move')}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   )
 }

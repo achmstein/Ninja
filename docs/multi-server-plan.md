@@ -14,6 +14,11 @@ Status: written 2026-10-31. Line numbers are as of that date.
   - A lane runs one job per node at a time (`Platform:LaneConcurrency`, default 1 = as before). Claims are serialised in the process.
   - Restores and bring-backs go through placement.
   - **Departure:** backups stay with the control plane. A cell's dumps and volumes stream through its agent into the control box's backup folder, and restores stream back, so any backup restores onto any node with no catalogue table and no presigned uploads from agents. The cost is the control box's disk and bandwidth; revisit with offsite-first storage when cells are many.
+- **Phase 6 done (2026-11-01).**
+  - `Provisioner.Move.cs` runs prepare → quiesce (gateway closed, queues drained or the move undone; dead letters stay) → backup → restore on the target → start and check health on the target → switch. Before the switch, a failure undoes everything; after it, an edge failure is reported and queued again.
+  - The old copy is kept for `MoveQuarantineDays` (7), then cleared by a `move-cleanup` job on its node; the reconciler leaves it alone meanwhile.
+  - The API covers `/tenants/{slug}/move`, `/platform/nodes/{id}/drain` and `/platform/nodes/{id}/retire`. The control app has a Move dialog on the tenant page and Drain/Retire on the Nodes tab.
+  - The tenant status `Moving` and `StatusBeforeMove` (migration `TenantMoves`) let a move picked up after a restart finish as it began.
 - **Departure from section 3:** a node is composed of parts (`Stacks`, `Data`, `Databases`, `Broker`, `Capacity`, `Images`, `RouteTo`) rather than one interface inheriting three. The agent client can implement each part separately.
 
 ## Findings that shape the design

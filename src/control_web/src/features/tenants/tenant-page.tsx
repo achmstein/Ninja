@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { AxiosError } from 'axios'
 import {
+  ArrowRightLeft,
   AlertCircle,
   ArrowUpCircle,
   CalendarPlus,
@@ -37,6 +38,8 @@ import {
   resendWelcomeEmailMutation,
   resumeTenantMutation,
   rollbackTenantMutation,
+  moveTenantMutation,
+  listNodesOptions,
   secureTenantMutation,
   startTenantMutation,
   stopTenantMutation,
@@ -78,7 +81,7 @@ import {
   tenantStatus,
 } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
-import { BringBackDialog, ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
+import { BringBackDialog, ConvertDialog, DestroyDialog, ExtendDialog, ForgetDialog, MoveDialog, RollbackDialog, RotateDialog, UpgradeDialog } from './dialogs'
 import { AuditTab } from './tabs/audit'
 import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
@@ -103,7 +106,7 @@ const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   audit: 'tabAudit',
 }
 
-type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'bringBack' | 'convert' | 'rotate' | 'rollback' | null
+type OpenDialog = 'extend' | 'upgrade' | 'destroy' | 'forget' | 'bringBack' | 'convert' | 'rotate' | 'rollback' | 'move' | null
 
 function Loading() {
   return (
@@ -155,6 +158,9 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
   const secure = useMutation({ ...secureTenantMutation(), onSuccess: queued, onError: failed })
   const resume = useMutation({ ...resumeTenantMutation(), onSuccess: queued, onError: failed })
   const rollback = useMutation({ ...rollbackTenantMutation(), onSuccess: queued, onError: failed })
+  const move = useMutation({ ...moveTenantMutation(), onSuccess: queued, onError: failed })
+  // Moving is only offered once there is somewhere to move to
+  const nodeCount = useQuery(listNodesOptions()).data?.filter((n) => n.status !== 'Retired').length ?? 0
   const dismiss = useMutation({ ...dismissTenantErrorMutation(), onSuccess: refresh, onError: failed })
   const resendWelcome = useMutation({
     ...resendWelcomeEmailMutation(),
@@ -364,6 +370,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
                       {t('rollbackTo', { tag: tenant.previousImageTag })}
                     </DropdownMenuItem>
                   )}
+                  {nodeCount > 1 && (status === 'Running' || status === 'Stopped') && tenant.hasOwnCredentials && (
+                    <DropdownMenuItem disabled={busy} onSelect={() => setDialog('move')}>
+                      <ArrowRightLeft />
+                      {t('moveToNode')}
+                    </DropdownMenuItem>
+                  )}
                   {canImpersonate(status) && (
                     <DropdownMenuItem disabled={resendWelcome.isPending} onSelect={() => resendWelcome.mutate(path)}>
                       <Mail />
@@ -530,6 +542,14 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         previousTag={tenant.previousImageTag ?? ''}
         backupId={tenant.upgradeBackupId}
         onConfirm={() => rollback.mutate(path)}
+      />
+      <MoveDialog
+        open={dialog === 'move'}
+        onOpenChange={(v) => setDialog(v ? 'move' : null)}
+        isPending={move.isPending}
+        name={name}
+        currentNodeId={Number(tenant.nodeId ?? 1)}
+        onConfirm={(nodeId) => move.mutate({ ...path, body: { nodeId, force: false } })}
       />
       <RotateDialog
         open={dialog === 'rotate'}

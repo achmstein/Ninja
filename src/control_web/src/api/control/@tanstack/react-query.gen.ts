@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, bringBackTenant, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateItemPhotos, getAiSettings, getAiUsage, getAppleSiteAssociation, getAssetLinks, getMapsSettings, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantAppConfig, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listArchivedBackups, listAudit, listNodes, listOperators, listTenantBackups, listTenants, listTenantSeedImages, type Options, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, rollbackTenant, saveAiProvider, saveAiRoles, saveMapsSettings, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, testMapsSearch, tlsAsk, updateNode, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, BringBackTenantData, BringBackTenantError, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateItemPhotosData, GenerateItemPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetAppleSiteAssociationData, GetAssetLinksData, GetMapsSettingsData, GetMapsSettingsResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantAppConfigData, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListArchivedBackupsData, ListArchivedBackupsResponse, ListAuditData, ListAuditResponse, ListNodesData, ListNodesResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, SaveMapsSettingsData, SaveMapsSettingsError, SaveMapsSettingsResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TestMapsSearchData, TestMapsSearchResponse, TlsAskData, UpdateNodeData, UpdateNodeError, UpdateNodeResponse, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, bringBackTenant, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, drainNode, enableOperator, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateItemPhotos, getAiSettings, getAiUsage, getAppleSiteAssociation, getAssetLinks, getMapsSettings, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantAppConfig, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listArchivedBackups, listAudit, listNodes, listOperators, listTenantBackups, listTenants, listTenantSeedImages, moveTenant, type Options, pingNode, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, registerNode, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, retireNode, rollbackTenant, saveAiProvider, saveAiRoles, saveMapsSettings, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, testMapsSearch, tlsAsk, updateNode, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, BringBackTenantData, BringBackTenantError, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, DrainNodeData, DrainNodeError, DrainNodeResponse, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateItemPhotosData, GenerateItemPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetAppleSiteAssociationData, GetAssetLinksData, GetMapsSettingsData, GetMapsSettingsResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantAppConfigData, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListArchivedBackupsData, ListArchivedBackupsResponse, ListAuditData, ListAuditResponse, ListNodesData, ListNodesResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, MoveTenantData, MoveTenantError, PingNodeData, PingNodeResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, RegisterNodeData, RegisterNodeError, RegisterNodeResponse, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RetireNodeData, RetireNodeError, RetireNodeResponse, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, SaveMapsSettingsData, SaveMapsSettingsError, SaveMapsSettingsResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TestMapsSearchData, TestMapsSearchResponse, TlsAskData, UpdateNodeData, UpdateNodeError, UpdateNodeResponse, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1454,12 +1454,97 @@ export const listNodesOptions = (options?: Options<ListNodesData>) => queryOptio
 });
 
 /**
+ * Put a node reached through its agent on the record, cordoned: it takes tenants once it answers and is made active
+ */
+export const registerNodeMutation = (options?: Partial<Options<RegisterNodeData>>): UseMutationOptions<RegisterNodeResponse, AxiosError<RegisterNodeError>, Options<RegisterNodeData>> => {
+    const mutationOptions: UseMutationOptions<RegisterNodeResponse, AxiosError<RegisterNodeError>, Options<RegisterNodeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await registerNode({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
  * Cordon a node or make it active again, label it, or set its own limits
  */
 export const updateNodeMutation = (options?: Partial<Options<UpdateNodeData>>): UseMutationOptions<UpdateNodeResponse, AxiosError<UpdateNodeError>, Options<UpdateNodeData>> => {
     const mutationOptions: UseMutationOptions<UpdateNodeResponse, AxiosError<UpdateNodeError>, Options<UpdateNodeData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateNode({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Ask the node whether it answers: its agent's version, its architecture, whether its docker runs; the record keeps when it last did
+ */
+export const pingNodeMutation = (options?: Partial<Options<PingNodeData>>): UseMutationOptions<PingNodeResponse, AxiosError<DefaultError>, Options<PingNodeData>> => {
+    const mutationOptions: UseMutationOptions<PingNodeResponse, AxiosError<DefaultError>, Options<PingNodeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await pingNode({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Move every tenant off the node, one at a time, each where placement finds room; the node takes no new ones
+ */
+export const drainNodeMutation = (options?: Partial<Options<DrainNodeData>>): UseMutationOptions<DrainNodeResponse, AxiosError<DrainNodeError>, Options<DrainNodeData>> => {
+    const mutationOptions: UseMutationOptions<DrainNodeResponse, AxiosError<DrainNodeError>, Options<DrainNodeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await drainNode({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Let an empty node go: no tenant on it and no old copy waiting to be cleared there
+ */
+export const retireNodeMutation = (options?: Partial<Options<RetireNodeData>>): UseMutationOptions<RetireNodeResponse, AxiosError<RetireNodeError>, Options<RetireNodeData>> => {
+    const mutationOptions: UseMutationOptions<RetireNodeResponse, AxiosError<RetireNodeError>, Options<RetireNodeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await retireNode({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Move the business's stack to another node with its data, realm and passwords: minutes of downtime, undone if anything fails before the switch
+ */
+export const moveTenantMutation = (options?: Partial<Options<MoveTenantData>>): UseMutationOptions<unknown, AxiosError<MoveTenantError>, Options<MoveTenantData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<MoveTenantError>, Options<MoveTenantData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await moveTenant({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
