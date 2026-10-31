@@ -12,9 +12,9 @@ import {
 /*
  * The sign-in kept alive, one renewal at a time for the whole browser.
  *
- * Keycloak takes each refresh token once: the renewal that uses it gets a
- * new one and the old one stops working, so a stolen refresh token is
- * useless as soon as the app renews, and one used twice ends the session.
+ * Keycloak rotates the refresh token on each renewal: the renewal that uses
+ * it gets a new one, a stolen one is useless once the app has renewed, and
+ * one used past its single allowed reuse ends the session.
  * Two tabs of the same app share one stored sign-in, so left to themselves
  * they would renew at the same moment with the same token and the second
  * would sign both out. Renewals therefore take a browser-wide lock, and the

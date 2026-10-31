@@ -27,6 +27,14 @@ public static partial class Templates
     /// </summary>
     public const int AccessTokenSeconds = 5 * 60;
 
+    /// <summary>
+    /// How many times a refresh token may be used again after its first use: once. A phone that lost
+    /// the reply to a renewal (the new token issued, the answer dropped on the way) still holds the
+    /// spent one, and its next renewal is forgiven rather than ending the session; a stolen token is
+    /// worthless once the real app has renewed again
+    /// </summary>
+    public const int RefreshTokenMaxReuse = 1;
+
     /// <summary>A web sign-in not used for two weeks ends</summary>
     public const int WebClientIdleSeconds = 14 * 24 * 60 * 60;
 

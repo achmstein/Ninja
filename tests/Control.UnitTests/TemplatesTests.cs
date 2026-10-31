@@ -63,11 +63,11 @@ public sealed class TemplatesTests
         Assert.AreEqual("https://admin.blue.ninja.app/auth/callback", clients["admin-panel"]["redirectUris"]![0]!.GetValue<string>());
         Assert.AreEqual("https://blue.ninja.app/auth/callback", clients["client-web"]["redirectUris"]![0]!.GetValue<string>());
 
-        // Five-minute access tokens, refresh tokens taken once, and each web app's sign-in exactly as
+        // Five-minute access tokens, refresh tokens rotated and forgiven one reuse, and each web app's sign-in exactly as
         // the upgrade step puts it on an older realm: its one callback, its sign-out page, its limits
         Assert.AreEqual(Templates.AccessTokenSeconds, realm["accessTokenLifespan"]!.GetValue<int>());
         Assert.IsTrue(realm["revokeRefreshToken"]!.GetValue<bool>());
-        Assert.AreEqual(0, realm["refreshTokenMaxReuse"]!.GetValue<int>());
+        Assert.AreEqual(Templates.RefreshTokenMaxReuse, realm["refreshTokenMaxReuse"]!.GetValue<int>());
         foreach (var web in Templates.WebSignInClients(TenantHosts.For(tenant, Platform)))
         {
             var webClient = clients[web.ClientId];

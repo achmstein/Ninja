@@ -111,9 +111,8 @@ public interface IKeycloakAdmin
     Task EnsureRememberMeAsync(string realm, CancellationToken ct);
     /// <summary>
     /// The web apps' sign-in hardened in a realm made before: five-minute access
-    /// tokens, each
-    /// refresh token taken once, and each app's client sending its code back to
-    /// its one callback (not anything under its host), signing out to its one
+    /// tokens, refresh tokens rotated on each renewal and forgiven one reuse,
+    /// and each app's client sending its code back to its one callback (not anything under its host), signing out to its one
     /// page, and its sign-ins ending after two idle weeks or thirty days. A
     /// client's other redirects (a business's own app) stay. Idempotent.
     /// </summary>
@@ -862,7 +861,7 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         var admin = $"{Base}/admin/realms/{realm}";
 
         // The realm's tokens: five-minute access tokens whatever the realm said before, and a
-        // refresh token that works once (the renewal that uses it gets the next)
+        // refresh token rotated on each renewal, forgiven one reuse (a reply lost on the way)
         var current = await client.GetFromJsonAsync<JsonObject>(admin, ct);
         var realmUpdate = new JsonObject();
         if (current?["accessTokenLifespan"]?.GetValue<int>() != Templates.AccessTokenSeconds)
@@ -870,10 +869,10 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
             realmUpdate["accessTokenLifespan"] = Templates.AccessTokenSeconds;
             realmUpdate["accessTokenLifespanForImplicitFlow"] = Templates.AccessTokenSeconds;
         }
-        if (current?["revokeRefreshToken"]?.GetValue<bool>() != true || current?["refreshTokenMaxReuse"]?.GetValue<int>() != 0)
+        if (current?["revokeRefreshToken"]?.GetValue<bool>() != true || current?["refreshTokenMaxReuse"]?.GetValue<int>() != Templates.RefreshTokenMaxReuse)
         {
             realmUpdate["revokeRefreshToken"] = true;
-            realmUpdate["refreshTokenMaxReuse"] = 0;
+            realmUpdate["refreshTokenMaxReuse"] = Templates.RefreshTokenMaxReuse;
         }
         if (realmUpdate.Count > 0)
             await ThrowIfRefusedAsync(await client.PutAsJsonAsync(admin, realmUpdate, ct), $"the token settings of {realm}", ct);
