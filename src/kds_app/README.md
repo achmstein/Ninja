@@ -55,7 +55,7 @@ A release build is generic: the platform's download page
 and the tablet is connected to its own on first open — the QR code on the
 admin's Apps page, or the business's address typed. Settings and the foot of the
 sign-in form have "Change business". A record pins a build to one stack instead
-(`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
+(`--dart-define-from-file=../../tenants/<slug>.json`, fetched by `tenants/fetch-record.sh`; see `tenants/README.md`).
 The launcher icon and splash are the platform's (`assets/images/ninja_*.png`;
 regenerate with `dart run flutter_launcher_icons && dart run flutter_native_splash:create`).
 

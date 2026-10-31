@@ -13,7 +13,7 @@ flutter run --dart-define=REALM=chillax
 ```
 
 A release build is told everything by a record instead
-(`--dart-define-from-file=../../tenants/chillax.json`, see `tenants/README.md`).
+(`--dart-define-from-file=../../tenants/<slug>.json`, fetched by `tenants/fetch-record.sh`; see `tenants/README.md`).
 
 This project is a starting point for a Flutter application.
 

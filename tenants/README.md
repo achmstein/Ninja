@@ -6,8 +6,13 @@ stack it talks to. The code carries no tenant of its own; a release build
 without a record fails at first use and says which key is missing.
 
 ```
+APP_BUILDER_SECRET=… PLATFORM_DOMAIN=ninjapp.net tenants/fetch-record.sh chillax
 flutter build apk --release --dart-define-from-file=../../tenants/chillax.json
 ```
+
+The record is fetched, never committed (`tenants/*.json` is written by the
+build and left out of git): a stale one would ship an app pointing at a host
+that no longer answers.
 
 A platform tenant's record is neither written by hand nor committed: the build
 fetches it from the control plane (`fetch-record.sh`, `GET
@@ -16,8 +21,8 @@ platform's settings as they are at that moment. It signs in as the
 `app-builder` client of the `ninja` realm, whose one role, `AppBuilder`, reads
 that and nothing else; `deploy-platform.yml` keeps the client and its secret,
 the repository secret `APP_BUILDER_SECRET`. A business the control plane does
-not have builds with its file committed here, as Chillax does until it moves
-onto the platform; once it is on, that file can go. The tenant page's Customer
+not have would build with a file committed here; Chillax is on the platform
+now, so there is none, and a build that cannot fetch the record stops. The tenant page's Customer
 app row still offers App config, to read or to build with by hand.
 
 `mobile-deploy.yml` passes the record named by its `tenant` input to the

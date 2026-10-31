@@ -529,3 +529,6 @@ deploy/platform/local/web/
 deploy/platform/local/realms/
 deploy/platform/local/.env
 deploy/platform/local/caddy-root.crt
+
+# A business's app record, fetched by tenants/fetch-record.sh at build time; never committed
+tenants/*.json
