@@ -25,6 +25,9 @@ public sealed class LocalNodeClient(IShell shell, IOptions<PlatformOptions> opti
     public IHostCapacity Capacity => capacity;
 
     public IImageInventory Images { get; } = new LocalImageInventory(shell);
+
+    /// <summary>The gateway by its container name, on the docker network the control plane shares with the stacks.</summary>
+    public StackRoute RouteTo(string slug) => new(new Uri($"http://{TenantNaming.Gateway(slug)}:5000"));
 }
 
 /// <summary>This box's images, as docker ps, inspect and images print them.</summary>

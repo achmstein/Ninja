@@ -5,6 +5,7 @@ using System.Net.Http.Json;
 using System.Text.Json.Nodes;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -73,7 +74,7 @@ public sealed class KeycloakStackTokenProvider(IHttpClientFactory httpClientFact
     public void Invalidate(string slug) => _tokens.TryRemove(slug, out _);
 }
 
-public sealed class HttpStackProxy(IHttpClientFactory httpClientFactory, IStackTokenProvider tokens) : IStackProxy
+public sealed class HttpStackProxy(IHttpClientFactory httpClientFactory, IStackTokenProvider tokens, INodes nodes) : IStackProxy
 {
     public async Task<HttpResponseMessage> SendAsync(Tenant tenant, HttpMethod method, string pathAndQuery, HttpContent? content, StackAuth auth, CancellationToken ct, int? branchId = null)
     {
@@ -91,7 +92,9 @@ public sealed class HttpStackProxy(IHttpClientFactory httpClientFactory, IStackT
     private async Task<HttpResponseMessage> SendOnceAsync(Tenant tenant, HttpMethod method, string pathAndQuery, HttpContent? content, StackAuth auth, int? branchId, CancellationToken ct)
     {
         var client = httpClientFactory.CreateClient("stack");
-        using var request = new HttpRequestMessage(method, $"http://{TenantNaming.Gateway(tenant.Slug)}:5000{pathAndQuery}") { Content = content };
+        var route = nodes.For(tenant).RouteTo(tenant.Slug);
+        using var request = new HttpRequestMessage(method, new Uri(route.BaseAddress, pathAndQuery)) { Content = content };
+        if (route.Host is not null) request.Headers.Host = route.Host;
         if (auth == StackAuth.Control)
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await tokens.GetAsync(tenant, ct));
         if (branchId is int branch)

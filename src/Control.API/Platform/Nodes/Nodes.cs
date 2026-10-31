@@ -10,6 +10,13 @@ namespace Ninja.Control.API.Platform.Nodes;
 /// </summary>
 public sealed record NodeRef(int Id, string Name);
 
+/// <summary>
+/// How the control plane reaches a stack's gateway: the address to send to and,
+/// when that address serves more than one stack (another node's ingress), the
+/// host to ask it for.
+/// </summary>
+public sealed record StackRoute(Uri BaseAddress, string? Host = null);
+
 /// <summary>What a stack is stamped from: its compose file and its secrets.</summary>
 public sealed record StackFiles(string Compose, string Env);
 
@@ -97,6 +104,9 @@ public interface INodeClient
     IHostCapacity Capacity { get; }
 
     IImageInventory Images { get; }
+
+    /// <summary>Where the control plane reaches this tenant's gateway.</summary>
+    StackRoute RouteTo(string slug);
 }
 
 /// <summary>Which node a tenant lives on, and the way to it.</summary>

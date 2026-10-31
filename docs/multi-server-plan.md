@@ -1,6 +1,9 @@
 # Multi-server plan: one control plane, many cells
 
-Status: plan, written 2026-10-31. Nothing here is built yet. Line numbers are as of that date.
+Status: written 2026-10-31. Line numbers are as of that date.
+
+- **Phase 1 done (2026-11-01).** Every docker call goes through `Platform/Nodes` (`INodes`, `INodeClient`, `LocalNodeClient`; `SingleNode` until a second node joins). Stack addresses come from `NodeEndpoints`, the edge from `IEdgeRouter`, and seed files from `PlatformOptions.ControlRoot`. `tests/Control.UnitTests/GoldenCommandsTests.cs` holds the line: the box hears what it heard before, and stacks are stamped word for word.
+- **Departure from section 3:** a node is composed of parts (`Stacks`, `Data`, `Databases`, `Broker`, `Capacity`, `Images`, `RouteTo`) rather than one interface inheriting three. The agent client can implement each part separately.
 
 ## Findings that shape the design
 
