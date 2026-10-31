@@ -486,7 +486,7 @@ abstract class AppLocalizations {
   /// No description provided for @useLoyaltyPoints.
   ///
   /// In en, this message translates to:
-  /// **'Use Loyalty Points'**
+  /// **'Use points'**
   String get useLoyaltyPoints;
 
   /// No description provided for @pts.

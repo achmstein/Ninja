@@ -71,9 +71,8 @@ class _TrayExtrasState extends ConsumerState<TrayExtras> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
+        // One line: the pills share it, a long label ellipsed rather than pushed onto a line of its own
+        Row(
           children: [
             _Pill(
               icon: LucideIcons.notebookPen,
@@ -84,6 +83,7 @@ class _TrayExtrasState extends ConsumerState<TrayExtras> {
                   ? ConstrainedBox(constraints: const BoxConstraints(maxWidth: 112), child: Text(note, overflow: TextOverflow.ellipsis))
                   : Text(l10n.ninjaAddNote),
             ),
+            const SizedBox(width: 8),
             _Pill(
               icon: LucideIcons.tag,
               on: _open == _Open.promo,
@@ -93,7 +93,8 @@ class _TrayExtrasState extends ConsumerState<TrayExtras> {
                   ? Text(promo.code!, style: TextStyle(letterSpacing: 0.6, color: promo.reason != null ? _redInk : null))
                   : Text(l10n.promoCode),
             ),
-            if (pointsOffered)
+            if (pointsOffered) ...[
+              const SizedBox(width: 8),
               _Pill(
                 icon: LucideIcons.award,
                 on: _open == _Open.points,
@@ -101,6 +102,7 @@ class _TrayExtrasState extends ConsumerState<TrayExtras> {
                 onTap: () => _toggle(_Open.points),
                 child: Text(pointsOn ? '${redemption.pointsToRedeem} ${l10n.pts}' : l10n.useLoyaltyPoints),
               ),
+            ],
           ],
         ),
         // One panel: moving to another pill swaps what is in it rather than closing and opening again
@@ -163,25 +165,32 @@ class _Pill extends StatelessWidget {
     final ink = theme.colors.foreground;
     final fill = set ? _emeraldFill : ink.withValues(alpha: on ? 0.20 : 0.10);
     final text = set ? _emerald : ink.withValues(alpha: on ? 1 : 0.8);
-    return Pressable(
-      onTap: onTap,
-      scale: 0.96,
-      child: AnimatedContainer(
-        duration: Motion.base,
-        height: 36,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        decoration: ShapeDecoration(color: fill, shape: const StadiumBorder()),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: text),
-            const SizedBox(width: 6),
-            DefaultTextStyle.merge(
-              style: context.localeText(theme.typography.caption.copyWith(color: text, fontWeight: FontWeight.w600)),
-              maxLines: 1,
-              child: child,
-            ),
-          ],
+    // Takes what its label needs, and gives some back when the row runs short
+    return Flexible(
+      child: Pressable(
+        onTap: onTap,
+        scale: 0.96,
+        child: AnimatedContainer(
+          duration: Motion.base,
+          height: 36,
+          padding: const EdgeInsets.symmetric(horizontal: 12),
+          decoration: ShapeDecoration(color: fill, shape: const StadiumBorder()),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 14, color: text),
+              const SizedBox(width: 6),
+              Flexible(
+                child: DefaultTextStyle.merge(
+                  style: context.localeText(theme.typography.caption.copyWith(color: text, fontWeight: FontWeight.w600)),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  softWrap: false,
+                  child: child,
+                ),
+              ),
+            ],
+          ),
         ),
       ),
     );

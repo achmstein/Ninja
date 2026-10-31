@@ -214,7 +214,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get anySpecialRequests => 'Any special requests';
 
   @override
-  String get useLoyaltyPoints => 'Use Loyalty Points';
+  String get useLoyaltyPoints => 'Use points';
 
   @override
   String get pts => 'pts';
