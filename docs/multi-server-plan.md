@@ -19,6 +19,16 @@ Status: written 2026-10-31. Line numbers are as of that date.
   - The old copy is kept for `MoveQuarantineDays` (7), then cleared by a `move-cleanup` job on its node; the reconciler leaves it alone meanwhile.
   - The API covers `/tenants/{slug}/move`, `/platform/nodes/{id}/drain` and `/platform/nodes/{id}/retire`. The control app has a Move dialog on the tenant page and Drain/Retire on the Nodes tab.
   - The tenant status `Moving` and `StatusBeforeMove` (migration `TenantMoves`) let a move picked up after a restart finish as it began.
+- **Phase 7 core done (2026-11-01).**
+  - **Evacuate:** `/platform/nodes/{id}/evacuate`, for Unreachable nodes only, brings each tenant up elsewhere from its newest backup with the same slug and realm. The loss is said on the tenant's record.
+  - **Fencing:** when an Unreachable node answers again, the watchdog stops every stack there whose tenant now lives elsewhere and queues its clean-up.
+  - **DNS** is unchanged: the wildcard records stay on the platform box, whose edge is the only public entry point.
+  - **Still open, operational rather than code:**
+    - WAL archiving per cell (point-in-time recovery; today's recovery point is the last nightly dump)
+    - PgBouncer once a node runs more than about 25 stacks
+    - an HA pair of edges and of Keycloak
+    - source-IP checks in the AI gateway and Talabat relay (fencing already stops the copies those would guard against)
+    - building the tenant images for amd64 too, so amd64 cells can run stacks
 - **Departure from section 3:** a node is composed of parts (`Stacks`, `Data`, `Databases`, `Broker`, `Capacity`, `Images`, `RouteTo`) rather than one interface inheriting three. The agent client can implement each part separately.
 
 ## Findings that shape the design

@@ -189,6 +189,117 @@ public sealed partial class Provisioner
         await audit.WriteAsync("tenant.move.failed", tenant.Slug, new { runId, to = target.Node.Name, error = cause.Message, undone = said }, ct, Source);
     }
 
+    /// <summary>
+    /// A tenant whose node does not answer, brought up on another from its newest backup: the same slug, realm
+    /// and passwords, what it took since that backup lost. Nothing is asked of the node it was on; when that one
+    /// answers again, the watchdog stops the copy left there before it can do anything (fencing).
+    /// </summary>
+    public async Task EvacuateAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        if (tenant.MovingToNodeId is not int targetId) return;
+
+        var runId = Guid.NewGuid();
+        var lost = nodes.For(tenant.NodeId);
+        var target = nodes.For(targetId);
+        var was = tenant.StatusBeforeMove ??= tenant.Status is TenantStatus.Moving ? TenantStatus.Running : tenant.Status;
+        tenant.Status = TenantStatus.Moving;
+        tenant.LastError = null;
+        await context.SaveChangesAsync(ct);
+
+        var newest = backups.List(tenant.Slug).FirstOrDefault();
+        try
+        {
+            if (newest is null)
+                throw new InvalidOperationException("It has no backup to bring it back from.");
+            await MovePrepareStepAsync(tenant, runId, target, ct);
+            await Step(tenant, runId, "evacuate-restore", async () =>
+            {
+                await backups.VerifyAsync(tenant.Slug, newest, ct);
+                await backups.RestoreDatabasesAsync(tenant.Slug, newest.Id, tenant, ct, on: target);
+                var uploads = await backups.RestoreUploadsAsync(tenant.Slug, newest.Id, tenant, ct, on: target);
+                return $"from {newest.Id}, taken {newest.At:u}{(uploads ? ", with its uploads" : "")}: what came after it is lost";
+            }, ct);
+            await Step(tenant, runId, "move-start", async () =>
+            {
+                if (was != TenantStatus.Running) return "it was stopped: it stays stopped there";
+                var output = await target.Stacks.UpAsync(tenant.Slug, Platform.PullImages, ct);
+                await stack.WaitHealthyAsync(tenant.On(targetId), TimeSpan.FromMinutes(5), ct);
+                return output;
+            }, ct);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "Evacuating {Slug} to {Node} failed", tenant.Slug, target.Node.Name);
+            try
+            {
+                if (await target.Stacks.IsStampedAsync(tenant.Slug, ct)) await target.Stacks.DownAsync(tenant.Slug, ct);
+                await ClearCopyAsync(tenant, target, ct);
+            }
+            catch (Exception inner) when (!ct.IsCancellationRequested)
+            {
+                logger.LogError(inner, "Clearing {Slug}'s copy on {Node} failed too", tenant.Slug, target.Node.Name);
+            }
+            tenant.Status = was;
+            tenant.MovingToNodeId = null;
+            tenant.StatusBeforeMove = null;
+            tenant.LastError = $"Bringing it up on {target.Node.Name} failed: {ex.Message}";
+            await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.evacuate.failed", tenant.Slug, new { runId, to = target.Node.Name, error = ex.Message }, ct, Source);
+            return;
+        }
+
+        await Step(tenant, runId, "move-switch", async () =>
+        {
+            tenant.NodeId = targetId;
+            tenant.MovingToNodeId = null;
+            tenant.Status = was;
+            tenant.StatusBeforeMove = null;
+            // Said on the record, not only in the steps: its owner may ask why yesterday's orders are gone
+            tenant.LastError = $"Brought up on {target.Node.Name} from its backup of {newest.At:u}, {lost.Node.Name} not answering; what it took after that is lost.";
+            await context.SaveChangesAsync(ct);
+            return $"{lost.Node.Name} → {target.Node.Name}, from {newest.Id}";
+        }, ct);
+        try
+        {
+            await Step(tenant, runId, "edge", () => edge.ApplyAsync(ct), ct);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            logger.LogError(ex, "{Slug} evacuated but the edge was not rewritten", tenant.Slug);
+            if (queue is not null) await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "edge"), ct);
+        }
+        await audit.WriteAsync("tenant.evacuated", tenant.Slug, new { runId, from = lost.Node.Name, to = target.Node.Name, backup = newest.Id, newest.At }, ct, Source);
+    }
+
+    /// <summary>
+    /// A node answering again after its tenants were brought up elsewhere: every stack still running there whose
+    /// tenant lives on another node now is stopped (its restart policy brought it back with the box), and its
+    /// clearing queued for after the quarantine. Returns the stacks stopped.
+    /// </summary>
+    public async Task<IReadOnlyList<string>> FenceAsync(int nodeId, CancellationToken ct)
+    {
+        var node = nodes.For(nodeId);
+        var reading = await node.Capacity.ProbeAsync(ct);
+        var running = reading.Projects
+            .Where(p => CapacityMath.IsStack(p.Project, reading.PlatformProject) && p.Running > 0)
+            .Select(p => p.Project["ninja-".Length..])
+            .ToHashSet(StringComparer.Ordinal);
+        var elsewhere = await context.Tenants
+            .Where(t => running.Contains(t.Slug) && t.NodeId != nodeId && t.MovingToNodeId != nodeId && t.Status != TenantStatus.Destroyed)
+            .ToListAsync(ct);
+        var stopped = new List<string>();
+        foreach (var tenant in elsewhere)
+        {
+            await node.Stacks.StopAsync(tenant.Slug, ct);
+            stopped.Add(tenant.Slug);
+            if (queue is not null)
+                await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "move-cleanup", NodeId: nodeId, NotBefore: DateTimeOffset.UtcNow.AddDays(Platform.MoveQuarantineDays)), ct);
+            await audit.WriteAsync("tenant.fenced", tenant.Slug, new { node = node.Node.Name }, ct, Source);
+        }
+        return stopped;
+    }
+
     /// <summary>The old copy of a moved tenant, cleared once its time in quarantine is over: its stack, databases, role, vhost and user.</summary>
     public async Task MoveCleanupAsync(Guid tenantId, int nodeId, CancellationToken ct)
     {

@@ -73,6 +73,7 @@ public static partial class ControlApi
         api.MapPost("/platform/nodes/{id:int}/ping", PingNode).WithName("PingNode").WithSummary("Ask the node whether it answers: its agent's version, its architecture, whether its docker runs; the record keeps when it last did").RequireAuthorization("Platform");
         api.MapPost("/platform/nodes/{id:int}/drain", DrainNode).WithName("DrainNode").WithSummary("Move every tenant off the node, one at a time, each where placement finds room; the node takes no new ones").RequireAuthorization("Platform");
         api.MapPost("/platform/nodes/{id:int}/retire", RetireNode).WithName("RetireNode").WithSummary("Let an empty node go: no tenant on it and no old copy waiting to be cleared there").RequireAuthorization("Platform");
+        api.MapPost("/platform/nodes/{id:int}/evacuate", EvacuateNode).WithName("EvacuateNode").WithSummary("Bring every tenant of a node that does not answer up elsewhere from its newest backup; what each took since is lost, and the node's copies are stopped if it ever answers again").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/move", MoveTenant).WithName("MoveTenant").WithSummary("Move the business's stack to another node with its data, realm and passwords: minutes of downtime, undone if anything fails before the switch").RequireAuthorization("Platform");
     }
 
@@ -138,6 +139,42 @@ public static partial class ControlApi
             queued.Add(tenant.Slug);
         }
         await audit.WriteAsync("node.drain", null, new { node.Id, node.Name, queued, stuck }, ct);
+        return TypedResults.Ok(new DrainResult(queued, stuck));
+    }
+
+    public static async Task<Results<Ok<DrainResult>, NotFound, Conflict<ProblemDetails>>> EvacuateNode(
+        ControlContext context, Placement placement, ProvisioningQueue queue, IAuditWriter audit, int id, CancellationToken ct)
+    {
+        var node = await context.Nodes.SingleOrDefaultAsync(n => n.Id == id, ct);
+        if (node is null) return TypedResults.NotFound();
+        // Only a node that has stopped answering: one that answers is drained, losing nothing
+        if (node.Status != NodeStatus.Unreachable)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{node.Name} answers: drain it instead, which loses nothing." });
+
+        var queued = new List<string>();
+        var stuck = new List<string>();
+        foreach (var tenant in await context.Tenants.Where(t => t.NodeId == id && t.Status != TenantStatus.Destroyed).OrderBy(t => t.Slug).ToListAsync(ct))
+        {
+            if (tenant.MovingToNodeId is not null) { queued.Add(tenant.Slug); continue; }
+            if (tenant.Status is not (TenantStatus.Running or TenantStatus.Stopped or TenantStatus.Failed))
+            {
+                stuck.Add($"{tenant.Slug}: it is {tenant.Status}");
+                continue;
+            }
+            var placed = await placement.PlaceAsync(new PlacementRequest(tenant.Kind, ExcludeNodeId: id), ct);
+            if (placed.NodeId is not int target)
+            {
+                stuck.Add($"{tenant.Slug}: {placed.Reason}");
+                continue;
+            }
+            tenant.MovingToNodeId = target;
+            // A failed tenant comes back running: it was failing on a node that is gone
+            if (tenant.Status == TenantStatus.Failed) tenant.StatusBeforeMove = TenantStatus.Running;
+            await context.SaveChangesAsync(ct);
+            await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "evacuate", NodeId: target), ct);
+            queued.Add(tenant.Slug);
+        }
+        await audit.WriteAsync("node.evacuate", null, new { node.Id, node.Name, queued, stuck }, ct);
         return TypedResults.Ok(new DrainResult(queued, stuck));
     }
 

@@ -3,6 +3,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { NodeDto, NodeStatus } from '@/api/control'
 import {
   drainNodeMutation,
+  evacuateNodeMutation,
   listNodesOptions,
   listNodesQueryKey,
   retireNodeMutation,
@@ -77,9 +78,18 @@ export function NodesTable() {
     onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
   })
 
-  const [asking, setAsking] = useState<{ node: NodeDto; action: 'drain' | 'retire' } | null>(null)
+  const [asking, setAsking] = useState<{ node: NodeDto; action: 'drain' | 'retire' | 'evacuate' } | null>(null)
   const drain = useMutation({
     ...drainNodeMutation(),
+    onSuccess: (r) => {
+      setAsking(null)
+      toast.success(t('nodeDrained', { count: String(r.moving.length), stuck: String(r.stuck.length) }))
+      refresh()
+    },
+    onError: (e) => toast.error(problemDetail(e) || t('somethingWentWrong')),
+  })
+  const evacuate = useMutation({
+    ...evacuateNodeMutation(),
     onSuccess: (r) => {
       setAsking(null)
       toast.success(t('nodeDrained', { count: String(r.moving.length), stuck: String(r.stuck.length) }))
@@ -193,6 +203,11 @@ export function NodesTable() {
                       {t('nodeDrain')}
                     </Button>
                   )}
+                  {node.status === 'Unreachable' && Number(node.tenants) > 0 && (
+                    <Button variant='ghost' size='sm' className='text-destructive' onClick={() => setAsking({ node, action: 'evacuate' })}>
+                      {t('nodeEvacuate')}
+                    </Button>
+                  )}
                   {node.kind === 'Agent' && node.status !== 'Retired' && Number(node.tenants) === 0 && (
                     <Button variant='ghost' size='sm' onClick={() => setAsking({ node, action: 'retire' })}>
                       {t('nodeRetire')}
@@ -211,23 +226,24 @@ export function NodesTable() {
         <AlertDialogContent size='sm'>
           <AlertDialogHeader>
             <AlertDialogTitle>
-              {asking?.action === 'drain' ? t('nodeDrainTitle', { name: asking.node.name }) : t('nodeRetireTitle', { name: asking?.node.name ?? '' })}
+              {t(asking?.action === 'drain' ? 'nodeDrainTitle' : asking?.action === 'evacuate' ? 'nodeEvacuateTitle' : 'nodeRetireTitle', { name: asking?.node.name ?? '' })}
             </AlertDialogTitle>
-            <AlertDialogDescription>{asking?.action === 'drain' ? t('nodeDrainNote') : t('nodeRetireNote')}</AlertDialogDescription>
+            <AlertDialogDescription>{t(asking?.action === 'drain' ? 'nodeDrainNote' : asking?.action === 'evacuate' ? 'nodeEvacuateNote' : 'nodeRetireNote')}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel disabled={drain.isPending || retire.isPending}>{t('cancel')}</AlertDialogCancel>
+            <AlertDialogCancel disabled={drain.isPending || retire.isPending || evacuate.isPending}>{t('cancel')}</AlertDialogCancel>
             <AlertDialogAction
-              disabled={drain.isPending || retire.isPending}
+              disabled={drain.isPending || retire.isPending || evacuate.isPending}
               onClick={(e) => {
                 e.preventDefault()
                 if (!asking) return
                 const path = { path: { id: Number(asking.node.id) } }
                 if (asking.action === 'drain') drain.mutate(path)
+                else if (asking.action === 'evacuate') evacuate.mutate(path)
                 else retire.mutate(path)
               }}
             >
-              {asking?.action === 'drain' ? t('nodeDrain') : t('nodeRetire')}
+              {t(asking?.action === 'drain' ? 'nodeDrain' : asking?.action === 'evacuate' ? 'nodeEvacuate' : 'nodeRetire')}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

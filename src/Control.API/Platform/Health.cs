@@ -170,7 +170,10 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
                 if (node.Status == NodeStatus.Unreachable)
                 {
                     node.Status = NodeStatus.Cordoned;
-                    await audit.WriteAsync("node.answering", null, new { node.Id, node.Name }, ct, "watchdog");
+                    // Its stacks came back with the box: any whose tenant was brought up elsewhere meanwhile is stopped now
+                    using var fencing = scopes.CreateScope();
+                    var fenced = await fencing.ServiceProvider.GetRequiredService<Provisioner>().FenceAsync(node.Id, ct);
+                    await audit.WriteAsync("node.answering", null, new { node.Id, node.Name, fenced }, ct, "watchdog");
                 }
                 continue;
             }

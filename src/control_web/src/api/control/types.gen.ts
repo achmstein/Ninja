@@ -4009,6 +4009,45 @@ export type RetireNodeResponses = {
 
 export type RetireNodeResponse = RetireNodeResponses[keyof RetireNodeResponses];
 
+export type EvacuateNodeData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/platform/nodes/{id}/evacuate';
+};
+
+export type EvacuateNodeErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type EvacuateNodeError = EvacuateNodeErrors[keyof EvacuateNodeErrors];
+
+export type EvacuateNodeResponses = {
+    /**
+     * OK
+     */
+    200: DrainResult;
+};
+
+export type EvacuateNodeResponse = EvacuateNodeResponses[keyof EvacuateNodeResponses];
+
 export type MoveTenantData = {
     body: MoveTenantRequest;
     path: {

@@ -79,6 +79,14 @@ public sealed class MoveTests
         private bool Fails(IReadOnlyList<string> args) => FailOn is not null && string.Join(' ', args).Contains(FailOn, StringComparison.Ordinal);
     }
 
+    /// <summary>A box whose stacks are what the test says they are.</summary>
+    private sealed class StubCapacity : IHostCapacity
+    {
+        public List<ProjectUsage> Projects { get; } = [];
+        public Task<CapacitySnapshot> ProbeAsync(CancellationToken ct)
+            => Task.FromResult(new CapacitySnapshot(DateTimeOffset.UtcNow, 16384, 8192, [0, 0, 0], 4, 100_000, 200_000, 0, 0, Projects, "ninja"));
+    }
+
     private sealed class HealthyStack : ITenantStack
     {
         public List<int> AskedOn { get; } = [];
@@ -96,6 +104,8 @@ public sealed class MoveTests
     }
 
     private HealthyStack _stack = null!;
+    private StubCapacity _oldBox = null!;
+    private TwoNodes? _provisionerNodes;
     private NoAudit _audit = null!;
 
     [TestInitialize]
@@ -121,9 +131,11 @@ public sealed class MoveTests
         _newShell = new FailingShell(new RecordingShell(NullLogger<RecordingShell>.Instance));
         _oldBroker = new QueueingBroker();
         var dryDb = new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance);
-        var one = new NamedNode(new LocalNodeClient(_oldShell, oneOptions, dryDb, _oldBroker, new ProcHostCapacity(_oldShell, new PlatformNodeSettings(oneOptions), NullLogger<ProcHostCapacity>.Instance)), new NodeRef(1, "node-1"));
+        _oldBox = new StubCapacity();
+        var one = new NamedNode(new LocalNodeClient(_oldShell, oneOptions, dryDb, _oldBroker, _oldBox), new NodeRef(1, "node-1"));
         var two = new NamedNode(new LocalNodeClient(_newShell, twoOptions, dryDb, new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance), new ProcHostCapacity(_newShell, new PlatformNodeSettings(twoOptions), NullLogger<ProcHostCapacity>.Instance)), new NodeRef(2, "node-2"));
         var nodes = new TwoNodes(one, two);
+        _provisionerNodes = nodes;
 
         _stack = new HealthyStack();
         _audit = new NoAudit();
@@ -233,5 +245,45 @@ public sealed class MoveTests
         await _provisioner.MoveCleanupAsync(_tenant.Id, 2, CancellationToken.None);
         Assert.AreEqual(0, _newShell.Inner.Commands.Count);
         Assert.IsTrue(_audit.Actions.Contains("tenant.move.cleanup-skipped"));
+    }
+
+    [TestMethod]
+    public async Task A_node_that_does_not_answer_has_its_tenant_brought_up_elsewhere_from_its_newest_backup()
+    {
+        // The backup the control plane kept, from before node 1 went quiet
+        var backups = new BackupService(new TwoNodes(_provisionerNodes!.For(1), _provisionerNodes.For(2)), new RecordingOffsiteStore(), Options.Create(_platform), NullLogger<BackupService>.Instance);
+        var newest = await backups.CreateAsync(_tenant, CancellationToken.None);
+        _oldShell.Commands.Clear();
+
+        await _provisioner.EvacuateAsync(_tenant.Id, CancellationToken.None);
+
+        Assert.AreEqual(2, _tenant.NodeId);
+        Assert.AreEqual(TenantStatus.Running, _tenant.Status);
+        StringAssert.Contains(_tenant.LastError, "what it took after that is lost", "the loss is said on the record");
+        // The edge's reload is the control plane's own, on the box node 1 shares with it here
+        Assert.AreEqual(0, _oldShell.Commands.Count(c => !c.Contains("caddy")), "nothing is asked of a node that does not answer");
+        Assert.AreEqual(TenantNaming.Databases.Length, _newShell.Inner.Commands.Count(c => c.Contains("pg_restore")));
+        Assert.IsTrue(_newShell.Inner.Commands.Any(c => c == "docker compose -p ninja-blue up -d --remove-orphans"));
+        StringAssert.Contains(_context.Steps.Single(st => st.Name == "evacuate-restore").Output, newest.Id);
+    }
+
+    [TestMethod]
+    public async Task A_node_that_answers_again_has_its_stale_copies_stopped_before_they_do_anything()
+    {
+        // blue lives on node 2 now; node 1 came back with blue's old stack running, and red's, which is still its own
+        _tenant.NodeId = 2;
+        _tenant.MovingToNodeId = null;
+        _context.Tenants.Add(new Tenant { Slug = "red", NameEn = "Red", Status = TenantStatus.Running, OwnerEmail = "o@red.test", NodeId = 1 });
+        await _context.SaveChangesAsync();
+        _oldBox.Projects.Add(new ProjectUsage("ninja-blue", 12, 12, 2048, 1));
+        _oldBox.Projects.Add(new ProjectUsage("ninja-red", 12, 12, 2048, 1));
+        _oldBox.Projects.Add(new ProjectUsage("ninja", 4, 4, 2048, 1));
+
+        var fenced = await _provisioner.FenceAsync(1, CancellationToken.None);
+
+        CollectionAssert.AreEqual(new[] { "blue" }, fenced.ToArray());
+        CollectionAssert.AreEqual(new[] { "docker compose -p ninja-blue stop" }, _oldShell.Commands, "red, which lives there, is left running");
+        var cleanup = _context.Jobs.Single(j => j.Action == "move-cleanup");
+        Assert.AreEqual(1, cleanup.NodeId);
     }
 }

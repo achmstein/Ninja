@@ -326,6 +326,7 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
         "demo-data" => provisioner.DemoDataAsync(job.TenantId, ct),
         "photos" => provisioner.PhotosAsync(job.TenantId, ct),
         "move" => provisioner.MoveAsync(job.TenantId, ct),
+        "evacuate" => provisioner.EvacuateAsync(job.TenantId, ct),
         "move-cleanup" => provisioner.MoveCleanupAsync(job.TenantId, job.NodeId ?? throw new InvalidOperationException("A clean-up names the node it clears."), ct),
         _ => provisioner.ComposeAsync(job.TenantId, job.Action, ct),
     };
