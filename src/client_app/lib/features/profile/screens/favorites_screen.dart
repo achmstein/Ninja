@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/providers/branch_provider.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
@@ -8,17 +9,19 @@ import '../../menu/services/menu_service.dart';
 import '../../menu/providers/favorites_provider.dart';
 import '../../menu/widgets/item.dart';
 
-/// Provider that combines favorites with menu items
+/// The favourites as the branch the app is at serves them: its prices, and
+/// only what it has; asked again when the app moves to another branch
 final favoriteMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
   final favoritesState = ref.watch(favoritesProvider);
   final favoriteIds = favoritesState.favoriteIds;
+  final branchId = ref.watch(selectedBranchIdProvider);
 
-  if (favoriteIds.isEmpty) {
+  if (favoriteIds.isEmpty || branchId == null) {
     return [];
   }
 
   final service = ref.watch(menuRepositoryProvider);
-  final allItems = await service.getMenuItems();
+  final allItems = await service.getMenuItems(branchId: branchId);
 
   return allItems.where((item) => favoriteIds.contains(item.id)).toList();
 });

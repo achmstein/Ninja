@@ -68,6 +68,8 @@ CurrentPlace? _decode(String? raw) {
   if (raw == null) return null;
   try {
     final json = jsonDecode(raw) as Map<String, dynamic>;
+    // A table kept without its branch is not one the app can place: forgotten, not guessed at branch 1
+    if (json['branchId'] is! int) return null;
     return CurrentPlace(
       id: json['id'] as int,
       kind: PlaceKind.fromValue(json['kind'] as int?),
@@ -75,7 +77,7 @@ CurrentPlace? _decode(String? raw) {
         en: json['nameEn'] as String?,
         ar: json['nameAr'] as String?,
       ),
-      branchId: json['branchId'] as int? ?? 1,
+      branchId: json['branchId'] as int,
       scannedAt:
           DateTime.fromMillisecondsSinceEpoch(json['scannedAt'] as int? ?? 0),
     );

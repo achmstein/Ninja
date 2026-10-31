@@ -10,7 +10,7 @@ class ApiClient {
   final Dio _dio;
   final AuthService _authService;
 
-  ApiClient(this._authService, {required String baseUrl, int Function()? branchIdGetter})
+  ApiClient(this._authService, {required String baseUrl, int? Function()? branchIdGetter})
       : _dio = Dio(BaseOptions(
           baseUrl: baseUrl,
           connectTimeout: const Duration(seconds: 60),
@@ -34,9 +34,12 @@ class ApiClient {
         if (token != null) {
           options.headers['Authorization'] = 'Bearer $token';
         }
-        // The selected branch, unless the call names its own (booking lists every branch's places)
+        // The selected branch, unless the call names its own (booking lists every branch's places,
+        // a cached menu its key's). None chosen yet (a first visit, the branches still loading):
+        // no header, so the server's own default answers rather than a guessed id that may not exist
         if (branchIdGetter != null && !options.headers.containsKey('X-Branch-Id')) {
-          options.headers['X-Branch-Id'] = branchIdGetter().toString();
+          final branchId = branchIdGetter();
+          if (branchId != null) options.headers['X-Branch-Id'] = '$branchId';
         }
         return handler.next(options);
       },
@@ -78,8 +81,8 @@ class ApiClient {
 }
 
 /// Helper to get the current branch ID from the provider container
-int Function() _branchIdGetter(Ref ref) {
-  return () => ref.read(branchProvider).selectedBranchId ?? 1;
+int? Function() _branchIdGetter(Ref ref) {
+  return () => ref.read(branchProvider).selectedBranchId;
 }
 
 /// Providers for API clients — branch-scoped services include X-Branch-Id header

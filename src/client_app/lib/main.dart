@@ -226,7 +226,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
         // An item went sold out (or came back) at the till: drop every
         // cached menu (all locales and branches) so the open screen refetches
         ref.invalidate(groupedMenuItemsProvider);
-        ref.invalidate(menuItemsProvider);
+        ref.invalidate(topMenuItemsProvider);
         WidgetsBinding.instance.ensureVisualUpdate();
       }),
     );

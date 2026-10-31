@@ -3,15 +3,18 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/providers/branch_provider.dart';
 import '../models/menu_item.dart';
 import '../models/user_preference.dart';
 
 /// Abstract interface for menu data access
 abstract class MenuRepository {
-  /// [branchId]: another branch's menu than the one the app is at (an order moving there)
+  /// [branchId]: the branch whose menu (prices, what it serves) is asked for. A provider that caches
+  /// the answer names it, so what it keeps is that branch's whatever the app is at when it refetches;
+  /// left out, the branch the app is at
   Future<List<MenuItem>> getMenuItems({int? categoryId, int? branchId});
   Future<MenuItem> getMenuItem(int id);
-  Future<List<MenuCategory>> getCategories();
+  Future<List<MenuCategory>> getCategories({int? branchId});
   Future<UserItemPreference?> getUserPreference(int catalogItemId);
   Future<List<UserItemPreference>> getUserPreferences(List<int> catalogItemIds);
   Future<List<UserItemPreference>> getAllUserPreferences();
@@ -60,9 +63,10 @@ class ApiMenuRepository implements MenuRepository {
 
   /// Get all categories
   @override
-  Future<List<MenuCategory>> getCategories() async {
+  Future<List<MenuCategory>> getCategories({int? branchId}) async {
     final response = await _apiClient.get<List<dynamic>>(
       'categories',
+      headers: branchId == null ? null : {'X-Branch-Id': '$branchId'},
     );
 
     return (response.data ?? [])
@@ -168,20 +172,6 @@ final menuRepositoryProvider = Provider<MenuRepository>((ref) {
   return ApiMenuRepository(apiClient);
 });
 
-/// Provider for menu items
-final menuItemsProvider = FutureProvider.family<List<MenuItem>, int?>(
-  (ref, categoryId) async {
-    final service = ref.watch(menuRepositoryProvider);
-    return service.getMenuItems(categoryId: categoryId);
-  },
-);
-
-/// Provider for categories — keyed by branch ID for clean state per branch
-final categoriesProvider = FutureProvider.family<List<MenuCategory>, int>((ref, branchId) async {
-  final service = ref.watch(menuRepositoryProvider);
-  return service.getCategories();
-});
-
 /// Notifier for selected category
 class SelectedCategoryNotifier extends Notifier<int?> {
   @override
@@ -214,12 +204,15 @@ final itemPreferenceProvider = Provider.family<UserItemPreference?, int>((ref, i
 
 /// The signed-in user's most-ordered items ("your usuals"), ranked. Empty for
 /// a guest or a user without enough history, so the menu section hides.
+/// The branch the app is at: its prices, and only what it serves.
 final topMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
   if (!ref.watch(isAuthenticatedProvider)) return const [];
+  final branchId = ref.watch(selectedBranchIdProvider);
+  if (branchId == null) return const [];
   final service = ref.watch(menuRepositoryProvider);
   final ids = await service.getMyTopItems();
   if (ids.isEmpty) return const [];
-  final items = await service.getMenuItems();
+  final items = await service.getMenuItems(branchId: branchId);
   final byId = {for (final item in items) item.id: item};
   return [
     for (final id in ids)
@@ -228,11 +221,13 @@ final topMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
 });
 
 /// Provider for grouped menu items by category with localized names.
-/// Keyed by (Locale, branchId) for clean state per branch.
-final groupedMenuItemsProvider = FutureProvider.family<Map<MenuCategory, List<MenuItem>>, (Locale, int)>((ref, _) async {
+/// Keyed by (Locale, branchId), and asked of that branch by name: what one
+/// key keeps is that branch's menu, whichever branch the app is at when it refetches.
+final groupedMenuItemsProvider = FutureProvider.family<Map<MenuCategory, List<MenuItem>>, (Locale, int)>((ref, key) async {
+  final branchId = key.$2;
   final service = ref.watch(menuRepositoryProvider);
-  final categories = await service.getCategories();
-  final items = await service.getMenuItems();
+  final categories = await service.getCategories(branchId: branchId);
+  final items = await service.getMenuItems(branchId: branchId);
 
   final grouped = <MenuCategory, List<MenuItem>>{};
 

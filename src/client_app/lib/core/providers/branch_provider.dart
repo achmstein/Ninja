@@ -4,6 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/branch.dart';
 import '../services/branch_service.dart';
 import '../services/location_service.dart';
+import 'branch_switch.dart';
 import '../../../features/cart/services/cart_service.dart';
 import '../../../features/cart/services/order_move.dart';
 import '../../../features/menu/services/menu_service.dart';
@@ -104,9 +105,13 @@ class BranchNotifier extends Notifier<BranchState> {
   /// A first visit, where the phone already gives the position without a
   /// prompt: the nearest open branch, rather than the owner's first
   Future<void> _nearestOnFirstVisit(List<Branch> branches) async {
+    final opened = state.selectedBranchId;
     await ref.read(locationProvider.notifier).readQuietly();
     final here = ref.read(locationProvider).here;
     if (here == null) return;
+    // Settled meanwhile (a scanned table, a link, the customer's own pick) or at a branch already:
+    // the guess gives way, as every other automatic move does
+    if (state.selectedBranchId != opened || ref.read(atBranchProvider)) return;
     final open = branches.where((b) => b.isActive && b.isOrderingEnabled).toList();
     final nearest = byDistance(open, here, (b) => b.point).firstOrNull;
     if (nearest != null && nearest.meters != null) await selectBranch(nearest.item.id);
