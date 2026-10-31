@@ -29,7 +29,16 @@ export const useBranchStore = create<BranchState>()(
   )
 )
 
-// For code outside the React tree (the axios interceptor)
+// For code outside the React tree
 export function getActiveBranchId(): number {
   return useBranchStore.getState().branchId
+}
+
+/**
+ * The branch requests go to (the axios interceptor): null until one is
+ * settled on, so a first visit never asks a guessed branch that may not exist.
+ */
+export function getChosenBranchId(): number | null {
+  const { branchId, chosen } = useBranchStore.getState()
+  return chosen ? branchId : null
 }

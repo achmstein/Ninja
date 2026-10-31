@@ -4,7 +4,7 @@ import {
   listCategoriesOptions,
   listItemsOptions,
 } from '@/api/catalog/@tanstack/react-query.gen'
-import { useSelectedBranch } from '@/lib/branch'
+import { useBranchScope, useSelectedBranch } from '@/lib/branch'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useFavorites } from './use-favorites'
 import { useMyTopItems } from './use-my-top-items'
@@ -28,8 +28,11 @@ export function useMenuData(): MenuData {
   const branch = useSelectedBranch()
   const orderingEnabled = branch?.isOrderingEnabled ?? true
 
-  const { data: categories = [] } = useQuery(listCategoriesOptions())
-  const { data: items = [], isLoading } = useQuery(listItemsOptions())
+  // This branch's menu by name, each branch cached as its own (lib/branch.ts)
+  const scope = useBranchScope()
+  const { data: categories = [] } = useQuery({ ...listCategoriesOptions(scope.options), enabled: scope.ready })
+  const { data: items = [], isLoading: itemsLoading } = useQuery({ ...listItemsOptions(scope.options), enabled: scope.ready })
+  const isLoading = itemsLoading || !scope.ready
   const { favorites } = useFavorites()
   const topItemIds = useMyTopItems()
 

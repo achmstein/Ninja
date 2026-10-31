@@ -18,6 +18,20 @@ export function useBranches() {
   })
 }
 
+/**
+ * A branch-scoped query's branch, named in the request and so in its key
+ * (the generated keys carry the headers): each branch's menu is cached as
+ * its own, a switch shows the new branch's at once or loads it, never the
+ * old one's prices meanwhile. `ready` once a branch is settled on (a first
+ * visit waits for useBranchFallback's pick rather than ask a guessed one).
+ * Spread `options` into the generated options, `enabled: ready` beside them.
+ */
+export function useBranchScope() {
+  const branchId = useBranchStore((s) => s.branchId)
+  const ready = useBranchStore((s) => s.chosen)
+  return { branchId, ready, options: { headers: { 'X-Branch-Id': String(branchId) } } }
+}
+
 /** The currently selected branch (settings drive ordering/reservation gates) */
 export function useSelectedBranch(): BranchResponse | undefined {
   const branchId = useBranchStore((s) => s.branchId)

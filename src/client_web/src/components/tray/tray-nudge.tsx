@@ -4,6 +4,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { Plus, X } from 'lucide-react'
 import { create } from 'zustand'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import { useBranchScope } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useItemPreferences } from '../menu/data/use-item-preferences'
@@ -32,7 +33,8 @@ export function TrayNudge() {
   const price = usePrice()
   const lines = useCart((s) => s.lines)
   const add = useCart((s) => s.add)
-  const { data: items = [] } = useQuery(listItemsOptions())
+  const scope = useBranchScope()
+  const { data: items = [] } = useQuery({ ...listItemsOptions(scope.options), enabled: scope.ready })
   const menu = useMemo(() => menuById(items), [items])
   const { said: notNow, say, reset } = useNotNow()
 

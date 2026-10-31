@@ -3,7 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { MotionConfig } from 'motion/react'
 import { Coffee } from 'lucide-react'
 import { getItemOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { useSelectedBranch } from '@/lib/branch'
+import { useBranchScope, useSelectedBranch } from '@/lib/branch'
 import { useCart } from '@/lib/cart'
 import { useT } from '@/lib/i18n'
 import { itemPictureUrl } from '@/components/menu/item-picture'
@@ -31,7 +31,10 @@ function ItemPage() {
   // As the menu: a branch that has paused ordering shows the item but will not add it
   const canOrder = useSelectedBranch()?.isOrderingEnabled ?? true
 
-  const { data: item, isLoading } = useQuery(getItemOptions({ path: { id: Number(itemId) } }))
+  // The item as this branch has it (its price), cached per branch like the menu
+  const scope = useBranchScope()
+  const { data: item, isLoading: itemLoading } = useQuery({ ...getItemOptions({ path: { id: Number(itemId) }, ...scope.options }), enabled: scope.ready })
+  const isLoading = itemLoading || !scope.ready
 
   if (!isLoading && !item) {
     return (

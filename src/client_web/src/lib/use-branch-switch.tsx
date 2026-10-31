@@ -9,6 +9,7 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { moveLines, type OrderMove } from '@/lib/order-move'
 import { toast } from '@/lib/toast'
 import { useHandler } from '@/lib/use-handler'
+import { useAtBranch } from '@/lib/at-branch'
 import { useBranchStore } from '@/stores/branch-store'
 import { usePlaceStore } from '@/stores/place-store'
 
@@ -73,22 +74,29 @@ export function useBranchFallback() {
   // Decided once, at launch: a later visit keeps its branch, wherever the customer is
   const [firstVisit] = useState(() => !useBranchStore.getState().chosen)
   const { here } = useMyLocation(firstVisit && (branches?.length ?? 0) > 1, { quiet: true })
+  // The branch this hook picked, where it picked one: the nearest may replace only its own guess
+  const guessedAt = useRef<number | null>(null)
 
   useEffect(() => {
     if (!branches?.length) return
     if (chosen && branches.some((b) => Number(b.id) === branchId)) return
     const ordered = lastUsedFirst(branches, branchId)
     const first = ordered.find((b) => b.isActive && b.isOrderingEnabled) ?? ordered.find((b) => b.isActive) ?? ordered[0]
+    guessedAt.current = Number(first.id)
     setBranchId(Number(first.id))
     queryClient.invalidateQueries({ predicate: (query) => (query.queryKey[0] as { _id?: string } | undefined)?._id !== 'getBranches' })
   }, [branches, branchId, chosen, setBranchId, queryClient])
 
+  // The branch the guess was made at: settled otherwise meanwhile (a scanned table, a link, the
+  // customer's own pick) or at a branch already, the guess gives way, as every automatic move does
+  const atBranch = useAtBranch()
   const placed = useRef(false)
   useEffect(() => {
     if (!firstVisit || !here || !branches?.length || placed.current) return
     placed.current = true
+    if (atBranch || branchId !== guessedAt.current) return
     moveToNearest(queryClient, branches, here)
-  }, [firstVisit, here, branches, queryClient])
+  }, [firstVisit, here, branches, queryClient, atBranch, branchId])
 }
 
 /**
@@ -158,4 +166,4 @@ export function useBranchesByDistance(ask: boolean, list?: BranchResponse[]) {
   return { sorted, location, anyPoint }
 }
 
-export { useAtBranch } from '@/lib/at-branch'
+export { useAtBranch }

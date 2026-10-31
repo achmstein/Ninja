@@ -1,5 +1,5 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
-import { getActiveBranchId } from '@/stores/branch-store'
+import { getChosenBranchId } from '@/stores/branch-store'
 import { getGuestId } from '@/stores/guest-store'
 import { getStoredUser } from './oidc'
 import { noteServerDate } from './clock'
@@ -34,9 +34,11 @@ apiClient.interceptors.request.use(
         config.headers['X-Guest-Id'] = guestId
       }
     }
-    // A call that names its own branch keeps it (booking lists every branch's places, lib/visit.ts)
+    // A call that names its own branch keeps it (booking lists every branch's places, lib/visit.ts;
+    // a cached menu its key's, lib/branch.ts's useBranchScope). None settled on yet: no header
     if (!config.headers.has('X-Branch-Id')) {
-      config.headers['X-Branch-Id'] = String(getActiveBranchId())
+      const branchId = getChosenBranchId()
+      if (branchId != null) config.headers['X-Branch-Id'] = String(branchId)
     }
     return config
   },

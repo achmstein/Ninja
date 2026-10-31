@@ -10,7 +10,7 @@ import { PLACE_ROOM, placeIcon } from '@/lib/places'
 import { useActiveStay, useMyHold, useMyStays } from '@/lib/stays'
 import { useActivePlace, type StoredPlace } from '@/stores/place-store'
 import { useFeatures } from '@/lib/brand'
-import { useBranches } from '@/lib/branch'
+import { useBranchScope, useBranches } from '@/lib/branch'
 import { useBranchStore } from '@/stores/branch-store'
 
 /**
@@ -34,8 +34,11 @@ export function bookablePlaces(
 /** The branch's bookable places, live — one query the tab and the nav share. */
 export function useBookablePlaces() {
   const features = useFeatures()
+  const scope = useBranchScope()
   return useQuery({
-    ...listPlacesOptions(),
+    // This branch's places by name, so a switch never shows the last one's
+    ...listPlacesOptions(scope.options),
+    enabled: scope.ready,
     refetchInterval: 30_000,
     select: (list) => bookablePlaces(list, features),
   })
