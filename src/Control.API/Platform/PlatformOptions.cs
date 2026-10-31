@@ -172,6 +172,12 @@ public sealed class PlatformOptions
     public int JobTimeoutMinutes { get; set; } = 45;
 
     /// <summary>
+    /// How many jobs a lane runs at once, never two on the same node: nodes work side by side, each one job at a
+    /// time as the box always has. One is the platform as it was before nodes.
+    /// </summary>
+    public int LaneConcurrency { get; set; } = 1;
+
+    /// <summary>
     /// What the shared Postgres allows (its max_connections), the most one
     /// service's pool may open (stamped into its connection string, the
     /// ceiling a runaway hits), and what one service typically holds (what

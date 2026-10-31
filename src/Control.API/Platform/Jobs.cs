@@ -26,9 +26,15 @@ public sealed record ProvisioningJob(Guid TenantId, string Action, string? Image
     };
 }
 
-/// <summary>The queue, on the record. One worker per lane on one box: claiming is a read then a save, nothing more.</summary>
+/// <summary>
+/// The queue, on the record. A lane runs one job at a time on each node; its workers live in this one process,
+/// and claiming (a read then a save) is held to one at a time per lane, so two of them never take the same job.
+/// A second control plane would need the database to hold claims instead (FOR UPDATE SKIP LOCKED).
+/// </summary>
 public sealed class ProvisioningQueue(IServiceScopeFactory scopes, IHttpContextAccessor http, ILogger<ProvisioningQueue> logger)
 {
+    private readonly ConcurrentDictionary<JobLane, SemaphoreSlim> _claiming = new();
+
     private readonly ConcurrentDictionary<JobLane, SemaphoreSlim> _signals = new();
 
     private SemaphoreSlim Signal(JobLane lane) => _signals.GetOrAdd(lane, _ => new SemaphoreSlim(0));
@@ -79,11 +85,27 @@ public sealed class ProvisioningQueue(IServiceScopeFactory scopes, IHttpContextA
     /// </summary>
     public async Task<Job?> ClaimAsync(JobLane lane, CancellationToken ct)
     {
+        var claiming = _claiming.GetOrAdd(lane, _ => new SemaphoreSlim(1, 1));
+        await claiming.WaitAsync(ct);
+        try
+        {
+            return await ClaimOneAsync(lane, ct);
+        }
+        finally
+        {
+            claiming.Release();
+        }
+    }
+
+    private async Task<Job?> ClaimOneAsync(JobLane lane, CancellationToken ct)
+    {
         using var scope = scopes.CreateScope();
         var context = scope.ServiceProvider.GetRequiredService<ControlContext>();
         var now = DateTimeOffset.UtcNow;
         var ready = context.Jobs
-            .Where(j => j.Status == JobStatus.Queued && j.Lane == lane && (j.NotBefore == null || j.NotBefore <= now));
+            .Where(j => j.Status == JobStatus.Queued && j.Lane == lane && (j.NotBefore == null || j.NotBefore <= now))
+            // One at a time on a node: not while the lane runs another on the same one (a job from before nodes is node 1's)
+            .Where(j => !context.Jobs.Any(r => r.Status == JobStatus.Running && r.Lane == lane && (r.NodeId ?? Node.HomeId) == (j.NodeId ?? Node.HomeId)));
         if (lane == JobLane.Backup)
         {
             var busy = ProvisioningWorker.Transitional;
@@ -198,7 +220,10 @@ public sealed class JobRecoveryService(ProvisioningQueue queue) : IHostedService
     public Task StopAsync(CancellationToken ct) => Task.CompletedTask;
 }
 
-/// <summary>Claims and runs one job at a time for its lane; never dies on a job.</summary>
+/// <summary>
+/// Claims and runs its lane's jobs: as many at once as the platform allows (<see cref="PlatformOptions.LaneConcurrency"/>),
+/// never two on one node, which the queue sees to. Never dies on a job.
+/// </summary>
 public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, IServiceScopeFactory scopes, UpdateCache updates, WorkerHeartbeat heartbeat, ILogger logger) : BackgroundService
 {
     /// <summary>The statuses a job leaves a tenant in while it works; a job that dies mid-way must not leave one there.</summary>
@@ -206,7 +231,16 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
 
     private static readonly TimeSpan Poll = TimeSpan.FromSeconds(15);
 
-    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    protected override Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        int slots;
+        using (var scope = scopes.CreateScope())
+            slots = Math.Max(1, scope.ServiceProvider.GetRequiredService<Microsoft.Extensions.Options.IOptions<PlatformOptions>>().Value.LaneConcurrency);
+        return Task.WhenAll(Enumerable.Range(0, slots).Select(_ => RunSlotAsync(stoppingToken)));
+    }
+
+    /// <summary>One of the lane's slots: a job at a time, the queue choosing one whose node is free.</summary>
+    private async Task RunSlotAsync(CancellationToken stoppingToken)
     {
         while (!stoppingToken.IsCancellationRequested)
         {

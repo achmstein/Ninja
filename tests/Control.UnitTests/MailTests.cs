@@ -43,6 +43,7 @@ public sealed class MailTests
         yield return MailTemplates.OpsJobStuck("blue", "upgrade", 52, Platform);
         yield return MailTemplates.OpsStackDown("blue", Platform);
         yield return MailTemplates.OpsWorkerDead("Stamp", Platform);
+        yield return MailTemplates.OpsNodeUnreachable("node-2", 3, Platform);
     }
 
     [TestMethod]

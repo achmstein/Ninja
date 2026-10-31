@@ -56,6 +56,50 @@ public sealed class JobQueueTests
     private ControlContext Context() => _services.CreateScope().ServiceProvider.GetRequiredService<ControlContext>();
 
     [TestMethod]
+    public async Task A_lane_runs_one_job_a_node_so_nodes_work_side_by_side()
+    {
+        // blue lives on node 1, red on node 2
+        await using (var context = Context())
+        {
+            context.Tenants.Single(t => t.Id == _red.Id).Status = TenantStatus.Running;
+            context.Tenants.Single(t => t.Id == _red.Id).NodeId = 2;
+            await context.SaveChangesAsync();
+        }
+        var blueStop = await _queue.EnqueueAsync(new ProvisioningJob(_blue.Id, "stop"), CancellationToken.None);
+        var blueStart = await _queue.EnqueueAsync(new ProvisioningJob(_blue.Id, "start"), CancellationToken.None);
+        var redStop = await _queue.EnqueueAsync(new ProvisioningJob(_red.Id, "stop"), CancellationToken.None);
+        Assert.AreEqual(2, Context().Jobs.Single(j => j.Id == redStop).NodeId, "a job carries its tenant's node");
+
+        var first = await _queue.ClaimAsync(JobLane.Stamp, CancellationToken.None);
+        var second = await _queue.ClaimAsync(JobLane.Stamp, CancellationToken.None);
+        var third = await _queue.ClaimAsync(JobLane.Stamp, CancellationToken.None);
+
+        Assert.AreEqual(blueStop, first!.Id);
+        Assert.AreEqual(redStop, second!.Id, "node 2 is free while node 1 works");
+        Assert.IsNull(third, "node 1's next waits for the one running there");
+
+        await _queue.CompleteAsync(blueStop, null, CancellationToken.None);
+        Assert.AreEqual(blueStart, (await _queue.ClaimAsync(JobLane.Stamp, CancellationToken.None))!.Id);
+    }
+
+    [TestMethod]
+    public async Task Claims_made_at_once_never_take_the_same_job()
+    {
+        for (var i = 0; i < 6; i++)
+        {
+            var tenant = new Tenant { Slug = $"t{i}", NameEn = "T", Status = TenantStatus.Running, OwnerEmail = $"o@t{i}.test", NodeId = 10 + i };
+            await using (var context = Context()) { context.Tenants.Add(tenant); await context.SaveChangesAsync(); }
+            await _queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "stop"), CancellationToken.None);
+        }
+
+        var claimed = await Task.WhenAll(Enumerable.Range(0, 8).Select(_ => _queue.ClaimAsync(JobLane.Stamp, CancellationToken.None)));
+
+        var ids = claimed.Where(j => j is not null).Select(j => j!.Id).ToList();
+        Assert.AreEqual(6, ids.Count, "each node's job once");
+        Assert.AreEqual(ids.Count, ids.Distinct().Count(), "no job claimed twice");
+    }
+
+    [TestMethod]
     public async Task The_same_job_queued_twice_is_one_row_and_a_stop_goes_before_a_stamp()
     {
         var first = await _queue.EnqueueAsync(new ProvisioningJob(_blue.Id, "provision"), CancellationToken.None);

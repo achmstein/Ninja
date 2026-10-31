@@ -267,7 +267,7 @@ public static partial class ControlApi
     /// temporary password, everyone else signs up again.
     /// </summary>
     public static async Task<Results<Accepted, NotFound, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> BringBack(
-        ControlContext context, BackupService backups, ProvisioningQueue queue, IAuditWriter audit, CapacityCache capacity, IOptions<PlatformOptions> options,
+        ControlContext context, BackupService backups, ProvisioningQueue queue, IAuditWriter audit, Placement placement, IOptions<PlatformOptions> options,
         string slug, BringBackRequest request, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleOrDefaultAsync(t => t.Slug == slug, ct);
@@ -276,11 +276,11 @@ public static partial class ControlApi
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"Only a destroyed tenant is brought back; {slug} is {tenant.Status}." });
         if (tenant.IsDrill)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = "A restore drill's scratch tenant is not brought back." });
-        if (!request.Force && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, Node.HomeId) });
-
-        // Back where its archived backup is kept: the box the control plane runs on, until backups leave it (phase 5)
-        tenant.NodeId = Node.HomeId;
+        // Wherever there is room: its archived backup is kept by the control plane and streams to any node
+        var placed = await placement.PlaceAsync(new PlacementRequest(tenant.Kind, Force: request.Force), ct);
+        if (placed.NodeId is not int nodeId)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"No room for another stack: {placed.Reason} Pass force=true to stamp anyway." });
+        tenant.NodeId = nodeId;
         string? from = null;
         if (!request.Empty)
         {

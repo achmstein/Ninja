@@ -153,8 +153,21 @@ public sealed class UpdateCache(IServiceScopeFactory scopes, INodes nodes, IImag
                 .ToListAsync(ct);
         }
 
-        // Every stack runs on the box the control plane runs on, until a second node joins
-        var running = await nodes.Home.Images.RunningAsync(ct);
+        // What runs on every node: this box's, and each reachable node's through its agent (one that does not
+        // answer leaves its tenants unassessed rather than the whole check failed)
+        var running = new Dictionary<string, IReadOnlyDictionary<string, string>>(await nodes.Home.Images.RunningAsync(ct), StringComparer.Ordinal);
+        foreach (var node in nodes.Known.Where(n => n.Kind == NodeKind.Agent && n.Status is not (NodeStatus.Retired or NodeStatus.Unreachable)))
+        {
+            try
+            {
+                foreach (var (project, services) in await nodes.For(node.Id).Images.RunningAsync(ct))
+                    running[project] = services;
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "Update check: {Node}'s images could not be read", node.Name);
+            }
+        }
         var local = await nodes.Home.Images.TaggedAsync(ct);
 
         // The registry, once per service and tag in use; a tag it cannot answer for falls back to the box's copy

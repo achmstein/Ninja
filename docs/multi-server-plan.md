@@ -8,6 +8,12 @@ Status: written 2026-10-31. Line numbers are as of that date.
 - **Phase 4 done (2026-11-01).** What runs on a node is `src/Ninja.Control.NodeRuntime`, with `NodeSettings` in place of the platform options. `src/Ninja.NodeAgent` is the agent: a `/v1` API, names checked, a `ComposePolicy`, and mTLS that pins the control plane's certificate. `AgentNodeClient` and `AgentConnections` pin the agent's certificate. Nodes are registered and pinged through the API, and every agent node's capacity is read on the timer. The edge names the tenant to a cell in `X-Ninja-Tenant` (a business's own domain keeps its host), and the internal edge listens on `:8090` at the box's WireGuard address. `deploy/cell` holds the cell, `setup-node.yml` sets a node up, and deploy-platform ships the client certificate.
   - Checked: contract tests (each part through the agent runs the commands it runs locally); a live mTLS check (pinned certificate 200, none or a stranger's refused at the handshake); live edge → cell → gateway routing; every Caddyfile and compose file validated; both images built.
   - **Departures:** the certificates are pinned self-signed ones made by setup-node, not a CA with join tokens, which makes mutual pinning a smaller moving part. The tenant images are still arm64-only, so a cell must be arm64 until they are built for amd64 too.
+- **Phase 5 done (2026-11-01).**
+  - The watchdog reconciles each node's tenants against that node's own stacks, and pings every agent node: three misses make it Unreachable, with one mail to ops; when it answers again it comes back Cordoned.
+  - The update check reads the running images on every reachable node.
+  - A lane runs one job per node at a time (`Platform:LaneConcurrency`, default 1 = as before). Claims are serialised in the process.
+  - Restores and bring-backs go through placement.
+  - **Departure:** backups stay with the control plane. A cell's dumps and volumes stream through its agent into the control box's backup folder, and restores stream back, so any backup restores onto any node with no catalogue table and no presigned uploads from agents. The cost is the control box's disk and bandwidth; revisit with offsite-first storage when cells are many.
 - **Departure from section 3:** a node is composed of parts (`Stacks`, `Data`, `Databases`, `Broker`, `Capacity`, `Images`, `RouteTo`) rather than one interface inheriting three. The agent client can implement each part separately.
 
 ## Findings that shape the design

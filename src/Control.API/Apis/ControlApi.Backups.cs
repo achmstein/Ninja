@@ -4,6 +4,7 @@ using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Apis;
 
@@ -68,7 +69,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Created<TenantDetail>, NotFound, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> RestoreBackup(
-        ControlContext context, BackupService backups, ProvisioningQueue queue, IAuditWriter audit, CapacityCache capacity, IOptions<PlatformOptions> options,
+        ControlContext context, BackupService backups, ProvisioningQueue queue, IAuditWriter audit, Placement placement, IOptions<PlatformOptions> options,
         string slug, string id, RestoreRequest request, CancellationToken ct)
     {
         var source = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
@@ -79,13 +80,15 @@ public static partial class ControlApi
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "The new slug must be 3–24 lower-case letters, digits and single dashes, and not a reserved word." });
         if (await context.Tenants.AnyAsync(t => t.Slug == into, ct))
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"{into} is taken; a restore makes a new tenant." });
-        if (!request.Force && !capacity.HasRoom)
-            return TypedResults.Conflict<ProblemDetails>(new() { Detail = NoRoom(capacity, Node.HomeId) });
+        var placed = await placement.PlaceAsync(new PlacementRequest(TenantKind.Customer, Force: request.Force), ct);
+        if (placed.NodeId is not int nodeId)
+            return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"No room for another stack: {placed.Reason} Pass force=true to stamp anyway." });
 
         // A restored business is the same business under a new slug: its name, look, locale and record come along; the realm and the owner are new
         var tenant = new Tenant
         {
             Slug = into,
+            NodeId = nodeId,
             NameEn = Clean(request.NameEn) ?? source.NameEn,
             NameAr = source.NameAr,
             Kind = TenantKind.Customer,

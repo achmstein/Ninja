@@ -3,6 +3,7 @@ using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -109,13 +110,18 @@ public static class Reconciler
 /// the first time it appears, an audit row and a mail to ops. Nothing is
 /// changed on its own: a stack that is down is for someone to look at.
 /// </summary>
-public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache capacity, WorkerHeartbeat heartbeat, PlatformWarnings warnings, IOptions<PlatformOptions> options, ILogger<PlatformWatchdog> logger) : BackgroundService
+public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache capacity, WorkerHeartbeat heartbeat, PlatformWarnings warnings, INodes nodes, IOptions<PlatformOptions> options, ILogger<PlatformWatchdog> logger) : BackgroundService
 {
     private static readonly TimeSpan Tick = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan Reconcile = TimeSpan.FromHours(1);
 
     private readonly HashSet<string> _seen = new(StringComparer.Ordinal);
     private DateTimeOffset _lastReconcile = DateTimeOffset.MinValue;
+
+    /// <summary>How many ticks in a row each node's agent has not answered; three, and the node is Unreachable.</summary>
+    private readonly Dictionary<int, int> _missed = [];
+
+    internal const int MissesBeforeUnreachable = 3;
 
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
@@ -127,6 +133,64 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             try { await TickAsync(stoppingToken); }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested) { logger.LogError(ex, "Watchdog tick failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+
+    /// <summary>
+    /// Each node beyond this box, pinged. A node that has missed three in a row goes Unreachable (a warning, an
+    /// audit row and one mail); one that answers again comes back Cordoned, for someone to look at and make
+    /// active. Returns the nodes that are Unreachable now.
+    /// </summary>
+    private async Task<HashSet<int>> WatchNodesAsync(ControlContext context, IAuditWriter audit,
+        List<(string Key, string Warning, string Action, object Details, MailMessage? Mail)> findings, PlatformOptions platform, CancellationToken ct)
+    {
+        var unreachable = new HashSet<int>();
+        var agents = await context.Nodes.Where(n => n.Kind == NodeKind.Agent && n.Status != NodeStatus.Retired && n.AgentUrl != null).ToListAsync(ct);
+        foreach (var node in agents)
+        {
+            bool answered;
+            try
+            {
+                using var timeout = CancellationTokenSource.CreateLinkedTokenSource(ct);
+                timeout.CancelAfter(TimeSpan.FromSeconds(15));
+                var ping = await nodes.For(node.Id).PingAsync(timeout.Token);
+                answered = true;
+                node.LastSeenAt = DateTimeOffset.UtcNow;
+                node.AgentVersion = ping.Version;
+                node.LastError = ping.Docker ? null : $"docker: {ping.Error}";
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                answered = false;
+                node.LastError = ex.Message;
+            }
+
+            if (answered)
+            {
+                _missed.Remove(node.Id);
+                if (node.Status == NodeStatus.Unreachable)
+                {
+                    node.Status = NodeStatus.Cordoned;
+                    await audit.WriteAsync("node.answering", null, new { node.Id, node.Name }, ct, "watchdog");
+                }
+                continue;
+            }
+
+            var missed = _missed[node.Id] = _missed.GetValueOrDefault(node.Id) + 1;
+            if (missed >= MissesBeforeUnreachable && node.Status != NodeStatus.Unreachable)
+            {
+                node.Status = NodeStatus.Unreachable;
+                logger.LogWarning("{Node} has not answered {Missed} times: Unreachable", node.Name, missed);
+            }
+            if (node.Status == NodeStatus.Unreachable)
+            {
+                unreachable.Add(node.Id);
+                var tenants = await context.Tenants.CountAsync(t => t.NodeId == node.Id && t.Status != TenantStatus.Destroyed, ct);
+                findings.Add(($"node:{node.Name}", $"{node.Name} does not answer: its {tenants} tenant(s) may be down and nothing there can be changed",
+                    "node.unreachable", new { node.Id, node.Name, tenants }, MailTemplates.OpsNodeUnreachable(node.Name, tenants, platform)));
+            }
+        }
+        await context.SaveChangesAsync(ct);
+        return unreachable;
     }
 
     internal async Task TickAsync(CancellationToken ct)
@@ -165,7 +229,11 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             }
         }
 
-        // The record against the box, once an hour
+        // The nodes beyond this box: each agent pinged; three silent ticks in a row and the node is Unreachable,
+        // its tenants said to be at risk. Nothing moves on its own: a node that is only cut off still runs its stacks
+        var unreachable = await WatchNodesAsync(context, audit, findings, platform, ct);
+
+        // The record against each node, once an hour
         if (snapshot is not null && now - _lastReconcile >= Reconcile)
         {
             _lastReconcile = now;
@@ -173,13 +241,24 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             // Destroying on the record, and a Destroyed one's containers went before its
             // record said so. A snapshot from minutes ago would call a just-destroyed stack
             // an orphan for the hour until the next reconciliation
-            var records = await context.Tenants.AsNoTracking().Select(t => new ValueTuple<string, TenantStatus>(t.Slug, t.Status)).ToListAsync(ct);
+            var records = await context.Tenants.AsNoTracking().Select(t => new { t.Slug, t.Status, t.NodeId }).ToListAsync(ct);
             var box = await capacity.RefreshAsync(ct);
-            var (down, orphans) = Reconciler.Compare(records, box.Projects, box.PlatformProject);
-            foreach (var slug in down)
-                findings.Add(($"down:{slug}", $"{slug} is Running on the record but none of its containers run", "tenant.stack-down", new { slug }, MailTemplates.OpsStackDown(slug, platform)));
-            foreach (var project in orphans)
-                findings.Add(($"orphan:{project}", $"Compose project {project} runs on the box but no tenant record explains it", "platform.orphan-stack", new { project }, null));
+            var unread = (await capacity.RefreshAgentsAsync(ct)).Select(f => f.Node.Id).ToHashSet();
+            var readings = new List<(int NodeId, string? Name, CapacitySnapshot Box)> { (Node.HomeId, null, box) };
+            foreach (var node in nodes.Known.Where(n => n.Kind == NodeKind.Agent && n.Status != NodeStatus.Retired))
+                if (!unread.Contains(node.Id) && !unreachable.Contains(node.Id) && capacity.For(node.Id) is { } reading)
+                    readings.Add((node.Id, node.Name, reading));
+            foreach (var (nodeId, name, reading) in readings)
+            {
+                // A node's tenants against that node's stacks; one that could not be read says nothing about its tenants
+                var here = records.Where(r => r.NodeId == nodeId).Select(r => (r.Slug, r.Status)).ToList();
+                var (down, orphans) = Reconciler.Compare(here, reading.Projects, reading.PlatformProject);
+                var on = name is null ? "the box" : name;
+                foreach (var slug in down)
+                    findings.Add(($"down:{slug}", $"{slug} is Running on the record but none of its containers run on {on}", "tenant.stack-down", new { slug, node = on }, MailTemplates.OpsStackDown(slug, platform)));
+                foreach (var project in orphans)
+                    findings.Add(($"orphan:{project}", $"Compose project {project} runs on {on} but no tenant record there explains it", "platform.orphan-stack", new { project, node = on }, null));
+            }
         }
 
         // What cleared, clears; what is new is said once

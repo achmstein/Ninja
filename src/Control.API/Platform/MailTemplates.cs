@@ -28,11 +28,12 @@ public static class MailTemplates
     public const string OpsJobStuckName = "ops-job-stuck";
     public const string OpsStackDownName = "ops-stack-down";
     public const string OpsWorkerDeadName = "ops-worker-dead";
+    public const string OpsNodeUnreachableName = "ops-node-unreachable";
 
     public static readonly string[] All =
     [
         OwnerWelcomeName, DemoExpiringName, DemoStoppedName, DemoDestroyedSoonName, SubscriptionPastDueName, SubscriptionSuspendedName, PaymentReceivedName,
-        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName, OpsDiskLowName, OpsJobStuckName, OpsStackDownName, OpsWorkerDeadName,
+        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName, OpsDiskLowName, OpsJobStuckName, OpsStackDownName, OpsWorkerDeadName, OpsNodeUnreachableName,
     ];
 
     public static MailMessage Welcome(Tenant t, TenantHosts hosts, MailOptions mail)
@@ -170,6 +171,12 @@ public static class MailTemplates
         => Ops(OpsWorkerDeadName, null, platform, $"The {lane} lane has stopped",
             [$"The {lane} worker has not gone round for minutes; jobs in that lane are not running. Restart the control plane: every job on the line survives a restart."],
             ("Open the queue", $"{platform.ControlUrl.TrimEnd('/')}/?tab=queue"));
+
+    public static MailMessage OpsNodeUnreachable(string node, int tenants, PlatformOptions platform)
+        => Ops(OpsNodeUnreachableName, null, platform, $"{node} does not answer",
+            [$"{node}'s agent has not answered for three minutes; the {tenants} tenant(s) living there may be down, and nothing on that node can be changed until it answers again. Nothing has been moved.",
+             "Look at the box itself (SSH, its WireGuard link to the platform). Once it answers, it comes back cordoned: make it active again from the Nodes tab."],
+            ("Open the nodes", $"{platform.ControlUrl.TrimEnd('/')}/?tab=nodes"));
 
     // ---------- the frame ----------
 
