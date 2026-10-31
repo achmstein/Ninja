@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:ui' show ImageFilter, lerpDouble;
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
@@ -69,7 +70,7 @@ class _NinjaSheetRoute<T> extends PopupRoute<T> {
 
   @override
   Widget buildPage(BuildContext context, Animation<double> animation, Animation<double> secondaryAnimation) =>
-      capturedThemes.wrap(_SheetFrame(route: this, padding: padding, builder: builder));
+      capturedThemes.wrap(_SheetFrame(route: this, dismissible: dismissible, padding: padding, builder: builder));
 }
 
 /// The page dimmed and a touch blurred behind the sheet
@@ -100,16 +101,21 @@ class _Scrim extends StatelessWidget {
 
 class _SheetFrame extends StatefulWidget {
   final PopupRoute<dynamic> route;
+
+  /// Pulled down far enough, it closes; one that is not gives a little under the finger and springs back
+  final bool dismissible;
   final EdgeInsetsGeometry padding;
   final WidgetBuilder builder;
 
-  const _SheetFrame({required this.route, required this.padding, required this.builder});
+  const _SheetFrame({required this.route, required this.dismissible, required this.padding, required this.builder});
 
   @override
   State<_SheetFrame> createState() => _SheetFrameState();
 }
 
 class _SheetFrameState extends State<_SheetFrame> {
+  /// How far the finger has pulled it, and how far the sheet follows: all the way, or a little for one that stays
+  double _pulled = 0;
   double _drag = 0;
   bool _dragging = false;
 
@@ -134,11 +140,21 @@ class _SheetFrameState extends State<_SheetFrame> {
     return rect;
   }
 
-  void _end(DragEndDetails details) {
+  void _update(DragUpdateDetails details) {
+    _pulled = (_pulled + details.delta.dy).clamp(-4, double.infinity);
+    // One that stays put resists, never more than a short way down, so it is never left off the screen
+    setState(() => _drag = widget.dismissible ? _pulled : 32 * (1 - math.exp(-math.max(0, _pulled) / 96)));
+  }
+
+  Future<void> _end(DragEndDetails details) async {
     final velocity = details.primaryVelocity ?? 0;
+    final close = widget.dismissible && (_drag > 96 || velocity > 600);
+    _pulled = 0;
     setState(() => _dragging = false);
-    if (_drag > 96 || velocity > 600) {
-      Navigator.of(context).maybePop();
+    if (close) {
+      await Navigator.of(context).maybePop();
+      // The page it is over said no (a PopScope): back up where it was, not left low with its scrim still taking every tap
+      if (mounted && widget.route.isActive) setState(() => _drag = 0);
     } else {
       setState(() => _drag = 0);
     }
@@ -183,7 +199,7 @@ class _SheetFrameState extends State<_SheetFrame> {
                   GestureDetector(
                     behavior: HitTestBehavior.opaque,
                     onVerticalDragStart: (_) => setState(() => _dragging = true),
-                    onVerticalDragUpdate: (d) => setState(() => _drag = (_drag + d.delta.dy).clamp(-4, double.infinity)),
+                    onVerticalDragUpdate: _update,
                     onVerticalDragEnd: _end,
                     child: SizedBox(
                       height: 28,
