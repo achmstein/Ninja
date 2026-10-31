@@ -60,9 +60,9 @@ public sealed class AgentNodeClient : INodeClient
 
     public Task<AgentPing> PingAsync(CancellationToken ct) => _agent.GetAsync<AgentPing>(AgentHttp.Path("ping"), ct);
 
-    /// <summary>The node's ingress, asked for the tenant's API host: it routes by host to the stack's gateway.</summary>
+    /// <summary>The node's ingress, the tenant named to it: it routes to the stack's gateway on its own network.</summary>
     public StackRoute RouteTo(string slug)
-        => new(new Uri(_node.IngressUrl ?? throw new InvalidOperationException($"{_node.Name} has no ingress on its record.")), $"api.{slug}.{_platform.Domain}");
+        => new(new Uri(_node.IngressUrl ?? throw new InvalidOperationException($"{_node.Name} has no ingress on its record.")), slug);
 }
 
 /// <summary>One agent, spoken to: JSON in and out, its refusals turned back into the exceptions a node part throws.</summary>

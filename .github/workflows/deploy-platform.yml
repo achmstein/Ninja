@@ -135,6 +135,12 @@ jobs:
           SOCIAL_APPLE_CLIENT_SECRET: ${{ secrets.PLATFORM_SOCIAL_APPLE_CLIENT_SECRET }}
           # Optional: the Firebase service account every stack's notification service pushes with (riders, customers, staff)
           FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+          # Optional, for nodes beyond this box (deploy/cell): the control plane's client certificate for
+          # their agents, a PFX in base64 and its password; every agent pins its thumbprint
+          NODE_AGENT_CLIENT_PFX: ${{ secrets.NODE_AGENT_CLIENT_PFX }}
+          NODE_AGENT_CLIENT_PASSWORD: ${{ secrets.NODE_AGENT_CLIENT_PASSWORD }}
+          # The box's address on the private network the cells share (10.66.0.1); empty until there are cells
+          PLATFORM_WG_IP: ${{ vars.PLATFORM_WG_IP }}
           # Optional: the app-builder client's secret, which mobile-deploy.yml signs in with to read a
           # business's app record; a repository secret, so both workflows see the one value
           APP_BUILDER_SECRET: ${{ secrets.APP_BUILDER_SECRET }}
@@ -174,6 +180,14 @@ jobs:
             FIREBASE_CREDENTIALS_PATH="$DEPLOY_DIR/firebase-credentials.json"
           fi
 
+          # The agents' client certificate: in its own folder, which the control plane mounts read-only
+          AGENT_CLIENT_CERT_PATH=""
+          mkdir -p platform-artifacts/agents
+          if [ -n "$NODE_AGENT_CLIENT_PFX" ]; then
+            printf '%s' "$NODE_AGENT_CLIENT_PFX" | base64 -d > platform-artifacts/agents/control-client.pfx
+            AGENT_CLIENT_CERT_PATH="/opt/ninja/platform/agents/control-client.pfx"
+          fi
+
           cat > platform-artifacts/.env <<EOF
           PLATFORM_DOMAIN=$PLATFORM_DOMAIN
           PLATFORM_SLUG_LABEL=${PLATFORM_SLUG_LABEL:-2}
@@ -205,6 +219,9 @@ jobs:
           SOCIAL_APPLE_CLIENT_SECRET=$SOCIAL_APPLE_CLIENT_SECRET
           FIREBASE_CREDENTIALS_PATH=$FIREBASE_CREDENTIALS_PATH
           APP_BUILDER_SECRET=$APP_BUILDER_SECRET
+          AGENT_CLIENT_CERT_PATH=$AGENT_CLIENT_CERT_PATH
+          AGENT_CLIENT_CERT_PASSWORD=$NODE_AGENT_CLIENT_PASSWORD
+          WG_IP=${PLATFORM_WG_IP:-127.0.0.1}
           IMAGE_REGISTRY=ghcr.io/${{ github.repository_owner }}/ninja
           IMAGE_TAG=${IMAGE_TAG:-latest}
           EOF
@@ -339,6 +356,8 @@ jobs:
 
             cd "$DEPLOY_DIR"
             chmod 600 .env
+            # The agents' client key: the deploy user's and root's alone (the control plane runs as root)
+            mkdir -p agents && chmod 700 agents && find agents -name '*.pfx' -exec chmod 600 {} +
             # The platform's Firebase key: readable by the .NET images' app user (uid 1654) that the
             # notification services run as, by nobody else on the box. Every stack's notification service
             # still mounts it; a platform push relay that held the key alone would end that

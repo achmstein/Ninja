@@ -135,6 +135,8 @@ services:
       Platform__Social__Apple__ClientSecret: ${SOCIAL_APPLE_CLIENT_SECRET:-}
       # The Firebase service account on the host, mounted read-only into every stack's notification service
       Platform__FirebaseCredentialsPath: ${FIREBASE_CREDENTIALS_PATH:-}
+      Platform__Agents__ClientCertificatePath: ${AGENT_CLIENT_CERT_PATH:-}
+      Platform__Agents__ClientCertificatePassword: ${AGENT_CLIENT_CERT_PASSWORD:-}
       # Ninja's Talabat (Delivery Hero POS) integration, one account for every café; empty leaves it off
       Platform__Talabat__MiddlewareUrl: ${TALABAT_MIDDLEWARE_URL:-}
       Platform__Talabat__Username: ${TALABAT_USERNAME:-}
@@ -172,6 +174,8 @@ services:
       # The custom-domain sites it writes for Caddy
       - ./custom-domains.caddy:/opt/ninja/platform/custom-domains.caddy
       - ./tenant-routes.caddy:/opt/ninja/platform/tenant-routes.caddy
+      # The client certificate the cells' agents pin (empty until there are cells)
+      - ./agents:/opt/ninja/platform/agents:ro
     depends_on:
       postgres:
         condition: service_healthy
@@ -190,6 +194,8 @@ services:
       - "80:80"
       - "443:443"
       - "443:443/udp"
+      # The internal edge, for the cells' stacks: on the box's WireGuard address only (127.0.0.1 until it has one)
+      - "${WG_IP:-127.0.0.1}:8090:8090"
     environment:
       PLATFORM_DOMAIN: ${PLATFORM_DOMAIN}
       PLATFORM_SLUG_LABEL: ${PLATFORM_SLUG_LABEL:-2}

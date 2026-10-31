@@ -25,12 +25,12 @@ public sealed class NodesTests
     }
 
     [TestMethod]
-    public void A_stack_is_reached_at_its_gateway_by_container_name_with_no_host_to_ask_for()
+    public void A_stack_is_reached_at_its_gateway_by_container_name_with_no_tenant_to_name()
     {
         var route = Nodes().Home.RouteTo("blue");
 
         Assert.AreEqual("http://blue-gateway:5000/api/tenant/brand?x=1", new Uri(route.BaseAddress, "/api/tenant/brand?x=1").ToString());
-        Assert.IsNull(route.Host);
+        Assert.IsNull(route.Tenant);
     }
 
     [TestMethod]

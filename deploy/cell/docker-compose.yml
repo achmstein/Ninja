@@ -1,0 +1,105 @@
+# A cell: a node that runs tenant stacks for the control plane on another box
+# (docs/multi-server-plan.md). Its own Postgres and broker for its stacks, an
+# ingress the platform's edge proxies a tenant's traffic to, and the agent the
+# control plane drives it through. Everything listens on the private network
+# only (WG_IP, the box's WireGuard address): nothing here is public.
+#
+#   docker compose up -d        (project name: ninja, as on the platform box,
+#                                so the stacks find postgres and eventbus
+#                                under the same names on the same network)
+#
+# Fill .env from .env.example; .github/workflows/setup-node.yml writes it.
+
+name: ninja
+
+services:
+  postgres:
+    image: docker.io/ankane/pgvector:latest
+    restart: unless-stopped
+    # Every stack opens eleven pools; a cell's Postgres serves its stacks and nothing else
+    command: ["postgres", "-c", "max_connections=${POSTGRES_MAX_CONNECTIONS:-400}", "-c", "shared_buffers=${POSTGRES_SHARED_BUFFERS:-1GB}"]
+    deploy:
+      resources:
+        limits:
+          memory: ${POSTGRES_MEMORY:-3G}
+    environment:
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+      POSTGRES_INITDB_ARGS: "--auth-host=scram-sha-256 --auth-local=scram-sha-256"
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    networks: [aspire]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  eventbus:
+    image: docker.io/library/rabbitmq:4.2
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: ${EVENTBUS_MEMORY:-1G}
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: ${EVENTBUS_PASSWORD}
+    volumes:
+      - rabbitmq-data:/var/lib/rabbitmq
+    networks: [aspire]
+    healthcheck:
+      test: ["CMD-SHELL", "test -f /var/lib/rabbitmq/.erlang.cookie && rabbitmq-diagnostics -q ping"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  # What the platform's edge sends a tenant's requests to: by host, to the stack's gateway here
+  ingress:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    ports:
+      - "${WG_IP}:8088:80"
+    environment:
+      PLATFORM_SLUG_LABEL: ${PLATFORM_SLUG_LABEL:-2}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+    networks: [aspire]
+
+  # The control plane's only way in: its certificate pinned, on the private network
+  agent:
+    image: ${IMAGE_REGISTRY:-ghcr.io/achmstein/ninja}-node-agent:${AGENT_TAG:-latest}
+    restart: unless-stopped
+    ports:
+      - "${WG_IP}:7443:7443"
+    environment:
+      ASPNETCORE_URLS: https://+:7443
+      ASPNETCORE_Kestrel__Certificates__Default__Path: /certs/agent.pfx
+      ASPNETCORE_Kestrel__Certificates__Default__Password: ${AGENT_CERT_PASSWORD}
+      Agent__ControlPlaneThumbprints__0: ${CONTROL_PLANE_THUMBPRINT}
+      Node__TenantsRoot: /opt/ninja/tenants
+      Node__PostgresHost: postgres
+      Node__PostgresPassword: ${POSTGRES_PASSWORD}
+      Node__PostgresContainer: ninja-postgres-1
+      Node__RabbitContainer: ninja-eventbus-1
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      # Compose reads a stack's files from the host: the same path inside and out
+      - /opt/ninja/tenants:/opt/ninja/tenants
+      - ./certs:/certs:ro
+    networks: [aspire]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      eventbus:
+        condition: service_healthy
+
+networks:
+  aspire:
+    name: aspire
+    driver: bridge
+
+volumes:
+  postgres-data:
+  rabbitmq-data:

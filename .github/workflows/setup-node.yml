@@ -1,0 +1,247 @@
+# Sets up a node: a box beyond the platform's own that runs tenant stacks for
+# the control plane (docs/multi-server-plan.md, deploy/cell). Run once per
+# node, and again to update its cell; every step is safe to repeat.
+#
+#   1. The node gets docker and WireGuard, and its own WireGuard key.
+#   2. The platform box gets WireGuard too (its key made the first time), and
+#      the node as a peer: 10.66.0.0/24, the platform at PLATFORM_WG_IP.
+#   3. The node joins the private network; its firewall opens SSH and
+#      WireGuard only (its agent and ingress listen on the WireGuard address).
+#   4. The cell comes up: its Postgres and broker, the ingress, and the agent
+#      with a certificate made on the node, pinning the control plane's.
+#   5. The summary prints what to register the node with (POST
+#      /api/control/platform/nodes, or the control app's Nodes tab).
+#
+# Needs: the secrets PLATFORM_SERVER_HOST/USER/SSH_KEY (as deploy-platform),
+# NODE_AGENT_CLIENT_PFX and NODE_AGENT_CLIENT_PASSWORD (the control plane's
+# client certificate, deploy/cell/README.md says how to make it), the
+# variable PLATFORM_WG_IP, and SSH to the node with NODE_SERVER_SSH_KEY (or
+# the platform's key when the node takes the same one).
+
+name: Setup Node
+
+on:
+  workflow_dispatch:
+    inputs:
+      node_name:
+        description: "The node's name on the record: node-2, node-3"
+        required: true
+        type: string
+      node_host:
+        description: "The node's public address, for SSH and WireGuard"
+        required: true
+        type: string
+      node_user:
+        description: "The SSH user on the node"
+        default: ubuntu
+        type: string
+      wg_ip:
+        description: "The node's address on the private network: 10.66.0.2, 10.66.0.3 (the platform is 10.66.0.1)"
+        required: true
+        type: string
+      agent_tag:
+        description: "The node agent's image tag: a release, or latest"
+        default: latest
+        type: string
+      environment:
+        description: "The GitHub environment holding the platform box's secrets"
+        default: platform
+        type: choice
+        options: [platform, platform-staging]
+
+permissions:
+  contents: read
+
+jobs:
+  setup:
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    env:
+      NODE: ${{ inputs.node_name }}
+      NODE_HOST: ${{ inputs.node_host }}
+      NODE_USER: ${{ inputs.node_user }}
+      WG_IP: ${{ inputs.wg_ip }}
+      AGENT_TAG: ${{ inputs.agent_tag }}
+      PLATFORM_HOST: ${{ secrets.PLATFORM_SERVER_HOST }}
+      PLATFORM_USER: ${{ secrets.PLATFORM_SERVER_USER }}
+      PLATFORM_WG_IP: ${{ vars.PLATFORM_WG_IP }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check the inputs
+        run: |
+          set -e
+          [[ "$NODE" =~ ^[a-z0-9][a-z0-9-]{0,31}$ ]] || { echo "::error::the name is lower-case letters, digits and dashes"; exit 1; }
+          [[ "$WG_IP" =~ ^10\.66\.0\.([2-9]|[1-9][0-9]|1[0-9][0-9]|2[0-4][0-9]|25[0-4])$ ]] || { echo "::error::the node's private address is 10.66.0.2 to 10.66.0.254"; exit 1; }
+          [ -n "$PLATFORM_WG_IP" ] || { echo "::error::set the variable PLATFORM_WG_IP (10.66.0.1) and redeploy the platform first"; exit 1; }
+          [ "$WG_IP" != "$PLATFORM_WG_IP" ] || { echo "::error::that address is the platform's"; exit 1; }
+
+      - name: SSH keys
+        env:
+          PLATFORM_KEY: ${{ secrets.PLATFORM_SERVER_SSH_KEY }}
+          NODE_KEY: ${{ secrets.NODE_SERVER_SSH_KEY || secrets.PLATFORM_SERVER_SSH_KEY }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          printf '%s\n' "$PLATFORM_KEY" > ~/.ssh/platform && chmod 600 ~/.ssh/platform
+          printf '%s\n' "$NODE_KEY" > ~/.ssh/node && chmod 600 ~/.ssh/node
+          echo "SSH_OPTS=-o StrictHostKeyChecking=accept-new -o ServerAliveInterval=30" >> "$GITHUB_ENV"
+
+      - name: The control plane's certificate, as the agent pins it
+        env:
+          PFX: ${{ secrets.NODE_AGENT_CLIENT_PFX }}
+          PFX_PASSWORD: ${{ secrets.NODE_AGENT_CLIENT_PASSWORD }}
+        run: |
+          set -e
+          [ -n "$PFX" ] || { echo "::error::NODE_AGENT_CLIENT_PFX is not set: deploy/cell/README.md makes it"; exit 1; }
+          printf '%s' "$PFX" | base64 -d > control-client.pfx
+          openssl pkcs12 -in control-client.pfx -passin env:PFX_PASSWORD -nokeys -clcerts -out control-client.crt
+          PIN=$(openssl x509 -in control-client.crt -noout -fingerprint -sha256 | sed 's/.*=//; s/://g')
+          rm -f control-client.pfx control-client.crt
+          echo "CONTROL_PLANE_THUMBPRINT=$PIN" >> "$GITHUB_ENV"
+
+      - name: The node gets docker and WireGuard
+        id: node
+        run: |
+          set -e
+          ssh $SSH_OPTS -i ~/.ssh/node "$NODE_USER@$NODE_HOST" 'bash -s' <<'EOS' > node.out
+          set -e
+          if ! command -v docker >/dev/null 2>&1; then curl -fsSL https://get.docker.com | sudo sh; sudo usermod -aG docker "$USER"; fi
+          if ! command -v wg >/dev/null 2>&1; then sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wireguard; fi
+          sudo install -d -m 700 /etc/wireguard
+          [ -f /etc/wireguard/node.key ] || (umask 077 && wg genkey | sudo tee /etc/wireguard/node.key >/dev/null)
+          echo "PUBKEY=$(sudo cat /etc/wireguard/node.key | wg pubkey)"
+          echo "ARCH=$(uname -m)"
+          EOS
+          grep -E '^(PUBKEY|ARCH)=' node.out >> "$GITHUB_OUTPUT"
+
+      - name: The platform box takes the node as a peer
+        id: platform
+        env:
+          NODE_PUBKEY: ${{ steps.node.outputs.PUBKEY }}
+        run: |
+          set -e
+          ssh $SSH_OPTS -i ~/.ssh/platform "$PLATFORM_USER@$PLATFORM_HOST" \
+            "NODE='$NODE' NODE_PUBKEY='$NODE_PUBKEY' NODE_HOST='$NODE_HOST' WG_IP='$WG_IP' PLATFORM_WG_IP='$PLATFORM_WG_IP' bash -s" <<'EOS' > platform.out
+          set -e
+          if ! command -v wg >/dev/null 2>&1; then sudo apt-get update -qq && sudo DEBIAN_FRONTEND=noninteractive apt-get install -y -qq wireguard; fi
+          sudo install -d -m 700 /etc/wireguard
+          [ -f /etc/wireguard/platform.key ] || (umask 077 && wg genkey | sudo tee /etc/wireguard/platform.key >/dev/null)
+          CONF=/etc/wireguard/wg0.conf
+          if ! sudo test -f "$CONF"; then
+            printf '[Interface]\nAddress = %s/24\nListenPort = 51820\nPostUp = wg set %%i private-key /etc/wireguard/platform.key\n' "$PLATFORM_WG_IP" | sudo tee "$CONF" >/dev/null
+            sudo chmod 600 "$CONF"
+          fi
+          # The node's peer block, replaced whole: between its own markers
+          sudo sed -i "/^# >>> $NODE\$/,/^# <<< $NODE\$/d" "$CONF"
+          printf '# >>> %s\n[Peer]\nPublicKey = %s\nAllowedIPs = %s/32\nEndpoint = %s:51820\n# <<< %s\n' "$NODE" "$NODE_PUBKEY" "$WG_IP" "$NODE_HOST" "$NODE" | sudo tee -a "$CONF" >/dev/null
+          sudo systemctl enable wg-quick@wg0 >/dev/null 2>&1 || true
+          if sudo wg show wg0 >/dev/null 2>&1; then sudo bash -c 'wg syncconf wg0 <(wg-quick strip wg0)'; else sudo systemctl start wg-quick@wg0; fi
+          if command -v ufw >/dev/null 2>&1 && sudo ufw status | grep -q active; then sudo ufw allow 51820/udp >/dev/null; fi
+          echo "PUBKEY=$(sudo cat /etc/wireguard/platform.key | wg pubkey)"
+          EOS
+          grep -E '^PUBKEY=' platform.out >> "$GITHUB_OUTPUT"
+
+      - name: The node joins the private network
+        env:
+          PLATFORM_PUBKEY: ${{ steps.platform.outputs.PUBKEY }}
+        run: |
+          set -e
+          ssh $SSH_OPTS -i ~/.ssh/node "$NODE_USER@$NODE_HOST" \
+            "WG_IP='$WG_IP' PLATFORM_PUBKEY='$PLATFORM_PUBKEY' PLATFORM_HOST='$PLATFORM_HOST' bash -s" <<'EOS'
+          set -e
+          CONF=/etc/wireguard/wg0.conf
+          printf '[Interface]\nAddress = %s/24\nListenPort = 51820\nPostUp = wg set %%i private-key /etc/wireguard/node.key\n\n[Peer]\nPublicKey = %s\nAllowedIPs = 10.66.0.0/24\nEndpoint = %s:51820\nPersistentKeepalive = 25\n' \
+            "$WG_IP" "$PLATFORM_PUBKEY" "$PLATFORM_HOST" | sudo tee "$CONF" >/dev/null
+          sudo chmod 600 "$CONF"
+          sudo systemctl enable wg-quick@wg0 >/dev/null 2>&1 || true
+          sudo systemctl restart wg-quick@wg0
+          # SSH and WireGuard from anywhere; the agent and the ingress only answer on the WireGuard address
+          if command -v ufw >/dev/null 2>&1; then
+            sudo ufw allow 22/tcp >/dev/null && sudo ufw allow 51820/udp >/dev/null && sudo ufw --force enable >/dev/null
+          fi
+          for i in $(seq 1 10); do ping -c1 -W2 10.66.0.1 >/dev/null 2>&1 && { echo "the platform answers on the private network"; exit 0; }; sleep 3; done
+          echo "::warning::the platform does not answer on 10.66.0.1 yet"
+          EOS
+
+      - name: The cell comes up
+        env:
+          GHCR_TOKEN: ${{ secrets.GHCR_TOKEN || secrets.GITHUB_TOKEN }}
+          GHCR_USER: ${{ github.actor }}
+          FIREBASE_CREDENTIALS_JSON: ${{ secrets.FIREBASE_CREDENTIALS_JSON }}
+        run: |
+          set -e
+          tar czf cell.tgz -C deploy/cell docker-compose.yml Caddyfile .env.example
+          scp $SSH_OPTS -i ~/.ssh/node cell.tgz "$NODE_USER@$NODE_HOST:/tmp/cell.tgz"
+          if [ -n "$FIREBASE_CREDENTIALS_JSON" ]; then
+            printf '%s' "$FIREBASE_CREDENTIALS_JSON" > firebase-credentials.json
+            scp $SSH_OPTS -i ~/.ssh/node firebase-credentials.json "$NODE_USER@$NODE_HOST:/tmp/firebase-credentials.json"
+            rm -f firebase-credentials.json
+          fi
+          ssh $SSH_OPTS -i ~/.ssh/node "$NODE_USER@$NODE_HOST" \
+            "NODE='$NODE' WG_IP='$WG_IP' AGENT_TAG='$AGENT_TAG' CONTROL_PLANE_THUMBPRINT='$CONTROL_PLANE_THUMBPRINT' GHCR_TOKEN='$GHCR_TOKEN' GHCR_USER='$GHCR_USER' IMAGE_REGISTRY='ghcr.io/${{ github.repository_owner }}/ninja' bash -s" <<'EOS' > cell.out
+          set -e
+          sudo install -d -o "$USER" -m 755 /opt/ninja /opt/ninja/cell /opt/ninja/tenants /opt/ninja/platform
+          cd /opt/ninja/cell
+          tar xzf /tmp/cell.tgz && rm -f /tmp/cell.tgz
+          # The push credentials where the stamped stacks mount them, as on the platform box: uid 1654's alone
+          if [ -f /tmp/firebase-credentials.json ]; then
+            sudo mv /tmp/firebase-credentials.json /opt/ninja/platform/firebase-credentials.json
+            sudo chown 1654:1654 /opt/ninja/platform/firebase-credentials.json && sudo chmod 400 /opt/ninja/platform/firebase-credentials.json
+          fi
+          # Secrets made once, kept on every later run
+          touch .env && chmod 600 .env
+          keep() { grep -q "^$1=" .env || echo "$1=$2" >> .env; }
+          set_() { sed -i "/^$1=/d" .env; echo "$1=$2" >> .env; }
+          keep POSTGRES_PASSWORD "$(openssl rand -hex 24)"
+          keep EVENTBUS_PASSWORD "$(openssl rand -hex 24)"
+          keep AGENT_CERT_PASSWORD "$(openssl rand -hex 24)"
+          set_ WG_IP "$WG_IP"
+          set_ AGENT_TAG "$AGENT_TAG"
+          set_ IMAGE_REGISTRY "$IMAGE_REGISTRY"
+          set_ CONTROL_PLANE_THUMBPRINT "$CONTROL_PLANE_THUMBPRINT"
+          # The agent's certificate, made on the node the first time; the control plane pins its thumbprint
+          install -d -m 700 certs
+          if [ ! -f certs/agent.pfx ]; then
+            PASS=$(grep -oP '^AGENT_CERT_PASSWORD=\K.*' .env)
+            openssl req -x509 -newkey ec -pkeyopt ec_paramgen_curve:P-256 -nodes -days 3650 \
+              -subj "/CN=$NODE" -addext "subjectAltName=IP:$WG_IP" -keyout certs/agent.key -out certs/agent.crt 2>/dev/null
+            openssl pkcs12 -export -inkey certs/agent.key -in certs/agent.crt -out certs/agent.pfx -passout pass:"$PASS"
+            rm -f certs/agent.key && chmod 600 certs/agent.pfx
+          fi
+          echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin >/dev/null
+          docker compose pull -q
+          docker compose up -d --remove-orphans
+          echo "PIN=$(openssl x509 -in certs/agent.crt -noout -fingerprint -sha256 | sed 's/.*=//; s/://g')"
+          EOS
+          grep -E '^PIN=' cell.out >> "$GITHUB_ENV"
+
+      - name: What to register the node with
+        env:
+          UNAME_ARCH: ${{ steps.node.outputs.ARCH }}
+        run: |
+          case "$UNAME_ARCH" in aarch64|arm64) ARCH=arm64 ;; *) ARCH=amd64 ;; esac
+          BODY=$(jq -n --arg name "$NODE" --arg ip "$WG_IP" --arg pin "$PIN" --arg arch "$ARCH" --arg p "$PLATFORM_WG_IP" '{
+            name: $name,
+            agentUrl: ("https://" + $ip + ":7443"),
+            ingressUrl: ("http://" + $ip + ":8088"),
+            certThumbprint: $pin,
+            architecture: $arch,
+            keycloakInternalUrl: ("http://" + $p + ":8090"),
+            aiGatewayUrl: ("http://" + $p + ":8090/ai/v1"),
+            talabatRelayUrl: ("http://" + $p + ":8090")
+          }')
+          {
+            echo "## $NODE is up"
+            echo
+            echo "Register it (it starts cordoned), ping it, then make it active:"
+            echo
+            echo '```json'
+            echo "$BODY"
+            echo '```'
+            echo
+            echo "POST /api/control/platform/nodes with that body, then POST /api/control/platform/nodes/{id}/ping."
+            if [ "$ARCH" != "arm64" ]; then
+              echo
+              echo "> The tenant images are built for arm64 only: this $ARCH node can run the agent but not stacks until they are built for $ARCH too."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"

@@ -94,7 +94,7 @@ public sealed class HttpStackProxy(IHttpClientFactory httpClientFactory, IStackT
         var client = httpClientFactory.CreateClient("stack");
         var route = nodes.For(tenant).RouteTo(tenant.Slug);
         using var request = new HttpRequestMessage(method, new Uri(route.BaseAddress, pathAndQuery)) { Content = content };
-        if (route.Host is not null) request.Headers.Host = route.Host;
+        if (route.Tenant is not null) request.Headers.Add(StackRoute.TenantHeader, route.Tenant);
         if (auth == StackAuth.Control)
             request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", await tokens.GetAsync(tenant, ct));
         if (branchId is int branch)

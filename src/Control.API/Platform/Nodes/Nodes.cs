@@ -13,9 +13,13 @@ public sealed record NodeRef(int Id, string Name);
 /// <summary>
 /// How the control plane reaches a stack's gateway: the address to send to and,
 /// when that address serves more than one stack (another node's ingress), the
-/// host to ask it for.
+/// tenant to name to it (X-Ninja-Tenant, as the platform's edge names it).
 /// </summary>
-public sealed record StackRoute(Uri BaseAddress, string? Host = null);
+public sealed record StackRoute(Uri BaseAddress, string? Tenant = null)
+{
+    /// <summary>The header a node's ingress routes on, set by whoever proxies to it.</summary>
+    public const string TenantHeader = "X-Ninja-Tenant";
+}
 
 /// <summary>One node, its parts each behind its own interface.</summary>
 public interface INodeClient

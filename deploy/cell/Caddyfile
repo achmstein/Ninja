@@ -1,0 +1,20 @@
+# A cell's ingress: the platform's edge proxies a tenant's requests here over
+# the private network, naming the tenant in X-Ninja-Tenant (the edge sets it,
+# overwriting whatever a client sent) and keeping the host they were made to,
+# the business's own domain included. The stack's gateway answers on this
+# box's docker network. Plain http: the edge holds the certificates, and this
+# listens on the WireGuard address only. A name that is not a slug gets nowhere.
+{
+	admin off
+	auto_https off
+}
+
+:80 {
+	@tenant header_regexp tenant X-Ninja-Tenant ^[a-z0-9][a-z0-9-]{1,23}$
+	handle @tenant {
+		reverse_proxy {header.X-Ninja-Tenant}-gateway:5000
+	}
+	handle {
+		respond "Which tenant?" 400
+	}
+}

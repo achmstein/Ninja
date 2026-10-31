@@ -94,6 +94,7 @@
 		import tenant-routes.caddy
 		default {args[0]}-gateway:5000
 	}
+	vars tenant_slug {args[0]}
 }
 
 (tenant_api) {
@@ -102,10 +103,14 @@
 	handle /api/* {
 		# The menu's JSON compresses five to ten times; the live hub below is left as it is
 		encode zstd gzip
-		reverse_proxy {tenant_upstream}
+		reverse_proxy {tenant_upstream} {
+			header_up X-Ninja-Tenant {vars.tenant_slug}
+		}
 	}
 	handle /hub/* {
-		reverse_proxy {tenant_upstream}
+		reverse_proxy {tenant_upstream} {
+			header_up X-Ninja-Tenant {vars.tenant_slug}
+		}
 	}
 }
 
@@ -271,7 +276,9 @@ https://*.*.{$PLATFORM_DOMAIN} {
 	@api host api.*.{$PLATFORM_DOMAIN}
 	handle @api {
 		import tenant_upstream {labels.{$PLATFORM_SLUG_LABEL}}
-		reverse_proxy {tenant_upstream}
+		reverse_proxy {tenant_upstream} {
+			header_up X-Ninja-Tenant {vars.tenant_slug}
+		}
 	}
 
 	# Two labels deep and none of the four: nothing here answers for it
@@ -308,4 +315,34 @@ https://*.{$PLATFORM_DOMAIN} {
 		import spa /srv/client-web
 	}
 	import paused_api
+}
+
+# The internal edge: the platform's own services as a cell's stacks reach
+# them, over the private network only (the port is published on the box's
+# WireGuard address and nowhere else). Their realms in Keycloak, the AI
+# gateway and the Talabat relay; never the master realm, the control API or
+# anything else. Plain http: WireGuard is the encryption.
+:8090 {
+	@master path /realms/master /realms/master/* /admin/realms/master /admin/realms/master/* /admin/master /admin/master/*
+	handle @master {
+		respond 404
+	}
+	handle /realms/* {
+		reverse_proxy keycloak:8080
+	}
+	handle /admin/realms/* {
+		reverse_proxy keycloak:8080
+	}
+	handle /resources/* {
+		reverse_proxy keycloak:8080
+	}
+	handle /ai/v1/* {
+		reverse_proxy control-api:8080
+	}
+	handle /api/talabat/relay/* {
+		reverse_proxy control-api:8080
+	}
+	handle {
+		respond 404
+	}
 }
