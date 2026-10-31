@@ -7,6 +7,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -108,7 +109,7 @@ public static partial class UpdateMath
 /// images) and, where the platform pulls, what it resolves to in the
 /// registry; the registry's answer wins where it has one.
 /// </summary>
-public sealed class UpdateCache(IServiceScopeFactory scopes, IShell shell, IImageRegistry registry, IOptions<PlatformOptions> options, ILogger<UpdateCache> logger)
+public sealed class UpdateCache(IServiceScopeFactory scopes, INodes nodes, IImageRegistry registry, IOptions<PlatformOptions> options, ILogger<UpdateCache> logger)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
@@ -152,8 +153,9 @@ public sealed class UpdateCache(IServiceScopeFactory scopes, IShell shell, IImag
                 .ToListAsync(ct);
         }
 
-        var running = await RunningImagesAsync(ct);
-        var local = await LocalImagesAsync(ct);
+        // Every stack runs on the box the control plane runs on, until a second node joins
+        var running = await nodes.Home.Images.RunningAsync(ct);
+        var local = await nodes.Home.Images.TaggedAsync(ct);
 
         // The registry, once per service and tag in use; a tag it cannot answer for falls back to the box's copy
         var newest = new Dictionary<string, IReadOnlyList<string>>(StringComparer.Ordinal);
@@ -185,44 +187,6 @@ public sealed class UpdateCache(IServiceScopeFactory scopes, IShell shell, IImag
 
         logger.LogInformation("Update check: {Behind} of {Total} tenants behind, {Releases} releases", result.Count(r => r.Value.Behind), result.Count, releases.Count);
         return new UpdateSnapshot(DateTimeOffset.UtcNow, releases, result);
-    }
-
-    /// <summary>Every container docker has, by compose project then service suffix, with the id of the image it runs.</summary>
-    private async Task<Dictionary<string, Dictionary<string, string>>> RunningImagesAsync(CancellationToken ct)
-    {
-        var byProject = new Dictionary<string, Dictionary<string, string>>(StringComparer.Ordinal);
-        var ps = await shell.RunAsync("docker", ["ps", "-a", "--filter", "label=com.docker.compose.project", "--format", "{{.ID}}"], null, ct);
-        var ids = ps.Stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
-        if (!ps.Ok || ids.Length == 0) return byProject;
-
-        var inspect = await shell.RunAsync("docker", ["inspect", "--format", "{{index .Config.Labels \"com.docker.compose.project\"}}\t{{index .Config.Labels \"com.docker.compose.service\"}}\t{{.Image}}", .. ids], null, ct);
-        foreach (var line in inspect.Stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var parts = line.Split('\t');
-            if (parts.Length != 3 || !parts[0].StartsWith("ninja-", StringComparison.Ordinal)) continue;
-            var slug = parts[0]["ninja-".Length..];
-            // {slug}-{service}-api is the compose service; the gateway and anything else is not a versioned image of ours
-            var prefix = $"{slug}-"; const string suffix = "-api";
-            if (!parts[1].StartsWith(prefix, StringComparison.Ordinal) || !parts[1].EndsWith(suffix, StringComparison.Ordinal)) continue;
-            var service = parts[1][prefix.Length..^suffix.Length];
-            if (!byProject.TryGetValue(parts[0], out var services)) byProject[parts[0]] = services = new(StringComparer.Ordinal);
-            services[service] = parts[2].Trim();
-        }
-        return byProject;
-    }
-
-    /// <summary>What each tag on the box resolves to: repository:tag → image id.</summary>
-    private async Task<Dictionary<string, string>> LocalImagesAsync(CancellationToken ct)
-    {
-        var map = new Dictionary<string, string>(StringComparer.Ordinal);
-        var images = await shell.RunAsync("docker", ["images", "--no-trunc", "--format", "{{.Repository}}:{{.Tag}}\t{{.ID}}"], null, ct);
-        if (!images.Ok) return map;
-        foreach (var line in images.Stdout.Split('\n', StringSplitOptions.RemoveEmptyEntries))
-        {
-            var parts = line.Split('\t');
-            if (parts.Length == 2) map[parts[0]] = parts[1].Trim();
-        }
-        return map;
     }
 }
 

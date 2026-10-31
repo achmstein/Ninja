@@ -42,13 +42,12 @@ public sealed class StackSettingsTests
         _context = new ControlContext(new DbContextOptionsBuilder<ControlContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _stack = new DryRunStackProxy(options);
         var shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
+        var nodes = TestNodes.Over(shell, options);
         _provisioner = new Provisioner(_context, options,
-            new SingleNode(new LocalNodeClient(shell, options)), new CaddyEdgeRouter(_context, shell, options),
-            new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
-            new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
+            nodes, new CaddyEdgeRouter(_context, shell, options),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             new HttpTenantStack(_stack, NullLogger<HttpTenantStack>.Instance), new NoAudit(),
-            new BackupService(SingleNode.Over(shell, options), new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance),
+            new BackupService(nodes, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance),
             NullLogger<Provisioner>.Instance);
 
         _tenant = new Tenant

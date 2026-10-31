@@ -21,7 +21,7 @@ public sealed class BackupTests
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
         _store = new RecordingOffsiteStore();
         var options = Options.Create(new PlatformOptions { TenantsRoot = _root, Offsite = { Prefix = "ninja/" } });
-        _backups = new BackupService(SingleNode.Over(_shell, options), _store, options, NullLogger<BackupService>.Instance);
+        _backups = new BackupService(TestNodes.Over(_shell, options), _store, options, NullLogger<BackupService>.Instance);
     }
 
     [TestCleanup]

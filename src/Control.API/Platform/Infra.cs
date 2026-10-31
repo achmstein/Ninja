@@ -8,6 +8,7 @@ using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
 using Ninja.ServiceDefaults;
 using Npgsql;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -308,7 +309,7 @@ public sealed partial class NpgsqlDatabaseAdmin(IOptions<PlatformOptions> option
 }
 
 /// <summary>Once, at start: the platform's own databases and the maintenance one stop accepting anyone but the superuser, which is what keeps every tenant role out of them.</summary>
-public sealed class PlatformLockdownService(IDatabaseAdmin databases, ILogger<PlatformLockdownService> logger) : BackgroundService
+public sealed class PlatformLockdownService(INodes nodes, ILogger<PlatformLockdownService> logger) : BackgroundService
 {
     public static readonly string[] Databases = ["controldb", "keycloak", "postgres"];
 
@@ -318,7 +319,7 @@ public sealed class PlatformLockdownService(IDatabaseAdmin databases, ILogger<Pl
         {
             try
             {
-                await databases.LockDownAsync(db, stoppingToken);
+                await nodes.Home.Databases.LockDownAsync(db, stoppingToken);
             }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested)
             {

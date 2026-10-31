@@ -108,7 +108,7 @@ public sealed class UpdateTests
         }
         var shell = new ScriptedShell(inspect, images);
         var registry = new DryRunImageRegistry();
-        var cache = new UpdateCache(provider.GetRequiredService<IServiceScopeFactory>(), shell, registry, Options.Create(platform), NullLogger<UpdateCache>.Instance);
+        var cache = new UpdateCache(provider.GetRequiredService<IServiceScopeFactory>(), TestNodes.Over(shell, Options.Create(platform)), registry, Options.Create(platform), NullLogger<UpdateCache>.Instance);
         return (cache, registry, shell);
     }
 

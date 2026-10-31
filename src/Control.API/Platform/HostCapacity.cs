@@ -2,6 +2,7 @@ using System.Text.Json;
 using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
+using Ninja.Control.API.Platform.Nodes;
 
 namespace Ninja.Control.API.Platform;
 
@@ -104,7 +105,7 @@ public sealed class DryRunHostCapacity(IServiceScopeFactory scopes, IOptions<Pla
 }
 
 /// <summary>The last snapshot, refreshed on a timer so the control app can poll without probing the box each time.</summary>
-public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> options)
+public sealed class CapacityCache(INodes nodes, IOptions<PlatformOptions> options)
 {
     private readonly SemaphoreSlim _gate = new(1, 1);
 
@@ -115,7 +116,7 @@ public sealed class CapacityCache(IHostCapacity host, IOptions<PlatformOptions> 
         await _gate.WaitAsync(ct);
         try
         {
-            Latest = await host.ProbeAsync(ct);
+            Latest = await nodes.Home.Capacity.ProbeAsync(ct);
             return Latest;
         }
         finally

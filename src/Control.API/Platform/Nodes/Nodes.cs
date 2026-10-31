@@ -1,4 +1,3 @@
-using Microsoft.Extensions.Options;
 using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform.Nodes;
@@ -66,6 +65,16 @@ public interface INodeData
     Task<ShellResult> ImportVolumeAsync(string volume, Stream input, CancellationToken ct);
 }
 
+/// <summary>The images on a node: what each stack's containers run, and what each tag there resolves to.</summary>
+public interface IImageInventory
+{
+    /// <summary>Every compose project's versioned services (ninja-{slug} → service → image id); the gateway and anything else is not ours to version.</summary>
+    Task<IReadOnlyDictionary<string, IReadOnlyDictionary<string, string>>> RunningAsync(CancellationToken ct);
+
+    /// <summary>repository:tag → image id, for every image on the node.</summary>
+    Task<IReadOnlyDictionary<string, string>> TaggedAsync(CancellationToken ct);
+}
+
 /// <summary>One node, its parts each behind its own interface.</summary>
 public interface INodeClient
 {
@@ -77,6 +86,17 @@ public interface INodeClient
     IStackRuntime Stacks { get; }
 
     INodeData Data { get; }
+
+    /// <summary>The node's Postgres: the tenants' roles and databases.</summary>
+    IDatabaseAdmin Databases { get; }
+
+    /// <summary>The node's broker: the tenants' users, vhosts and queues.</summary>
+    IBrokerAdmin Broker { get; }
+
+    /// <summary>What the node has and what its stacks take.</summary>
+    IHostCapacity Capacity { get; }
+
+    IImageInventory Images { get; }
 }
 
 /// <summary>Which node a tenant lives on, and the way to it.</summary>
@@ -94,7 +114,4 @@ public sealed class SingleNode(LocalNodeClient local) : INodes
     public INodeClient For(Tenant tenant) => local;
 
     public INodeClient Home => local;
-
-    /// <summary>The one box, reached through <paramref name="shell"/>: the tests' and the dry run's way to a node.</summary>
-    public static SingleNode Over(IShell shell, IOptions<PlatformOptions> options) => new(new LocalNodeClient(shell, options));
 }

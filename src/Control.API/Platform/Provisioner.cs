@@ -17,8 +17,6 @@ public sealed class Provisioner(
     IOptions<PlatformOptions> options,
     INodes nodes,
     IEdgeRouter edge,
-    IDatabaseAdmin databases,
-    IBrokerAdmin broker,
     IKeycloakAdmin keycloak,
     ITenantStack stack,
     IAuditWriter audit,
@@ -271,8 +269,8 @@ public sealed class Provisioner(
             // Stamped before online payments: Sales gets its key for the provider secrets on this stamp
             if (string.IsNullOrEmpty(tenant.PaymentsKey)) tenant.PaymentsKey = TenantNaming.NewSecret();
             await context.SaveChangesAsync(ct);
-            await databases.EnsureRoleAsync(TenantNaming.DbRole(tenant.Slug), tenant.DbPassword, ct);
-            await broker.EnsureUserAsync(TenantNaming.BrokerUser(tenant.Slug), tenant.BrokerPassword, ct);
+            await nodes.For(tenant).Databases.EnsureRoleAsync(TenantNaming.DbRole(tenant.Slug), tenant.DbPassword, ct);
+            await nodes.For(tenant).Broker.EnsureUserAsync(TenantNaming.BrokerUser(tenant.Slug), tenant.BrokerPassword, ct);
             return $"role {TenantNaming.DbRole(tenant.Slug)}, user {TenantNaming.BrokerUser(tenant.Slug)}{(fresh ? "" : " (kept)")}";
         }, ct);
 
@@ -281,14 +279,14 @@ public sealed class Provisioner(
         => Step(tenant, runId, "databases", async () =>
         {
             foreach (var db in TenantNaming.Databases)
-                await databases.EnsureDatabaseAsync(TenantNaming.Database(tenant.Slug, db), TenantNaming.DbRole(tenant.Slug), ct);
+                await nodes.For(tenant).Databases.EnsureDatabaseAsync(TenantNaming.Database(tenant.Slug, db), TenantNaming.DbRole(tenant.Slug), ct);
             return $"{TenantNaming.Databases.Length} databases owned by {TenantNaming.DbRole(tenant.Slug)}";
         }, ct);
 
     private Task<string> BrokerStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "broker", async () =>
         {
-            await broker.EnsureVHostAsync(TenantNaming.VHost(tenant.Slug), TenantNaming.BrokerUser(tenant.Slug), ct);
+            await nodes.For(tenant).Broker.EnsureVHostAsync(TenantNaming.VHost(tenant.Slug), TenantNaming.BrokerUser(tenant.Slug), ct);
             return $"vhost {TenantNaming.VHost(tenant.Slug)} for {TenantNaming.BrokerUser(tenant.Slug)}";
         }, ct);
 
@@ -390,7 +388,7 @@ public sealed class Provisioner(
             var vhost = TenantNaming.VHost(tenant.Slug);
             var off = TenantNaming.Services.Except(PlanCatalog.Services(tenant)).Select(TenantNaming.Queue).ToList();
             foreach (var queue in off)
-                await broker.DeleteQueueAsync(vhost, queue, ct);
+                await nodes.For(tenant).Broker.DeleteQueueAsync(vhost, queue, ct);
             return off.Count == 0 ? "every service runs" : $"{string.Join(", ", off)} off vhost {vhost}";
         }, ct);
 
@@ -477,7 +475,7 @@ public sealed class Provisioner(
     private Task<string> BrokerLockdownStepAsync(Tenant tenant, Guid runId, CancellationToken ct)
         => Step(tenant, runId, "broker-lockdown", async () =>
         {
-            await broker.ClearPermissionsAsync(TenantNaming.VHost(tenant.Slug), Platform.RabbitUser, ct);
+            await nodes.For(tenant).Broker.ClearPermissionsAsync(TenantNaming.VHost(tenant.Slug), Platform.RabbitUser, ct);
             return $"{Platform.RabbitUser} off vhost {TenantNaming.VHost(tenant.Slug)}";
         }, ct);
 
@@ -534,22 +532,22 @@ public sealed class Provisioner(
 
             await Step(tenant, runId, "broker-delete", async () =>
             {
-                await broker.DeleteVHostAsync(TenantNaming.VHost(tenant.Slug), ct);
-                await broker.DeleteUserAsync(TenantNaming.BrokerUser(tenant.Slug), ct);
+                await nodes.For(tenant).Broker.DeleteVHostAsync(TenantNaming.VHost(tenant.Slug), ct);
+                await nodes.For(tenant).Broker.DeleteUserAsync(TenantNaming.BrokerUser(tenant.Slug), ct);
                 return "vhost and user gone";
             }, ct);
 
             await Step(tenant, runId, "databases-drop", async () =>
             {
                 foreach (var db in TenantNaming.Databases)
-                    await databases.DropDatabaseAsync(TenantNaming.Database(tenant.Slug, db), ct);
+                    await nodes.For(tenant).Databases.DropDatabaseAsync(TenantNaming.Database(tenant.Slug, db), ct);
                 return $"{TenantNaming.Databases.Length} databases";
             }, ct);
 
             // Owns nothing once its databases are gone; the passwords stay on the record for a re-provision
             await Step(tenant, runId, "role-drop", async () =>
             {
-                await databases.DropRoleAsync(TenantNaming.DbRole(tenant.Slug), ct);
+                await nodes.For(tenant).Databases.DropRoleAsync(TenantNaming.DbRole(tenant.Slug), ct);
                 return "gone";
             }, ct);
 

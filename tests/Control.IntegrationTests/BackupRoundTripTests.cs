@@ -33,7 +33,7 @@ public sealed class BackupRoundTripTests
     public async Task A_backup_dumps_every_database_verifies_and_restores_into_another_tenant_owned_by_its_role()
     {
         var admin = new NpgsqlDatabaseAdmin(Containers.Options);
-        var backups = new BackupService(SingleNode.Over(Containers.Shell, Containers.Options), new RecordingOffsiteStore(), Containers.Options, NullLogger<BackupService>.Instance);
+        var backups = new BackupService(new SingleNode(new LocalNodeClient(Containers.Shell, Containers.Options, new NpgsqlDatabaseAdmin(Containers.Options), new RabbitCtlBrokerAdmin(Containers.Shell, Containers.Options), new ProcHostCapacity(Containers.Shell, Containers.Options, NullLogger<ProcHostCapacity>.Instance))), new RecordingOffsiteStore(), Containers.Options, NullLogger<BackupService>.Instance);
         var source = new Tenant { Slug = "amber", ImageTag = "v1" };
         var target = new Tenant { Slug = "copper" };
         var sourcePassword = TenantNaming.NewSecret();

@@ -62,11 +62,10 @@ public sealed class GoldenCommandsTests
         var options = Options.Create(_platform);
         _context = new ControlContext(new DbContextOptionsBuilder<ControlContext>().UseInMemoryDatabase(Guid.NewGuid().ToString()).Options);
         _shell = new RecordingShell(NullLogger<RecordingShell>.Instance);
-        _backups = new BackupService(SingleNode.Over(_shell, options), new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
+        var nodes = TestNodes.Over(_shell, options);
+        _backups = new BackupService(nodes, new RecordingOffsiteStore(), options, NullLogger<BackupService>.Instance);
         _provisioner = new Provisioner(_context, options,
-            new SingleNode(new LocalNodeClient(_shell, options)), new CaddyEdgeRouter(_context, _shell, options),
-            new DryRunDatabaseAdmin(NullLogger<DryRunDatabaseAdmin>.Instance),
-            new DryRunBrokerAdmin(NullLogger<DryRunBrokerAdmin>.Instance),
+            nodes, new CaddyEdgeRouter(_context, _shell, options),
             new DryRunKeycloakAdmin(NullLogger<DryRunKeycloakAdmin>.Instance),
             new HealthyStack(), new NoAudit(), _backups, NullLogger<Provisioner>.Instance);
     }
@@ -114,7 +113,7 @@ public sealed class GoldenCommandsTests
         await Phase("rollback", () => _provisioner.RollbackAsync(blue.Id, ct));
         await Phase("edge", () => _provisioner.EdgeAsync(blue.Id, ct));
 
-        var ops = new TenantOps(new SingleNode(new LocalNodeClient(_shell, Options.Create(_platform))), null!);
+        var ops = new TenantOps(TestNodes.Over(_shell, Options.Create(_platform)), null!);
         await Phase("containers", () => ops.ContainersAsync(blue, ct));
         await Phase("logs", () => ops.LogsAsync(blue, "catalog", 50, ct));
 
