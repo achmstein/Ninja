@@ -430,8 +430,9 @@ jobs:
             done
             docker compose exec -T keycloak $KC update realms/ninja -s loginTheme=ninja
             # Short sessions for the console that can destroy tenants, and a second factor for everyone in it:
-            # the OTP form is REQUIRED in the browser flow, so a user without one is asked to set it up at sign-in
-            docker compose exec -T keycloak $KC update realms/ninja -s accessTokenLifespan=900 -s ssoSessionIdleTimeout=28800 -s ssoSessionMaxLifespan=86400 -s otpPolicyType=totp
+            # the OTP form is REQUIRED in the browser flow, so a user without one is asked to set it up at sign-in.
+            # Five-minute access tokens and rotated refresh tokens, as Control.API keeps every realm (Templates.WebSignIn.cs)
+            docker compose exec -T keycloak $KC update realms/ninja -s accessTokenLifespan=300 -s accessTokenLifespanForImplicitFlow=300 -s revokeRefreshToken=true -s refreshTokenMaxReuse=1 -s ssoSessionIdleTimeout=28800 -s ssoSessionMaxLifespan=86400 -s otpPolicyType=totp
             docker compose exec -T keycloak $KC update authentication/required-actions/CONFIGURE_TOTP -r ninja -s enabled=true -s defaultAction=true
             OTP_EXEC=$(docker compose exec -T keycloak $KC get authentication/flows/browser/executions -r ninja | python3 -c 'import json,sys; print(next(e["id"] for e in json.load(sys.stdin) if e.get("providerId") == "auth-otp-form"))')
             docker compose exec -T keycloak $KC update authentication/flows/browser/executions -r ninja -b "{\"id\":\"$OTP_EXEC\",\"requirement\":\"REQUIRED\"}"
