@@ -36,6 +36,13 @@ export const Route = createFileRoute('/(auth)/sign-in')({
 function SignIn() {
   const t = useT()
   const auth = useAuth()
+  // A renewal that failed is not a sign-in that did: the dead session is
+  // dropped (DropRefusedSession) and Keycloak is asked afresh
+  const signInError =
+    auth.error?.source === 'renewSilent' ||
+    auth.error?.source === 'signinSilent'
+      ? undefined
+      : auth.error
   const { resolvedTheme } = useTheme()
   const navigate = useNavigate()
   const { redirect, expired } = useSearch({ from: '/(auth)/sign-in' })
@@ -67,7 +74,7 @@ function SignIn() {
     if (
       auth.isLoading ||
       auth.isAuthenticated ||
-      auth.error ||
+      signInError ||
       auth.activeNavigator ||
       redirectStarted.current
     ) {
@@ -79,9 +86,9 @@ function SignIn() {
     }
     auth.signinRedirect(loginPageParams(resolvedTheme, 'en'))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoading, auth.isAuthenticated, auth.error, auth.activeNavigator])
+  }, [auth.isLoading, auth.isAuthenticated, signInError, auth.activeNavigator])
 
-  if (auth.error) {
+  if (signInError) {
     return (
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
@@ -89,7 +96,7 @@ function SignIn() {
             <CardTitle className='text-xl tracking-tight'>
               {t('signInFailed')}
             </CardTitle>
-            <CardDescription>{auth.error.message}</CardDescription>
+            <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={beginSignIn} size='lg' className='w-full'>

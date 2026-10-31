@@ -6,6 +6,7 @@ import { AuthProvider } from 'react-oidc-context'
 import { bootBrand } from './lib/brand'
 import { App } from './app'
 import { getOidcConfig } from './lib/oidc'
+import { DropRefusedSession } from './lib/drop-refused-session'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
@@ -42,6 +43,7 @@ if (!rootElement.innerHTML) {
   root.render(
     <StrictMode>
       <AuthProvider {...getOidcConfig()}>
+        <DropRefusedSession />
         <QueryClientProvider client={queryClient}>
           <App router={router} />
         </QueryClientProvider>

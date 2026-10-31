@@ -3,6 +3,7 @@ import { useNavigate, useSearch } from '@tanstack/react-router'
 import { loginPageParams } from '@/config/oidc-config'
 import { RefreshCw } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { useBrandName } from '@/lib/brand'
 import { useLanguage, useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
@@ -14,10 +15,9 @@ import {
   CardTitle,
 } from '@/components/ui/card'
 import { Spinner } from '@/components/ui/spinner'
-import { AuthLayout } from '../auth-layout'
-import { useBrandName } from '@/lib/brand'
 import { BrandMark } from '@/components/brand-mark'
 import { PoweredBy } from '@/components/ninja-wordmark'
+import { AuthLayout } from '../auth-layout'
 
 /**
  * Keycloak is the only identity provider, so there is nothing to choose on a
@@ -29,6 +29,13 @@ export function SignIn() {
   const t = useT()
   const businessName = useBrandName()
   const auth = useAuth()
+  // A renewal that failed is not a sign-in that did: the dead session is
+  // dropped (DropRefusedSession) and Keycloak is asked afresh
+  const signInError =
+    auth.error?.source === 'renewSilent' ||
+    auth.error?.source === 'signinSilent'
+      ? undefined
+      : auth.error
   const { resolvedTheme } = useTheme()
   const language = useLanguage((state) => state.language)
   const navigate = useNavigate()
@@ -61,7 +68,7 @@ export function SignIn() {
     if (
       auth.isLoading ||
       auth.isAuthenticated ||
-      auth.error ||
+      signInError ||
       auth.activeNavigator ||
       redirectStarted.current
     ) {
@@ -73,9 +80,9 @@ export function SignIn() {
     }
     auth.signinRedirect(loginPageParams(resolvedTheme, language))
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [auth.isLoading, auth.isAuthenticated, auth.error, auth.activeNavigator])
+  }, [auth.isLoading, auth.isAuthenticated, signInError, auth.activeNavigator])
 
-  if (auth.error) {
+  if (signInError) {
     return (
       <AuthLayout>
         <Card className='gap-4'>
@@ -83,7 +90,7 @@ export function SignIn() {
             <CardTitle className='text-xl tracking-tight'>
               {t('signInFailed')}
             </CardTitle>
-            <CardDescription>{auth.error.message}</CardDescription>
+            <CardDescription>{signInError.message}</CardDescription>
           </CardHeader>
           <CardContent>
             <Button onClick={beginSignIn} size='lg' className='w-full'>
@@ -104,7 +111,9 @@ export function SignIn() {
           <span className='text-2xl font-semibold tracking-tight'>
             {businessName || t('adminName')}
           </span>
-          {businessName && <span className='text-muted-foreground'>{t('adminName')}</span>}
+          {businessName && (
+            <span className='text-muted-foreground'>{t('adminName')}</span>
+          )}
         </div>
       </div>
       <div className='text-muted-foreground flex items-center gap-2 text-sm'>

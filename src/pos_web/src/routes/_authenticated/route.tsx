@@ -71,9 +71,12 @@ function AuthenticatedRoute() {
     auth
       .signinSilent()
       .catch((error: unknown) => {
-        // Keycloak said no: the session is over. Anything else is the network.
-        if (error instanceof ErrorResponse) setRefusedFor(token)
-        else networkStatus.reportFailure()
+        // Keycloak said no: the session is over, and the dead sign-in goes
+        // with it, so the cashier signs in afresh. Anything else is the network.
+        if (error instanceof ErrorResponse) {
+          setRefusedFor(token)
+          void auth.removeUser()
+        } else networkStatus.reportFailure()
       })
       .finally(() => {
         renewing.current = false
