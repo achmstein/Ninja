@@ -52,6 +52,7 @@ import {
 } from '@/features/receipt/receipt-sheet'
 import { StayBar } from '@/features/places/stay-bar'
 import { StayMembers } from '@/features/places/stay-members'
+import { EndedTime } from '@/features/places/ended-time'
 import { isRunning, stayRoster } from '@/features/places/status'
 import { TimeSoFar } from '@/features/places/time-so-far'
 import { useStay, useStayActions } from '@/features/places/use-places'
@@ -672,19 +673,23 @@ export function TicketScreen({
   const noneChosen = selectedIds.size === 0
 
   // The room, while there is one: running, its whole panel; ended with the
-  // bill still open, the people, still editable so every share finds its tab.
-  // Until the stay arrives, its shape
+  // bill still open, the time it came to where the clock stood (its money is
+  // a line on the bill now), and the people, still editable so every share
+  // finds its tab. Until the stay arrives, its shape
   const stayLoading = isOpen && ticket.sessionId != null && stay === undefined
   const room = stayLoading ? (
     <Skeleton className='h-44 rounded-xl' />
   ) : runningStay ? (
     <StayBar stay={runningStay} />
   ) : endedStay ? (
-    <div className='flex flex-col gap-2'>
-      <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
-        {t('inTheRoom')}
-      </h2>
-      <StayMembers stay={endedStay} />
+    <div className='flex flex-col gap-6'>
+      <EndedTime stay={endedStay} />
+      <div className='flex flex-col gap-2'>
+        <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+          {t('inTheRoom')}
+        </h2>
+        <StayMembers stay={endedStay} />
+      </div>
     </div>
   ) : null
 

@@ -46,7 +46,9 @@ class RateOptionToggle extends StatelessWidget {
             SizedBox(
               height: Sizes.control,
               child: FButton(
-                variant: value == option.code ? null : FButtonVariant.outline,
+                // The one in force a light fill, not the page's darkest block:
+                // in the panel the clock leads, not the rate
+                variant: value == option.code ? FButtonVariant.secondary : FButtonVariant.outline,
                 onPress: disabled ? null : () => onChange(option.code),
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 prefix: Icon(index == 0 ? FIcons.user : FIcons.users, size: Sizes.icon),
@@ -54,13 +56,14 @@ class RateOptionToggle extends StatelessWidget {
                     ? null
                     : Text(rates![option.code]!,
                         style: theme.typography.label.copyWith(
-                          color: value == option.code
-                              ? theme.colors.primaryForeground.withValues(alpha: 0.8)
-                              : theme.colors.mutedForeground,
+                          color: value == option.code ? theme.colors.foreground : theme.colors.mutedForeground,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         )),
                 child: Text(option.name.localized(context),
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.body.forButton
+                        .copyWith(fontWeight: value == option.code ? FontWeight.w600 : FontWeight.w400)),
               ),
             ),
           ],

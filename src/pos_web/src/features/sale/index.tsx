@@ -530,12 +530,16 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
   // The sale's rows by line, so the one just rung up can be scrolled to
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
+  // How many times each line has been rung up here, so its row's tint starts
+  // again on every tap, as a line landing on the bill does
+  const [rungUp, setRungUp] = useState<Record<string, number>>({})
 
   /** Adds the line and brings its row into view: a new line lands at the end
    * of a long sale, an extra one of a line already there anywhere in it */
   const add = (line: SaleLine) => {
     addToSale(line)
     const key = lineKey(line)
+    setRungUp((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }))
     // Two frames: the row is rendered by the first, laid out by the second
     requestAnimationFrame(() =>
       requestAnimationFrame(() =>
@@ -901,7 +905,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
                   else rowRefs.current.delete(lineKey(line))
                 }}
               >
-                <CartLineRow line={line} onSetQuantity={setQuantity} />
+                {/* Just rung up: a soft tint behind it fades out, keyed by
+                    the tap so each one starts it again */}
+                <div
+                  key={rungUp[lineKey(line)] ?? 0}
+                  className={cn(rungUp[lineKey(line)] && 'animate-landed')}
+                >
+                  <CartLineRow line={line} onSetQuantity={setQuantity} />
+                </div>
               </div>
             ))}
           </div>

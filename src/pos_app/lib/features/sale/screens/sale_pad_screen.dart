@@ -198,18 +198,40 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     unawaited(ref.read(catalogRepositoryProvider).saveCustomerPreferences(customerId, items));
   }
 
+  /// The sale's rows by line, so the one just rung up can be scrolled to
+  final Map<String, GlobalKey> _rowKeys = {};
+
+  /// How many times each line has been rung up here, so its row's tint
+  /// starts again on every tap, as a line landing on the bill does
+  final Map<String, int> _rungUp = {};
+
+  /// Adds [line] and brings its row into view: a new line lands at the end
+  /// of a long sale, an extra one of a line already there anywhere in it
+  void _add(SaleLine line) {
+    ref.read(saleProvider.notifier).add(line);
+    setState(() => _rungUp[line.key] = (_rungUp[line.key] ?? 0) + 1);
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final row = _rowKeys[line.key]?.currentContext;
+      if (row == null || !mounted) return;
+      Scrollable.ensureVisible(row,
+          alignmentPolicy: ScrollPositionAlignmentPolicy.keepVisibleAtEnd,
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic);
+    });
+  }
+
   Future<void> _tapItem(CatalogItem item, {bool suggested = false}) async {
     if (item.customizations.isNotEmpty) {
       // Pre-fill from the attached customer's saved choices, if any.
       final customerId = ref.read(saleProvider).customer?.id;
       final line = await showCustomizeDialog(context, item, customerId: customerId);
       if (line != null) {
-        ref.read(saleProvider.notifier).add(suggested ? line.suggested() : line);
+        _add(suggested ? line.suggested() : line);
         if (!suggested) setState(() => _lastAdded = item);
       }
       return;
     }
-    ref.read(saleProvider.notifier).add(SaleLine(
+    _add(SaleLine(
           productId: item.id,
           nameEn: item.name.en,
           nameAr: item.name.ar,
@@ -1010,12 +1032,26 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                   Expanded(
                     child: lines.isEmpty
                         ? const SizedBox.shrink()
-                        : ListView.separated(
-                            itemCount: lines.length,
-                            separatorBuilder: (_, _) => Container(height: 1, color: theme.colors.border),
-                            itemBuilder: (context, index) => CartLineRow(
-                              line: lines[index],
-                              onSetQuantity: (key, quantity) => ref.read(saleProvider.notifier).setQuantity(key, quantity),
+                        // Every row built (a sale is a few dozen at most), so the
+                        // one just rung up can always be brought into view
+                        : SingleChildScrollView(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.stretch,
+                              children: [
+                                for (final (index, line) in lines.indexed) ...[
+                                  if (index > 0) Container(height: 1, color: theme.colors.border),
+                                  KeyedSubtree(
+                                    key: _rowKeys.putIfAbsent(line.key, GlobalKey.new),
+                                    child: _RungUp(
+                                      tick: _rungUp[line.key] ?? 0,
+                                      child: CartLineRow(
+                                        line: line,
+                                        onSetQuantity: (key, quantity) => ref.read(saleProvider.notifier).setQuantity(key, quantity),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ],
                             ),
                           ),
                   ),
@@ -1278,6 +1314,31 @@ class _RailCategory extends StatelessWidget {
           ],
         ),
       ),
+    );
+  }
+}
+
+/// A line just rung up: a soft tint behind its row fades out, the way a line
+/// landing on the bill does, so the eye finds what was added. [tick] counts
+/// the taps, so each one starts it again
+class _RungUp extends StatelessWidget {
+  final int tick;
+  final Widget child;
+
+  const _RungUp({required this.tick, required this.child});
+
+  @override
+  Widget build(BuildContext context) {
+    if (tick == 0) return child;
+    final theme = context.theme;
+    return TweenAnimationBuilder<double>(
+      key: ValueKey(tick),
+      tween: Tween(begin: 1, end: 0),
+      duration: const Duration(milliseconds: 1200),
+      curve: Curves.easeOut,
+      builder: (context, t, child) =>
+          DecoratedBox(decoration: BoxDecoration(color: theme.colors.primary.withValues(alpha: 0.08 * t)), child: child),
+      child: child,
     );
   }
 }

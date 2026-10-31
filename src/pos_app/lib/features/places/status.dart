@@ -21,9 +21,9 @@ extension ReservationState on Reservation {
 extension StayState on Stay {
   bool get isRunning => status == StayStatus.running;
 
-  /// Seconds since the timer started
+  /// Seconds since the timer started; once ended, the stay's whole length
   double elapsedSeconds(DateTime now) =>
-      startedAt == null ? 0 : now.difference(startedAt!).inMilliseconds / 1000;
+      startedAt == null ? 0 : (endedAt ?? now).difference(startedAt!).inMilliseconds / 1000;
 
   /// Seconds spent on one rate option across the stay's segments
   double optionSeconds(String code, DateTime now) {

@@ -79,11 +79,19 @@ class ThemeState {
       typography: typography,
     ).copyWith(borderRadius: const FLerpBorderRadius.all(Radius.circular(Sizes.radius), min: 24));
 
+    // A one-line field is a control's height (its line of text and the rest
+    // split above and below), so a field and the button beside it stand the same
+    final line = typography.sm.fontSize! * (typography.sm.height ?? 1);
+    final textFieldStyle = FTextFieldStyle.inherit(colors: colors, typography: typography, style: style).copyWith(
+      contentPadding: .value(EdgeInsets.symmetric(horizontal: 12, vertical: (Sizes.control - line) / 2)),
+    );
+
     // Build complete theme - widget styles will inherit from typography
     return FThemeData(
       colors: colors,
       typography: typography,
       style: style,
+      textFieldStyle: textFieldStyle,
     );
   }
 

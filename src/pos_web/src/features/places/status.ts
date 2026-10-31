@@ -129,10 +129,11 @@ export function formatClock(totalSeconds: number): string {
   return `${hh}:${mm}:${ss}`
 }
 
-/** Seconds since the stay's clock started. */
+/** Seconds since the stay's clock started; once ended, the stay's whole length. */
 export function elapsedSeconds(stay: StayViewModel, nowMs: number): number {
+  const end = stay.endedAt ? new Date(stay.endedAt).getTime() : nowMs
   return stay.startedAt
-    ? (nowMs - new Date(stay.startedAt).getTime()) / 1000
+    ? (end - new Date(stay.startedAt).getTime()) / 1000
     : 0
 }
 

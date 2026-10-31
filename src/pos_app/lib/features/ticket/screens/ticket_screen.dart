@@ -83,6 +83,25 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
   // Quick refreshes while an order the server took is still to show its lines here
   Timer? _landingPoll;
 
+  // Lines just charged to this bill sit at its end: brought into view as
+  // they arrive, so the cashier sees them breathe and land without scrolling
+  final _sendingKey = GlobalKey();
+  int _shownSends = 0;
+
+  void _revealSends(int count) {
+    if (count <= _shownSends) {
+      _shownSends = count;
+      return;
+    }
+    _shownSends = count;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      final target = _sendingKey.currentContext;
+      if (target == null || !mounted) return;
+      Scrollable.ensureVisible(target,
+          alignment: 1, duration: const Duration(milliseconds: 350), curve: Curves.easeOutCubic);
+    });
+  }
+
   @override
   void initState() {
     super.initState();
@@ -446,6 +465,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
     final lines = ticket.lines;
     final sends = ticket.isOpen ? _sends(ref.watch(sendingProvider)) : const <Sending>[];
+    _revealSends(sends.length);
     final onTheirWay = sends.where((s) => s.status != SendStatus.failed).toList();
     final landed = ref.watch(landedOrdersProvider);
     // App orders for this table or session that have not been accepted yet —
@@ -519,11 +539,15 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     );
 
     // The room, while there is one: running, its whole card; ended with the
-    // bill still open, the people, still editable so every share finds its tab
+    // bill still open, the time it came to where the clock stood (its money
+    // is a line on the bill now), and the people, still editable so every
+    // share finds its tab
     final room = <Widget>[
       if (sessionLoading) const _SessionCardSkeleton(),
       if (activeSession != null) StayBar(session: activeSession, panel: true),
       if (endedSession != null) ...[
+        _EndedTime(session: endedSession),
+        const SizedBox(height: Sizes.gapXl),
         Heading(l10n.inTheRoom),
         const SizedBox(height: Sizes.gapSm),
         StayMembers(session: endedSession),
@@ -609,7 +633,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
             ],
           ],
         ),
-      SendingLines(sends: sends),
+      KeyedSubtree(key: _sendingKey, child: SendingLines(sends: sends)),
       if (online.isNotEmpty && !ticket.isVoided) ...[
         const SizedBox(height: Sizes.gapLg),
         OnlinePaymentsCard(
@@ -680,7 +704,11 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                     Expanded(child: scroll(bill)),
                     Container(
                       width: size.width >= 1280 ? 380 : 340,
-                      decoration: BoxDecoration(border: BorderDirectional(start: rule)),
+                      // A light tint: the room's own surface beside the bill, not more of its list
+                      decoration: BoxDecoration(
+                        color: theme.colors.muted.withValues(alpha: 0.4),
+                        border: BorderDirectional(start: rule),
+                      ),
                       child: scroll(room),
                     ),
                   ],
@@ -1391,6 +1419,45 @@ class _ActionBar extends StatelessWidget {
           ],
         ],
       ),
+    );
+  }
+}
+
+/// An ended session's time where its clock stood, stopped at the whole
+/// stay: when it ended under it, and the split by rate once more than one
+/// was played. No money: the time is a line on the bill now
+class _EndedTime extends StatelessWidget {
+  final Stay session;
+
+  const _EndedTime({required this.session});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final end = session.endedAt ?? DateTime.now();
+    final used = session.usedOptions(end);
+    const tabular = [FontFeature.tabularFigures()];
+    final muted = theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Text(formatClock(session.elapsedSeconds(end)),
+            style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+        Text(
+          session.endedAt == null ? l10n.sessionEnded : '${l10n.sessionEnded} · ${formatTime(context, session.endedAt!)}',
+          maxLines: 1,
+          overflow: TextOverflow.ellipsis,
+          style: muted,
+        ),
+        if (used.length > 1)
+          Text(
+            used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, end))}').join(' · '),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
+          ),
+      ],
     );
   }
 }

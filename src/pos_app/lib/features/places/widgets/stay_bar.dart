@@ -119,30 +119,27 @@ class _StayBarState extends ConsumerState<StayBar> {
     const tabular = [FontFeature.tabularFigures()];
 
     if (widget.panel) {
+      // Three groups, each from the start edge and the same space apart: the
+      // time (the clock leads, the money answers on one line under it), the
+      // rate, the people; then the way to end it
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // How long, and how much: the clock leads, the money answers
           Text(formatClock(session.elapsedSeconds(now)),
-              textAlign: TextAlign.center,
               style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+          Text('≈ ${money(context, estimate.amount)} · $hoursLabel',
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
           if (used.length > 1)
             Text(
               used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, now))}').join(' · '),
-              textAlign: TextAlign.center,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
               style: muted.copyWith(fontFeatures: tabular),
             ),
-          const SizedBox(height: Sizes.gapSm),
-          Text('≈ ${money(context, estimate.amount)}',
-              textAlign: TextAlign.center,
-              style: theme.typography.title.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
-          Text(hoursLabel,
-              textAlign: TextAlign.center,
-              style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
           if (session.hasOptions) ...[
-            const SizedBox(height: Sizes.gapLg),
+            const SizedBox(height: Sizes.gapXl),
             RateOptionToggle(
               options: session.options,
               value: session.currentOptionCode,
