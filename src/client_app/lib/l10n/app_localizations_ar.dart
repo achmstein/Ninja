@@ -1925,6 +1925,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get billHideDetails => 'اخفي التفاصيل';
+
+  @override
+  String get guestOrderToCollect => 'من غير ترابيزة: هتستلم طلبك من الكاشير';
+
+  @override
+  String get orderToCollect => 'هتستلم طلبك من الكاشير';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -3496,4 +3502,10 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get billHideDetails => 'إخفاء التفاصيل';
+
+  @override
+  String get guestOrderToCollect => 'دون طاولة: ستستلم طلبك من الكاشير';
+
+  @override
+  String get orderToCollect => 'ستستلم طلبك من الكاشير';
 }

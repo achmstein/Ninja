@@ -3464,6 +3464,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Hide details'**
   String get billHideDetails;
+
+  /// No description provided for @guestOrderToCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'No table: you\'ll collect your order at the counter'**
+  String get guestOrderToCollect;
+
+  /// No description provided for @orderToCollect.
+  ///
+  /// In en, this message translates to:
+  /// **'You\'ll collect your order at the counter'**
+  String get orderToCollect;
 }
 
 class _AppLocalizationsDelegate

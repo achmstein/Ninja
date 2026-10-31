@@ -616,5 +616,7 @@
   "promoBookNow": "احجز دلوقتي",
   "promoShowAgain": "شوف العرض",
   "billShowDetails": "اعرض التفاصيل",
-  "billHideDetails": "اخفي التفاصيل"
+  "billHideDetails": "اخفي التفاصيل",
+  "guestOrderToCollect": "من غير ترابيزة: هتستلم طلبك من الكاشير",
+  "orderToCollect": "هتستلم طلبك من الكاشير"
 }

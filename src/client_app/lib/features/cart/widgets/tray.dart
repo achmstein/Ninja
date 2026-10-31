@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -566,11 +567,14 @@ class TraySheet extends ConsumerWidget {
                 // Not at a table: collect it or have it brought, where the branch delivers
                 else if (destination == null && ref.watch(deliveryStateProvider.select((d) => d.offered)))
                   const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: DeliveryChoiceView())
-                // Not at a table, no delivery, more than one branch: which one it is collected from,
-                // a tap from choosing another, as booking says which branch its places are at
-                else if (destination == null && ref.watch(branchProvider.select((b) => b.branches.length)) > 1)
-                  const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: PickupFrom())
-                else if (destination != null)
+                // Not at a table, no delivery: collected at the counter, and with more than one branch,
+                // which one it is collected from, a tap from choosing another, as booking says which branch its places are at
+                else if (destination == null) ...[
+                  if (ref.watch(branchProvider.select((b) => b.branches.length)) > 1)
+                    const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: PickupFrom()),
+                  const Padding(padding: EdgeInsets.fromLTRB(8, 12, 8, 0), child: _CollectAtCounter()),
+                ]
+                else
                   Padding(
                     padding: const EdgeInsets.fromLTRB(8, 12, 8, 0),
                     child: Row(
@@ -591,6 +595,32 @@ class TraySheet extends ConsumerWidget {
                   Padding(padding: const EdgeInsets.fromLTRB(8, 12, 8, 0), child: PayChoiceView(total: _orderTotal(ref))),
               ],
             ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+/// No table and nothing brought: the order is collected at the counter. A cloud
+/// kitchen has no tables to speak of, so it only says where to collect it.
+class _CollectAtCounter extends ConsumerWidget {
+  const _CollectAtCounter();
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final l10n = AppLocalizations.of(context)!;
+    final theme = context.theme;
+    final ink = theme.colors.foreground.withValues(alpha: 0.7);
+    final cloudKitchen = ref.watch(brandProvider.select((b) => b.isCloudKitchen));
+    return Row(
+      children: [
+        Icon(LucideIcons.shoppingBag, size: 16, color: ink),
+        const SizedBox(width: 8),
+        Expanded(
+          child: Text(
+            cloudKitchen ? l10n.orderToCollect : l10n.guestOrderToCollect,
+            style: context.localeText(theme.typography.note.copyWith(color: ink)),
           ),
         ),
       ],
