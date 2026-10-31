@@ -1365,6 +1365,28 @@ class AppLocalizationsAr extends AppLocalizations {
   String get yourBalance => 'رصيدك';
 
   @override
+  String get bookAllBranches => 'كل الفروع';
+
+  @override
+  String bookMoreBranches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فرع كمان',
+      few: '$count فروع كمان',
+      two: 'فرعين كمان',
+      one: 'فرع كمان',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bookSearchBranches => 'دوّر على فرع';
+
+  @override
+  String get bookNoBranchFound => 'مفيش فرع بالاسم ده';
+
+  @override
   String bookFreeShort(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,
@@ -2911,6 +2933,28 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get ninjaThisMonth => 'هذا الشهر';
+
+  @override
+  String get bookAllBranches => 'جميع الفروع';
+
+  @override
+  String bookMoreBranches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count فرعًا آخر',
+      few: '$count فروع أخرى',
+      two: 'فرعان آخران',
+      one: 'فرع آخر',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bookSearchBranches => 'ابحث عن فرع';
+
+  @override
+  String get bookNoBranchFound => 'لا يوجد فرع بهذا الاسم';
 
   @override
   String bookFreeShort(int count) {

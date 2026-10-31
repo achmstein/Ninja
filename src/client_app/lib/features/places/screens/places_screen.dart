@@ -1636,8 +1636,20 @@ String tariffLine(BuildContext context, MoneyFormat money, List<RateOption> opti
 /// Where there is room, across the business's branches, at a glance (client_web's branch-dial.tsx):
 /// one chip a branch, nearest first, each with a meter lit for every free place; the chosen branch's
 /// places are listed under it. A row that swipes when the branches do not fit
+typedef DialBranch = ({Branch branch, List<Place> places, double? meters});
+
+/// A chip's width and the gap after it: the step the dial snaps to
+const _chipWidth = 160.0;
+const _chipGap = 10.0;
+
+/// More branches than this and the dial shows the nearest few, then All branches
+const _dialMax = 6;
+
+/// How many branches the dial shows before All branches, past [_dialMax]
+const _dialShown = 5;
+
 class BranchDial extends StatelessWidget {
-  final List<({Branch branch, List<Place> places, double? meters})> branches;
+  final List<DialBranch> branches;
   final int? selectedId;
   final ValueChanged<int> onSelect;
 
@@ -1645,20 +1657,263 @@ class BranchDial extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-      scrollDirection: Axis.horizontal,
-      // The chips swipe out to the screen's edges, starting where the page does
-      clipBehavior: Clip.none,
-      child: Row(
-        spacing: 10,
-        children: [for (final b in branches) _DialChip(dial: b, selected: b.branch.id == selectedId, onSelect: onSelect)],
+    // Many branches: the nearest few and the chosen one, then the way to every one of them, searched by name
+    final many = branches.length > _dialMax;
+    final shown = !many
+        ? branches
+        : [
+            ...branches.take(_dialShown),
+            ...branches.skip(_dialShown).where((b) => b.branch.id == selectedId),
+          ];
+    final chips = [
+      for (final b in shown) _DialChip(dial: b, selected: b.branch.id == selectedId, onSelect: onSelect),
+      if (many)
+        _AllBranchesChip(
+          more: branches.length - shown.length,
+          onTap: () => showAllBranches(context, branches: branches, selectedId: selectedId, onSelect: onSelect),
+        ),
+    ];
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        // Room for them all: every branch in view, wrapped into rows, nothing to swipe for
+        if (constraints.maxWidth >= 600) return Wrap(spacing: _chipGap, runSpacing: _chipGap, children: chips);
+        return SingleChildScrollView(
+          scrollDirection: Axis.horizontal,
+          // A swipe always comes to rest on a whole chip, never one cut at the edge
+          physics: const _ChipSnapPhysics(step: _chipWidth + _chipGap),
+          // The chips swipe out to the screen's edges, starting where the page does
+          clipBehavior: Clip.none,
+          child: Row(spacing: _chipGap, children: chips),
+        );
+      },
+    );
+  }
+}
+
+/// Comes to rest on a chip's edge: the fling carries on as it would, and lands on the nearest step
+class _ChipSnapPhysics extends ScrollPhysics {
+  final double step;
+
+  const _ChipSnapPhysics({required this.step, super.parent});
+
+  @override
+  _ChipSnapPhysics applyTo(ScrollPhysics? ancestor) => _ChipSnapPhysics(step: step, parent: buildParent(ancestor));
+
+  @override
+  Simulation? createBallisticSimulation(ScrollMetrics position, double velocity) {
+    // Past either end the parent brings it back
+    if (position.outOfRange) return super.createBallisticSimulation(position, velocity);
+    final tolerance = toleranceFor(position);
+    // Where the fling would carry it, a little ahead, rounded to a chip
+    final ahead = position.pixels + velocity * 0.3;
+    final target = ((ahead / step).round() * step).clamp(position.minScrollExtent, position.maxScrollExtent).toDouble();
+    if ((target - position.pixels).abs() < tolerance.distance) return null;
+    return ScrollSpringSimulation(spring, position.pixels, target, velocity, tolerance: tolerance);
+  }
+
+  @override
+  bool get allowImplicitScrolling => false;
+}
+
+/// The dial's last chip, with many branches: every one of them, as a list to search
+class _AllBranchesChip extends StatelessWidget {
+  /// How many branches the dial is not showing
+  final int more;
+  final VoidCallback onTap;
+
+  const _AllBranchesChip({required this.more, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final c = theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Semantics(
+      button: true,
+      child: Pressable(
+        onTap: onTap,
+        scale: 0.97,
+        child: Container(
+          width: _chipWidth,
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: c.background,
+            border: Border.all(color: c.border),
+            borderRadius: BorderRadius.circular(20),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            spacing: 8,
+            children: [
+              SizedBox(
+                height: 32,
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: AppText(
+                        l10n.bookAllBranches,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                      ),
+                    ),
+                    Container(
+                      width: 32,
+                      height: 32,
+                      decoration: BoxDecoration(color: c.muted, shape: BoxShape.circle),
+                      child: Icon(LucideIcons.search, size: 16, color: c.foreground),
+                    ),
+                  ],
+                ),
+              ),
+              // Where the others' meters stand: kept so the chip stands as tall as its neighbours
+              const SizedBox(height: 6),
+              AppText(
+                l10n.bookMoreBranches(more),
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground)),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }
 }
 
+/// Every branch taking bookings, as a sheet: searched by name in either language, nearest first, each with how
+/// many places are free there and how far it is. A tap shows that branch's places under the dial
+Future<void> showAllBranches(
+  BuildContext context, {
+  required List<DialBranch> branches,
+  required int? selectedId,
+  required ValueChanged<int> onSelect,
+}) =>
+    showNinjaSheet<void>(
+      context: context,
+      padding: const EdgeInsets.fromLTRB(12, 0, 12, 16),
+      builder: (sheetContext) => _AllBranchesSheet(branches: branches, selectedId: selectedId, onSelect: onSelect),
+    );
+
+class _AllBranchesSheet extends StatefulWidget {
+  final List<DialBranch> branches;
+  final int? selectedId;
+  final ValueChanged<int> onSelect;
+
+  const _AllBranchesSheet({required this.branches, required this.selectedId, required this.onSelect});
+
+  @override
+  State<_AllBranchesSheet> createState() => _AllBranchesSheetState();
+}
+
+class _AllBranchesSheetState extends State<_AllBranchesSheet> {
+  final _search = TextEditingController();
+  String _query = '';
+
+  @override
+  void dispose() {
+    _search.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final c = theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    final q = _query.trim().toLowerCase();
+    // Either language's name answers, whichever the customer types in
+    final found = [
+      for (final b in widget.branches)
+        if (q.isEmpty || '${b.branch.name.en ?? ''} ${b.branch.name.ar ?? ''}'.toLowerCase().contains(q)) b,
+    ];
+    final caption = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Padding(
+          padding: const EdgeInsets.fromLTRB(8, 4, 8, 12),
+          child: AppText(l10n.bookAllBranches, style: context.localeText(theme.typography.title.copyWith(color: c.foreground))),
+        ),
+        NinjaField(
+          controller: _search,
+          hint: l10n.bookSearchBranches,
+          textInputAction: TextInputAction.search,
+          onChange: (v) => setState(() => _query = v),
+        ),
+        const SizedBox(height: 8),
+        ConstrainedBox(
+          constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.5),
+          child: found.isEmpty
+              ? Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 24),
+                  child: AppText(l10n.bookNoBranchFound, textAlign: TextAlign.center, style: caption),
+                )
+              : ListView.builder(
+                  shrinkWrap: true,
+                  itemCount: found.length,
+                  itemBuilder: (context, i) {
+                    final b = found[i];
+                    final chosen = b.branch.id == widget.selectedId;
+                    final free = b.places.where((p) => p.canBookNow).length;
+                    return Pressable(
+                      onTap: () {
+                        widget.onSelect(b.branch.id);
+                        Navigator.of(context).pop();
+                      },
+                      scale: 0.98,
+                      child: Container(
+                        constraints: const BoxConstraints(minHeight: 56),
+                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                        decoration: BoxDecoration(color: chosen ? c.muted : null, borderRadius: BorderRadius.circular(14)),
+                        child: Row(
+                          children: [
+                            // Free there now, at a glance
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: BoxDecoration(color: free > 0 ? NinjaColors.success : c.border, shape: BoxShape.circle),
+                            ),
+                            const SizedBox(width: 12),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  AppText(
+                                    b.branch.name.localized(context),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                                  ),
+                                  AppText(l10n.bookFreeShort(free), maxLines: 1, style: caption),
+                                ],
+                              ),
+                            ),
+                            if (b.meters != null) ...[
+                              const SizedBox(width: 12),
+                              Text(distanceText(context, b.meters!),
+                                  textDirection: TextDirection.ltr, style: caption.copyWith(fontFeatures: NinjaTypography.tabular)),
+                            ],
+                            if (chosen) ...[
+                              const SizedBox(width: 12),
+                              Icon(LucideIcons.check, size: 18, color: c.foreground),
+                            ],
+                          ],
+                        ),
+                      ),
+                    );
+                  },
+                ),
+        ),
+      ],
+    );
+  }
+}
+
 class _DialChip extends StatelessWidget {
-  final ({Branch branch, List<Place> places, double? meters}) dial;
+  final DialBranch dial;
   final bool selected;
   final ValueChanged<int> onSelect;
 
@@ -1683,7 +1938,7 @@ class _DialChip extends StatelessWidget {
         child: AnimatedContainer(
           duration: Motion.fast,
           curve: Motion.enter,
-          width: 160,
+          width: _chipWidth,
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
             color: selected ? c.primary : c.background,

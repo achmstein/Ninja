@@ -675,6 +675,16 @@ class _BillsState extends State<_Bills> {
               const gap = 12.0;
               final columns = math.max(1, ((constraints.maxWidth + gap) / (180 + gap)).floor());
               final width = math.min(220.0, (constraints.maxWidth - gap * (columns - 1)) / columns);
+              // Each row as tall as its tallest card, as pos_web's grid rows are: one with a two-line name or a
+              // room's clock grows its row, the rest keep the card's least height
+              final needs = [
+                for (final ticket in shown)
+                  BillCard.heightFor(context, ticket, width: width, clock: clocks[ticket.id] != null, waiting: waitingIds.contains(ticket.id)),
+              ];
+              double rowHeight(int index) {
+                final start = index ~/ columns * columns;
+                return needs.sublist(start, math.min(start + columns, needs.length)).reduce(math.max);
+              }
               // A bill that closes folds away and the others slide up into
               // its place; one that opens slides in. A filter or a search
               // just redraws.
@@ -686,11 +696,17 @@ class _BillsState extends State<_Bills> {
                   exit: (context, key, child, exit) => _FoldAway(animation: exit, child: child),
                   builder: (context, children) => Wrap(spacing: gap, runSpacing: gap, children: children),
                   children: [
-                    for (final ticket in shown)
+                    for (final (index, ticket) in shown.indexed)
                       SizedBox(
                         key: ValueKey(ticket.id),
                         width: width,
-                        child: BillCard(ticket: ticket, clock: clocks[ticket.id], waiting: waitingIds.contains(ticket.id), onTap: () => context.go('/ticket/${ticket.id}')),
+                        child: BillCard(
+                          ticket: ticket,
+                          clock: clocks[ticket.id],
+                          waiting: waitingIds.contains(ticket.id),
+                          height: rowHeight(index),
+                          onTap: () => context.go('/ticket/${ticket.id}'),
+                        ),
                       ),
                   ],
                 ),

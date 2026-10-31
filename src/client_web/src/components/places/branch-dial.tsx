@@ -1,17 +1,25 @@
-import { useRef, type KeyboardEvent } from 'react'
+import { useRef, useState, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
-import { Navigation } from 'lucide-react'
+import { Check, Navigation, Search } from 'lucide-react'
 import type { BranchResponse } from '@/api/tenant'
 import type { PlaceViewModel } from '@/api/spaces'
 import { PLACE_AVAILABLE } from '@/lib/places'
 import { directionsUrl, pointOf, useDistance } from '@/lib/geo'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 
 export type DialBranch = { branch: BranchResponse; places: PlaceViewModel[]; meters: number | null }
 
 /** More rooms than this and the meter shows a share instead of a segment each */
 const MAX_SEGMENTS = 10
+
+/** More branches than this and the dial shows the nearest few, then All branches */
+const DIAL_MAX = 6
+
+/** How many branches the dial shows before All branches, past DIAL_MAX */
+const DIAL_SHOWN = 5
 
 /**
  * Where there is room, across the business's branches, at a glance: one chip
@@ -32,6 +40,12 @@ export function BranchDial({
 }) {
   const t = useT()
   const row = useRef<HTMLDivElement>(null)
+  const [allOpen, setAllOpen] = useState(false)
+  // Many branches: the nearest few and the chosen one, then the way to every one of them, searched by name
+  const many = branches.length > DIAL_MAX
+  const shown = many
+    ? [...branches.slice(0, DIAL_SHOWN), ...branches.slice(DIAL_SHOWN).filter((b) => Number(b.branch.id) === selectedId)]
+    : branches
 
   // Arrow keys step along the dial (the row's own direction, so right-to-left in Arabic)
   const onKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
@@ -53,9 +67,11 @@ export function BranchDial({
       role='tablist'
       aria-label={t('bookBranches')}
       onKeyDown={onKeyDown}
-      className='no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1'
+      // A phone swipes the row, each chip snapping to the edge; wider, every branch is in view, wrapped
+      // into rows, nothing to swipe for (a mouse wheel does not scroll sideways)
+      className='no-scrollbar -mx-4 flex snap-x snap-mandatory scroll-px-4 gap-2.5 overflow-x-auto px-4 pb-1 sm:mx-0 sm:flex-wrap sm:overflow-visible sm:px-0'
     >
-      {branches.map((b) => (
+      {shown.map((b) => (
         <DialChip
           key={String(b.branch.id)}
           dial={b}
@@ -64,7 +80,124 @@ export function BranchDial({
           panelId={panelId}
         />
       ))}
+      {many && (
+        <button
+          type='button'
+          onClick={() => setAllOpen(true)}
+          className='bg-background border-border flex w-40 shrink-0 snap-start flex-col gap-2 rounded-[1.25rem] border p-3 text-start'
+        >
+          <span className='flex h-8 items-center gap-2 text-body font-semibold'>
+            <span className='min-w-0 flex-1 truncate'>{t('bookAllBranches')}</span>
+            <span className='bg-muted grid size-8 shrink-0 place-items-center rounded-full'>
+              <Search className='size-4' />
+            </span>
+          </span>
+          {/* Where the others' meters stand: kept so the chip stands as tall as its neighbours */}
+          <span className='h-1.5' aria-hidden />
+          <span className='text-muted-foreground truncate text-caption'>
+            {t('bookMoreBranches', { count: branches.length - shown.length })}
+          </span>
+        </button>
+      )}
+      {many && (
+        <AllBranchesSheet
+          open={allOpen}
+          onOpenChange={setAllOpen}
+          branches={branches}
+          selectedId={selectedId}
+          onSelect={onSelect}
+        />
+      )}
     </div>
+  )
+}
+
+/**
+ * Every branch taking bookings, as a sheet: searched by name in either
+ * language, nearest first, each with how many places are free there and how
+ * far it is. A tap shows that branch's places under the dial.
+ */
+function AllBranchesSheet({
+  open,
+  onOpenChange,
+  branches,
+  selectedId,
+  onSelect,
+}: {
+  open: boolean
+  onOpenChange: (open: boolean) => void
+  branches: DialBranch[]
+  selectedId: number | null
+  onSelect: (branchId: number) => void
+}) {
+  const t = useT()
+  const localized = useLocalized()
+  const distance = useDistance()
+  const [query, setQuery] = useState('')
+  const q = query.trim().toLowerCase()
+  // Either language's name answers, whichever the customer types in
+  const found = branches.filter(
+    (b) => !q || `${b.branch.name?.en ?? ''} ${b.branch.name?.ar ?? ''}`.toLowerCase().includes(q),
+  )
+
+  return (
+    <Sheet
+      open={open}
+      onOpenChange={(next) => {
+        if (!next) setQuery('')
+        onOpenChange(next)
+      }}
+    >
+      <SheetContent>
+        <SheetHeader>
+          <SheetTitle>{t('bookAllBranches')}</SheetTitle>
+        </SheetHeader>
+        <Input
+          type='search'
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder={t('bookSearchBranches')}
+          enterKeyHint='search'
+          className='h-12 text-base'
+        />
+        {found.length === 0 ? (
+          <p className='text-muted-foreground py-6 text-center text-caption'>{t('bookNoBranchFound')}</p>
+        ) : (
+          <div className='flex max-h-[50svh] flex-col gap-1 overflow-y-auto'>
+            {found.map((b) => {
+              const id = Number(b.branch.id)
+              const chosen = id === selectedId
+              const free = b.places.filter((p) => Number(p.status) === PLACE_AVAILABLE).length
+              return (
+                <button
+                  key={String(b.branch.id)}
+                  type='button'
+                  onClick={() => {
+                    onSelect(id)
+                    onOpenChange(false)
+                    setQuery('')
+                  }}
+                  className={cn('flex min-h-14 items-center gap-3 rounded-[0.875rem] px-3 py-2 text-start', chosen && 'bg-muted')}
+                >
+                  {/* Free there now, at a glance */}
+                  <span className={cn('size-2 shrink-0 rounded-full', free > 0 ? 'bg-emerald-500' : 'bg-border')} aria-hidden />
+                  <span className='flex min-w-0 flex-1 flex-col'>
+                    <span className='truncate text-body font-semibold'>{localized(b.branch.name)}</span>
+                    <span className='text-muted-foreground text-caption'>{t('bookFreeShort', { count: free })}</span>
+                  </span>
+                  {b.meters != null && (
+                    <span className='text-muted-foreground text-caption tabular-nums' dir='ltr'>
+                      {distance(b.meters)}
+                    </span>
+                  )}
+                  {chosen && <Check className='size-4 shrink-0' />}
+                </button>
+              )
+            })}
+          </div>
+        )}
+      </SheetContent>
+    </Sheet>
   )
 }
 

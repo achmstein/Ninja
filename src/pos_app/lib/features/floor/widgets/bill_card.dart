@@ -21,6 +21,13 @@ String ticketTypeLabel(AppLocalizations l10n, TicketType? type) => switch (type)
       _ => l10n.counter,
     };
 
+/// The name a bill card shows: the place, else the bill's label, else its kind
+String billCardLabel(BuildContext context, TicketSummary ticket) {
+  final title = ticket.locationName?.localized(context);
+  if (title != null && title.isNotEmpty) return title;
+  return ticket.label?.isNotEmpty == true ? ticket.label! : ticketTypeLabel(AppLocalizations.of(context)!, ticket.type);
+}
+
 /// One card per open bill: the place, its total, the running clock for a
 /// room, and a dot when an order is still waiting to be confirmed onto it.
 class BillCard extends StatelessWidget {
@@ -31,31 +38,65 @@ class BillCard extends StatelessWidget {
   final bool waiting;
   final VoidCallback onTap;
 
+  /// Its row's height ([heightFor] across the row), so the cards in a row stand level, the total at the foot
+  final double height;
+
   const BillCard({
     super.key,
     required this.ticket,
     required this.onTap,
     this.clock,
     this.waiting = false,
+    this.height = minHeight,
   });
+
+  /// pos_web's min-h-28: a one-line name, no clock
+  static const minHeight = 112.0;
+
+  /// What a card of [width] needs, as pos_web's card grows to it: the padding, the name on its one or two
+  /// lines, the clock's line, the total's, and the gaps between them; never under [minHeight]. A row of
+  /// cards stands as tall as the tallest of them, as pos_web's grid rows do
+  static double heightFor(BuildContext context, TicketSummary ticket, {required double width, bool clock = false, bool waiting = false}) {
+    final theme = context.theme;
+    final scaler = MediaQuery.textScalerOf(context);
+    double lines(String text, TextStyle style, double maxWidth, int maxLines) {
+      final painter = TextPainter(
+        text: TextSpan(text: text, style: style),
+        maxLines: maxLines,
+        textDirection: TextDirection.ltr,
+        textScaler: scaler,
+      )..layout(maxWidth: maxWidth < 1 ? 1 : maxWidth);
+      final h = painter.height;
+      painter.dispose();
+      return h;
+    }
+
+    // The name beside its icon (16 and 8) and the waiting dot (8 and 10)
+    final nameWidth = width - 24 - Sizes.iconSmall - 8 - (waiting ? 18 : 0);
+    final name = lines(billCardLabel(context, ticket), _nameStyle(theme), nameWidth, 2);
+    final clockLine = clock ? 8 + lines('00:00:00', _clockStyle(theme), width - 24, 1) : 0;
+    final total = lines('0', _totalStyle(theme), width - 24, 1);
+    final needed = 24 + name + clockLine + 8 + total;
+    return needed < minHeight ? minHeight : needed.ceilToDouble();
+  }
+
+  static TextStyle _nameStyle(FThemeData theme) => theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25);
+  static TextStyle _clockStyle(FThemeData theme) =>
+      theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]);
+  static TextStyle _totalStyle(FThemeData theme) =>
+      theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()]);
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-
-    final title = ticket.locationName?.localized(context);
-    final label = (title != null && title.isNotEmpty)
-        ? title
-        : (ticket.label?.isNotEmpty == true ? ticket.label! : ticketTypeLabel(l10n, ticket.type));
+    final label = billCardLabel(context, ticket);
 
     return FTappable(
       onPress: onTap,
-      // A fixed card height (pos_web's min-h-28 plus a second name line) is
-      // what lets the total sit at the bottom: inside a Wrap there is no
-      // other height to fill
+      // Its row's height, from [heightFor], is what lets the total sit at the
+      // bottom: inside a Wrap there is no other height to fill
       builder: (context, states, child) => Container(
-        height: 128,
+        height: height,
         padding: const EdgeInsets.all(12),
         decoration: BoxDecoration(
           color: states.contains(FTappableVariant.pressed) || states.contains(FTappableVariant.hovered)
@@ -87,7 +128,7 @@ class BillCard extends StatelessWidget {
                   overflow: TextOverflow.ellipsis,
                   textDirection: textDirectionFor(label),
                   textAlign: textAlignFor(context),
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25),
+                  style: _nameStyle(theme),
                 ),
               ),
               if (waiting) ...[
@@ -105,22 +146,10 @@ class BillCard extends StatelessWidget {
           ),
           if (clock != null) ...[
             const SizedBox(height: 8),
-            Text(
-              clock!,
-              style: theme.typography.sm.copyWith(
-                color: theme.colors.mutedForeground,
-                fontFeatures: const [FontFeature.tabularFigures()],
-              ),
-            ),
+            Text(clock!, style: _clockStyle(theme)),
           ],
           const Spacer(),
-          Text(
-            money(context, ticket.total),
-            style: theme.typography.lg.copyWith(
-              fontWeight: FontWeight.w600,
-              fontFeatures: const [FontFeature.tabularFigures()],
-            ),
-          ),
+          Text(money(context, ticket.total), style: _totalStyle(theme)),
         ],
       ),
     );

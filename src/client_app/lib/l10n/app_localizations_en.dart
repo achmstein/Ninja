@@ -1371,6 +1371,26 @@ class AppLocalizationsEn extends AppLocalizations {
   String get yourBalance => 'Your balance';
 
   @override
+  String get bookAllBranches => 'All branches';
+
+  @override
+  String bookMoreBranches(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count more',
+      one: '1 more',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get bookSearchBranches => 'Search branches';
+
+  @override
+  String get bookNoBranchFound => 'No branch by that name';
+
+  @override
   String bookFreeShort(int count) {
     String _temp0 = intl.Intl.pluralLogic(
       count,

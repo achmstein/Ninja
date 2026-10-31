@@ -2535,6 +2535,30 @@ abstract class AppLocalizations {
   /// **'Your balance'**
   String get yourBalance;
 
+  /// No description provided for @bookAllBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'All branches'**
+  String get bookAllBranches;
+
+  /// No description provided for @bookMoreBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 more} other{{count} more}}'**
+  String bookMoreBranches(int count);
+
+  /// No description provided for @bookSearchBranches.
+  ///
+  /// In en, this message translates to:
+  /// **'Search branches'**
+  String get bookSearchBranches;
+
+  /// No description provided for @bookNoBranchFound.
+  ///
+  /// In en, this message translates to:
+  /// **'No branch by that name'**
+  String get bookNoBranchFound;
+
   /// No description provided for @bookFreeShort.
   ///
   /// In en, this message translates to:
