@@ -1205,6 +1205,9 @@ export function TicketScreen({
         ticket={ticket}
         count={selectedIds.size}
         allSelected={selectedIds.size >= movableCount}
+        suggestedName={oneCustomer(
+          (ticket.lines ?? []).filter((line) => selectedIds.has(toNumber(line.id))),
+        )}
         isPending={moveLines.isPending}
         onPick={doMoveLines}
       />
@@ -1309,4 +1312,19 @@ export function TicketScreen({
       )}
     </div>
   )
+}
+
+/** The one customer every given line is for, by name: none when a line is nobody's or there are two */
+function oneCustomer(lines: { customerId?: string | null; customerName?: string | null }[]): string | null {
+  let key: string | null = null
+  let name: string | null = null
+  for (const line of lines) {
+    const n = (line.customerName ?? '').trim()
+    if (!n) return null
+    const k = line.customerId ? String(line.customerId) : n
+    if (key !== null && k !== key) return null
+    key = k
+    name = n
+  }
+  return name
 }

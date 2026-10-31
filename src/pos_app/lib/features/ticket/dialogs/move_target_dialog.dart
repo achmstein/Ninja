@@ -37,11 +37,13 @@ Future<MoveTarget?> showMoveTargetDialog(
   required int count,
   required bool allSelected,
   required MoveMode mode,
+  String? suggestedName,
 }) {
   return showPosDialog<MoveTarget>(
     context,
     maxWidth: mode == MoveMode.move ? 680 : 448,
-    builder: (context) => _MoveTargetDialog(ticket: ticket, count: count, allSelected: allSelected, mode: mode),
+    builder: (context) =>
+        _MoveTargetDialog(ticket: ticket, count: count, allSelected: allSelected, mode: mode, suggestedName: suggestedName),
   );
 }
 
@@ -50,14 +52,18 @@ class _MoveTargetDialog extends ConsumerStatefulWidget {
   final int count;
   final bool allSelected;
   final MoveMode mode;
-  const _MoveTargetDialog({required this.ticket, required this.count, required this.allSelected, required this.mode});
+
+  /// The one customer every selected line is for: the new counter bill's name, ready to take or change
+  final String? suggestedName;
+  const _MoveTargetDialog({required this.ticket, required this.count, required this.allSelected, required this.mode, this.suggestedName});
 
   @override
   ConsumerState<_MoveTargetDialog> createState() => _MoveTargetDialogState();
 }
 
 class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
-  final _label = TextEditingController();
+  // The selected lines' one customer, already there: one tap names the bill for them
+  late final _label = TextEditingController(text: widget.suggestedName ?? '');
   final _search = TextEditingController();
 
   @override

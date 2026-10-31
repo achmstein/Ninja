@@ -331,6 +331,21 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 
   // Where the lines go: an open bill, a new tab or table, or a fresh ticket
   // for the same place (the split) when nothing else is named
+  /// The one customer every given line is for, by name: none when a line is nobody's or there are two
+  static String? _oneCustomer(List<TicketLineView> lines) {
+    String? key;
+    String? name;
+    for (final line in lines) {
+      final n = (line.customerName ?? '').trim();
+      if (n.isEmpty) return null;
+      final k = (line.customerId ?? '').isNotEmpty ? line.customerId! : n;
+      if (key != null && k != key) return null;
+      key = k;
+      name = n;
+    }
+    return name;
+  }
+
   Future<void> _move(TicketDetail ticket, {required MoveMode mode}) async {
     final movable = ticket.lines.where((l) => l.source != 'SessionTime').length;
     final target = await showMoveTargetDialog(
@@ -339,6 +354,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       count: _selected.length,
       allSelected: _selected.length >= movable,
       mode: mode,
+      suggestedName: _oneCustomer([for (final line in ticket.lines) if (_selected.contains(line.id)) line]),
     );
     if (target == null || !mounted) return;
     final l10n = AppLocalizations.of(context)!;

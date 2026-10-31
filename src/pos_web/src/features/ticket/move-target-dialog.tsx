@@ -55,6 +55,8 @@ type MoveTargetDialogProps = {
   count: number
   /** Every movable line is selected: a same-place split would just be a rename. */
   allSelected: boolean
+  /** The one customer every selected line is for: the new counter bill's name, ready to take or change */
+  suggestedName?: string | null
   isPending: boolean
   onPick: (target: MoveTarget) => void
 }
@@ -83,6 +85,7 @@ export function MoveTargetDialog({
   ticket,
   count,
   allSelected,
+  suggestedName,
   isPending,
   onPick,
 }: MoveTargetDialogProps) {
@@ -92,12 +95,16 @@ export function MoveTargetDialog({
   const [label, setLabel] = useState('')
   const [search, setSearch] = useState('')
 
+  // Opened, the selected lines' one customer is already there: one tap names
+  // the new bill for them, and it can still be changed or cleared
   useEffect(() => {
-    if (!open) {
+    if (open) {
+      setLabel(suggestedName ?? '')
+    } else {
       setLabel('')
       setSearch('')
     }
-  }, [open])
+  }, [open, suggestedName])
 
   const cloudKitchen = useIsCloudKitchen()
   const { data: tickets = [] } = useQuery({

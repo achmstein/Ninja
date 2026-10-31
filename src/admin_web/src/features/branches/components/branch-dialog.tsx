@@ -109,14 +109,25 @@ function BranchForm({
     onOpenChange(false)
   }
 
-  // A link that names no point says how to copy the right one
-  const onError = (error: unknown) =>
-    isAxiosError(error) &&
-    error.response?.status === 400 &&
-    (error.response.data as { title?: string } | undefined)?.title ===
-      'Location not read'
-      ? toast.error(t('locationNotRead'))
-      : toast.error(t('failedToSaveBranch'))
+  // A refusal says why, not only that it failed: a link that names no point
+  // says how to copy the right one; a location the drawn delivery area no
+  // longer fits says what to do with the area first
+  const onError = (error: unknown) => {
+    const title =
+      isAxiosError(error) && error.response?.status === 400
+        ? (error.response.data as { title?: string } | undefined)?.title
+        : undefined
+    switch (title) {
+      case 'Location not read':
+        return toast.error(t('locationNotRead'))
+      case 'Delivery area not usable':
+        return toast.error(t('branchAreaTooFarToMove'))
+      case 'Delivery not set':
+        return toast.error(t('branchDeliveryNotSet'))
+      default:
+        return toast.error(t('failedToSaveBranch'))
+    }
+  }
 
   const createBranch = useMutation({
     ...createBranchMutation(),

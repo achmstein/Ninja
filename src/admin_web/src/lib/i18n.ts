@@ -1703,6 +1703,8 @@ const webExtras = {
   riderAtTill: { en: "At the till", ar: "من الكاشير" },
   riderFromApp: { en: "From the rider app", ar: "من تطبيق المندوب" },
   riderSomeone: { en: "a rider", ar: "مندوب" },
+  branchAreaTooFarToMove: { en: "This branch delivers inside an area drawn on the map, and the new location is more than 50 km from it. Remove the area or draw it again in the branch's delivery settings, then save the new location.", ar: "هذا الفرع يوصّل داخل منطقة مرسومة على الخريطة، والموقع الجديد يبعد عنها أكثر من 50 كم. أزل المنطقة أو ارسمها من جديد في إعدادات التوصيل للفرع، ثم احفظ الموقع الجديد." },
+  branchDeliveryNotSet: { en: "This branch delivers, so it needs its location and how far it delivers. Turn delivery off first to take either away.", ar: "هذا الفرع يوصّل، فيلزمه موقعه ومدى التوصيل. أوقف التوصيل أولًا لإزالة أيٍّ منهما." },
   locationNotRead: { en: "That link has no location. In Google Maps, open the branch, tap Share, then Copy link.", ar: "هذا الرابط بلا موقع. افتح الفرع في خرائط Google، ثم مشاركة، ثم نسخ الرابط." },
   marginOfSales: { en: "Margin {share}", ar: "هامش {share}" },
   usesIngredientsBadge: { en: "Recipe · food cost %", ar: "وصفة · نسبة التكلفة" },

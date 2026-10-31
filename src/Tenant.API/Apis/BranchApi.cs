@@ -177,6 +177,7 @@ public static class BranchApi
 
         // Null leaves the drawn area as it is; empty takes it away; anything else is held to
         // the branch as it now stands. A branch moved keeps its area only if it is still near
+        var movedOffDelivery = false;
         if (request.DeliveryArea is { } drawn)
         {
             if (drawn.Length == 0)
@@ -191,14 +192,20 @@ public static class BranchApi
             }
         }
         else if (request.Location is not null && branch.DeliveryArea is { } kept && branch.Latitude is not null
-            && DeliveryAreaRules.Check(kept, branch.Latitude, branch.Longitude).Problem is { } movedAway)
+            && DeliveryAreaRules.Check(kept, branch.Latitude, branch.Longitude).Problem is not null)
         {
-            return AreaNotUsable(movedAway);
+            // The area was drawn round where the branch was, and the branch has moved too far from it: it
+            // goes with the move rather than refusing it (refused, an owner with delivery switched off had
+            // no screen left to take the area away on); a radius, if it has one, stands
+            branch.DeliveryArea = null;
+            // Nothing left to deliver within: the branch stops delivering until it is given a radius or an
+            // area round its new place, rather than the move being refused for it
+            if (request.IsDeliveryEnabled is null && branch.IsDeliveryEnabled && !branch.CanDeliver) movedOffDelivery = true;
         }
 
         // A delivering branch keeps somewhere to measure from and somewhere to stop: taking either
         // away is refused, as switching delivery on without them is (UpdateBranchSettings)
-        if ((request.IsDeliveryEnabled ?? branch.IsDeliveryEnabled) && !branch.CanDeliver)
+        if ((request.IsDeliveryEnabled ?? (movedOffDelivery ? false : branch.IsDeliveryEnabled)) && !branch.CanDeliver)
             return TypedResults.BadRequest<ProblemDetails>(new()
             {
                 Title = "Delivery not set",
@@ -206,7 +213,8 @@ public static class BranchApi
             });
 
         // The flags ride the same save; the service announces the change
-        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders, request.IsDeliveryEnabled, request.RequireSignInForDelivery);
+        await settings.ApplyAsync(branch, request.IsOrderingEnabled, request.IsReservationsEnabled, request.RequireSignInForTableOrders,
+            movedOffDelivery ? false : request.IsDeliveryEnabled, request.RequireSignInForDelivery);
 
         var response = BranchResponse.From(branch);
         return TypedResults.Ok(response);
