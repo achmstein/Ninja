@@ -225,8 +225,8 @@ const dictionary = {
   noSteps: "No run yet",
   // Talabat, from its onboarding
   talabat: "Talabat",
-  talabatHint: "From Talabat's onboarding: the business's chain there. Give Talabat the plugin URL and each branch's remote id.",
-  talabatNoAccount: "The platform has no Talabat account yet (TALABAT_* in the platform .env): nothing is sent or taken until it has.",
+  talabatHint: "The chain code and market Talabat's onboarding gives the business. Its orders then arrive in the till.",
+  talabatNoAccount: "Ninja has no Talabat partner account yet, so nothing is sent or received until it does.",
   talabatChainCode: "Chain code",
   talabatChainCodePlaceholder: "Not on Talabat",
   talabatGlobalEntity: "Global entity",
