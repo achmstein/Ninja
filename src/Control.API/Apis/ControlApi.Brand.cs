@@ -55,6 +55,8 @@ public static partial class ControlApi
         if (tenant.Status != TenantStatus.Running)
             return TypedResults.Conflict<ProblemDetails>(new() { Detail = $"The brand lives on the stack, and {slug} is {tenant.Status}." });
 
+        // Where customers go is the record's (its domain), never typed here: a brand saved from an older page keeps it too
+        request = request with { CustomerUrl = TenantHosts.For(tenant, options.Value).CustomerUrl };
         using var response = await stack.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(request), StackAuth.Control, ct);
         var result = await BrandResult(response, tenant, options.Value, ct);
 

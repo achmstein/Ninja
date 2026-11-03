@@ -233,4 +233,17 @@ public sealed class StackSettingsTests
         Assert.AreEqual("dark", brand["theme"]!["mode"]!.GetValue<string>());
         Assert.IsNull(brand["icons"], "what the stack makes itself is not sent back");
     }
+
+    /// <summary>Where customers go follows the record's domain: one field, never two that drift apart.</summary>
+    [TestMethod]
+    public void The_customer_url_is_the_records_domain_when_the_platform_is_given()
+    {
+        var current = new JsonObject { ["customerUrl"] = "https://typed-long-ago.example" };
+        var platform = new PlatformOptions { Domain = "ninjapp.net" };
+
+        Assert.AreEqual($"https://{_tenant.Slug}.ninjapp.net", StackSettings.Apply(current, _tenant, platform)["customerUrl"]!.GetValue<string>());
+
+        _tenant.CustomerDomain = "menu.blue.com";
+        Assert.AreEqual("https://menu.blue.com", StackSettings.Apply(current, _tenant, platform)["customerUrl"]!.GetValue<string>());
+    }
 }

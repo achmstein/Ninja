@@ -127,7 +127,7 @@ public static partial class ControlApi
             await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "maps"), ct);
 
         // A running business's apps see the rest at once; a stack that is not running keeps its own until it is provisioned again
-        if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, ct) is { } refused)
+        if (tenant.Status == TenantStatus.Running && await StackSettings.PushAsync(stack, tenant, options.Value, ct) is { } refused)
             return TypedResults.Problem(detail: $"Saved on the record, but the business did not take it: {refused}", statusCode: StatusCodes.Status502BadGateway);
 
         return TypedResults.Ok(TenantDetail.From(tenant, [], provisioner.SeedImages(tenant).Keys.ToList(), options.Value, maps: await MapsStore.LoadAsync(context, ct)));

@@ -16,8 +16,12 @@ public static class StackSettings
     /// <summary>The fields Tenant.API's PUT /api/tenant reads; the rest of its answer is its own.</summary>
     private static readonly string[] Writable = ["name", "primaryColor", "customerUrl", "features", "theme", "locale"];
 
-    /// <summary>The brand the stack would keep, with the record's settings on it.</summary>
-    public static JsonObject Apply(JsonObject current, Tenant tenant)
+    /// <summary>
+    /// The brand the stack would keep, with the record's settings on it. The customer URL is the record's
+    /// too when the platform is given: the business's own domain, or {slug}.{domain} without one, so the
+    /// links the stack writes follow the domain set on the record and never drift from it.
+    /// </summary>
+    public static JsonObject Apply(JsonObject current, Tenant tenant, PlatformOptions? platform = null)
     {
         var brand = new JsonObject();
         foreach (var key in Writable)
@@ -26,6 +30,7 @@ public static class StackSettings
         }
         brand["name"] = new JsonObject { ["en"] = tenant.NameEn, ["ar"] = tenant.NameAr };
         brand["primaryColor"] = tenant.PrimaryColor;
+        if (platform is not null) brand["customerUrl"] = TenantHosts.For(tenant, platform).CustomerUrl;
         var theme = brand["theme"] as JsonObject ?? new JsonObject();
         theme["mode"] = tenant.DefaultTheme;
         theme["slab"] = tenant.Slab;
@@ -41,14 +46,14 @@ public static class StackSettings
     }
 
     /// <summary>Puts the record's settings on the stack; null when it took them, else why not.</summary>
-    public static async Task<string?> PushAsync(IStackProxy stack, Tenant tenant, CancellationToken ct)
+    public static async Task<string?> PushAsync(IStackProxy stack, Tenant tenant, PlatformOptions platform, CancellationToken ct)
     {
         using var get = await stack.SendAsync(tenant, HttpMethod.Get, "/api/tenant", null, StackAuth.Anonymous, ct);
         if (!get.IsSuccessStatusCode)
             return $"The stack answered {(int)get.StatusCode} reading its brand.";
         var current = await get.Content.ReadFromJsonAsync<JsonObject>(ct) ?? new JsonObject();
 
-        using var put = await stack.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(Apply(current, tenant)), StackAuth.Control, ct);
+        using var put = await stack.SendAsync(tenant, HttpMethod.Put, "/api/tenant", JsonContent.Create(Apply(current, tenant, platform)), StackAuth.Control, ct);
         return put.IsSuccessStatusCode
             ? null
             : $"The stack answered {(int)put.StatusCode}: {await put.Content.ReadAsStringAsync(ct)}";
