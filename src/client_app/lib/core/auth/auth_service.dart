@@ -112,6 +112,10 @@ class AuthService extends Notifier<AuthState> {
   ));
   final FlutterSecureStorage _storage = const FlutterSecureStorage();
 
+  /// Why the last social sign-in failed, as Google, Apple or Keycloak put it: shown small under
+  /// the failure, so a setup fault (a fingerprint, a client) can be told from a refusal
+  String? lastSocialError;
+
   // Native social login SDKs
   final GoogleSignIn _googleSignIn = GoogleSignIn.instance;
   bool _googleSignInInitialized = false;
@@ -354,6 +358,7 @@ class AuthService extends Notifier<AuthState> {
   /// Sign in with social provider using native SDKs (no browser)
   Future<bool> signInWithProvider(SocialProvider provider) async {
     debugPrint('Attempting native social sign in with: ${provider.name}');
+    lastSocialError = null;
 
     try {
       String? socialToken;
@@ -376,6 +381,7 @@ class AuthService extends Notifier<AuthState> {
           debugPrint('Google sign in successful, got access token');
         } on GoogleSignInException catch (e) {
           debugPrint('Google sign in exception: ${e.code}');
+          lastSocialError = 'Google ${e.code.name}${e.description == null ? '' : ': ${e.description}'}';
           return false;
         }
       } else {
@@ -416,12 +422,13 @@ class AuthService extends Notifier<AuthState> {
       return await _exchangeSocialToken(socialToken, providerAlias, tokenType);
     } catch (e) {
       debugPrint('Social sign in error: $e');
+      lastSocialError = e.toString();
       return false;
     }
   }
 
   /// Exchange social provider token for Keycloak tokens
-  Future<bool> _exchangeSocialToken(String socialToken, String providerAlias, String tokenType) async {
+  Future<bool> _exchangeSocialToken(String socialToken, String providerAlias, String tokenType, {bool linked = false}) async {
     debugPrint('Exchanging $providerAlias token with Keycloak');
 
     try {
@@ -463,6 +470,23 @@ class AuthService extends Notifier<AuthState> {
     } on DioException catch (e) {
       debugPrint('Token exchange DioException: ${e.type} - ${e.message}');
       debugPrint('Token exchange error response: ${e.response?.statusCode} - ${e.response?.data}');
+      // The email already has an account not linked to Google (made with a password, moved in, or
+      // signed in on the web): the platform links it once Google vouches for the token, and the
+      // token is traded again
+      final data = e.response?.data;
+      final described = data is Map ? data['error_description']?.toString() : data?.toString();
+      if (!linked && providerAlias == 'google' && e.response?.statusCode == 400 && (described?.contains('User already exists') ?? false)) {
+        try {
+          await _dio.post(
+            '${AppConfig.keycloakUrl}/api/control/social/google/link',
+            data: {'realm': AppConfig.keycloakRealm, 'accessToken': socialToken},
+          );
+          return await _exchangeSocialToken(socialToken, providerAlias, tokenType, linked: true);
+        } on DioException catch (link) {
+          debugPrint('Google link failed: ${link.response?.statusCode} - ${link.response?.data}');
+        }
+      }
+      lastSocialError = 'Sign-in ${e.response?.statusCode ?? e.type.name}${described == null ? '' : ': $described'}';
       return false;
     } catch (e) {
       debugPrint('Token exchange error: $e');

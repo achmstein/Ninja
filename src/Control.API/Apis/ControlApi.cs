@@ -45,6 +45,7 @@ public static partial class ControlApi
         MapOpsApi(api);
         MapImpersonationApi(api);
         MapAppleApi(api);
+        MapSocialLinkApi(api);
         MapBackupsApi(api);
         MapMailApi(api);
         MapSubscriptionApi(api);

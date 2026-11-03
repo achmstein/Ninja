@@ -198,6 +198,11 @@ auth.{$PLATFORM_DOMAIN} {
 		rewrite * /api/control/social/apple
 		reverse_proxy control-api:8080
 	}
+	# The customer app, refused a Google exchange for an email that already has an
+	# unlinked account, has the control plane link it (it asks Google whose token it is)
+	handle /api/control/social/google/link {
+		reverse_proxy control-api:8080
+	}
 	# The admin console and the admin REST API: only from ADMIN_ALLOW_CIDR
 	# (space-separated networks; nothing is allowed until it is set). The
 	# control plane talks to Keycloak inside the docker network, not here.

@@ -47,6 +47,13 @@ public interface IKeycloakAdmin
     /// </summary>
     Task EnsureSocialProvidersAsync(string realm, string? appId, CancellationToken ct);
     /// <summary>
+    /// The realm's user with this email linked to the provider's account (alias, its subject), when the
+    /// user has no link to that provider yet: Keycloak's token exchange makes a new account or takes a
+    /// linked one, and refuses an email that is already some unlinked account's. "linked", "already"
+    /// (a link to that provider was there), or "none" (no such user: the exchange makes one).
+    /// </summary>
+    Task<string> LinkSocialAsync(string realm, string email, string alias, string subject, CancellationToken ct);
+    /// <summary>
     /// The hub realm every business's browser sign-in with Google and Apple goes through: made when
     /// missing, the platform's apps in it (a rotated secret lands too), a hub record never stopped
     /// to review a profile, and a browser flow per provider that goes straight to it. Idempotent, and
@@ -271,6 +278,19 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         var client = await AdminClientAsync(ct);
         var users = await client.GetFromJsonAsync<JsonArray>($"{Base}/admin/realms/{realm}/users?email={Uri.EscapeDataString(email)}&exact=true", ct);
         return users is { Count: > 0 } ? users[0]!["id"]!.GetValue<string>() : null;
+    }
+
+    public async Task<string> LinkSocialAsync(string realm, string email, string alias, string subject, CancellationToken ct)
+    {
+        var client = await AdminClientAsync(ct);
+        var admin = $"{Base}/admin/realms/{realm}";
+        var users = await client.GetFromJsonAsync<JsonArray>($"{admin}/users?email={Uri.EscapeDataString(email)}&exact=true", ct);
+        if (users is not { Count: > 0 } || users[0]?["id"]?.GetValue<string>() is not { } userId) return "none";
+        var links = await client.GetFromJsonAsync<JsonArray>($"{admin}/users/{userId}/federated-identity", ct) ?? [];
+        if (links.OfType<JsonObject>().Any(l => l["identityProvider"]?.GetValue<string>() == alias)) return "already";
+        await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{admin}/users/{userId}/federated-identity/{alias}",
+            new JsonObject { ["identityProvider"] = alias, ["userId"] = subject, ["userName"] = email }, ct), $"the {alias} link of {email} in {realm}", ct);
+        return "linked";
     }
 
     public async Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct)
@@ -892,6 +912,7 @@ public sealed class DryRunKeycloakAdmin(ILogger<DryRunKeycloakAdmin> logger) : I
     }
     public Task<string?> FindUserIdAsync(string realm, string email, CancellationToken ct) => Task.FromResult<string?>($"dry-run-{email}");
     public Task<bool> HasRequiredActionAsync(string realm, string email, string action, CancellationToken ct) => Task.FromResult(true);
+    public Task<string> LinkSocialAsync(string realm, string email, string alias, string subject, CancellationToken ct) => Task.FromResult("none");
     public Task SetRealmSmtpAsync(string realm, string smtpServerJson, CancellationToken ct) { logger.LogInformation("(dry run) smtp on {Realm}", realm); return Task.CompletedTask; }
     public Task EnsureRealmUpToDateAsync(string realm, string apiUrl, string assistantSecret, CancellationToken ct)
     {

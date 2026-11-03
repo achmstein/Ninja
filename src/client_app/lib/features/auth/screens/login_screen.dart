@@ -85,8 +85,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
       final success = await authService.signInWithProvider(provider);
 
       if (!success && mounted) {
+        final why = authService.lastSocialError;
         setState(() {
-          _error = l10n.socialSignInFailed;
+          _error = why == null ? l10n.socialSignInFailed : '${l10n.socialSignInFailed} ($why)';
         });
       }
     } catch (e) {
