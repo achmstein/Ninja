@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Info } from 'lucide-react'
-import type { BrandDto, BrandFeatures, TenantDetail } from '@/api/control'
+import type { BrandDto, TenantDetail } from '@/api/control'
 import {
   deleteTenantBrandImageMutation,
   getTenantBrandOptions,
@@ -28,7 +28,6 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
-import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import {
   Select,
@@ -39,7 +38,6 @@ import {
 } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Switch } from '@/components/ui/switch'
 import {
   imageOf,
   imagesFromUrls,
@@ -53,6 +51,8 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { isHexColor, tenantStatus } from '@/lib/tenant'
 import { toast } from '@/lib/toast'
+import { DefaultThemeField, type DefaultTheme } from '../new-tenant-business'
+import { RecordBrandForm } from '../record-brand-form'
 
 const DEFAULT = '__default__'
 
@@ -80,23 +80,6 @@ const RADIUS_LABELS: Record<string, TranslationKey> = {
   lg: 'radiusLg',
   xl: 'radiusXl',
 }
-
-const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
-  { key: 'reservations', label: 'featureReservations' },
-  { key: 'timeBilling', label: 'featureTimeBilling' },
-  { key: 'loyalty', label: 'featureLoyalty' },
-  { key: 'tabs', label: 'featureTabs' },
-  { key: 'inventory', label: 'featureInventory' },
-  { key: 'finance', label: 'featureFinance' },
-  { key: 'payroll', label: 'featurePayroll' },
-  { key: 'kds', label: 'featureKds' },
-  { key: 'onlinePayments', label: 'featureOnlinePayments' },
-  { key: 'delivery', label: 'featureDelivery' },
-  // Paid when ordered: entitled with online payments
-  { key: 'payAhead', label: 'featurePayAhead' },
-  { key: 'ai', label: 'featureAi' },
-  { key: 'callCentre', label: 'featureCallCentre' },
-]
 
 const withScheme = (url: string) => (/^https?:\/\//i.test(url) ? url : `https://${url}`)
 
@@ -132,12 +115,16 @@ export function BrandTab({ tenant }: { tenant: TenantDetail }) {
   if (!running || brand.isError) {
     return (
       <div className='flex flex-col gap-6 lg:flex-row lg:items-start'>
-        <Alert className='flex-1'>
-          <Info />
-          <AlertDescription>
-            {(brand.isError && problemDetail(brand.error)) || t('brandNotRunning')}
-          </AlertDescription>
-        </Alert>
+        <div className='flex flex-1 flex-col gap-4'>
+          <Alert>
+            <Info />
+            <AlertDescription>
+              {(brand.isError && problemDetail(brand.error)) || t('brandNotRunning')}
+            </AlertDescription>
+          </Alert>
+          {/* The parts the record keeps, so they can change while the stack is down; it takes them when it runs */}
+          <RecordBrandForm key={`${tenant.nameEn}-${tenant.nameAr}-${tenant.primaryColor}-${tenant.slab}-${tenant.defaultTheme}`} tenant={tenant} />
+        </div>
         <div className='flex flex-col items-center gap-3'>
           <PreviewToggles
             language={preview.language}
@@ -248,8 +235,8 @@ function BrandForm({
   const [dock, setDock] = useState<Dock>(dockOf(brand.theme.slab))
   const [menuLayout, setMenuLayout] = useState(menuLayoutOf(brand.theme.layout?.menuItem))
   const [placesLayout, setPlacesLayout] = useState(placesLayoutOf(brand.theme.layout?.places))
-  const [customerUrl, setCustomerUrl] = useState(brand.customerUrl ?? '')
-  const [features, setFeatures] = useState<BrandFeatures>({ ...brand.features })
+  const savedMode: DefaultTheme = brand.theme.mode === 'light' || brand.theme.mode === 'dark' ? brand.theme.mode : 'device'
+  const [mode, setMode] = useState<DefaultTheme>(savedMode)
 
   const orNull = (v: string) => (v.trim() ? v.trim().toLowerCase() : null)
 
@@ -356,11 +343,13 @@ function BrandForm({
     [brand]
   )
   const dirty = JSON.stringify({ name: draft.name, primaryColor: draft.primaryColor, theme: draft.theme }) !== JSON.stringify(saved)
+  const changed = dirty || mode !== savedMode
   useEffect(() => onDraft(dirty ? draft : null), [dirty, draft, onDraft])
   useEffect(() => () => onDraft(null), [onDraft])
 
   const colorOk = (v: string) => v === '' || isHexColor(v)
   const canSubmit =
+    changed &&
     !isBlank(name) &&
     [primary, accent, surface, darkPrimary, darkAccent, darkSurface].every(colorOk) &&
     !save.isPending
@@ -373,10 +362,10 @@ function BrandForm({
       body: {
         name: fromLocalizedValue(name),
         primaryColor: orNull(primary),
-        customerUrl: customerUrl.trim() || null,
-        features,
-        // The starting light or dark and the locale are the record's; they go back as the business has them
-        theme: { ...theme, mode: brand.theme.mode ?? null },
+        // Where customers go is the record's domain (Connections), the switches the Plan tab's: both go back as they are
+        customerUrl: brand.customerUrl ?? null,
+        features: brand.features,
+        theme: { ...theme, mode: mode === 'device' ? null : mode },
         locale: brand.locale,
       },
     })
@@ -397,6 +386,7 @@ function BrandForm({
             hint={t('brandColorHint')}
           />
           <DockField value={dock} onChange={setDock} color={primary} />
+          <DefaultThemeField value={mode} onChange={setMode} />
           <div className='grid gap-2'>
             <Label htmlFor='brand-menu' className='text-xs'>{t('menuLayout')}</Label>
             <Select value={menuLayout} onValueChange={(v) => pickLayout('menuItem', v)} disabled={saveLayout.isPending}>
@@ -483,40 +473,6 @@ function BrandForm({
             </CollapsibleContent>
           </Collapsible>
           <ContrastNotice input={{ primaryColor: orNull(primary), theme } satisfies BrandThemeInput} />
-          <div className='grid gap-2'>
-            <Label htmlFor='brand-url' className='text-xs'>{t('customerUrl')}</Label>
-            <Input
-              id='brand-url'
-              dir='ltr'
-              type='url'
-              placeholder='https://'
-              value={customerUrl}
-              onChange={(e) => setCustomerUrl(e.target.value)}
-            />
-          </div>
-          <div className='grid gap-2'>
-            <Label className='text-xs'>{t('features')}</Label>
-            <div className='divide-y rounded-lg border'>
-              {FEATURES.map(({ key, label }) => {
-                // A stack older than plans answers without entitlements: everything is allowed there
-                const entitled = brand.entitlements?.[key] ?? true
-                return (
-                  <div key={key} className='flex items-center justify-between gap-4 px-3 py-2'>
-                    <Label htmlFor={`feature-${key}`} className='flex items-center gap-2 font-normal'>
-                      {t(label)}
-                      {!entitled && <Badge variant='outline'>{t('notInPlan')}</Badge>}
-                    </Label>
-                    <Switch
-                      id={`feature-${key}`}
-                      checked={Boolean(entitled && features[key])}
-                      disabled={!entitled}
-                      onCheckedChange={(v) => setFeatures((f) => ({ ...f, [key]: v }))}
-                    />
-                  </div>
-                )
-              })}
-            </div>
-          </div>
           <div className='flex justify-end'>
             <Button type='submit' disabled={!canSubmit}>
               {save.isPending && <Spinner />}

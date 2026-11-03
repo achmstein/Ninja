@@ -38,6 +38,7 @@ import {
   TableRow,
 } from '@/components/ui/table'
 import { useFormat } from '@/lib/format'
+import { FeatureSwitchesCard } from '../feature-switches'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -78,6 +79,8 @@ export function SubscriptionTab({ tenant }: { tenant: TenantDetail }) {
     queryClient.invalidateQueries({ queryKey: getTenantSubscriptionQueryKey({ path: { slug } }) })
     queryClient.invalidateQueries({ queryKey: getTenantQueryKey({ path: { slug } }) })
     queryClient.invalidateQueries({ queryKey: listTenantsQueryKey() })
+    // What the plan allows changes which feature switches may be on
+    queryClient.invalidateQueries({ queryKey: [{ _id: 'getTenantBrand' }] })
   }
   const failed = (e: unknown) => toast.error(problemDetail(e) || t('somethingWentWrong'))
 
@@ -131,6 +134,9 @@ export function SubscriptionTab({ tenant }: { tenant: TenantDetail }) {
         isPending={save.isPending}
         onSave={(plan, addons, graceDays) => save.mutate({ path: { slug }, body: { plan, addons, graceDays } })}
       />
+      <div className='xl:order-last xl:col-span-2'>
+        <FeatureSwitchesCard tenant={tenant} />
+      </div>
 
       <div className='flex flex-col gap-6'>
         <Card>

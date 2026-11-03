@@ -80,7 +80,8 @@ import {
 } from './new-tenant-locale'
 import {
   BusinessPicker,
-  LookFields,
+  ArabicStyleField,
+  DefaultThemeField,
   SUGGESTED_MODULES,
   type ArabicStyle,
   type DefaultTheme,
@@ -327,7 +328,7 @@ export function NewTenantPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('record')}</CardTitle>
+              <CardTitle>{t('tabBusiness')}</CardTitle>
             </CardHeader>
             <CardContent className='grid gap-4'>
               <LocalizedInput
@@ -404,18 +405,6 @@ export function NewTenantPage() {
                     ))}
                   </ToggleGroup>
                 </div>
-                {kind === 'Customer' && (
-                  <div className='grid gap-2 sm:col-span-2'>
-                    <Label htmlFor='customerDomain'>{t('customerDomain')}</Label>
-                    <Input
-                      id='customerDomain'
-                      dir='ltr'
-                      placeholder='menu.example.com'
-                      value={customerDomain}
-                      onChange={(e) => setCustomerDomain(e.target.value)}
-                    />
-                  </div>
-                )}
                 {kind === 'Demo' && (
                   <div className='grid gap-2'>
                     <Label htmlFor='demoDays'>{t('demoDays')}</Label>
@@ -468,44 +457,6 @@ export function NewTenantPage() {
                       onChange={(e) => setAddress(e.target.value)}
                     />
                   </div>
-                  <div className='grid gap-2'>
-                    <Label htmlFor='plan'>{t('plan')}</Label>
-                    <Select value={plan} onValueChange={(v) => setPlan(v as TenantPlanName)}>
-                      <SelectTrigger id='plan' className='w-full'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {TENANT_PLANS.map((p) => (
-                          <SelectItem key={p} value={p}>
-                            {t(planLabelKey[p])}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  <div className='grid gap-2 sm:col-span-2'>
-                    <Label>{t('modules')}</Label>
-                    {kind === 'Demo' && <p className='text-muted-foreground text-xs'>{t('demoHasEverything')}</p>}
-                    <div className='grid gap-2 sm:grid-cols-2'>
-                      {MODULES.map((m) => {
-                        const isIncluded = included.has(m)
-                        return (
-                          <label key={m} className='flex items-center gap-2 text-sm'>
-                            <Checkbox
-                              checked={isIncluded || addons.includes(m)}
-                              disabled={isIncluded || kind === 'Demo'}
-                              onCheckedChange={(v) => {
-                                setAddonsTouched(true)
-                                setAddons((a) => (v === true ? [...a, m] : a.filter((x) => x !== m)))
-                              }}
-                            />
-                            {t(moduleLabelKey[m])}
-                            {isIncluded && <span className='text-muted-foreground text-xs'>· {t('includedInPlan')}</span>}
-                          </label>
-                        )
-                      })}
-                    </div>
-                  </div>
                   <div className='grid gap-2 sm:col-span-2'>
                     <Label htmlFor='notes'>{t('notes')}</Label>
                     <Textarea
@@ -522,7 +473,53 @@ export function NewTenantPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle>{t('locale')}</CardTitle>
+              <CardTitle>{t('tabSubscription')}</CardTitle>
+            </CardHeader>
+            <CardContent className='grid gap-4 sm:grid-cols-2'>
+              <div className='grid gap-2'>
+                <Label htmlFor='plan'>{t('plan')}</Label>
+                <Select value={plan} onValueChange={(v) => setPlan(v as TenantPlanName)}>
+                  <SelectTrigger id='plan' className='w-full'>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TENANT_PLANS.map((p) => (
+                      <SelectItem key={p} value={p}>
+                        {t(planLabelKey[p])}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className='grid gap-2 sm:col-span-2'>
+                <Label>{t('modules')}</Label>
+                {kind === 'Demo' && <p className='text-muted-foreground text-xs'>{t('demoHasEverything')}</p>}
+                <div className='grid gap-2 sm:grid-cols-2'>
+                  {MODULES.map((m) => {
+                    const isIncluded = included.has(m)
+                    return (
+                      <label key={m} className='flex items-center gap-2 text-sm'>
+                        <Checkbox
+                          checked={isIncluded || addons.includes(m)}
+                          disabled={isIncluded || kind === 'Demo'}
+                          onCheckedChange={(v) => {
+                            setAddonsTouched(true)
+                            setAddons((a) => (v === true ? [...a, m] : a.filter((x) => x !== m)))
+                          }}
+                        />
+                        {t(moduleLabelKey[m])}
+                        {isIncluded && <span className='text-muted-foreground text-xs'>· {t('includedInPlan')}</span>}
+                      </label>
+                    )
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('businessLocale')}</CardTitle>
             </CardHeader>
             <CardContent>
               <LocaleFields
@@ -552,14 +549,12 @@ export function NewTenantPage() {
                 />
               </div>
               <div className='mt-4'>
-                <LookFields
-                  arabicStyle={arabicStyle}
-                  onArabicStyle={(v) => {
+                <ArabicStyleField
+                  value={arabicStyle}
+                  onChange={(v) => {
                     setArabicStyle(v)
                     setArabicTouched(true)
                   }}
-                  defaultTheme={defaultTheme}
-                  onDefaultTheme={setDefaultTheme}
                 />
               </div>
             </CardContent>
@@ -579,8 +574,7 @@ export function NewTenantPage() {
                 eyedropper
               />
               <DockField value={dock} onChange={setDock} color={color} />
-              <SocialField id='socialSignIn' checked={social} onChange={setSocial} />
-              <MapsField id='googleMaps' checked={maps} onChange={setMaps} />
+              <DefaultThemeField value={defaultTheme} onChange={setDefaultTheme} />
               <ImageSlotGrid
                 srcOf={(slot) => objectUrls[slot] ?? null}
                 busySlot={logoCleanup.busySlot}
@@ -594,6 +588,28 @@ export function NewTenantPage() {
                 }
               />
               {logoCleanup.dialog}
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle>{t('tabConnections')}</CardTitle>
+            </CardHeader>
+            <CardContent className='grid gap-6'>
+              {kind === 'Customer' && (
+                <div className='grid gap-2'>
+                  <Label htmlFor='customerDomain'>{t('customerDomain')}</Label>
+                  <Input
+                    id='customerDomain'
+                    dir='ltr'
+                    placeholder='menu.example.com'
+                    value={customerDomain}
+                    onChange={(e) => setCustomerDomain(e.target.value)}
+                  />
+                </div>
+              )}
+              <SocialField id='socialSignIn' checked={social} onChange={setSocial} />
+              <MapsField id='googleMaps' checked={maps} onChange={setMaps} />
             </CardContent>
           </Card>
 

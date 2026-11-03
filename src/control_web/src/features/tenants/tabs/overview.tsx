@@ -1,20 +1,15 @@
-import { useState } from 'react'
-import { CalendarPlus, Download, ExternalLink, Pencil } from 'lucide-react'
+import { Link } from '@tanstack/react-router'
+import { CalendarPlus, ChevronRight, ExternalLink } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
 import { CopyButton } from '@/components/copy-button'
 import { Button } from '@/components/ui/button'
-import { Spinner } from '@/components/ui/spinner'
-import { apiClient } from '@/lib/api-client'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { countryOf } from '@/lib/locale'
-import { problemDetail } from '@/lib/problem'
 import { planLabelKey, seedLabelKey, tenantKind, tenantStatus } from '@/lib/tenant'
-import { toast } from '@/lib/toast'
 import { UpdateStanding } from '../dialogs'
-import { EditRecordSheet } from '../edit-record-sheet'
+import type { TenantTab } from '../tenant-page'
 import { Steps } from '../steps'
-import { TalabatSection } from '../talabat-section'
 import { JobLabel } from '@/features/platform/queue-table'
 
 const HOSTS: { key: keyof TenantDetail['hosts']; label: TranslationKey }[] = [
@@ -41,7 +36,6 @@ export function OverviewTab({
 }) {
   const t = useT()
   const format = useFormat()
-  const [editing, setEditing] = useState(false)
 
   const status = tenantStatus(tenant.status)
   const kind = tenantKind(tenant.kind)
@@ -49,33 +43,9 @@ export function OverviewTab({
   const country = countryOf(tenant.locale.country)
   const { record, locale } = tenant
 
-  // A plain link would not carry the bearer token: fetch the record
-  // through the shared client and hand the browser a blob
-  const [downloading, setDownloading] = useState(false)
-  const downloadAppConfig = async () => {
-    setDownloading(true)
-    try {
-      const res = await apiClient.get<Blob>(
-        `/api/control/tenants/${encodeURIComponent(tenant.slug)}/app-config`,
-        { responseType: 'blob' }
-      )
-      const url = URL.createObjectURL(res.data)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `${tenant.slug}.json`
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      URL.revokeObjectURL(url)
-    } catch (e) {
-      toast.error(problemDetail(e) || t('somethingWentWrong'))
-    } finally {
-      setDownloading(false)
-    }
-  }
-
   return (
     <div className='flex flex-col gap-6'>
+      <StillToDo tenant={tenant} />
       <section className='grid gap-x-8 gap-y-6 md:grid-cols-2 xl:grid-cols-3'>
         <dl className={dlClass}>
           <dt className={dtClass}>{t('hosts')}</dt>
@@ -169,81 +139,85 @@ export function OverviewTab({
         </dl>
 
         <dl className={dlClass}>
-          <dt className={dtClass}>{t('record')}</dt>
-          <dd className='flex justify-end'>
-            <Button variant='ghost' size='sm' className='h-7 px-2' onClick={() => setEditing(true)}>
-              <Pencil />
-              {t('edit')}
-            </Button>
-          </dd>
+          <Edited tab='business' slug={tenant.slug} label={t('tabBusiness')} />
           <dt className={dtClass}>{t('contact')}</dt>
           <dd className='truncate'>{record.contactName || '—'}</dd>
           <dt className={dtClass}>{t('phone')}</dt>
           <dd className='truncate' dir='ltr'>{record.phone || '—'}</dd>
-          <dt className={dtClass}>{t('address')}</dt>
-          <dd className='whitespace-pre-line'>{record.address || '—'}</dd>
-          <dt className={dtClass}>{t('plan')}</dt>
-          <dd>{t(planLabelKey[record.plan])}</dd>
           <dt className={dtClass}>{t('country')}</dt>
-          <dd>{country?.name.en ?? locale.country}</dd>
-          <dt className={dtClass}>{t('currency')}</dt>
-          <dd>{locale.currency}</dd>
-          <dt className={dtClass}>{t('timeZone')}</dt>
-          <dd dir='ltr'>{locale.timeZone}</dd>
-          <dt className={dtClass}>{t('defaultLanguage')}</dt>
-          <dd>{locale.language === 'ar' ? t('arabic') : t('english')}</dd>
+          <dd>{country?.name.en ?? locale.country} · {locale.currency}</dd>
           <dt className={dtClass}>{t('seed')}</dt>
           <dd>{t(seedLabelKey[tenant.seed])}</dd>
-          {tenant.customerDomain && (
-            <>
-              <dt className={dtClass}>{t('ownDomain')}</dt>
-              <dd className='truncate' dir='ltr'>{tenant.customerDomain}</dd>
-            </>
-          )}
-          <dt className={dtClass}>{t('googleMaps')}</dt>
-          <dd className='flex flex-col gap-0.5'>
-            <span>{tenant.googleMaps ? (tenant.googleMapsAvailable ? t('googleMapsOn') : t('googleMapsOnNoKeys')) : t('googleMapsOff')}</span>
-            {/* Google takes the browser key only from the sites it lists: until this one is, its web keeps the free map */}
-            {tenant.mapsDomainToAdd && (
-              <span className='text-muted-foreground text-xs'>
-                {t('googleMapsAddDomain', { pattern: `https://${tenant.mapsDomainToAdd}/*` })}
-              </span>
-            )}
-          </dd>
-          <dt className={dtClass}>{t('customerApp')}</dt>
-          <dd className='flex min-w-0 items-center justify-between gap-2'>
-            <span className='truncate' dir={tenant.appId ? 'ltr' : undefined}>
-              {tenant.appId ?? t('sharedApp')}
-            </span>
-            <Button
-              variant='ghost'
-              size='sm'
-              className='h-7 shrink-0 px-2'
-              title={t('appConfigHint')}
-              disabled={downloading}
-              onClick={downloadAppConfig}
-            >
-              {downloading ? <Spinner /> : <Download />}
-              {t('appConfig')}
-            </Button>
-          </dd>
           {record.notes && (
             <>
               <dt className={dtClass}>{t('notes')}</dt>
-              <dd className='whitespace-pre-line'>{record.notes}</dd>
+              <dd className='line-clamp-3 whitespace-pre-line'>{record.notes}</dd>
             </>
           )}
+          <Edited tab='subscription' slug={tenant.slug} label={t('tabSubscription')} />
+          <dt className={dtClass}>{t('plan')}</dt>
+          <dd>{t(planLabelKey[record.plan])}</dd>
+          <Edited tab='connections' slug={tenant.slug} label={t('tabConnections')} />
+          <dt className={dtClass}>{t('ownDomain')}</dt>
+          <dd className='truncate' dir={tenant.customerDomain ? 'ltr' : undefined}>{tenant.customerDomain ?? '—'}</dd>
+          <dt className={dtClass}>{t('googleMaps')}</dt>
+          <dd>{tenant.googleMaps ? (tenant.googleMapsAvailable ? t('googleMapsOn') : t('googleMapsOnNoKeys')) : t('googleMapsOff')}</dd>
+          <Edited tab='app' slug={tenant.slug} label={t('tabApp')} />
+          <dt className={dtClass}>{t('customerApp')}</dt>
+          <dd className='truncate' dir={tenant.appId ? 'ltr' : undefined}>{tenant.appId ?? t('sharedApp')}</dd>
         </dl>
       </section>
-
-      {alive && <TalabatSection tenant={tenant} />}
 
       <section className='flex flex-col gap-2'>
         <h2 className='text-sm font-medium'>{t('steps')}</h2>
         <Steps steps={tenant.steps} />
       </section>
-
-      <EditRecordSheet open={editing} onOpenChange={setEditing} tenant={tenant} />
     </div>
+  )
+}
+
+/** A heading over the values edited on one tab, linking there */
+function Edited({ tab, slug, label }: { tab: TenantTab; slug: string; label: string }) {
+  return (
+    <>
+      <dt className='text-muted-foreground col-span-2 mt-2 text-xs font-medium tracking-wide uppercase first:mt-0'>
+        <Link to='/t/$slug' params={{ slug }} search={{ tab }} className='inline-flex items-center gap-1 hover:underline'>
+          {label}
+          <ChevronRight className='size-3' />
+        </Link>
+      </dt>
+    </>
+  )
+}
+
+/**
+ * What a business still lacks to be fully set up, each a link to the tab that
+ * fixes it. Nothing shows once everything is in place.
+ */
+function StillToDo({ tenant }: { tenant: TenantDetail }) {
+  const t = useT()
+  const status = tenantStatus(tenant.status)
+  if (status === 'Destroyed' || status === 'Destroying') return null
+  const items: { tab: TenantTab; label: string }[] = []
+  if (!tenant.record.contactName && !tenant.record.phone) items.push({ tab: 'business', label: t('todoContact') })
+  if (tenantKind(tenant.kind) === 'Customer' && !tenant.customerDomain) items.push({ tab: 'connections', label: t('todoDomain') })
+  if (tenant.mapsDomainToAdd) items.push({ tab: 'connections', label: t('todoMapsDomain', { domain: tenant.mapsDomainToAdd }) })
+  if (tenant.appId && !tenant.appleTeamId) items.push({ tab: 'app', label: t('todoAppleTeam') })
+  if (tenant.appId && (tenant.androidCertFingerprints?.length ?? 0) < 2) items.push({ tab: 'app', label: t('todoPlayFingerprint') })
+  if (items.length === 0) return null
+  return (
+    <section className='rounded-lg border border-amber-500/40 bg-amber-500/5 p-3'>
+      <h2 className='mb-2 text-sm font-medium'>{t('stillToDo')}</h2>
+      <ul className='flex flex-col gap-1 text-sm'>
+        {items.map((item) => (
+          <li key={item.label}>
+            <Link to='/t/$slug' params={{ slug: tenant.slug }} search={{ tab: item.tab }} className='inline-flex items-center gap-1 hover:underline'>
+              {item.label}
+              <ChevronRight className='size-3' />
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </section>
   )
 }

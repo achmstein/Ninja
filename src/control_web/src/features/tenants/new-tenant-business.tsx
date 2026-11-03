@@ -76,49 +76,45 @@ export type ArabicStyle = 'standard' | 'egyptian'
 export type DefaultTheme = 'device' | 'light' | 'dark'
 
 /** Which Arabic the business's apps speak, and the light or dark a new person starts in. */
-export function LookFields({
-  arabicStyle,
-  onArabicStyle,
-  defaultTheme,
-  onDefaultTheme,
-}: {
-  arabicStyle: ArabicStyle
-  onArabicStyle: (value: ArabicStyle) => void
-  defaultTheme: DefaultTheme
-  onDefaultTheme: (value: DefaultTheme) => void
-}) {
+/** Which Arabic the business's apps speak: the language's, set with the locale */
+export function ArabicStyleField({ value, onChange }: { value: ArabicStyle; onChange: (value: ArabicStyle) => void }) {
   const t = useT()
   return (
-    <div className='grid gap-4 sm:grid-cols-2'>
-      <div className='grid min-w-0 gap-2'>
-        <Label>{t('arabicStyle')}</Label>
-        <ToggleGroup
-          type='single'
-          variant='outline'
-          value={arabicStyle}
-          onValueChange={(v) => v && onArabicStyle(v as ArabicStyle)}
-          className='flex-wrap justify-start'
-        >
-          <ToggleGroupItem value='standard'>{t('arabicStandard')}</ToggleGroupItem>
-          <ToggleGroupItem value='egyptian'>{t('arabicEgyptian')}</ToggleGroupItem>
-        </ToggleGroup>
-        <p className='text-muted-foreground text-xs'>{t('arabicStyleHint')}</p>
-      </div>
-      <div className='grid min-w-0 gap-2'>
-        <Label>{t('defaultTheme')}</Label>
-        <ToggleGroup
-          type='single'
-          variant='outline'
-          value={defaultTheme}
-          onValueChange={(v) => v && onDefaultTheme(v as DefaultTheme)}
-          className='flex-wrap justify-start'
-        >
-          <ToggleGroupItem value='device'>{t('themeDevice')}</ToggleGroupItem>
-          <ToggleGroupItem value='light'>{t('themeLight')}</ToggleGroupItem>
-          <ToggleGroupItem value='dark'>{t('themeDark')}</ToggleGroupItem>
-        </ToggleGroup>
-        <p className='text-muted-foreground text-xs'>{t('defaultThemeHint')}</p>
-      </div>
+    <div className='grid min-w-0 gap-2'>
+      <Label>{t('arabicStyle')}</Label>
+      <ToggleGroup
+        type='single'
+        variant='outline'
+        value={value}
+        onValueChange={(v) => v && onChange(v as ArabicStyle)}
+        className='flex-wrap justify-start'
+      >
+        <ToggleGroupItem value='standard'>{t('arabicStandard')}</ToggleGroupItem>
+        <ToggleGroupItem value='egyptian'>{t('arabicEgyptian')}</ToggleGroupItem>
+      </ToggleGroup>
+      <p className='text-muted-foreground text-xs'>{t('arabicStyleHint')}</p>
+    </div>
+  )
+}
+
+/** Light, dark or the device's, the first time someone opens the business's apps: part of its look */
+export function DefaultThemeField({ value, onChange }: { value: DefaultTheme; onChange: (value: DefaultTheme) => void }) {
+  const t = useT()
+  return (
+    <div className='grid min-w-0 gap-2'>
+      <Label>{t('defaultTheme')}</Label>
+      <ToggleGroup
+        type='single'
+        variant='outline'
+        value={value}
+        onValueChange={(v) => v && onChange(v as DefaultTheme)}
+        className='flex-wrap justify-start'
+      >
+        <ToggleGroupItem value='device'>{t('themeDevice')}</ToggleGroupItem>
+        <ToggleGroupItem value='light'>{t('themeLight')}</ToggleGroupItem>
+        <ToggleGroupItem value='dark'>{t('themeDark')}</ToggleGroupItem>
+      </ToggleGroup>
+      <p className='text-muted-foreground text-xs'>{t('defaultThemeHint')}</p>
     </div>
   )
 }

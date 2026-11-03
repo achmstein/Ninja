@@ -40,6 +40,7 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { AppBuildCard } from '../app-build'
+import { GiveOwnApp, OwnAppRecord } from './app-record'
 
 const CHECK_LABELS: Record<string, TranslationKey> = {
   'android-key': 'appAndroidKey',
@@ -59,23 +60,10 @@ const CHECK_LABELS: Record<string, TranslationKey> = {
  * A key is never shown again, only that it is set.
  */
 export function AppTab({ tenant }: { tenant: TenantDetail }) {
-  const t = useT()
   const path = { slug: tenant.slug }
   const app = useQuery({ ...getTenantAppOptions({ path }), enabled: !!tenant.appId })
 
-  if (!tenant.appId) {
-    return (
-      <Card>
-        <CardHeader>
-          <CardTitle className='flex items-center gap-2'>
-            <Smartphone className='size-4' />
-            {t('appSharedTitle')}
-          </CardTitle>
-          <CardDescription>{t('appSharedHint')}</CardDescription>
-        </CardHeader>
-      </Card>
-    )
-  }
+  if (!tenant.appId) return <GiveOwnApp tenant={tenant} />
   if (!app.data) return <Skeleton className='h-96 w-full' />
   return <AppCards tenant={tenant} app={app.data} />
 }
@@ -149,6 +137,13 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
 
       <div className='grid gap-4 lg:grid-cols-2'>
         <AppBuildCard slug={tenant.slug} />
+        <div className='lg:col-span-2'>
+          <OwnAppRecord
+            key={`${tenant.appId}-${tenant.appleTeamId}-${(tenant.androidCertFingerprints ?? []).join(',')}`}
+            tenant={tenant}
+            uploadSha256={app.androidKey.sha256}
+          />
+        </div>
         <AndroidKeyCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
         <PlayCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
         <AppleCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />

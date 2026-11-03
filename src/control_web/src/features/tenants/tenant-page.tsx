@@ -88,18 +88,22 @@ import { BackupsTab } from './tabs/backups'
 import { HealthTab } from './tabs/health'
 import { OverviewTab } from './tabs/overview'
 import { AppTab } from './tabs/app'
+import { BusinessTab } from './tabs/business'
+import { ConnectionsTab } from './tabs/connections'
 import { JobLabel } from '@/features/platform/queue-table'
 
 // Recharts and the brand editor only load once their tab opens
 const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
 const MetricsTab = lazy(() => import('./tabs/metrics').then((m) => ({ default: m.MetricsTab })))
 
-export const TENANT_TABS = ['overview', 'brand', 'app', 'subscription', 'health', 'metrics', 'backups', 'audit'] as const
+export const TENANT_TABS = ['overview', 'business', 'brand', 'subscription', 'connections', 'app', 'health', 'metrics', 'backups', 'audit'] as const
 export type TenantTab = (typeof TENANT_TABS)[number]
 
 const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   overview: 'tabOverview',
+  business: 'tabBusiness',
   brand: 'tabBrand',
+  connections: 'tabConnections',
   app: 'tabApp',
   subscription: 'tabSubscription',
   health: 'tabHealth',
@@ -488,6 +492,12 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
         </div>
         <TabsContent value='overview' className='pt-2'>
           <OverviewTab tenant={tenant} onExtend={() => setDialog('extend')} />
+        </TabsContent>
+        <TabsContent value='business' className='pt-2'>
+          <BusinessTab tenant={tenant} />
+        </TabsContent>
+        <TabsContent value='connections' className='pt-2'>
+          <ConnectionsTab tenant={tenant} />
         </TabsContent>
         <TabsContent value='brand' className='pt-2'>
           <Suspense fallback={<Loading />}>
