@@ -1,18 +1,18 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { AlertCircle, ChevronDown } from 'lucide-react'
+import { AlertCircle } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
 import {
   getTenantQueryKey,
   updateTenantTalabatMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { CopyButton } from '@/components/copy-button'
-import { Alert, AlertDescription } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Spinner } from '@/components/ui/spinner'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
@@ -20,8 +20,7 @@ import { toast } from '@/lib/toast'
 /**
  * The business on Talabat, as Talabat's onboarding gives it: its chain there and
  * its market. What Talabat needs from us in return — the plugin URL and each
- * branch's remote id — sits beside it to copy. Folded to one line until
- * opened: most businesses are not on Talabat, and the ones that are set it once.
+ * branch's remote id — sits below it to copy.
  */
 export function TalabatSection({ tenant }: { tenant: TenantDetail }) {
   const t = useT()
@@ -30,7 +29,6 @@ export function TalabatSection({ tenant }: { tenant: TenantDetail }) {
   const [chainCode, setChainCode] = useState(talabat?.chainCode ?? '')
   // Empty keeps what the platform uses now, shown as the placeholder
   const [globalEntityId, setGlobalEntityId] = useState('')
-  const [open, setOpen] = useState(false)
 
   const save = useMutation({
     ...updateTenantTalabatMutation(),
@@ -59,79 +57,86 @@ export function TalabatSection({ tenant }: { tenant: TenantDetail }) {
   }
 
   return (
-    <Collapsible open={open} onOpenChange={setOpen} asChild>
-      <section className='flex flex-col gap-3'>
-        <CollapsibleTrigger className='hover:bg-muted/50 -mx-2 flex items-center gap-2 rounded-md px-2 py-1.5 text-start'>
-          <h2 className='text-sm font-medium'>{t('talabat')}</h2>
+    <Card className='gap-4'>
+      <CardHeader>
+        <CardTitle className='flex items-center gap-2 text-sm'>
+          {t('talabat')}
           {talabat.chainCode ? (
             <Badge variant='secondary' className='font-mono' dir='ltr'>
               {talabat.chainCode}
             </Badge>
           ) : (
-            <span className='text-muted-foreground text-xs'>{t('talabatChainCodePlaceholder')}</span>
+            <Badge variant='outline' className='font-normal'>
+              {t('talabatChainCodePlaceholder')}
+            </Badge>
           )}
-          <ChevronDown className={`text-muted-foreground ms-auto size-4 transition-transform ${open ? 'rotate-180' : ''}`} />
-        </CollapsibleTrigger>
+        </CardTitle>
+        <CardDescription>{t('talabatHint')}</CardDescription>
+      </CardHeader>
+      <CardContent className='flex flex-col gap-5'>
+        {!talabat.platformConfigured && (
+          <p className='flex items-start gap-2 text-xs text-amber-700 dark:text-amber-400'>
+            <AlertCircle className='mt-px size-3.5 shrink-0' />
+            {t('talabatNoAccount')}
+          </p>
+        )}
 
-        <CollapsibleContent className='flex flex-col gap-3'>
-          <p className='text-muted-foreground text-xs'>{t('talabatHint')}</p>
-
-          {!talabat.platformConfigured && (
-            <Alert>
-              <AlertCircle />
-              <AlertDescription>{t('talabatNoAccount')}</AlertDescription>
-            </Alert>
-          )}
-
-          <div className='grid gap-x-8 gap-y-4 md:grid-cols-2'>
-            <form onSubmit={submit} className='flex flex-col gap-3'>
-              <div className='grid gap-3 sm:grid-cols-2'>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='talabat-chain'>{t('talabatChainCode')}</Label>
-                  <Input
-                    id='talabat-chain'
-                    value={chainCode}
-                    dir='ltr'
-                    autoComplete='off'
-                    placeholder={t('talabatChainCodePlaceholder')}
-                    onChange={(e) => setChainCode(e.target.value)}
-                  />
-                </div>
-                <div className='flex flex-col gap-1.5'>
-                  <Label htmlFor='talabat-entity'>{t('talabatGlobalEntity')}</Label>
-                  <Input
-                    id='talabat-entity'
-                    value={globalEntityId}
-                    dir='ltr'
-                    autoComplete='off'
-                    className='uppercase'
-                    placeholder={talabat.globalEntityId}
-                    onChange={(e) => setGlobalEntityId(e.target.value)}
-                  />
-                </div>
-              </div>
-              <div>
-                <Button type='submit' size='sm' disabled={!dirty || save.isPending}>
-                  {t('save')}
-                </Button>
-              </div>
-            </form>
-
-            <dl className='grid grid-cols-[auto_1fr] content-start items-center gap-x-4 gap-y-2 text-sm'>
-              <dt className='text-muted-foreground'>{t('talabatPluginUrl')}</dt>
-              <dd className='flex min-w-0 items-center gap-1'>
-                <span className='truncate font-mono text-xs' dir='ltr'>{talabat.pluginUrl}</span>
-                <CopyButton value={talabat.pluginUrl} />
-              </dd>
-              <dt className='text-muted-foreground'>{t('talabatRemoteId')}</dt>
-              <dd className='flex min-w-0 flex-col'>
-                <span className='font-mono text-xs' dir='ltr'>{talabat.remoteIdPattern}</span>
-                <span className='text-muted-foreground text-xs'>{t('talabatRemoteIdHint')}</span>
-              </dd>
-            </dl>
+        <form onSubmit={submit} className='flex flex-col gap-4'>
+          <div className='grid gap-4 sm:grid-cols-2'>
+            <div className='grid gap-2'>
+              <Label htmlFor='talabat-chain'>{t('talabatChainCode')}</Label>
+              <Input
+                id='talabat-chain'
+                value={chainCode}
+                dir='ltr'
+                autoComplete='off'
+                placeholder='e.g. 683ab1'
+                onChange={(e) => setChainCode(e.target.value)}
+              />
+            </div>
+            <div className='grid gap-2'>
+              <Label htmlFor='talabat-entity'>{t('talabatGlobalEntity')}</Label>
+              <Input
+                id='talabat-entity'
+                value={globalEntityId}
+                dir='ltr'
+                autoComplete='off'
+                className='uppercase'
+                placeholder={talabat.globalEntityId}
+                onChange={(e) => setGlobalEntityId(e.target.value)}
+              />
+            </div>
           </div>
-        </CollapsibleContent>
-      </section>
-    </Collapsible>
+          <div className='flex justify-end'>
+            <Button type='submit' size='sm' disabled={!dirty || save.isPending}>
+              {save.isPending && <Spinner />}
+              {t('save')}
+            </Button>
+          </div>
+        </form>
+
+        <div className='flex flex-col gap-3 border-t pt-4'>
+          <p className='text-sm font-medium'>{t('talabatGiveThem')}</p>
+          <Given label={t('talabatPluginUrl')} value={talabat.pluginUrl} />
+          <Given label={t('talabatRemoteId')} value={talabat.remoteIdPattern} hint={t('talabatRemoteIdHint')} />
+        </div>
+      </CardContent>
+    </Card>
+  )
+}
+
+/** A value to hand Talabat: whole, on its own line, with a copy button */
+function Given({ label, value, hint }: { label: string; value: string; hint?: string }) {
+  return (
+    <div className='grid gap-1.5'>
+      <span className='text-muted-foreground text-xs'>{label}</span>
+      <div className='bg-muted flex min-w-0 items-center gap-2 rounded-md py-1.5 ps-3 pe-1.5'>
+        <span className='min-w-0 flex-1 font-mono text-xs break-all' dir='ltr'>
+          {value}
+        </span>
+        <CopyButton value={value} />
+      </div>
+      {hint && <span className='text-muted-foreground text-xs'>{hint}</span>}
+    </div>
   )
 }

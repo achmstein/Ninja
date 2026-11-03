@@ -3,7 +3,6 @@ import { ExternalLink } from 'lucide-react'
 import type { TenantDetail } from '@/api/control'
 import { MapsField } from '@/components/brand/maps-field'
 import { SocialField } from '@/components/brand/social-field'
-import { Card, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useT } from '@/lib/i18n'
@@ -19,17 +18,11 @@ import { Section } from './business'
 export function ConnectionsTab({ tenant }: { tenant: TenantDetail }) {
   const alive = !['Destroyed', 'Destroying'].includes(tenantStatus(tenant.status))
   return (
-    <div className='grid gap-4 lg:grid-cols-2'>
+    <div className='grid items-start gap-4 lg:grid-cols-2'>
       <DomainCard key={`domain-${tenant.customerDomain}`} tenant={tenant} />
       <SignInCard key={`social-${tenant.socialSignIn}`} tenant={tenant} />
       <MapsCard key={`maps-${tenant.googleMaps}`} tenant={tenant} />
-      {alive && (
-        <Card className='gap-4'>
-          <CardContent>
-            <TalabatSection tenant={tenant} />
-          </CardContent>
-        </Card>
-      )}
+      {alive && <TalabatSection tenant={tenant} />}
     </div>
   )
 }

@@ -135,7 +135,7 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
         )}
       </Card>
 
-      <div className='grid gap-4 lg:grid-cols-2'>
+      <div className='grid items-start gap-4 lg:grid-cols-2'>
         <AppBuildCard slug={tenant.slug} />
         <div className='lg:col-span-2'>
           <OwnAppRecord

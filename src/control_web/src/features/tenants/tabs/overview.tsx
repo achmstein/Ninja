@@ -203,7 +203,8 @@ function StillToDo({ tenant }: { tenant: TenantDetail }) {
   if (tenantKind(tenant.kind) === 'Customer' && !tenant.customerDomain) items.push({ tab: 'connections', label: t('todoDomain') })
   if (tenant.mapsDomainToAdd) items.push({ tab: 'connections', label: t('todoMapsDomain', { domain: tenant.mapsDomainToAdd }) })
   if (tenant.appId && !tenant.appleTeamId) items.push({ tab: 'app', label: t('todoAppleTeam') })
-  if (tenant.appId && (tenant.androidCertFingerprints?.length ?? 0) < 2) items.push({ tab: 'app', label: t('todoPlayFingerprint') })
+  // One may be enough (an app Play signs with its upload key): only none at all is surely missing
+  if (tenant.appId && (tenant.androidCertFingerprints?.length ?? 0) === 0) items.push({ tab: 'app', label: t('todoPlayFingerprint') })
   if (items.length === 0) return null
   return (
     <section className='rounded-lg border border-amber-500/40 bg-amber-500/5 p-3'>

@@ -140,11 +140,14 @@ public static class AppChecks
             ? new AppCheck("apple-team", false, "No Apple team ID on the record: the iOS build stops without it.")
             : new AppCheck("apple-team", true, $"Team {tenant.AppleTeamId}.");
 
-        // Installs from Play carry Play's app signing key: without its fingerprint a printed QR code opens the web app
+        // Installs from Play carry Play's app signing key, which is the upload key for an app Play does not re-sign:
+        // one fingerprint may be all there is, so only none at all is surely wrong
         var fingerprints = AppLinks.Fingerprints(tenant.AndroidCertFingerprints);
-        yield return fingerprints.Any(f => f != app.UploadKeySha256)
-            ? new AppCheck("app-links", true, $"{fingerprints.Length} Android fingerprints on the record.")
-            : new AppCheck("app-links", false, "Paste Play's app signing key SHA-256 (Play Console › App integrity) into the record's Android signing fingerprints.");
+        yield return fingerprints.Length == 0
+            ? new AppCheck("app-links", false, "No Android signing fingerprints: a printed QR code opens the web app instead of the app.")
+            : fingerprints.All(f => f == app.UploadKeySha256)
+                ? new AppCheck("app-links", true, "The upload key's fingerprint. If Play re-signs the app (App integrity shows a different app signing key), add that one too.")
+                : new AppCheck("app-links", true, $"{fingerprints.Length} Android fingerprints on the record.");
     }
 }
 

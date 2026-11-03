@@ -21,12 +21,12 @@ import { useRecordSave } from '../record-save'
  */
 export function BusinessTab({ tenant }: { tenant: TenantDetail }) {
   return (
-    <div className='grid gap-4 lg:grid-cols-2'>
-      <ContactCard key={`contact-${tenant.record.contactName}-${tenant.record.phone}-${tenant.record.address}-${tenant.record.notes}`} tenant={tenant} />
+    <div className='grid items-start gap-4 lg:grid-cols-2'>
       <div className='flex flex-col gap-4'>
+        <ContactCard key={`contact-${tenant.record.contactName}-${tenant.record.phone}-${tenant.record.address}-${tenant.record.notes}`} tenant={tenant} />
         <KindCard key={`kind-${tenant.businessType}`} tenant={tenant} />
-        <LocaleCard key={`locale-${JSON.stringify(tenant.locale)}`} tenant={tenant} />
       </div>
+      <LocaleCard key={`locale-${JSON.stringify(tenant.locale)}`} tenant={tenant} />
     </div>
   )
 }

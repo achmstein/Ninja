@@ -205,7 +205,7 @@ public sealed class OwnAppTests
         Assert.IsFalse(checks["firebase-android"].Ok);
         Assert.IsFalse(checks["icon"].Ok);
         Assert.IsTrue(checks["apple-team"].Ok);
-        Assert.IsFalse(checks["app-links"].Ok, "no Play app signing fingerprint on the record");
+        Assert.IsFalse(checks["app-links"].Ok, "no fingerprint on the record at all");
 
         var ok = AppChecks.Local(tenant, new TenantApp
         {
