@@ -660,12 +660,14 @@ class _SwipeLine extends ConsumerWidget {
   void _removed(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
     final name = item.productName.getText(ref.read(localeProvider));
-    ref.read(cartProvider.notifier).removeItem(index);
+    // The cart itself, held now: by the time Undo is tapped this line is gone and its ref with it
+    final cart = ref.read(cartProvider.notifier);
+    cart.removeItem(index);
     showIsland(
       title: Text(l10n.ninjaRemoved(name)),
       icon: const Icon(LucideIcons.trash2),
       actionLabel: l10n.ninjaUndo,
-      onAction: () => ref.read(cartProvider.notifier).addItem(item),
+      onAction: () => cart.addItem(item),
       duration: const Duration(seconds: 5),
     );
   }
