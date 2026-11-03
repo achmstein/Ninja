@@ -101,7 +101,7 @@ class DeliveryChoiceView extends ConsumerWidget {
             child: Container(
               constraints: const BoxConstraints(minHeight: 56),
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(16)),
+              decoration: BoxDecoration(color: soft, borderRadius: BorderRadius.circular(theme.radius + 8)),
               child: Row(
                 children: [
                   Icon(LucideIcons.mapPin, size: 20, color: ink),
@@ -243,7 +243,7 @@ class PickupFrom extends ConsumerWidget {
     final box = Container(
       constraints: const BoxConstraints(minHeight: 56),
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-      decoration: BoxDecoration(color: ink.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(16)),
+      decoration: BoxDecoration(color: ink.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(theme.radius + 8)),
       child: Row(
         children: [
           Icon(cloudKitchen ? LucideIcons.shoppingBag : LucideIcons.store, size: 20, color: ink),
