@@ -43,7 +43,10 @@ if [ -z "${APP_BUILDER_SECRET:-}" ] || [ -z "${PLATFORM_DOMAIN:-}" ]; then
 fi
 
 python=$(command -v python3 || command -v python)
-token=$(curl -sS --fail-with-body --max-time 30 \
+# A platform deploy restarts the control plane for about a minute: a build started then waits it out
+# (502s and refused connections tried again for two minutes) rather than failing at its first step
+RETRY="--retry 8 --retry-delay 15 --retry-connrefused"
+token=$(curl -sS --fail-with-body --max-time 30 $RETRY \
   -d grant_type=client_credentials -d client_id=app-builder --data-urlencode "client_secret=$APP_BUILDER_SECRET" \
   "https://auth.$PLATFORM_DOMAIN/realms/ninja/protocol/openid-connect/token" \
   | "$python" -c 'import json, sys; print(json.load(sys.stdin)["access_token"])' | tr -d '\r')
@@ -70,7 +73,7 @@ sha1 = re.search(r"SHA1:\s*([0-9A-F:]{59})", text)
 sha256 = re.search(r"SHA256:\s*([0-9A-F:]{95})", text)
 if not sha1 or not sha256: sys.exit("keytool did not show the fingerprints")
 print(json.dumps({"sha1": sha1.group(1), "sha256": sha256.group(1)}))')
-  code=$(curl -sS --max-time 30 -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
+  code=$(curl -sS --max-time 30 $RETRY -o /dev/null -w '%{http_code}' -X POST -H "Authorization: Bearer $token" -H 'Content-Type: application/json' \
     -d "$body" "$control/app-kit/report")
   echo "The upload key's fingerprints, given to the control plane: $code"
   [ "$code" = "200" ] || exit 1
@@ -79,7 +82,7 @@ fi
 
 answer=$(mktemp)
 trap 'rm -f "$answer"' EXIT
-code=$(curl -sS --max-time 30 -o "$answer" -w '%{http_code}' -H "Authorization: Bearer $token" \
+code=$(curl -sS --max-time 30 $RETRY -o "$answer" -w '%{http_code}' -H "Authorization: Bearer $token" \
   -H "X-Build-Run: ${GITHUB_REPOSITORY:-local}/${GITHUB_RUN_ID:-0}" \
   "$control/app-kit?platform=$mode")
 case "$code" in
