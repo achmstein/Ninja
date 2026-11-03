@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:lucide_icons_flutter/lucide_icons.dart';
 import '../theme/ninja_theme.dart';
 import '../theme/theme_provider.dart';
+import 'parts.dart';
 
 /// A field in the Ninja style (client_web's ui/input.tsx): filled, not
 /// outlined, a finger's height, the corners of the pills around it, 16 px
@@ -96,6 +97,9 @@ class _NinjaFieldState extends State<NinjaField> {
     final theme = context.theme;
     final c = theme.colors;
     final radius = BorderRadius.circular(16);
+    // Muted on muted is invisible: on a panel the field takes the page's colour and a hairline instead
+    final onPanel = Panel.isAround(context);
+    final rest = onPanel ? 1.0 : 0.0;
     OutlineInputBorder border(Color color, double width) => OutlineInputBorder(
           borderRadius: radius,
           borderSide: width == 0 ? BorderSide.none : BorderSide(color: color, width: width),
@@ -121,12 +125,12 @@ class _NinjaFieldState extends State<NinjaField> {
         hintText: widget.hint,
         hintStyle: context.localeText(TextStyle(fontSize: 16, color: c.mutedForeground)),
         filled: true,
-        fillColor: c.muted,
+        fillColor: onPanel ? c.background : c.muted,
         isDense: true,
         contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         border: border(c.border, 0),
-        enabledBorder: border(c.border, 0),
-        disabledBorder: border(c.border, 0),
+        enabledBorder: border(c.border, rest),
+        disabledBorder: border(c.border, rest),
         focusedBorder: border(c.primary.withValues(alpha: 0.4), 2),
         suffixIcon: widget.obscure
             ? IconButton(

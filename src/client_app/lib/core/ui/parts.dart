@@ -74,12 +74,22 @@ class Panel extends StatelessWidget {
 
   const Panel({super.key, required this.child, this.padding = const EdgeInsets.all(16)});
 
+  /// Whether this sits on a panel's muted fill: a field there is drawn on the page's colour instead, or it vanishes
+  static bool isAround(BuildContext context) => context.dependOnInheritedWidgetOfExactType<_OnPanel>() != null;
+
   @override
   Widget build(BuildContext context) => Container(
         padding: padding,
         decoration: BoxDecoration(color: context.theme.colors.muted, borderRadius: BorderRadius.circular(Ninja.panelRadius)),
-        child: child,
+        child: _OnPanel(child: child),
       );
+}
+
+class _OnPanel extends InheritedWidget {
+  const _OnPanel({required super.child});
+
+  @override
+  bool updateShouldNotify(_OnPanel oldWidget) => false;
 }
 
 /// A small label over a group of panels or tiles
