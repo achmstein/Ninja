@@ -3468,7 +3468,7 @@ abstract class AppLocalizations {
   /// No description provided for @guestOrderToCollect.
   ///
   /// In en, this message translates to:
-  /// **'No table: you\'ll collect your order at the counter'**
+  /// **'You\'ll collect your order at the counter'**
   String get guestOrderToCollect;
 
   /// No description provided for @orderToCollect.

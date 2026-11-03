@@ -934,6 +934,6 @@
   "promoShowAgain": "See what's on",
   "billShowDetails": "Show details",
   "billHideDetails": "Hide details",
-  "guestOrderToCollect": "No table: you'll collect your order at the counter",
+  "guestOrderToCollect": "You'll collect your order at the counter",
   "orderToCollect": "You'll collect your order at the counter"
 }

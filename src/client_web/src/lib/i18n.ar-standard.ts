@@ -79,7 +79,7 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   demoPaymentsBadge: 'تجربة: لا تُخصم أي مبالغ',
   scanTableHint: 'وجّه الكاميرا نحو الرمز الموجود على طاولتك',
   cameraBlocked: 'الكاميرا غير متاحة. اسمح بها لهذا التطبيق من إعدادات الهاتف، أو امسح الرمز بكاميرا الهاتف.',
-  guestOrderToCollect: 'دون طاولة: ستستلم طلبك من الكاشير',
+  guestOrderToCollect: 'ستستلم طلبك من الكاشير',
   orderToCollect: 'ستستلم طلبك من الكاشير',
   signInToOrderPickup: 'سجّل الدخول لتطلب مسبقًا وتستلم من الكاشير',
   signInForBills: 'سجّل الدخول لترى فواتيرك، أو اطلب كزائر',

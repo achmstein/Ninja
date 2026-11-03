@@ -126,8 +126,8 @@ const webExtras = {
   // A business that takes guests' orders from anywhere: one without a table is
   // collected at the counter
   guestOrderToCollect: {
-    en: "No table: you'll collect your order at the counter",
-    ar: 'من غير ترابيزة: هتستلم طلبك من الكاشير',
+    en: "You'll collect your order at the counter",
+    ar: 'هتستلم طلبك من الكاشير',
   },
   // A cloud kitchen: no table to scan, so the order is collected, and a
   // guest the kitchen does not take signs in to order ahead

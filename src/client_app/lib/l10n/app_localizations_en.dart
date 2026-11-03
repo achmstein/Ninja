@@ -1936,8 +1936,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get billHideDetails => 'Hide details';
 
   @override
-  String get guestOrderToCollect =>
-      'No table: you\'ll collect your order at the counter';
+  String get guestOrderToCollect => 'You\'ll collect your order at the counter';
 
   @override
   String get orderToCollect => 'You\'ll collect your order at the counter';

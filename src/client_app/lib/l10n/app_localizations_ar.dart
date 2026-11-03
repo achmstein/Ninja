@@ -1927,7 +1927,7 @@ class AppLocalizationsAr extends AppLocalizations {
   String get billHideDetails => 'اخفي التفاصيل';
 
   @override
-  String get guestOrderToCollect => 'من غير ترابيزة: هتستلم طلبك من الكاشير';
+  String get guestOrderToCollect => 'هتستلم طلبك من الكاشير';
 
   @override
   String get orderToCollect => 'هتستلم طلبك من الكاشير';
@@ -3504,7 +3504,7 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get billHideDetails => 'إخفاء التفاصيل';
 
   @override
-  String get guestOrderToCollect => 'دون طاولة: ستستلم طلبك من الكاشير';
+  String get guestOrderToCollect => 'ستستلم طلبك من الكاشير';
 
   @override
   String get orderToCollect => 'ستستلم طلبك من الكاشير';
