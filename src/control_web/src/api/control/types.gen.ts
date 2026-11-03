@@ -119,11 +119,11 @@ export type AppFirebaseStatus = {
 
 export type AppIconsRequest = {
     /**
-     * 1024x1024 PNG without transparency, base64; left out keeps the saved one
+     * The logo, any size or shape (PNG, JPEG, WebP), base64: the icon and Android's foreground are made from it; left out keeps the saved ones
      */
     icon?: null | string;
     /**
-     * Android's adaptive foreground, square PNG, base64; left out keeps the saved one
+     * Another image for Android's adaptive foreground only, placed in its middle; left out, the logo's
      */
     foreground?: null | string;
     clearForeground?: boolean;
@@ -4375,6 +4375,45 @@ export type SetAppIconsResponses = {
 };
 
 export type SetAppIconsResponse = SetAppIconsResponses[keyof SetAppIconsResponses];
+
+export type SetAppIconsFromBrandData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/icons/from-brand';
+};
+
+export type SetAppIconsFromBrandErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetAppIconsFromBrandError = SetAppIconsFromBrandErrors[keyof SetAppIconsFromBrandErrors];
+
+export type SetAppIconsFromBrandResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type SetAppIconsFromBrandResponse = SetAppIconsFromBrandResponses[keyof SetAppIconsFromBrandResponses];
 
 export type GetAppIconData = {
     body?: never;

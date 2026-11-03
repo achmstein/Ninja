@@ -29,6 +29,9 @@
     <PackageReference Include="MailKit" />
     <!-- A business's Android upload key, made and read here as PKCS12 with its alias (Platform/UploadKeys.cs) -->
     <PackageReference Include="System.Security.Cryptography.Pkcs" />
+    <!-- A business's app icons made from its logo (Platform/OwnApp.cs) -->
+    <PackageReference Include="SkiaSharp" />
+    <PackageReference Include="SkiaSharp.NativeAssets.Linux.NoDependencies" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

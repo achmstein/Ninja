@@ -56,8 +56,8 @@ public sealed record PlayKeyRequest([property: Description("The service account'
 public sealed record AppleKeyRequest(string KeyId, string IssuerId, [property: Description("The .p8 file's contents")] string PrivateKey);
 
 public sealed record AppIconsRequest(
-    [property: Description("1024x1024 PNG without transparency, base64; left out keeps the saved one")] string? Icon = null,
-    [property: Description("Android's adaptive foreground, square PNG, base64; left out keeps the saved one")] string? Foreground = null,
+    [property: Description("The logo, any size or shape (PNG, JPEG, WebP), base64: the icon and Android's foreground are made from it; left out keeps the saved ones")] string? Icon = null,
+    [property: Description("Another image for Android's adaptive foreground only, placed in its middle; left out, the logo's")] string? Foreground = null,
     bool ClearForeground = false);
 
 public sealed record FirebaseLinkResponse(TenantAppStatus App, IReadOnlyList<string> Done);
@@ -111,7 +111,8 @@ public static partial class ControlApi
         api.MapPost("/tenants/{slug}/app/android-key/generate", GenerateAndroidKey).WithName("GenerateAndroidKey").WithSummary("Make a new Android upload key for the business (RSA 2048, 25 years); its SHA-256 joins the record's App Links fingerprints").RequireAuthorization("Platform");
         api.MapPut("/tenants/{slug}/app/play", SetPlayKey).WithName("SetPlayKey").WithSummary("The Google service account with release rights on the business's Play account").RequireAuthorization("Platform");
         api.MapPut("/tenants/{slug}/app/apple", SetAppleKey).WithName("SetAppleKey").WithSummary("The App Store Connect API key from the business's account (App Manager)").RequireAuthorization("Platform");
-        api.MapPut("/tenants/{slug}/app/icons", SetAppIcons).WithName("SetAppIcons").WithSummary("The app's icon (1024x1024 PNG, no transparency) and Android's adaptive foreground").RequireAuthorization("Platform");
+        api.MapPut("/tenants/{slug}/app/icons", SetAppIcons).WithName("SetAppIcons").WithSummary("The app's logo, any size: its icon (1024x1024 on white) and Android's adaptive foreground are made from it").RequireAuthorization("Platform");
+        api.MapPost("/tenants/{slug}/app/icons/from-brand", AppIconsFromBrand).WithName("SetAppIconsFromBrand").WithSummary("Make the app's icons from the logo on the business's brand, as the running stack serves it").RequireAuthorization("Platform");
         api.MapGet("/tenants/{slug}/app/icons/{which}", GetAppIcon).WithName("GetAppIcon").WithSummary("The saved icon (icon) or foreground (foreground), as PNG").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/app/firebase", LinkFirebase).WithName("LinkFirebaseApps").WithSummary("Find or make the business's Android and iOS apps in the platform's Firebase project, give Android its certificates, and keep both config files").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/app/check", CheckApp).WithName("CheckTenantApp").WithSummary("Try every key from the server (Apple finds the app, Play opens an edit) and check the files, icon and record: one line each").RequireAuthorization("Platform");
@@ -219,17 +220,23 @@ public static partial class ControlApi
         if (Refuse(tenant) is { } refused) return refused;
 
         var changed = new List<string>();
+        // The logo as it is: both icons are made from it, Android's foreground too unless one is given beside it
         if (!string.IsNullOrWhiteSpace(request.Icon))
         {
-            var icon = Png(request.Icon);
-            if ((icon is null ? "The icon did not arrive as a file." : AppIcons.Check(icon, foreground: false)) is { } error) return Problem(error);
-            app.Icon = icon;
+            if (Png(request.Icon) is not { } logo) return Problem("The logo did not arrive as a file.");
+            if (AppIcons.Make(logo, out var error) is not { } made) return Problem(error!);
+            app.Icon = made.Icon;
             changed.Add("icon");
+            if (string.IsNullOrWhiteSpace(request.Foreground))
+            {
+                app.IconForeground = made.Foreground;
+                changed.Add("foreground from the logo");
+            }
         }
         if (!string.IsNullOrWhiteSpace(request.Foreground))
         {
-            var foreground = Png(request.Foreground);
-            if ((foreground is null ? "The foreground did not arrive as a file." : AppIcons.Check(foreground, foreground: true)) is { } error) return Problem(error);
+            if (Png(request.Foreground) is not { } given) return Problem("The foreground did not arrive as a file.");
+            if (AppIcons.MakeForeground(given, out var error) is not { } foreground) return Problem(error!);
             app.IconForeground = foreground;
             changed.Add("foreground");
         }
@@ -244,6 +251,44 @@ public static partial class ControlApi
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.icons", slug, new { changed }, ct);
         return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+    }
+
+    public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> AppIconsFromBrand(
+        ControlContext context, IAuditWriter audit, IStackProxy stack, string slug, CancellationToken ct)
+    {
+        if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
+        var (tenant, app) = found;
+        if (Refuse(tenant) is { } refused) return refused;
+        if (await IconsFromBrandAsync(stack, tenant, app, ct) is { } error) return Problem(error);
+        await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.app.icons", slug, new { changed = new[] { "icon and foreground from the brand logo" } }, ct);
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+    }
+
+    /// <summary>
+    /// Both icons made from the logo the business's brand has (the one its web app and receipts show),
+    /// read from its running stack. Null when done; why not otherwise.
+    /// </summary>
+    internal static async Task<string?> IconsFromBrandAsync(IStackProxy stack, Tenant tenant, TenantApp app, CancellationToken ct)
+    {
+        if (tenant.Status != TenantStatus.Running) return $"The brand logo lives on the business's stack, and it is {tenant.Status}.";
+        byte[] logo;
+        try
+        {
+            using var response = await stack.SendAsync(tenant, HttpMethod.Get, "/api/tenant/images/logo", null, StackAuth.Anonymous, ct);
+            if (response.StatusCode == System.Net.HttpStatusCode.NotFound) return "The brand has no logo yet: upload one on the Brand tab, or an icon here.";
+            if (!response.IsSuccessStatusCode) return $"The business's stack answered {(int)response.StatusCode} for its logo.";
+            logo = await response.Content.ReadAsByteArrayAsync(ct);
+        }
+        catch (Exception e) when (e is HttpRequestException or TaskCanceledException)
+        {
+            return $"The business's stack did not answer: {e.Message}";
+        }
+        if (AppIcons.Make(logo, out var error) is not { } made) return $"The brand logo: {error}";
+        app.Icon = made.Icon;
+        app.IconForeground = made.Foreground;
+        app.UpdatedAt = DateTime.UtcNow;
+        return null;
     }
 
     public static async Task<Results<FileContentHttpResult, NotFound>> GetAppIcon(ControlContext context, string slug, string which, CancellationToken ct)

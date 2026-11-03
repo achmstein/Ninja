@@ -9,6 +9,7 @@ import {
   getTenantAppQueryKey,
   importAndroidKeyMutation,
   linkFirebaseAppsMutation,
+  setAppIconsFromBrandMutation,
   setAppIconsMutation,
   setAppleKeyMutation,
   setPlayKeyMutation,
@@ -334,15 +335,21 @@ function IconsCard({ tenant, app, onSaved, onError }: CardProps) {
   const t = useT()
   const path = { slug: tenant.slug }
   const save = useMutation({ ...setAppIconsMutation(), onSuccess: (s) => onSaved(s, t('appIconsSaved')), onError })
+  const brand = useMutation({ ...setAppIconsFromBrandMutation(), onSuccess: (s) => onSaved(s, t('appIconsFromBrandDone')), onError })
+  const busy = save.isPending || brand.isPending
   return (
     <Item title={t('appIcons')} set={app.icons.icon} hint={t('appIconsHint')}>
+      <Button size='sm' variant={app.icons.icon ? 'outline' : 'default'} disabled={busy} onClick={() => brand.mutate({ path })}>
+        {brand.isPending && <Spinner />}
+        {t('appIconsFromBrand')}
+      </Button>
       <div className='flex flex-wrap items-start gap-4'>
         <IconPick
           slug={tenant.slug}
           which='icon'
           label={t('appIcon')}
           set={app.icons.icon}
-          busy={save.isPending}
+          busy={busy}
           onPick={async (f) => save.mutate({ path, body: { icon: await readFileBase64(f) } })}
         />
         <IconPick
@@ -350,7 +357,7 @@ function IconsCard({ tenant, app, onSaved, onError }: CardProps) {
           which='foreground'
           label={t('appIconForeground')}
           set={app.icons.foreground}
-          busy={save.isPending}
+          busy={busy}
           onPick={async (f) => save.mutate({ path, body: { foreground: await readFileBase64(f) } })}
         />
       </div>

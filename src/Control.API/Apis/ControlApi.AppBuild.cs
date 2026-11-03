@@ -209,7 +209,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Ok<AppSetupResponse>, NotFound, BadRequest<ProblemDetails>>> SetUpApp(
-        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, string slug, CancellationToken ct)
+        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, IStackProxy stack, string slug, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -224,6 +224,13 @@ public static partial class ControlApi
             steps.Add(new("android-key", true, $"Made an upload key ({app.UploadKeySha256![..11]}…)"));
         }
         else steps.Add(new("android-key", true, "The upload key is there"));
+
+        // The icons from the brand's logo, unless the app already has its own
+        if (app.Icon is null)
+            steps.Add(await IconsFromBrandAsync(stack, tenant, app, ct) is { } iconError
+                ? new("icon", false, iconError)
+                : new("icon", true, "Made the icons from the brand logo"));
+        else steps.Add(new("icon", true, "The icons are there"));
         await context.SaveChangesAsync(ct);
 
         // 2. The App IDs in the business's developer account, with its App Store Connect key

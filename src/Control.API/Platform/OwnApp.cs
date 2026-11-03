@@ -5,27 +5,105 @@ using Ninja.Control.API.Model;
 
 namespace Ninja.Control.API.Platform;
 
-/// <summary>The icons a business's own app is built with, checked as tool/stamp_tenant.dart and the stores need them.</summary>
+/// <summary>The two icons a build stamps, made from one logo.</summary>
+public sealed record MadeIcons(byte[] Icon, byte[] Foreground);
+
+/// <summary>
+/// The icons a business's own app is built with, made here from whatever logo is given (any size or
+/// shape, PNG, JPEG or WebP), so nobody prepares them by hand: the icon is the logo centred on a white
+/// 1024x1024 square with a margin, without transparency (the App Store refuses it); Android's adaptive
+/// foreground is the logo alone on a transparent 1024x1024 layer, inside its middle 60%, the part every
+/// launcher's mask (circle, squircle, teardrop) keeps. tool/stamp_tenant.dart puts it over white.
+/// </summary>
 public static class AppIcons
 {
-    public const int MaxBytes = 1024 * 1024;
-    private static readonly byte[] Signature = [0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A];
+    public const int MaxBytes = 8 * 1024 * 1024;
+    public const int Size = 1024;
 
-    /// <summary>Null when the PNG will do; what is wrong with it otherwise.</summary>
-    public static string? Check(byte[] png, bool foreground)
+    /// <summary>How much of the icon the logo takes, and how much of the foreground layer.</summary>
+    private const float IconShare = 0.78f;
+    private const float ForegroundShare = 0.60f;
+
+    /// <summary>Both icons from the logo; null and why when it is not an image that will do.</summary>
+    public static MadeIcons? Make(byte[] logo, out string? error)
     {
-        if (png.Length > MaxBytes) return "The image is over 1 MB.";
-        // The signature, then IHDR first: width, height, bit depth, colour type
-        if (png.Length < 33 || !png.AsSpan(0, 8).SequenceEqual(Signature) || png[12] != 'I' || png[13] != 'H' || png[14] != 'D' || png[15] != 'R')
-            return "The image must be a PNG.";
-        var width = BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(16, 4));
-        var height = BinaryPrimitives.ReadInt32BigEndian(png.AsSpan(20, 4));
-        var colour = png[25];
-        if (width != height) return $"The image must be square; it is {width}x{height}.";
-        if (foreground) return width < 432 ? $"The foreground must be at least 432x432; it is {width}x{height}." : null;
-        if (width != 1024) return $"The icon must be 1024x1024; it is {width}x{height}.";
-        // Colour types 4 and 6 carry alpha, which the App Store refuses on an icon
-        return colour is 4 or 6 ? "The icon must have no transparency: export it without an alpha channel." : null;
+        error = null;
+        if (logo.Length > MaxBytes)
+        {
+            error = "The image is over 8 MB.";
+            return null;
+        }
+        using var bitmap = Decode(logo);
+        if (bitmap is null)
+        {
+            error = "That is not an image: give a PNG, JPEG or WebP of the logo.";
+            return null;
+        }
+        if (Math.Max(bitmap.Width, bitmap.Height) < 256)
+        {
+            error = $"The logo is {bitmap.Width}x{bitmap.Height}: give one at least 512 pixels across, or it will look blurred on a phone.";
+            return null;
+        }
+        var mark = Content(bitmap);
+        return new MadeIcons(Draw(bitmap, mark, IconShare, SkiaSharp.SKColors.White), Draw(bitmap, mark, ForegroundShare, SkiaSharp.SKColors.Transparent));
+    }
+
+    /// <summary>Only the foreground, given on its own: the logo inside the middle of a transparent layer.</summary>
+    public static byte[]? MakeForeground(byte[] logo, out string? error)
+    {
+        error = null;
+        using var bitmap = logo.Length > MaxBytes ? null : Decode(logo);
+        if (bitmap is null)
+        {
+            error = "That is not an image under 8 MB.";
+            return null;
+        }
+        return Draw(bitmap, Content(bitmap), ForegroundShare, SkiaSharp.SKColors.Transparent);
+    }
+
+    /// <summary>The image, or null when the bytes are none Skia reads (Decode throws on them rather than saying so).</summary>
+    private static SkiaSharp.SKBitmap? Decode(byte[] bytes)
+    {
+        using var data = SkiaSharp.SKData.CreateCopy(bytes);
+        using var codec = SkiaSharp.SKCodec.Create(data);
+        return codec is null ? null : SkiaSharp.SKBitmap.Decode(codec);
+    }
+
+    /// <summary>The part of the image that is the logo: what is neither transparent nor near white, the margins trimmed.</summary>
+    private static SkiaSharp.SKRectI Content(SkiaSharp.SKBitmap bitmap)
+    {
+        int left = bitmap.Width, top = bitmap.Height, right = -1, bottom = -1;
+        for (var y = 0; y < bitmap.Height; y++)
+        for (var x = 0; x < bitmap.Width; x++)
+        {
+            var c = bitmap.GetPixel(x, y);
+            if (c.Alpha < 16 || (c.Red > 245 && c.Green > 245 && c.Blue > 245)) continue;
+            if (x < left) left = x;
+            if (x > right) right = x;
+            if (y < top) top = y;
+            if (y > bottom) bottom = y;
+        }
+        return right < 0 ? new SkiaSharp.SKRectI(0, 0, bitmap.Width, bitmap.Height) : new SkiaSharp.SKRectI(left, top, right + 1, bottom + 1);
+    }
+
+    /// <summary>The logo's content scaled to fit <paramref name="share"/> of a 1024 square, centred, over the background.</summary>
+    private static byte[] Draw(SkiaSharp.SKBitmap bitmap, SkiaSharp.SKRectI mark, float share, SkiaSharp.SKColor background)
+    {
+        var info = new SkiaSharp.SKImageInfo(Size, Size, SkiaSharp.SKColorType.Rgba8888,
+            background.Alpha == 255 ? SkiaSharp.SKAlphaType.Opaque : SkiaSharp.SKAlphaType.Premul);
+        using var surface = SkiaSharp.SKSurface.Create(info);
+        var canvas = surface.Canvas;
+        canvas.Clear(background);
+        var scale = Size * share / Math.Max(mark.Width, mark.Height);
+        var width = mark.Width * scale;
+        var height = mark.Height * scale;
+        var target = SkiaSharp.SKRect.Create((Size - width) / 2, (Size - height) / 2, width, height);
+        using var image = SkiaSharp.SKImage.FromBitmap(bitmap);
+        using var paint = new SkiaSharp.SKPaint { IsAntialias = true };
+        canvas.DrawImage(image, mark, target, new SkiaSharp.SKSamplingOptions(SkiaSharp.SKCubicResampler.Mitchell), paint);
+        using var snapshot = surface.Snapshot();
+        using var png = snapshot.Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+        return png.ToArray();
     }
 }
 

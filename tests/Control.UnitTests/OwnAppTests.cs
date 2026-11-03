@@ -164,14 +164,36 @@ public sealed class OwnAppTests
     }
 
     [TestMethod]
-    public void An_icon_must_be_a_square_1024_png_without_alpha()
+    public void Both_icons_are_made_from_a_logo_of_any_shape()
     {
-        Assert.IsNull(AppIcons.Check(Png(1024, 1024, colour: 2), foreground: false));
-        Assert.Contains("transparency", AppIcons.Check(Png(1024, 1024, colour: 6), foreground: false)!);
-        Assert.Contains("1024x1024", AppIcons.Check(Png(512, 512, colour: 2), foreground: false)!);
-        Assert.Contains("square", AppIcons.Check(Png(1024, 500, colour: 2), foreground: false)!);
-        Assert.IsNull(AppIcons.Check(Png(512, 512, colour: 6), foreground: true), "the adaptive foreground is transparent around its mark");
-        Assert.Contains("PNG", AppIcons.Check(Encoding.ASCII.GetBytes("GIF89a................................"), foreground: false)!);
+        // A black mark on white, wider than tall, off-centre, like a logo exported from anything
+        using var logo = new SkiaSharp.SKBitmap(614, 600);
+        using (var canvas = new SkiaSharp.SKCanvas(logo))
+        {
+            canvas.Clear(SkiaSharp.SKColors.White);
+            using var ink = new SkiaSharp.SKPaint { Color = SkiaSharp.SKColors.Black };
+            canvas.DrawRect(100, 200, 400, 300, ink);
+        }
+        using var encoded = SkiaSharp.SKImage.FromBitmap(logo).Encode(SkiaSharp.SKEncodedImageFormat.Png, 100);
+
+        var made = AppIcons.Make(encoded.ToArray(), out var error);
+        Assert.IsNull(error);
+
+        using var icon = SkiaSharp.SKBitmap.Decode(made!.Icon);
+        Assert.AreEqual(1024, icon.Width);
+        Assert.AreEqual(1024, icon.Height);
+        Assert.AreEqual(SkiaSharp.SKColors.White, icon.GetPixel(10, 10), "the margin is white");
+        Assert.AreEqual(255, icon.GetPixel(10, 10).Alpha, "no transparency for the App Store");
+        Assert.AreEqual(SkiaSharp.SKColors.Black, icon.GetPixel(512, 512), "the mark is centred");
+
+        using var foreground = SkiaSharp.SKBitmap.Decode(made.Foreground);
+        Assert.AreEqual(1024, foreground.Width);
+        Assert.AreEqual(0, foreground.GetPixel(10, 10).Alpha, "the layer around the mark is transparent");
+        Assert.AreEqual(0, foreground.GetPixel(512, 190).Alpha, "the mark stays in the middle 60%, inside every launcher's mask");
+        Assert.AreEqual(SkiaSharp.SKColors.Black, foreground.GetPixel(512, 512));
+
+        Assert.IsNull(AppIcons.Make(Encoding.ASCII.GetBytes("not an image at all"), out var refused));
+        Assert.Contains("not an image", refused!);
     }
 
     [TestMethod]
@@ -325,18 +347,6 @@ public sealed class OwnAppTests
         ["private_key"] = rsa.ExportPkcs8PrivateKeyPem(),
         ["token_uri"] = "https://oauth2.googleapis.com/token",
     }.ToJsonString();
-
-    /// <summary>The PNG signature and an IHDR chunk: enough for the check, which reads no further.</summary>
-    private static byte[] Png(int width, int height, byte colour)
-    {
-        var png = new byte[33];
-        new byte[] { 0x89, 0x50, 0x4E, 0x47, 0x0D, 0x0A, 0x1A, 0x0A, 0, 0, 0, 13, (byte)'I', (byte)'H', (byte)'D', (byte)'R' }.CopyTo(png, 0);
-        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(png.AsSpan(16), width);
-        System.Buffers.Binary.BinaryPrimitives.WriteInt32BigEndian(png.AsSpan(20), height);
-        png[24] = 8;
-        png[25] = colour;
-        return png;
-    }
 
     private sealed class FakeGoogle(Func<HttpRequestMessage, string?> answer, string? noContentFor = null) : HttpMessageHandler
     {
