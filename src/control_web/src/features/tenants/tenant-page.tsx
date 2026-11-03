@@ -477,7 +477,7 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
       >
         {/* The list scrolls sideways on a phone; its wrapper keeps the active
             tab's underline (drawn below the list) inside the scroll box */}
-        <div className='max-w-full overflow-x-auto pb-2'>
+        <div className='max-w-full overflow-x-auto overflow-y-hidden pb-2 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
           <TabsList variant='line'>
             {TENANT_TABS.map((key) => (
               <TabsTrigger key={key} value={key}>

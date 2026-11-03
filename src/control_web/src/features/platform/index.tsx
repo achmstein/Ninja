@@ -222,7 +222,7 @@ export function PlatformPage() {
         {/* Nine tabs are wider than a phone: the list scrolls sideways in
             its own box rather than pushing the page past the screen, as the
             tenant page's tabs do */}
-        <div className='max-w-full overflow-x-auto'>
+        <div className='max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
           <TabsList>
             <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
             <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
