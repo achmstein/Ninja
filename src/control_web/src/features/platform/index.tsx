@@ -52,13 +52,14 @@ import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'
 import { NodesTable } from './nodes-table'
 import { MapsSettings } from './maps-settings'
+import { FirebaseSettings } from './firebase-settings'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
 import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps'
+type Tab = 'tenants' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps' | 'firebase'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -232,6 +233,7 @@ export function PlatformPage() {
             <TabsTrigger value='team'>{t('tabTeam')}</TabsTrigger>
             <TabsTrigger value='ai'>{t('tabAi')}</TabsTrigger>
             <TabsTrigger value='maps'>{t('tabMaps')}</TabsTrigger>
+            <TabsTrigger value='firebase'>{t('tabFirebase')}</TabsTrigger>
           </TabsList>
         </div>
         <TabsContent value='tenants'>
@@ -275,6 +277,9 @@ export function PlatformPage() {
         </TabsContent>
         <TabsContent value='maps'>
           <MapsSettings />
+        </TabsContent>
+        <TabsContent value='firebase'>
+          <FirebaseSettings />
         </TabsContent>
       </Tabs>
     </div>

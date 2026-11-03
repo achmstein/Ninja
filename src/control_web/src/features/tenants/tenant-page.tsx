@@ -87,18 +87,20 @@ import { SubscriptionTab } from './tabs/subscription'
 import { BackupsTab } from './tabs/backups'
 import { HealthTab } from './tabs/health'
 import { OverviewTab } from './tabs/overview'
+import { AppTab } from './tabs/app'
 import { JobLabel } from '@/features/platform/queue-table'
 
 // Recharts and the brand editor only load once their tab opens
 const BrandTab = lazy(() => import('./tabs/brand').then((m) => ({ default: m.BrandTab })))
 const MetricsTab = lazy(() => import('./tabs/metrics').then((m) => ({ default: m.MetricsTab })))
 
-export const TENANT_TABS = ['overview', 'brand', 'subscription', 'health', 'metrics', 'backups', 'audit'] as const
+export const TENANT_TABS = ['overview', 'brand', 'app', 'subscription', 'health', 'metrics', 'backups', 'audit'] as const
 export type TenantTab = (typeof TENANT_TABS)[number]
 
 const TAB_LABELS: Record<TenantTab, TranslationKey> = {
   overview: 'tabOverview',
   brand: 'tabBrand',
+  app: 'tabApp',
   subscription: 'tabSubscription',
   health: 'tabHealth',
   metrics: 'tabMetrics',
@@ -491,6 +493,9 @@ export function TenantPage({ slug, tab }: { slug: string; tab: TenantTab }) {
           <Suspense fallback={<Loading />}>
             <BrandTab tenant={tenant} />
           </Suspense>
+        </TabsContent>
+        <TabsContent value='app' className='pt-2'>
+          <AppTab tenant={tenant} />
         </TabsContent>
         <TabsContent value='subscription' className='pt-2'>
           <SubscriptionTab tenant={tenant} />

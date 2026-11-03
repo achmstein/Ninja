@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, BringBackTenantData, BringBackTenantErrors, BringBackTenantResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteAiProviderData, DeleteAiProviderErrors, DeleteAiProviderResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DeleteTenantSeedMenuData, DeleteTenantSeedMenuErrors, DeleteTenantSeedMenuResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DisableOperatorData, DisableOperatorErrors, DisableOperatorResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, DrainNodeData, DrainNodeErrors, DrainNodeResponses, EnableOperatorData, EnableOperatorErrors, EnableOperatorResponses, EvacuateNodeData, EvacuateNodeErrors, EvacuateNodeResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FillDemoDataData, FillDemoDataErrors, FillDemoDataResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GenerateItemPhotosData, GenerateItemPhotosErrors, GenerateItemPhotosResponses, GetAiSettingsData, GetAiSettingsErrors, GetAiSettingsResponses, GetAiUsageData, GetAiUsageErrors, GetAiUsageResponses, GetAppleSiteAssociationData, GetAppleSiteAssociationErrors, GetAssetLinksData, GetAssetLinksErrors, GetMapsSettingsData, GetMapsSettingsErrors, GetMapsSettingsResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantAppConfigData, GetTenantAppConfigErrors, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, InviteOperatorData, InviteOperatorErrors, InviteOperatorResponses, ListAiProviderModelsData, ListAiProviderModelsErrors, ListAiProviderModelsResponses, ListArchivedBackupsData, ListArchivedBackupsErrors, ListArchivedBackupsResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListNodesData, ListNodesErrors, ListNodesResponses, ListOperatorsData, ListOperatorsErrors, ListOperatorsResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, MoveTenantData, MoveTenantErrors, MoveTenantResponses, PingNodeData, PingNodeErrors, PingNodeResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, PutTenantSeedMenuData, PutTenantSeedMenuErrors, PutTenantSeedMenuResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, RegisterNodeData, RegisterNodeErrors, RegisterNodeResponses, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorErrors, ResetOperatorAuthenticatorResponses, ResetOperatorPasswordData, ResetOperatorPasswordErrors, ResetOperatorPasswordResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RetireNodeData, RetireNodeErrors, RetireNodeResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SaveAiProviderData, SaveAiProviderErrors, SaveAiProviderResponses, SaveAiRolesData, SaveAiRolesErrors, SaveAiRolesResponses, SaveMapsSettingsData, SaveMapsSettingsErrors, SaveMapsSettingsResponses, ScanMenuForNewTenantData, ScanMenuForNewTenantErrors, ScanMenuForNewTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, SignOutOperatorData, SignOutOperatorErrors, SignOutOperatorResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TestAiRoleData, TestAiRoleErrors, TestAiRoleResponses, TestMapsSearchData, TestMapsSearchErrors, TestMapsSearchResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateNodeData, UpdateNodeErrors, UpdateNodeResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpdateTenantTalabatData, UpdateTenantTalabatErrors, UpdateTenantTalabatResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsErrors, ApplyMailToRealmsResponses, BringBackTenantData, BringBackTenantErrors, BringBackTenantResponses, CancelPlatformJobData, CancelPlatformJobErrors, CancelPlatformJobResponses, CarryTenantAppKitData, CarryTenantAppKitErrors, CarryTenantAppKitResponses, CheckTenantAppData, CheckTenantAppErrors, CheckTenantAppResponses, ConvertTenantData, ConvertTenantErrors, ConvertTenantResponses, CreatePlatformBackupData, CreatePlatformBackupErrors, CreatePlatformBackupResponses, CreateTenantBackupData, CreateTenantBackupErrors, CreateTenantBackupResponses, CreateTenantData, CreateTenantErrors, CreateTenantResponses, DeleteAiProviderData, DeleteAiProviderErrors, DeleteAiProviderResponses, DeleteTenantBackupData, DeleteTenantBackupErrors, DeleteTenantBackupResponses, DeleteTenantBrandImageData, DeleteTenantBrandImageErrors, DeleteTenantBrandImageResponses, DeleteTenantSeedImageData, DeleteTenantSeedImageErrors, DeleteTenantSeedImageResponses, DeleteTenantSeedMenuData, DeleteTenantSeedMenuErrors, DeleteTenantSeedMenuResponses, DestroyTenantData, DestroyTenantErrors, DestroyTenantResponses, DisableOperatorData, DisableOperatorErrors, DisableOperatorResponses, DismissTenantErrorData, DismissTenantErrorErrors, DismissTenantErrorResponses, DownloadPlatformBackupData, DownloadPlatformBackupErrors, DownloadTenantBackupData, DownloadTenantBackupErrors, DrainNodeData, DrainNodeErrors, DrainNodeResponses, EnableOperatorData, EnableOperatorErrors, EnableOperatorResponses, EvacuateNodeData, EvacuateNodeErrors, EvacuateNodeResponses, ExtendDemoData, ExtendDemoErrors, ExtendDemoResponses, FillDemoDataData, FillDemoDataErrors, FillDemoDataResponses, FleetUpgradeData, FleetUpgradeErrors, FleetUpgradeResponses, ForgetTenantData, ForgetTenantErrors, ForgetTenantResponses, GenerateAndroidKeyData, GenerateAndroidKeyErrors, GenerateAndroidKeyResponses, GenerateItemPhotosData, GenerateItemPhotosErrors, GenerateItemPhotosResponses, GetAiSettingsData, GetAiSettingsErrors, GetAiSettingsResponses, GetAiUsageData, GetAiUsageErrors, GetAiUsageResponses, GetAppIconData, GetAppIconErrors, GetAppleSiteAssociationData, GetAppleSiteAssociationErrors, GetAssetLinksData, GetAssetLinksErrors, GetFirebaseSettingsData, GetFirebaseSettingsErrors, GetFirebaseSettingsResponses, GetMapsSettingsData, GetMapsSettingsErrors, GetMapsSettingsResponses, GetPlansData, GetPlansErrors, GetPlansResponses, GetPlatformBackupsData, GetPlatformBackupsErrors, GetPlatformBackupsResponses, GetPlatformCapacityData, GetPlatformCapacityErrors, GetPlatformCapacityResponses, GetPlatformData, GetPlatformErrors, GetPlatformJobsData, GetPlatformJobsErrors, GetPlatformJobsResponses, GetPlatformMailData, GetPlatformMailErrors, GetPlatformMailResponses, GetPlatformResponses, GetPlatformUpdatesData, GetPlatformUpdatesErrors, GetPlatformUpdatesResponses, GetTenantAppConfigData, GetTenantAppConfigErrors, GetTenantAppData, GetTenantAppErrors, GetTenantAppKitData, GetTenantAppKitErrors, GetTenantAppKitResponses, GetTenantAppResponses, GetTenantBrandData, GetTenantBrandErrors, GetTenantBrandResponses, GetTenantContainersData, GetTenantContainersErrors, GetTenantContainersResponses, GetTenantData, GetTenantErrors, GetTenantHealthData, GetTenantHealthErrors, GetTenantHealthResponses, GetTenantLogsData, GetTenantLogsErrors, GetTenantMetricsData, GetTenantMetricsErrors, GetTenantMetricsResponses, GetTenantResponses, GetTenantSeedImageData, GetTenantSeedImageErrors, GetTenantSubscriptionData, GetTenantSubscriptionErrors, GetTenantSubscriptionResponses, ImpersonateOwnerData, ImpersonateOwnerErrors, ImpersonateOwnerResponses, ImportAndroidKeyData, ImportAndroidKeyErrors, ImportAndroidKeyResponses, InviteOperatorData, InviteOperatorErrors, InviteOperatorResponses, LinkFirebaseAppsData, LinkFirebaseAppsErrors, LinkFirebaseAppsResponses, ListAiProviderModelsData, ListAiProviderModelsErrors, ListAiProviderModelsResponses, ListArchivedBackupsData, ListArchivedBackupsErrors, ListArchivedBackupsResponses, ListAuditData, ListAuditErrors, ListAuditResponses, ListNodesData, ListNodesErrors, ListNodesResponses, ListOperatorsData, ListOperatorsErrors, ListOperatorsResponses, ListTenantBackupsData, ListTenantBackupsErrors, ListTenantBackupsResponses, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesErrors, ListTenantSeedImagesResponses, ListTenantsErrors, ListTenantsResponses, MoveTenantData, MoveTenantErrors, MoveTenantResponses, PingNodeData, PingNodeErrors, PingNodeResponses, ProvisionTenantData, ProvisionTenantErrors, ProvisionTenantResponses, PutTenantSeedMenuData, PutTenantSeedMenuErrors, PutTenantSeedMenuResponses, RecordTenantPaymentData, RecordTenantPaymentErrors, RecordTenantPaymentResponses, RedeemImpersonationData, RedeemImpersonationErrors, RegisterNodeData, RegisterNodeErrors, RegisterNodeResponses, ReportUploadKeyFingerprintsData, ReportUploadKeyFingerprintsErrors, ReportUploadKeyFingerprintsResponses, ResendWelcomeEmailData, ResendWelcomeEmailErrors, ResendWelcomeEmailResponses, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorErrors, ResetOperatorAuthenticatorResponses, ResetOperatorPasswordData, ResetOperatorPasswordErrors, ResetOperatorPasswordResponses, RestoreTenantBackupData, RestoreTenantBackupErrors, RestoreTenantBackupResponses, ResumeTenantData, ResumeTenantErrors, ResumeTenantResponses, RetireNodeData, RetireNodeErrors, RetireNodeResponses, RollbackTenantData, RollbackTenantErrors, RollbackTenantResponses, SaveAiProviderData, SaveAiProviderErrors, SaveAiProviderResponses, SaveAiRolesData, SaveAiRolesErrors, SaveAiRolesResponses, SaveFirebaseSettingsData, SaveFirebaseSettingsErrors, SaveFirebaseSettingsResponses, SaveMapsSettingsData, SaveMapsSettingsErrors, SaveMapsSettingsResponses, ScanMenuForNewTenantData, ScanMenuForNewTenantErrors, ScanMenuForNewTenantResponses, SecureTenantData, SecureTenantErrors, SecureTenantResponses, SetAppIconsData, SetAppIconsErrors, SetAppIconsResponses, SetAppleKeyData, SetAppleKeyErrors, SetAppleKeyResponses, SetPlayKeyData, SetPlayKeyErrors, SetPlayKeyResponses, SignOutOperatorData, SignOutOperatorErrors, SignOutOperatorResponses, StartTenantData, StartTenantErrors, StartTenantResponses, StopTenantData, StopTenantErrors, StopTenantResponses, SuspendTenantData, SuspendTenantErrors, SuspendTenantResponses, TestAiRoleData, TestAiRoleErrors, TestAiRoleResponses, TestFirebaseData, TestFirebaseErrors, TestFirebaseResponses, TestMapsSearchData, TestMapsSearchErrors, TestMapsSearchResponses, TlsAskData, TlsAskErrors, TlsAskResponses, UpdateNodeData, UpdateNodeErrors, UpdateNodeResponses, UpdateTenantBrandData, UpdateTenantBrandErrors, UpdateTenantBrandResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UpdateTenantSubscriptionData, UpdateTenantSubscriptionErrors, UpdateTenantSubscriptionResponses, UpdateTenantTalabatData, UpdateTenantTalabatErrors, UpdateTenantTalabatResponses, UpgradeTenantData, UpgradeTenantErrors, UpgradeTenantResponses, UploadTenantBrandImageData, UploadTenantBrandImageErrors, UploadTenantBrandImageResponses, UploadTenantSeedImageData, UploadTenantSeedImageErrors, UploadTenantSeedImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -691,6 +691,168 @@ export const testMapsSearch = <ThrowOnError extends boolean = false>(options?: O
     responseType: 'json',
     url: '/api/control/maps/test',
     ...options
+});
+
+/**
+ * The service account the businesses' own apps are made in Firebase with (shown by its email and project)
+ */
+export const getFirebaseSettings = <ThrowOnError extends boolean = false>(options?: Options<GetFirebaseSettingsData, ThrowOnError>): RequestResult<GetFirebaseSettingsResponses, GetFirebaseSettingsErrors, ThrowOnError> => (options?.client ?? client).get<GetFirebaseSettingsResponses, GetFirebaseSettingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/firebase',
+    ...options
+});
+
+/**
+ * Set or clear that service account: a Google key file with Firebase Admin on the platform's Firebase project
+ */
+export const saveFirebaseSettings = <ThrowOnError extends boolean = false>(options: Options<SaveFirebaseSettingsData, ThrowOnError>): RequestResult<SaveFirebaseSettingsResponses, SaveFirebaseSettingsErrors, ThrowOnError> => (options.client ?? client).put<SaveFirebaseSettingsResponses, SaveFirebaseSettingsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/firebase',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * List the project's apps with the saved service account: whether Firebase answers it
+ */
+export const testFirebase = <ThrowOnError extends boolean = false>(options?: Options<TestFirebaseData, ThrowOnError>): RequestResult<TestFirebaseResponses, TestFirebaseErrors, ThrowOnError> => (options?.client ?? client).post<TestFirebaseResponses, TestFirebaseErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/firebase/test',
+    ...options
+});
+
+/**
+ * What the business's own app holds (keys only as set or not, fingerprints, Firebase ids) and its last check
+ */
+export const getTenantApp = <ThrowOnError extends boolean = false>(options: Options<GetTenantAppData, ThrowOnError>): RequestResult<GetTenantAppResponses, GetTenantAppErrors, ThrowOnError> => (options.client ?? client).get<GetTenantAppResponses, GetTenantAppErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app',
+    ...options
+});
+
+/**
+ * Take in the business's existing Android upload keystore, checked; its SHA-256 joins the record's App Links fingerprints
+ */
+export const importAndroidKey = <ThrowOnError extends boolean = false>(options: Options<ImportAndroidKeyData, ThrowOnError>): RequestResult<ImportAndroidKeyResponses, ImportAndroidKeyErrors, ThrowOnError> => (options.client ?? client).put<ImportAndroidKeyResponses, ImportAndroidKeyErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/android-key',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Make a new Android upload key for the business (RSA 2048, 25 years); its SHA-256 joins the record's App Links fingerprints
+ */
+export const generateAndroidKey = <ThrowOnError extends boolean = false>(options: Options<GenerateAndroidKeyData, ThrowOnError>): RequestResult<GenerateAndroidKeyResponses, GenerateAndroidKeyErrors, ThrowOnError> => (options.client ?? client).post<GenerateAndroidKeyResponses, GenerateAndroidKeyErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/android-key/generate',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The Google service account with release rights on the business's Play account
+ */
+export const setPlayKey = <ThrowOnError extends boolean = false>(options: Options<SetPlayKeyData, ThrowOnError>): RequestResult<SetPlayKeyResponses, SetPlayKeyErrors, ThrowOnError> => (options.client ?? client).put<SetPlayKeyResponses, SetPlayKeyErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/play',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The App Store Connect API key from the business's account (App Manager)
+ */
+export const setAppleKey = <ThrowOnError extends boolean = false>(options: Options<SetAppleKeyData, ThrowOnError>): RequestResult<SetAppleKeyResponses, SetAppleKeyErrors, ThrowOnError> => (options.client ?? client).put<SetAppleKeyResponses, SetAppleKeyErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/apple',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The app's icon (1024x1024 PNG, no transparency) and Android's adaptive foreground
+ */
+export const setAppIcons = <ThrowOnError extends boolean = false>(options: Options<SetAppIconsData, ThrowOnError>): RequestResult<SetAppIconsResponses, SetAppIconsErrors, ThrowOnError> => (options.client ?? client).put<SetAppIconsResponses, SetAppIconsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/icons',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The saved icon (icon) or foreground (foreground), as PNG
+ */
+export const getAppIcon = <ThrowOnError extends boolean = false>(options: Options<GetAppIconData, ThrowOnError>): RequestResult<unknown, GetAppIconErrors, ThrowOnError> => (options.client ?? client).get<unknown, GetAppIconErrors, ThrowOnError>({ url: '/api/control/tenants/{slug}/app/icons/{which}', ...options });
+
+/**
+ * Find or make the business's Android and iOS apps in the platform's Firebase project, give Android its certificates, and keep both config files
+ */
+export const linkFirebaseApps = <ThrowOnError extends boolean = false>(options: Options<LinkFirebaseAppsData, ThrowOnError>): RequestResult<LinkFirebaseAppsResponses, LinkFirebaseAppsErrors, ThrowOnError> => (options.client ?? client).post<LinkFirebaseAppsResponses, LinkFirebaseAppsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/firebase',
+    ...options
+});
+
+/**
+ * Try every key from the server (Apple finds the app, Play opens an edit) and check the files, icon and record: one line each
+ */
+export const checkTenantApp = <ThrowOnError extends boolean = false>(options: Options<CheckTenantAppData, ThrowOnError>): RequestResult<CheckTenantAppResponses, CheckTenantAppErrors, ThrowOnError> => (options.client ?? client).post<CheckTenantAppResponses, CheckTenantAppErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app/check',
+    ...options
+});
+
+/**
+ * What the build signs and uploads the business's own app with, for one platform; each read is audited. tenants/fetch-kit.sh reads it as the app-builder client
+ */
+export const getTenantAppKit = <ThrowOnError extends boolean = false>(options: Options<GetTenantAppKitData, ThrowOnError>): RequestResult<GetTenantAppKitResponses, GetTenantAppKitErrors, ThrowOnError> => (options.client ?? client).get<GetTenantAppKitResponses, GetTenantAppKitErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app-kit',
+    ...options
+});
+
+/**
+ * Fill the empty slots of the business's app with what its GitHub environment held (carry-app-secrets.yml); never replaces one
+ */
+export const carryTenantAppKit = <ThrowOnError extends boolean = false>(options: Options<CarryTenantAppKitData, ThrowOnError>): RequestResult<CarryTenantAppKitResponses, CarryTenantAppKitErrors, ThrowOnError> => (options.client ?? client).post<CarryTenantAppKitResponses, CarryTenantAppKitErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/control/tenants/{slug}/app-kit/carry',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The build's reading of a JKS upload key's fingerprints, taken only while none are known
+ */
+export const reportUploadKeyFingerprints = <ThrowOnError extends boolean = false>(options: Options<ReportUploadKeyFingerprintsData, ThrowOnError>): RequestResult<ReportUploadKeyFingerprintsResponses, ReportUploadKeyFingerprintsErrors, ThrowOnError> => (options.client ?? client).post<ReportUploadKeyFingerprintsResponses, ReportUploadKeyFingerprintsErrors, ThrowOnError>({
+    url: '/api/control/tenants/{slug}/app-kit/report',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

@@ -54,6 +54,85 @@ export type AiUsageRow = {
     completionTokens: number | string;
 };
 
+export type AndroidKeyStatus = {
+    set: boolean;
+    /**
+     * pkcs12 when it was made here or could be read, jks when its fingerprints come from its first build
+     */
+    format: null | string;
+    alias: null | string;
+    sha1: null | string;
+    sha256: null | string;
+};
+
+export type AppCheck = {
+    item: string;
+    ok: boolean;
+    detail: string;
+};
+
+export type AppFirebaseStatus = {
+    /**
+     * Whether the Platform page's Firebase tab has its service account
+     */
+    platformReady: boolean;
+    androidAppId: null | string;
+    iosAppId: null | string;
+    androidFile: boolean;
+    iosFile: boolean;
+};
+
+export type AppIconsRequest = {
+    /**
+     * 1024x1024 PNG without transparency, base64; left out keeps the saved one
+     */
+    icon?: null | string;
+    /**
+     * Android's adaptive foreground, square PNG, base64; left out keeps the saved one
+     */
+    foreground?: null | string;
+    clearForeground?: boolean;
+};
+
+export type AppIconsStatus = {
+    icon: boolean;
+    foreground: boolean;
+};
+
+export type AppKit = {
+    googleServicesJson?: null | string;
+    googleServiceInfoPlist?: null | string;
+    keystore?: null | string;
+    keyAlias?: null | string;
+    keyPassword?: null | string;
+    storePassword?: null | string;
+    /**
+     * Whether the upload key's fingerprints are known; when not, the build reports them (app-kit/report)
+     */
+    fingerprintsKnown?: boolean;
+    playServiceAccountJson?: null | string;
+    ascKeyId?: null | string;
+    ascIssuerId?: null | string;
+    ascPrivateKey?: null | string;
+    icon?: null | string;
+    iconForeground?: null | string;
+};
+
+export type AppleKeyRequest = {
+    keyId: string;
+    issuerId: string;
+    /**
+     * The .p8 file's contents
+     */
+    privateKey: string;
+};
+
+export type AppleKeyStatus = {
+    set: boolean;
+    keyId: null | string;
+    issuerId: null | string;
+};
+
 export type AuditEntry = {
     id: number | string;
     at: string;
@@ -204,6 +283,25 @@ export type CapacityResponse = {
     connectionsMax: number | string;
 };
 
+export type CarryAppKitRequest = {
+    keystore?: null | string;
+    keyAlias?: null | string;
+    keyPassword?: null | string;
+    storePassword?: null | string;
+    playServiceAccountJson?: null | string;
+    ascKeyId?: null | string;
+    ascIssuerId?: null | string;
+    ascPrivateKey?: null | string;
+    googleServicesJson?: null | string;
+    googleServiceInfoPlist?: null | string;
+};
+
+export type CarryAppKitResult = {
+    filled: Array<string>;
+    kept: Array<string>;
+    refused: Array<string>;
+};
+
 export type ContainerInfo = {
     service: string;
     name: string;
@@ -276,6 +374,30 @@ export type ExtendRequest = {
     days: number | string;
 };
 
+export type FirebaseLinkResponse = {
+    app: TenantAppStatus;
+    done: Array<string>;
+};
+
+export type FirebaseSettingsDto = {
+    set: boolean;
+    /**
+     * The service account, the one part shown again
+     */
+    clientEmail: null | string;
+    /**
+     * The Firebase project it manages, from its key file
+     */
+    projectId: null | string;
+    updatedAt: null | string;
+};
+
+export type FirebaseTestResult = {
+    ok: boolean;
+    detail: string;
+    apps: Array<string>;
+};
+
 export type FleetUpgradeRequest = {
     imageTag: string;
     canary?: null | string;
@@ -285,6 +407,10 @@ export type FleetUpgradeRequest = {
 export type FleetUpgradeResponse = {
     queued: number | string;
     canary: null | string;
+};
+
+export type GenerateAndroidKeyRequest = {
+    confirm?: boolean;
 };
 
 export type HttpValidationProblemDetails = {
@@ -305,6 +431,23 @@ export type IFormFileCollection = Array<IFormFile>;
 export type ImpersonationLink = {
     url: string;
     expiresAt: string;
+};
+
+export type ImportAndroidKeyRequest = {
+    /**
+     * The keystore file, base64
+     */
+    keystore: string;
+    alias: string;
+    storePassword: string;
+    /**
+     * Left out: the store password, as PKCS12 keys have
+     */
+    keyPassword?: null | string;
+    /**
+     * Required to replace a key already set: Play refuses another upload key until it is reset in Play Console
+     */
+    confirm?: boolean;
 };
 
 export type InviteOperatorRequest = {
@@ -544,6 +687,21 @@ export type PlatformResponse = {
     warnings: Array<string>;
 };
 
+export type PlayKeyRequest = {
+    /**
+     * The service account's key file, as Google gives it
+     */
+    serviceAccountJson: string;
+};
+
+export type PlayKeyStatus = {
+    set: boolean;
+    /**
+     * The service account, the one part shown again
+     */
+    clientEmail: null | string;
+};
+
 export type ProblemDetails = {
     type?: null | string;
     title?: null | string;
@@ -618,6 +776,11 @@ export type RegisterNodeRequest = {
     talabatRelayUrl?: null | string;
 };
 
+export type ReportFingerprintsRequest = {
+    sha1: string;
+    sha256: string;
+};
+
 export type RestoreRequest = {
     intoSlug: string;
     nameEn?: null | string;
@@ -634,6 +797,11 @@ export type SaveAiProviderRequest = {
 
 export type SaveAiRolesRequest = {
     roles: Array<AiRoleDto>;
+};
+
+export type SaveFirebaseSettingsRequest = {
+    serviceAccountJson?: null | string;
+    clear?: boolean;
 };
 
 export type SaveMapsSettingsRequest = {
@@ -696,6 +864,20 @@ export type SubscriptionDetail = {
 };
 
 export type SubscriptionStatus = 'Trialing' | 'Active' | 'PastDue' | 'Suspended' | 'Cancelled';
+
+export type TenantAppStatus = {
+    /**
+     * The record's own app id; null: the business is on the shared app and nothing here is used
+     */
+    appId: null | string;
+    androidKey: AndroidKeyStatus;
+    play: PlayKeyStatus;
+    apple: AppleKeyStatus;
+    icons: AppIconsStatus;
+    firebase: AppFirebaseStatus;
+    checks: Array<AppCheck>;
+    checkedAt: null | string;
+};
 
 export type TenantDetail = {
     slug: string;
@@ -3794,6 +3976,545 @@ export type TestMapsSearchResponses = {
 };
 
 export type TestMapsSearchResponse = TestMapsSearchResponses[keyof TestMapsSearchResponses];
+
+export type GetFirebaseSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/firebase';
+};
+
+export type GetFirebaseSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetFirebaseSettingsResponses = {
+    /**
+     * OK
+     */
+    200: FirebaseSettingsDto;
+};
+
+export type GetFirebaseSettingsResponse = GetFirebaseSettingsResponses[keyof GetFirebaseSettingsResponses];
+
+export type SaveFirebaseSettingsData = {
+    body: SaveFirebaseSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/firebase';
+};
+
+export type SaveFirebaseSettingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveFirebaseSettingsError = SaveFirebaseSettingsErrors[keyof SaveFirebaseSettingsErrors];
+
+export type SaveFirebaseSettingsResponses = {
+    /**
+     * OK
+     */
+    200: FirebaseSettingsDto;
+};
+
+export type SaveFirebaseSettingsResponse = SaveFirebaseSettingsResponses[keyof SaveFirebaseSettingsResponses];
+
+export type TestFirebaseData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/firebase/test';
+};
+
+export type TestFirebaseErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TestFirebaseResponses = {
+    /**
+     * OK
+     */
+    200: FirebaseTestResult;
+};
+
+export type TestFirebaseResponse = TestFirebaseResponses[keyof TestFirebaseResponses];
+
+export type GetTenantAppData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app';
+};
+
+export type GetTenantAppErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTenantAppResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type GetTenantAppResponse = GetTenantAppResponses[keyof GetTenantAppResponses];
+
+export type ImportAndroidKeyData = {
+    body: ImportAndroidKeyRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/android-key';
+};
+
+export type ImportAndroidKeyErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ImportAndroidKeyError = ImportAndroidKeyErrors[keyof ImportAndroidKeyErrors];
+
+export type ImportAndroidKeyResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type ImportAndroidKeyResponse = ImportAndroidKeyResponses[keyof ImportAndroidKeyResponses];
+
+export type GenerateAndroidKeyData = {
+    body?: null | GenerateAndroidKeyRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/android-key/generate';
+};
+
+export type GenerateAndroidKeyErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GenerateAndroidKeyError = GenerateAndroidKeyErrors[keyof GenerateAndroidKeyErrors];
+
+export type GenerateAndroidKeyResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type GenerateAndroidKeyResponse = GenerateAndroidKeyResponses[keyof GenerateAndroidKeyResponses];
+
+export type SetPlayKeyData = {
+    body: PlayKeyRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/play';
+};
+
+export type SetPlayKeyErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetPlayKeyError = SetPlayKeyErrors[keyof SetPlayKeyErrors];
+
+export type SetPlayKeyResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type SetPlayKeyResponse = SetPlayKeyResponses[keyof SetPlayKeyResponses];
+
+export type SetAppleKeyData = {
+    body: AppleKeyRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/apple';
+};
+
+export type SetAppleKeyErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetAppleKeyError = SetAppleKeyErrors[keyof SetAppleKeyErrors];
+
+export type SetAppleKeyResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type SetAppleKeyResponse = SetAppleKeyResponses[keyof SetAppleKeyResponses];
+
+export type SetAppIconsData = {
+    body: AppIconsRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/icons';
+};
+
+export type SetAppIconsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetAppIconsError = SetAppIconsErrors[keyof SetAppIconsErrors];
+
+export type SetAppIconsResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type SetAppIconsResponse = SetAppIconsResponses[keyof SetAppIconsResponses];
+
+export type GetAppIconData = {
+    body?: never;
+    path: {
+        slug: string;
+        which: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/icons/{which}';
+};
+
+export type GetAppIconErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type LinkFirebaseAppsData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/firebase';
+};
+
+export type LinkFirebaseAppsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type LinkFirebaseAppsError = LinkFirebaseAppsErrors[keyof LinkFirebaseAppsErrors];
+
+export type LinkFirebaseAppsResponses = {
+    /**
+     * OK
+     */
+    200: FirebaseLinkResponse;
+};
+
+export type LinkFirebaseAppsResponse = LinkFirebaseAppsResponses[keyof LinkFirebaseAppsResponses];
+
+export type CheckTenantAppData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/check';
+};
+
+export type CheckTenantAppErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CheckTenantAppError = CheckTenantAppErrors[keyof CheckTenantAppErrors];
+
+export type CheckTenantAppResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type CheckTenantAppResponse = CheckTenantAppResponses[keyof CheckTenantAppResponses];
+
+export type GetTenantAppKitData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query: {
+        platform: string;
+    };
+    url: '/api/control/tenants/{slug}/app-kit';
+};
+
+export type GetTenantAppKitErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetTenantAppKitError = GetTenantAppKitErrors[keyof GetTenantAppKitErrors];
+
+export type GetTenantAppKitResponses = {
+    /**
+     * OK
+     */
+    200: AppKit;
+};
+
+export type GetTenantAppKitResponse = GetTenantAppKitResponses[keyof GetTenantAppKitResponses];
+
+export type CarryTenantAppKitData = {
+    body: CarryAppKitRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app-kit/carry';
+};
+
+export type CarryTenantAppKitErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type CarryTenantAppKitError = CarryTenantAppKitErrors[keyof CarryTenantAppKitErrors];
+
+export type CarryTenantAppKitResponses = {
+    /**
+     * OK
+     */
+    200: CarryAppKitResult;
+};
+
+export type CarryTenantAppKitResponse = CarryTenantAppKitResponses[keyof CarryTenantAppKitResponses];
+
+export type ReportUploadKeyFingerprintsData = {
+    body: ReportFingerprintsRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app-kit/report';
+};
+
+export type ReportUploadKeyFingerprintsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+    /**
+     * Conflict
+     */
+    409: ProblemDetails;
+};
+
+export type ReportUploadKeyFingerprintsError = ReportUploadKeyFingerprintsErrors[keyof ReportUploadKeyFingerprintsErrors];
+
+export type ReportUploadKeyFingerprintsResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
 
 export type ListNodesData = {
     body?: never;

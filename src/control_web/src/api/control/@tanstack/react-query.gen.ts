@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { applyMailToRealms, bringBackTenant, cancelPlatformJob, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, drainNode, enableOperator, evacuateNode, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateItemPhotos, getAiSettings, getAiUsage, getAppleSiteAssociation, getAssetLinks, getMapsSettings, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantAppConfig, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, inviteOperator, listAiProviderModels, listArchivedBackups, listAudit, listNodes, listOperators, listTenantBackups, listTenants, listTenantSeedImages, moveTenant, type Options, pingNode, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, registerNode, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, retireNode, rollbackTenant, saveAiProvider, saveAiRoles, saveMapsSettings, scanMenuForNewTenant, secureTenant, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, testMapsSearch, tlsAsk, updateNode, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
-import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, BringBackTenantData, BringBackTenantError, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, DrainNodeData, DrainNodeError, DrainNodeResponse, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, EvacuateNodeData, EvacuateNodeError, EvacuateNodeResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateItemPhotosData, GenerateItemPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetAppleSiteAssociationData, GetAssetLinksData, GetMapsSettingsData, GetMapsSettingsResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantAppConfigData, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListArchivedBackupsData, ListArchivedBackupsResponse, ListAuditData, ListAuditResponse, ListNodesData, ListNodesResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, MoveTenantData, MoveTenantError, PingNodeData, PingNodeResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, RegisterNodeData, RegisterNodeError, RegisterNodeResponse, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RetireNodeData, RetireNodeError, RetireNodeResponse, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, SaveMapsSettingsData, SaveMapsSettingsError, SaveMapsSettingsResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TestMapsSearchData, TestMapsSearchResponse, TlsAskData, UpdateNodeData, UpdateNodeError, UpdateNodeResponse, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
+import { applyMailToRealms, bringBackTenant, cancelPlatformJob, carryTenantAppKit, checkTenantApp, convertTenant, createPlatformBackup, createTenant, createTenantBackup, deleteAiProvider, deleteTenantBackup, deleteTenantBrandImage, deleteTenantSeedImage, deleteTenantSeedMenu, destroyTenant, disableOperator, dismissTenantError, downloadPlatformBackup, downloadTenantBackup, drainNode, enableOperator, evacuateNode, extendDemo, fillDemoData, fleetUpgrade, forgetTenant, generateAndroidKey, generateItemPhotos, getAiSettings, getAiUsage, getAppIcon, getAppleSiteAssociation, getAssetLinks, getFirebaseSettings, getMapsSettings, getPlans, getPlatform, getPlatformBackups, getPlatformCapacity, getPlatformJobs, getPlatformMail, getPlatformUpdates, getTenant, getTenantApp, getTenantAppConfig, getTenantAppKit, getTenantBrand, getTenantContainers, getTenantHealth, getTenantLogs, getTenantMetrics, getTenantSeedImage, getTenantSubscription, impersonateOwner, importAndroidKey, inviteOperator, linkFirebaseApps, listAiProviderModels, listArchivedBackups, listAudit, listNodes, listOperators, listTenantBackups, listTenants, listTenantSeedImages, moveTenant, type Options, pingNode, provisionTenant, putTenantSeedMenu, recordTenantPayment, redeemImpersonation, registerNode, reportUploadKeyFingerprints, resendWelcomeEmail, resetOperatorAuthenticator, resetOperatorPassword, restoreTenantBackup, resumeTenant, retireNode, rollbackTenant, saveAiProvider, saveAiRoles, saveFirebaseSettings, saveMapsSettings, scanMenuForNewTenant, secureTenant, setAppIcons, setAppleKey, setPlayKey, signOutOperator, startTenant, stopTenant, suspendTenant, testAiRole, testFirebase, testMapsSearch, tlsAsk, updateNode, updateTenant, updateTenantBrand, updateTenantSubscription, updateTenantTalabat, upgradeTenant, uploadTenantBrandImage, uploadTenantSeedImage } from '../sdk.gen';
+import type { ApplyMailToRealmsData, ApplyMailToRealmsError, ApplyMailToRealmsResponse, BringBackTenantData, BringBackTenantError, CancelPlatformJobData, CancelPlatformJobError, CancelPlatformJobResponse, CarryTenantAppKitData, CarryTenantAppKitError, CarryTenantAppKitResponse, CheckTenantAppData, CheckTenantAppError, CheckTenantAppResponse, ConvertTenantData, ConvertTenantError, ConvertTenantResponse, CreatePlatformBackupData, CreatePlatformBackupResponse, CreateTenantBackupData, CreateTenantBackupError, CreateTenantData, CreateTenantError, CreateTenantResponse, DeleteAiProviderData, DeleteAiProviderResponse, DeleteTenantBackupData, DeleteTenantBackupResponse, DeleteTenantBrandImageData, DeleteTenantBrandImageError, DeleteTenantBrandImageResponse, DeleteTenantSeedImageData, DeleteTenantSeedImageResponse, DeleteTenantSeedMenuData, DeleteTenantSeedMenuResponse, DestroyTenantData, DestroyTenantError, DisableOperatorData, DisableOperatorError, DisableOperatorResponse, DismissTenantErrorData, DismissTenantErrorError, DismissTenantErrorResponse, DownloadPlatformBackupData, DownloadTenantBackupData, DrainNodeData, DrainNodeError, DrainNodeResponse, EnableOperatorData, EnableOperatorError, EnableOperatorResponse, EvacuateNodeData, EvacuateNodeError, EvacuateNodeResponse, ExtendDemoData, ExtendDemoError, ExtendDemoResponse, FillDemoDataData, FillDemoDataError, FleetUpgradeData, FleetUpgradeError, FleetUpgradeResponse2, ForgetTenantData, ForgetTenantError, ForgetTenantResponse, GenerateAndroidKeyData, GenerateAndroidKeyError, GenerateAndroidKeyResponse, GenerateItemPhotosData, GenerateItemPhotosError, GetAiSettingsData, GetAiSettingsResponse, GetAiUsageData, GetAiUsageResponse, GetAppIconData, GetAppleSiteAssociationData, GetAssetLinksData, GetFirebaseSettingsData, GetFirebaseSettingsResponse, GetMapsSettingsData, GetMapsSettingsResponse, GetPlansData, GetPlansResponse, GetPlatformBackupsData, GetPlatformBackupsResponse, GetPlatformCapacityData, GetPlatformCapacityResponse, GetPlatformData, GetPlatformJobsData, GetPlatformJobsResponse, GetPlatformMailData, GetPlatformMailResponse, GetPlatformResponse, GetPlatformUpdatesData, GetPlatformUpdatesResponse, GetTenantAppConfigData, GetTenantAppData, GetTenantAppKitData, GetTenantAppKitError, GetTenantAppKitResponse, GetTenantAppResponse, GetTenantBrandData, GetTenantBrandError, GetTenantBrandResponse, GetTenantContainersData, GetTenantContainersError, GetTenantContainersResponse, GetTenantData, GetTenantHealthData, GetTenantHealthError, GetTenantHealthResponse, GetTenantLogsData, GetTenantLogsError, GetTenantMetricsData, GetTenantMetricsError, GetTenantMetricsResponse, GetTenantResponse, GetTenantSeedImageData, GetTenantSubscriptionData, GetTenantSubscriptionResponse, ImpersonateOwnerData, ImpersonateOwnerError, ImpersonateOwnerResponse, ImportAndroidKeyData, ImportAndroidKeyError, ImportAndroidKeyResponse, InviteOperatorData, InviteOperatorError, InviteOperatorResponse, LinkFirebaseAppsData, LinkFirebaseAppsError, LinkFirebaseAppsResponse, ListAiProviderModelsData, ListAiProviderModelsResponse, ListArchivedBackupsData, ListArchivedBackupsResponse, ListAuditData, ListAuditResponse, ListNodesData, ListNodesResponse, ListOperatorsData, ListOperatorsResponse, ListTenantBackupsData, ListTenantBackupsResponse, ListTenantsData, ListTenantSeedImagesData, ListTenantSeedImagesResponse, ListTenantsResponse, MoveTenantData, MoveTenantError, PingNodeData, PingNodeResponse, ProvisionTenantData, ProvisionTenantError, PutTenantSeedMenuData, PutTenantSeedMenuError, PutTenantSeedMenuResponse, RecordTenantPaymentData, RecordTenantPaymentError, RecordTenantPaymentResponse, RedeemImpersonationData, RedeemImpersonationError, RegisterNodeData, RegisterNodeError, RegisterNodeResponse, ReportUploadKeyFingerprintsData, ReportUploadKeyFingerprintsError, ResendWelcomeEmailData, ResendWelcomeEmailError, ResetOperatorAuthenticatorData, ResetOperatorAuthenticatorError, ResetOperatorAuthenticatorResponse, ResetOperatorPasswordData, ResetOperatorPasswordError, ResetOperatorPasswordResponse, RestoreTenantBackupData, RestoreTenantBackupError, RestoreTenantBackupResponse, ResumeTenantData, ResumeTenantError, RetireNodeData, RetireNodeError, RetireNodeResponse, RollbackTenantData, RollbackTenantError, SaveAiProviderData, SaveAiProviderError, SaveAiProviderResponse, SaveAiRolesData, SaveAiRolesError, SaveAiRolesResponse, SaveFirebaseSettingsData, SaveFirebaseSettingsError, SaveFirebaseSettingsResponse, SaveMapsSettingsData, SaveMapsSettingsError, SaveMapsSettingsResponse, ScanMenuForNewTenantData, ScanMenuForNewTenantError, ScanMenuForNewTenantResponse, SecureTenantData, SecureTenantError, SetAppIconsData, SetAppIconsError, SetAppIconsResponse, SetAppleKeyData, SetAppleKeyError, SetAppleKeyResponse, SetPlayKeyData, SetPlayKeyError, SetPlayKeyResponse, SignOutOperatorData, SignOutOperatorError, SignOutOperatorResponse, StartTenantData, StartTenantError, StopTenantData, StopTenantError, SuspendTenantData, SuspendTenantError, TestAiRoleData, TestAiRoleResponse, TestFirebaseData, TestFirebaseResponse, TestMapsSearchData, TestMapsSearchResponse, TlsAskData, UpdateNodeData, UpdateNodeError, UpdateNodeResponse, UpdateTenantBrandData, UpdateTenantBrandError, UpdateTenantBrandResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UpdateTenantSubscriptionData, UpdateTenantSubscriptionError, UpdateTenantSubscriptionResponse, UpdateTenantTalabatData, UpdateTenantTalabatError, UpdateTenantTalabatResponse, UpgradeTenantData, UpgradeTenantError, UploadTenantBrandImageData, UploadTenantBrandImageError, UploadTenantBrandImageResponse, UploadTenantSeedImageData, UploadTenantSeedImageError, UploadTenantSeedImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -1425,6 +1425,265 @@ export const testMapsSearchMutation = (options?: Partial<Options<TestMapsSearchD
     const mutationOptions: UseMutationOptions<TestMapsSearchResponse, AxiosError<DefaultError>, Options<TestMapsSearchData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await testMapsSearch({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getFirebaseSettingsQueryKey = (options?: Options<GetFirebaseSettingsData>) => createQueryKey('getFirebaseSettings', options);
+
+/**
+ * The service account the businesses' own apps are made in Firebase with (shown by its email and project)
+ */
+export const getFirebaseSettingsOptions = (options?: Options<GetFirebaseSettingsData>) => queryOptions<GetFirebaseSettingsResponse, AxiosError<DefaultError>, GetFirebaseSettingsResponse, ReturnType<typeof getFirebaseSettingsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getFirebaseSettings({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getFirebaseSettingsQueryKey(options)
+});
+
+/**
+ * Set or clear that service account: a Google key file with Firebase Admin on the platform's Firebase project
+ */
+export const saveFirebaseSettingsMutation = (options?: Partial<Options<SaveFirebaseSettingsData>>): UseMutationOptions<SaveFirebaseSettingsResponse, AxiosError<SaveFirebaseSettingsError>, Options<SaveFirebaseSettingsData>> => {
+    const mutationOptions: UseMutationOptions<SaveFirebaseSettingsResponse, AxiosError<SaveFirebaseSettingsError>, Options<SaveFirebaseSettingsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await saveFirebaseSettings({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * List the project's apps with the saved service account: whether Firebase answers it
+ */
+export const testFirebaseMutation = (options?: Partial<Options<TestFirebaseData>>): UseMutationOptions<TestFirebaseResponse, AxiosError<DefaultError>, Options<TestFirebaseData>> => {
+    const mutationOptions: UseMutationOptions<TestFirebaseResponse, AxiosError<DefaultError>, Options<TestFirebaseData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await testFirebase({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantAppQueryKey = (options: Options<GetTenantAppData>) => createQueryKey('getTenantApp', options);
+
+/**
+ * What the business's own app holds (keys only as set or not, fingerprints, Firebase ids) and its last check
+ */
+export const getTenantAppOptions = (options: Options<GetTenantAppData>) => queryOptions<GetTenantAppResponse, AxiosError<DefaultError>, GetTenantAppResponse, ReturnType<typeof getTenantAppQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantApp({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantAppQueryKey(options)
+});
+
+/**
+ * Take in the business's existing Android upload keystore, checked; its SHA-256 joins the record's App Links fingerprints
+ */
+export const importAndroidKeyMutation = (options?: Partial<Options<ImportAndroidKeyData>>): UseMutationOptions<ImportAndroidKeyResponse, AxiosError<ImportAndroidKeyError>, Options<ImportAndroidKeyData>> => {
+    const mutationOptions: UseMutationOptions<ImportAndroidKeyResponse, AxiosError<ImportAndroidKeyError>, Options<ImportAndroidKeyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await importAndroidKey({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Make a new Android upload key for the business (RSA 2048, 25 years); its SHA-256 joins the record's App Links fingerprints
+ */
+export const generateAndroidKeyMutation = (options?: Partial<Options<GenerateAndroidKeyData>>): UseMutationOptions<GenerateAndroidKeyResponse, AxiosError<GenerateAndroidKeyError>, Options<GenerateAndroidKeyData>> => {
+    const mutationOptions: UseMutationOptions<GenerateAndroidKeyResponse, AxiosError<GenerateAndroidKeyError>, Options<GenerateAndroidKeyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await generateAndroidKey({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The Google service account with release rights on the business's Play account
+ */
+export const setPlayKeyMutation = (options?: Partial<Options<SetPlayKeyData>>): UseMutationOptions<SetPlayKeyResponse, AxiosError<SetPlayKeyError>, Options<SetPlayKeyData>> => {
+    const mutationOptions: UseMutationOptions<SetPlayKeyResponse, AxiosError<SetPlayKeyError>, Options<SetPlayKeyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setPlayKey({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The App Store Connect API key from the business's account (App Manager)
+ */
+export const setAppleKeyMutation = (options?: Partial<Options<SetAppleKeyData>>): UseMutationOptions<SetAppleKeyResponse, AxiosError<SetAppleKeyError>, Options<SetAppleKeyData>> => {
+    const mutationOptions: UseMutationOptions<SetAppleKeyResponse, AxiosError<SetAppleKeyError>, Options<SetAppleKeyData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setAppleKey({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The app's icon (1024x1024 PNG, no transparency) and Android's adaptive foreground
+ */
+export const setAppIconsMutation = (options?: Partial<Options<SetAppIconsData>>): UseMutationOptions<SetAppIconsResponse, AxiosError<SetAppIconsError>, Options<SetAppIconsData>> => {
+    const mutationOptions: UseMutationOptions<SetAppIconsResponse, AxiosError<SetAppIconsError>, Options<SetAppIconsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setAppIcons({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getAppIconQueryKey = (options: Options<GetAppIconData>) => createQueryKey('getAppIcon', options);
+
+/**
+ * The saved icon (icon) or foreground (foreground), as PNG
+ */
+export const getAppIconOptions = (options: Options<GetAppIconData>) => queryOptions<unknown, AxiosError<DefaultError>, unknown, ReturnType<typeof getAppIconQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getAppIcon({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getAppIconQueryKey(options)
+});
+
+/**
+ * Find or make the business's Android and iOS apps in the platform's Firebase project, give Android its certificates, and keep both config files
+ */
+export const linkFirebaseAppsMutation = (options?: Partial<Options<LinkFirebaseAppsData>>): UseMutationOptions<LinkFirebaseAppsResponse, AxiosError<LinkFirebaseAppsError>, Options<LinkFirebaseAppsData>> => {
+    const mutationOptions: UseMutationOptions<LinkFirebaseAppsResponse, AxiosError<LinkFirebaseAppsError>, Options<LinkFirebaseAppsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await linkFirebaseApps({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Try every key from the server (Apple finds the app, Play opens an edit) and check the files, icon and record: one line each
+ */
+export const checkTenantAppMutation = (options?: Partial<Options<CheckTenantAppData>>): UseMutationOptions<CheckTenantAppResponse, AxiosError<CheckTenantAppError>, Options<CheckTenantAppData>> => {
+    const mutationOptions: UseMutationOptions<CheckTenantAppResponse, AxiosError<CheckTenantAppError>, Options<CheckTenantAppData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await checkTenantApp({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getTenantAppKitQueryKey = (options: Options<GetTenantAppKitData>) => createQueryKey('getTenantAppKit', options);
+
+/**
+ * What the build signs and uploads the business's own app with, for one platform; each read is audited. tenants/fetch-kit.sh reads it as the app-builder client
+ */
+export const getTenantAppKitOptions = (options: Options<GetTenantAppKitData>) => queryOptions<GetTenantAppKitResponse, AxiosError<GetTenantAppKitError>, GetTenantAppKitResponse, ReturnType<typeof getTenantAppKitQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getTenantAppKit({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getTenantAppKitQueryKey(options)
+});
+
+/**
+ * Fill the empty slots of the business's app with what its GitHub environment held (carry-app-secrets.yml); never replaces one
+ */
+export const carryTenantAppKitMutation = (options?: Partial<Options<CarryTenantAppKitData>>): UseMutationOptions<CarryTenantAppKitResponse, AxiosError<CarryTenantAppKitError>, Options<CarryTenantAppKitData>> => {
+    const mutationOptions: UseMutationOptions<CarryTenantAppKitResponse, AxiosError<CarryTenantAppKitError>, Options<CarryTenantAppKitData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await carryTenantAppKit({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * The build's reading of a JKS upload key's fingerprints, taken only while none are known
+ */
+export const reportUploadKeyFingerprintsMutation = (options?: Partial<Options<ReportUploadKeyFingerprintsData>>): UseMutationOptions<unknown, AxiosError<ReportUploadKeyFingerprintsError>, Options<ReportUploadKeyFingerprintsData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ReportUploadKeyFingerprintsError>, Options<ReportUploadKeyFingerprintsData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await reportUploadKeyFingerprints({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
