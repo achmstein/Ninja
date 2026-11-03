@@ -7,8 +7,8 @@ platform :android do
     tenant = options[:tenant] || ENV['TENANT'] || 'chillax'
     app_root = File.expand_path('../..', Dir.pwd)
 
-    # Decode keystore from base64 in CI
-    if ENV['CI'] && ENV['ANDROID_KEYSTORE_BASE64']
+    # Decode keystore from base64 in CI, unless tenants/fetch-kit.sh put the business's own in place
+    if ENV['CI'] && ENV['ANDROID_KEYSTORE_BASE64'] && ENV['KIT_SIGNING'] != '1'
       sh("echo -n \"$ANDROID_KEYSTORE_BASE64\" | base64 --decode > \"#{app_root}/android/app/upload-keystore.jks\"")
       File.write("#{app_root}/android/key.properties", <<~PROPS)
         storePassword=#{ENV['ANDROID_STORE_PASSWORD']}

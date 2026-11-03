@@ -75,8 +75,10 @@ not stamp it.
 The native folders carry Chillax's app. A record with an `APP_ID` is stamped
 over them before the build (`src/client_app/tool/stamp_tenant.dart`, run by
 `mobile-deploy.yml`; on a dev machine `git checkout -- android ios` undoes
-it), and everything that signs and uploads comes from the GitHub environment
-`app-<slug>`. Once per business:
+it), and everything that signs and uploads comes from
+the business's record on the control plane, its **App** tab (`GET
+/tenants/{slug}/app-kit`, put in place by `tenants/fetch-kit.sh`). Nothing is
+set per business in GitHub. Once per business:
 
 1. **Its accounts.** The business enrols with Apple (an organisation needs a
    D-U-N-S number) and opens a Play Console account (an organisation one: a
@@ -89,31 +91,34 @@ it), and everything that signs and uploads comes from the GitHub environment
    the app on the first. In Play Console, the app with package
    `net.ninjapp.<business>`. Each store's listing, privacy and rating answers
    are filled in by hand the first time.
-3. **Its app in Firebase and Google.** Android and iOS apps with that id in
-   the platform's Firebase project, the one the notification service pushes
-   with, which must be the Google Cloud project of the shared Google sign-in
-   client (`GOOGLE_SERVER_CLIENT_ID`): Google's sign-in on Android also needs
-   an Android OAuth client there with the package and the SHA-1 of Play's app
-   signing key, and on iOS takes the iOS client the Firebase file names.
-4. **The record.** "Own customer app" set to the id on the control plane,
+3. **The record.** "Own customer app" set to the id on the control plane,
    and the Apple team ID beside it (the business's developer account, under
-   Membership); the build reads them from there. In this folder only
-   `tenants/<slug>/icon.png` (1024x1024, no transparency) and, for Android's
-   adaptive icon, `tenants/<slug>/icon-foreground.png` (the mark inside the
-   middle two thirds); without an icon the build keeps the cup.
-5. **The environment `app-<slug>`** in the repository's settings:
+   Membership); the build reads them from there. The business's page then
+   has an **App** tab.
+4. **The App tab**, one card each, every key kept encrypted and never shown
+   again:
 
-   | | Name | What |
-   |---|---|---|
-   | secret | `APP_STORE_CONNECT_API_KEY_ID`, `APP_STORE_CONNECT_API_ISSUER_ID`, `APP_STORE_CONNECT_API_PRIVATE_KEY` | An App Store Connect API key from its account (App Manager) |
-   | secret | `GOOGLE_SERVICE_INFO_PLIST` | Its iOS app's Firebase file, as it is |
-   | secret | `PLAY_STORE_SERVICE_ACCOUNT_JSON` | A service account with release rights on its Play account |
-   | secret | `ANDROID_KEYSTORE_BASE64`, `ANDROID_KEY_ALIAS`, `ANDROID_KEY_PASSWORD`, `ANDROID_STORE_PASSWORD` | Its own upload key (`keytool -genkey`), kept somewhere safe besides |
-   | secret | `GOOGLE_SERVICES_JSON` | Its Android app's Firebase file, as it is |
+   | Card | What |
+   |---|---|
+   | Android upload key | **Generate** for a new app (RSA 2048, 25 years, PKCS12), or **Import existing** for an app already on Play (its keystore, alias and passwords). Its SHA-256 joins the record's Android signing fingerprints by itself. A JKS key cannot be read by the server: its first build reports its fingerprints. Replacing a key asks first, since Play refuses another until it is reset in Play Console |
+   | Play Console access | The key file of a service account with release rights on its Play account |
+   | App Store Connect key | An API key from its account (App Manager): key ID, issuer ID and the .p8 |
+   | Icons | 1024x1024 PNG without transparency, and Android's adaptive foreground (the mark inside its middle two thirds); without an icon the build keeps the cup |
+   | Firebase | **Link in Firebase** finds or makes its Android and iOS apps in the platform's Firebase project (the service account on the Platform page's Firebase tab, Firebase Admin on the project, which must be the Google Cloud project of the shared Google sign-in client `GOOGLE_SERVER_CLIENT_ID`), gives Android the upload key's SHA-1 and SHA-256 and the record's fingerprints, and keeps both config files |
 
-   The repository itself holds what every business shares: none of it is set
-   per business. The stamp refuses a Firebase file that is not the
-   business's, and the stores refuse another account's keys.
+   **Check all** tries everything from the server: Apple finds the app with
+   the key, Play opens (and drops) an edit with the service account, the
+   Firebase files name the app, and the record has the team and Play's
+   fingerprint. Google's sign-in OAuth clients (an Android one with Play's
+   app signing SHA-1, the iOS one the Firebase file names) are not made by
+   the API: check them in Google Cloud the first time.
+5. **Kept before the App tab:** a business set up with a GitHub environment
+   `app-<slug>` is carried once with the workflow Carry App Secrets (tenant
+   `<slug>`): only empty slots on the record are filled, never one already
+   set. Its builds then read the record; the environment's secrets stay as a
+   fallback for anything the record lacks (the kit's items skip the steps
+   that would write them), until deleted by hand. Every read of the kit is
+   in the business's audit.
 6. **Its iOS signing, nothing to do:** every business's distribution
    certificate and App Store profiles live in one private repo,
    `achmstein/ninja-certificates` (the repository variable `MATCH_GIT_URL`),
@@ -138,12 +143,13 @@ it), and everything that signs and uploads comes from the GitHub environment
    `/.well-known/assetlinks.json` and `/.well-known/apple-app-site-association`
    on the business's customer host (`{slug}.{domain}` or its own domain) from
    its record, through the control plane (the `app_links` snippet in
-   `deploy/platform/Caddyfile`). iOS needs only the Apple team ID from step 4.
+   `deploy/platform/Caddyfile`). iOS needs only the Apple team ID from step 3.
    Android needs the SHA-256 fingerprints of the certificates the app is signed
    with: once the first bundle is in Play, App integrity in Play Console shows
    the app signing key's (what installs from the store carry) and the upload
-   key's (what the run's APK carries); paste both into "Android signing
-   fingerprints" on the record. Until then a printed QR code opens the web app.
+   key's (what the run's APK carries). The upload key's is on the record
+   already (step 4); paste the app signing key's into "Android signing
+   fingerprints", then press Link again on the App tab so Firebase has it too. Until then a printed QR code opens the web app.
    Android checks the file when the app is installed, so a phone that
    installed it before keeps opening the browser until the app is updated or
    reinstalled; iOS fetches it through Apple's CDN, which can take a day.
