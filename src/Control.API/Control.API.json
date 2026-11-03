@@ -4499,6 +4499,69 @@
         ]
       }
     },
+    "/api/control/tenants/{slug}/app/google-sign-in": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The iOS OAuth client Google sign-in comes back to, made in the platform sign-in client's Google Cloud project; the build writes it into the iOS Firebase file",
+        "operationId": "SetAppGoogleSignIn",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GoogleSignInRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/tenants/{slug}/app/firebase": {
       "post": {
         "tags": [
@@ -4637,69 +4700,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/AppKit"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "Not Found"
-          },
-          "400": {
-            "description": "Bad Request",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/ProblemDetails"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "Unauthorized"
-          },
-          "403": {
-            "description": "Forbidden"
-          }
-        },
-        "security": [
-          { }
-        ]
-      }
-    },
-    "/api/control/tenants/{slug}/app-kit/carry": {
-      "post": {
-        "tags": [
-          "Control"
-        ],
-        "summary": "Fill the empty slots of the business's app with what its GitHub environment held (carry-app-secrets.yml); never replaces one",
-        "operationId": "CarryTenantAppKit",
-        "parameters": [
-          {
-            "name": "slug",
-            "in": "path",
-            "required": true,
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CarryAppKitRequest"
-              }
-            }
-          },
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "description": "OK",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/CarryAppKitResult"
                 }
               }
             }
@@ -7077,99 +7077,6 @@
           }
         }
       },
-      "CarryAppKitRequest": {
-        "type": "object",
-        "properties": {
-          "keystore": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "keyAlias": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "keyPassword": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "storePassword": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "playServiceAccountJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ascKeyId": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ascIssuerId": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "ascPrivateKey": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "googleServicesJson": {
-            "type": [
-              "null",
-              "string"
-            ]
-          },
-          "googleServiceInfoPlist": {
-            "type": [
-              "null",
-              "string"
-            ]
-          }
-        }
-      },
-      "CarryAppKitResult": {
-        "required": [
-          "filled",
-          "kept",
-          "refused"
-        ],
-        "type": "object",
-        "properties": {
-          "filled": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "kept": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "refused": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        }
-      },
       "ContainerInfo": {
         "required": [
           "service",
@@ -7609,6 +7516,69 @@
           "confirm": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "GoogleSignInRequest": {
+        "required": [
+          "iosClientId"
+        ],
+        "type": "object",
+        "properties": {
+          "iosClientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The iOS OAuth client's id (….apps.googleusercontent.com); empty: the Firebase file's own"
+          },
+          "playSigningSha1": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The SHA-1 of Play's app signing key, from Play Console's App integrity page; Firebase is given it on the next link"
+          }
+        }
+      },
+      "GoogleSignInStatus": {
+        "required": [
+          "project",
+          "iosClientId",
+          "iosClientGiven",
+          "iosClientInProject",
+          "playSigningSha1"
+        ],
+        "type": "object",
+        "properties": {
+          "project": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Google Cloud project number of the platform's sign-in client; null: no Google sign-in on the platform"
+          },
+          "iosClientId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The iOS client the app signs in with: the one given here, else the iOS Firebase file's"
+          },
+          "iosClientGiven": {
+            "type": "boolean",
+            "description": "Whether that client was given here rather than read from the Firebase file"
+          },
+          "iosClientInProject": {
+            "type": "boolean",
+            "description": "Whether that client is in the sign-in client's project"
+          },
+          "playSigningSha1": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The SHA-1 of Play's app signing key, as given here"
           }
         }
       },
@@ -9454,6 +9424,7 @@
           "apple",
           "icons",
           "firebase",
+          "googleSignIn",
           "checks",
           "checkedAt"
         ],
@@ -9480,6 +9451,9 @@
           },
           "firebase": {
             "$ref": "#/components/schemas/AppFirebaseStatus"
+          },
+          "googleSignIn": {
+            "$ref": "#/components/schemas/GoogleSignInStatus"
           },
           "checks": {
             "type": "array",

@@ -151,73 +151,9 @@ public static class AppChecks
     }
 }
 
-/// <summary>A business's GitHub environment carried onto its record once: only what is empty is filled.</summary>
-public static partial class AppCarry
+/// <summary>Fingerprints as the build reports them.</summary>
+public static partial class Fingerprint
 {
-    public static CarryAppKitResult Apply(Tenant tenant, TenantApp app, CarryAppKitRequest request)
-    {
-        var filled = new List<string>();
-        var kept = new List<string>();
-        var refused = new List<string>();
-
-        void Fill(string name, string? given, Func<string?> current, Action<string> set, Func<string, string?>? check = null)
-        {
-            if (string.IsNullOrWhiteSpace(given)) return;
-            if (current() is not null)
-            {
-                kept.Add(name);
-                return;
-            }
-            if (check?.Invoke(given.Trim()) is { } why)
-            {
-                refused.Add($"{name}: {why}");
-                return;
-            }
-            set(given.Trim());
-            filled.Add(name);
-        }
-
-        // The keystore goes in as one: file, alias and passwords together, checked as the console checks it
-        if (!string.IsNullOrWhiteSpace(request.Keystore))
-        {
-            if (app.UploadKeystore is not null) kept.Add("keystore");
-            else
-            {
-                byte[]? bytes = null;
-                try { bytes = Convert.FromBase64String(request.Keystore.Trim()); } catch (FormatException) { }
-                var key = bytes is null ? null : UploadKeys.Import(bytes, request.KeyAlias ?? "", request.KeyPassword ?? request.StorePassword ?? "", request.StorePassword ?? "", out var error);
-                if (key is null) refused.Add("keystore: " + (bytes is null ? "not base64" : "the alias or passwords do not open it"));
-                else
-                {
-                    ControlApi.SetUploadKey(tenant, app, key);
-                    filled.Add("keystore");
-                }
-            }
-        }
-
-        Fill("play", request.PlayServiceAccountJson, () => app.PlayServiceAccountJson, v => app.PlayServiceAccountJson = v,
-            v => GoogleServiceAccount.Parse(v, out var e) is null ? e : null);
-        if (!string.IsNullOrWhiteSpace(request.AscPrivateKey))
-        {
-            if (app.AscPrivateKey is not null) kept.Add("apple");
-            else if (!StoreKeys.IsAscKey(request.AscPrivateKey) || string.IsNullOrWhiteSpace(request.AscKeyId) || string.IsNullOrWhiteSpace(request.AscIssuerId))
-                refused.Add("apple: the key id, issuer id and .p8 do not make an App Store Connect key");
-            else
-            {
-                app.AscKeyId = request.AscKeyId.Trim().ToUpperInvariant();
-                app.AscIssuerId = request.AscIssuerId.Trim().ToLowerInvariant();
-                app.AscPrivateKey = request.AscPrivateKey.Trim();
-                filled.Add("apple");
-            }
-        }
-        Fill("google-services.json", request.GoogleServicesJson, () => app.GoogleServicesJson, v => app.GoogleServicesJson = v,
-            v => v.Contains(tenant.AppId!, StringComparison.Ordinal) ? null : $"it does not name {tenant.AppId}");
-        Fill("GoogleService-Info.plist", request.GoogleServiceInfoPlist, () => app.GoogleServiceInfoPlist, v => app.GoogleServiceInfoPlist = v,
-            v => v.Contains($"<string>{tenant.AppId}</string>", StringComparison.Ordinal) ? null : $"it does not name {tenant.AppId}");
-
-        return new CarryAppKitResult(filled, kept, refused);
-    }
-
     /// <summary>A SHA-1 fingerprint as AA:BB:…, from keytool's or any hex; null when it is not one.</summary>
     public static string? NormalizeSha1(string? value)
     {
@@ -227,4 +163,61 @@ public static partial class AppCarry
 
     [GeneratedRegex("^[0-9A-F]{40}$")]
     private static partial Regex Sha1Hex();
+}
+
+/// <summary>
+/// Google sign-in in a business's own app. The app asks for the platform's web client
+/// (GOOGLE_SERVER_CLIENT_ID, the realm's Google provider), and Google only answers an app whose own
+/// OAuth clients are in that client's Google Cloud project: an Android client naming the app id and
+/// the SHA-1 of the key the installed app is signed with (Play's app signing key, and the upload key
+/// for a build installed by hand), and an iOS client naming the bundle id, whose id the app carries in
+/// its iOS Firebase file. Google gives no API to make either, so they are made by hand; this says
+/// where and checks what can be checked.
+/// </summary>
+public static partial class GoogleSignIn
+{
+    /// <summary>The Google Cloud project number an OAuth client id belongs to: its part before the dash.</summary>
+    public static string? Project(string? clientId)
+        => clientId is null ? null : ClientIdPattern().Match(clientId) is { Success: true } m ? m.Groups[1].Value : null;
+
+    public static bool IsClientId(string? clientId) => clientId is not null && ClientIdPattern().IsMatch(clientId);
+
+    /// <summary>The iOS client the Firebase file names, if any.</summary>
+    public static string? PlistClientId(string? plist)
+        => plist is null ? null : Regex.Match(plist, @"<key>CLIENT_ID</key>\s*<string>([^<]*)</string>") is { Success: true } m ? m.Groups[1].Value : null;
+
+    /// <summary>The iOS client the app signs in with: the one given on the App tab, else the Firebase file's.</summary>
+    public static string? IosClientId(TenantApp app) => app.GoogleIosClientId ?? PlistClientId(app.GoogleServiceInfoPlist);
+
+    /// <summary>The Firebase file with CLIENT_ID and REVERSED_CLIENT_ID set to the given client, replaced or added.</summary>
+    public static string WithClientId(string plist, string clientId)
+    {
+        var reversed = "com.googleusercontent.apps." + clientId[..^".apps.googleusercontent.com".Length];
+        foreach (var (key, value) in new[] { ("CLIENT_ID", clientId), ("REVERSED_CLIENT_ID", reversed) })
+        {
+            var existing = new Regex($@"(<key>{key}</key>\s*<string>)[^<]*(</string>)");
+            plist = existing.IsMatch(plist)
+                ? existing.Replace(plist, m => m.Groups[1].Value + value + m.Groups[2].Value, 1)
+                : new Regex(@"<dict>").Replace(plist, $"<dict>\n\t<key>{key}</key>\n\t<string>{value}</string>", 1);
+        }
+        return plist;
+    }
+
+    /// <summary>The check: the iOS client in the sign-in client's project; Android said, as it cannot be asked.</summary>
+    public static AppCheck? Check(Tenant tenant, TenantApp app, string? webClientId)
+    {
+        if (Project(webClientId) is not { } project) return null;
+        var ios = IosClientId(app);
+        var android = app.PlaySigningSha1 is null
+            ? $"Android: give the SHA-1 of Play's app signing key (Play Console, App integrity) on the App tab and link Firebase again, or the app as Play installs it cannot sign in with Google."
+            : $"Android: Play's app signing SHA-1 is given; Firebase must be linked since (in project {project}) for Google to know it.";
+        if (ios is null)
+            return new AppCheck("google-sign-in", false, $"No iOS client for Google sign-in: make an iOS OAuth client for {tenant.AppId} in Google Cloud project {project} and give its id on the App tab. {android}");
+        if (Project(ios) != project)
+            return new AppCheck("google-sign-in", false, $"The iOS client is in Google Cloud project {Project(ios)}, sign-in is in {project}: make an iOS OAuth client for {tenant.AppId} in {project} and give its id on the App tab. {android}");
+        return new AppCheck("google-sign-in", app.PlaySigningSha1 is not null, $"iOS signs in with project {project}'s client. {android}");
+    }
+
+    [GeneratedRegex(@"^(\d+)-[a-z0-9]+\.apps\.googleusercontent\.com$")]
+    private static partial Regex ClientIdPattern();
 }

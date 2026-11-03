@@ -46,6 +46,20 @@ public class TenantApp
 
     public string? FirebaseIosAppId { get; set; }
 
+    /// <summary>
+    /// The iOS OAuth client Google sign-in comes back to, made by hand in the Google Cloud project of the
+    /// platform's sign-in client (Google gives no API for it); the build writes it into the iOS Firebase
+    /// file as CLIENT_ID, which the app and tool/stamp_tenant.dart read. Null: the file's own.
+    /// </summary>
+    public string? GoogleIosClientId { get; set; }
+
+    /// <summary>
+    /// The SHA-1 of Play's app signing key, copied from Play Console (App integrity): Play's API gives only
+    /// its SHA-256. Firebase is given it with the upload key's, and so makes the Android OAuth client
+    /// Google sign-in needs for the app as Play installs it.
+    /// </summary>
+    public string? PlaySigningSha1 { get; set; }
+
     /// <summary>1024x1024 PNG, no transparency: the iOS icon and Android's legacy one.</summary>
     public byte[]? Icon { get; set; }
 

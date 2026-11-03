@@ -871,6 +871,9 @@ namespace Ninja.Control.API.Migrations
                         .HasMaxLength(100)
                         .HasColumnType("character varying(100)");
 
+                    b.Property<string>("GoogleIosClientId")
+                        .HasColumnType("text");
+
                     b.Property<string>("GoogleServiceInfoPlist")
                         .HasColumnType("text");
 
@@ -892,6 +895,9 @@ namespace Ninja.Control.API.Migrations
                         .HasColumnType("character varying(512)");
 
                     b.Property<string>("PlayServiceAccountJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("PlaySigningSha1")
                         .HasColumnType("text");
 
                     b.Property<string>("StorePassword")

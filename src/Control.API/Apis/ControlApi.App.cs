@@ -2,6 +2,7 @@ using System.ComponentModel;
 using System.Text.Json.Nodes;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
@@ -28,8 +29,20 @@ public sealed record AppFirebaseStatus(
     bool AndroidFile,
     bool IosFile);
 
-/// <param name="Item">android-key, play, apple, firebase-android, firebase-ios, icon, apple-team, app-links</param>
+/// <param name="Item">android-key, play, apple, firebase-android, firebase-ios, icon, apple-team, app-links, google-sign-in</param>
 public sealed record AppCheck(string Item, bool Ok, string Detail);
+
+/// <summary>Where the app's Google sign-in clients must be, and the iOS one it uses.</summary>
+public sealed record GoogleSignInStatus(
+    [property: Description("The Google Cloud project number of the platform's sign-in client; null: no Google sign-in on the platform")] string? Project,
+    [property: Description("The iOS client the app signs in with: the one given here, else the iOS Firebase file's")] string? IosClientId,
+    [property: Description("Whether that client was given here rather than read from the Firebase file")] bool IosClientGiven,
+    [property: Description("Whether that client is in the sign-in client's project")] bool IosClientInProject,
+    [property: Description("The SHA-1 of Play's app signing key, as given here")] string? PlaySigningSha1);
+
+public sealed record GoogleSignInRequest(
+    [property: Description("The iOS OAuth client's id (….apps.googleusercontent.com); empty: the Firebase file's own")] string? IosClientId,
+    [property: Description("The SHA-1 of Play's app signing key, from Play Console's App integrity page; Firebase is given it on the next link")] string? PlaySigningSha1 = null);
 
 /// <summary>What the business's own app holds, never a key's value.</summary>
 public sealed record TenantAppStatus(
@@ -39,6 +52,7 @@ public sealed record TenantAppStatus(
     AppleKeyStatus Apple,
     AppIconsStatus Icons,
     AppFirebaseStatus Firebase,
+    GoogleSignInStatus GoogleSignIn,
     IReadOnlyList<AppCheck> Checks,
     DateTime? CheckedAt);
 
@@ -78,21 +92,6 @@ public sealed record AppKit(
     string? Icon = null,
     string? IconForeground = null);
 
-/// <summary>What a business's GitHub environment held, carried once: only empty slots are filled.</summary>
-public sealed record CarryAppKitRequest(
-    string? Keystore = null,
-    string? KeyAlias = null,
-    string? KeyPassword = null,
-    string? StorePassword = null,
-    string? PlayServiceAccountJson = null,
-    string? AscKeyId = null,
-    string? AscIssuerId = null,
-    string? AscPrivateKey = null,
-    string? GoogleServicesJson = null,
-    string? GoogleServiceInfoPlist = null);
-
-public sealed record CarryAppKitResult(IReadOnlyList<string> Filled, IReadOnlyList<string> Kept, IReadOnlyList<string> Refused);
-
 public sealed record ReportFingerprintsRequest(string Sha1, string Sha256);
 
 /// <summary>
@@ -114,24 +113,24 @@ public static partial class ControlApi
         api.MapPut("/tenants/{slug}/app/icons", SetAppIcons).WithName("SetAppIcons").WithSummary("The app's logo, any size: its icon (1024x1024 on white) and Android's adaptive foreground are made from it").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/app/icons/from-brand", AppIconsFromBrand).WithName("SetAppIconsFromBrand").WithSummary("Make the app's icons from the logo on the business's brand, as the running stack serves it").RequireAuthorization("Platform");
         api.MapGet("/tenants/{slug}/app/icons/{which}", GetAppIcon).WithName("GetAppIcon").WithSummary("The saved icon (icon) or foreground (foreground), as PNG").RequireAuthorization("Platform");
+        api.MapPut("/tenants/{slug}/app/google-sign-in", SetGoogleSignIn).WithName("SetAppGoogleSignIn").WithSummary("The iOS OAuth client Google sign-in comes back to, made in the platform sign-in client's Google Cloud project; the build writes it into the iOS Firebase file").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/app/firebase", LinkFirebase).WithName("LinkFirebaseApps").WithSummary("Find or make the business's Android and iOS apps in the platform's Firebase project, give Android its certificates, and keep both config files").RequireAuthorization("Platform");
         api.MapPost("/tenants/{slug}/app/check", CheckApp).WithName("CheckTenantApp").WithSummary("Try every key from the server (Apple finds the app, Play opens an edit) and check the files, icon and record: one line each").RequireAuthorization("Platform");
 
         api.MapGet("/tenants/{slug}/app-kit", GetAppKit).WithName("GetTenantAppKit").WithSummary("What the build signs and uploads the business's own app with, for one platform; each read is audited. tenants/fetch-kit.sh reads it as the app-builder client").RequireAuthorization(Extensions.Extensions.AppBuildPolicy);
-        api.MapPost("/tenants/{slug}/app-kit/carry", CarryAppKit).WithName("CarryTenantAppKit").WithSummary("Fill the empty slots of the business's app with what its GitHub environment held (carry-app-secrets.yml); never replaces one").RequireAuthorization(Extensions.Extensions.AppBuildPolicy);
         api.MapPost("/tenants/{slug}/app-kit/report", ReportUploadKey).WithName("ReportUploadKeyFingerprints").WithSummary("The build's reading of a JKS upload key's fingerprints, taken only while none are known").RequireAuthorization(Extensions.Extensions.AppBuildPolicy);
     }
 
-    public static async Task<Results<Ok<TenantAppStatus>, NotFound>> GetApp(ControlContext context, string slug, CancellationToken ct)
+    public static async Task<Results<Ok<TenantAppStatus>, NotFound>> GetApp(ControlContext context, IOptions<PlatformOptions> options, string slug, CancellationToken ct)
     {
         var tenant = await context.Tenants.AsNoTracking().SingleOrDefaultAsync(t => t.Slug == slug, ct);
         if (tenant is null) return TypedResults.NotFound();
         var app = await context.TenantApps.AsNoTracking().SingleOrDefaultAsync(a => a.TenantId == tenant.Id, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> ImportAndroidKey(
-        ControlContext context, IAuditWriter audit, string slug, ImportAndroidKeyRequest request, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, string slug, ImportAndroidKeyRequest request, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -154,11 +153,11 @@ public static partial class ControlApi
         SetUploadKey(tenant, app, key);
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.android-key", slug, new { how = "imported", replaced, format = key.Sha256 is null ? "jks" : "pkcs12" }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> GenerateAndroidKey(
-        ControlContext context, IAuditWriter audit, string slug, GenerateAndroidKeyRequest? request, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, string slug, GenerateAndroidKeyRequest? request, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -170,11 +169,11 @@ public static partial class ControlApi
         SetUploadKey(tenant, app, UploadKeys.Generate(tenant.NameEn ?? tenant.NameAr ?? tenant.Slug));
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.android-key", slug, new { how = "generated", replaced }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> SetPlayKey(
-        ControlContext context, IAuditWriter audit, string slug, PlayKeyRequest request, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, string slug, PlayKeyRequest request, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -185,11 +184,11 @@ public static partial class ControlApi
         app.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.play", slug, new { account.ClientEmail }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> SetAppleKey(
-        ControlContext context, IAuditWriter audit, string slug, AppleKeyRequest request, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, string slug, AppleKeyRequest request, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -209,11 +208,11 @@ public static partial class ControlApi
         app.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.apple", slug, new { keyId, issuer }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> SetAppIcons(
-        ControlContext context, IAuditWriter audit, string slug, AppIconsRequest request, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, string slug, AppIconsRequest request, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -245,16 +244,16 @@ public static partial class ControlApi
             app.IconForeground = null;
             changed.Add("foreground cleared");
         }
-        if (changed.Count == 0) return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        if (changed.Count == 0) return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
 
         app.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.icons", slug, new { changed }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> AppIconsFromBrand(
-        ControlContext context, IAuditWriter audit, IStackProxy stack, string slug, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, IStackProxy stack, string slug, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -262,7 +261,7 @@ public static partial class ControlApi
         if (await IconsFromBrandAsync(stack, tenant, app, ct) is { } error) return Problem(error);
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.icons", slug, new { changed = new[] { "icon and foreground from the brand logo" } }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     /// <summary>
@@ -300,8 +299,30 @@ public static partial class ControlApi
         return bytes is null ? TypedResults.NotFound() : TypedResults.File(bytes, "image/png");
     }
 
+    public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> SetGoogleSignIn(
+        ControlContext context, IAuditWriter audit, IOptions<PlatformOptions> options, string slug, GoogleSignInRequest request, CancellationToken ct)
+    {
+        if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
+        var (tenant, app) = found;
+        if (Refuse(tenant) is { } refused) return refused;
+        var id = string.IsNullOrWhiteSpace(request.IosClientId) ? null : request.IosClientId.Trim();
+        if (id is not null && !GoogleSignIn.IsClientId(id))
+            return Problem("An OAuth client id is the project number, a dash and the client's code, ending .apps.googleusercontent.com.");
+        if (id is not null && GoogleSignIn.Project(options.Value.Social.Google.ClientId) is { } project && GoogleSignIn.Project(id) != project)
+            return Problem($"That client is in Google Cloud project {GoogleSignIn.Project(id)}; sign-in is in project {project}, where the iOS client must be made.");
+        var playSha1 = string.IsNullOrWhiteSpace(request.PlaySigningSha1) ? null : Fingerprint.NormalizeSha1(request.PlaySigningSha1);
+        if (!string.IsNullOrWhiteSpace(request.PlaySigningSha1) && playSha1 is null)
+            return Problem("The SHA-1 is 20 bytes in hex, as Play Console's App integrity page shows it.");
+        app.GoogleIosClientId = id;
+        app.PlaySigningSha1 = playSha1;
+        app.UpdatedAt = DateTime.UtcNow;
+        await context.SaveChangesAsync(ct);
+        await audit.WriteAsync("tenant.app.google-sign-in", slug, new { ios = id, playSha1 }, ct);
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
+    }
+
     public static async Task<Results<Ok<FirebaseLinkResponse>, NotFound, BadRequest<ProblemDetails>>> LinkFirebase(
-        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, string slug, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, IHttpClientFactory clients, string slug, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -312,7 +333,7 @@ public static partial class ControlApi
         // Android's certificates: the upload key's, and whatever else the record lists (Play's app signing key)
         var sha256 = AppLinks.Fingerprints(tenant.AndroidCertFingerprints).ToList();
         if (app.UploadKeySha256 is { } upload && !sha256.Contains(upload)) sha256.Add(upload);
-        var sha1 = app.UploadKeySha1 is { } s ? new[] { s } : [];
+        var sha1 = Sha1sFor(app);
 
         FirebaseLinkResult result;
         try
@@ -331,11 +352,11 @@ public static partial class ControlApi
         app.UpdatedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.firebase", slug, new { project = firebase.Project, android = app.FirebaseAndroidAppId, ios = app.FirebaseIosAppId, result.Done }, ct);
-        return TypedResults.Ok(new FirebaseLinkResponse(await AppStatusAsync(context, tenant, app, ct), result.Done));
+        return TypedResults.Ok(new FirebaseLinkResponse(await AppStatusAsync(context, tenant, app, ct, options.Value), result.Done));
     }
 
     public static async Task<Results<Ok<TenantAppStatus>, NotFound, BadRequest<ProblemDetails>>> CheckApp(
-        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, string slug, CancellationToken ct)
+        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, IOptions<PlatformOptions> options, string slug, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -356,12 +377,13 @@ public static partial class ControlApi
             appName = await StoreKeys.FindAscAppAsync(http, app.AscKeyId, app.AscIssuerId, app.AscPrivateKey, tenant.AppId!, ct);
             return null;
         }, () => $"App Store Connect has {appName}."));
+        if (GoogleSignIn.Check(tenant, app, options.Value.Social.Google.ClientId) is { } google) checks.Add(google);
 
         app.Checks = System.Text.Json.JsonSerializer.Serialize(checks, System.Text.Json.JsonSerializerOptions.Web);
         app.CheckedAt = DateTime.UtcNow;
         await context.SaveChangesAsync(ct);
         await audit.WriteAsync("tenant.app.checked", slug, new { failed = checks.Where(c => !c.Ok).Select(c => c.Item) }, ct);
-        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct));
+        return TypedResults.Ok(await AppStatusAsync(context, tenant, app, ct, options.Value));
     }
 
     public static async Task<Results<Ok<AppKit>, NotFound, BadRequest<ProblemDetails>>> GetAppKit(
@@ -379,23 +401,6 @@ public static partial class ControlApi
         return TypedResults.Ok(kit);
     }
 
-    public static async Task<Results<Ok<CarryAppKitResult>, NotFound, BadRequest<ProblemDetails>>> CarryAppKit(
-        ControlContext context, IAuditWriter audit, string slug, CarryAppKitRequest request, CancellationToken ct)
-    {
-        if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
-        var (tenant, app) = found;
-        if (Refuse(tenant) is { } refused) return refused;
-
-        var result = AppCarry.Apply(tenant, app, request);
-        if (result.Filled.Count > 0)
-        {
-            app.UpdatedAt = DateTime.UtcNow;
-            await context.SaveChangesAsync(ct);
-        }
-        await audit.WriteAsync("tenant.app.carried", slug, result, ct);
-        return TypedResults.Ok(result);
-    }
-
     public static async Task<Results<Ok, NotFound, BadRequest<ProblemDetails>, Conflict<ProblemDetails>>> ReportUploadKey(
         ControlContext context, IAuditWriter audit, string slug, ReportFingerprintsRequest request, CancellationToken ct)
     {
@@ -404,7 +409,7 @@ public static partial class ControlApi
         if (app.UploadKeystore is null) return Problem("The business has no upload key here.");
         var sha256 = AppLinks.NormalizeFingerprints(request.Sha256, out var error);
         if (sha256 is null || sha256.Contains(',')) return Problem(error ?? "One SHA-256 fingerprint.");
-        var sha1 = AppCarry.NormalizeSha1(request.Sha1);
+        var sha1 = Fingerprint.NormalizeSha1(request.Sha1);
         if (sha1 is null) return Problem("The SHA-1 is 20 bytes in hex, as keytool -list -v shows it.");
         // Taken once: a key whose fingerprints are known is not re-described by a build
         if (app.UploadKeySha256 is not null)
@@ -434,7 +439,8 @@ public static partial class ControlApi
                 Icon: Base64(app.Icon),
                 IconForeground: Base64(app.IconForeground))
             : new AppKit(
-                GoogleServiceInfoPlist: app.GoogleServiceInfoPlist,
+                // The iOS client Google sign-in comes back to, when one was given for the sign-in client's project
+                GoogleServiceInfoPlist: app.GoogleServiceInfoPlist is { } plist && app.GoogleIosClientId is { } ios ? GoogleSignIn.WithClientId(plist, ios) : app.GoogleServiceInfoPlist,
                 AscKeyId: app.AscKeyId,
                 AscIssuerId: app.AscIssuerId,
                 AscPrivateKey: app.AscPrivateKey,
@@ -453,6 +459,9 @@ public static partial class ControlApi
         app.UploadKeySha256 = key.Sha256;
         app.UpdatedAt = DateTime.UtcNow;
     }
+
+    /// <summary>The SHA-1s Firebase is given for Android: the upload key's and Play's app signing key's.</summary>
+    internal static string[] Sha1sFor(TenantApp app) => new[] { app.UploadKeySha1, app.PlaySigningSha1 }.OfType<string>().Distinct().ToArray();
 
     internal static string? MergeFingerprints(string? stored, string? add, string? remove)
     {
@@ -517,8 +526,10 @@ public static partial class ControlApi
             : null;
     }
 
-    private static async Task<TenantAppStatus> AppStatusAsync(ControlContext context, Tenant tenant, TenantApp? app, CancellationToken ct)
+    private static async Task<TenantAppStatus> AppStatusAsync(ControlContext context, Tenant tenant, TenantApp? app, CancellationToken ct, PlatformOptions platform)
     {
+        var project = GoogleSignIn.Project(platform.Social.Google.ClientId);
+        var ios = app is null ? null : GoogleSignIn.IosClientId(app);
         var platformReady = await context.FirebaseSettings.AsNoTracking().AnyAsync(f => f.Id == FirebaseSettings.SingletonId && f.ServiceAccountJson != null, ct);
         var checks = app?.Checks is { } json ? System.Text.Json.JsonSerializer.Deserialize<List<AppCheck>>(json, System.Text.Json.JsonSerializerOptions.Web) ?? [] : [];
         return new TenantAppStatus(
@@ -530,6 +541,7 @@ public static partial class ControlApi
             new AppleKeyStatus(app?.AscPrivateKey is not null, app?.AscKeyId, app?.AscIssuerId),
             new AppIconsStatus(app?.Icon is not null, app?.IconForeground is not null),
             new AppFirebaseStatus(platformReady, app?.FirebaseAndroidAppId, app?.FirebaseIosAppId, app?.GoogleServicesJson is not null, app?.GoogleServiceInfoPlist is not null),
+            new GoogleSignInStatus(project, ios, app?.GoogleIosClientId is not null, ios is not null && GoogleSignIn.Project(ios) == project, app?.PlaySigningSha1),
             checks,
             app?.CheckedAt);
     }

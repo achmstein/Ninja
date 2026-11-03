@@ -19,6 +19,48 @@ public sealed class OwnAppTests
 {
     private static Tenant OwnApp() => new() { Slug = "blue", OwnerEmail = "owner@blue.test", NameEn = "Blue Café", AppId = "net.ninjapp.blue", AppleTeamId = "ABCDE12345" };
 
+    private const string Web = "658573607094-web.apps.googleusercontent.com";
+
+    [TestMethod]
+    public void The_given_ios_client_replaces_the_firebase_files_and_is_added_where_it_has_none()
+    {
+        const string withOne = "<plist><dict>\n\t<key>CLIENT_ID</key>\n\t<string>111-old.apps.googleusercontent.com</string>\n\t<key>REVERSED_CLIENT_ID</key>\n\t<string>com.googleusercontent.apps.111-old</string>\n\t<key>BUNDLE_ID</key>\n\t<string>net.ninjapp.blue</string>\n</dict></plist>";
+        var replaced = GoogleSignIn.WithClientId(withOne, "658573607094-ios1.apps.googleusercontent.com");
+        Assert.AreEqual("658573607094-ios1.apps.googleusercontent.com", GoogleSignIn.PlistClientId(replaced));
+        Assert.Contains("<string>com.googleusercontent.apps.658573607094-ios1</string>", replaced);
+        Assert.DoesNotContain("111-old", replaced);
+
+        var added = GoogleSignIn.WithClientId("<plist><dict>\n\t<key>BUNDLE_ID</key>\n\t<string>net.ninjapp.blue</string>\n</dict></plist>", "658573607094-ios1.apps.googleusercontent.com");
+        Assert.AreEqual("658573607094-ios1.apps.googleusercontent.com", GoogleSignIn.PlistClientId(added));
+        Assert.Contains("<string>com.googleusercontent.apps.658573607094-ios1</string>", added);
+
+        var app = new TenantApp { GoogleServiceInfoPlist = withOne, GoogleIosClientId = "658573607094-ios1.apps.googleusercontent.com" };
+        Assert.AreEqual("658573607094-ios1.apps.googleusercontent.com", GoogleSignIn.PlistClientId(ControlApi.Kit(app, "ios").GoogleServiceInfoPlist));
+    }
+
+    [TestMethod]
+    public void Google_sign_in_is_ready_only_with_the_ios_client_in_the_sign_in_project_and_plays_sha1()
+    {
+        var tenant = OwnApp();
+        Assert.IsNull(GoogleSignIn.Check(tenant, new TenantApp(), null), "no Google sign-in on the platform, nothing to check");
+        Assert.IsFalse(GoogleSignIn.Check(tenant, new TenantApp(), Web)!.Ok, "no iOS client");
+        var other = new TenantApp { GoogleIosClientId = "111-ios.apps.googleusercontent.com", PlaySigningSha1 = "AA" };
+        StringAssert.Contains(GoogleSignIn.Check(tenant, other, Web)!.Detail, "111");
+        Assert.IsFalse(GoogleSignIn.Check(tenant, new TenantApp { GoogleIosClientId = "658573607094-ios.apps.googleusercontent.com" }, Web)!.Ok, "no Play SHA-1");
+        Assert.IsTrue(GoogleSignIn.Check(tenant, new TenantApp { GoogleIosClientId = "658573607094-ios.apps.googleusercontent.com", PlaySigningSha1 = "AA" }, Web)!.Ok);
+        CollectionAssert.AreEqual(new[] { "AA", "BB" }, ControlApi.Sha1sFor(new TenantApp { UploadKeySha1 = "AA", PlaySigningSha1 = "BB" }));
+    }
+
+    [TestMethod]
+    public void Plays_certificate_hash_reads_as_hex_or_base64()
+    {
+        var bytes = Enumerable.Range(0, 32).Select(i => (byte)i).ToArray();
+        var expected = string.Join(':', bytes.Select(b => b.ToString("X2")));
+        Assert.AreEqual(expected, StoreKeys.Sha256Of(System.Convert.ToHexString(bytes).ToLowerInvariant()));
+        Assert.AreEqual(expected, StoreKeys.Sha256Of(System.Convert.ToBase64String(bytes).TrimEnd('=').Replace('+', '-').Replace('/', '_')));
+        Assert.IsNull(StoreKeys.Sha256Of("nope"));
+    }
+
     [TestMethod]
     public void A_generated_upload_key_opens_with_its_password_and_names_its_alias()
     {
@@ -106,37 +148,6 @@ public sealed class OwnAppTests
         ControlApi.SetUploadKey(tenant, app, second);
         CollectionAssert.AreEqual(new[] { play, second.Sha256 }, AppLinks.Fingerprints(tenant.AndroidCertFingerprints));
         Assert.AreEqual(second.Sha256, app.UploadKeySha256);
-    }
-
-    [TestMethod]
-    public void A_carry_fills_what_is_empty_and_never_replaces_what_is_set()
-    {
-        var tenant = OwnApp();
-        var key = UploadKeys.Generate("Blue");
-        var app = new TenantApp { TenantId = tenant.Id, PlayServiceAccountJson = "{\"saved\":true}" };
-        using var ec = ECDsa.Create(ECCurve.NamedCurves.nistP256);
-
-        var result = AppCarry.Apply(tenant, app, new CarryAppKitRequest(
-            Keystore: System.Convert.ToBase64String(key.Keystore),
-            KeyAlias: "upload",
-            KeyPassword: key.KeyPassword,
-            StorePassword: key.StorePassword,
-            PlayServiceAccountJson: ServiceAccountJson(RSA.Create(2048)),
-            AscKeyId: "KEY1234567",
-            AscIssuerId: Guid.NewGuid().ToString(),
-            AscPrivateKey: ec.ExportPkcs8PrivateKeyPem(),
-            GoogleServicesJson: "{\"package_name\": \"com.someone.else\"}"));
-
-        CollectionAssert.AreEquivalent(new[] { "keystore", "apple" }, result.Filled.ToArray());
-        CollectionAssert.AreEqual(new[] { "play" }, result.Kept.ToArray());
-        Assert.HasCount(1, result.Refused, "another app's Firebase file is refused");
-        Assert.AreEqual("{\"saved\":true}", app.PlayServiceAccountJson);
-        Assert.AreEqual(key.Sha256, app.UploadKeySha256);
-        Assert.Contains(key.Sha256!, tenant.AndroidCertFingerprints!);
-
-        var again = AppCarry.Apply(tenant, app, new CarryAppKitRequest(Keystore: System.Convert.ToBase64String(UploadKeys.Generate("Other").Keystore), KeyAlias: "upload", StorePassword: "x"));
-        CollectionAssert.AreEqual(new[] { "keystore" }, again.Kept.ToArray());
-        Assert.AreEqual(key.Sha256, app.UploadKeySha256, "a carried key is never replaced by a second carry");
     }
 
     [TestMethod]

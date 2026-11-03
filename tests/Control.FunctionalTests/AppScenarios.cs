@@ -56,14 +56,6 @@ public sealed class AppScenarios
         var ios = await build.GetFromJsonAsync<AppKit>($"/api/control/tenants/{slug}/app-kit?platform=ios", Json);
         Assert.IsNull(ios!.Keystore, "the iOS build is not handed the Android key");
 
-        // A carry fills what is empty and leaves the key the console made
-        using (var carry = await build.PostAsJsonAsync($"/api/control/tenants/{slug}/app-kit/carry", new CarryAppKitRequest(Keystore: "AAAA", KeyAlias: "upload", StorePassword: "x")))
-        {
-            var result = (await carry.Content.ReadFromJsonAsync<CarryAppKitResult>(Json))!;
-            CollectionAssert.AreEqual(new[] { "keystore" }, result.Kept.ToArray());
-            Assert.IsEmpty(result.Filled);
-        }
-
         // The build's login reaches the kit and nothing of the console's
         using (var status = await build.GetAsync($"/api/control/tenants/{slug}/app"))
             Assert.AreEqual(HttpStatusCode.Forbidden, status.StatusCode);

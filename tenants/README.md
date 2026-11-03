@@ -116,16 +116,15 @@ set per business in GitHub. Once per business:
    key. **Check all** tries everything from the server: Apple finds the app with
    the key, Play opens (and drops) an edit with the service account, the
    Firebase files name the app, and the record has the team and Play's
-   fingerprint. Google's sign-in OAuth clients (an Android one with Play's
-   app signing SHA-1, the iOS one the Firebase file names) are not made by
-   the API: check them in Google Cloud the first time.
-5. **Kept before the App tab:** a business set up with a GitHub environment
-   `app-<slug>` is carried once with the workflow Carry App Secrets (tenant
-   `<slug>`): only empty slots on the record are filled, never one already
-   set. Its builds then read the record; the environment's secrets stay as a
-   fallback for anything the record lacks (the kit's items skip the steps
-   that would write them), until deleted by hand. Every read of the kit is
-   in the business's audit.
+   fingerprint. Set up also reads Play's app signing key's SHA-256 off the
+   newest release and adds it to the record's fingerprints.
+5. **Google sign-in** (its card on the App tab): Google answers the app only
+   when the sign-in client's Google Cloud project knows it. Paste the SHA-1
+   of Play's app signing key (Play Console › App integrity; Play's API gives
+   only the SHA-256) and press Set up: Firebase is given it and makes the
+   Android OAuth client. For iOS make an iOS OAuth client for the bundle ID
+   in that project and paste its client ID: the build writes it into the
+   iOS Firebase file. Every read of the kit is in the business's audit.
 6. **Its iOS signing, nothing to do:** every business's distribution
    certificate and App Store profiles live in one private repo,
    `achmstein/ninja-certificates` (the repository variable `MATCH_GIT_URL`),

@@ -354,25 +354,6 @@ export type CapacityResponse = {
     connectionsMax: number | string;
 };
 
-export type CarryAppKitRequest = {
-    keystore?: null | string;
-    keyAlias?: null | string;
-    keyPassword?: null | string;
-    storePassword?: null | string;
-    playServiceAccountJson?: null | string;
-    ascKeyId?: null | string;
-    ascIssuerId?: null | string;
-    ascPrivateKey?: null | string;
-    googleServicesJson?: null | string;
-    googleServiceInfoPlist?: null | string;
-};
-
-export type CarryAppKitResult = {
-    filled: Array<string>;
-    kept: Array<string>;
-    refused: Array<string>;
-};
-
 export type ContainerInfo = {
     service: string;
     name: string;
@@ -482,6 +463,40 @@ export type FleetUpgradeResponse = {
 
 export type GenerateAndroidKeyRequest = {
     confirm?: boolean;
+};
+
+export type GoogleSignInRequest = {
+    /**
+     * The iOS OAuth client's id (….apps.googleusercontent.com); empty: the Firebase file's own
+     */
+    iosClientId: null | string;
+    /**
+     * The SHA-1 of Play's app signing key, from Play Console's App integrity page; Firebase is given it on the next link
+     */
+    playSigningSha1?: null | string;
+};
+
+export type GoogleSignInStatus = {
+    /**
+     * The Google Cloud project number of the platform's sign-in client; null: no Google sign-in on the platform
+     */
+    project: null | string;
+    /**
+     * The iOS client the app signs in with: the one given here, else the iOS Firebase file's
+     */
+    iosClientId: null | string;
+    /**
+     * Whether that client was given here rather than read from the Firebase file
+     */
+    iosClientGiven: boolean;
+    /**
+     * Whether that client is in the sign-in client's project
+     */
+    iosClientInProject: boolean;
+    /**
+     * The SHA-1 of Play's app signing key, as given here
+     */
+    playSigningSha1: null | string;
 };
 
 export type HttpValidationProblemDetails = {
@@ -959,6 +974,7 @@ export type TenantAppStatus = {
     apple: AppleKeyStatus;
     icons: AppIconsStatus;
     firebase: AppFirebaseStatus;
+    googleSignIn: GoogleSignInStatus;
     checks: Array<AppCheck>;
     checkedAt: null | string;
 };
@@ -4440,6 +4456,45 @@ export type GetAppIconErrors = {
     404: unknown;
 };
 
+export type SetAppGoogleSignInData = {
+    body: GoogleSignInRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/google-sign-in';
+};
+
+export type SetAppGoogleSignInErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetAppGoogleSignInError = SetAppGoogleSignInErrors[keyof SetAppGoogleSignInErrors];
+
+export type SetAppGoogleSignInResponses = {
+    /**
+     * OK
+     */
+    200: TenantAppStatus;
+};
+
+export type SetAppGoogleSignInResponse = SetAppGoogleSignInResponses[keyof SetAppGoogleSignInResponses];
+
 export type LinkFirebaseAppsData = {
     body?: never;
     path: {
@@ -4558,45 +4613,6 @@ export type GetTenantAppKitResponses = {
 };
 
 export type GetTenantAppKitResponse = GetTenantAppKitResponses[keyof GetTenantAppKitResponses];
-
-export type CarryTenantAppKitData = {
-    body: CarryAppKitRequest;
-    path: {
-        slug: string;
-    };
-    query?: never;
-    url: '/api/control/tenants/{slug}/app-kit/carry';
-};
-
-export type CarryTenantAppKitErrors = {
-    /**
-     * Bad Request
-     */
-    400: ProblemDetails;
-    /**
-     * Unauthorized
-     */
-    401: unknown;
-    /**
-     * Forbidden
-     */
-    403: unknown;
-    /**
-     * Not Found
-     */
-    404: unknown;
-};
-
-export type CarryTenantAppKitError = CarryTenantAppKitErrors[keyof CarryTenantAppKitErrors];
-
-export type CarryTenantAppKitResponses = {
-    /**
-     * OK
-     */
-    200: CarryAppKitResult;
-};
-
-export type CarryTenantAppKitResponse = CarryTenantAppKitResponses[keyof CarryTenantAppKitResponses];
 
 export type ReportUploadKeyFingerprintsData = {
     body: ReportFingerprintsRequest;

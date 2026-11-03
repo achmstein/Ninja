@@ -12,6 +12,7 @@ import {
   setAppIconsFromBrandMutation,
   setAppIconsMutation,
   setAppleKeyMutation,
+  setAppGoogleSignInMutation,
   setPlayKeyMutation,
   setUpTenantAppMutation,
 } from '@/api/control/@tanstack/react-query.gen'
@@ -51,6 +52,7 @@ const CHECK_LABELS: Record<string, TranslationKey> = {
   icon: 'appIcons',
   'apple-team': 'appleTeamId',
   'app-links': 'androidFingerprints',
+  'google-sign-in': 'appGoogleSignIn',
 }
 
 /**
@@ -135,43 +137,47 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
         )}
       </Card>
 
-      <div className='grid items-start gap-4 lg:grid-cols-2'>
-        <AppBuildCard slug={tenant.slug} />
-        <div className='lg:col-span-2'>
-          <OwnAppRecord
-            key={`${tenant.appId}-${tenant.appleTeamId}-${(tenant.androidCertFingerprints ?? []).join(',')}`}
-            tenant={tenant}
-            uploadSha256={app.androidKey.sha256}
-          />
-        </div>
-        <AndroidKeyCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
-        <PlayCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
-        <AppleCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
-        <IconsCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
+      <AppBuildCard slug={tenant.slug} />
+      <OwnAppRecord
+        key={`${tenant.appId}-${tenant.appleTeamId}-${(tenant.androidCertFingerprints ?? []).join(',')}`}
+        tenant={tenant}
+        uploadSha256={app.androidKey.sha256}
+      />
 
-        <Item
-          title={t('appFirebase')}
-          set={app.firebase.androidFile && app.firebase.iosFile}
-          hint={app.firebase.platformReady ? t('appFirebaseHint') : t('appFirebaseNoAccount')}
-        >
-          {(app.firebase.androidAppId || app.firebase.iosAppId) && (
-            <dl className='grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs'>
-              <dt className='text-muted-foreground'>Android</dt>
-              <dd className='truncate font-mono' dir='ltr'>{app.firebase.androidAppId ?? '—'}</dd>
-              <dt className='text-muted-foreground'>iOS</dt>
-              <dd className='truncate font-mono' dir='ltr'>{app.firebase.iosAppId ?? '—'}</dd>
-            </dl>
-          )}
-          <Button
-            size='sm'
-            variant={app.firebase.androidFile ? 'outline' : 'default'}
-            disabled={!app.firebase.platformReady || firebase.isPending}
-            onClick={() => firebase.mutate({ path })}
+      {/* Two columns that stack each on its own, so a short card never leaves a gap beside a tall one */}
+      <div className='grid items-start gap-4 lg:grid-cols-2'>
+        <div className='flex flex-col gap-4'>
+          <AndroidKeyCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
+          <AppleCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
+          <Item
+            title={t('appFirebase')}
+            set={app.firebase.androidFile && app.firebase.iosFile}
+            hint={app.firebase.platformReady ? t('appFirebaseHint') : t('appFirebaseNoAccount')}
           >
-            {firebase.isPending && <Spinner />}
-            {app.firebase.androidFile ? t('appFirebaseAgain') : t('appFirebaseLink')}
-          </Button>
-        </Item>
+            {(app.firebase.androidAppId || app.firebase.iosAppId) && (
+              <dl className='grid grid-cols-[auto_1fr] gap-x-3 gap-y-1 text-xs'>
+                <dt className='text-muted-foreground'>Android</dt>
+                <dd className='truncate font-mono' dir='ltr'>{app.firebase.androidAppId ?? '—'}</dd>
+                <dt className='text-muted-foreground'>iOS</dt>
+                <dd className='truncate font-mono' dir='ltr'>{app.firebase.iosAppId ?? '—'}</dd>
+              </dl>
+            )}
+            <Button
+              size='sm'
+              variant={app.firebase.androidFile ? 'outline' : 'default'}
+              disabled={!app.firebase.platformReady || firebase.isPending}
+              onClick={() => firebase.mutate({ path })}
+            >
+              {firebase.isPending && <Spinner />}
+              {app.firebase.androidFile ? t('appFirebaseAgain') : t('appFirebaseLink')}
+            </Button>
+          </Item>
+        </div>
+        <div className='flex flex-col gap-4'>
+          <PlayCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
+          <IconsCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
+          {app.googleSignIn.project && <GoogleSignInCard key={`${app.googleSignIn.iosClientId}-${app.googleSignIn.playSigningSha1}`} tenant={tenant} app={app} onSaved={onSaved} onError={onError} />}
+        </div>
       </div>
     </div>
   )
@@ -274,6 +280,43 @@ function AndroidKeyCard({ tenant, app, onSaved, onError }: CardProps) {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+    </Item>
+  )
+}
+
+/**
+ * Google sign-in in the app: Google answers only an app whose own clients are
+ * in the platform sign-in client's Google Cloud project. Android's is made by
+ * Firebase once it has the SHA-1 of the key Play signs with; iOS's is made by
+ * hand there and its id given here.
+ */
+function GoogleSignInCard({ tenant, app, onSaved, onError }: CardProps) {
+  const t = useT()
+  const google = app.googleSignIn
+  const [ios, setIos] = useState(google.iosClientGiven ? (google.iosClientId ?? '') : '')
+  const [playSha1, setPlaySha1] = useState(google.playSigningSha1 ?? '')
+  const save = useMutation({ ...setAppGoogleSignInMutation(), onSuccess: (s) => onSaved(s, t('appGoogleSignInSaved')), onError })
+  const dirty = ios.trim() !== (google.iosClientGiven ? (google.iosClientId ?? '') : '') || playSha1.trim() !== (google.playSigningSha1 ?? '')
+  return (
+    <Item title={t('appGoogleSignIn')} set={google.iosClientInProject && !!google.playSigningSha1} hint={t('appGoogleSignInHint', { project: google.project ?? '' })}>
+      <div className='space-y-1'>
+        <Field id='google-play-sha1' label={t('appPlaySigningSha1')} value={playSha1} onChange={setPlaySha1} placeholder='AA:BB:…' />
+        <p className='text-muted-foreground text-xs'>{t('appPlaySigningSha1Hint')}</p>
+      </div>
+      <div className='space-y-1'>
+        <Field id='google-ios' label={t('appGoogleIosClient')} value={ios} onChange={setIos} placeholder={google.iosClientId ?? `${google.project}-….apps.googleusercontent.com`} />
+        <p className={cn('text-xs', google.iosClientInProject ? 'text-muted-foreground' : 'text-destructive')}>
+          {google.iosClientInProject ? t('appGoogleIosClientOk') : t('appGoogleIosClientHint', { project: google.project ?? '', bundle: tenant.appId ?? '' })}
+        </p>
+      </div>
+      <Button
+        size='sm'
+        disabled={!dirty || save.isPending}
+        onClick={() => save.mutate({ path: { slug: tenant.slug }, body: { iosClientId: ios.trim() || null, playSigningSha1: playSha1.trim() || null } })}
+      >
+        {save.isPending && <Spinner />}
+        {t('save')}
+      </Button>
     </Item>
   )
 }

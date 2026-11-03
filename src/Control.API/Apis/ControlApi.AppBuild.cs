@@ -1,6 +1,7 @@
 using System.ComponentModel;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Options;
 using Ninja.Control.API.Infrastructure;
 using Ninja.Control.API.Model;
 using Ninja.Control.API.Platform;
@@ -209,7 +210,7 @@ public static partial class ControlApi
     }
 
     public static async Task<Results<Ok<AppSetupResponse>, NotFound, BadRequest<ProblemDetails>>> SetUpApp(
-        ControlContext context, IAuditWriter audit, IHttpClientFactory clients, IStackProxy stack, string slug, CancellationToken ct)
+        ControlContext context, IOptions<PlatformOptions> options, IAuditWriter audit, IHttpClientFactory clients, IStackProxy stack, string slug, CancellationToken ct)
     {
         if (await OwnAppAsync(context, slug, ct) is not { } found) return TypedResults.NotFound();
         var (tenant, app) = found;
@@ -249,6 +250,29 @@ public static partial class ControlApi
             }
         }
 
+        // Play's app signing key, which installed apps are signed with: its SHA-256 joins the record's App Links
+        // fingerprints (and so Firebase's), read off the newest release once Play has one
+        if (GoogleServiceAccount.Parse(app.PlayServiceAccountJson, out _) is { } play)
+        {
+            try
+            {
+                var signing = await StoreKeys.PlaySigningSha256Async(clients.CreateClient(StoreClient), play, tenant.AppId!, ct);
+                if (signing is null) steps.Add(new("play-signing", true, "Play has no release yet: its app signing key is read after the first upload"));
+                else if (AppLinks.Fingerprints(tenant.AndroidCertFingerprints).Contains(signing))
+                    steps.Add(new("play-signing", true, $"Play's app signing key ({signing[..11]}…) is on the record"));
+                else
+                {
+                    tenant.AndroidCertFingerprints = MergeFingerprints(tenant.AndroidCertFingerprints, add: signing, remove: null);
+                    await context.SaveChangesAsync(ct);
+                    steps.Add(new("play-signing", true, $"Added Play's app signing key ({signing[..11]}…) to the fingerprints"));
+                }
+            }
+            catch (Exception e) when (e is StoreKeyException or HttpRequestException or TaskCanceledException)
+            {
+                steps.Add(new("play-signing", false, e.Message));
+            }
+        }
+
         // 3. Firebase: the apps found or made, the certificates given, both files kept
         if (await FirebaseAppsAsync(context, clients, ct) is not { } firebase)
             steps.Add(new("firebase", false, "Save the Firebase service account on the Platform page's Own apps tab, then press Set up again"));
@@ -258,7 +282,7 @@ public static partial class ControlApi
             if (app.UploadKeySha256 is { } upload && !sha256.Contains(upload)) sha256.Add(upload);
             try
             {
-                var linked = await firebase.LinkAsync(tenant.AppId!, name, tenant.AppleTeamId, app.UploadKeySha1 is { } s ? [s] : [], sha256, ct);
+                var linked = await firebase.LinkAsync(tenant.AppId!, name, tenant.AppleTeamId, Sha1sFor(app), sha256, ct);
                 app.FirebaseAndroidAppId = linked.Android?.AppId;
                 app.GoogleServicesJson = linked.Android?.ConfigFile;
                 app.FirebaseIosAppId = linked.Ios?.AppId;
@@ -276,8 +300,8 @@ public static partial class ControlApi
         await audit.WriteAsync("tenant.app.setup", slug, new { steps = steps.Select(s => new { s.Step, s.Ok }) }, ct);
 
         // 4. The checks, as Check all runs them
-        var checkedApp = await CheckApp(context, audit, clients, slug, ct);
-        var status = checkedApp.Result is Ok<TenantAppStatus> ok ? ok.Value! : await AppStatusAsync(context, tenant, app, ct);
+        var checkedApp = await CheckApp(context, audit, clients, options, slug, ct);
+        var status = checkedApp.Result is Ok<TenantAppStatus> ok ? ok.Value! : await AppStatusAsync(context, tenant, app, ct, options.Value);
         return TypedResults.Ok(new AppSetupResponse(status, steps));
     }
 

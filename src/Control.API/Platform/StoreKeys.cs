@@ -230,6 +230,68 @@ public static class StoreKeys
         }
     }
 
+    /// <summary>
+    /// The SHA-256 of the key Play signs the installed app with (Play App Signing), AA:BB:…: read off the
+    /// APKs Play made of the newest release on any track (generatedapks.list). Null while Play has none.
+    /// Play's API gives no SHA-1 of it, which Google sign-in's Android client needs: that one is still
+    /// copied from Play Console (App integrity).
+    /// </summary>
+    public static async Task<string?> PlaySigningSha256Async(HttpClient http, GoogleServiceAccount account, string packageName, CancellationToken ct)
+    {
+        var token = await account.AccessTokenAsync(http, PlayScope, ct);
+        var app = $"https://androidpublisher.googleapis.com/androidpublisher/v3/applications/{Uri.EscapeDataString(packageName)}";
+        async Task<JsonNode?> SendAsync(HttpMethod method, string url, string? body = null)
+        {
+            using var request = new HttpRequestMessage(method, url);
+            if (body is not null) request.Content = new StringContent(body, Encoding.UTF8, "application/json");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            using var response = await http.SendAsync(request, ct);
+            var text = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                throw new StoreKeyException($"Play refused {account.ClientEmail} on {packageName} ({(int)response.StatusCode}): {ErrorOf(text)}");
+            return text.Length == 0 ? null : JsonNode.Parse(text);
+        }
+
+        // The newest version code on any track, read in an edit thrown away after
+        var edit = (await SendAsync(HttpMethod.Post, $"{app}/edits", "{}"))?["id"]?.GetValue<string>()
+            ?? throw new StoreKeyException("Play opened no edit.");
+        long newest = 0;
+        try
+        {
+            var tracks = await SendAsync(HttpMethod.Get, $"{app}/edits/{Uri.EscapeDataString(edit)}/tracks");
+            foreach (var track in tracks?["tracks"]?.AsArray() ?? [])
+            foreach (var release in track?["releases"]?.AsArray() ?? [])
+            foreach (var code in release?["versionCodes"]?.AsArray() ?? [])
+                if (long.TryParse(code?.ToString(), out var n) && n > newest) newest = n;
+        }
+        finally
+        {
+            try { await SendAsync(HttpMethod.Delete, $"{app}/edits/{Uri.EscapeDataString(edit)}"); }
+            catch (StoreKeyException) { }
+        }
+        if (newest == 0) return null;
+
+        var generated = await SendAsync(HttpMethod.Get, $"{app}/generatedApks/{newest}");
+        foreach (var signed in generated?["generatedApks"]?.AsArray() ?? [])
+            if (Sha256Of(signed?["certificateSha256Hash"]?.GetValue<string>()) is { } sha256) return sha256;
+        return null;
+    }
+
+    /// <summary>A certificate hash as Play gives it (hex, or base64) in the record's AA:BB:… form.</summary>
+    internal static string? Sha256Of(string? hash)
+    {
+        if (string.IsNullOrWhiteSpace(hash)) return null;
+        var hex = hash.Replace(":", "").Trim();
+        byte[]? bytes = null;
+        if (hex.Length == 64 && hex.All(Uri.IsHexDigit)) bytes = System.Convert.FromHexString(hex);
+        else
+        {
+            try { bytes = System.Convert.FromBase64String(hash.Replace('-', '+').Replace('_', '/').PadRight((hash.Length + 3) / 4 * 4, '=')); }
+            catch (FormatException) { }
+        }
+        return bytes is { Length: 32 } ? string.Join(':', bytes.Select(b => b.ToString("X2"))) : null;
+    }
+
     /// <summary>The message out of a Google or Apple error body, or the body cut short.</summary>
     public static string ErrorOf(string body)
     {
