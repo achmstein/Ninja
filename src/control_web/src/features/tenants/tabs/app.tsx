@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { CheckCircle2, Circle, KeyRound, ShieldCheck, Smartphone, XCircle } from 'lucide-react'
+import { CheckCircle2, Circle, KeyRound, ShieldCheck, Smartphone, Sparkles, XCircle } from 'lucide-react'
 import type { AppCheck, TenantAppStatus, TenantDetail } from '@/api/control'
 import {
   checkTenantAppMutation,
@@ -12,6 +12,7 @@ import {
   setAppIconsMutation,
   setAppleKeyMutation,
   setPlayKeyMutation,
+  setUpTenantAppMutation,
 } from '@/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { readFileBase64, readFileText } from '@/lib/files'
@@ -37,6 +38,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { AppBuildCard } from '../app-build'
 
 const CHECK_LABELS: Record<string, TranslationKey> = {
   'android-key': 'appAndroidKey',
@@ -92,6 +94,17 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
   const onError = (e: unknown) => toast.error(problemDetail(e) || t('somethingWentWrong'))
 
   const check = useMutation({ ...checkTenantAppMutation(), onSuccess: (s) => onSaved(s, t('appChecked')), onError })
+  const setup = useMutation({
+    ...setUpTenantAppMutation(),
+    onSuccess: (r) => {
+      queryClient.setQueryData(getTenantAppQueryKey({ path }), r.app)
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTenant' }] })
+      const failed = r.steps.filter((s) => !s.ok)
+      if (failed.length === 0) toast.success(t('appSetUpDone'))
+      else toast.warning(failed.map((s) => s.detail).join(' · '))
+    },
+    onError,
+  })
   const firebase = useMutation({
     ...linkFirebaseAppsMutation(),
     onSuccess: (r) => onSaved(r.app, r.done.join(' · ')),
@@ -112,10 +125,16 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
             </CardTitle>
             <CardDescription>{t('appReady', { done: ready, total: done.length })}</CardDescription>
           </div>
-          <Button variant='outline' disabled={check.isPending} onClick={() => check.mutate({ path })}>
-            {check.isPending ? <Spinner /> : <ShieldCheck />}
-            {t('appCheckAll')}
-          </Button>
+          <div className='flex flex-wrap gap-2'>
+            <Button disabled={setup.isPending} onClick={() => setup.mutate({ path })}>
+              {setup.isPending ? <Spinner /> : <Sparkles />}
+              {t('appSetUp')}
+            </Button>
+            <Button variant='outline' disabled={check.isPending || setup.isPending} onClick={() => check.mutate({ path })}>
+              {check.isPending ? <Spinner /> : <ShieldCheck />}
+              {t('appCheckAll')}
+            </Button>
+          </div>
         </CardHeader>
         {app.checks.length > 0 && (
           <CardContent className='space-y-2'>
@@ -128,6 +147,7 @@ function AppCards({ tenant, app }: { tenant: TenantDetail; app: TenantAppStatus 
       </Card>
 
       <div className='grid gap-4 lg:grid-cols-2'>
+        <AppBuildCard slug={tenant.slug} />
         <AndroidKeyCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
         <PlayCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />
         <AppleCard tenant={tenant} app={app} onSaved={onSaved} onError={onError} />

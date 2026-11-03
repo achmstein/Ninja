@@ -85,10 +85,12 @@ set per business in GitHub. Once per business:
    new personal account must run a 14-day closed test with 12 testers before
    it may publish), and invites us: Admin on App Store Connect, release
    rights on Play.
-2. **Its apps in the stores.** In App Store Connect, the App IDs
-   `net.ninjapp.<business>` (Sign in with Apple, Push Notifications,
-   Associated Domains) and `net.ninjapp.<business>.ChillaxLiveActivity`, and
-   the app on the first. In Play Console, the app with package
+2. **Its apps in the stores.** In App Store Connect, the app on the bundle ID
+   `net.ninjapp.<business>` (the App IDs themselves, with Sign in with Apple,
+   Push Notifications and Associated Domains, and the Live Activity's
+   `net.ninjapp.<business>.ChillaxLiveActivity`, are made by **Set up** in
+   step 4; make them first if App Store Connect wants one to pick). In Play
+   Console, the app with package
    `net.ninjapp.<business>`. Each store's listing, privacy and rating answers
    are filled in by hand the first time.
 3. **The record.** "Own customer app" set to the id on the control plane,
@@ -104,9 +106,14 @@ set per business in GitHub. Once per business:
    | Play Console access | The key file of a service account with release rights on its Play account |
    | App Store Connect key | An API key from its account (App Manager): key ID, issuer ID and the .p8 |
    | Icons | 1024x1024 PNG without transparency, and Android's adaptive foreground (the mark inside its middle two thirds); without an icon the build keeps the cup |
-   | Firebase | **Link in Firebase** finds or makes its Android and iOS apps in the platform's Firebase project (the service account on the Platform page's Firebase tab, Firebase Admin on the project, which must be the Google Cloud project of the shared Google sign-in client `GOOGLE_SERVER_CLIENT_ID`), gives Android the upload key's SHA-1 and SHA-256 and the record's fingerprints, and keeps both config files |
+   | Build | Builds it from here (Android to Play's track as a draft, iOS to TestFlight) and follows the run, with the Platform page's GitHub token |
+   | Firebase | **Link in Firebase** finds or makes its Android and iOS apps in the platform's Firebase project (the service account on the Platform page's Own apps tab, Firebase Admin on the project, which must be the Google Cloud project of the shared Google sign-in client `GOOGLE_SERVER_CLIENT_ID`), gives Android the upload key's SHA-1 and SHA-256 and the record's fingerprints, and keeps both config files |
 
-   **Check all** tries everything from the server: Apple finds the app with
+   **Set up** does in one press everything the server can: an upload key if
+   there is none (never replacing one), the Apple App IDs and their
+   capabilities with the App Store Connect key, Firebase, then the checks;
+   what it could not do says what is missing. Press it again after adding a
+   key. **Check all** tries everything from the server: Apple finds the app with
    the key, Play opens (and drops) an edit with the service account, the
    Firebase files name the app, and the record has the team and Play's
    fingerprint. Google's sign-in OAuth clients (an Android one with Play's
@@ -134,8 +141,9 @@ set per business in GitHub. Once per business:
    it alone). The workflow Initialize Fastlane Match does the same ahead of a
    build. Apple allows a team a few distribution certificates: never delete a
    business's branch, or the next build makes another.
-7. **The first build:** run Build and Deploy Mobile Apps with app
-   `client_app` and tenant `<slug>`. iOS lands in TestFlight. Play refuses an
+7. **The first build:** **Build** on its App tab (or Build and Deploy Mobile
+   Apps with app `client_app` and tenant `<slug>`); **Build all own apps** on
+   the Platform page's Own apps tab builds every business's at once. iOS lands in TestFlight. Play refuses an
    API upload until the app's first bundle went in by hand: take
    `client-app-android-aab` from the run, upload it in Play Console, and the
    next runs upload by themselves (internal track, as a draft).

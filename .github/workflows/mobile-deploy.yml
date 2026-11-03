@@ -1,4 +1,6 @@
 name: Build and Deploy Mobile Apps
+# The control app finds a business's build again by this name (Control.API, GitHubBuilds.RunName)
+run-name: ${{ inputs.app == 'client_app' && format('Customer app for {0}', inputs.tenant || 'chillax') || format('{0} ({1})', inputs.app, inputs.platform) }}
 
 on:
   workflow_dispatch:

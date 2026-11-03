@@ -65,6 +65,41 @@ export type AndroidKeyStatus = {
     sha256: null | string;
 };
 
+export type AppBuildSettingsDto = {
+    /**
+     * Whether a GitHub token is saved
+     */
+    set: boolean;
+    /**
+     * Its last four characters, the only part shown again
+     */
+    hint: string;
+    repository: string;
+    workflow: string;
+    ref: string;
+    updatedAt: null | string;
+};
+
+export type AppBuildStatus = {
+    /**
+     * Whether the Platform page has a GitHub token, without which no build starts from here
+     */
+    canBuild: boolean;
+    platform: null | string;
+    track: null | string;
+    requestedAt: null | string;
+    run: null | BuildRun;
+    /**
+     * Why the run could not be read, when it could not
+     */
+    problem: null | string;
+};
+
+export type AppBuildTestResult = {
+    ok: boolean;
+    detail: string;
+};
+
 export type AppCheck = {
     item: string;
     ok: boolean;
@@ -131,6 +166,17 @@ export type AppleKeyStatus = {
     set: boolean;
     keyId: null | string;
     issuerId: null | string;
+};
+
+export type AppSetupResponse = {
+    app: TenantAppStatus;
+    steps: Array<AppSetupStep>;
+};
+
+export type AppSetupStep = {
+    step: string;
+    ok: boolean;
+    detail: string;
 };
 
 export type AuditEntry = {
@@ -259,6 +305,31 @@ export type BringBackRequest = {
     empty?: boolean;
     backupId?: null | string;
     force?: boolean;
+};
+
+export type BuildAllRefusal = {
+    slug: string;
+    reason: string;
+};
+
+export type BuildAllResult = {
+    started: Array<string>;
+    refused: Array<BuildAllRefusal>;
+};
+
+export type BuildJob = {
+    name: string;
+    status: string;
+    conclusion: null | string;
+};
+
+export type BuildRun = {
+    id: number | string;
+    status: string;
+    conclusion: null | string;
+    url: string;
+    createdAt: string;
+    jobs: Array<BuildJob>;
 };
 
 export type BusinessType = 'CoffeeShop' | 'Restaurant' | 'GameStation' | 'Other' | 'CloudKitchen';
@@ -799,6 +870,14 @@ export type SaveAiRolesRequest = {
     roles: Array<AiRoleDto>;
 };
 
+export type SaveAppBuildSettingsRequest = {
+    gitHubToken?: null | string;
+    clearToken?: boolean;
+    repository?: null | string;
+    workflow?: null | string;
+    ref?: null | string;
+};
+
 export type SaveFirebaseSettingsRequest = {
     serviceAccountJson?: null | string;
     clear?: boolean;
@@ -837,6 +916,11 @@ export type ServiceHealth = {
     ok: boolean;
     ms: number | string;
     detail: string;
+};
+
+export type StartAppBuildRequest = {
+    platform?: string;
+    track?: string;
 };
 
 export type StepDto = {
@@ -4515,6 +4599,237 @@ export type ReportUploadKeyFingerprintsResponses = {
      */
     200: unknown;
 };
+
+export type GetAppBuildSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/apps/builds/settings';
+};
+
+export type GetAppBuildSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetAppBuildSettingsResponses = {
+    /**
+     * OK
+     */
+    200: AppBuildSettingsDto;
+};
+
+export type GetAppBuildSettingsResponse = GetAppBuildSettingsResponses[keyof GetAppBuildSettingsResponses];
+
+export type SaveAppBuildSettingsData = {
+    body: SaveAppBuildSettingsRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/apps/builds/settings';
+};
+
+export type SaveAppBuildSettingsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SaveAppBuildSettingsError = SaveAppBuildSettingsErrors[keyof SaveAppBuildSettingsErrors];
+
+export type SaveAppBuildSettingsResponses = {
+    /**
+     * OK
+     */
+    200: AppBuildSettingsDto;
+};
+
+export type SaveAppBuildSettingsResponse = SaveAppBuildSettingsResponses[keyof SaveAppBuildSettingsResponses];
+
+export type TestAppBuildSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/apps/builds/settings/test';
+};
+
+export type TestAppBuildSettingsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TestAppBuildSettingsResponses = {
+    /**
+     * OK
+     */
+    200: AppBuildTestResult;
+};
+
+export type TestAppBuildSettingsResponse = TestAppBuildSettingsResponses[keyof TestAppBuildSettingsResponses];
+
+export type BuildAllOwnAppsData = {
+    body?: null | StartAppBuildRequest;
+    path?: never;
+    query?: never;
+    url: '/api/control/apps/build-all';
+};
+
+export type BuildAllOwnAppsErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type BuildAllOwnAppsError = BuildAllOwnAppsErrors[keyof BuildAllOwnAppsErrors];
+
+export type BuildAllOwnAppsResponses = {
+    /**
+     * OK
+     */
+    200: BuildAllResult;
+};
+
+export type BuildAllOwnAppsResponse = BuildAllOwnAppsResponses[keyof BuildAllOwnAppsResponses];
+
+export type GetAppBuildData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/build';
+};
+
+export type GetAppBuildErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetAppBuildResponses = {
+    /**
+     * OK
+     */
+    200: AppBuildStatus;
+};
+
+export type GetAppBuildResponse = GetAppBuildResponses[keyof GetAppBuildResponses];
+
+export type StartAppBuildData = {
+    body?: null | StartAppBuildRequest;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/build';
+};
+
+export type StartAppBuildErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type StartAppBuildError = StartAppBuildErrors[keyof StartAppBuildErrors];
+
+export type StartAppBuildResponses = {
+    /**
+     * OK
+     */
+    200: AppBuildStatus;
+};
+
+export type StartAppBuildResponse = StartAppBuildResponses[keyof StartAppBuildResponses];
+
+export type SetUpTenantAppData = {
+    body?: never;
+    path: {
+        slug: string;
+    };
+    query?: never;
+    url: '/api/control/tenants/{slug}/app/setup';
+};
+
+export type SetUpTenantAppErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetUpTenantAppError = SetUpTenantAppErrors[keyof SetUpTenantAppErrors];
+
+export type SetUpTenantAppResponses = {
+    /**
+     * OK
+     */
+    200: AppSetupResponse;
+};
+
+export type SetUpTenantAppResponse = SetUpTenantAppResponses[keyof SetUpTenantAppResponses];
 
 export type ListNodesData = {
     body?: never;

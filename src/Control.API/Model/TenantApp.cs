@@ -57,5 +57,14 @@ public class TenantApp
 
     public DateTime? CheckedAt { get; set; }
 
+    /// <summary>The last build started from the control app: its GitHub run once found, when, and for what.</summary>
+    public long? BuildRunId { get; set; }
+
+    public DateTime? BuildRequestedAt { get; set; }
+
+    public string? BuildPlatform { get; set; }
+
+    public string? BuildTrack { get; set; }
+
     public DateTime UpdatedAt { get; set; }
 }

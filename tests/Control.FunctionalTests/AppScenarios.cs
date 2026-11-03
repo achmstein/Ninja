@@ -72,6 +72,24 @@ public sealed class AppScenarios
         using (var nobody = await api.Anonymous().GetAsync($"/api/control/tenants/{slug}/app-kit?platform=android"))
             Assert.AreEqual(HttpStatusCode.Unauthorized, nobody.StatusCode);
 
+        // No GitHub token on the platform: a build is refused with what to do, and Set up does what it can
+        using (var build0 = await console.PostAsJsonAsync($"/api/control/tenants/{slug}/app/build", new StartAppBuildRequest()))
+        {
+            Assert.AreEqual(HttpStatusCode.BadRequest, build0.StatusCode);
+            Assert.Contains("GitHub token", await build0.Content.ReadAsStringAsync());
+        }
+        using (var setup = await console.PostAsync($"/api/control/tenants/{slug}/app/setup", null))
+        {
+            Assert.AreEqual(HttpStatusCode.OK, setup.StatusCode, await setup.Content.ReadAsStringAsync());
+            var result = (await setup.Content.ReadFromJsonAsync<AppSetupResponse>(Json))!;
+            var steps = result.Steps.ToDictionary(s => s.Step);
+            Assert.IsTrue(steps["android-key"].Ok);
+            Assert.Contains("is there", steps["android-key"].Detail, "the key made before is kept");
+            Assert.IsFalse(steps["apple"].Ok, "no App Store Connect key yet");
+            Assert.IsFalse(steps["firebase"].Ok, "no Firebase service account on the platform");
+            Assert.IsNotEmpty(result.App.Checks, "the checks ran after");
+        }
+
         var audit = await api.AuditAsync(slug);
         Assert.IsTrue(audit.Any(a => a.Action == "tenant.app.kit.read"), "every read of the kit is audited");
         Assert.IsFalse(audit.Any(a => a.Details?.Contains(kit.StorePassword!) == true), "never with a value");

@@ -249,6 +249,66 @@ public sealed class OwnAppTests
         Assert.Contains("ABCDE12345", handler.Bodies.Single(b => b.Path.EndsWith("/iosApps") && b.Method == "POST").Body, "the iOS app is made under the business's team");
     }
 
+    [TestMethod]
+    public async Task A_build_is_started_for_the_customer_app_and_found_again_by_its_name()
+    {
+        var since = new DateTime(2026, 11, 3, 12, 0, 0, DateTimeKind.Utc);
+        var handler = new FakeGoogle(request => (request.Method.Method, request.RequestUri!.AbsolutePath) switch
+        {
+            ("POST", "/repos/achmstein/Ninja/actions/workflows/mobile-deploy.yml/dispatches") => null,
+            ("GET", "/repos/achmstein/Ninja/actions/workflows/mobile-deploy.yml/runs") => """
+                {"workflow_runs":[
+                  {"id":7,"display_title":"Customer app for other","status":"queued","html_url":"https://x/7","created_at":"2026-11-03T12:00:05Z"},
+                  {"id":9,"display_title":"Customer app for blue","status":"in_progress","conclusion":null,"html_url":"https://x/9","created_at":"2026-11-03T12:00:06Z"}]}
+                """,
+            ("GET", "/repos/achmstein/Ninja/actions/runs/9/jobs") => """
+                {"jobs":[{"name":"build-android-client","status":"completed","conclusion":"success"},
+                         {"name":"build-ios-client","status":"in_progress","conclusion":null},
+                         {"name":"build-android-pos","status":"completed","conclusion":"skipped"}]}
+                """,
+            _ => null,
+        }, noContentFor: "/dispatches");
+        var builds = new GitHubBuilds(new HttpClient(handler), new AppBuildSettings { GitHubToken = "github_pat_x" });
+
+        Assert.IsNull(await builds.StartAsync("blue", "all", "internal", CancellationToken.None), "GitHub said no run id: it is found by name");
+        var dispatch = JsonNode.Parse(handler.Bodies.First().Body)!;
+        Assert.AreEqual("client_app", dispatch["inputs"]!["app"]!.GetValue<string>());
+        Assert.AreEqual("blue", dispatch["inputs"]!["tenant"]!.GetValue<string>());
+        Assert.AreEqual("main", dispatch["ref"]!.GetValue<string>());
+
+        var run = await builds.FindAsync("blue", null, since, CancellationToken.None);
+        Assert.AreEqual(9, run!.Id);
+        Assert.AreEqual("in_progress", run.Status);
+        CollectionAssert.AreEqual(new[] { "Android", "iOS" }, run.Jobs.Select(j => j.Name).ToArray(), "only the customer app's jobs");
+        Assert.AreEqual("success", run.Jobs[0].Conclusion);
+    }
+
+    [TestMethod]
+    public async Task The_apple_app_ids_are_made_when_missing_with_the_apps_capabilities()
+    {
+        using var ec = ECDsa.Create(ECCurve.NamedCurves.nistP256);
+        var handler = new FakeGoogle(request => (request.Method.Method, request.RequestUri!.AbsolutePath, request.RequestUri.Query) switch
+        {
+            ("GET", "/v1/bundleIds", var q) when q.Contains("ChillaxLiveActivity") => """{"data":[{"id":"EXT","attributes":{"identifier":"net.ninjapp.blue.ChillaxLiveActivity"}}]}""",
+            ("GET", "/v1/bundleIds", _) => """{"data":[{"id":"OTHER","attributes":{"identifier":"net.ninjapp.blue.ChillaxLiveActivity"}}]}""",
+            ("POST", "/v1/bundleIds", _) => """{"data":{"id":"APP"}}""",
+            ("GET", "/v1/bundleIds/APP/bundleIdCapabilities", _) => """{"data":[{"attributes":{"capabilityType":"PUSH_NOTIFICATIONS"}}]}""",
+            ("POST", "/v1/bundleIdCapabilities", _) => "{}",
+            _ => null,
+        });
+
+        var done = await StoreKeys.RegisterAppIdsAsync(new HttpClient(handler), "KEY1234567", "issuer", ec.ExportPkcs8PrivateKeyPem(), "net.ninjapp.blue", "Blue Café", CancellationToken.None);
+
+        var made = handler.Bodies.Where(b => b.Method == "POST" && b.Path == "/v1/bundleIds").ToList();
+        Assert.HasCount(1, made, "the app is made; the extension, already there, is not");
+        Assert.Contains("\"Blue Caf\"", made[0].Body, "Apple's names take letters, digits and spaces");
+        var capabilities = handler.Bodies.Where(b => b.Path == "/v1/bundleIdCapabilities").Select(b => b.Body).ToList();
+        Assert.HasCount(2, capabilities, "push was there already");
+        Assert.IsTrue(capabilities.Any(c => c.Contains("SIGN_IN_WITH_APPLE") && c.Contains("PRIMARY_APP_CONSENT")), "Sign in with Apple as its own primary App ID");
+        Assert.IsTrue(capabilities.Any(c => c.Contains("ASSOCIATED_DOMAINS")));
+        Assert.HasCount(3, done);
+    }
+
     private static string B64(string s) => System.Convert.ToBase64String(Encoding.UTF8.GetBytes(s));
 
     private static byte[] FromBase64Url(string s)
@@ -278,7 +338,7 @@ public sealed class OwnAppTests
         return png;
     }
 
-    private sealed class FakeGoogle(Func<HttpRequestMessage, string?> answer) : HttpMessageHandler
+    private sealed class FakeGoogle(Func<HttpRequestMessage, string?> answer, string? noContentFor = null) : HttpMessageHandler
     {
         public List<(string Method, string Path, string Body)> Bodies { get; } = [];
 
@@ -286,6 +346,8 @@ public sealed class OwnAppTests
         {
             var body = request.Content is null ? "" : await request.Content.ReadAsStringAsync(ct);
             Bodies.Add((request.Method.Method, request.RequestUri!.AbsolutePath, body));
+            if (noContentFor is not null && request.RequestUri.AbsolutePath.EndsWith(noContentFor, StringComparison.Ordinal))
+                return new HttpResponseMessage(HttpStatusCode.NoContent);
             return answer(request) is { } json
                 ? new HttpResponseMessage(HttpStatusCode.OK) { Content = new StringContent(json, Encoding.UTF8, "application/json") }
                 : new HttpResponseMessage(HttpStatusCode.NotFound) { Content = new StringContent($"no fake for {request.Method} {request.RequestUri}") };

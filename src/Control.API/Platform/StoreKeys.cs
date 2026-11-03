@@ -126,6 +126,89 @@ public static class StoreKeys
         return app["attributes"]?["name"]?.GetValue<string>() ?? bundleId;
     }
 
+    /// <summary>
+    /// The capabilities ios/Runner/Runner.entitlements asks for; Sign in with Apple as a primary App ID,
+    /// not grouped with another (Apple gives a person's name once per group). The Live Activity's
+    /// extension asks for none.
+    /// </summary>
+    private static readonly (string Type, JsonArray? Settings)[] AppCapabilities =
+    [
+        ("PUSH_NOTIFICATIONS", null),
+        ("ASSOCIATED_DOMAINS", null),
+        ("SIGN_IN_WITH_APPLE", [new JsonObject { ["key"] = "APPLE_ID_AUTH_APP_CONSENT", ["options"] = new JsonArray(new JsonObject { ["key"] = "PRIMARY_APP_CONSENT" }) }]),
+    ];
+
+    /// <summary>
+    /// The app's two App IDs in the business's developer account, made when missing: the app with its
+    /// capabilities, and its Live Activity's extension. Match makes the profiles on the first build; the
+    /// app's record in App Store Connect is still made there by hand (Apple's API makes none). Says what it did.
+    /// </summary>
+    public static async Task<List<string>> RegisterAppIdsAsync(HttpClient http, string keyId, string issuerId, string privateKey, string appId, string name, CancellationToken ct)
+    {
+        var token = AscToken(keyId, issuerId, privateKey);
+        var done = new List<string>();
+
+        async Task<JsonNode> Send(HttpMethod method, string path, JsonObject? body)
+        {
+            using var request = new HttpRequestMessage(method, $"https://api.appstoreconnect.apple.com/v1/{path}");
+            request.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+            if (body is not null) request.Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json");
+            using var response = await http.SendAsync(request, ct);
+            var text = await response.Content.ReadAsStringAsync(ct);
+            if (!response.IsSuccessStatusCode)
+                throw new StoreKeyException($"Apple refused {method} {path.Split('?')[0]} ({(int)response.StatusCode}): {ErrorOf(text)}");
+            return string.IsNullOrWhiteSpace(text) ? new JsonObject() : JsonNode.Parse(text) ?? new JsonObject();
+        }
+
+        async Task<string> Ensure(string identifier, string label)
+        {
+            var found = (await Send(HttpMethod.Get, $"bundleIds?filter[identifier]={Uri.EscapeDataString(identifier)}&limit=20", null))["data"]?.AsArray()
+                .FirstOrDefault(b => b?["attributes"]?["identifier"]?.GetValue<string>() == identifier);
+            if (found is not null) return found["id"]!.GetValue<string>();
+            var made = await Send(HttpMethod.Post, "bundleIds", new JsonObject
+            {
+                ["data"] = new JsonObject
+                {
+                    ["type"] = "bundleIds",
+                    ["attributes"] = new JsonObject { ["identifier"] = identifier, ["name"] = label, ["platform"] = "IOS" },
+                },
+            });
+            done.Add($"Registered the App ID {identifier}");
+            return made["data"]!["id"]!.GetValue<string>();
+        }
+
+        var appBundle = await Ensure(appId, AppleName(name));
+        await Ensure($"{appId}.ChillaxLiveActivity", AppleName($"{name} Live Activity"));
+
+        var have = (await Send(HttpMethod.Get, $"bundleIds/{appBundle}/bundleIdCapabilities", null))["data"]?.AsArray()
+            .Select(c => c?["attributes"]?["capabilityType"]?.GetValue<string>()).ToHashSet() ?? [];
+        foreach (var (type, settings) in AppCapabilities)
+        {
+            if (have.Contains(type)) continue;
+            var attributes = new JsonObject { ["capabilityType"] = type };
+            if (settings is not null) attributes["settings"] = settings.DeepClone();
+            await Send(HttpMethod.Post, "bundleIdCapabilities", new JsonObject
+            {
+                ["data"] = new JsonObject
+                {
+                    ["type"] = "bundleIdCapabilities",
+                    ["attributes"] = attributes,
+                    ["relationships"] = new JsonObject { ["bundleId"] = new JsonObject { ["data"] = new JsonObject { ["type"] = "bundleIds", ["id"] = appBundle } } },
+                },
+            });
+            done.Add($"Gave it {type.Replace('_', ' ').ToLowerInvariant()}");
+        }
+        if (done.Count == 0) done.Add("The App IDs were there already");
+        return done;
+    }
+
+    /// <summary>Apple's App ID names take letters, digits and spaces only</summary>
+    private static string AppleName(string name)
+    {
+        var kept = new string(name.Where(c => char.IsAsciiLetterOrDigit(c) || c == ' ').ToArray()).Trim();
+        return kept.Length == 0 ? "Ninja app" : kept.Length > 60 ? kept[..60] : kept;
+    }
+
     /// <summary>Opens an edit on the package and drops it: Play allows that only with release rights. Throws with what Google said.</summary>
     public static async Task CheckPlayAsync(HttpClient http, GoogleServiceAccount account, string packageName, CancellationToken ct)
     {
@@ -156,7 +239,8 @@ public static class StoreKeys
             var message = json?["error"]?["message"]?.GetValue<string>()
                 ?? json?["error_description"]?.GetValue<string>()
                 ?? json?["errors"]?[0]?["detail"]?.GetValue<string>()
-                ?? (json?["error"] is JsonValue e ? e.GetValue<string>() : null);
+                ?? (json?["error"] is JsonValue e ? e.GetValue<string>() : null)
+                ?? (json?["message"] is JsonValue m ? m.GetValue<string>() : null);
             if (message is not null) return message;
         }
         catch (Exception e) when (e is JsonException or InvalidOperationException)

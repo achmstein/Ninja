@@ -34,8 +34,20 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<TenantApp> TenantApps => Set<TenantApp>();
 
+    public DbSet<AppBuildSettings> AppBuildSettings => Set<AppBuildSettings>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<AppBuildSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            entity.Property(e => e.GitHubToken).HasMaxLength(1024).HasConversion(_secrets.NullableConverter());
+            entity.Property(e => e.Repository).HasMaxLength(140).IsRequired();
+            entity.Property(e => e.Workflow).HasMaxLength(100).IsRequired();
+            entity.Property(e => e.Ref).HasMaxLength(100).IsRequired();
+        });
+
         modelBuilder.Entity<FirebaseSettings>(entity =>
         {
             entity.HasKey(e => e.Id);
@@ -63,6 +75,8 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
             entity.Property(e => e.FirebaseAndroidAppId).HasMaxLength(100);
             entity.Property(e => e.FirebaseIosAppId).HasMaxLength(100);
             entity.Property(e => e.Checks).HasColumnType("jsonb");
+            entity.Property(e => e.BuildPlatform).HasMaxLength(16);
+            entity.Property(e => e.BuildTrack).HasMaxLength(16);
         });
 
         modelBuilder.Entity<MapsSettings>(entity =>

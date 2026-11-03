@@ -70,6 +70,7 @@ public static class Extensions
         // A business's own app: Firebase's management API, and the stores' APIs its keys are checked against
         builder.Services.AddHttpClient(FirebaseApps.ClientName, client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllResilienceHandlers();
         builder.Services.AddHttpClient(ControlApi.StoreClient, client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllResilienceHandlers();
+        builder.Services.AddHttpClient(GitHubBuilds.ClientName, client => client.Timeout = TimeSpan.FromSeconds(30)).RemoveAllResilienceHandlers();
 #pragma warning restore EXTEXP0001
         // A role is what the agents name: the fallback and the vision model are roles too
         builder.Configuration["AI:FallbackModel"] ??= AiRoles.Fallback;

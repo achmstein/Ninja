@@ -55,6 +55,7 @@ public static partial class ControlApi
         MapMapsApi(api);
         MapFirebaseApi(api);
         MapAppApi(api);
+        MapAppBuildApi(api);
         MapNodesApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know

@@ -126,6 +126,38 @@ namespace Ninja.Control.API.Migrations
                     b.ToTable("AiUsage");
                 });
 
+            modelBuilder.Entity("Ninja.Control.API.Model.AppBuildSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("GitHubToken")
+                        .HasMaxLength(1024)
+                        .HasColumnType("character varying(1024)");
+
+                    b.Property<string>("Ref")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Repository")
+                        .IsRequired()
+                        .HasMaxLength(140)
+                        .HasColumnType("character varying(140)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Workflow")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("AppBuildSettings");
+                });
+
             modelBuilder.Entity("Ninja.Control.API.Model.FirebaseSettings", b =>
                 {
                     b.Property<int>("Id")
@@ -810,6 +842,20 @@ namespace Ninja.Control.API.Migrations
 
                     b.Property<string>("AscPrivateKey")
                         .HasColumnType("text");
+
+                    b.Property<string>("BuildPlatform")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
+
+                    b.Property<DateTime?>("BuildRequestedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<long?>("BuildRunId")
+                        .HasColumnType("bigint");
+
+                    b.Property<string>("BuildTrack")
+                        .HasMaxLength(16)
+                        .HasColumnType("character varying(16)");
 
                     b.Property<DateTime?>("CheckedAt")
                         .HasColumnType("timestamp with time zone");

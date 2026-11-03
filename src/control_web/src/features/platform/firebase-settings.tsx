@@ -20,6 +20,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { AppBuildsSettings } from './app-builds-settings'
 
 /**
  * The service account the businesses' own apps are made in Firebase with:
@@ -133,6 +134,7 @@ export function FirebaseSettings() {
           )}
         </CardContent>
       </Card>
+      <AppBuildsSettings />
     </div>
   )
 }

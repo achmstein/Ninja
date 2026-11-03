@@ -4742,6 +4742,333 @@
         ]
       }
     },
+    "/api/control/apps/builds/settings": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The GitHub token (shown by its last four characters), repository, workflow and branch the own apps are built with",
+        "operationId": "GetAppBuildSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBuildSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Set the GitHub token (Actions read and write on the repository), or the repository, workflow or branch",
+        "operationId": "SaveAppBuildSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveAppBuildSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBuildSettingsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/apps/builds/settings/test": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Read the workflow with the saved token: whether a build could start",
+        "operationId": "TestAppBuildSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBuildTestResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/apps/build-all": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Start a build of every business's own app, one run each",
+        "operationId": "BuildAllOwnApps",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartAppBuildRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/BuildAllResult"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/build": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The business's last build started from here, as GitHub has it now",
+        "operationId": "GetAppBuild",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBuildStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Build the business's own app: Android to Play's track, iOS to TestFlight",
+        "operationId": "StartAppBuild",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/StartAppBuildRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppBuildStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/setup": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Everything the server can do for the app in one go: an upload key if it has none, its Apple App IDs (with the App Store Connect key), Firebase, then the checks",
+        "operationId": "SetUpTenantApp",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppSetupResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/platform/nodes": {
       "get": {
         "tags": [
@@ -5446,6 +5773,112 @@
           }
         }
       },
+      "AppBuildSettingsDto": {
+        "required": [
+          "set",
+          "hint",
+          "repository",
+          "workflow",
+          "ref",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean",
+            "description": "Whether a GitHub token is saved"
+          },
+          "hint": {
+            "type": "string",
+            "description": "Its last four characters, the only part shown again"
+          },
+          "repository": {
+            "type": "string"
+          },
+          "workflow": {
+            "type": "string"
+          },
+          "ref": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "AppBuildStatus": {
+        "required": [
+          "canBuild",
+          "platform",
+          "track",
+          "requestedAt",
+          "run",
+          "problem"
+        ],
+        "type": "object",
+        "properties": {
+          "canBuild": {
+            "type": "boolean",
+            "description": "Whether the Platform page has a GitHub token, without which no build starts from here"
+          },
+          "platform": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "track": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "requestedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          },
+          "run": {
+            "oneOf": [
+              {
+                "type": "null"
+              },
+              {
+                "description": "The run on GitHub once it is found; null just after starting, or when GitHub has not listed it yet",
+                "$ref": "#/components/schemas/BuildRun"
+              }
+            ]
+          },
+          "problem": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Why the run could not be read, when it could not"
+          }
+        }
+      },
+      "AppBuildTestResult": {
+        "required": [
+          "ok",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
       "AppCheck": {
         "required": [
           "item",
@@ -5661,6 +6094,43 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "AppSetupResponse": {
+        "required": [
+          "app",
+          "steps"
+        ],
+        "type": "object",
+        "properties": {
+          "app": {
+            "$ref": "#/components/schemas/TenantAppStatus"
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppSetupStep"
+            }
+          }
+        }
+      },
+      "AppSetupStep": {
+        "required": [
+          "step",
+          "ok",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "step": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
           }
         }
       },
@@ -6283,6 +6753,107 @@
           "force": {
             "type": "boolean",
             "default": false
+          }
+        }
+      },
+      "BuildAllRefusal": {
+        "required": [
+          "slug",
+          "reason"
+        ],
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        }
+      },
+      "BuildAllResult": {
+        "required": [
+          "started",
+          "refused"
+        ],
+        "type": "object",
+        "properties": {
+          "started": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "refused": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildAllRefusal"
+            }
+          }
+        }
+      },
+      "BuildJob": {
+        "required": [
+          "name",
+          "status",
+          "conclusion"
+        ],
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "conclusion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "BuildRun": {
+        "required": [
+          "id",
+          "status",
+          "conclusion",
+          "url",
+          "createdAt",
+          "jobs"
+        ],
+        "type": "object",
+        "properties": {
+          "id": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int64"
+          },
+          "status": {
+            "type": "string"
+          },
+          "conclusion": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "url": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "jobs": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BuildJob"
+            }
           }
         }
       },
@@ -8512,6 +9083,39 @@
           }
         }
       },
+      "SaveAppBuildSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "gitHubToken": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clearToken": {
+            "type": "boolean",
+            "default": false
+          },
+          "repository": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "workflow": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ref": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "SaveFirebaseSettingsRequest": {
         "type": "object",
         "properties": {
@@ -8637,6 +9241,19 @@
           },
           "detail": {
             "type": "string"
+          }
+        }
+      },
+      "StartAppBuildRequest": {
+        "type": "object",
+        "properties": {
+          "platform": {
+            "type": "string",
+            "default": "all"
+          },
+          "track": {
+            "type": "string",
+            "default": "internal"
           }
         }
       },
