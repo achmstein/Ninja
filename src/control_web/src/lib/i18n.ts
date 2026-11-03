@@ -824,7 +824,7 @@ const dictionary = {
   appPlaySigningSha1Hint: "Play Console › Test and release › App integrity › App signing key certificate. Save, then Set up gives it to Firebase.",
   appGoogleIosClient: "iOS client ID",
   appGoogleIosClientOk: "In the sign-in project. Left empty, the Firebase file's own is used.",
-  appGoogleIosClientHint: "Google Cloud console › project {project} › Credentials › Create OAuth client ID › iOS, bundle ID {bundle}; paste its client ID here. The next iOS build carries it.",
+  appGoogleIosClientHint: "The Firebase file has no iOS client in project {project}. Turn Google on in that project's Firebase Authentication (Sign-in method) and press Set up: Firebase makes one for {bundle}. Only if it still has none, make an iOS OAuth client there by hand and paste its client ID here.",
   appFirebaseAndroid: "Firebase (Android)",
   appFirebaseIos: "Firebase (iOS)",
   firebaseNone: "No Firebase service account",

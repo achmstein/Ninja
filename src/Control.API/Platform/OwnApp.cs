@@ -212,9 +212,9 @@ public static partial class GoogleSignIn
             ? $"Android: give the SHA-1 of Play's app signing key (Play Console, App integrity) on the App tab and link Firebase again, or the app as Play installs it cannot sign in with Google."
             : $"Android: Play's app signing SHA-1 is given; Firebase must be linked since (in project {project}) for Google to know it.";
         if (ios is null)
-            return new AppCheck("google-sign-in", false, $"No iOS client for Google sign-in: make an iOS OAuth client for {tenant.AppId} in Google Cloud project {project} and give its id on the App tab. {android}");
+            return new AppCheck("google-sign-in", false, $"The iOS Firebase file names no client for Google sign-in: turn Google on in Firebase Authentication of project {project} and press Set up, so Firebase makes one for {tenant.AppId}. {android}");
         if (Project(ios) != project)
-            return new AppCheck("google-sign-in", false, $"The iOS client is in Google Cloud project {Project(ios)}, sign-in is in {project}: make an iOS OAuth client for {tenant.AppId} in {project} and give its id on the App tab. {android}");
+            return new AppCheck("google-sign-in", false, $"The iOS client is in Google Cloud project {Project(ios)}, sign-in is in {project}: turn Google on in Firebase Authentication of project {project} and press Set up, so Firebase makes one for {tenant.AppId}. {android}");
         return new AppCheck("google-sign-in", app.PlaySigningSha1 is not null, $"iOS signs in with project {project}'s client. {android}");
     }
 
