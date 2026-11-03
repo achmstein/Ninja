@@ -437,6 +437,78 @@ public sealed class KeycloakRestAdmin(KeycloakAdminToken admin, IHttpClientFacto
         var mobile = (await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId=mobile-app", ct))?.OfType<JsonObject>().FirstOrDefault();
         if (mobile is not null && Templates.WithAppRedirects(mobile, realm, appId))
             await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{admin}/clients/{mobile["id"]!.GetValue<string>()}", mobile, ct), $"the customer app's redirects in {realm}", ct);
+
+        // The app signs in natively and hands Keycloak the provider's token (token exchange): Keycloak takes it
+        // only from a client each provider's token-exchange permission allows, which is the customer app's
+        if (mobile is not null)
+        {
+            var aliases = wanted.Select(p => p?["alias"]?.GetValue<string>()).OfType<string>().ToList();
+            if (aliases.Count > 0) await AllowTokenExchangeAsync(client, admin, mobile["id"]!.GetValue<string>(), aliases, ct);
+        }
+    }
+
+    public const string TokenExchangePolicy = "mobile-app-policy";
+
+    /// <summary>
+    /// Each provider's token-exchange permission (fine-grained admin permissions, v1) granted to the customer
+    /// app's client by one client policy in realm-management, as Chillax's own deploy did: without it the
+    /// app's Google or Apple sign-in is refused at the exchange though the browser's works.
+    /// </summary>
+    private async Task AllowTokenExchangeAsync(HttpClient client, string admin, string mobileId, IReadOnlyList<string> aliases, CancellationToken ct)
+    {
+        var management = (await client.GetFromJsonAsync<JsonArray>($"{admin}/clients?clientId=realm-management", ct))?.OfType<JsonObject>().FirstOrDefault()?["id"]?.GetValue<string>();
+        if (management is null) return;
+        var authz = $"{admin}/clients/{management}/authz/resource-server";
+
+        // Each provider's permissions on first: realm-management has no authorization (its policies answer 404) until then
+        var permissionIds = new List<(string Alias, string Id)>();
+        foreach (var alias in aliases)
+        {
+            using var enabled = await client.PutAsJsonAsync($"{admin}/identity-provider/instances/{alias}/management/permissions", new JsonObject { ["enabled"] = true }, ct);
+            if (!enabled.IsSuccessStatusCode)
+                throw new InvalidOperationException($"Keycloak refused permissions on {alias} ({(int)enabled.StatusCode}): {await enabled.Content.ReadAsStringAsync(ct)}");
+            var permissions = await enabled.Content.ReadFromJsonAsync<JsonObject>(ct);
+            if (permissions?["scopePermissions"]?["token-exchange"]?.GetValue<string>() is { } id) permissionIds.Add((alias, id));
+        }
+        if (permissionIds.Count == 0) return;
+
+        string? policyId = null;
+        foreach (var attempt in new[] { 0, 1 })
+        {
+            var policies = await client.GetFromJsonAsync<JsonArray>($"{authz}/policy/client?name={TokenExchangePolicy}", ct) ?? [];
+            var policy = policies.OfType<JsonObject>().FirstOrDefault(p => p["name"]?.GetValue<string>() == TokenExchangePolicy);
+            if (policy is not null)
+            {
+                policyId = policy["id"]!.GetValue<string>();
+                var clients = policy["clients"]?.AsArray().Select(c => c?.GetValue<string>()).ToList() ?? [];
+                if (!clients.Contains(mobileId))
+                {
+                    policy["clients"] = new JsonArray(JsonValue.Create(mobileId));
+                    await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{authz}/policy/client/{policyId}", policy, ct), "the token-exchange policy", ct);
+                }
+                break;
+            }
+            if (attempt == 1) break;
+            await ThrowIfRefusedAsync(await client.PostAsJsonAsync($"{authz}/policy/client", new JsonObject
+            {
+                ["name"] = TokenExchangePolicy,
+                ["description"] = "The customer app may exchange a Google or Apple token",
+                ["logic"] = "POSITIVE",
+                ["clients"] = new JsonArray(JsonValue.Create(mobileId)),
+            }, ct), "the token-exchange policy", ct);
+        }
+        if (policyId is null) throw new InvalidOperationException("Keycloak made no token-exchange policy");
+
+        foreach (var (alias, permissionId) in permissionIds)
+        {
+            var permission = await client.GetFromJsonAsync<JsonObject>($"{authz}/permission/scope/{permissionId}", ct);
+            if (permission is null) continue;
+            var given = await client.GetFromJsonAsync<JsonArray>($"{authz}/policy/{permissionId}/associatedPolicies", ct) ?? [];
+            if (given.OfType<JsonObject>().Any(p => p["id"]?.GetValue<string>() == policyId)) continue;
+            permission["policies"] = new JsonArray(JsonValue.Create(policyId));
+            permission["decisionStrategy"] = "AFFIRMATIVE";
+            await ThrowIfRefusedAsync(await client.PutAsJsonAsync($"{authz}/permission/scope/{permissionId}", permission, ct), $"the token-exchange permission on {alias}", ct);
+        }
     }
 
     public async Task EnsureProfileFieldsAsync(string realm, string country, CancellationToken ct)
