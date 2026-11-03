@@ -27,6 +27,8 @@
     <PackageReference Include="Npgsql" />
     <PackageReference Include="AWSSDK.S3" />
     <PackageReference Include="MailKit" />
+    <!-- A business's Android upload key, made and read here as PKCS12 with its alias (Platform/UploadKeys.cs) -->
+    <PackageReference Include="System.Security.Cryptography.Pkcs" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools">
       <PrivateAssets>all</PrivateAssets>
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

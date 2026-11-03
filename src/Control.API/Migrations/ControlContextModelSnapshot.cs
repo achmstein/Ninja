@@ -126,6 +126,22 @@ namespace Ninja.Control.API.Migrations
                     b.ToTable("AiUsage");
                 });
 
+            modelBuilder.Entity("Ninja.Control.API.Model.FirebaseSettings", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("ServiceAccountJson")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("FirebaseSettings");
+                });
+
             modelBuilder.Entity("Ninja.Control.API.Model.Job", b =>
                 {
                     b.Property<long>("Id")
@@ -779,6 +795,82 @@ namespace Ninja.Control.API.Migrations
                     b.ToTable("Tenants");
                 });
 
+            modelBuilder.Entity("Ninja.Control.API.Model.TenantApp", b =>
+                {
+                    b.Property<Guid>("TenantId")
+                        .HasColumnType("uuid");
+
+                    b.Property<string>("AscIssuerId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AscKeyId")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("AscPrivateKey")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CheckedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Checks")
+                        .HasColumnType("jsonb");
+
+                    b.Property<string>("FirebaseAndroidAppId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("FirebaseIosAppId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("GoogleServiceInfoPlist")
+                        .HasColumnType("text");
+
+                    b.Property<string>("GoogleServicesJson")
+                        .HasColumnType("text");
+
+                    b.Property<byte[]>("Icon")
+                        .HasColumnType("bytea");
+
+                    b.Property<byte[]>("IconForeground")
+                        .HasColumnType("bytea");
+
+                    b.Property<string>("KeyAlias")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("KeyPassword")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<string>("PlayServiceAccountJson")
+                        .HasColumnType("text");
+
+                    b.Property<string>("StorePassword")
+                        .HasMaxLength(512)
+                        .HasColumnType("character varying(512)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("UploadKeySha1")
+                        .HasMaxLength(59)
+                        .HasColumnType("character varying(59)");
+
+                    b.Property<string>("UploadKeySha256")
+                        .HasMaxLength(95)
+                        .HasColumnType("character varying(95)");
+
+                    b.Property<string>("UploadKeystore")
+                        .HasColumnType("text");
+
+                    b.HasKey("TenantId");
+
+                    b.ToTable("TenantApps");
+                });
+
             modelBuilder.Entity("Ninja.Control.API.Model.AiRoleModel", b =>
                 {
                     b.HasOne("Ninja.Control.API.Model.AiProvider", null)
@@ -817,6 +909,15 @@ namespace Ninja.Control.API.Migrations
                         .WithMany()
                         .HasForeignKey("NodeId")
                         .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Ninja.Control.API.Model.TenantApp", b =>
+                {
+                    b.HasOne("Ninja.Control.API.Model.Tenant", null)
+                        .WithOne()
+                        .HasForeignKey("Ninja.Control.API.Model.TenantApp", "TenantId")
+                        .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
                 });
 

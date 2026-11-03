@@ -53,6 +53,8 @@ public static partial class ControlApi
         MapTalabatSettingsApi(api);
         MapAiApi(api);
         MapMapsApi(api);
+        MapFirebaseApi(api);
+        MapAppApi(api);
         MapNodesApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know

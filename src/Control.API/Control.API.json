@@ -3933,6 +3933,815 @@
         ]
       }
     },
+    "/api/control/firebase": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The service account the businesses' own apps are made in Firebase with (shown by its email and project)",
+        "operationId": "GetFirebaseSettings",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirebaseSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Set or clear that service account: a Google key file with Firebase Admin on the platform's Firebase project",
+        "operationId": "SaveFirebaseSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveFirebaseSettingsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirebaseSettingsDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/firebase/test": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "List the project's apps with the saved service account: whether Firebase answers it",
+        "operationId": "TestFirebase",
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirebaseTestResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "What the business's own app holds (keys only as set or not, fingerprints, Firebase ids) and its last check",
+        "operationId": "GetTenantApp",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/android-key": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Take in the business's existing Android upload keystore, checked; its SHA-256 joins the record's App Links fingerprints",
+        "operationId": "ImportAndroidKey",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportAndroidKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/android-key/generate": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Make a new Android upload key for the business (RSA 2048, 25 years); its SHA-256 joins the record's App Links fingerprints",
+        "operationId": "GenerateAndroidKey",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "null"
+                  },
+                  {
+                    "$ref": "#/components/schemas/GenerateAndroidKeyRequest"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/play": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The Google service account with release rights on the business's Play account",
+        "operationId": "SetPlayKey",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PlayKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/apple": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The App Store Connect API key from the business's account (App Manager)",
+        "operationId": "SetAppleKey",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppleKeyRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/icons": {
+      "put": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The app's icon (1024x1024 PNG, no transparency) and Android's adaptive foreground",
+        "operationId": "SetAppIcons",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AppIconsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/icons/{which}": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The saved icon (icon) or foreground (foreground), as PNG",
+        "operationId": "GetAppIcon",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "which",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/firebase": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Find or make the business's Android and iOS apps in the platform's Firebase project, give Android its certificates, and keep both config files",
+        "operationId": "LinkFirebaseApps",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FirebaseLinkResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app/check": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Try every key from the server (Apple finds the app, Play opens an edit) and check the files, icon and record: one line each",
+        "operationId": "CheckTenantApp",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TenantAppStatus"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app-kit": {
+      "get": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "What the build signs and uploads the business's own app with, for one platform; each read is audited. tenants/fetch-kit.sh reads it as the app-builder client",
+        "operationId": "GetTenantAppKit",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "platform",
+            "in": "query",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AppKit"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app-kit/carry": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "Fill the empty slots of the business's app with what its GitHub environment held (carry-app-secrets.yml); never replaces one",
+        "operationId": "CarryTenantAppKit",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CarryAppKitRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CarryAppKitResult"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/control/tenants/{slug}/app-kit/report": {
+      "post": {
+        "tags": [
+          "Control"
+        ],
+        "summary": "The build's reading of a JKS upload key's fingerprints, taken only while none are known",
+        "operationId": "ReportUploadKeyFingerprints",
+        "parameters": [
+          {
+            "name": "slug",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReportFingerprintsRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Conflict",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/control/platform/nodes": {
       "get": {
         "tags": [
@@ -4594,6 +5403,264 @@
               "string"
             ],
             "format": "int64"
+          }
+        }
+      },
+      "AndroidKeyStatus": {
+        "required": [
+          "set",
+          "format",
+          "alias",
+          "sha1",
+          "sha256"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean"
+          },
+          "format": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "pkcs12 when it was made here or could be read, jks when its fingerprints come from its first build"
+          },
+          "alias": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sha1": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "sha256": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AppCheck": {
+        "required": [
+          "item",
+          "ok",
+          "detail"
+        ],
+        "type": "object",
+        "properties": {
+          "item": {
+            "type": "string"
+          },
+          "ok": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
+        }
+      },
+      "AppFirebaseStatus": {
+        "required": [
+          "platformReady",
+          "androidAppId",
+          "iosAppId",
+          "androidFile",
+          "iosFile"
+        ],
+        "type": "object",
+        "properties": {
+          "platformReady": {
+            "type": "boolean",
+            "description": "Whether the Platform page's Firebase tab has its service account"
+          },
+          "androidAppId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "iosAppId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "androidFile": {
+            "type": "boolean"
+          },
+          "iosFile": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AppIconsRequest": {
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "1024x1024 PNG without transparency, base64; left out keeps the saved one"
+          },
+          "foreground": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Android's adaptive foreground, square PNG, base64; left out keeps the saved one"
+          },
+          "clearForeground": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "AppIconsStatus": {
+        "required": [
+          "icon",
+          "foreground"
+        ],
+        "type": "object",
+        "properties": {
+          "icon": {
+            "type": "boolean"
+          },
+          "foreground": {
+            "type": "boolean"
+          }
+        }
+      },
+      "AppKit": {
+        "type": "object",
+        "properties": {
+          "googleServicesJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "googleServiceInfoPlist": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "keystore": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "keyAlias": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "keyPassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storePassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "fingerprintsKnown": {
+            "type": "boolean",
+            "description": "Whether the upload key's fingerprints are known; when not, the build reports them (app-kit/report)",
+            "default": false
+          },
+          "playServiceAccountJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascKeyId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascIssuerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascPrivateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "icon": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "iconForeground": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "AppleKeyRequest": {
+        "required": [
+          "keyId",
+          "issuerId",
+          "privateKey"
+        ],
+        "type": "object",
+        "properties": {
+          "keyId": {
+            "type": "string"
+          },
+          "issuerId": {
+            "type": "string"
+          },
+          "privateKey": {
+            "type": "string",
+            "description": "The .p8 file's contents"
+          }
+        }
+      },
+      "AppleKeyStatus": {
+        "required": [
+          "set",
+          "keyId",
+          "issuerId"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean"
+          },
+          "keyId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "issuerId": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -5386,6 +6453,99 @@
           }
         }
       },
+      "CarryAppKitRequest": {
+        "type": "object",
+        "properties": {
+          "keystore": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "keyAlias": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "keyPassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "storePassword": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "playServiceAccountJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascKeyId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascIssuerId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "ascPrivateKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "googleServicesJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "googleServiceInfoPlist": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CarryAppKitResult": {
+        "required": [
+          "filled",
+          "kept",
+          "refused"
+        ],
+        "type": "object",
+        "properties": {
+          "filled": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "kept": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "refused": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "ContainerInfo": {
         "required": [
           "service",
@@ -5695,6 +6855,81 @@
           }
         }
       },
+      "FirebaseLinkResponse": {
+        "required": [
+          "app",
+          "done"
+        ],
+        "type": "object",
+        "properties": {
+          "app": {
+            "$ref": "#/components/schemas/TenantAppStatus"
+          },
+          "done": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
+      "FirebaseSettingsDto": {
+        "required": [
+          "set",
+          "clientEmail",
+          "projectId",
+          "updatedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean"
+          },
+          "clientEmail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The service account, the one part shown again"
+          },
+          "projectId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The Firebase project it manages, from its key file"
+          },
+          "updatedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
+      },
+      "FirebaseTestResult": {
+        "required": [
+          "ok",
+          "detail",
+          "apps"
+        ],
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      },
       "FleetUpgradeRequest": {
         "required": [
           "imageTag"
@@ -5741,6 +6976,15 @@
               "null",
               "string"
             ]
+          }
+        }
+      },
+      "GenerateAndroidKeyRequest": {
+        "type": "object",
+        "properties": {
+          "confirm": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -5814,6 +7058,38 @@
           "expiresAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "ImportAndroidKeyRequest": {
+        "required": [
+          "keystore",
+          "alias",
+          "storePassword"
+        ],
+        "type": "object",
+        "properties": {
+          "keystore": {
+            "type": "string",
+            "description": "The keystore file, base64"
+          },
+          "alias": {
+            "type": "string"
+          },
+          "storePassword": {
+            "type": "string"
+          },
+          "keyPassword": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "Left out: the store password, as PKCS12 keys have"
+          },
+          "confirm": {
+            "type": "boolean",
+            "description": "Required to replace a key already set: Play refuses another upload key until it is reset in Play Console",
+            "default": false
           }
         }
       },
@@ -6829,6 +8105,37 @@
           }
         }
       },
+      "PlayKeyRequest": {
+        "required": [
+          "serviceAccountJson"
+        ],
+        "type": "object",
+        "properties": {
+          "serviceAccountJson": {
+            "type": "string",
+            "description": "The service account's key file, as Google gives it"
+          }
+        }
+      },
+      "PlayKeyStatus": {
+        "required": [
+          "set",
+          "clientEmail"
+        ],
+        "type": "object",
+        "properties": {
+          "set": {
+            "type": "boolean"
+          },
+          "clientEmail": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The service account, the one part shown again"
+          }
+        }
+      },
       "ProblemDetails": {
         "type": "object",
         "properties": {
@@ -7117,6 +8424,21 @@
           }
         }
       },
+      "ReportFingerprintsRequest": {
+        "required": [
+          "sha1",
+          "sha256"
+        ],
+        "type": "object",
+        "properties": {
+          "sha1": {
+            "type": "string"
+          },
+          "sha256": {
+            "type": "string"
+          }
+        }
+      },
       "RestoreRequest": {
         "required": [
           "intoSlug"
@@ -7187,6 +8509,21 @@
             "items": {
               "$ref": "#/components/schemas/AiRoleDto"
             }
+          }
+        }
+      },
+      "SaveFirebaseSettingsRequest": {
+        "type": "object",
+        "properties": {
+          "serviceAccountJson": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "clear": {
+            "type": "boolean",
+            "default": false
           }
         }
       },
@@ -7438,6 +8775,56 @@
           "Suspended",
           "Cancelled"
         ]
+      },
+      "TenantAppStatus": {
+        "required": [
+          "appId",
+          "androidKey",
+          "play",
+          "apple",
+          "icons",
+          "firebase",
+          "checks",
+          "checkedAt"
+        ],
+        "type": "object",
+        "properties": {
+          "appId": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "description": "The record's own app id; null: the business is on the shared app and nothing here is used"
+          },
+          "androidKey": {
+            "$ref": "#/components/schemas/AndroidKeyStatus"
+          },
+          "play": {
+            "$ref": "#/components/schemas/PlayKeyStatus"
+          },
+          "apple": {
+            "$ref": "#/components/schemas/AppleKeyStatus"
+          },
+          "icons": {
+            "$ref": "#/components/schemas/AppIconsStatus"
+          },
+          "firebase": {
+            "$ref": "#/components/schemas/AppFirebaseStatus"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AppCheck"
+            }
+          },
+          "checkedAt": {
+            "type": [
+              "null",
+              "string"
+            ],
+            "format": "date-time"
+          }
+        }
       },
       "TenantDetail": {
         "required": [

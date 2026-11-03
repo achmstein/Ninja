@@ -30,8 +30,41 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<MapsSettings> MapsSettings => Set<MapsSettings>();
 
+    public DbSet<FirebaseSettings> FirebaseSettings => Set<FirebaseSettings>();
+
+    public DbSet<TenantApp> TenantApps => Set<TenantApp>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<FirebaseSettings>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Id).ValueGeneratedNever();
+            // A service account's key file is a few kilobytes: no limit
+            entity.Property(e => e.ServiceAccountJson).HasConversion(_secrets.NullableConverter());
+        });
+
+        modelBuilder.Entity<TenantApp>(entity =>
+        {
+            entity.HasKey(e => e.TenantId);
+            // Dropped with the record (Forget); kept while the record is, destroyed or not
+            entity.HasOne<Tenant>().WithOne().HasForeignKey<TenantApp>(e => e.TenantId).OnDelete(DeleteBehavior.Cascade);
+            var secret = _secrets.NullableConverter();
+            entity.Property(e => e.UploadKeystore).HasConversion(secret);
+            entity.Property(e => e.KeyAlias).HasMaxLength(512).HasConversion(secret);
+            entity.Property(e => e.KeyPassword).HasMaxLength(512).HasConversion(secret);
+            entity.Property(e => e.StorePassword).HasMaxLength(512).HasConversion(secret);
+            entity.Property(e => e.PlayServiceAccountJson).HasConversion(secret);
+            entity.Property(e => e.AscKeyId).HasMaxLength(64);
+            entity.Property(e => e.AscIssuerId).HasMaxLength(64);
+            entity.Property(e => e.AscPrivateKey).HasConversion(secret);
+            entity.Property(e => e.UploadKeySha1).HasMaxLength(59);
+            entity.Property(e => e.UploadKeySha256).HasMaxLength(95);
+            entity.Property(e => e.FirebaseAndroidAppId).HasMaxLength(100);
+            entity.Property(e => e.FirebaseIosAppId).HasMaxLength(100);
+            entity.Property(e => e.Checks).HasColumnType("jsonb");
+        });
+
         modelBuilder.Entity<MapsSettings>(entity =>
         {
             // One row, always id 1
