@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react'
 import { isAxiosError } from 'axios'
-import { Check, Wand2 } from 'lucide-react'
+import { Camera, Check, Wand2 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { drawItemPhoto } from '@/api/catalog'
+import { drawItemPhoto, restageItemPhoto } from '@/api/catalog'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -124,6 +124,9 @@ export function PhotoStudio({
   const [drawing, setDrawing] = useState(false)
   const [step, setStep] = useState(0)
   const [error, setError] = useState<string | null>(null)
+  // From its name (the model draws it) or from the owner's own photo (the model restages it, the label kept)
+  const [source, setSource] = useState<'name' | 'photo'>('name')
+  const [photo, setPhoto] = useState<{ file: File; url: string } | null>(null)
   const nextId = useRef(1)
   const kept = useRef<Set<string>>(new Set())
 
@@ -147,27 +150,56 @@ export function PhotoStudio({
     []
   )
 
+  // The picked photo is let go when another is picked or the studio closes
+  useEffect(
+    () => () => {
+      if (photo) URL.revokeObjectURL(photo.url)
+    },
+    [photo]
+  )
+
   const current = drafts.find((d) => d.id === shown) ?? null
   const name = item.nameEn || item.nameAr || ''
+  const canDraw = source === 'name' ? !!name : !!photo
+  const pick = (file: File | undefined) => {
+    if (!file) return
+    setPhoto({ file, url: URL.createObjectURL(file) })
+    setShown(null)
+    setError(null)
+  }
 
   const draw = async () => {
     setDrawing(true)
     setStep(0)
     setError(null)
     try {
-      const { data } = await drawItemPhoto({
-        query: { 'api-version': API_VERSION },
-        body: {
-          nameEn: item.nameEn || null,
-          nameAr: item.nameAr || null,
-          description: item.description || null,
-          category: item.category || null,
-          style: look,
-          note: note.trim() || null,
-        },
-        responseType: 'blob',
-        throwOnError: true,
-      })
+      const { data } =
+        source === 'photo' && photo
+          ? await restageItemPhoto({
+              query: { 'api-version': API_VERSION },
+              body: {
+                photo: photo.file as unknown as never,
+                nameEn: item.nameEn || undefined,
+                nameAr: item.nameAr || undefined,
+                style: look,
+                note: note.trim() || undefined,
+              },
+              responseType: 'blob',
+              throwOnError: true,
+            })
+          : await drawItemPhoto({
+              query: { 'api-version': API_VERSION },
+              body: {
+                nameEn: item.nameEn || null,
+                nameAr: item.nameAr || null,
+                description: item.description || null,
+                category: item.category || null,
+                style: look,
+                note: note.trim() || null,
+              },
+              responseType: 'blob',
+              throwOnError: true,
+            })
       const blob = data as Blob
       const file = new File([blob], `item-${look}.webp`, { type: 'image/webp' })
       const draft: Draft = {
@@ -206,6 +238,44 @@ export function PhotoStudio({
             {name || t('photoStudioHint')}
           </DialogDescription>
         </DialogHeader>
+
+        {/* From its name, or from the owner's own photo (a branded can keeps its label) */}
+        <div
+          role='radiogroup'
+          className='bg-muted grid grid-cols-2 rounded-full p-1'
+        >
+          {(['name', 'photo'] as const).map((s) => (
+            <button
+              key={s}
+              type='button'
+              role='radio'
+              aria-checked={source === s}
+              disabled={drawing}
+              onClick={() => {
+                setSource(s)
+                setError(null)
+              }}
+              className={cn(
+                'flex h-9 items-center justify-center gap-1.5 rounded-full text-sm font-medium transition-colors',
+                source === s
+                  ? 'bg-background text-foreground shadow-xs'
+                  : 'text-muted-foreground hover:text-foreground'
+              )}
+            >
+              {s === 'photo' ? (
+                <Camera className='size-4' />
+              ) : (
+                <Wand2 className='size-4' />
+              )}
+              {t(s === 'photo' ? 'studioFromPhoto' : 'studioFromName')}
+            </button>
+          ))}
+        </div>
+        {source === 'photo' && (
+          <p className='text-muted-foreground -mt-2 text-xs'>
+            {t('studioFromPhotoHint')}
+          </p>
+        )}
 
         {/* The stage: the look's surface while idle, a breathing frame while drawing, the photo developing */}
         <div
@@ -297,7 +367,41 @@ export function PhotoStudio({
             </div>
           )}
 
-          {!current && !drawing && (
+          {/* From a photo: the owner's photo waits on the stage, or a way to take one */}
+          {source === 'photo' &&
+            !current &&
+            !drawing &&
+            (photo ? (
+              <>
+                <img
+                  src={photo.url}
+                  alt=''
+                  className='absolute inset-0 size-full object-cover'
+                />
+                <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
+                  <span className='bg-background/85 rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'>
+                    {t('studioPhotoReady')}
+                  </span>
+                </div>
+              </>
+            ) : (
+              <label className='absolute inset-0 grid cursor-pointer place-items-center p-6 text-center'>
+                <input
+                  type='file'
+                  accept='image/*'
+                  className='sr-only'
+                  onChange={(e) => pick(e.target.files?.[0])}
+                />
+                <span className='bg-background/85 flex flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-3 shadow-sm backdrop-blur'>
+                  <Camera className='text-primary size-5' />
+                  <span className='text-sm font-medium'>
+                    {t('studioPickPhoto')}
+                  </span>
+                </span>
+              </label>
+            ))}
+
+          {source === 'name' && !current && !drawing && (
             <div className='absolute inset-0 grid place-items-center p-6 text-center'>
               <div className='bg-background/85 flex flex-col items-center gap-2 rounded-xl px-4 py-3 shadow-sm backdrop-blur'>
                 <Wand2 className='text-primary size-5' />
@@ -379,7 +483,7 @@ export function PhotoStudio({
           placeholder={t('studioNotePlaceholder')}
           disabled={drawing}
           onKeyDown={(e) => {
-            if (e.key === 'Enter' && !drawing && name) {
+            if (e.key === 'Enter' && !drawing && canDraw) {
               e.preventDefault()
               void draw()
             }
@@ -388,11 +492,25 @@ export function PhotoStudio({
 
         {error && <p className='text-destructive text-sm'>{error}</p>}
 
+        {source === 'photo' && photo && (
+          <label className='text-primary -mt-2 inline-flex cursor-pointer items-center gap-1.5 self-start text-sm font-medium hover:underline'>
+            <input
+              type='file'
+              accept='image/*'
+              className='sr-only'
+              disabled={drawing}
+              onChange={(e) => pick(e.target.files?.[0])}
+            />
+            <Camera className='size-4' />
+            {t('studioChangePhoto')}
+          </label>
+        )}
+
         <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
           <Button
             type='button'
             variant={current ? 'outline' : 'default'}
-            disabled={drawing || !name}
+            disabled={drawing || !canDraw}
             onClick={() => void draw()}
           >
             <NinjaMark />
@@ -400,7 +518,9 @@ export function PhotoStudio({
               ? t('studioDrawing')
               : current
                 ? t('studioDrawAgain')
-                : t('studioDraw')}
+                : source === 'photo'
+                  ? t('studioRestage')
+                  : t('studioDraw')}
           </Button>
           {current && (
             <Button type='button' disabled={drawing} onClick={use}>

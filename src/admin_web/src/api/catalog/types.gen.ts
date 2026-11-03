@@ -801,6 +801,45 @@ export type DrawItemPhotoErrors = {
 
 export type DrawItemPhotoError = DrawItemPhotoErrors[keyof DrawItemPhotoErrors];
 
+export type RestageItemPhotoData = {
+    body: {
+        photo: IFormFile;
+    } & {
+        nameEn?: string;
+    } & {
+        nameAr?: string;
+    } & {
+        style?: string;
+    } & {
+        note?: string;
+    };
+    path?: never;
+    query?: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version'?: string;
+    };
+    url: '/api/catalog/assist/photo/restage';
+};
+
+export type RestageItemPhotoErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type RestageItemPhotoError = RestageItemPhotoErrors[keyof RestageItemPhotoErrors];
+
 export type QuotePromoData = {
     body?: never;
     path?: never;

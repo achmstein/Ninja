@@ -68,6 +68,45 @@ public sealed class ItemPhotoDrawer(IServiceProvider services, IOptions<AIOption
         }
     }
 
+    /// <summary>
+    /// The owner's own photo of the item (a can of a brand, a bottle, a box, a dish) restaged by the image
+    /// model in the chosen look: the item itself kept as photographed, its packaging, label and logo too,
+    /// which a model drawing from a name alone never gets right and should not invent; only the
+    /// background, surface and light are made. Handed back as the WebP an upload would store.
+    /// </summary>
+    public async Task<byte[]> RestageAsync(byte[] photo, DrawItemPhotoRequest request, CancellationToken ct)
+    {
+        if (options.Value.UseFake)
+            return ItemPictures.Normalize(photo).Webp ?? Fake(request);
+        if (_client is null)
+            throw new AIUnavailableException();
+
+        var jpeg = PromotionDesigner.AsJpeg(photo) ?? throw new AIProviderException(400, "The photo could not be read.", null, null);
+        try
+        {
+            var images = _client.GetImageClient(options.Value.ImageModel);
+            using var stream = new MemoryStream(jpeg);
+            var result = await images.GenerateImageEditsAsync(stream, "photo.jpg", ItemPhotoPrompt.FromPhoto(request), 1, new ImageEditOptions
+            {
+                Size = GeneratedImageSize.W1024xH1024,
+            }, ct);
+            var bytes = result.Value.FirstOrDefault()?.ImageBytes?.ToArray()
+                ?? throw new AIProviderException(502, "The image model answered with no picture.", null, null);
+            var (webp, error) = ItemPictures.Normalize(bytes);
+            return webp ?? throw new AIProviderException(502, error ?? "The picture could not be read.", null, null);
+        }
+        catch (ClientResultException ex)
+        {
+            var response = ex.GetRawResponse();
+            TimeSpan? wait = response is not null && response.Headers.TryGetValue("Retry-After", out var value) && int.TryParse(value, out var seconds)
+                ? TimeSpan.FromSeconds(seconds)
+                : null;
+            if (ex.Status == 503)
+                throw new NoImageModelException();
+            throw new AIProviderException(ex.Status, ex.Message, wait, ex);
+        }
+    }
+
     /// <summary>Under test: a plate on a table in the style's colours, so the flow runs without a model.</summary>
     private static byte[] Fake(DrawItemPhotoRequest request)
     {
@@ -141,5 +180,31 @@ public static class ItemPhotoPrompt
         return $"Professional food photograph of {name}, as a café or restaurant serves it.{what}{kind} " +
                $"{look} Appetizing and realistic, true to how it is really made.{note} " +
                "No text, no labels, no logos, no hands, no people. Square, centred.";
+    }
+
+    /// <summary>
+    /// The words a photo of the item is restaged in: keep the item exactly as photographed (its packaging,
+    /// label, logo and lettering untouched, never redrawn), and make only the setting in the chosen look.
+    /// </summary>
+    public static string FromPhoto(DrawItemPhotoRequest request)
+    {
+        static string? Clean(string? text) => string.IsNullOrWhiteSpace(text) ? null : text.Trim();
+        var name = Clean(request.NameEn) ?? Clean(request.NameAr);
+        var what = name is null ? "the item in this photo" : $"the item in this photo ({name})";
+        var note = Clean(request.Note) is { } extra ? $" Also: {extra[..Math.Min(extra.Length, ItemPhotoDrawer.MaxNoteLength)]}." : "";
+        var setting = StyleOf(request.Style) switch
+        {
+            "rustic" => "on a worn wooden table with a linen napkin, warm golden window light, a 45-degree angle, shallow depth of field",
+            "overhead" => "seen straight from above on a light textured surface, centred with room around it, soft even daylight",
+            "moody" => "on a dark slate surface against a dark background, one soft directional light, deep shadows, a low 30-degree angle",
+            "fresh" => "on a white marble surface with a few fresh, fitting ingredients near it, airy high-key daylight, a 45-degree angle",
+            _ => "alone on a plain light surface against a clean light background, soft natural side light, a 45-degree angle, shallow depth of field",
+        };
+        return $"Turn this photo into a professional menu photograph of {what}. " +
+               "Keep the item exactly as it is in the photo: the same product, shape, packaging, colours, label, logo and lettering, " +
+               "sharp and legible; do not redraw, restyle, translate, remove or invent any brand, text or logo on it. " +
+               $"Replace only the surroundings and the light: {setting}. " +
+               "Clean the item of dust, glare and fingerprints, take away clutter, hands and people, and add a natural soft shadow under it. " +
+               $"Photorealistic, appetizing, square, the item centred and filling about two thirds of the frame.{note}";
     }
 }

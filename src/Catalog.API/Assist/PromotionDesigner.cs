@@ -157,7 +157,7 @@ public sealed class PromotionDesigner(IServiceProvider services, IOptions<AIOpti
     }
 
     /// <summary>Upright, within 1600 px, as a JPEG; null when it is not a picture</summary>
-    private static byte[]? AsJpeg(byte[] bytes)
+    internal static byte[]? AsJpeg(byte[] bytes)
     {
         using var codec = SKCodec.Create(new SKMemoryStream(bytes));
         if (codec is null) return null;

@@ -66,7 +66,50 @@ public static class CatalogAssistApi
             .RequireAuthorization("Admin")
             .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
 
+        api.MapPost("/assist/photo/restage", RestageItemPhoto)
+            .WithName("RestageItemPhoto")
+            .WithSummary("Restage the owner's photo of an item")
+            .WithDescription("The image model turns the owner's own photo of the item (a branded can or bottle, a box, a dish) into a menu photo in one of the house looks, keeping the item, its packaging, label and logo as photographed and making only the setting and light. Answers the WebP an upload would store. Nothing is saved (Admin only).")
+            .WithTags("Assist")
+            .RequireAuthorization("Admin")
+            .DisableAntiforgery()
+            .RequireRateLimiting(NinjaAIRateLimiting.PolicyName);
+
         return api;
+    }
+
+    public static async Task<Results<FileContentHttpResult, BadRequest<ProblemDetails>, ProblemHttpResult>> RestageItemPhoto(
+        [FromServices] ItemPhotoDrawer drawer,
+        HttpContext httpContext,
+        [Description("The owner's photo of the item, any phone photo (jpeg, png or webp)")] IFormFile photo,
+        [FromForm] string? nameEn,
+        [FromForm] string? nameAr,
+        [FromForm, Description("studio, rustic, overhead, moody or fresh")] string? style,
+        [FromForm, Description("Anything to add in the owner's words")] string? note,
+        CancellationToken ct)
+    {
+        if (!drawer.IsEnabled)
+            return AIProblems.NotConfigured();
+        if (note is { Length: > ItemPhotoDrawer.MaxNoteLength })
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Keep the note under {ItemPhotoDrawer.MaxNoteLength} characters." });
+        if (photo.Length == 0 || photo.Length > ItemPictures.MaxUploadBytes)
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"The photo must be a jpeg, png or webp image of at most {ItemPictures.MaxUploadBytes / (1024 * 1024)} MB." });
+
+        using var buffer = new MemoryStream((int)photo.Length);
+        await photo.CopyToAsync(buffer, ct);
+        try
+        {
+            var picture = await drawer.RestageAsync(buffer.ToArray(), new DrawItemPhotoRequest(nameEn, nameAr, null, null, style, note), ct);
+            return TypedResults.File(picture, "image/webp", "item.webp");
+        }
+        catch (NoImageModelException)
+        {
+            return TypedResults.Problem(title: "No image model", detail: "Item photos are not set up: the platform has no image model yet.", statusCode: StatusCodes.Status503ServiceUnavailable);
+        }
+        catch (AIException ex)
+        {
+            return AIProblems.From(ex, httpContext);
+        }
     }
 
     public static async Task<Results<FileContentHttpResult, BadRequest<ProblemDetails>, ProblemHttpResult>> DrawItemPhoto(

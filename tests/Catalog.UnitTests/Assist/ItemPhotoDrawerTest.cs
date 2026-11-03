@@ -63,4 +63,17 @@ public class ItemPhotoDrawerTest
 
         Assert.IsFalse(drawer.IsEnabled);
     }
+
+    [TestMethod]
+    public void A_restaged_photo_keeps_the_item_and_its_label_and_makes_only_the_setting()
+    {
+        var prompt = ItemPhotoPrompt.FromPhoto(new DrawItemPhotoRequest("Pepsi can", "بيبسي", null, null, "moody", "ice cubes around it"));
+        StringAssert.Contains(prompt, "(Pepsi can)");
+        StringAssert.Contains(prompt, "label, logo and lettering");
+        StringAssert.Contains(prompt, "do not redraw");
+        StringAssert.Contains(prompt, "dark slate");
+        StringAssert.Contains(prompt, "Also: ice cubes around it.");
+        Assert.DoesNotContain("no logos", prompt, "the text prompt's rule against logos would strip the brand off the photo");
+        Assert.AreEqual(ItemPhotoPrompt.FromPhoto(new DrawItemPhotoRequest(null, null, null, null, "studio", null)), ItemPhotoPrompt.FromPhoto(new DrawItemPhotoRequest(null, null, null, null, "neon", null)));
+    }
 }
