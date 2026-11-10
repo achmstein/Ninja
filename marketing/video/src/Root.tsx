@@ -17,6 +17,7 @@ import { Branches } from "./tour/team";
 import { Fast } from "./tour/Fast";
 import { Gaming, GAMING_FRAMES } from "./tour/gaming";
 import { Tour } from "./tour/Tour";
+import { WebClips } from "./Web";
 
 export const RemotionRoot: React.FC = () => {
   return (
@@ -246,6 +247,7 @@ export const RemotionRoot: React.FC = () => {
           defaultProps={{ headline: "Everything your café runs on.", tagline: "One app for your whole café.", url: "ninjapp.net" }}
         />
       </Folder>
+      <WebClips />
     </>
   );
 };

@@ -2,3 +2,8 @@ node_modules
 dist
 dist-ssr
 *.local
+# Copied from marketing/video/public by scripts/film-assets.mjs
+public/dishes
+public/hero
+public/paper-menu.jpg
+public/supplier-receipt.jpg

@@ -10,6 +10,15 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // The film's scenes, compiled from where the films are made
+      '@film': path.resolve(__dirname, '../../marketing/video/src'),
+      // Their sounds are left out, and the package that plays them with it
+      '@remotion/media': path.resolve(__dirname, './src/film/no-media.tsx'),
     },
+    // What the scenes import is this project's copy, wherever the scene's file sits
+    dedupe: ['react', 'react-dom', 'remotion', 'lucide-react', '@remotion/google-fonts'],
+  },
+  server: {
+    fs: { allow: ['.', '../../marketing/video/src'] },
   },
 })

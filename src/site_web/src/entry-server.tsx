@@ -1,8 +1,6 @@
 import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
-import type { Lang } from '@/cafe/menu'
-import { useCafe } from '@/cafe/store'
-import { contentFor } from '@/lib/lang'
+import { contentFor, type Lang } from '@/lib/lang'
 import { App } from './App'
 
 const SITE = 'https://ninjapp.net'
@@ -11,7 +9,6 @@ const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quo
 
 /** A page as HTML, for scripts/prerender.mjs: what goes in #root and what goes in <head> */
 export function render(lang: Lang): { app: string; head: string } {
-  useCafe.getState().reset()
   const c = contentFor(lang)
   const url = lang === 'ar' ? `${SITE}/ar` : `${SITE}/`
   const head = [

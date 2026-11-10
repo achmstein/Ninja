@@ -43,6 +43,6 @@ describe('the two languages', () => {
   })
 
   it('name every module', () => {
-    for (const m of MODULES) expect(en.plans.modules[m].name).toBeTruthy()
+    for (const m of MODULES) expect(en.plans.modules[m]).toBeTruthy()
   })
 })

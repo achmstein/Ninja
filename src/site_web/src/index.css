@@ -1,30 +1,17 @@
 @import 'tailwindcss';
 
-/* The page's own faces, and each app's: all kept on this host */
+/* The page's faces, kept on this host. The apps' own faces come with the scenes */
 @import '@fontsource-variable/bricolage-grotesque/wght.css';
 @import '@fontsource-variable/geist/wght.css';
-@import '@fontsource-variable/inter/wght.css';
-@import '@fontsource-variable/plus-jakarta-sans/wght.css';
-@import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
 @import '@fontsource/original-surfer/latin-400.css';
-/* The four made-up brands' wordmarks */
-@import '@fontsource/pacifico/latin-400.css';
-@import '@fontsource/anton/latin-400.css';
-@import '@fontsource/bungee/latin-400.css';
-@import '@fontsource/playfair-display/latin-700-italic.css';
 
 @theme {
-  /* Headlines; Arabic falls to Plex, which has no Latin of its own in this stack */
+  /* Headlines; Arabic falls to Plex, the only face here that has it */
   --font-display: 'Bricolage Grotesque Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  /* The page's reading face, and the owner's dashboard's */
   --font-sans: 'Geist Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  /* The guest app's */
-  --font-guest: 'Plus Jakarta Sans Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  /* The till's, the kitchen's and the rider's */
-  --font-staff: 'Inter Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
   /* The `ninja` wordmark and nothing else */
   --font-wordmark: 'Original Surfer', cursive;
 
@@ -33,13 +20,8 @@
   --color-ink: #0f172a;
   --color-soft: #55617a;
   --color-night: #020617;
-  /* The counter the devices stand on, and the order travelling between them */
+  /* The amber of the app's order button */
   --color-counter: #fbbf24;
-  /* Each app's own colour, from its icon */
-  --color-till: #18181b;
-  --color-kitchen: #ea580c;
-  --color-rider: #0d9488;
-  --color-owner: #4f60e0;
 }
 
 html {
@@ -51,12 +33,6 @@ html {
   scroll-behavior: smooth;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  html {
-    scroll-behavior: auto;
-  }
-}
-
 body {
   margin: 0;
   overflow-x: clip;
@@ -66,24 +42,23 @@ body {
 .display {
   font-family: var(--font-display);
   font-weight: 800;
-  letter-spacing: -0.035em;
-  line-height: 0.98;
+  letter-spacing: -0.04em;
+  line-height: 0.95;
   text-wrap: balance;
 }
 
 [lang='ar'] .display {
   letter-spacing: 0;
-  line-height: 1.25;
+  line-height: 1.22;
   font-weight: 700;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-owner);
+  outline: 3px solid var(--color-ink);
   outline-offset: 3px;
   border-radius: 6px;
 }
 
-/* A screen scrolls like a phone: no bar */
 .no-bar {
   scrollbar-width: none;
 }
@@ -91,94 +66,18 @@ body {
   display: none;
 }
 
-/* The page's own finger on a control */
-@keyframes tap-dot {
-  0% {
-    opacity: 0;
-    scale: 1;
+/* The reel on a wide page: a card stops near the top and the next one slides over it,
+   each a step lower than the one before, so the deck shows its edges */
+@media (min-width: 1024px) and (min-height: 640px) {
+  .reel-card {
+    position: sticky;
+    top: calc(1.25rem + var(--i) * 0.9rem);
+    min-height: calc(100svh - 7rem);
   }
-  25% {
-    opacity: 1;
-    scale: 0.8;
-  }
-  70% {
-    opacity: 1;
-    scale: 1;
-  }
-  100% {
-    opacity: 0;
-  }
-}
-@keyframes tap-ring {
-  0% {
-    opacity: 0.9;
-    scale: 1;
-  }
-  100% {
-    opacity: 0;
-    scale: 2.2;
-  }
-}
-.tap-dot {
-  animation: tap-dot 0.65s ease-out both;
-}
-.tap-ring {
-  animation: tap-ring 0.55s 0.12s ease-out both;
-}
-
-/* The line that reads down a paper menu */
-@keyframes scan-line {
-  from {
-    top: 0;
-  }
-  to {
-    top: 100%;
-  }
-}
-.scan-line {
-  animation: scan-line 1.3s linear infinite alternate;
-}
-
-/* An order on its way from one screen to the next */
-@keyframes thread-x {
-  from {
-    inset-inline-start: 0%;
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  to {
-    inset-inline-start: 100%;
-    opacity: 0;
-  }
-}
-@keyframes thread-y {
-  from {
-    top: 0%;
-    opacity: 1;
-  }
-  85% {
-    opacity: 1;
-  }
-  to {
-    top: 100%;
-    opacity: 0;
-  }
-}
-.thread-x {
-  animation: thread-x 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
-}
-.thread-y {
-  animation: thread-y 0.8s cubic-bezier(0.65, 0, 0.35, 1) both;
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .tap-dot,
-  .tap-ring,
-  .scan-line,
-  .thread-x,
-  .thread-y {
-    animation: none;
+  html {
+    scroll-behavior: auto;
   }
 }
