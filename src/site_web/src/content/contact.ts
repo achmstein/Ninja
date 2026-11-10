@@ -5,7 +5,7 @@
  */
 export const CONTACT = {
   email: 'hello@ninjapp.net',
-  whatsapp: '',
+  whatsapp: '201110970097',
 }
 
 export const mailto = (subject: string) => `mailto:${CONTACT.email}?subject=${encodeURIComponent(subject)}`

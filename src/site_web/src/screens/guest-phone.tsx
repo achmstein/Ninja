@@ -716,7 +716,7 @@ function PointsRing({ points, progress, label }: { points: number; progress: num
 function YouTab() {
   const { c } = useLang()
   const points = useCafe((s) => s.points)
-  const earned = useCafe((s) => s.orders.filter((o) => o.from === 'phone' && o.where === TABLE && o.stage === 'ready'))
+  const earned = useCafe((s) => s.orders).filter((o) => o.from === 'phone' && o.where === TABLE && o.stage === 'ready')
   const { tier, next, progress } = tierOf(points)
   const toNext = next ? TIERS.find((t) => t.id === next)!.from - points : 0
   const rows: { key: string; title: string; when: string; points: number }[] = [

@@ -136,7 +136,8 @@ function Today({ narrow }: { narrow?: boolean }) {
   const { c, w } = useLang()
   const sales = useCafe((s) => s.salesToday)
   const count = useCafe((s) => s.ordersToday)
-  const orders = useCafe((s) => kitchenOrders(s.orders))
+  // The list is made here, not in the selector: a selector must hand back the same thing for the same state
+  const orders = kitchenOrders(useCafe((s) => s.orders))
   // The bar for this hour grows with what the page sells
   const live = Math.min(100, 46 + (sales - 18_450) / 40)
   return (
