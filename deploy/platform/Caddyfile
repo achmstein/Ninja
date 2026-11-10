@@ -158,15 +158,22 @@
 	handle /control* {
 		redir https://control.{$PLATFORM_DOMAIN}
 	}
-	# The platform's own site: what Ninja is, its privacy policy and terms (the
-	# addresses Google's and Apple's sign-in screens link to), support
+	# The platform's own site (src/site_web, built to static pages): the home
+	# page at / and /ar, its privacy policy and terms (the addresses Google's
+	# and Apple's sign-in screens link to), support
 	handle {
 		root * /srv/site
 		try_files {path} {path}.html {path}/index.html
+		# The pages come with their HTML already rendered, 200 kB of it: a sixth compressed
+		encode zstd gzip
 		file_server
-		header Cache-Control "public, max-age=300"
-		@brand path /brand/*
-		header @brand Cache-Control "public, max-age=86400"
+		# A page is asked for again each visit, so a deploy shows at once; what it
+		# loads is named by its content and kept for good
+		header Cache-Control "no-cache"
+		@assets path /assets/*
+		header @assets Cache-Control "public, max-age=31536000, immutable"
+		@pictures path /brand/* /dishes/* /app-icons/* *.webp
+		header @pictures Cache-Control "public, max-age=86400"
 	}
 }
 

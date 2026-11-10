@@ -103,6 +103,12 @@ jobs:
             cp -r "src/$app/dist" "web-artifacts/$name"
             echo "::endgroup::"
           done
+          # The platform's own site at the bare domain: the home page in English and
+          # Arabic, each rendered to HTML by its build, with privacy, terms and support
+          echo "::group::site"
+          (cd src/site_web && npm ci && npm run build)
+          cp -r src/site_web/dist web-artifacts/site
+          echo "::endgroup::"
 
       - name: Prepare platform artifacts
         env:
@@ -156,7 +162,7 @@ jobs:
             echo "::error::PLATFORM_ENCRYPTION_KEY must be the base64 of 32 bytes (openssl rand -base64 32)"; exit 1
           fi
 
-          mkdir -p platform-artifacts/realms platform-artifacts/themes platform-artifacts/apps platform-artifacts/site
+          mkdir -p platform-artifacts/realms platform-artifacts/themes platform-artifacts/apps
           cp deploy/platform/docker-compose.yml platform-artifacts/
           cp deploy/platform/Caddyfile platform-artifacts/
           cp deploy/platform/init-multiple-databases.sh platform-artifacts/
@@ -169,8 +175,6 @@ jobs:
           cp -r src/Ninja.AppHost/KeycloakConfiguration/themes/ninja platform-artifacts/themes/ninja
           # The native apps' download page; the APKs land beside it from mobile-deploy.yml
           cp deploy/platform/apps/index.html platform-artifacts/apps/
-          # The platform's own site at the bare domain (privacy, terms, support)
-          cp -r deploy/platform/site/. platform-artifacts/site/
           # Push: the stacks mount it read-only; without it their pushes are only logged
           FIREBASE_CREDENTIALS_PATH=""
           if [ -n "$FIREBASE_CREDENTIALS_JSON" ]; then
@@ -386,9 +390,17 @@ jobs:
                 cp -a "web-incoming/$name/." "web/$name/"
                 echo "Deployed $name"
               done
+              # The site the same way: emptied first, so a page that is gone from the build is gone here
+              if [ -d web-incoming/site ]; then
+                mkdir -p site
+                find site -mindepth 1 -delete
+                cp -a web-incoming/site/. site/
+                echo "Deployed site"
+              fi
               rm -rf web-incoming
             fi
             for name in admin-web client-web pos-web kds-web control-web; do mkdir -p "web/$name"; done
+            mkdir -p site
 
             echo "$GHCR_TOKEN" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
 

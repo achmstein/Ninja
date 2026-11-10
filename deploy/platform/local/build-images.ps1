@@ -68,7 +68,21 @@ if ($all -or $Web) {
             Copy-Item -Recurse dist $target
         } finally { Pop-Location }
     }
-    foreach ($name in @('admin-web', 'client-web', 'pos-web', 'kds-web', 'control-web')) {
+    # The platform's own site: its build renders the pages to HTML as well
+    Write-Host "web    site"
+    Push-Location (Join-Path $root 'src\site_web')
+    try {
+        if (-not (Test-Path node_modules)) { npm ci --no-audit --no-fund | Out-Null }
+        $ErrorActionPreference = 'Continue'
+        & npm.cmd run build --silent 2>&1 | Out-Host
+        $code = $LASTEXITCODE
+        $ErrorActionPreference = 'Stop'
+        if ($code -ne 0) { throw 'build failed for site_web' }
+        $target = Join-Path $here 'web\site'
+        if (Test-Path $target) { Remove-Item -Recurse -Force $target }
+        Copy-Item -Recurse dist $target
+    } finally { Pop-Location }
+    foreach ($name in @('admin-web', 'client-web', 'pos-web', 'kds-web', 'control-web', 'site')) {
         New-Item -ItemType Directory -Force (Join-Path $here "web\$name") | Out-Null
     }
 }
