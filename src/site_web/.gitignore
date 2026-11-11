@@ -2,8 +2,6 @@ node_modules
 dist
 dist-ssr
 *.local
-# Copied from marketing/video/public by scripts/film-assets.mjs
+# Built or copied before the page is run or built (scripts/demo-apps.mjs)
+public/demo
 public/dishes
-public/hero
-public/paper-menu.jpg
-public/supplier-receipt.jpg

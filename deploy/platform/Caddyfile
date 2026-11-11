@@ -161,6 +161,18 @@
 	# The platform's own site (src/site_web, built to static pages): the home
 	# page at / and /ar, its privacy policy and terms (the addresses Google's
 	# and Apple's sign-in screens link to), support
+	# The real apps the home page shows, each built into its own folder of the site and
+	# answered by the demo's service worker: inside one, anything that is not a file is its page
+	@demo path_regexp demo ^/demo/([a-z-]+)/
+	handle @demo {
+		root * /srv/site
+		try_files {path} /demo/{re.demo.1}/index.html
+		encode zstd gzip
+		file_server
+		header Cache-Control "no-cache"
+		@demoassets path /demo/*/assets/*
+		header @demoassets Cache-Control "public, max-age=31536000, immutable"
+	}
 	handle {
 		root * /srv/site
 		try_files {path} {path}.html {path}/index.html
@@ -171,8 +183,8 @@
 		header Cache-Control "no-cache"
 		@assets path /assets/*
 		header @assets Cache-Control "public, max-age=31536000, immutable"
-		# The clips and the film keep their names from one build to the next: a day
-		@media path /brand/* /clips/* /film/*
+		# The marks and the sample menu's photos keep their names from one build to the next: a day
+		@media path /brand/* /dishes/*
 		header @media Cache-Control "public, max-age=86400"
 	}
 }

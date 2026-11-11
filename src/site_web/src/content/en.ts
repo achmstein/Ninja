@@ -1,8 +1,7 @@
 /**
  * The page's words in English; ar.ts has the same shape, line for line
  * (plans/plans.test.ts checks). The page says little: each clip gets a title
- * of a few words and nothing under it. The titles are the film's own
- * (marketing/video/src/tour/Fast.tsx), so the page and the film say the same.
+ * of a few words and one short line.
  */
 export const en = {
   meta: {
@@ -22,38 +21,13 @@ export const en = {
   },
   hero: {
     title: 'Everything your café runs on.',
-    lead: 'One order, from the table to the door.',
-    clip: 'An order going from a guest’s phone to the till, the kitchen and the rider',
+    lead: 'One app for your guests, your team and you.',
+    watch: 'The real guest app, running by itself on a sample café',
   },
-  reel: [
-    {
-      name: 'For your guests',
-      clips: [
-        { id: 'brand', title: 'Your app, in your name and colours.' },
-        { id: 'pay', title: 'Pay at the table.' },
-        { id: 'book', title: 'Book from the phone.' },
-        { id: 'loyalty', title: 'Every visit earns points.' },
-      ],
-    },
-    {
-      name: 'For your team',
-      clips: [
-        { id: 'till', title: 'A till learned in a minute.' },
-        { id: 'kitchen', title: 'The kitchen sees it instantly.' },
-        { id: 'delivery', title: 'Your own riders deliver it.' },
-      ],
-    },
-    {
-      name: 'For you',
-      clips: [
-        { id: 'menu', title: 'Your menu, from a photo.' },
-        { id: 'stock', title: 'Stock and recipes.' },
-        { id: 'profit', title: 'Expenses, pay and profit.' },
-        { id: 'branches', title: 'All your branches.' },
-        { id: 'ask', title: 'Ask about your café.' },
-      ],
-    },
-  ],
+  guest: {
+    title: 'Their phone is the menu.',
+    lead: 'Scan the table. Order. Nothing to download.',
+  },
   plans: {
     title: 'Three plans. Add what you need.',
     names: { Free: 'Free', Starter: 'Starter', Pro: 'Pro' },

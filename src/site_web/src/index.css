@@ -1,31 +1,27 @@
 @import 'tailwindcss';
 
-/* The page's faces, kept on this host. The apps' own faces come with the scenes */
-@import '@fontsource-variable/bricolage-grotesque/wght.css';
-@import '@fontsource-variable/geist/wght.css';
-@import '@fontsource/ibm-plex-sans-arabic/arabic-500.css';
+/* One face for the page, kept on this host: Inter, the nearest free face to Apple's own,
+   and Plex for Arabic. The apps bring their own faces with them */
+@import '@fontsource-variable/inter/wght.css';
+@import '@fontsource/ibm-plex-sans-arabic/arabic-400.css';
 @import '@fontsource/ibm-plex-sans-arabic/arabic-600.css';
-@import '@fontsource/ibm-plex-sans-arabic/arabic-700.css';
 @import '@fontsource/original-surfer/latin-400.css';
 
 @theme {
-  /* Headlines; Arabic falls to Plex, the only face here that has it */
-  --font-display: 'Bricolage Grotesque Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
-  --font-sans: 'Geist Variable', 'IBM Plex Sans Arabic', system-ui, sans-serif;
+  --font-sans: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'Inter Variable', 'IBM Plex Sans Arabic', 'Helvetica Neue', sans-serif;
   /* The `ninja` wordmark and nothing else */
   --font-wordmark: 'Original Surfer', cursive;
 
-  /* Ninja's slate, as the apps have it */
-  --color-page: #f4f5f7;
-  --color-ink: #0f172a;
-  --color-soft: #55617a;
-  --color-night: #020617;
-  /* The amber of the app's order button */
-  --color-counter: #fbbf24;
+  /* White, one grey, near-black type and a single blue for what can be pressed */
+  --color-ink: #1d1d1f;
+  --color-soft: #6e6e73;
+  --color-mist: #f5f5f7;
+  --color-blue: #0071e3;
+  --color-link: #0066cc;
 }
 
 html {
-  background: var(--color-page);
+  background: #fff;
   color: var(--color-ink);
   font-family: var(--font-sans);
   -webkit-font-smoothing: antialiased;
@@ -38,23 +34,21 @@ body {
   overflow-x: clip;
 }
 
-/* A headline: heavy, tight, and set close. Arabic keeps its natural spacing */
-.display {
-  font-family: var(--font-display);
-  font-weight: 800;
-  letter-spacing: -0.04em;
-  line-height: 0.95;
+/* A headline: semibold, tight, close-set. Arabic keeps its natural spacing */
+.headline {
+  font-weight: 600;
+  letter-spacing: -0.028em;
+  line-height: 1.05;
   text-wrap: balance;
 }
 
-[lang='ar'] .display {
+[lang='ar'] .headline {
   letter-spacing: 0;
-  line-height: 1.22;
-  font-weight: 700;
+  line-height: 1.3;
 }
 
 :focus-visible {
-  outline: 3px solid var(--color-ink);
+  outline: 3px solid var(--color-blue);
   outline-offset: 3px;
   border-radius: 6px;
 }
@@ -64,16 +58,6 @@ body {
 }
 .no-bar::-webkit-scrollbar {
   display: none;
-}
-
-/* The reel on a wide page: a card stops near the top and the next one slides over it,
-   each a step lower than the one before, so the deck shows its edges */
-@media (min-width: 1024px) and (min-height: 640px) {
-  .reel-card {
-    position: sticky;
-    top: calc(1.25rem + var(--i) * 0.9rem);
-    min-height: calc(100svh - 7rem);
-  }
 }
 
 @media (prefers-reduced-motion: reduce) {

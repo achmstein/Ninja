@@ -17,23 +17,20 @@ export function NMark({ size = 36, className }: { size?: number; className?: str
   )
 }
 
-export const Container = ({ children, className }: { children: ReactNode; className?: string }) => <div className={cn('mx-auto w-full max-w-[1320px] px-5 sm:px-8', className)}>{children}</div>
+export const Container = ({ children, className }: { children: ReactNode; className?: string }) => <div className={cn('mx-auto w-full max-w-[1100px] px-5 sm:px-8', className)}>{children}</div>
 
 /** The way to reach Ninja: WhatsApp first, email beside it */
 export function ContactButtons({ className }: { className?: string }) {
   const { c } = useLang()
   const whatsapp = whatsappLink(c.cta.whatsappText)
   return (
-    <div className={cn('flex flex-wrap gap-3', className)}>
+    <div className={cn('flex flex-wrap items-center gap-x-7 gap-y-3', className)}>
       {whatsapp && (
-        <a className='inline-flex min-h-14 items-center rounded-full bg-ink px-7 text-lg font-semibold text-white transition-transform active:scale-[0.97]' href={whatsapp} target='_blank' rel='noreferrer'>
+        <a className='inline-flex min-h-12 items-center rounded-full bg-blue px-6 text-[1.0625rem] text-white transition-colors hover:bg-[#0077ed]' href={whatsapp} target='_blank' rel='noreferrer'>
           {c.cta.whatsapp}
         </a>
       )}
-      <a
-        className={cn('inline-flex min-h-14 items-center rounded-full px-7 text-lg font-semibold transition-colors', whatsapp ? 'ring-1 ring-ink/25 hover:bg-ink/5' : 'bg-ink text-white')}
-        href={mailto(c.cta.subject)}
-      >
+      <a className='text-[1.0625rem] text-link hover:underline' href={mailto(c.cta.subject)}>
         {c.cta.email}
       </a>
     </div>
@@ -43,28 +40,25 @@ export function ContactButtons({ className }: { className?: string }) {
 export function Header() {
   const { c } = useLang()
   return (
-    <header className='py-5'>
-      <Container className='flex items-center gap-4'>
-        <a href={c.nav.otherLang === 'ar' ? '/' : '/ar'} aria-label={c.nav.home} className='flex items-center gap-2.5'>
-          <NMark />
-          <span dir='ltr' className='text-[1.7rem] leading-none' style={{ fontFamily: 'var(--font-wordmark)' }}>
+    <header className='border-b border-ink/10 bg-white/80 backdrop-blur'>
+      <Container className='flex h-12 items-center gap-4 text-[0.8125rem]'>
+        <a href={c.nav.otherLang === 'ar' ? '/' : '/ar'} aria-label={c.nav.home} className='flex items-center gap-2'>
+          <NMark size={24} />
+          <span dir='ltr' className='text-[1.25rem] leading-none' style={{ fontFamily: 'var(--font-wordmark)' }}>
             ninja
           </span>
         </a>
-        <nav className='ms-auto flex items-center gap-1 text-[0.9375rem] font-medium sm:gap-2'>
-          <a href='#reel' className='hidden rounded-full px-3 py-2 hover:bg-ink/5 md:block'>
-            {c.nav.features}
-          </a>
-          <a href='#plans' className='hidden rounded-full px-3 py-2 hover:bg-ink/5 md:block'>
+        <nav className='ms-auto flex items-center gap-5 text-ink/80'>
+          <a href='#plans' className='hidden hover:text-ink sm:block'>
             {c.nav.plans}
           </a>
-          <a href='/apps' className='hidden rounded-full px-3 py-2 hover:bg-ink/5 sm:block'>
+          <a href='/apps' className='hidden hover:text-ink sm:block'>
             {c.nav.apps}
           </a>
-          <a href={c.nav.otherHref} lang={c.nav.otherLang} hrefLang={c.nav.otherLang} className='rounded-full px-3 py-2 hover:bg-ink/5'>
+          <a href={c.nav.otherHref} lang={c.nav.otherLang} hrefLang={c.nav.otherLang} className='hover:text-ink'>
             {c.nav.other}
           </a>
-          <a href='#talk' className='rounded-full bg-ink px-4 py-2.5 text-white'>
+          <a href='#talk' className='rounded-full bg-blue px-3 py-1 text-white'>
             {c.nav.talk}
           </a>
         </nav>
@@ -76,7 +70,7 @@ export function Header() {
 export function Footer() {
   const { c } = useLang()
   return (
-    <footer className='py-10 text-[0.9375rem] text-soft'>
+    <footer className='border-t border-ink/10 bg-mist py-6 text-xs text-soft'>
       <Container className='flex flex-wrap items-center justify-between gap-4'>
         <span dir='ltr'>{c.footer.rights}</span>
         <nav className='flex flex-wrap gap-x-6 gap-y-2'>

@@ -23,6 +23,8 @@ const queryClient = new QueryClient({
 
 const router = createRouter({
   routeTree,
+  // '/' everywhere the app is served; a folder where it is shown inside another site (the home page's demo)
+  basepath: import.meta.env.BASE_URL,
   context: { queryClient },
   defaultPreload: 'intent',
 })
