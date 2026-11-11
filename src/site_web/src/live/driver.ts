@@ -11,6 +11,8 @@ export type Step =
   | { do: 'tap'; find: string | RegExp; in?: string; nth?: number }
   /** Scroll the page (or the first element matching `in`) to a fraction of its length */
   | { do: 'scroll'; to: number; in?: string }
+  /** Have the app ask its server again, as it does when something changes there */
+  | { do: 'refresh' }
   /** Go back, as the phone's back gesture does */
   | { do: 'back' }
   /** Load the app afresh, so the next round starts clean */
@@ -74,11 +76,15 @@ export function runScript(frame: HTMLIFrameElement, script: Script): () => void 
         } else if (step.do === 'scroll') {
           const target = step.in ? doc.querySelector(step.in) : doc.scrollingElement
           target?.scrollTo({ top: (target.scrollHeight - target.clientHeight) * step.to, behavior: 'smooth' })
+        } else if (step.do === 'refresh') {
+          // The apps read again when their window comes back into view
+          win.dispatchEvent(new Event('visibilitychange'))
+          win.dispatchEvent(new Event('focus'))
         } else if (step.do === 'back') {
           win.history.back()
         } else if (step.do === 'reload') {
-          // What the last round left behind (a tray, a table) goes; the language it was shown in stays
-          for (const key of Object.keys(win.localStorage)) if (!key.endsWith('-language')) win.localStorage.removeItem(key)
+          // What the last round left behind (a tray, a table) goes; the language and whoever is signed in stay
+          for (const key of Object.keys(win.localStorage)) if (!key.endsWith('-language') && !key.startsWith('oidc.')) win.localStorage.removeItem(key)
           win.sessionStorage.clear()
           win.location.reload()
           await wait(2500)

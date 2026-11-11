@@ -70,7 +70,7 @@ export function Header() {
 export function Footer() {
   const { c } = useLang()
   return (
-    <footer className='border-t border-ink/10 bg-mist py-6 text-xs text-soft'>
+    <footer className='border-t border-ink/10 py-6 text-xs text-soft'>
       <Container className='flex flex-wrap items-center justify-between gap-4'>
         <span dir='ltr'>{c.footer.rights}</span>
         <nav className='flex flex-wrap gap-x-6 gap-y-2'>

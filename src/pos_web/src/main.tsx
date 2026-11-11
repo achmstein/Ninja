@@ -66,6 +66,8 @@ keepPersistedQueries(queryClient)
 // Create a new router instance
 const router = createRouter({
   routeTree,
+  // '/' everywhere the app is served; a folder where it is shown inside another site (the home page's demo)
+  basepath: import.meta.env.BASE_URL,
   context: { queryClient },
   defaultPreload: 'intent',
   defaultPreloadStaleTime: 0,
@@ -89,7 +91,9 @@ const rootElement = document.getElementById('root')!
 if (!rootElement.innerHTML) {
   // The app itself loads with the internet down: the service worker keeps
   // the shell (vite.config.ts). Dev serves modules live, so only a build has one.
-  if (import.meta.env.PROD) {
+  // Not where the app is shown inside another site (the home page's demo): there the
+  // page's own worker answers for the server, and this one would take the app from it
+  if (import.meta.env.PROD && import.meta.env.BASE_URL === '/') {
     const { registerSW } = await import('virtual:pwa-register')
     registerSW({ immediate: true })
   }

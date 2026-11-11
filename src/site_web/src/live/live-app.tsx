@@ -10,7 +10,35 @@ import { runScript, type Script } from './driver'
  * scaled to the room it is given. A visitor cannot operate it: a script
  * does, by tapping the app's own controls, for as long as it is on screen.
  */
-export function LiveApp({ app, path = '', width, height, script, label, radius, className }: { app: string; path?: string; width: number; height: number; script: Script; label: string; radius?: string; className?: string }) {
+export type Staff = {
+  /** The app's sign-in client, which names where it keeps whoever is signed in */
+  client: string
+  /** Where the app keeps its language */
+  language: string
+}
+
+export function LiveApp({
+  app,
+  path = '',
+  width,
+  height,
+  script,
+  label,
+  staff,
+  radius,
+  className,
+}: {
+  app: string
+  path?: string
+  width: number
+  height: number
+  script: Script
+  label: string
+  /** A staff app: opened already signed in, in the page's language */
+  staff?: Staff
+  radius?: string
+  className?: string
+}) {
   const { lang } = useLang()
   const box = useRef<HTMLDivElement>(null)
   const frame = useRef<HTMLIFrameElement>(null)
@@ -35,17 +63,25 @@ export function LiveApp({ app, path = '', width, height, script, label, radius, 
     const el = box.current
     if (!el) return
     let gone = false
+    // Open while it is near the screen and closed again when it is far: four apps at once is a lot to keep running
     const coming = new IntersectionObserver(
       ([entry]) => {
-        if (!entry.isIntersecting) return
-        coming.disconnect()
+        if (!entry.isIntersecting) return setSrc(null)
         demoServer()
-          .then(() => {
+          .then(async () => {
+            // The apps were never meant to share a browser's storage, and here they do (one site, four apps):
+            // what another app kept under the same name would be read as this one's. Each starts from nothing
+            for (const key of Object.keys(localStorage)) if (!key.endsWith('-language') && !key.startsWith('oidc.')) localStorage.removeItem(key)
+            if (staff) {
+              const [key, user] = await signedIn(staff.client)
+              localStorage.setItem(key, user)
+              localStorage.setItem(staff.language, JSON.stringify({ state: { language: lang }, version: 0 }))
+            }
             if (!gone) setSrc(`/demo/${app}/${path}`)
           })
           .catch(() => {})
       },
-      { rootMargin: '600px 0px' }
+      { rootMargin: '700px 0px' }
     )
     const showing = new IntersectionObserver(([entry]) => setOnScreen(entry.isIntersecting), { threshold: 0.35 })
     coming.observe(el)
@@ -55,7 +91,7 @@ export function LiveApp({ app, path = '', width, height, script, label, radius, 
       coming.disconnect()
       showing.disconnect()
     }
-  }, [app, path, lang])
+  }, [app, path, lang, staff])
 
   // The script plays while the app is on screen, and starts over when it comes back
   useEffect(() => {
@@ -81,6 +117,20 @@ export function LiveApp({ app, path = '', width, height, script, label, radius, 
       )}
     </div>
   )
+}
+
+/** Whoever is signed in at a staff app, from the demo's server: the key the app reads and what it finds there */
+function signedIn(clientId: string): Promise<[string, string]> {
+  return new Promise((resolve, reject) => {
+    const worker = navigator.serviceWorker.controller ?? null
+    const channel = new MessageChannel()
+    channel.port1.onmessage = (event) => resolve(event.data as [string, string])
+    navigator.serviceWorker.getRegistration('/demo/').then((registration) => {
+      const to = registration?.active ?? worker
+      if (!to) return reject(new Error('The demo server is not running'))
+      to.postMessage({ type: 'staff', clientId }, [channel.port2])
+    }, reject)
+  })
 }
 
 let server: Promise<void> | null = null

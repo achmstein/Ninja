@@ -1,6 +1,6 @@
 import { LangProvider, type Lang } from '@/lib/lang'
 import { Footer, Header } from '@/sections/chrome'
-import { Call, Hero, Plans } from '@/sections/page'
+import { Call, Hero, Moments, Plans } from '@/sections/page'
 
 /**
  * The page: Ninja shown, not described. The apps on it are the real ones,
@@ -12,6 +12,7 @@ export function App({ lang }: { lang: Lang }) {
       <Header />
       <main>
         <Hero />
+        <Moments />
         <Plans />
         <Call />
       </main>

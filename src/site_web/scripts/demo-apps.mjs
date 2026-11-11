@@ -9,7 +9,7 @@ import { fileURLToPath } from 'node:url'
 
 const here = path.dirname(fileURLToPath(import.meta.url))
 const site = path.resolve(here, '..')
-const APPS = { guest: 'client_web' }
+const APPS = { guest: 'client_web', till: 'pos_web', kitchen: 'kds_web', owner: 'admin_web' }
 const only = process.argv.slice(2)
 
 await mkdir(path.join(site, 'public/demo'), { recursive: true })

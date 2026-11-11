@@ -28,6 +28,21 @@ export const en = {
     title: 'Their phone is the menu.',
     lead: 'Scan the table. Order. Nothing to download.',
   },
+  till: {
+    title: 'The till takes it.',
+    lead: 'An order from a table lands on the till. One tap confirms it.',
+    watch: 'The real till, taking an order sent from a table',
+  },
+  kitchen: {
+    title: 'The kitchen sees it.',
+    lead: 'Every order on a screen, timed. One tap when it is ready.',
+    watch: 'The real kitchen screen, marking orders ready',
+  },
+  owner: {
+    title: 'You see the day.',
+    lead: 'Sales, stock and profit, wherever you are.',
+    watch: 'The real dashboard of an owner, on a sample café',
+  },
   plans: {
     title: 'Three plans. Add what you need.',
     names: { Free: 'Free', Starter: 'Starter', Pro: 'Pro' },
