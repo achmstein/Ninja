@@ -35,6 +35,7 @@ services:
       Tenant__ContentLanguages: "both"
       ConnectionStrings__catalogdb: "Host=postgres;Port=5432;Username=blue_app;Password=${DB_PASSWORD};Database=blue_catalogdb;Maximum Pool Size=20;Minimum Pool Size=0"
       CatalogOptions__PicBaseUrl: "https://api.blue.ninja.app"
+      services__tenant-api__http__0: "http://blue-tenant-api:8080"
       ConnectionStrings__chatModel: "Endpoint=http://control-api:8080/ai/v1;Key=${AI_GATEWAY_KEY};Model=main"
       AI__FallbackModel: "fallback"
       AI__VisionModel: "vision"

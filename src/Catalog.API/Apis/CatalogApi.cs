@@ -2,6 +2,7 @@
 using System.ComponentModel.DataAnnotations;
 using System.Security.Claims;
 using Ninja.Catalog.API.Dtos;
+using Ninja.Catalog.API.Application;
 using Ninja.Catalog.API.Model;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -763,15 +764,16 @@ public static class CatalogApi
     public static async Task<Results<Ok<CatalogItemDto>, NotFound, BadRequest<ProblemDetails>>> ToggleItemAvailability(
         [AsParameters] CatalogServices services,
         HttpContext httpContext,
+        IHttpClientFactory httpClientFactory,
         [Description("The id of the menu item")] int id,
         [FromBody] SetAvailabilityRequest? request = null)
     {
         var branchId = httpContext.GetBranchId();
+        var isAdmin = httpContext.User.GetRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase);
 
         // The till only ever marks an item sold out at its own branch; the
         // global flag stays a back-office decision.
-        if (!branchId.HasValue &&
-            !httpContext.User.GetRoles().Contains("Admin", StringComparer.OrdinalIgnoreCase))
+        if (!branchId.HasValue && !isAdmin)
         {
             return TypedResults.BadRequest<ProblemDetails>(new()
             {
@@ -799,6 +801,41 @@ public static class CatalogApi
                 .FirstOrDefaultAsync(o => o.BranchId == branchId.Value && o.CatalogItemId == id);
 
             var newAvailability = request?.IsAvailable ?? !(existing?.IsAvailable ?? item.IsAvailable);
+
+            // Off for the whole menu, the item stays off here whatever the
+            // branch says, so turning it on here would save and then show off.
+            // An admin lifts the whole-menu switch instead, and every other
+            // branch gets its own "off" so nothing comes on there with it.
+            if (newAvailability && !item.IsAvailable)
+            {
+                if (!isAdmin)
+                {
+                    return TypedResults.BadRequest<ProblemDetails>(new()
+                    {
+                        Detail = "This item is turned off for the whole menu; an admin can turn it back on"
+                    });
+                }
+
+                var others = await BranchDirectory.KnownBranchIdsAsync(
+                    services.Context, httpClientFactory, services.Logger, httpContext.RequestAborted);
+                var otherOverrides = await services.Context.BranchItemOverrides
+                    .Where(o => o.CatalogItemId == id && o.BranchId != branchId.Value)
+                    .ToListAsync();
+                foreach (var o in otherOverrides)
+                {
+                    o.IsAvailable = false;
+                }
+                foreach (var other in others.Where(b => b != branchId.Value && otherOverrides.All(o => o.BranchId != b)))
+                {
+                    services.Context.BranchItemOverrides.Add(new BranchItemOverride
+                    {
+                        BranchId = other,
+                        CatalogItemId = id,
+                        IsAvailable = false,
+                    });
+                }
+                item.IsAvailable = true;
+            }
 
             if (existing != null)
             {

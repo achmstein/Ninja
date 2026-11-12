@@ -69,5 +69,8 @@ public static class Extensions
         builder.Services.AddOptions<Ninja.Catalog.API.Talabat.TalabatOptions>().BindConfiguration(Ninja.Catalog.API.Talabat.TalabatOptions.Section);
         builder.Services.AddHttpClient(Ninja.Catalog.API.Talabat.TalabatSyncService.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(60));
         builder.Services.AddHostedService<Ninja.Catalog.API.Talabat.TalabatSyncService>();
+
+        // The branch list, from Tenant.API: turning an item back on at one branch keeps it off at the others
+        builder.Services.AddHttpClient(Ninja.Catalog.API.Application.BranchDirectory.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(5));
     }
 }

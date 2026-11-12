@@ -526,6 +526,9 @@ public static partial class Templates
             {
                 case "catalog":
                     sb.AppendLine($"      CatalogOptions__PicBaseUrl: \"{hosts.ApiUrl}\"");
+                    // The branch list, when an item is turned back on at one branch and must stay off at the others
+                    if (services.Contains("tenant"))
+                        sb.AppendLine($"      services__tenant-api__http__0: \"http://{TenantNaming.Service(slug, "tenant")}:8080\"");
                     AppendChatModel(sb, tenant, platform, node);
                     // Talabat: the menu and what is sold out go out through the relay, like the orders' answers
                     if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, node);

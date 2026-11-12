@@ -226,6 +226,9 @@ var tenantApi = builder.AddProject<Projects.Tenant_API>("tenant-api")
 var assistantSecret = builder.AddParameter("assistant-secret",
     () => builder.Configuration["Parameters:assistant-secret"] ?? "assistant-api-secret",
     secret: true);
+// The catalog asks Tenant.API for the branch list (an item turned back on at one branch stays off at the others)
+catalogApi.WithReference(tenantApi);
+
 var assistantApi = builder.AddProject<Projects.Assistant_API>("assistant-api")
     .WithReference(keycloak)
     .WithReference(tenantApi).WithReference(salesApi).WithReference(financeApi).WithReference(inventoryApi)

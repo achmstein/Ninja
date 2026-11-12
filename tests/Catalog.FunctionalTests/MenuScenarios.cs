@@ -149,6 +149,30 @@ public sealed class MenuScenarios
     }
 
     [TestMethod]
+    public async Task An_item_off_for_the_whole_menu_comes_back_at_one_branch_only()
+    {
+        const int otherBranch = 2;
+        var otherTill = Suite.Catalog.As(Persona.Cashier(otherBranch), otherBranch);
+        var otherCustomer = Suite.Catalog.As(Persona.Customer(), otherBranch);
+        var categoryId = await ACategoryAsync();
+        // The other branch is one the catalog knows (here by a sold-out mark; live, Tenant.API lists it)
+        var marker = await Admin.PostAsync<ItemView>(Items(), NewItem("Brownie", 30m, categoryId), HttpStatusCode.Created);
+        await otherTill.SendAsync<ItemView>(HttpMethod.Patch, Items($"/{marker.Id}/availability"), new { isAvailable = false }, HttpStatusCode.OK);
+
+        var offEverywhere = new { name = new { en = "Guava juice", ar = "جوافة" }, description = new { en = "Fresh", ar = "فريش" }, price = 50m, catalogTypeId = categoryId, isAvailable = false };
+        var item = await Admin.PostAsync<ItemView>(Items(), offEverywhere, HttpStatusCode.Created);
+
+        var (tillStatus, tillDetail) = await Till.RefusedAsync(HttpMethod.Patch, Items($"/{item.Id}/availability"), new { isAvailable = true });
+        Assert.AreEqual(HttpStatusCode.BadRequest, tillStatus, "the till cannot lift the whole-menu switch, and says so instead of flipping back");
+        Assert.Contains("whole menu", tillDetail);
+
+        var on = await Admin.SendAsync<ItemView>(HttpMethod.Patch, Items($"/{item.Id}/availability"), new { isAvailable = true }, HttpStatusCode.OK);
+        Assert.IsTrue(on.IsAvailable, "turned on at the branch, it is on there");
+        Assert.IsTrue((await Customer.GetAsync<List<ItemView>>(Items())).Single(i => i.Id == item.Id).IsAvailable, "and stays on when the menu is read again");
+        Assert.IsFalse((await otherCustomer.GetAsync<List<ItemView>>(Items())).Single(i => i.Id == item.Id).IsAvailable, "the other branch did not turn it on");
+    }
+
+    [TestMethod]
     public async Task An_offer_is_what_the_item_costs_while_it_runs()
     {
         var categoryId = await ACategoryAsync();
