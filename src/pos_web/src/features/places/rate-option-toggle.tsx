@@ -47,10 +47,11 @@ export function RateOptionToggle({
               onClick={() => onChange(code)}
               className={cn(
                 'flex h-12 items-center gap-2 rounded-lg border px-4 text-base transition-colors disabled:opacity-50',
-                // The one in force a light fill, not the page's darkest
-                // block: in the panel the clock leads, not the rate
+                // The one in force in the till's darkest fill, as on the
+                // Android till and in the side-by-side picker: a light grey
+                // fill next to a white row did not say which was chosen
                 selected
-                  ? 'bg-secondary text-secondary-foreground border-transparent font-semibold'
+                  ? 'border-primary bg-primary text-primary-foreground font-semibold'
                   : 'bg-background hover:bg-muted',
               )}
             >
@@ -62,7 +63,9 @@ export function RateOptionToggle({
                 <span
                   className={cn(
                     'shrink-0 text-sm font-normal tabular-nums',
-                    selected ? 'text-foreground' : 'text-muted-foreground',
+                    selected
+                      ? 'text-primary-foreground/80'
+                      : 'text-muted-foreground',
                   )}
                 >
                   {rates[code]}

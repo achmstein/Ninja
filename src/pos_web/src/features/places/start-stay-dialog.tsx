@@ -123,13 +123,16 @@ export function StartStayDialog({
           </div>
         )}
 
-        <DialogFooter className='gap-2'>
+        {/* Two rows, each the dialog's own width: the other ways to take the
+            place, then cancel and start. On one row the four buttons were
+            wider than the dialog and spilled out of both its sides */}
+        <DialogFooter className='flex-col gap-2 sm:flex-col'>
           {!reservation && (
-            <div className='flex gap-2 sm:me-auto'>
+            <div className='flex gap-2'>
               <Button
                 variant='outline'
                 size='lg'
-                className='h-12'
+                className='h-12 min-w-0 flex-1'
                 disabled={actions.isBusy}
                 onClick={reserve}
               >
@@ -141,7 +144,7 @@ export function StartStayDialog({
                 <Button
                   variant='outline'
                   size='lg'
-                  className='h-12'
+                  className='h-12 min-w-0 flex-1'
                   disabled={actions.isBusy}
                   onClick={() => {
                     onOpenChange(false)
@@ -154,27 +157,29 @@ export function StartStayDialog({
               )}
             </div>
           )}
-          <Button
-            variant='outline'
-            size='lg'
-            className='h-12'
-            onClick={() => onOpenChange(false)}
-          >
-            {t('cancel')}
-          </Button>
-          <Button
-            size='lg'
-            className='h-12 px-6'
-            disabled={actions.isBusy}
-            onClick={start}
-          >
-            {actions.isBusy ? (
-              <Loader2 className='size-5 animate-spin' />
-            ) : (
-              <Play className='size-5 rtl:rotate-180' />
-            )}
-            {t('startSession')}
-          </Button>
+          <div className='flex gap-2'>
+            <Button
+              variant='outline'
+              size='lg'
+              className='h-12 min-w-0 flex-1'
+              onClick={() => onOpenChange(false)}
+            >
+              {t('cancel')}
+            </Button>
+            <Button
+              size='lg'
+              className='h-12 min-w-0 flex-[2] px-6'
+              disabled={actions.isBusy}
+              onClick={start}
+            >
+              {actions.isBusy ? (
+                <Loader2 className='size-5 animate-spin' />
+              ) : (
+                <Play className='size-5 rtl:rotate-180' />
+              )}
+              {t('startSession')}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>
