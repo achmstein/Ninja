@@ -9,10 +9,18 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleSendTo } from '@/features/sale/cart'
-import { DELIVERY_LIMITS, keptSendTo, MIN_PHONE_DIGITS, toSendTo, validatePhoneDelivery } from '@/features/sale/sale-delivery'
+import {
+  DELIVERY_LIMITS,
+  keptSendTo,
+  MIN_PHONE_DIGITS,
+  toSaleZone,
+  toSendTo,
+  validatePhoneDelivery,
+  zoneIn,
+} from '@/features/sale/sale-delivery'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { digitCount, normalizePhone, showPhone } from '@/lib/phone'
 import { isModuleOff } from '@/lib/problem'
@@ -20,6 +28,7 @@ import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useAddressLine, useDistanceText } from './delivery-details'
 import { AddressSearchField } from './address-search-field'
+import { AreaPicker } from './area-picker'
 import { outOfRangeKey } from './delivery-format'
 import { useTillDeliveryQuote } from './use-deliveries'
 
@@ -43,7 +52,10 @@ type PhoneDeliveryFormProps = {
  * minimum is said, not refused. A caller who had deliveries before is offered
  * those addresses, by their account or their number. A pin out of this
  * branch's area, or clearly nearer another branch, offers that branch: the
- * order is then sent there, made and delivered by it.
+ * order is then sent there, made and delivered by it. Where the branch keeps
+ * named areas, the one the caller says is picked by name first (or read from
+ * the pin when it falls in one drawn on the map), and its fee and minimum are
+ * what hold.
  */
 export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDeliveryFormProps) {
   const t = useT()
@@ -66,6 +78,7 @@ export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDelivery
 function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<PhoneDeliveryFormProps, 'open' | 'onOpenChange'>) {
   const t = useT()
   const money = useMoney()
+  const localized = useLocalized()
   const line = useAddressLine()
   const distance = useDistanceText()
   const country = useBrand()?.locale.country ?? 'EG'
@@ -74,12 +87,20 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const [name, setName] = useState(customer?.name ?? '')
   const [tried, setTried] = useState(false)
   const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
+  // The cashier took off the area the pin is in: it is not put back until the pin changes
+  const [areaOff, setAreaOff] = useState(false)
   const branchName = useBranchName()
   // With a call centre the calls come through the hotline: a branch till keeps what it is rung for
   const callCentre = useFeatures().callCentre === true
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
-  const quote = useTillDeliveryQuote(form.location)
+  // This branch's named areas, as they are now: asked apart from the pin, so the list stays while one is read.
+  // The area picked by name is the one in that list (one the owner removed since is no longer picked)
+  const areas = useTillDeliveryQuote().data
+  const zones = areas?.zones ?? []
+  const named = areas ? zoneIn(zones, form.zone?.id) : (form.zone ?? null)
+  // Asked for the area picked by name: the fee and the minimum answered are then that area's
+  const quote = useTillDeliveryQuote(form.location, true, named?.id ?? null)
   const terms = quote.data
   const pasted = form.location.trim()
   // The pin is the one read from the text now in the field, never an earlier link's
@@ -88,6 +109,13 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   // The other branches that deliver to this pin, and the one chosen while it is still offered
   const alternatives = pinned && !callCentre ? (terms?.alternatives ?? []) : []
   const sending = keptSendTo(sendTo, alternatives, pinned)
+  // No area picked by name: the one the pin fell in (drawn on the map), unless it is switched off
+  // for a while or the cashier took it off. An area is its branch's own: none on an order sent on
+  const onMap =
+    !named && !areaOff && pinned && terms?.zoneId != null && terms.zoneName != null && !terms.zoneOff
+      ? toSaleZone({ ...terms, zoneId: terms.zoneId, name: terms.zoneName })
+      : null
+  const zone = sending ? null : (named ?? onMap)
 
   const lookupPhone = useDebounced(digitCount(form.phone) >= MIN_PHONE_DIGITS ? normalizePhone(form.phone, country) : '', 400)
   const known = useQuery({
@@ -97,7 +125,9 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
     enabled: !!customer?.id || lookupPhone !== '',
   })
 
-  const pickKnown = (a: KnownAddressView) =>
+  const pickKnown = (a: KnownAddressView) => {
+    // Another address altogether: its own pin says the area again
+    setAreaOff(false)
     setForm({
       address: a.address,
       building: a.building ?? '',
@@ -110,6 +140,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
       latitude: null,
       longitude: null,
     })
+  }
 
   const errors = validatePhoneDelivery(form, name, !customer?.id)
   // What the branch that delivers it asks
@@ -127,6 +158,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         latitude: pinned ? toNumber(terms?.latitude) : null,
         longitude: pinned ? toNumber(terms?.longitude) : null,
         sendTo: sending,
+        zone,
       },
       name.trim(),
     )
@@ -185,16 +217,39 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         </div>
       )}
 
-      {/* First what a caller says first, the street or a landmark, when the business has Google Maps:
+      {/* First the area the caller says, where the branch keeps named areas: picked by name, what
+          delivering there costs is settled. Made here then, not sent to another branch */}
+      {zones.length > 0 && (
+        <Field id={`${ids}-area`} label={t('deliveryAreaLabel')}>
+          {(a) => (
+            <AreaPicker
+              id={a.id}
+              zones={zones}
+              value={zone}
+              onPick={(picked) => {
+                setSendTo(null)
+                set({ zone: toSaleZone(picked) })
+              }}
+              onClear={() => {
+                setAreaOff(true)
+                set({ zone: null })
+              }}
+            />
+          )}
+        </Field>
+      )}
+
+      {/* Then the street or a landmark, when the business has Google Maps:
           a pick puts its point in the location field, as coordinates, and the street when it is empty.
           The same order as the call centre's */}
       <AddressSearchField
-        onPick={(place) =>
+        onPick={(place) => {
+          setAreaOff(false)
           set({
             location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
             address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
           })
-        }
+        }}
       />
 
       <Field id={`${ids}-street`} label={t('deliveryStreetLabel')} error={tried && errors.address ? t('deliveryNeedsStreet') : null}>
@@ -273,16 +328,34 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
       )}
 
       {!reading && alternatives.length > 0 && (
-        <NearerBranches alternatives={alternatives} chosen={sending?.branchId ?? null} onChoose={setSendTo} />
+        <NearerBranches
+          alternatives={alternatives}
+          chosen={sending?.branchId ?? null}
+          onChoose={(to) => {
+            setSendTo(to)
+            // Areas belong to a branch: the one picked here does not follow the order to another
+            if (to) set({ zone: null })
+          }}
+        />
       )}
 
       {/* Said, not refused: the cashier knows the streets and the regulars */}
       {terms && !reading && (
         <div className='flex flex-col gap-1.5'>
           {pinned && !terms.inRange && !sending && <Warning>{t(outOfRangeKey(terms), { km: toNumber(terms.radiusKm) })}</Warning>}
+          {!sending && terms.zoneOff && terms.zoneName && (
+            <Warning>
+              <span>
+                <bdi>{localized(terms.zoneName)}</bdi> · {t('deliveryAreaOff')}
+              </span>
+            </Warning>
+          )}
           {minimum > 0 && itemsTotal < minimum && <Warning>{t('deliveryUnderMinimum', { amount: money(minimum) })}</Warning>}
           <div className='text-muted-foreground flex justify-between text-sm'>
-            <span>{t('deliveryFee')}</span>
+            <span>
+              {t('deliveryFee')}
+              {!sending && terms.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(terms.etaMinutes) })}</>}
+            </span>
             <span className='tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
           </div>
         </div>

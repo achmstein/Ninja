@@ -1,7 +1,7 @@
 import { Bike, MapPin, Navigation, Phone } from 'lucide-react'
 import type { DeliveryView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
-import { useLanguage, useT } from '@/lib/i18n'
+import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
@@ -26,14 +26,17 @@ export function useDistanceText() {
 
 /**
  * Where an order is going, for the till, read top to bottom: where to (with
- * how far), the street, the building, floor and flat under it, the rider's
- * note, then the two things the cashier does with it: call, or open the map.
- * The fee is money, so it sits with the bill's total (`DeliveryFeeRow`), not here.
+ * how far), the branch's named area it is in, the street, the building,
+ * floor and flat under it, the rider's note, then the two things the cashier
+ * does with it: call, or open the map. The fee is money, so it sits with the
+ * bill's total (`DeliveryFeeRow`), not here.
  */
 export function DeliveryDetails({ delivery, className }: { delivery: DeliveryView; className?: string }) {
   const t = useT()
+  const localized = useLocalized()
   const line = useAddressLine()
   const distance = useDistanceText()
+  const area = localized(delivery.zoneName)
   const tel = telHref(delivery.phone)
   const details = line({ building: delivery.building, floor: delivery.floor, apartment: delivery.apartment })
   const pinned = delivery.latitude != null && delivery.longitude != null
@@ -53,6 +56,11 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
       <div className='flex items-start gap-2'>
         <MapPin className='text-muted-foreground mt-1 size-4 shrink-0' />
         <div className='min-w-0 flex-1'>
+          {area && (
+            <div className='text-muted-foreground text-sm font-medium'>
+              <bdi>{area}</bdi>
+            </div>
+          )}
           <div className='text-base font-semibold'>{delivery.address}</div>
           {details && <div className='text-muted-foreground text-sm'>{details}</div>}
           {delivery.directions && (
@@ -85,14 +93,17 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
   )
 }
 
-/** The delivery fee as a line of the bill, just above its total */
+/** The delivery fee as a line of the bill, just above its total, with about how long the area takes when it says */
 export function DeliveryFeeRow({ delivery, className }: { delivery: DeliveryView; className?: string }) {
   const t = useT()
   const money = useMoney()
   const fee = toNumber(delivery.fee)
   return (
     <div className={cn('text-muted-foreground flex justify-between text-sm', className)}>
-      <span>{t('deliveryFee')}</span>
+      <span>
+        {t('deliveryFee')}
+        {delivery.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(delivery.etaMinutes) })}</>}
+      </span>
       <span className='tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
     </div>
   )

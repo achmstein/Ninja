@@ -1,5 +1,5 @@
 import { useId, useState } from 'react'
-import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store, X } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions, resolveDeliveryBranchForStaffOptions } from '@/api/ordering/@tanstack/react-query.gen'
@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { AddressSearchField } from '@/features/deliveries/address-search-field'
+import { AreaPicker } from '@/features/deliveries/area-picker'
 import { useAddressLine, useDistanceText } from '@/features/deliveries/delivery-details'
 import { emptyDelivery, useSale, type SaleDelivery } from '@/features/sale/cart'
-import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, validatePhoneDelivery } from '@/features/sale/sale-delivery'
+import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, toSaleZone, validatePhoneDelivery } from '@/features/sale/sale-delivery'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
@@ -21,7 +22,7 @@ import { digitCount, normalizePhone } from '@/lib/phone'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useBranchStore } from '@/stores/branch-store'
-import { branchOffers, callerDelivery, offeredBranch } from './call-centre'
+import { branchOffers, callerDelivery, chosenArea, offeredBranch, pinArea } from './call-centre'
 
 /**
  * The call centre's "next caller": every sale starts from who is calling and
@@ -31,7 +32,9 @@ import { branchOffers, callerDelivery, offeredBranch } from './call-centre'
  * name is found on the map and the nearest branch whose area takes it in is
  * chosen, which the agent may change; with no point on the map the agent
  * picks the branch that delivers to that area. Or the caller collects, at a
- * branch they name. The till then switches to
+ * branch they name. Where the branches keep named areas, the area the caller
+ * says comes first: picked by name it settles the branch, the fee and the
+ * minimum on its own. The till then switches to
  * that branch and the order is rung up there as any other: its menu, its
  * prices, its kitchen, its riders. No drawer, no shift, no tables.
  */
@@ -56,6 +59,9 @@ export function CallCentre() {
   const [form, setForm] = useState<SaleDelivery>(emptyDelivery)
   const [picked, setPicked] = useState<number | null>(null)
   const [confirmingPaused, setConfirmingPaused] = useState<number | null>(null)
+  // The named area the agent picked by name, and whether they took off the one the map point is in
+  const [areaId, setAreaId] = useState<number | null>(null)
+  const [areaOff, setAreaOff] = useState(false)
   const [tried, setTried] = useState(false)
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
@@ -80,12 +86,18 @@ export function CallCentre() {
       query: { 'api-version': API_VERSION, location: location || undefined },
     }),
     staleTime: 60_000,
+    // The named areas are the same wherever the caller is: the picker keeps them while another point is asked
+    placeholderData: keepPreviousData,
   })
   const settled = !resolution.isFetching && resolution.data !== undefined
   const answer = settled ? resolution.data : undefined
-  const { offers, byHand } = branchOffers(answer?.branches ?? [], answer?.delivering ?? [])
-  const branchId = offeredBranch(offers, byHand, picked)
-  const chosen = offers.find((b) => b.branchId === branchId) ?? null
+  const zones = resolution.data?.zones ?? []
+  const reaching = answer?.branches ?? []
+  const { offers, byHand } = branchOffers(reaching, answer?.delivering ?? [])
+  const offered = offeredBranch(offers, byHand, picked)
+  // The area picked by name goes first, with its branch; without one, the area the map point is in
+  const area = chosenArea(zones, areaId, pinArea(reaching, zones, offered), areaOff)
+  const branchId = area ? toNumber(area.branchId) : offered
   const pin =
     answer?.latitude != null && answer.longitude != null
       ? {
@@ -96,6 +108,9 @@ export function CallCentre() {
 
   const pickKnown = (a: KnownAddressView) => {
     setPicked(null)
+    // Another address altogether: its own point says the area again
+    setAreaId(null)
+    setAreaOff(false)
     setForm({
       address: a.address,
       building: a.building ?? '',
@@ -131,7 +146,10 @@ export function CallCentre() {
   const deliver = () => {
     setTried(true)
     if (Object.keys(errors).length > 0 || branchId == null || !settled) return
-    startAt(branchId, callerDelivery({ ...form, phone: normalizePhone(form.phone, country) }, pin))
+    startAt(
+      branchId,
+      callerDelivery({ ...form, zone: area ? toSaleZone(area) : null, phone: normalizePhone(form.phone, country) }, pin),
+    )
   }
 
   const pickup = (target: number) => {
@@ -198,12 +216,32 @@ export function CallCentre() {
           <Bike className='size-5' aria-hidden />
           {t('callCentreDelivery')}
         </h2>
-        {/* What a caller says first is the street or a landmark: a pick fills the location, which
+        {/* Where the branches keep named areas, what a caller says first is theirs: picked by name it
+            settles the branch and what delivering there costs, whatever the map says */}
+        {zones.length > 0 && (
+          <Labelled id={`${ids}-area`} label={t('deliveryAreaLabel')}>
+            <AreaPicker
+              id={`${ids}-area`}
+              zones={zones}
+              value={area ? toSaleZone(area) : null}
+              onPick={(zone) => {
+                setConfirmingPaused(null)
+                setAreaId(toNumber(zone.zoneId))
+              }}
+              onClear={() => {
+                setAreaId(null)
+                setAreaOff(true)
+              }}
+            />
+          </Labelled>
+        )}
+        {/* Then the street or a landmark: a pick fills the location, which
             picks the branch, and the street when it is still empty. Shown with Google Maps on */}
         <AddressSearchField
           onPick={(place) => {
             setPicked(null)
             setConfirmingPaused(null)
+            setAreaOff(false)
             set({
               location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
               address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
@@ -263,6 +301,7 @@ export function CallCentre() {
               onClick={() => {
                 setPicked(null)
                 setConfirmingPaused(null)
+                setAreaOff(false)
                 set({ location: '' })
               }}
             >
@@ -271,13 +310,33 @@ export function CallCentre() {
           </p>
         )}
 
-        {/* Which branch makes it: the nearest whose area takes the point in, or the agent's own pick */}
+        {/* Which branch makes it: the picked area's, the nearest whose area takes the point in, or the agent's own pick */}
         <div className='flex flex-col gap-2 text-sm' aria-live='polite'>
-          {reading ? (
-            <p className='text-muted-foreground flex items-center gap-1.5'>
-              <Loader2 className='size-3.5 animate-spin' aria-hidden />
-              {t('callCentreFindingBranch')}
+          {area && (
+            <p className='border-primary bg-primary/5 flex min-h-12 items-center gap-2 rounded-lg border p-3'>
+              <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
+              <span className='min-w-0 flex-1'>
+                <span className='font-medium'>{branchName(branchId)}</span>
+                <span className='text-muted-foreground'>
+                  {' · '}
+                  {toNumber(area.fee) > 0 ? t('callCentreFeeIs', { fee: money(area.fee) }) : t('deliveryFree')}
+                  {toNumber(area.minimumOrder) > 0 && <> · {t('deliveryMinimumIs', { amount: money(area.minimumOrder) })}</>}
+                  {area.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(area.etaMinutes) })}</>}
+                </span>
+                {!area.on && <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>· {t('deliveryAreaOff')}</span>}
+                {area.branchPaused && (
+                  <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>· {t('deliveryBranchPaused')}</span>
+                )}
+              </span>
             </p>
+          )}
+          {reading ? (
+            !area && (
+              <p className='text-muted-foreground flex items-center gap-1.5'>
+                <Loader2 className='size-3.5 animate-spin' aria-hidden />
+                {t('callCentreFindingBranch')}
+              </p>
+            )
           ) : resolution.isError ? (
             <p className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
               {t('deliveryQuoteFailed')}
@@ -285,7 +344,7 @@ export function CallCentre() {
                 {t('retry')}
               </Button>
             </p>
-          ) : offers.length === 0 ? (
+          ) : area ? null : offers.length === 0 ? (
             <p className='text-amber-700 dark:text-amber-400'>{t('callCentreNoBranchDelivers')}</p>
           ) : (
             <>
@@ -297,6 +356,8 @@ export function CallCentre() {
               {offers.map((b) => {
                 const id = b.branchId
                 const isChosen = id === branchId
+                // The map point is in an area of this branch that is switched off for a while
+                const offHere = pinArea(reaching, zones, id)
                 return (
                   <button
                     key={id}
@@ -329,6 +390,11 @@ export function CallCentre() {
                           · {confirmingPaused === id ? t('callCentreTapAgainPaused') : t('deliveryBranchPaused')}
                         </span>
                       )}
+                      {offHere && !offHere.on && (
+                        <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
+                          · <bdi>{localized(offHere.name)}</bdi> {t('deliveryAreaOff')}
+                        </span>
+                      )}
                     </span>
                   </button>
                 )
@@ -337,8 +403,8 @@ export function CallCentre() {
           )}
         </div>
 
-        <Button size='lg' className='h-14 text-lg' onClick={deliver} disabled={reading || chosen == null}>
-          {chosen ? t('callCentreDeliverFrom', { branch: branchName(branchId) }) : t('callCentreDeliver')}
+        <Button size='lg' className='h-14 text-lg' onClick={deliver} disabled={reading || branchId == null}>
+          {branchId != null ? t('callCentreDeliverFrom', { branch: branchName(branchId) }) : t('callCentreDeliver')}
         </Button>
       </section>
 

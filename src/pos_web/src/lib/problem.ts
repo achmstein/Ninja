@@ -53,6 +53,8 @@ export const PROBLEM_KEYS: Record<string, TranslationKey> = {
   'delivery.send_not_delivery': 'problemSendNotDelivery',
   'delivery.send_with_ticket': 'problemSendWithTicket',
   'delivery.send_branch_closed': 'problemSendBranchClosed',
+  'delivery.area_unknown': 'deliveryAreaGone',
+  'delivery.area_off': 'problemAreaOff',
   'rider.unknown': 'problemRiderUnknown',
   'rider.not_yours': 'problemRiderNotYours',
   'module.off': 'problemModuleOff',

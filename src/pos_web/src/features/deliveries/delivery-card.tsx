@@ -1,6 +1,6 @@
 import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Store, Undo2, UserRound } from 'lucide-react'
 import { useBranchName } from '@/features/branch/use-branch-name'
-import { useLocale, useT } from '@/lib/i18n'
+import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { relativeTime } from '@/features/orders/status'
@@ -11,7 +11,7 @@ import type { BoardDelivery } from './use-deliveries'
 
 /**
  * One delivery on the board: how it stands and since when; who and what to
- * collect; where; and its rider. Fills the column it is in. A tap opens it.
+ * collect; where (the named area first, when it is in one); and its rider. Fills the column it is in. A tap opens it.
  */
 export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: () => void }) {
   const t = useT()
@@ -19,6 +19,8 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
   const money = useMoney()
   const nowMs = useNowMs()
   const line = useAddressLine()
+  const localized = useLocalized()
+  const area = localized(order.delivery.zoneName)
   const sentFrom = useSentFrom()
   const lane = laneOf(order)
 
@@ -55,6 +57,12 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />
         <span className='min-w-0 truncate'>
+          {area && (
+            <>
+              <bdi className='text-foreground font-medium'>{area}</bdi>
+              {' · '}
+            </>
+          )}
           <bdi>{line(order.delivery)}</bdi>
         </span>
       </div>

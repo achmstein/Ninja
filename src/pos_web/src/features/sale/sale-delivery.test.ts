@@ -1,13 +1,17 @@
 import { describe, expect, it } from 'vitest'
 import { emptyDelivery, type SaleDelivery } from './cart'
 import {
+  chargedZone,
   deliveryFeeOf,
   deliveryReadiness,
   keptSendTo,
   sendToBranchId,
   toPosDeliveryRequest,
+  toSaleZone,
   toSendTo,
   validatePhoneDelivery,
+  zoneGone,
+  zoneIn,
 } from './sale-delivery'
 
 const filled: SaleDelivery = {
@@ -45,12 +49,72 @@ describe('toPosDeliveryRequest', () => {
       floor: null,
       apartment: null,
       directions: 'Blue gate',
+      zoneId: null,
     })
   })
 
   it('sends the pin only when both coordinates are there', () => {
     expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: 31.47 })).toMatchObject({ latitude: 30.06, longitude: 31.47 })
     expect(toPosDeliveryRequest({ ...filled, latitude: 30.06, longitude: null })).toMatchObject({ latitude: null, longitude: null })
+  })
+})
+
+describe('a named area', () => {
+  const listed = {
+    zoneId: '7',
+    branchId: 1,
+    name: { en: 'Maadi Degla', ar: null },
+    fee: '35',
+    minimumOrder: 150,
+    etaMinutes: '40',
+    on: true,
+    branchPaused: false,
+    drawn: false,
+  }
+  const degla = toSaleZone(listed)
+  const sendTo = { branchId: 2, fee: 25, minimumOrder: 0, distanceMeters: 900, paused: false }
+
+  it('is kept as numbers, with its name in both languages', () => {
+    expect(degla).toEqual({ id: 7, name: { en: 'Maadi Degla', ar: null }, fee: 35, minimumOrder: 150, etaMinutes: 40 })
+    expect(toSaleZone({ ...listed, etaMinutes: null }).etaMinutes).toBeNull()
+  })
+
+  it('is found in the list the server sent, and not once the owner removed it', () => {
+    expect(zoneIn([listed], 7)).toEqual(degla)
+    expect(zoneIn([listed], 8)).toBeNull()
+    expect(zoneIn(null, 7)).toBeNull()
+    expect(zoneIn([listed], null)).toBeNull()
+  })
+
+  it('goes on the order by its id, the one the cashier picked by name', () => {
+    expect(toPosDeliveryRequest({ ...filled, zone: degla })).toMatchObject({ zoneId: 7 })
+  })
+
+  it('does not follow an order sent to another branch', () => {
+    expect(toPosDeliveryRequest({ ...filled, zone: degla, sendTo })).toMatchObject({ zoneId: null })
+    expect(chargedZone({ ...filled, zone: degla, sendTo })).toBeNull()
+    expect(chargedZone({ ...filled, zone: degla })).toEqual(degla)
+  })
+
+  it('is none on a sale kept before areas were', () => {
+    const { zone: _zone, ...before } = filled
+    expect(chargedZone(before)).toBeNull()
+    expect(chargedZone(null)).toBeNull()
+    expect(toPosDeliveryRequest(before)).toMatchObject({ zoneId: null })
+  })
+
+  it('is charged at the fee the branch answers for it: the area’s, or the other branch’s when sent on', () => {
+    expect(deliveryFeeOf({ ...filled, zone: degla }, 35)).toBe(35)
+    expect(deliveryFeeOf({ ...filled, zone: degla, sendTo }, 35)).toBe(25)
+  })
+
+  it('is gone when the terms asked for it name another area or none', () => {
+    expect(zoneGone(degla, 7)).toBe(false)
+    expect(zoneGone(degla, '7')).toBe(false)
+    expect(zoneGone(degla, null)).toBe(true)
+    expect(zoneGone(degla, undefined)).toBe(true)
+    expect(zoneGone(degla, 9)).toBe(true)
+    expect(zoneGone(null, null)).toBe(false)
   })
 })
 

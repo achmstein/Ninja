@@ -1,14 +1,15 @@
 // The pure parts of the call centre: which branch a caller's delivery goes to,
 // and what the sale is made of once it is chosen. Kept apart from the screens
 // so they can be tested.
-import type { DeliveryAlternative } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, StaffDeliveryZone } from '@/api/ordering/types.gen'
 import type { SaleDelivery } from '@/features/sale/cart'
 import { toNumber } from '@/lib/money'
 
 /**
  * The delivery as the sale pad keeps it, at the branch that makes it: the
- * caller's words and the pin read from what they shared. Never sent on to
- * another branch — the till switches to the branch that cooks it.
+ * caller's words, the named area the agent picked (on the form), and the pin
+ * read from what they shared. Never sent on to another branch — the till
+ * switches to the branch that cooks it.
  */
 export function callerDelivery(form: SaleDelivery, pin: { latitude: number; longitude: number } | null): SaleDelivery {
   return {
@@ -19,7 +20,46 @@ export function callerDelivery(form: SaleDelivery, pin: { latitude: number; long
     // The pin as coordinates: the sale pad's quote reads it back as the same point
     location: pin ? `${pin.latitude}, ${pin.longitude}` : form.location.trim(),
     sendTo: null,
+    zone: form.zone ?? null,
   }
+}
+
+/** The named area with this id among every branch's, as the server lists them now; null when it is not there */
+export function areaById(zones: readonly StaffDeliveryZone[], zoneId: number | null): StaffDeliveryZone | null {
+  if (zoneId == null) return null
+  return zones.find((z) => toNumber(z.zoneId) === zoneId) ?? null
+}
+
+/**
+ * The named area the point on the map is in at this branch, when it is in
+ * one: what the order is charged there unless the agent picks another by name.
+ */
+export function pinArea(
+  reaching: readonly DeliveryAlternative[],
+  zones: readonly StaffDeliveryZone[],
+  branchId: number | null,
+): StaffDeliveryZone | null {
+  if (branchId == null) return null
+  const at = reaching.find((b) => toNumber(b.branchId) === branchId)
+  if (at?.zoneId == null) return null
+  const zone = areaById(zones, toNumber(at.zoneId))
+  return zone && toNumber(zone.branchId) === branchId ? zone : null
+}
+
+/**
+ * The area the order goes to: the one the agent picked by name while it is
+ * still listed; otherwise the one the map point is in, unless it is switched
+ * off (that takes the agent's own tap) or the agent took it off.
+ */
+export function chosenArea(
+  zones: readonly StaffDeliveryZone[],
+  byName: number | null,
+  onMap: StaffDeliveryZone | null,
+  tookOff: boolean,
+): StaffDeliveryZone | null {
+  const named = areaById(zones, byName)
+  if (named) return named
+  return onMap && onMap.on && !tookOff ? onMap : null
 }
 
 /** A branch the agent may send the caller's order to. No distance when no point on the map is known. */

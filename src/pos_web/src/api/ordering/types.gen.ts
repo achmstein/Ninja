@@ -136,6 +136,10 @@ export type DeliveringBranch = {
     fee: number | string;
     minimumOrder: number | string;
     signInRequired: boolean;
+    zoneId?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
+    zoneOff?: boolean;
 };
 
 export type DeliveryAlternative = {
@@ -144,6 +148,10 @@ export type DeliveryAlternative = {
     fee: number | string;
     minimumOrder: number | string;
     paused: boolean;
+    zoneId?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
+    zoneOff?: boolean;
 };
 
 export type DeliveryFailedRequest = {
@@ -177,6 +185,10 @@ export type DeliveryQuote = {
     radiusKm: number | string;
     signInRequired?: boolean;
     hasArea?: boolean;
+    zoneId?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
+    zoneOff?: boolean;
 };
 
 export type DeliveryRequest = {
@@ -210,6 +222,8 @@ export type DeliveryStaffView = {
     phone?: string;
     fee?: number | string;
     distanceMeters?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
     assignedAt?: null | string;
@@ -245,6 +259,8 @@ export type DeliveryView = {
     phone?: string;
     fee?: number | string;
     distanceMeters?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
     assignedAt?: null | string;
@@ -557,6 +573,7 @@ export type PosDeliveryRequest = {
     floor?: null | string;
     apartment?: null | string;
     directions?: null | string;
+    zoneId?: null | number | string;
 };
 
 export type PosOrderRequest = {
@@ -682,6 +699,19 @@ export type StaffDeliveryResolution = {
     locationRead: boolean;
     branches: Array<DeliveryAlternative>;
     delivering: Array<StaffDeliveringBranch>;
+    zones?: null | Array<StaffDeliveryZone>;
+};
+
+export type StaffDeliveryZone = {
+    zoneId: number | string;
+    branchId: number | string;
+    name: LocalizedText;
+    fee: number | string;
+    minimumOrder: number | string;
+    etaMinutes: null | number | string;
+    on: boolean;
+    branchPaused: boolean;
+    drawn: boolean;
 };
 
 export type StockDisposition = 'Waste' | 'Restock';
@@ -700,6 +730,11 @@ export type TillDeliveryQuote = {
     locationRead: boolean;
     alternatives: Array<DeliveryAlternative>;
     hasArea?: boolean;
+    zoneId?: null | number | string;
+    zoneName?: null | LocalizedText;
+    etaMinutes?: null | number | string;
+    zoneOff?: boolean;
+    zones?: null | Array<StaffDeliveryZone>;
 };
 
 export type GetOrdersByUserData = {
@@ -2361,6 +2396,7 @@ export type GetTillDeliveryQuoteData = {
     path?: never;
     query: {
         location?: string;
+        zoneId?: number | string;
         /**
          * The API version, in the format 'major.minor'.
          */

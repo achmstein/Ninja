@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
-import type { DeliveryAlternative } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, StaffDeliveryZone } from '@/api/ordering/types.gen'
 import { emptyDelivery } from '@/features/sale/cart'
-import { branchOffers, callerDelivery, offeredBranch } from './call-centre'
+import { areaById, branchOffers, callerDelivery, chosenArea, offeredBranch, pinArea } from './call-centre'
 
 const branch = (branchId: number, paused = false): DeliveryAlternative => ({
   branchId,
@@ -80,6 +80,13 @@ describe('callerDelivery', () => {
     })
   })
 
+  it('carries the named area the agent picked, and none when there is none', () => {
+    const zone = { id: 7, name: { en: 'Maadi Degla', ar: null }, fee: 35, minimumOrder: 0, etaMinutes: null }
+    expect(callerDelivery({ ...emptyDelivery, address: 'Road 9', zone }, null)).toMatchObject({ zone, sendTo: null })
+    const { zone: _zone, ...before } = emptyDelivery
+    expect(callerDelivery({ ...before, address: 'Road 9' }, null).zone).toBeNull()
+  })
+
   it('keeps the words alone without a pin', () => {
     const delivery = callerDelivery({ ...emptyDelivery, address: 'Maadi road 9', location: ' ' }, null)
     expect(delivery).toMatchObject({
@@ -87,5 +94,51 @@ describe('callerDelivery', () => {
       longitude: null,
       location: '',
     })
+  })
+})
+
+describe('named areas', () => {
+  const area = (zoneId: number, branchId: number, on = true): StaffDeliveryZone => ({
+    zoneId,
+    branchId,
+    name: { en: `Area ${zoneId}`, ar: null },
+    fee: 30,
+    minimumOrder: 0,
+    etaMinutes: null,
+    on,
+    branchPaused: false,
+    drawn: true,
+  })
+  const zones = [area(7, 2), area(8, 2, false), area(9, 3)]
+
+  it('finds an area by its id while it is listed', () => {
+    expect(areaById(zones, 9)?.branchId).toBe(3)
+    expect(areaById(zones, 4)).toBeNull()
+    expect(areaById(zones, null)).toBeNull()
+  })
+
+  it('reads the area the map point is in at the branch that makes it', () => {
+    const reaching = [{ ...branch(2), zoneId: 7 }, { ...branch(3), zoneId: '9' }, branch(4)]
+    expect(pinArea(reaching, zones, 2)?.zoneId).toBe(7)
+    expect(pinArea(reaching, zones, 3)?.zoneId).toBe(9)
+    expect(pinArea(reaching, zones, 4)).toBeNull()
+    expect(pinArea(reaching, zones, null)).toBeNull()
+    expect(pinArea([{ ...branch(2), zoneId: 9 }], zones, 2)).toBeNull()
+  })
+
+  it('goes by the area picked by name before the one on the map', () => {
+    expect(chosenArea(zones, 9, zones[0], false)?.zoneId).toBe(9)
+    expect(chosenArea(zones, 8, zones[0], false)?.zoneId).toBe(8)
+  })
+
+  it('takes the area on the map when none was picked, unless it is off or the agent took it off', () => {
+    expect(chosenArea(zones, null, zones[0], false)?.zoneId).toBe(7)
+    expect(chosenArea(zones, null, zones[1], false)).toBeNull()
+    expect(chosenArea(zones, null, zones[0], true)).toBeNull()
+    expect(chosenArea(zones, null, null, false)).toBeNull()
+  })
+
+  it('falls back to the map once the area picked by name is no longer listed', () => {
+    expect(chosenArea(zones, 4, zones[0], false)?.zoneId).toBe(7)
   })
 })

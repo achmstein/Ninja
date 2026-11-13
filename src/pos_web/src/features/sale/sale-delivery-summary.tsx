@@ -1,7 +1,7 @@
 import { AlertTriangle, Bike, Loader2, MapPin, Store, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBranchName } from '@/features/branch/use-branch-name'
-import { useT } from '@/lib/i18n'
+import { useLocalized, useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
 import type { SaleDelivery } from './cart'
 import type { DeliveryReadiness } from './sale-delivery'
@@ -11,7 +11,8 @@ import type { DeliveryReadiness } from './sale-delivery'
  * the rider calls, a tap to change it, a cross to make it a counter sale
  * again. When it can't go yet (terms being read, unreadable, delivery off) it
  * says so with the way out, and the sale waits. One sent to the branch
- * nearer the caller says which.
+ * nearer the caller says which. The branch's named area it goes to comes
+ * before the street.
  */
 export function SaleDeliverySummary({
   delivery,
@@ -28,12 +29,15 @@ export function SaleDeliverySummary({
 }) {
   const t = useT()
   const branchName = useBranchName()
+  const localized = useLocalized()
+  // An area is its branch's own: none on a delivery another branch makes
+  const area = delivery.sendTo ? '' : localized(delivery.zone?.name)
   return (
     <div className='bg-muted mt-2 flex flex-col gap-2 rounded-lg p-2.5 text-sm'>
       <div className='flex items-start gap-2'>
         <Bike className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
         <button type='button' onClick={onEdit} className='min-w-0 flex-1 text-start' aria-label={t('deliveryChange')}>
-          <span className='block truncate font-medium'>{[delivery.address, delivery.building].filter(Boolean).join(' · ')}</span>
+          <span className='block truncate font-medium'>{[area, delivery.address, delivery.building].filter(Boolean).join(' · ')}</span>
           <span className='text-muted-foreground flex items-center gap-1 text-xs'>
             {delivery.latitude != null && <MapPin className='size-3' aria-hidden />}
             <span dir='ltr'>{showPhone(delivery.phone)}</span>

@@ -1,7 +1,7 @@
-import type { DeliveryAlternative, PosDeliveryRequest } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, PosDeliveryRequest, StaffDeliveryZone } from '@/api/ordering/types.gen'
 import { toNumber } from '@/lib/money'
 import { digitCount } from '@/lib/phone'
-import type { SaleDelivery, SaleSendTo } from './cart'
+import type { SaleDelivery, SaleSendTo, SaleZone } from './cart'
 
 /** Enough digits to be a phone the rider can call, and to look a caller up by */
 export const MIN_PHONE_DIGITS = 8
@@ -24,7 +24,11 @@ export function validatePhoneDelivery(form: SaleDelivery, name: string, needsNam
 
 const orNull = (value: string) => value.trim() || null
 
-/** The delivery as the till's order request carries it: the pin only when the caller shared one */
+/**
+ * The delivery as the till's order request carries it: the pin only when the
+ * caller shared one, the named area only when it is made here (an area is
+ * its branch's own)
+ */
 export function toPosDeliveryRequest(delivery: SaleDelivery): PosDeliveryRequest {
   const pinned = delivery.latitude != null && delivery.longitude != null
   return {
@@ -36,7 +40,49 @@ export function toPosDeliveryRequest(delivery: SaleDelivery): PosDeliveryRequest
     floor: orNull(delivery.floor),
     apartment: orNull(delivery.apartment),
     directions: orNull(delivery.directions),
+    zoneId: delivery.sendTo ? null : (delivery.zone?.id ?? null),
   }
+}
+
+/** A named area the server listed, as the sale keeps it */
+export function toSaleZone(zone: {
+  zoneId: number | string
+  name: { en?: string | null; ar?: string | null }
+  fee: number | string
+  minimumOrder: number | string
+  etaMinutes?: number | string | null
+}): SaleZone {
+  return {
+    id: toNumber(zone.zoneId),
+    name: { en: zone.name.en ?? null, ar: zone.name.ar ?? null },
+    fee: toNumber(zone.fee),
+    minimumOrder: toNumber(zone.minimumOrder),
+    etaMinutes: zone.etaMinutes != null ? toNumber(zone.etaMinutes) : null,
+  }
+}
+
+/** The area with this id in a list the server sent, as the sale keeps it; null when it is not (or no longer) there */
+export function zoneIn(zones: readonly StaffDeliveryZone[] | null | undefined, zoneId: number | string | null | undefined): SaleZone | null {
+  if (zoneId == null) return null
+  const found = (zones ?? []).find((z) => toNumber(z.zoneId) === toNumber(zoneId))
+  return found ? toSaleZone(found) : null
+}
+
+/**
+ * The area the sale is charged for: none once it is sent to another branch.
+ * The sale pad asks the branch's terms for it, and the fee answered is that
+ * area's.
+ */
+export function chargedZone(delivery: SaleDelivery | null | undefined): SaleZone | null {
+  return delivery?.sendTo ? null : (delivery?.zone ?? null)
+}
+
+/**
+ * Whether the area on the sale is gone from the branch's list: the terms
+ * asked for it came back naming another area, or none (the owner removed it).
+ */
+export function zoneGone(zone: SaleZone | null, answeredZoneId: number | string | null | undefined): boolean {
+  return zone != null && (answeredZoneId == null || toNumber(answeredZoneId) !== zone.id)
 }
 
 /** A branch the till's quote offered, as the sale keeps it */

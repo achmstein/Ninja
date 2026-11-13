@@ -61,13 +61,15 @@ export function useRiders(enabled: boolean) {
  * The branch's answer for a delivery the till takes over the phone: whether
  * it delivers at all, its fee and minimum, and, for a location the caller
  * shared, the pin read from it and how far that is. `location` is debounced
- * so a paste reads once; the answer says which text it was for.
+ * so a paste reads once; the answer says which text it was for. With
+ * `zoneId`, the named area the cashier picked, the fee and minimum answered
+ * are that area's; the answer names it back while it is still on the list.
  */
-export function useTillDeliveryQuote(location = '', enabled = true) {
+export function useTillDeliveryQuote(location = '', enabled = true, zoneId: number | null = null) {
   const pasted = useDebounced(location.trim(), 400)
   const query = useQuery({
     ...getTillDeliveryQuoteOptions({
-      query: { 'api-version': API_VERSION, location: pasted || undefined },
+      query: { 'api-version': API_VERSION, location: pasted || undefined, zoneId: zoneId ?? undefined },
     }),
     enabled,
     staleTime: 60_000,

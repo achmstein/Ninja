@@ -66,6 +66,17 @@ export type SaleDelivery = {
   longitude: number | null
   /** Another branch, nearer the caller, makes and delivers it; null (or missing) keeps it here */
   sendTo?: SaleSendTo | null
+  /** The branch's named area the cashier picked (or the pin fell in); null (or missing) charges the branch's own fee */
+  zone?: SaleZone | null
+}
+
+/** A branch's named delivery area as the sale keeps it: its name and what holds there when it was picked */
+export type SaleZone = {
+  id: number
+  name: { en: string | null; ar: string | null }
+  fee: number
+  minimumOrder: number
+  etaMinutes: number | null
 }
 
 /** The branch a phone delivery is sent to, with what it asks, as the till's quote offered it */
@@ -88,6 +99,7 @@ export const emptyDelivery: SaleDelivery = {
   latitude: null,
   longitude: null,
   sendTo: null,
+  zone: null,
 }
 
 /**

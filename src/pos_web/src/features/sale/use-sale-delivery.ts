@@ -1,10 +1,12 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useTillDeliveryQuote } from '@/features/deliveries/use-deliveries'
 import { useFeatures } from '@/lib/brand'
+import { translate } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { isModuleOff } from '@/lib/problem'
+import { toast } from '@/lib/toast'
 import { useSale } from './cart'
-import { deliveryFeeOf, deliveryReadiness } from './sale-delivery'
+import { chargedZone, deliveryFeeOf, deliveryReadiness, zoneGone } from './sale-delivery'
 
 /**
  * A walk-in sale that goes out with a rider instead: whether the till may
@@ -12,19 +14,37 @@ import { deliveryFeeOf, deliveryReadiness } from './sale-delivery'
  * says whether the sale is a delivery; the branch's terms only say whether it
  * can go, and while they can't (being read, unreadable, delivery off) the
  * sale waits rather than going out as a counter sale. A round on an open bill
- * is never a delivery.
+ * is never a delivery. One to a named area is charged that area's fee: the
+ * terms are asked for the area, and for the pin when no area was picked, the
+ * way the order itself is priced.
  */
 export function useSaleDelivery(addingToTicket: boolean) {
   const features = useFeatures()
   const { delivery, setDelivery, customer, setCustomer } = useSale()
   const [formOpen, setFormOpen] = useState(false)
   const onSale = addingToTicket ? null : delivery
+  // The named area it is charged for, and without one the pin: the server reads the area the pin is in
+  const zone = chargedZone(onSale)
+  const pin =
+    onSale && !onSale.sendTo && !zone && onSale.latitude != null && onSale.longitude != null
+      ? `${onSale.latitude}, ${onSale.longitude}`
+      : ''
   // Asked where the business delivers, and for a delivery already on the sale whatever the switch says
-  const terms = useTillDeliveryQuote('', !addingToTicket && (features.delivery === true || onSale != null))
+  const terms = useTillDeliveryQuote(pin, !addingToTicket && (features.delivery === true || onSale != null), zone?.id ?? null)
+  // The owner took the area off the list since it was picked: the branch's own fee holds, and the cashier is told
+  const gone = onSale != null && terms.data?.delivers === true && !terms.isFetching && zoneGone(zone, terms.data.zoneId)
+  useEffect(() => {
+    if (!gone) return
+    const current = useSale.getState().delivery
+    if (!current?.zone) return
+    setDelivery({ ...current, zone: null })
+    toast.warning(translate('deliveryAreaGone'))
+  }, [gone, setDelivery])
   const off = terms.isError && isModuleOff(terms.error)
   const readiness = deliveryReadiness(
     onSale,
-    { isLoading: terms.isLoading, isError: terms.isError && !off, delivers: off ? false : terms.data?.delivers },
+    // Still the terms of the pin before: the fee shown would be another place's
+    { isLoading: terms.isLoading || terms.answeredFor !== pin, isError: terms.isError && !off, delivers: off ? false : terms.data?.delivers },
     features.delivery === true,
   )
 
