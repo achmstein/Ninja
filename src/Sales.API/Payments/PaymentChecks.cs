@@ -218,6 +218,13 @@ public sealed class PaymentsWorker(
     protected override async Task ExecuteAsync(CancellationToken stoppingToken)
     {
         await Task.Delay(TimeSpan.FromSeconds(20), clock, stoppingToken);
+        // On a new database the migration can still be making the tables when the twenty seconds
+        // are up (a slow machine, a first start): a round then failed on a table not there yet and
+        // said so as an error, though nothing was wrong. The first round waits for the database
+        while (!stoppingToken.IsCancellationRequested && !await DatabaseIsReadyAsync(stoppingToken))
+        {
+            await Task.Delay(TimeSpan.FromSeconds(2), clock, stoppingToken);
+        }
         while (!stoppingToken.IsCancellationRequested)
         {
             try
@@ -229,6 +236,21 @@ public sealed class PaymentsWorker(
                 logger.LogError(ex, "A round of the payments' clockwork failed; the next round tries again");
             }
             await Task.Delay(Interval, clock, stoppingToken);
+        }
+    }
+
+    /// <summary>Every migration has been applied. A database that cannot say (not relational, not reachable yet) is not held up for: the round finds out.</summary>
+    private async Task<bool> DatabaseIsReadyAsync(CancellationToken ct)
+    {
+        try
+        {
+            using var scope = scopes.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<SalesContext>();
+            return !db.Database.IsRelational() || !(await db.Database.GetPendingMigrationsAsync(ct)).Any();
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            return false;
         }
     }
 

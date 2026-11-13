@@ -42,6 +42,8 @@ public sealed class SmokeTests(NinjaApp app) : ScenarioTest(app)
     {
         Assert.Equal(Microsoft.AspNetCore.SignalR.Client.HubConnectionState.Connected, App.Hub.State);
         Assert.NotEmpty(App.ConnectionStrings);
-        Assert.Empty(App.Logs.Failures(Marker.Start));
+        // Said in full: "the collection was not empty" names no service and no error
+        var failures = App.Logs.Failures(Marker.Start);
+        Assert.True(failures.Count == 0, string.Join(Environment.NewLine, failures.Select(f => f.ToString())));
     }
 }
