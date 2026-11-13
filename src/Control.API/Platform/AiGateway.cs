@@ -108,6 +108,57 @@ public sealed class AiRouter(IServiceScopeFactory scopes)
 /// day per role and model, added to as calls come back. Best effort: a count
 /// that cannot be written never fails the call it counts.
 /// </summary>
+/// <summary>
+/// What a provider's answer says the call used, whichever way it says it: a chat completion's
+/// prompt_tokens and completion_tokens, an image model's input_tokens and output_tokens (OpenAI's
+/// images), or Gemini's own usageMetadata. Nothing said is nothing counted: some image models are
+/// billed by the picture and report no tokens at all.
+/// </summary>
+public static class AiTokens
+{
+    public static (long Prompt, long Completion) Of(JsonNode? answer)
+    {
+        try
+        {
+            if (answer?["usage"] is JsonObject used)
+            {
+                var prompt = Long(used["prompt_tokens"] ?? used["input_tokens"]);
+                var completion = Long(used["completion_tokens"] ?? used["output_tokens"]);
+                // Only a total: what is not the prompt's is the answer's
+                if (completion == 0 && Long(used["total_tokens"]) is var total and > 0) completion = Math.Max(0, total - prompt);
+                return (prompt, completion);
+            }
+            if (answer?["usageMetadata"] is JsonObject meta)
+            {
+                var prompt = Long(meta["promptTokenCount"]);
+                // The total takes in what the model thought as well as what it drew or said
+                var total = Long(meta["totalTokenCount"]);
+                return (prompt, total > prompt ? total - prompt : Long(meta["candidatesTokenCount"]));
+            }
+        }
+        catch (Exception ex) when (ex is InvalidOperationException or FormatException)
+        {
+            // A number written some other way: not counted, never a failed picture
+        }
+        return (0, 0);
+    }
+
+    public static (long Prompt, long Completion) Of(string? answer)
+    {
+        if (string.IsNullOrWhiteSpace(answer)) return (0, 0);
+        try
+        {
+            return Of(JsonNode.Parse(answer));
+        }
+        catch (System.Text.Json.JsonException)
+        {
+            return (0, 0);
+        }
+    }
+
+    private static long Long(JsonNode? value) => value is null ? 0 : value.GetValueKind() == System.Text.Json.JsonValueKind.Number ? (long)value.GetValue<double>() : 0;
+}
+
 public sealed class AiUsageRecorder(IServiceScopeFactory scopes, ILogger<AiUsageRecorder> logger)
 {
     /// <summary>The slug the control panel's own calls are counted under.</summary>
@@ -244,6 +295,26 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
         var client = clients.CreateClient(Apis.ControlApi.AiProviderClient);
         try
         {
+            // Gemini's own image models say what a picture used only through their own generateContent;
+            // their OpenAI-style images endpoint answers with the picture alone. Asked the native way
+            // first, so the tokens are counted; what it will not draw that way goes the old way below
+            if (IsGeminiImageModel(route))
+            {
+                try
+                {
+                    var drawn = await GeminiContentAsync(client, route, prompt, null, null, portrait: false, ct);
+                    if (drawn.Picture is { } native)
+                    {
+                        _ = usage.RecordAsync(slug, route, true, drawn.Prompt, drawn.Completion);
+                        return native;
+                    }
+                }
+                catch (AiImageException ex) when (ex.Status is 400 or 404)
+                {
+                    // Not a model generateContent draws with: the images endpoint is tried
+                }
+            }
+
             var body = new JsonObject { ["model"] = route.Model, ["prompt"] = prompt, ["n"] = 1, ["size"] = "1024x1024", ["response_format"] = "b64_json" };
             var (status, text) = await PostAsync(client, route, body, ct);
             // OpenAI's gpt-image models always answer in base64 and refuse to be asked to
@@ -263,7 +334,8 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
                 bytes = await client.GetByteArrayAsync(url, ct);
             else
                 throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
-            _ = usage.RecordAsync(slug, route, true, 0, 0);
+            var (promptTokens, completionTokens) = AiTokens.Of(text);
+            _ = usage.RecordAsync(slug, route, true, promptTokens, completionTokens);
             return bytes;
         }
         catch (Exception ex) when (ex is not OperationCanceledException && ex is not AIUnavailableException)
@@ -290,10 +362,10 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
         count = Math.Clamp(count, 1, MaxEdits);
         try
         {
-            var pictures = IsGemini(route)
+            var (pictures, promptTokens, completionTokens) = IsGemini(route)
                 ? await GeminiEditAsync(client, route, photo, mediaType, prompt, count, portrait, ct)
                 : await OpenAIEditAsync(client, route, photo, mediaType, prompt, count, portrait, ct);
-            _ = usage.RecordAsync(slug, route, true, 0, 0);
+            _ = usage.RecordAsync(slug, route, true, promptTokens, completionTokens);
             return pictures;
         }
         catch (Exception ex) when (ex is not OperationCanceledException && ex is not AIUnavailableException)
@@ -305,53 +377,66 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
 
     private static bool IsGemini(AiRoute route) => route.BaseUrl.Contains("generativelanguage.googleapis.com", StringComparison.OrdinalIgnoreCase);
 
-    /// <summary>One generateContent per picture: the photo and the words in, a picture out</summary>
-    private static async Task<IReadOnlyList<byte[]>> GeminiEditAsync(
+    /// <summary>One of Gemini's own image models (gemini-…-image), which draw through generateContent; Imagen does not.</summary>
+    private static bool IsGeminiImageModel(AiRoute route) => IsGemini(route) && route.Model.Contains("gemini", StringComparison.OrdinalIgnoreCase);
+
+    /// <summary>One generateContent per picture: the photo and the words in, a picture out, and the tokens they all used</summary>
+    private static async Task<(IReadOnlyList<byte[]> Pictures, long Prompt, long Completion)> GeminiEditAsync(
         HttpClient client, AiRoute route, byte[] photo, string mediaType, string prompt, int count, bool portrait, CancellationToken ct)
+    {
+        var answers = await Task.WhenAll(Enumerable.Range(0, count).Select(_ => GeminiContentAsync(client, route, prompt, photo, mediaType, portrait, ct)));
+        var pictures = answers.Select(a => a.Picture).OfType<byte[]>().ToList();
+        return pictures.Count > 0
+            ? (pictures, answers.Sum(a => a.Prompt), answers.Sum(a => a.Completion))
+            : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+    }
+
+    /// <summary>
+    /// One generateContent call: the words, and a photo when there is one, in; a picture out (null when the
+    /// model answered with words only) and what the call used, as its usageMetadata says.
+    /// </summary>
+    private static async Task<(byte[]? Picture, long Prompt, long Completion)> GeminiContentAsync(
+        HttpClient client, AiRoute route, string prompt, byte[]? photo, string? mediaType, bool portrait, CancellationToken ct)
     {
         // The native API sits beside the OpenAI-style layer: …/v1beta/openai/ → …/v1beta/
         var native = route.BaseUrl.TrimEnd('/');
         if (native.EndsWith("/openai", StringComparison.OrdinalIgnoreCase)) native = native[..^"/openai".Length];
         var model = route.Model.StartsWith("models/", StringComparison.Ordinal) ? route.Model["models/".Length..] : route.Model;
+        var parts = new JsonArray(new JsonObject { ["text"] = prompt });
+        if (photo is not null)
+        {
+            parts.Add(new JsonObject { ["inline_data"] = new JsonObject { ["mime_type"] = mediaType, ["data"] = Convert.ToBase64String(photo) } });
+        }
         var body = new JsonObject
         {
-            ["contents"] = new JsonArray(new JsonObject
-            {
-                ["parts"] = new JsonArray(
-                    new JsonObject { ["text"] = prompt },
-                    new JsonObject { ["inline_data"] = new JsonObject { ["mime_type"] = mediaType, ["data"] = Convert.ToBase64String(photo) } }),
-            }),
+            ["contents"] = new JsonArray(new JsonObject { ["parts"] = parts }),
             ["generationConfig"] = new JsonObject
             {
                 ["responseModalities"] = new JsonArray("TEXT", "IMAGE"),
                 ["imageConfig"] = new JsonObject { ["aspectRatio"] = portrait ? "4:5" : "1:1" },
             },
         };
-        var tasks = Enumerable.Range(0, count).Select(async _ =>
+        using var request = new HttpRequestMessage(HttpMethod.Post, $"{native}/models/{model}:generateContent")
         {
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{native}/models/{model}:generateContent")
-            {
-                Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
-            };
-            request.Headers.TryAddWithoutValidation("x-goog-api-key", route.ApiKey);
-            using var response = await client.SendAsync(request, ct);
-            var text = await response.Content.ReadAsStringAsync(ct);
-            if (!response.IsSuccessStatusCode)
-                throw new AiImageException((int)response.StatusCode, $"{route.ProviderName} drew nothing ({(int)response.StatusCode}): {(text.Length > 300 ? text[..300] : text)}");
-            var parts = JsonNode.Parse(text)?["candidates"]?[0]?["content"]?["parts"] as JsonArray ?? [];
-            foreach (var part in parts)
-            {
-                var data = (part?["inlineData"] ?? part?["inline_data"])?["data"]?.GetValue<string>();
-                if (data is { Length: > 0 }) return Convert.FromBase64String(data);
-            }
-            return null;
-        });
-        var pictures = (await Task.WhenAll(tasks)).OfType<byte[]>().ToList();
-        return pictures.Count > 0 ? pictures : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+            Content = new StringContent(body.ToJsonString(), Encoding.UTF8, "application/json"),
+        };
+        request.Headers.TryAddWithoutValidation("x-goog-api-key", route.ApiKey);
+        using var response = await client.SendAsync(request, ct);
+        var text = await response.Content.ReadAsStringAsync(ct);
+        if (!response.IsSuccessStatusCode)
+            throw new AiImageException((int)response.StatusCode, $"{route.ProviderName} drew nothing ({(int)response.StatusCode}): {(text.Length > 300 ? text[..300] : text)}");
+        var answer = JsonNode.Parse(text);
+        var (promptTokens, completionTokens) = AiTokens.Of(answer);
+        foreach (var part in answer?["candidates"]?[0]?["content"]?["parts"] as JsonArray ?? [])
+        {
+            var data = (part?["inlineData"] ?? part?["inline_data"])?["data"]?.GetValue<string>();
+            if (data is { Length: > 0 }) return (Convert.FromBase64String(data), promptTokens, completionTokens);
+        }
+        return (null, promptTokens, completionTokens);
     }
 
-    /// <summary>OpenAI's images/edits: the photo as a file, the words, how many and how big</summary>
-    private static async Task<IReadOnlyList<byte[]>> OpenAIEditAsync(
+    /// <summary>OpenAI's images/edits: the photo as a file, the words, how many and how big; and the tokens it says it used</summary>
+    private static async Task<(IReadOnlyList<byte[]> Pictures, long Prompt, long Completion)> OpenAIEditAsync(
         HttpClient client, AiRoute route, byte[] photo, string mediaType, string prompt, int count, bool portrait, CancellationToken ct)
     {
         using var form = new MultipartFormDataContent();
@@ -369,12 +454,14 @@ public sealed class AiImages(AiRouter router, AiUsageRecorder usage, IHttpClient
         if (!response.IsSuccessStatusCode)
             throw new AiImageException((int)response.StatusCode, $"{route.ProviderName} drew nothing ({(int)response.StatusCode}): {(text.Length > 300 ? text[..300] : text)}");
         var pictures = new List<byte[]>();
-        foreach (var item in JsonNode.Parse(text)?["data"] as JsonArray ?? [])
+        var answer = JsonNode.Parse(text);
+        foreach (var item in answer?["data"] as JsonArray ?? [])
         {
             if (item?["b64_json"]?.GetValue<string>() is { Length: > 0 } b64) pictures.Add(Convert.FromBase64String(b64));
             else if (item?["url"]?.GetValue<string>() is { Length: > 0 } url) pictures.Add(await client.GetByteArrayAsync(url, ct));
         }
-        return pictures.Count > 0 ? pictures : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
+        var (promptTokens, completionTokens) = AiTokens.Of(answer);
+        return pictures.Count > 0 ? (pictures, promptTokens, completionTokens) : throw new InvalidOperationException($"{route.ProviderName} answered with no picture.");
     }
 
     private static async Task<(int Status, string Text)> PostAsync(HttpClient client, AiRoute route, JsonObject body, CancellationToken ct)

@@ -505,13 +505,7 @@ public static class AiGatewayApi
             long prompt = 0, completion = 0;
             if (response.IsSuccessStatusCode)
             {
-                try
-                {
-                    var used = JsonNode.Parse(text)?["usage"];
-                    prompt = used?["prompt_tokens"]?.GetValue<long>() ?? 0;
-                    completion = used?["completion_tokens"]?.GetValue<long>() ?? 0;
-                }
-                catch (System.Text.Json.JsonException) { }
+                (prompt, completion) = AiTokens.Of(text);
             }
             _ = usage.RecordAsync(slug, route, response.IsSuccessStatusCode, prompt, completion);
             await http.Response.WriteAsync(text, ct);
