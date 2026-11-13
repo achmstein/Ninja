@@ -42,13 +42,14 @@ public static class DeliveryZoneRules
             if ((zone.Name.En?.Length ?? 0) > MaxNameLength || (zone.Name.Ar?.Length ?? 0) > MaxNameLength)
                 return (null, $"An area's name is up to {MaxNameLength} characters: \"{label}\" is longer.");
             // One name, one area: an agent typing it must land on one fee
-            foreach (var name in new[] { zone.Name.En, zone.Name.Ar })
+            // (an area written the same in both languages is one name, not two)
+            foreach (var name in new[] { zone.Name.En, zone.Name.Ar }.OfType<string>().Distinct(StringComparer.OrdinalIgnoreCase))
             {
-                if (name is not null && !names.Add(name)) return (null, $"Two delivery areas are called \"{name}\". Give each its own name.");
+                if (!names.Add(name)) return (null, $"Two delivery areas are called \"{name}\". Give each its own name.");
             }
             if (zone.Id is { } id && !ids.Add(id)) return (null, $"The area \"{label}\" is in the list twice.");
-            if (zone.Fee < 0 || zone.Fee > MaxAmount) return (null, $"The delivery fee of \"{label}\" can't be below zero.");
-            if (zone.MinimumOrder is < 0 or > MaxAmount) return (null, $"The minimum order of \"{label}\" can't be below zero.");
+            if (zone.Fee < 0 || zone.Fee > MaxAmount) return (null, $"The delivery fee of \"{label}\" is between zero and {MaxAmount:0}.");
+            if (zone.MinimumOrder is < 0 or > MaxAmount) return (null, $"The minimum order of \"{label}\" is between zero and {MaxAmount:0}.");
             if (zone.EtaMinutes is < MinEtaMinutes or > MaxEtaMinutes)
                 return (null, $"The delivery time of \"{label}\" is between {MinEtaMinutes} and {MaxEtaMinutes} minutes.");
 

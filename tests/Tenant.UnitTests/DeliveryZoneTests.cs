@@ -71,6 +71,7 @@ public sealed class DeliveryZoneTests
     public void No_list_is_an_empty_one_and_a_free_area_is_an_area()
     {
         Assert.IsEmpty(DeliveryZoneRules.Check(null, Lat, Lng).Zones!);
+        Assert.IsNull(DeliveryZoneRules.Check([Zone("Maadi", "Maadi")], Lat, Lng).Problem, "written the same in both languages: one name, not two areas");
         Assert.IsNull(DeliveryZoneRules.Check([Zone("Next door", fee: 0)], Lat, Lng).Problem);
     }
 }
