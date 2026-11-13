@@ -622,7 +622,7 @@ public class OrdersWebApiTest
             Arg.Is<IdentifiedCommand<CreateOrderCommand, int>>(c =>
                 c.Command.IsGuestOrder
                 && c.Command.GuestName == "Nadia"
-                && c.Command.GuestPhone == "01012345678"),
+                && c.Command.GuestPhone == "+201012345678"),
             default);
     }
 

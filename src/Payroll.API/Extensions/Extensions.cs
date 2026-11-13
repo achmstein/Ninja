@@ -35,7 +35,9 @@ public static class Extensions
         builder.EnrichNpgsqlDbContext<PayrollContext>();
 
         // REVIEW: This is done for development ease but shouldn't be here in production
-        services.AddMigration<PayrollContext>();
+        // And the phones kept the old local way (010…) put in the one form (+2010…)
+        services.AddMigration<PayrollContext>((context, sp) =>
+            context.KeepPhonesInOneFormAsync<Employee>(nameof(Employee.Phone), PhoneColumns.Any(sp.GetRequiredService<TenantCountry>().Code)));
 
         services.AddMediatR(cfg =>
         {

@@ -80,9 +80,9 @@ public static class TalabatApi
             branchId,
             customerNote: order.CustomerComment,
             guestName: order.CustomerName ?? $"{TalabatOrder.PlatformName} {order.ShortCode ?? order.Code}",
-            // Talabat sends +20 10â€¦, 20 10â€¦ or 10â€¦: kept the way the country writes it, so the guest is the same
-            // person as on any other order and the number dials as staff expect; empty stays empty
-            guestPhone: PhoneRules.Normalize(order.CustomerPhone, country.Code) is { Length: > 0 } phone ? phone : null,
+            // Talabat sends +20 10…, 20 10… or 10…: kept in the one form every other order's number is, so the
+            // guest is the same person as on any other order; what is not a number is kept as sent, empty stays empty
+            guestPhone: PhoneRules.Tidy(order.CustomerPhone, country.Code),
             source: OrderSource.Talabat,
             platform: order.ToPlatformOrder());
 

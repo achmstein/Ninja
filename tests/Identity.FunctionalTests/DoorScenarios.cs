@@ -86,7 +86,7 @@ public sealed class DoorScenarios
 
         var (signedUp, detail) = await Suite.Anyone.RefusedAsync(HttpMethod.Post, Suite.Url("/register"), new
         {
-            name = "Laila Mansour", email, password = "a-good-password", phoneNumber = "01000000000",
+            name = "Laila Mansour", email, password = "a-good-password", phoneNumber = "0100 000 0000",
         });
         Assert.AreEqual(HttpStatusCode.OK, signedUp, detail);
 
@@ -97,7 +97,7 @@ public sealed class DoorScenarios
         Assert.AreEqual("Mansour", user["lastName"]!.GetValue<string>(), "a name with a space is a first and a last");
         Assert.IsTrue(user["enabled"]!.GetValue<bool>());
         Assert.IsTrue(user["emailVerified"]!.GetValue<bool>(), "a business does not send a customer looking for a verification mail before their coffee");
-        Assert.AreEqual("01000000000", Attribute(user, "phoneNumber"));
+        Assert.AreEqual("+201000000000", Attribute(user, "phoneNumber"));
         Assert.AreEqual("a-good-password", Suite.Keycloak.PasswordsSet[user["id"]!.GetValue<string>()].Single());
         Assert.IsEmpty(Suite.Keycloak.RolesOf(user["id"]!.GetValue<string>()), "a customer carries no staff role");
 
@@ -175,7 +175,7 @@ public sealed class DoorScenarios
     [TestMethod]
     public async Task Which_branches_someone_works_at_is_the_owners_to_set()
     {
-        var id = Suite.Keycloak.Given(AnEmail("tarek"), "Tarek", "Selim", phone: "01111111111", role: "Cashier", branches: [1]);
+        var id = Suite.Keycloak.Given(AnEmail("tarek"), "Tarek", "Selim", phone: "+201111111111", role: "Cashier", branches: [1]);
 
         var (byManager, _) = await Suite.BackOffice.RefusedAsync(HttpMethod.Put, Suite.Url($"/users/{id}/branches"), new { branchIds = new[] { 2 } });
         Assert.AreEqual(HttpStatusCode.Forbidden, byManager, "who works where is the owner's call");
@@ -185,7 +185,7 @@ public sealed class DoorScenarios
 
         var user = Suite.Keycloak.User(id)!;
         CollectionAssert.AreEqual(new[] { "1", "2" }, user["attributes"]!["branches"]!.AsArray().Select(b => b!.GetValue<string>()).ToArray());
-        Assert.AreEqual("01111111111", Attribute(user, "phoneNumber"), "the whole person goes back, so nothing else about them is lost");
+        Assert.AreEqual("+201111111111", Attribute(user, "phoneNumber"), "the whole person goes back, so nothing else about them is lost");
         Assert.AreEqual("Tarek", user["firstName"]!.GetValue<string>());
 
         var (nonsense, why) = await Suite.Owner.RefusedAsync(HttpMethod.Put, Suite.Url($"/users/{id}/branches"), new { branchIds = new[] { 0 } });
@@ -221,7 +221,7 @@ public sealed class DoorScenarios
     [TestMethod]
     public async Task A_person_changes_their_own_name_and_the_whole_person_goes_back()
     {
-        var id = Suite.Keycloak.Given(AnEmail("mostafa"), "Mostafa", "K", phone: "01222222222");
+        var id = Suite.Keycloak.Given(AnEmail("mostafa"), "Mostafa", "K", phone: "+201222222222");
 
         var (changed, detail) = await Suite.Signed(id).RefusedAsync(HttpMethod.Post, Suite.Url("/update-name"), new { newName = "Mostafa Kamel" });
         Assert.AreEqual(HttpStatusCode.OK, changed, detail);
@@ -229,13 +229,13 @@ public sealed class DoorScenarios
         var user = Suite.Keycloak.User(id)!;
         Assert.AreEqual("Mostafa", user["firstName"]!.GetValue<string>());
         Assert.AreEqual("Kamel", user["lastName"]!.GetValue<string>());
-        Assert.AreEqual("01222222222", Attribute(user, "phoneNumber"), "Keycloak drops what a write leaves out, so the write leaves nothing out");
+        Assert.AreEqual("+201222222222", Attribute(user, "phoneNumber"), "Keycloak drops what a write leaves out, so the write leaves nothing out");
 
         // The name the rest of the business knows them by follows: Accounts' suite reads the other end of that event
 
         var profile = await Suite.Signed(id).GetAsync<MyProfileView>(Suite.Url("/my-profile"));
         Assert.AreEqual("Mostafa Kamel", profile.Name, "their own page says the name they just gave");
-        Assert.AreEqual("01222222222", profile.PhoneNumber);
+        Assert.AreEqual("+201222222222", profile.PhoneNumber);
         Assert.IsTrue(profile.IsProfileComplete, "a name and a number is all a business needs of a customer");
 
         var (aStranger, _) = await Suite.Signed(Guid.NewGuid().ToString()).RefusedAsync(HttpMethod.Post, Suite.Url("/update-name"), new { newName = "Nobody" });
@@ -251,7 +251,7 @@ public sealed class DoorScenarios
     public async Task The_till_searches_the_directory_and_a_customer_may_not()
     {
         var email = AnEmail("dina");
-        Suite.Keycloak.Given(email, "Dina", "Rashed", phone: "01033334444");
+        Suite.Keycloak.Given(email, "Dina", "Rashed", phone: "+201033334444");
         Suite.Keycloak.Given(AnEmail("sherif"), "Sherif", "Nabil", role: "Cashier");
 
         await ServiceUnderTest<Program>.EventuallyAsync(
@@ -260,7 +260,7 @@ public sealed class DoorScenarios
 
         var found = (await Suite.Till.GetAsync<List<UserView>>(Suite.Url("/users") + "?search=Dina Rashed")).First();
         Assert.AreEqual(email, found.Email);
-        Assert.AreEqual("01033334444", found.PhoneNumber, "so the cashier can tell two Dinas apart");
+        Assert.AreEqual("+201033334444", found.PhoneNumber, "so the cashier can tell two Dinas apart");
         Assert.IsEmpty(found.RealmRoles, "a customer holds no staff role");
 
         var staff = await Suite.Till.GetAsync<List<UserView>>(Suite.Url("/users") + "?role=Cashier");
@@ -283,13 +283,13 @@ public sealed class DoorScenarios
     [TestMethod]
     public async Task Reading_or_changing_somebody_else_is_the_back_offices()
     {
-        var id = Suite.Keycloak.Given(AnEmail("nadia"), "Nadia", "Fouad", phone: "01044445555");
+        var id = Suite.Keycloak.Given(AnEmail("nadia"), "Nadia", "Fouad", phone: "+201044445555");
 
         foreach (var (method, path, body) in new (HttpMethod, string, object?)[]
         {
             (HttpMethod.Get, Suite.Url($"/users/{id}"), null),
             (HttpMethod.Get, Suite.Url("/users/count"), null),
-            (HttpMethod.Put, Suite.Url($"/users/{id}/profile"), new { name = "Not Nadia", phoneNumber = "01000000000" }),
+            (HttpMethod.Put, Suite.Url($"/users/{id}/profile"), new { name = "Not Nadia", phoneNumber = "+201000000000" }),
             (HttpMethod.Put, Suite.Url($"/users/{id}/password"), new { newPassword = "not-theirs-to-set" }),
             (HttpMethod.Put, Suite.Url($"/users/{id}/toggle-enabled"), null),
         })
@@ -303,17 +303,17 @@ public sealed class DoorScenarios
 
         var read = await Suite.BackOffice.GetAsync<UserView>(Suite.Url($"/users/{id}"));
         Assert.AreEqual("Nadia", read.FirstName);
-        Assert.AreEqual("01044445555", read.PhoneNumber);
+        Assert.AreEqual("+201044445555", read.PhoneNumber);
 
         var (renamed, detail) = await Suite.BackOffice.RefusedAsync(HttpMethod.Put, Suite.Url($"/users/{id}/profile"), new
         {
-            name = "Nadia Fouad Ali", phoneNumber = "01055556666",
+            name = "Nadia Fouad Ali", phoneNumber = "+201055556666",
         });
         Assert.AreEqual(HttpStatusCode.OK, renamed, detail);
         var edited = Suite.Keycloak.User(id)!;
         Assert.AreEqual("Nadia", edited["firstName"]!.GetValue<string>());
         Assert.AreEqual("Fouad Ali", edited["lastName"]!.GetValue<string>());
-        Assert.AreEqual("01055556666", Attribute(edited, "phoneNumber"));
+        Assert.AreEqual("+201055556666", Attribute(edited, "phoneNumber"));
 
         var (reset, _) = await Suite.BackOffice.RefusedAsync(HttpMethod.Put, Suite.Url($"/users/{id}/password"), new { newPassword = "the-new-one" });
         Assert.AreEqual(HttpStatusCode.OK, reset);

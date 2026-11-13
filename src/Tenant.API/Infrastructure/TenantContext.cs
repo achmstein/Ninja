@@ -84,13 +84,16 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
     public static readonly JsonSerializerOptions ImagesJson = new(JsonSerializerDefaults.Web);
 }
 
-public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration configuration, TenantBrandStore brand) : IDbSeeder<TenantContext>
+public class TenantContextSeed(ILogger<TenantContextSeed> logger, IConfiguration configuration, TenantBrandStore brand, TenantCountry country) : IDbSeeder<TenantContext>
 {
     public async Task SeedAsync(TenantContext context)
     {
         // Icons on disk cut by an older renderer are cut again from the mark, like a migration for the uploads
         if (await brand.RecutStaleIconsAsync(CancellationToken.None))
             logger.LogInformation("Cut the icons again from the mark (renderer {Renderer})", TenantBrandStore.IconRenderer);
+
+        // Branch phones kept the old local way (010…) put in the one form (+2010…)
+        await context.KeepPhonesInOneFormAsync<Model.Branch>(nameof(Model.Branch.Phone), PhoneColumns.Any(country.Code));
 
         // The stack's tenant, from the environment the stack was provisioned
         // with (Tenant__Name__En, Tenant__Name__Ar, Tenant__PrimaryColor,

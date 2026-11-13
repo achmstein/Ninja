@@ -35,7 +35,7 @@ public class CounterCustomerTests
     [TestMethod]
     public void The_stand_in_email_is_the_numbers_digits_and_never_shown()
     {
-        Assert.AreEqual("01012345678@counter.invalid", CounterCustomer.StandInEmail("01012345678"));
+        Assert.AreEqual("201012345678@counter.invalid", CounterCustomer.StandInEmail("+201012345678"));
         Assert.AreEqual("447700900123@counter.invalid", CounterCustomer.StandInEmail("+447700900123"));
         Assert.IsTrue(CounterCustomer.IsStandInEmail("01012345678@COUNTER.invalid"));
         Assert.IsNull(CounterCustomer.VisibleEmail("01012345678@counter.invalid"));

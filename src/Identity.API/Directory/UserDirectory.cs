@@ -16,14 +16,16 @@ public sealed record DirectoryUser(
     IReadOnlyList<int> Branches,
     bool AddedAtCounter = false,
     string PhoneNormalized = "",
-    bool AllBranches = false)
+    bool AllBranches = false,
+    string? PhoneSearch = null)
 {
     public string DisplayName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))) is { Length: > 0 } full ? full : Username ?? "";
 
     // Search runs over these, computed once per load
     public string[] NameTokens { get; } = NameSearch.Tokenize(
         string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Username : $"{FirstName} {LastName}");
-    public string PhoneDigits { get; } = NameSearch.Digits(PhoneNumber);
+    // The local and the international digits, so 0100… and 20100… both find +20100…
+    public string PhoneDigits { get; } = PhoneSearch ?? NameSearch.Digits(PhoneNumber);
     public string EmailNormalized { get; } = (Email ?? "").ToLowerInvariant();
     public string UsernameNormalized { get; } = (Username ?? "").ToLowerInvariant();
 }
@@ -177,10 +179,12 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
         try
         {
             var started = DateTimeOffset.UtcNow;
-            var users = await LoadAsync(ct);
+            var (users, stored) = await LoadAsync(ct);
             _snapshot = new DirectorySnapshot(users, started);
             _firstLoad.TrySetResult();
             logger.LogInformation("Directory loaded: {Count} users in {Elapsed} ms", users.Count, (DateTimeOffset.UtcNow - started).TotalMilliseconds);
+            // After the index is up: searching never waits for this
+            await KeepPhonesInOneFormAsync(stored, ct);
         }
         finally
         {
@@ -215,7 +219,7 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
         }
     }
 
-    private async Task<IReadOnlyList<DirectoryUser>> LoadAsync(CancellationToken ct)
+    private async Task<(IReadOnlyList<DirectoryUser> Users, IReadOnlyList<KeycloakUser> Stored)> LoadAsync(CancellationToken ct)
     {
         var client = await keycloak.AuthorizedClientAsync();
         var users = await PageAsync<KeycloakUser>(client, $"{keycloak.AdminUrl}/users?briefRepresentation=false", ct);
@@ -238,9 +242,82 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
             }
         }
 
-        return users
+        return (users
             .Select(u => FromKeycloak(u, rolesByUser.GetValueOrDefault(u.Id) ?? [], country.Code))
-            .ToList();
+            .ToList(), users);
+    }
+
+    /// <summary>
+    /// What a user's number, and a counter customer's stand-in address, should be kept as, when that is
+    /// not how they are kept: a number written before numbers had one form (010…), or typed on Keycloak's
+    /// own sign-up page, which stores what it is given. Null when there is nothing to change: no number,
+    /// not a number here, or already +20….
+    /// </summary>
+    internal static (string Phone, string? StandInEmail)? PhoneToKeep(KeycloakUser u, string country)
+    {
+        var stored = u.Attributes?.GetValueOrDefault("phoneNumber")?.FirstOrDefault();
+        if (string.IsNullOrWhiteSpace(stored)) return null;
+        var phone = PhoneRules.Normalize(stored, country);
+        if (phone == stored || !PhoneRules.IsValid(phone, country)) return null;
+        // The stand-in address is the number's digits: it follows the number, so the next cashier to add
+        // this number is still told it is taken
+        var standIn = CounterCustomer.IsStandInEmail(u.Email) && CounterCustomer.StandInEmail(phone) is var email
+            && !string.Equals(email, u.Email, StringComparison.OrdinalIgnoreCase) ? email : null;
+        return (phone, standIn);
+    }
+
+    /// <summary>
+    /// Rewrites, in Keycloak, every number not kept in the one form. Repeat-safe and quiet: a user it
+    /// cannot write is left for the next load, and a realm that refuses the form (its phone rule not yet
+    /// brought up to date) ends the pass.
+    /// </summary>
+    private async Task KeepPhonesInOneFormAsync(IReadOnlyList<KeycloakUser> stored, CancellationToken ct)
+    {
+        var changes = stored.Select(u => (User: u, Keep: PhoneToKeep(u, country.Code))).Where(c => c.Keep is not null).ToList();
+        if (changes.Count == 0) return;
+
+        var kept = 0;
+        try
+        {
+            var client = await keycloak.AuthorizedClientAsync();
+            foreach (var (user, keep) in changes)
+            {
+                ct.ThrowIfCancellationRequested();
+                var (phone, standIn) = keep!.Value;
+                if (await keycloak.GetUserAsync(client, user.Id) is not { } full) continue;
+                var attributes = full["attributes"] as System.Text.Json.Nodes.JsonObject ?? [];
+                full["attributes"] = attributes;
+                attributes["phoneNumber"] = new System.Text.Json.Nodes.JsonArray(phone);
+
+                var renamed = (System.Text.Json.Nodes.JsonObject)full.DeepClone();
+                if (standIn is not null)
+                {
+                    renamed["username"] = standIn;
+                    renamed["email"] = standIn;
+                }
+                var response = await keycloak.PutUserAsync(client, user.Id, renamed);
+                if (!response.IsSuccessStatusCode && standIn is not null)
+                {
+                    // The address is taken (the same number added twice) or may not be changed: the number alone
+                    response = await keycloak.PutUserAsync(client, user.Id, full);
+                }
+                if (!response.IsSuccessStatusCode)
+                {
+                    logger.LogWarning("Could not keep a user's phone in the international form ({Status}); left for the next load", (int)response.StatusCode);
+                    if (response.StatusCode == System.Net.HttpStatusCode.BadRequest) break;
+                    continue;
+                }
+                kept++;
+            }
+        }
+        catch (Exception ex) when (ex is not OperationCanceledException)
+        {
+            logger.LogWarning(ex, "Keeping phones in the international form stopped; the next load carries on");
+        }
+        if (kept > 0)
+        {
+            logger.LogInformation("Phones rewritten in the international form: {Count}", kept);
+        }
     }
 
     /// <summary>
@@ -264,7 +341,8 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
             UserAttributes.BranchesOf(u.Attributes),
             CounterCustomer.IsAddedAtCounter(u.Attributes),
             PhoneRules.Normalize(phone, country),
-            UserAttributes.HoldsAllBranches(u.Attributes));
+            UserAttributes.HoldsAllBranches(u.Attributes),
+            PhoneRules.SearchDigits(phone, country));
     }
 
     private async Task<List<T>> PageAsync<T>(HttpClient client, string url, CancellationToken ct)

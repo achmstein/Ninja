@@ -8,7 +8,7 @@ namespace Ninja.Finance.API.Application.Services;
 /// renames, reorders or retires them from the page; nothing here runs
 /// again once a category exists.
 /// </summary>
-public class FinanceContextSeed(ILogger<FinanceContextSeed> logger) : IDbSeeder<FinanceContext>
+public class FinanceContextSeed(ILogger<FinanceContextSeed> logger, TenantCountry country) : IDbSeeder<FinanceContext>
 {
     private static readonly (string En, string Ar)[] Defaults =
     [
@@ -25,6 +25,11 @@ public class FinanceContextSeed(ILogger<FinanceContextSeed> logger) : IDbSeeder<
 
     public async Task SeedAsync(FinanceContext context)
     {
+        // Phones kept the old local way (010…) put in the one form (+2010…); every start, unlike the categories
+        var anyPhone = PhoneColumns.Any(country.Code);
+        await context.KeepPhonesInOneFormAsync<Supplier>(nameof(Supplier.Phone), anyPhone);
+        await context.KeepPhonesInOneFormAsync<Partner>(nameof(Partner.Phone), anyPhone);
+
         if (await context.ExpenseCategories.AnyAsync())
             return;
 

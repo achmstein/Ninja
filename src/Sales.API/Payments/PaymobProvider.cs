@@ -60,7 +60,7 @@ public sealed class PaymobProvider(HttpClient http, IOptions<PaymentsOptions> op
             {
                 ["first_name"] = first,
                 ["last_name"] = last,
-                ["phone_number"] = string.IsNullOrWhiteSpace(request.PayerPhone) ? "NA" : request.PayerPhone,
+                ["phone_number"] = PhoneRules.Tidy(request.PayerPhone, null) ?? "NA",
                 ["email"] = "NA",
                 ["apartment"] = "NA",
                 ["street"] = "NA",

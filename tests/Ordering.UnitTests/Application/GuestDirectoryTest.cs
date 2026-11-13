@@ -48,6 +48,17 @@ public class GuestDirectoryTest
     }
 
     [TestMethod]
+    public void A_guest_is_found_by_their_number_as_people_here_say_it()
+    {
+        var guests = new[] { Row("phone-a", "+201012345678", "Mona"), Row("phone-c", "+201198765432", "Ali") };
+
+        Assert.AreEqual("Mona", GuestDirectory.Aggregate(guests, "0101234").Single().Name);
+        Assert.AreEqual("Mona", GuestDirectory.Aggregate(guests, "+20 101").Single().Name);
+        Assert.AreEqual("Ali", GuestDirectory.Aggregate(guests, "011 9876").Single().Name);
+        Assert.AreEqual("201012345678", GuestDirectory.Aggregate(guests, "Mona").Single().Key);
+    }
+
+    [TestMethod]
     public void Most_recent_guest_comes_first()
     {
         var guests = GuestDirectory.Aggregate(

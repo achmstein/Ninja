@@ -1,4 +1,5 @@
 using System.Net;
+using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 using Ninja.Ordering.API.Application.IntegrationEvents.Events;
@@ -295,6 +296,44 @@ public sealed class DeliveryScenarios
         },
         delivery,
     };
+
+    [TestMethod]
+    public async Task A_delivery_s_number_kept_the_old_local_way_is_rewritten_at_start_and_still_found()
+    {
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var handler = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await handler.Handle(new BranchSettingsChangedIntegrationEvent(
+                PhoneOrders, IsOrderingEnabled: false, IsReservationsEnabled: true, RequireSignInForTableOrders: false,
+                IsDeliveryEnabled: true, Latitude: Lat, Longitude: Lng, DeliveryRadiusKm: 5, DeliveryFee: 20, DeliveryMinimumOrder: 100));
+        }
+        var till = Suite.Ordering.As(Persona.Cashier(PhoneOrders), PhoneOrders);
+        var phone = $"010{Random.Shared.Next(10_000_000, 99_999_999)}";
+        var kept = $"+20{phone[1..]}";
+        var (ok, body) = await RingUpAsync(till, PhoneOrder(new { address = "Old Number St", phone }));
+        Assert.AreEqual(HttpStatusCode.OK, ok, body);
+
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>();
+            Assert.AreEqual(1, await context.Orders.CountAsync(o => o.Delivery!.Phone == kept), "a number is kept in the international form");
+
+            // As a stack that ran before numbers had one form left it, with a hotline nobody can rewrite beside it
+            await context.Orders.Where(o => o.Delivery!.Phone == kept)
+                .ExecuteUpdateAsync(s => s.SetProperty(o => o.GuestPhone, phone));
+            await context.Database.ExecuteSqlAsync($"""UPDATE ordering.orders SET "Delivery_Phone" = {phone} WHERE "Delivery_Phone" = {kept}""");
+
+            var seeder = scope.ServiceProvider.GetRequiredService<Microsoft.AspNetCore.Hosting.IDbSeeder<Ninja.Ordering.Infrastructure.OrderingContext>>();
+            await seeder.SeedAsync(context);
+            await seeder.SeedAsync(context);
+
+            Assert.AreEqual(1, await context.Orders.CountAsync(o => o.Delivery!.Phone == kept && o.GuestPhone == kept), "both columns, once");
+            Assert.AreEqual(0, await context.Orders.CountAsync(o => o.Delivery!.Phone == phone));
+        }
+
+        var known = await till.GetAsync<List<KnownAddress>>($"{Orders}/delivery/known-addresses?phone={phone}&{Version}");
+        Assert.AreEqual("Old Number St", known.Single().Address, "the caller's earlier door is still theirs");
+    }
 
     [TestMethod]
     public async Task The_till_takes_a_delivery_over_the_phone_without_a_pin_even_while_customers_are_paused()

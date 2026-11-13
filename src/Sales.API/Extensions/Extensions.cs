@@ -55,7 +55,14 @@ public static class Extensions
         builder.EnrichNpgsqlDbContext<SalesContext>();
 
         // REVIEW: This is done for development ease but shouldn't be here in production
-        services.AddMigration<SalesContext>();
+        // And the numbers copied from orders the old local way (010…) put in the one form (+2010…)
+        services.AddSingleton<TenantCountry>();
+        services.AddMigration<SalesContext>(async (context, sp) =>
+        {
+            var customer = PhoneColumns.Customer(sp.GetRequiredService<TenantCountry>().Code);
+            await context.KeepPhonesInOneFormAsync<Ticket>(nameof(Ticket.GuestPhone), customer);
+            await context.KeepPhonesInOneFormAsync<Ninja.Sales.Infrastructure.Projections.OrderPaymentDue>(nameof(Ninja.Sales.Infrastructure.Projections.OrderPaymentDue.Phone), customer);
+        });
 
         services.AddMediatR(cfg =>
         {

@@ -8,9 +8,6 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
 {
     public CreateOrderCommandValidator(TenantCountry country, ILogger<CreateOrderCommandValidator> logger)
     {
-        // A guest's phone is read the way this business's country writes one
-        var guestPhonePattern = PhoneRules.For(country.Code).Pattern;
-
         // A signed-in order is identified by its user; a guest order stands on
         // the contact details left at checkout instead. A counter sale is
         // neither: staff keyed it in, the cashier's identity rides the request,
@@ -30,7 +27,8 @@ public class CreateOrderCommandValidator : AbstractValidator<CreateOrderCommand>
             RuleFor(command => command.GuestName).NotEmpty();
             RuleFor(command => command.GuestPhone)
                 .NotEmpty()
-                .Matches(guestPhonePattern)
+                // A mobile of this business's country, however it was typed
+                .Must(phone => PhoneRules.IsValid(phone, country.Code))
                 .WithMessage("A valid phone number is required to order as a guest.");
 
             // Loyalty is account-only: there is nothing to redeem against

@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.RateLimiting;
 
 namespace Ninja.Ordering.API.Deliveries;
 
+using DomainOrder = Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
+
 /// <summary>
 /// The business's own delivery, as a module of Ordering: its numbers, the one
 /// policy the app's and the till's orders are held to, the riders and the
@@ -23,6 +25,18 @@ public static class DeliveryModule
 
     private const int QuotesPerMinute = 60;
     private const int KnownAddressLookupsPerMinute = 30;
+
+    /// <summary>
+    /// The numbers the module keeps (a delivery's, a saved address's) written the old local way, put in
+    /// the one form numbers are kept in now, so a caller's earlier deliveries are still found by the
+    /// number as it is read today. Run at start, after the migrations; repeat-safe.
+    /// </summary>
+    public static async Task<int> KeepPhonesInOneFormAsync(OrderingContext context, string country)
+    {
+        var customer = PhoneColumns.Customer(country);
+        return await context.KeepPhonesInOneFormAsync<DomainOrder>(nameof(Delivery.Phone), customer, owned: nameof(DomainOrder.Delivery))
+            + await context.KeepPhonesInOneFormAsync<CustomerAddress>(nameof(CustomerAddress.Phone), customer);
+    }
 
     public static IHostApplicationBuilder AddDeliveryModule(this IHostApplicationBuilder builder, IEventBusBuilder eventBus)
     {

@@ -256,16 +256,17 @@ public sealed class TemplatesTests
     }
 
     [TestMethod]
-    public void A_realm_s_phone_follows_the_country_the_business_is_in_now()
+    public void A_realm_s_phone_takes_any_spelling_and_shows_the_country_s_own()
     {
-        // A realm made with the catch-all pattern, before the business was set to Egypt
+        // A realm made when a number had to be typed one way: it refused what a phone's autofill hands
+        // over (1012345678, +20 10…), and the international form numbers are kept in now
         var old = JsonNode.Parse("""
             [{"name":"username"},
-             {"name":"phoneNumber","validations":{"pattern":{"pattern":"^\\+?[0-9]{7,15}$","error-message":"invalidPhone"}},"annotations":{"inputType":"html5-tel","inputTypePlaceholder":"+xxxxxxxxxxx"}}]
+             {"name":"phoneNumber","validations":{"pattern":{"pattern":"^01[0-9]{9}$","error-message":"invalidPhone"}},"annotations":{"inputType":"html5-tel","inputTypePlaceholder":"01xxxxxxxxx"}}]
             """)!.AsArray();
         Assert.IsTrue(Templates.WithPhoneRule(old, "EG"));
-        Assert.AreEqual("^01[0-9]{9}$", old[1]!["validations"]!["pattern"]!["pattern"]!.GetValue<string>());
-        Assert.AreEqual("01xxxxxxxxx", old[1]!["annotations"]!["inputTypePlaceholder"]!.GetValue<string>());
+        Assert.AreEqual(Ninja.ServiceDefaults.PhoneRules.LoosePattern, old[1]!["validations"]!["pattern"]!["pattern"]!.GetValue<string>());
+        Assert.AreEqual(Ninja.ServiceDefaults.PhoneRules.For("EG").Placeholder, old[1]!["annotations"]!["inputTypePlaceholder"]!.GetValue<string>());
         Assert.IsFalse(Templates.WithPhoneRule(old, "EG"), "twice is once");
 
         // The template stamps the same rule, so a new realm needs nothing

@@ -1,15 +1,23 @@
 ﻿namespace Ninja.Ordering.API.Infrastructure;
 
+using DomainOrder = Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Order;
+
 /// <summary>
-/// Simplified ordering context seed for business.
-/// No card types needed - payment happens at POS.
+/// Nothing to seed: orders are created when customers place them. What runs here is the upkeep of
+/// what is already kept.
 /// </summary>
-public class OrderingContextSeed : IDbSeeder<OrderingContext>
+public class OrderingContextSeed(TenantCountry country, ILogger<OrderingContextSeed> logger) : IDbSeeder<OrderingContext>
 {
-    public Task SeedAsync(OrderingContext context)
+    public async Task SeedAsync(OrderingContext context)
     {
-        // No seeding required for simplified business ordering
-        // Orders are created when customers place them
-        return Task.CompletedTask;
+        // Numbers kept the old local way (010…) put in the one form (+2010…), so a caller's earlier
+        // deliveries and a guest's earlier orders are still found by the number as it is read now
+        var rewritten =
+            await context.KeepPhonesInOneFormAsync<DomainOrder>(nameof(DomainOrder.GuestPhone), PhoneColumns.Customer(country.Code)) +
+            await DeliveryModule.KeepPhonesInOneFormAsync(context, country.Code);
+        if (rewritten > 0)
+        {
+            logger.LogInformation("Phones rewritten in the international form: {Count}", rewritten);
+        }
     }
 }

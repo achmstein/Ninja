@@ -117,6 +117,7 @@ public static class GuestDirectory
         var digits = NormalizePhone(term);
         return orders.Any(r =>
             (r.GuestName?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false) ||
-            (digits != null && (NormalizePhone(r.GuestPhone)?.Contains(digits) ?? false)));
+            // By the digits as kept (+20 10…) or as people here write them (010…)
+            (digits != null && PhoneRules.SearchDigits(r.GuestPhone, null).Contains(digits)));
     }
 }

@@ -308,13 +308,14 @@ public class DeliveryHardeningTest
     public async Task A_caller_s_earlier_addresses_are_this_branch_s_only()
     {
         var store = new Store();
-        await SaveAsync(store, ConfirmedDelivery(Branch, "01001112222"));
-        await SaveAsync(store, ConfirmedDelivery(OtherBranch, "01001113333"));
+        await SaveAsync(store, ConfirmedDelivery(Branch, "+201001112222"));
+        await SaveAsync(store, ConfirmedDelivery(OtherBranch, "+201001113333"));
 
         await using var context = store.NewContext();
         var queries = new DeliveryBoardQueries(context, Egypt, Options);
 
-        Assert.HasCount(1, await queries.GetKnownAddressesAsync(Branch, null, "01001112222"));
+        Assert.HasCount(1, await queries.GetKnownAddressesAsync(Branch, null, "01001112222"), "by the number as the caller says it");
+        Assert.HasCount(1, await queries.GetKnownAddressesAsync(Branch, null, "+20 100 111 2222"));
         Assert.IsEmpty(await queries.GetKnownAddressesAsync(Branch, null, "01001113333"), "another branch's deliveries stay there");
         Assert.IsEmpty(await queries.GetKnownAddressesAsync(Branch, null, null));
     }

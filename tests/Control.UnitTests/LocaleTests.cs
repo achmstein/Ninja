@@ -9,15 +9,16 @@ namespace Ninja.Control.UnitTests;
 public sealed class LocaleTests
 {
     [TestMethod]
-    [DataRow("EG", "^01[0-9]{9}$", "01xxxxxxxxx")]
-    [DataRow("sa", "^05[0-9]{8}$", "05xxxxxxxx")]
-    [DataRow("AE", "^05[0-9]{8}$", "05xxxxxxxx")]
-    [DataRow("GB", "^\\+?[0-9]{7,15}$", "+xxxxxxxxxxx")]
-    public void Phone_rules_follow_the_country(string country, string pattern, string placeholder)
+    [DataRow("EG", "01")]
+    [DataRow("sa", "05")]
+    [DataRow("AE", "05")]
+    [DataRow("GB", "07")]
+    public void The_phone_field_shows_a_mobile_of_the_country(string country, string start)
     {
-        var (p, ph) = PhoneRules.For(country);
-        Assert.AreEqual(pattern, p);
-        Assert.AreEqual(placeholder, ph);
+        var (pattern, placeholder) = PhoneRules.For(country);
+        Assert.AreEqual(PhoneRules.LoosePattern, pattern, "any spelling gets as far as the server, which reads it");
+        StringAssert.StartsWith(placeholder, start);
+        Assert.IsTrue(PhoneRules.IsValid(placeholder, country));
     }
 
     [TestMethod]
@@ -50,17 +51,17 @@ public sealed class LocaleTests
     }
 
     [TestMethod]
-    public void The_realm_checks_phones_the_way_the_tenants_country_does()
+    public void The_realm_takes_any_spelling_and_shows_the_tenants_country_s_own()
     {
         var platform = new PlatformOptions { Domain = "ninja.app", KeycloakPublicUrl = "https://auth.ninja.app" };
-        foreach (var (country, expected) in new[] { ("EG", "^01[0-9]{9}$"), ("SA", "^05[0-9]{8}$"), ("GB", "^\\+?[0-9]{7,15}$") })
+        foreach (var country in new[] { "EG", "SA", "GB" })
         {
             var tenant = new Tenant { Slug = "blue", NameEn = "Blue", OwnerEmail = "o@b.test", IdentitySecret = "i", ControlSecret = "c", Country = country };
             var realm = JsonNode.Parse(Templates.TenantRealm(tenant, TenantHosts.For(tenant, platform), platform))!.AsObject();
             // The user profile is JSON kept as a string in the realm's attributes
             var profileJson = realm["components"]!["org.keycloak.userprofile.UserProfileProvider"]![0]!["config"]!["kc.user.profile.config"]![0]!.GetValue<string>();
             var phone = JsonNode.Parse(profileJson)!["attributes"]!.AsArray().Single(a => a!["name"]!.GetValue<string>() == "phoneNumber")!;
-            Assert.AreEqual(expected, phone["validations"]!["pattern"]!["pattern"]!.GetValue<string>(), country);
+            Assert.AreEqual(PhoneRules.LoosePattern, phone["validations"]!["pattern"]!["pattern"]!.GetValue<string>(), country);
             Assert.AreEqual(PhoneRules.For(country).Placeholder, phone["annotations"]!["inputTypePlaceholder"]!.GetValue<string>(), country);
         }
     }

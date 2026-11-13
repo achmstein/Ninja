@@ -25,6 +25,9 @@ public sealed class CounterCustomerScenarios
     /// <summary>An Egyptian mobile no other scenario uses.</summary>
     private static string APhone() => $"0102{Interlocked.Increment(ref _number):D7}";
 
+    /// <summary>The number as it is kept, however it was typed: +20102…</summary>
+    private static string Kept(string phone) => $"+20{phone[1..]}";
+
     private static string? Attribute(JsonObject user, string name)
         => (user["attributes"] as JsonObject)?[name]?.AsArray().FirstOrDefault()?.GetValue<string>();
 
@@ -43,7 +46,7 @@ public sealed class CounterCustomerScenarios
 
         var added = await AddAsync("Karim Adel", typed);
 
-        Assert.AreEqual(phone, added.PhoneNumber, "+20 and spaces come off: the number is kept the way the realm's pattern expects");
+        Assert.AreEqual(Kept(phone), added.PhoneNumber, "spaces come off: the number is kept in the one international form");
         Assert.IsTrue(added.AddedAtCounter);
         Assert.IsNull(added.Email, "the stand-in address Keycloak needs is nobody's email and is never shown");
 
@@ -51,9 +54,9 @@ public sealed class CounterCustomerScenarios
         Assert.AreEqual("Karim", user["firstName"]!.GetValue<string>());
         Assert.AreEqual("Adel", user["lastName"]!.GetValue<string>());
         Assert.IsTrue(user["enabled"]!.GetValue<bool>());
-        Assert.AreEqual($"{phone}@counter.invalid", user["email"]!.GetValue<string>(), "a realm that signs in by email will not keep a user without one");
+        Assert.AreEqual($"{Kept(phone)[1..]}@counter.invalid", user["email"]!.GetValue<string>(), "a realm that signs in by email will not keep a user without one");
         Assert.IsFalse(user["emailVerified"]!.GetValue<bool>());
-        Assert.AreEqual(phone, Attribute(user, "phoneNumber"));
+        Assert.AreEqual(Kept(phone), Attribute(user, "phoneNumber"));
         Assert.AreEqual("counter", Attribute(user, "origin"));
         Assert.AreEqual(Persona.Cashier().UserId, Attribute(user, "originBy"), "who added them");
         Assert.IsNotNull(Attribute(user, "originAt"), "and when");
@@ -113,7 +116,7 @@ public sealed class CounterCustomerScenarios
             "the directory has caught up");
 
         var byPhone = await Suite.Till.GetAsync<LookupView>(Suite.Url($"/customers/lookup?phone={Uri.EscapeDataString("+20 " + phone[1..])}"));
-        Assert.AreEqual(phone, byPhone.Phone);
+        Assert.AreEqual(Kept(phone), byPhone.Phone);
         Assert.IsTrue(byPhone.PhoneValid);
         Assert.AreEqual(id, byPhone.Match?.Id);
 
@@ -150,7 +153,7 @@ public sealed class CounterCustomerScenarios
 
         var preview = await Suite.Anyone.PostAsync<ClaimPreviewView>(Suite.Url("/claim/preview"), new { token = link.Token });
         Assert.AreEqual("Salma Nabil", preview.Name);
-        Assert.AreEqual(phone, preview.PhoneNumber);
+        Assert.AreEqual(Kept(phone), preview.PhoneNumber);
 
         var (wrong, wrongWhy) = await Suite.Anyone.RefusedAsync(HttpMethod.Post, Suite.Url("/claim/preview"), new { token = link.Token[..^2] + "xx" });
         Assert.AreEqual(HttpStatusCode.NotFound, wrong);
@@ -179,7 +182,7 @@ public sealed class CounterCustomerScenarios
         Assert.AreEqual("a-good-password", Suite.Keycloak.PasswordsSet[added.Id].Single());
         Assert.IsNull(Attribute(user, "origin"), "no longer the counter's to hand over");
         Assert.IsNotNull(Attribute(user, "claimedAt"));
-        Assert.AreEqual(phone, Attribute(user, "phoneNumber"), "and nothing else about them is lost");
+        Assert.AreEqual(Kept(phone), Attribute(user, "phoneNumber"), "and nothing else about them is lost");
 
         var (twice, why) = await Suite.Anyone.RefusedAsync(HttpMethod.Post, Suite.Url("/claim"), new { token = link.Token, email = $"other-{Guid.NewGuid():N}@ninja.test", password = "another-password" });
         Assert.AreEqual(HttpStatusCode.Gone, twice, "a link works once");
@@ -218,6 +221,27 @@ public sealed class CounterCustomerScenarios
     }
 
     [TestMethod]
+    public async Task A_number_kept_the_old_local_way_is_rewritten_where_it_is_kept()
+    {
+        // Signed up before numbers had one form, or on Keycloak's own page, which keeps what it is given
+        var phone = APhone();
+        var id = Suite.Keycloak.Given($"old-{Guid.NewGuid():N}@ninja.test", "Old", "Timer", phone: phone[1..]);
+
+        await ServiceUnderTest<Program>.EventuallyAsync(
+            async () =>
+            {
+                // A lookup that finds nobody reloads the directory, and a load rewrites what it finds
+                await Suite.Till.GetAsync<LookupView>(Suite.Url($"/customers/lookup?phone={Uri.EscapeDataString(phone)}"));
+                return Attribute(Suite.Keycloak.User(id)!, "phoneNumber") == Kept(phone);
+            },
+            "the number is kept in the international form");
+
+        var found = await Suite.Till.GetAsync<LookupView>(Suite.Url($"/customers/lookup?phone={Uri.EscapeDataString(phone)}"));
+        Assert.AreEqual(id, found.Match?.Id, "and is found by it as people here say it");
+        Assert.AreEqual("Old", Suite.Keycloak.User(id)!["firstName"]!.GetValue<string>(), "the whole person went back");
+    }
+
+    [TestMethod]
     public async Task The_list_shows_who_was_added_at_the_counter_and_no_stand_in_email()
     {
         var phone = APhone();
@@ -231,7 +255,7 @@ public sealed class CounterCustomerScenarios
         Assert.AreEqual(added.Id, listed.Id);
         Assert.IsTrue(listed.AddedAtCounter, "the admin marks them 'Added at the counter'");
         Assert.IsNull(listed.Email);
-        Assert.AreEqual(phone, listed.Username, "the stand-in address is not their username either");
+        Assert.AreEqual(Kept(phone), listed.Username, "the stand-in address is not their username either");
 
         Assert.IsEmpty(await Suite.Till.GetAsync<List<CustomerView>>(Suite.Url("/users") + "?search=counter.invalid"),
             "and nobody is found by it");
