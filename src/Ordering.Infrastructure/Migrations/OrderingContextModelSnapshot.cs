@@ -1042,6 +1042,37 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("tenantsettings", "ordering");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.TicketPlace", b =>
+                {
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("PlaceId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("PlaceKind")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<string>("PlaceNameAr")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("PlaceNameEn")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("TicketId");
+
+                    b.ToTable("ticketplaces", "ordering");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate.KitchenStation", b =>
                 {
                     b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>

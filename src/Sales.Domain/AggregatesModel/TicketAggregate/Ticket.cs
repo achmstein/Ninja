@@ -272,6 +272,8 @@ public class Ticket : Entity, IAggregateRoot
         LastActivityAt = OpenedAt;
 
         AddDomainEvent(new TicketChangedDomainEvent(this));
+        // Handled at the save that opens it, by when the place it is the bill of is set
+        AddDomainEvent(new TicketOpenedDomainEvent(this));
     }
 
     /// <summary>

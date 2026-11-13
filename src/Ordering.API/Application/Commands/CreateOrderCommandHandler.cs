@@ -13,19 +13,22 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
     private readonly ILogger<CreateOrderCommandHandler> _logger;
     private readonly IDeliveryPolicy? _deliveryPolicy;
     private readonly ICustomerAddressBook? _addressBook;
+    private readonly ITicketPlaces? _ticketPlaces;
 
     public CreateOrderCommandHandler(
         IOrderingIntegrationEventService orderingIntegrationEventService,
         IOrderRepository orderRepository,
         ILogger<CreateOrderCommandHandler> logger,
         IDeliveryPolicy? deliveryPolicy = null,
-        ICustomerAddressBook? addressBook = null)
+        ICustomerAddressBook? addressBook = null,
+        ITicketPlaces? ticketPlaces = null)
     {
         _orderRepository = orderRepository ?? throw new ArgumentNullException(nameof(orderRepository));
         _orderingIntegrationEventService = orderingIntegrationEventService ?? throw new ArgumentNullException(nameof(orderingIntegrationEventService));
         _logger = logger ?? throw new ArgumentNullException(nameof(logger));
         _deliveryPolicy = deliveryPolicy;
         _addressBook = addressBook;
+        _ticketPlaces = ticketPlaces;
     }
 
     /// <summary>
@@ -76,6 +79,12 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
         var loyaltyDiscount = Order.GetLoyaltyDiscountFor(message.PointsToRedeem, itemsTotal);
         var delivery = await DeliveryOfAsync(message, itemsTotal);
 
+        // Rung up onto an open bill without saying where: the bill is a place's, and the order is that
+        // place's with it. The kitchen's card then says "Room 5" whichever till sent it
+        var ticketPlace = message.TicketId is { } onTicket && message.PlaceId is null && _ticketPlaces is not null
+            ? await _ticketPlaces.FindAsync(onTicket, cancellationToken)
+            : null;
+
         // Create the order (starts in AwaitingValidation status)
         var order = new Order(
             message.UserId,
@@ -91,9 +100,9 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             sessionId: message.SessionId,
             ticketId: message.TicketId,
             placedAt: message.PlacedAt,
-            placeId: message.PlaceId,
-            placeKind: message.PlaceKind,
-            placeName: message.PlaceName,
+            placeId: message.PlaceId ?? ticketPlace?.PlaceId,
+            placeKind: message.PlaceId is null ? ticketPlace?.PlaceKind : message.PlaceKind,
+            placeName: message.PlaceId is null ? ticketPlace?.PlaceName : message.PlaceName,
             promoCode: message.PromoCode,
             guestOrdersAnywhere: message.GuestOrdersAnywhere,
             platform: message.Platform,

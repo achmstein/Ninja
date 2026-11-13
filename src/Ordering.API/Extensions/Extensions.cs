@@ -59,6 +59,7 @@ internal static class Extensions
         services.AddScoped<IBranchSettingsQueries, BranchSettingsQueries>();
         services.AddScoped<ITenantSettingsQueries, TenantSettingsQueries>();
         services.AddScoped<IPlaceQueries, PlaceQueries>();
+        services.AddScoped<ITicketPlaces, TicketPlaces>();
         services.AddScoped<IBuyerRepository, BuyerRepository>();
         services.AddScoped<IOrderRepository, OrderRepository>();
         services.AddScoped<IKitchenQueries, KitchenQueries>();
@@ -117,6 +118,8 @@ internal static class Extensions
 
         // Sales' receipts, projected onto the orders they covered: "paid" and
         // "refunded" reach the customer's list without a call to Sales
+        // Which place an open bill is the bill of: an order rung up onto it goes to the kitchen under that place
+        eventBus.AddSubscription<TicketOpenedIntegrationEvent, TicketOpenedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
         eventBus.AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();

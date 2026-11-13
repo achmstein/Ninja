@@ -22,6 +22,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<TenantSettings> TenantSettings { get; set; }
     public DbSet<GuestBlock> GuestBlocks { get; set; }
     public DbSet<Place> Places { get; set; }
+    public DbSet<TicketPlace> TicketPlaces { get; set; }
     public DbSet<KitchenStation> KitchenStations { get; set; }
     public DbSet<KitchenPrintJob> KitchenPrintJobs { get; set; }
     public DbSet<PrintConnector> PrintConnectors { get; set; }
@@ -62,6 +63,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new TenantSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new GuestBlockEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new TicketPlaceEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new KitchenStationEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new OrderStationPartEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new KitchenPrintJobEntityTypeConfiguration());

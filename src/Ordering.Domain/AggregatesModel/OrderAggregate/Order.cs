@@ -295,6 +295,18 @@ public class Order
         _isDraft = false;
     }
 
+    /// <summary>
+    /// The order was rung up onto an open bill without saying where: it belongs to the place the bill
+    /// is the bill of, and takes it. An order that already says its place keeps what it says.
+    /// </summary>
+    public void TakePlaceOfTicket(int placeId, string? placeKind, LocalizedText? placeName)
+    {
+        if (PlaceId is not null) return;
+        PlaceId = placeId;
+        PlaceKind = placeKind;
+        PlaceName = placeName;
+    }
+
     public Order(string userId, string userName, int branchId, string? customerNote = null, int? buyerId = null, int pointsToRedeem = 0, double loyaltyDiscount = 0, string? guestId = null, string? guestName = null, string? guestPhone = null, OrderSource? source = null, int? sessionId = null, int? ticketId = null, DateTime? placedAt = null, int? placeId = null, string? placeKind = null, LocalizedText? placeName = null, string? promoCode = null, bool guestOrdersAnywhere = false, PlatformOrder? platform = null, Delivery? delivery = null, bool paysOnline = false, OrderTaker? taker = null) : this()
     {
         BuyerId = buyerId;

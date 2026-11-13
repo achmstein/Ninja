@@ -104,7 +104,7 @@ public sealed record OrderItemView(LocalizedText ProductName, int Units, double 
 public sealed record OrderView(int OrderNumber, string Status, string Source, int? PlaceId, int? SessionId, List<OrderItemView> OrderItems, decimal Total);
 
 public sealed record KitchenOrder(int OrderNumber, DateTime? ConfirmedAt, DateTime? ReadyAt, string Source, string? CustomerName, List<KitchenOrderItem> Items,
-    List<KitchenOrderPart>? Parts = null);
+    List<KitchenOrderPart>? Parts = null, LocalizedText? PlaceName = null);
 
 public sealed record KitchenOrderItem(LocalizedText ProductName, int Units, int? StationId = null);
 

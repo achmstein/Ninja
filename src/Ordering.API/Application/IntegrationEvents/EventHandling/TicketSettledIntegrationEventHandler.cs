@@ -9,11 +9,15 @@ namespace Ninja.Ordering.API.Application.IntegrationEvents.EventHandling;
 /// </summary>
 public class TicketSettledIntegrationEventHandler(
     IMediator mediator,
-    ILogger<TicketSettledIntegrationEventHandler> logger)
+    ILogger<TicketSettledIntegrationEventHandler> logger,
+    ITicketPlaces ticketPlaces = null)
     : IIntegrationEventHandler<TicketSettledIntegrationEvent>
 {
     public async Task Handle(TicketSettledIntegrationEvent @event)
     {
+        // Nothing more is rung up onto a paid bill: which place it was the bill of is let go
+        if (ticketPlaces is not null) await ticketPlaces.ForgetAsync(@event.TicketId);
+
         var orderIds = @event.OrderIds ?? [];
         if (orderIds.Count == 0)
         {

@@ -75,6 +75,16 @@ public sealed class TableAndCustomerOrderScenario(NinjaApp app, DaySetup day) : 
         Assert.Equal(table.Id, teas.TicketId);
         var addOnEvent = await ExpectEventAsync(addOn, "OrderStatusChangedToConfirmed", e => e.Int("OrderId") == teas.OrderId);
         Assert.Equal(table.Id, addOnEvent.Int("TicketId"));
+        // The pad named only the bill, not where it is: the kitchen's card still says which table,
+        // the same one the customer's own order shows. The bill is the table's, and Ordering knows it
+        await ExpectAsync("the kitchen's card for the add-on names the table", async () =>
+        {
+            var board = await Kitchen.BoardAsync(Ct);
+            var customers = Assert.Single(board, o => o.OrderNumber == orderId);
+            var addOns = Assert.Single(board, o => o.OrderNumber == teas.OrderId);
+            Assert.False(string.IsNullOrEmpty(customers.PlaceName?.En ?? customers.PlaceName?.Ar));
+            Assert.Equal(customers.PlaceName, addOns.PlaceName);
+        });
 
         var ticket = await TicketAsync(table.Id);
         Assert.Equal(3, ticket.Lines.Count);

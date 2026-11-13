@@ -83,6 +83,9 @@ public static class Extensions
         // A rider's cash for a delivery, met with its bill whichever comes first
         services.AddScoped<Ninja.Sales.API.Application.Deliveries.DeliveryCashier>();
 
+        // The bills already open say which place they are the bill of, once at every start
+        services.AddHostedService<Ninja.Sales.API.Application.OpenTicketsAnnouncer>();
+
         services.AddScoped<ITicketRepository, TicketRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
@@ -131,6 +134,7 @@ public static class Extensions
 [JsonSerializable(typeof(OrderOnlinePaymentRefusedIntegrationEvent))]
 [JsonSerializable(typeof(OrderPaidOnlineIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(TicketOpenedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
