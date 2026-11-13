@@ -7,6 +7,7 @@ import {
   Clock,
   FileText,
   MapPin,
+  MapPinned,
   Pencil,
   Phone,
   Power,
@@ -19,6 +20,7 @@ import {
 import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getBranchPricingOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@/api/tenant'
+import { getDeliveryZonesOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -58,6 +60,7 @@ export function BranchSheet({
   onKitchen,
   onPricing,
   onDelivery,
+  onZones,
   onSetActive,
 }: {
   open: boolean
@@ -70,6 +73,7 @@ export function BranchSheet({
   onKitchen: () => void
   onPricing: () => void
   onDelivery: () => void
+  onZones: () => void
   onSetActive: (active: boolean) => void
 }) {
   const t = useT()
@@ -95,8 +99,18 @@ export function BranchSheet({
     enabled: open && branch != null,
   })
 
+  // The named areas, as their own dialog reads them
+  const zonesQuery = useQuery({
+    ...getDeliveryZonesOptions({ path: { branchId } }),
+    enabled: open && branch != null && features.delivery,
+  })
+
   if (!branch) return null
 
+  const zones = zonesQuery.data
+  const zonesDrawn = (zones ?? []).filter(
+    (z) => (z.shape?.length ?? 0) >= 3
+  ).length
   const stations = stationsQuery.data?.length ?? 0
   const pricing = pricingQuery.data
   const address = localized(branch.address)
@@ -223,6 +237,30 @@ export function BranchSheet({
                 : t('branchNotSet')
             }
             onClick={onDelivery}
+          />
+          {/* Named areas, each with its own fee; the row above holds everywhere else */}
+          <OpenRow
+            icon={MapPinned}
+            title={t('deliveryZones')}
+            value={
+              zones ? (
+                zones.length === 0 ? (
+                  t('deliveryZonesNone')
+                ) : (
+                  [
+                    t('deliveryZonesCount', { count: zones.length }),
+                    zonesDrawn > 0
+                      ? t('deliveryZonesOnMap', { n: zonesDrawn })
+                      : null,
+                  ]
+                    .filter(Boolean)
+                    .join(' · ')
+                )
+              ) : zonesQuery.isLoading ? (
+                <Skeleton className='h-4 w-16' />
+              ) : null
+            }
+            onClick={onZones}
           />
         </Group>
       )}

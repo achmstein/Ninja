@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { autocompletePlaces, createBranch, deleteTenantImage, getAllBranches, getBranches, getPlace, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
-import type { AutocompletePlacesData, AutocompletePlacesResponse, CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetPlaceData, GetPlaceResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsError, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
+import { autocompletePlaces, createBranch, deleteTenantImage, getAllBranches, getBranches, getDeliveryZones, getPlace, getTenant, getTenantIcon, getTenantImage, getTenantLoginCss, getTenantManifest, type Options, setDeliveryZones, setTenantAssistant, setTenantEntitlements, updateBranch, updateBranchSettings, updateTenant, uploadTenantImage } from '../sdk.gen';
+import type { AutocompletePlacesData, AutocompletePlacesResponse, CreateBranchData, CreateBranchError, CreateBranchResponse, DeleteTenantImageData, DeleteTenantImageResponse, GetAllBranchesData, GetAllBranchesResponse, GetBranchesData, GetBranchesResponse, GetDeliveryZonesData, GetDeliveryZonesResponse, GetPlaceData, GetPlaceResponse, GetTenantData, GetTenantIconData, GetTenantImageData, GetTenantLoginCssData, GetTenantManifestData, GetTenantManifestError, GetTenantResponse, SetDeliveryZonesData, SetDeliveryZonesError, SetDeliveryZonesResponse, SetTenantAssistantData, SetTenantAssistantError, SetTenantAssistantResponse, SetTenantEntitlementsData, SetTenantEntitlementsResponse, UpdateBranchData, UpdateBranchError, UpdateBranchResponse, UpdateBranchSettingsData, UpdateBranchSettingsError, UpdateBranchSettingsResponse, UpdateTenantData, UpdateTenantError, UpdateTenantResponse, UploadTenantImageData, UploadTenantImageError, UploadTenantImageResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -117,6 +117,43 @@ export const updateBranchSettingsMutation = (options?: Partial<Options<UpdateBra
     const mutationOptions: UseMutationOptions<UpdateBranchSettingsResponse, AxiosError<UpdateBranchSettingsError>, Options<UpdateBranchSettingsData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await updateBranchSettings({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getDeliveryZonesQueryKey = (options: Options<GetDeliveryZonesData>) => createQueryKey('getDeliveryZones', options);
+
+/**
+ * A branch's named delivery areas, in the owner's order
+ */
+export const getDeliveryZonesOptions = (options: Options<GetDeliveryZonesData>) => queryOptions<GetDeliveryZonesResponse, AxiosError<DefaultError>, GetDeliveryZonesResponse, ReturnType<typeof getDeliveryZonesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getDeliveryZones({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getDeliveryZonesQueryKey(options)
+});
+
+/**
+ * Replace a branch's named delivery areas with this list
+ *
+ * The whole list, in order: an entry with an id keeps that area, one without is new, and an area left out is removed. Orders already placed keep the area and the fee they were placed with.
+ */
+export const setDeliveryZonesMutation = (options?: Partial<Options<SetDeliveryZonesData>>): UseMutationOptions<SetDeliveryZonesResponse, AxiosError<SetDeliveryZonesError>, Options<SetDeliveryZonesData>> => {
+    const mutationOptions: UseMutationOptions<SetDeliveryZonesResponse, AxiosError<SetDeliveryZonesError>, Options<SetDeliveryZonesData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setDeliveryZones({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

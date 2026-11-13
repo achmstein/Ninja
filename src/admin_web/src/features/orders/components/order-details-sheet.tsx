@@ -147,16 +147,22 @@ export function OrderDetailsSheet({
           {order.delivery && (
             <div className='bg-muted/50 flex flex-col gap-1 rounded-lg p-3 text-sm'>
               <div className='flex items-center gap-2 font-medium'>
-                <Bike className='text-muted-foreground h-4 w-4' />
-                {formatAddressLine(
-                  order.delivery,
-                  {
-                    building: t('deliveryBuildingShort'),
-                    floor: t('deliveryFloorShort'),
-                    apartment: t('deliveryApartmentShort'),
-                  },
-                  locale
-                )}
+                <Bike className='text-muted-foreground h-4 w-4 shrink-0' />
+                {/* The named area it goes to, as it was called when the order was placed, then the address */}
+                {[
+                  localized(order.delivery.zoneName ?? undefined),
+                  formatAddressLine(
+                    order.delivery,
+                    {
+                      building: t('deliveryBuildingShort'),
+                      floor: t('deliveryFloorShort'),
+                      apartment: t('deliveryApartmentShort'),
+                    },
+                    locale
+                  ),
+                ]
+                  .filter(Boolean)
+                  .join(' · ')}
               </div>
               {/* It couldn't be delivered, or it came back: said in words */}
               {(order.delivery.failedAt || order.delivery.returnedAt) && (
@@ -176,6 +182,13 @@ export function OrderDetailsSheet({
                 <span>
                   {t('deliveryFee')}: {formatEgp(order.delivery.fee)}
                 </span>
+                {order.delivery.etaMinutes != null && (
+                  <span>
+                    {t('deliveryEtaAbout', {
+                      n: Number(order.delivery.etaMinutes),
+                    })}
+                  </span>
+                )}
                 {order.delivery.riderName && (
                   <span>
                     {t('riderRole')}: {order.delivery.riderName}
