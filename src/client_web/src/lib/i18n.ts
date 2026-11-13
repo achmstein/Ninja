@@ -485,7 +485,6 @@ const webExtras = {
   deliveryConfirmPin: { en: 'Confirm location', ar: 'أكّد المكان' },
   deliveryPinSet: { en: 'Location set on the map', ar: 'المكان متحدد على الخريطة' },
   deliveryChange: { en: 'Change', ar: 'غيّر' },
-  deliveryIfAny: { en: 'Building, floor and apartment only if you have them', ar: 'العمارة والدور والشقة لو موجودين بس' },
   deliveryBuilding: { en: 'Building', ar: 'العمارة' },
   deliveryFloor: { en: 'Floor', ar: 'الدور' },
   deliveryApartment: { en: 'Apartment', ar: 'الشقة' },

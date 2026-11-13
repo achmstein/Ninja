@@ -414,7 +414,6 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' maxLength={50} />
         <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} maxLength={50} />
       </div>
-      <p className='text-muted-foreground -mt-1 px-1 text-caption'>{t('deliveryIfAny')}</p>
       <Input
         value={directions}
         onChange={(e) => setDirections(e.target.value)}

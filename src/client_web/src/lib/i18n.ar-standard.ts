@@ -24,7 +24,6 @@ export const arStandard: Record<string, string | Record<string, string>> = {
   deliveryConfirmPin: 'تأكيد الموقع',
   deliveryPinSet: 'تم تحديد الموقع على الخريطة',
   deliveryChange: 'تغيير',
-  deliveryIfAny: 'المبنى والطابق والشقة إن وُجدت فقط',
   deliveryNeedPhone: 'رقم يستطيع المندوب الاتصال به',
   deliveryYourName: 'اسمك',
   deliveryNeedsAccount: 'سجّل الدخول لتطلب التوصيل من هنا',
