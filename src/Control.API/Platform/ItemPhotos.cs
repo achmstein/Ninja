@@ -96,6 +96,7 @@ public sealed class ItemPhotos(IStackProxy stack, AiImages images, ILogger<ItemP
                "Clean studio style: the dish alone, served on simple white tableware on a plain light surface, " +
                "soft natural daylight from the side, shot from a 45-degree angle, shallow depth of field, " +
                "appetizing and realistic, true to how it is really made. " +
-               "No text, no labels, no logos, no hands, no people. Square, centred.";
+               "No text, no labels, no logos, no hands, no people. " +
+               "Square, a close-up with the item centred and large, filling most of the frame.";
     }
 }

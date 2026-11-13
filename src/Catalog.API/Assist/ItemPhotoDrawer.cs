@@ -167,8 +167,8 @@ public static class ItemPhotoPrompt
         {
             "rustic" => "Rustic style: on a worn wooden table with a linen napkin, warm golden light from a window, " +
                         "shot from a 45-degree angle, shallow depth of field.",
-            "overhead" => "Flat lay: shot straight from above on a light textured surface, the dish centred with a little " +
-                          "room around it, soft even daylight, crisp and graphic.",
+            "overhead" => "Flat lay: shot straight from above on a light textured surface, the dish centred, " +
+                          "soft even daylight, crisp and graphic.",
             "moody" => "Moody style: on a dark slate surface against a dark background, one soft directional light " +
                        "sculpting the dish, deep shadows, rich colour, shot from a low 30-degree angle.",
             "fresh" => "Fresh, bright style: on a white marble surface with a few fresh ingredients of the dish scattered " +
@@ -179,7 +179,9 @@ public static class ItemPhotoPrompt
 
         return $"Professional food photograph of {name}, as a café or restaurant serves it.{what}{kind} " +
                $"{look} Appetizing and realistic, true to how it is really made.{note} " +
-               "No text, no labels, no logos, no hands, no people. Square, centred.";
+               "No text, no labels, no logos, no hands, no people. " +
+               // A menu tile is small: the item is the picture, not a detail in a scene
+               "Square, a close-up with the item centred and large, filling most of the frame.";
     }
 
     /// <summary>
@@ -195,7 +197,7 @@ public static class ItemPhotoPrompt
         var setting = StyleOf(request.Style) switch
         {
             "rustic" => "on a worn wooden table with a linen napkin, warm golden window light, a 45-degree angle, shallow depth of field",
-            "overhead" => "seen straight from above on a light textured surface, centred with room around it, soft even daylight",
+            "overhead" => "seen straight from above on a light textured surface, centred, soft even daylight",
             "moody" => "on a dark slate surface against a dark background, one soft directional light, deep shadows, a low 30-degree angle",
             "fresh" => "on a white marble surface with a few fresh, fitting ingredients near it, airy high-key daylight, a 45-degree angle",
             _ => "alone on a plain light surface against a clean light background, soft natural side light, a 45-degree angle, shallow depth of field",
@@ -205,6 +207,10 @@ public static class ItemPhotoPrompt
                "sharp and legible; do not redraw, restyle, translate, remove or invent any brand, text or logo on it. " +
                $"Replace only the surroundings and the light: {setting}. " +
                "Clean the item of dust, glare and fingerprints, take away clutter, hands and people, and add a natural soft shadow under it. " +
-               $"Photorealistic, appetizing, square, the item centred and filling about two thirds of the frame.{note}";
+               // On a menu the photo is a small tile: an item left small in a wide scene reads as a dot there
+               "Frame it as a close-up, the way a menu shows one item: the camera near, the item large and centred, " +
+               "filling most of the frame (about 85% of its height or width) with only a thin margin of the setting around it. " +
+               "If the photo shows the item small or from far away, move in and crop so it is large; never leave it small, distant or off to one side. " +
+               $"Photorealistic, appetizing, square.{note}";
     }
 }

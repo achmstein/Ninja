@@ -579,6 +579,7 @@ const webExtras = {
   lookOverheadHint: { en: "Shot straight from above on a light surface, neat and graphic.", ar: "مصوَّر من الأعلى مباشرة على سطح فاتح، مرتب وواضح." },
   lookMoodyHint: { en: "Dark slate, a dark background and one soft light, rich shadows.", ar: "حجر داكن وخلفية داكنة وضوء واحد هادئ وظلال عميقة." },
   lookFreshHint: { en: "White marble, a few of the item's ingredients around it, bright airy light.", ar: "رخام أبيض وحوله بعض مكونات الصنف، بإضاءة ساطعة." },
+  studioNote: { en: "Instructions (optional)", ar: "تعليمات (اختياري)" },
   studioNotePlaceholder: { en: "Anything to add? e.g. with mint leaves, in a glass mug", ar: "إضافة؟ مثلًا: مع أوراق نعناع، في كوب زجاجي" },
   studioIdle: { en: "Choose a look and draw", ar: "اختر الطابع وابدأ الرسم" },
   studioDraw: { en: "Draw the photo", ar: "ارسم الصورة" },

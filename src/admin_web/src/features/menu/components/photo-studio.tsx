@@ -14,7 +14,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Input } from '@/components/ui/input'
+import { Textarea } from '@/components/ui/textarea'
 import { NinjaMark } from '@/components/ninja-mark'
 import { assistErrorMessage } from '@/features/assist/errors'
 
@@ -230,7 +230,7 @@ export function PhotoStudio({
     <Dialog open={open} onOpenChange={(next) => !drawing && onOpenChange(next)}>
       {/* Wide on a desk: the photo on one side, what shapes it beside it. Block flow, not the dialog's grid:
           a grid row under a capped height let the square stage spill over the lines below it */}
-      <DialogContent className='block max-h-[92dvh] overflow-y-auto sm:max-w-lg md:max-w-4xl'>
+      <DialogContent className='block max-h-[92dvh] overflow-y-auto sm:max-w-lg md:max-w-[58rem]'>
         <DialogHeader className='mb-4'>
           <DialogTitle className='flex items-center gap-2'>
             <NinjaMark className='text-primary size-4' />
@@ -467,8 +467,9 @@ export function PhotoStudio({
                   {t('studioLookHint')}
                 </p>
               </div>
-              {/* Each look with what it is, so none has to be tried to be understood */}
-              <div className='grid gap-1.5'>
+              {/* Two to a row, so the column is no taller than the photo beside it; what the chosen
+                  look is reads under them */}
+              <div className='grid grid-cols-2 gap-1.5'>
                 {LOOKS.map((l) => (
                   <button
                     key={l.value}
@@ -477,15 +478,15 @@ export function PhotoStudio({
                     disabled={drawing}
                     aria-pressed={look === l.value}
                     className={cn(
-                      'flex items-center gap-3 rounded-xl border p-2 text-start transition-colors',
+                      'flex items-center gap-2.5 rounded-xl border p-1.5 text-start text-sm transition-colors',
                       look === l.value
-                        ? 'border-primary bg-primary/5'
+                        ? 'border-primary bg-primary/5 font-medium'
                         : 'hover:bg-muted/60 border-transparent'
                     )}
                   >
                     <span
                       className={cn(
-                        'relative size-10 shrink-0 rounded-full border shadow-xs',
+                        'relative size-9 shrink-0 rounded-full border shadow-xs',
                         l.swatch
                       )}
                     >
@@ -493,31 +494,41 @@ export function PhotoStudio({
                         <Check className='bg-primary text-primary-foreground absolute -end-1 -top-1 size-4 rounded-full p-0.5' />
                       )}
                     </span>
-                    <span className='min-w-0'>
-                      <span className='block text-sm font-medium'>
-                        {t(l.key)}
-                      </span>
-                      <span className='text-muted-foreground block text-xs'>
-                        {t(l.hint)}
-                      </span>
-                    </span>
+                    <span className='min-w-0 truncate'>{t(l.key)}</span>
                   </button>
                 ))}
               </div>
+              <p className='text-muted-foreground text-xs' aria-live='polite'>
+                {t(LOOKS.find((l) => l.value === look)!.hint)}
+              </p>
             </div>
 
-            <Input
-              value={note}
-              onChange={(e) => setNote(e.target.value.slice(0, 200))}
-              placeholder={t('studioNotePlaceholder')}
-              disabled={drawing}
-              onKeyDown={(e) => {
-                if (e.key === 'Enter' && !drawing && canDraw) {
-                  e.preventDefault()
-                  void draw()
-                }
-              }}
-            />
+            <div className='space-y-1.5'>
+              <label htmlFor='studio-note' className='text-sm font-medium'>
+                {t('studioNote')}
+              </label>
+              {/* Room to say it in a sentence or two; Enter is a new line, Ctrl or Cmd with it draws */}
+              <Textarea
+                id='studio-note'
+                rows={3}
+                value={note}
+                onChange={(e) => setNote(e.target.value.slice(0, 200))}
+                placeholder={t('studioNotePlaceholder')}
+                disabled={drawing}
+                className='min-h-20 resize-none'
+                onKeyDown={(e) => {
+                  if (
+                    e.key === 'Enter' &&
+                    (e.ctrlKey || e.metaKey) &&
+                    !drawing &&
+                    canDraw
+                  ) {
+                    e.preventDefault()
+                    void draw()
+                  }
+                }}
+              />
+            </div>
 
             {error && <p className='text-destructive text-sm'>{error}</p>}
 
