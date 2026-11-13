@@ -228,8 +228,10 @@ export function PhotoStudio({
 
   return (
     <Dialog open={open} onOpenChange={(next) => !drawing && onOpenChange(next)}>
-      <DialogContent className='max-h-[92dvh] overflow-y-auto sm:max-w-lg'>
-        <DialogHeader>
+      {/* Wide on a desk: the photo on one side, what shapes it beside it. Block flow, not the dialog's grid:
+          a grid row under a capped height let the square stage spill over the lines below it */}
+      <DialogContent className='block max-h-[92dvh] overflow-y-auto sm:max-w-lg md:max-w-4xl'>
+        <DialogHeader className='mb-4'>
           <DialogTitle className='flex items-center gap-2'>
             <NinjaMark className='text-primary size-4' />
             {t('photoStudio')}
@@ -239,295 +241,310 @@ export function PhotoStudio({
           </DialogDescription>
         </DialogHeader>
 
-        {/* From its name, or from the owner's own photo (a branded can keeps its label) */}
-        <div
-          role='radiogroup'
-          className='bg-muted grid grid-cols-2 rounded-full p-1'
-        >
-          {(['name', 'photo'] as const).map((s) => (
-            <button
-              key={s}
-              type='button'
-              role='radio'
-              aria-checked={source === s}
-              disabled={drawing}
-              onClick={() => {
-                setSource(s)
-                setError(null)
-              }}
+        <div className='grid gap-5 md:grid-cols-[minmax(0,1fr)_22rem]'>
+          <div className='min-w-0 space-y-3'>
+            {/* The stage: the look's surface while idle, a breathing frame while drawing, the photo developing */}
+            <div
               className={cn(
-                'flex h-9 items-center justify-center gap-1.5 rounded-full text-sm font-medium transition-colors',
-                source === s
-                  ? 'bg-background text-foreground shadow-xs'
-                  : 'text-muted-foreground hover:text-foreground'
+                'relative aspect-square w-full overflow-hidden rounded-xl border',
+                !current && swatch
               )}
             >
-              {s === 'photo' ? (
-                <Camera className='size-4' />
-              ) : (
-                <Wand2 className='size-4' />
-              )}
-              {t(s === 'photo' ? 'studioFromPhoto' : 'studioFromName')}
-            </button>
-          ))}
-        </div>
-        {source === 'photo' && (
-          <p className='text-muted-foreground -mt-2 text-xs'>
-            {t('studioFromPhotoHint')}
-          </p>
-        )}
-
-        {/* The stage: the look's surface while idle, a breathing frame while drawing, the photo developing */}
-        <div
-          className={cn(
-            'relative aspect-square w-full overflow-hidden rounded-xl border',
-            !current && swatch
-          )}
-        >
-          <AnimatePresence mode='popLayout'>
-            {current && !drawing && (
-              <motion.img
-                key={current.id}
-                src={current.url}
-                alt=''
-                className='absolute inset-0 size-full object-cover'
-                initial={
-                  reduce
-                    ? { opacity: 0 }
-                    : { opacity: 0, scale: 1.08, filter: 'blur(24px)' }
-                }
-                animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
-                exit={{ opacity: 0 }}
-                transition={{
-                  duration: reduce ? 0.2 : 1.1,
-                  ease: [0.22, 1, 0.36, 1],
-                }}
-              />
-            )}
-          </AnimatePresence>
-
-          {drawing && (
-            <div className={cn('absolute inset-0', swatch)}>
-              {!reduce && (
-                <>
-                  <motion.div
-                    aria-hidden
-                    className='bg-primary/30 absolute size-2/3 rounded-full blur-3xl'
-                    animate={{
-                      x: ['-10%', '60%', '20%', '-10%'],
-                      y: ['0%', '30%', '60%', '0%'],
-                    }}
+              <AnimatePresence mode='popLayout'>
+                {current && !drawing && (
+                  <motion.img
+                    key={current.id}
+                    src={current.url}
+                    alt=''
+                    className='absolute inset-0 size-full object-cover'
+                    initial={
+                      reduce
+                        ? { opacity: 0 }
+                        : { opacity: 0, scale: 1.08, filter: 'blur(24px)' }
+                    }
+                    animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
+                    exit={{ opacity: 0 }}
                     transition={{
-                      duration: 6,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
+                      duration: reduce ? 0.2 : 1.1,
+                      ease: [0.22, 1, 0.36, 1],
                     }}
                   />
-                  <motion.div
-                    aria-hidden
-                    className='absolute size-1/2 rounded-full bg-amber-300/40 blur-3xl'
-                    animate={{
-                      x: ['70%', '10%', '50%', '70%'],
-                      y: ['60%', '20%', '0%', '60%'],
-                    }}
-                    transition={{
-                      duration: 7,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                  />
-                  {/* A sweep of light across, as a flash would */}
-                  <motion.div
-                    aria-hidden
-                    className='absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent'
-                    animate={{ x: ['-150%', '350%'] }}
-                    transition={{
-                      duration: 2.2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                      repeatDelay: 0.6,
-                    }}
-                  />
-                </>
-              )}
-              <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
-                <AnimatePresence mode='wait'>
-                  <motion.span
-                    key={step}
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -8 }}
-                    className='bg-background/85 text-foreground rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'
-                    role='status'
-                  >
-                    {t(STEPS[step])}
-                  </motion.span>
-                </AnimatePresence>
-              </div>
-            </div>
-          )}
+                )}
+              </AnimatePresence>
 
-          {/* From a photo: the owner's photo waits on the stage, or a way to take one */}
-          {source === 'photo' &&
-            !current &&
-            !drawing &&
-            (photo ? (
-              <>
-                <img
-                  src={photo.url}
-                  alt=''
-                  className='absolute inset-0 size-full object-cover'
-                />
-                <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
-                  <span className='bg-background/85 rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'>
-                    {t('studioPhotoReady')}
-                  </span>
+              {drawing && (
+                <div className={cn('absolute inset-0', swatch)}>
+                  {!reduce && (
+                    <>
+                      <motion.div
+                        aria-hidden
+                        className='bg-primary/30 absolute size-2/3 rounded-full blur-3xl'
+                        animate={{
+                          x: ['-10%', '60%', '20%', '-10%'],
+                          y: ['0%', '30%', '60%', '0%'],
+                        }}
+                        transition={{
+                          duration: 6,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                      <motion.div
+                        aria-hidden
+                        className='absolute size-1/2 rounded-full bg-amber-300/40 blur-3xl'
+                        animate={{
+                          x: ['70%', '10%', '50%', '70%'],
+                          y: ['60%', '20%', '0%', '60%'],
+                        }}
+                        transition={{
+                          duration: 7,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                      />
+                      {/* A sweep of light across, as a flash would */}
+                      <motion.div
+                        aria-hidden
+                        className='absolute inset-y-0 w-1/3 -skew-x-12 bg-gradient-to-r from-transparent via-white/40 to-transparent'
+                        animate={{ x: ['-150%', '350%'] }}
+                        transition={{
+                          duration: 2.2,
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                          repeatDelay: 0.6,
+                        }}
+                      />
+                    </>
+                  )}
+                  <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
+                    <AnimatePresence mode='wait'>
+                      <motion.span
+                        key={step}
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className='bg-background/85 text-foreground rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'
+                        role='status'
+                      >
+                        {t(STEPS[step])}
+                      </motion.span>
+                    </AnimatePresence>
+                  </div>
                 </div>
-              </>
-            ) : (
-              <label className='absolute inset-0 grid cursor-pointer place-items-center p-6 text-center'>
+              )}
+
+              {/* From a photo: the owner's photo waits on the stage, or a way to take one */}
+              {source === 'photo' &&
+                !current &&
+                !drawing &&
+                (photo ? (
+                  <>
+                    <img
+                      src={photo.url}
+                      alt=''
+                      className='absolute inset-0 size-full object-cover'
+                    />
+                    <div className='absolute inset-x-0 bottom-0 flex justify-center p-4'>
+                      <span className='bg-background/85 rounded-full px-3 py-1 text-xs font-medium shadow-sm backdrop-blur'>
+                        {t('studioPhotoReady')}
+                      </span>
+                    </div>
+                  </>
+                ) : (
+                  <label className='absolute inset-0 grid cursor-pointer place-items-center p-6 text-center'>
+                    <input
+                      type='file'
+                      accept='image/*'
+                      className='sr-only'
+                      onChange={(e) => pick(e.target.files?.[0])}
+                    />
+                    <span className='bg-background/85 flex flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-3 shadow-sm backdrop-blur'>
+                      <Camera className='text-primary size-5' />
+                      <span className='text-sm font-medium'>
+                        {t('studioPickPhoto')}
+                      </span>
+                    </span>
+                  </label>
+                ))}
+
+              {source === 'name' && !current && !drawing && (
+                <div className='absolute inset-0 grid place-items-center p-6 text-center'>
+                  <div className='bg-background/85 flex flex-col items-center gap-2 rounded-xl px-4 py-3 shadow-sm backdrop-blur'>
+                    <Wand2 className='text-primary size-5' />
+                    <span className='text-sm font-medium'>
+                      {t('studioIdle')}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Every draw, to compare and go back to */}
+            {drafts.length > 1 && (
+              <div className='-mx-1 flex gap-2 overflow-x-auto px-1 py-1'>
+                {drafts.map((d) => (
+                  <button
+                    key={d.id}
+                    type='button'
+                    onClick={() => setShown(d.id)}
+                    disabled={drawing}
+                    aria-label={t(LOOKS.find((l) => l.value === d.look)!.key)}
+                    className={cn(
+                      'size-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all',
+                      d.id === shown
+                        ? 'border-primary scale-105'
+                        : 'border-transparent opacity-70 hover:opacity-100'
+                    )}
+                  >
+                    <img
+                      src={d.url}
+                      alt=''
+                      className='size-full object-cover'
+                    />
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {source === 'photo' && photo && (
+              <label className='text-primary inline-flex cursor-pointer items-center gap-1.5 self-start text-sm font-medium hover:underline'>
                 <input
                   type='file'
                   accept='image/*'
                   className='sr-only'
+                  disabled={drawing}
                   onChange={(e) => pick(e.target.files?.[0])}
                 />
-                <span className='bg-background/85 flex flex-col items-center gap-2 rounded-xl border border-dashed px-4 py-3 shadow-sm backdrop-blur'>
-                  <Camera className='text-primary size-5' />
-                  <span className='text-sm font-medium'>
-                    {t('studioPickPhoto')}
-                  </span>
-                </span>
+                <Camera className='size-4' />
+                {t('studioChangePhoto')}
               </label>
-            ))}
-
-          {source === 'name' && !current && !drawing && (
-            <div className='absolute inset-0 grid place-items-center p-6 text-center'>
-              <div className='bg-background/85 flex flex-col items-center gap-2 rounded-xl px-4 py-3 shadow-sm backdrop-blur'>
-                <Wand2 className='text-primary size-5' />
-                <span className='text-sm font-medium'>{t('studioIdle')}</span>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Every draw, to compare and go back to */}
-        {drafts.length > 1 && (
-          <div className='-mx-1 flex gap-2 overflow-x-auto px-1 py-1'>
-            {drafts.map((d) => (
-              <button
-                key={d.id}
-                type='button'
-                onClick={() => setShown(d.id)}
-                disabled={drawing}
-                aria-label={t(LOOKS.find((l) => l.value === d.look)!.key)}
-                className={cn(
-                  'size-14 shrink-0 overflow-hidden rounded-lg border-2 transition-all',
-                  d.id === shown
-                    ? 'border-primary scale-105'
-                    : 'border-transparent opacity-70 hover:opacity-100'
-                )}
-              >
-                <img src={d.url} alt='' className='size-full object-cover' />
-              </button>
-            ))}
+            )}
           </div>
-        )}
 
-        <div className='space-y-2'>
-          <div>
-            <span className='text-sm font-medium'>{t('studioLook')}</span>
-            <p className='text-muted-foreground text-xs'>
-              {t('studioLookHint')}
-            </p>
-          </div>
-          <div className='-mx-1 flex gap-2 overflow-x-auto px-1 pb-1'>
-            {LOOKS.map((l) => (
-              <button
-                key={l.value}
-                type='button'
-                onClick={() => setLook(l.value)}
-                disabled={drawing}
-                aria-pressed={look === l.value}
-                className={cn(
-                  'flex w-16 shrink-0 flex-col items-center gap-1.5 rounded-lg p-1 text-xs transition-colors',
-                  look === l.value
-                    ? 'text-foreground font-medium'
-                    : 'text-muted-foreground hover:text-foreground'
-                )}
-              >
-                <span
+          <div className='flex min-w-0 flex-col gap-4'>
+            {/* From its name, or from the owner's own photo (a branded can keeps its label) */}
+            <div
+              role='radiogroup'
+              className='bg-muted grid grid-cols-2 rounded-full p-1'
+            >
+              {(['name', 'photo'] as const).map((s) => (
+                <button
+                  key={s}
+                  type='button'
+                  role='radio'
+                  aria-checked={source === s}
+                  disabled={drawing}
+                  onClick={() => {
+                    setSource(s)
+                    setError(null)
+                  }}
                   className={cn(
-                    'relative size-12 rounded-full border shadow-xs',
-                    l.swatch,
-                    look === l.value && 'ring-primary ring-2 ring-offset-2'
+                    'flex h-9 items-center justify-center gap-1.5 rounded-full text-sm font-medium transition-colors',
+                    source === s
+                      ? 'bg-background text-foreground shadow-xs'
+                      : 'text-muted-foreground hover:text-foreground'
                   )}
                 >
-                  {look === l.value && (
-                    <Check className='bg-primary text-primary-foreground absolute -end-1 -top-1 size-4 rounded-full p-0.5' />
+                  {s === 'photo' ? (
+                    <Camera className='size-4' />
+                  ) : (
+                    <Wand2 className='size-4' />
                   )}
-                </span>
-                {t(l.key)}
-              </button>
-            ))}
-          </div>
-        </div>
+                  {t(s === 'photo' ? 'studioFromPhoto' : 'studioFromName')}
+                </button>
+              ))}
+            </div>
+            {source === 'photo' && (
+              <p className='text-muted-foreground -mt-2 text-xs'>
+                {t('studioFromPhotoHint')}
+              </p>
+            )}
 
-        <p className='text-muted-foreground -mt-2 text-xs' aria-live='polite'>
-          {t(LOOKS.find((l) => l.value === look)!.hint)}
-        </p>
+            <div className='space-y-2'>
+              <div>
+                <span className='text-sm font-medium'>{t('studioLook')}</span>
+                <p className='text-muted-foreground text-xs'>
+                  {t('studioLookHint')}
+                </p>
+              </div>
+              {/* Each look with what it is, so none has to be tried to be understood */}
+              <div className='grid gap-1.5'>
+                {LOOKS.map((l) => (
+                  <button
+                    key={l.value}
+                    type='button'
+                    onClick={() => setLook(l.value)}
+                    disabled={drawing}
+                    aria-pressed={look === l.value}
+                    className={cn(
+                      'flex items-center gap-3 rounded-xl border p-2 text-start transition-colors',
+                      look === l.value
+                        ? 'border-primary bg-primary/5'
+                        : 'hover:bg-muted/60 border-transparent'
+                    )}
+                  >
+                    <span
+                      className={cn(
+                        'relative size-10 shrink-0 rounded-full border shadow-xs',
+                        l.swatch
+                      )}
+                    >
+                      {look === l.value && (
+                        <Check className='bg-primary text-primary-foreground absolute -end-1 -top-1 size-4 rounded-full p-0.5' />
+                      )}
+                    </span>
+                    <span className='min-w-0'>
+                      <span className='block text-sm font-medium'>
+                        {t(l.key)}
+                      </span>
+                      <span className='text-muted-foreground block text-xs'>
+                        {t(l.hint)}
+                      </span>
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
 
-        <Input
-          value={note}
-          onChange={(e) => setNote(e.target.value.slice(0, 200))}
-          placeholder={t('studioNotePlaceholder')}
-          disabled={drawing}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' && !drawing && canDraw) {
-              e.preventDefault()
-              void draw()
-            }
-          }}
-        />
-
-        {error && <p className='text-destructive text-sm'>{error}</p>}
-
-        {source === 'photo' && photo && (
-          <label className='text-primary -mt-2 inline-flex cursor-pointer items-center gap-1.5 self-start text-sm font-medium hover:underline'>
-            <input
-              type='file'
-              accept='image/*'
-              className='sr-only'
+            <Input
+              value={note}
+              onChange={(e) => setNote(e.target.value.slice(0, 200))}
+              placeholder={t('studioNotePlaceholder')}
               disabled={drawing}
-              onChange={(e) => pick(e.target.files?.[0])}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !drawing && canDraw) {
+                  e.preventDefault()
+                  void draw()
+                }
+              }}
             />
-            <Camera className='size-4' />
-            {t('studioChangePhoto')}
-          </label>
-        )}
 
-        <div className='flex flex-col-reverse gap-2 sm:flex-row sm:justify-end'>
-          <Button
-            type='button'
-            variant={current ? 'outline' : 'default'}
-            disabled={drawing || !canDraw}
-            onClick={() => void draw()}
-          >
-            <NinjaMark />
-            {drawing
-              ? t('studioDrawing')
-              : current
-                ? t('studioDrawAgain')
-                : source === 'photo'
-                  ? t('studioRestage')
-                  : t('studioDraw')}
-          </Button>
-          {current && (
-            <Button type='button' disabled={drawing} onClick={use}>
-              <Check />
-              {t('studioUse')}
-            </Button>
-          )}
+            {error && <p className='text-destructive text-sm'>{error}</p>}
+
+            <div className='flex flex-col-reverse gap-2 sm:flex-row md:mt-auto [&>button]:sm:flex-1'>
+              <Button
+                type='button'
+                variant={current ? 'outline' : 'default'}
+                disabled={drawing || !canDraw}
+                onClick={() => void draw()}
+              >
+                <NinjaMark />
+                {drawing
+                  ? t('studioDrawing')
+                  : current
+                    ? t('studioDrawAgain')
+                    : source === 'photo'
+                      ? t('studioRestage')
+                      : t('studioDraw')}
+              </Button>
+              {current && (
+                <Button type='button' disabled={drawing} onClick={use}>
+                  <Check />
+                  {t('studioUse')}
+                </Button>
+              )}
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
