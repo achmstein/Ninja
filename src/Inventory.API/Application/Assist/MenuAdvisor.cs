@@ -109,8 +109,8 @@ public sealed class MenuAdvisor(INinjaAgentFactory factory)
 
         if (skipped > 0)
             warnings.Add(skipped == 1
-                ? "Skipped one piece of advice for a dish not on the matrix, given twice, or with an unknown move."
-                : $"Skipped {skipped} pieces of advice for dishes not on the matrix, given twice, or with unknown moves.");
+                ? "Skipped one piece of advice for an item not on the matrix, given twice, or with an unknown move."
+                : $"Skipped {skipped} pieces of advice for items not on the matrix, given twice, or with unknown moves.");
         if (!string.IsNullOrWhiteSpace(result.Notes))
             warnings.Add(result.Notes.Trim());
 

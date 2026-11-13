@@ -99,7 +99,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         if (categoryId != menuItem.CatalogTypeId) changes.Add($"category \"{menuItem.CatalogTypeName?.Both}\" → \"{newCategory?.Both}\"");
         if (newPopular != menuItem.IsPopular) changes.Add(newPopular ? "marked popular" : "no longer marked popular");
         if (newPrep != menuItem.PreparationTimeMinutes) changes.Add(newPrep is null ? "no preparation time" : $"preparation time {newPrep} minutes");
-        if (string.IsNullOrEmpty(newName.En) && string.IsNullOrEmpty(newName.Ar)) return ToolResults.Fail("A dish needs a name.");
+        if (string.IsNullOrEmpty(newName.En) && string.IsNullOrEmpty(newName.Ar)) return ToolResults.Fail("An item needs a name.");
         if (changes.Count == 0) return ToolResults.Fail($"\"{oldName.Both}\" is already so; nothing would change.");
 
         var preview = $"Change \"{oldName.Both}\": {string.Join("; ", changes)}." + (price is not null && snap.Branches.Count(b => b.IsActive) > 1 ? " A branch with its own price keeps it." : "");
@@ -192,7 +192,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
         CancellationToken ct = default)
     {
-        if (price is null && !usualPrice && available is null) return ToolResults.Fail("Say the price at this branch, usualPrice=true, or whether it sells the dish.");
+        if (price is null && !usualPrice && available is null) return ToolResults.Fail("Say the price at this branch, usualPrice=true, or whether it sells the item.");
         if (price is <= 0) return ToolResults.Fail("The price must be more than zero.");
 
         var snapshot = await tenant.LoadAsync(ct);
@@ -688,7 +688,7 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
             new ProposeRecipesRequest([new MenuItemToTrack(menuItem.Id, itemName, menuItem.Description, menuItem.CatalogTypeName?.Display, Chain(menuItem).Price, options, brief)]), null, ct);
         if (!proposal.IsOk) return ToolResults.Fail($"No recipe was proposed: {proposal.Error}");
         if (proposal.Value!.Recipes?.FirstOrDefault() is not { } proposed || proposed.Kind is not ("recipe" or "unit") || (proposed.Kind == "recipe" && proposed.Lines is not { Count: > 0 }))
-            return ToolResults.Fail("No recipe came back for this dish; describe it in your own words (what goes in and how much) and try again.");
+            return ToolResults.Fail("No recipe came back for this item; describe it in your own words (what goes in and how much) and try again.");
 
         var keys = (proposed.Lines ?? []).Select(l => l.NewItemKey).Where(k => k is not null).ToHashSet();
         var steps = new DraftRecipe(

@@ -438,7 +438,7 @@ abstract class AppLocalizations {
   /// No description provided for @noItemsFound.
   ///
   /// In en, this message translates to:
-  /// **'No dishes match that'**
+  /// **'No items match that'**
   String get noItemsFound;
 
   /// No description provided for @noItemsAvailable.
@@ -2352,7 +2352,7 @@ abstract class AppLocalizations {
   /// No description provided for @ninjaEmptyTray.
   ///
   /// In en, this message translates to:
-  /// **'Your order is empty. Tap a dish to add it.'**
+  /// **'Your order is empty. Tap an item to add it.'**
   String get ninjaEmptyTray;
 
   /// No description provided for @ninjaRemoved.

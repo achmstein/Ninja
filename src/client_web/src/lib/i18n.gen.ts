@@ -64,7 +64,7 @@ export const messages = {
   cart: { en: "Cart", ar: "السلة" },
   settings: { en: "Settings", ar: "الاعدادات" },
   searchMenu: { en: "Search menu...", ar: "دور في المنيو..." },
-  noItemsFound: { en: "No dishes match that", ar: "مفيش أصناف بالاسم ده" },
+  noItemsFound: { en: "No items match that", ar: "مفيش أصناف بالاسم ده" },
   noItemsAvailable: { en: "No items available", ar: "مفيش حاجات متاحة" },
   failedToLoadMenu: { en: "Failed to load menu: {error}", ar: "المنيو مش بيحمل: {error}" },
   viewCart: { en: "View Cart", ar: "شوف السلة" },
@@ -383,7 +383,7 @@ export const messages = {
   ninjaYourOrder: { en: "Your order", ar: "طلبك" },
   ninjaOrder: { en: "Order", ar: "اطلب" },
   ninjaSending: { en: "Sending", ar: "بيتبعت" },
-  ninjaEmptyTray: { en: "Your order is empty. Tap a dish to add it.", ar: "طلبك فاضي. دوس على صنف تضيفه." },
+  ninjaEmptyTray: { en: "Your order is empty. Tap an item to add it.", ar: "طلبك فاضي. دوس على صنف تضيفه." },
   ninjaRemoved: { en: "{name} removed", ar: "اتشال {name}" },
   ninjaUndo: { en: "Undo", ar: "رجّعه" },
   ninjaRemove: { en: "Remove", ar: "شيله" },
@@ -569,6 +569,8 @@ export const messages = {
   promoShowAgain: { en: "See what's on", ar: "شوف العرض" },
   billShowDetails: { en: "Show details", ar: "اعرض التفاصيل" },
   billHideDetails: { en: "Hide details", ar: "اخفي التفاصيل" },
+  guestOrderToCollect: { en: "You'll collect your order at the counter", ar: "هتستلم طلبك من الكاشير" },
+  orderToCollect: { en: "You'll collect your order at the counter", ar: "هتستلم طلبك من الكاشير" },
 } as const satisfies Record<string, Message>
 
 /** Modern Standard Arabic, read instead of `ar` when the business speaks it. */
@@ -1027,4 +1029,6 @@ export const messagesArStandard: Partial<Record<keyof typeof messages, string | 
   promoShowAgain: "اعرض العرض",
   billShowDetails: "عرض التفاصيل",
   billHideDetails: "إخفاء التفاصيل",
+  guestOrderToCollect: "ستستلم طلبك من الكاشير",
+  orderToCollect: "ستستلم طلبك من الكاشير",
 }

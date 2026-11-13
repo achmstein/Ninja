@@ -26,7 +26,7 @@ public static class PairingsPostProcessor
             return $"Send at most {MaxTogether} bought-together counts.";
 
         if ((request.Current?.Count ?? 0) >= CatalogItemPairing.MaxPerItem)
-            return $"The list already has {CatalogItemPairing.MaxPerItem} dishes; remove one to make room.";
+            return $"The list already has {CatalogItemPairing.MaxPerItem} items; remove one to make room.";
 
         return null;
     }

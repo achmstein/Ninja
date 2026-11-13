@@ -71,7 +71,7 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         string name, decimal price, string category, string? description, List<GroupInput>? customizations, bool suggest,
         string recipe, string? photo, bool popular, string requestId, CancellationToken ct)
     {
-        if (string.IsNullOrWhiteSpace(name)) return ToolResults.Fail("The dish needs a name.");
+        if (string.IsNullOrWhiteSpace(name)) return ToolResults.Fail("The item needs a name.");
         if (price < 0) return ToolResults.Fail("The price cannot be negative.");
         if (string.IsNullOrWhiteSpace(category)) return ToolResults.Fail("Say which category it goes in, or name a new one.");
 
@@ -180,7 +180,7 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
         var compose = new ComposeItemRequest(newItem.Name, newItem.Description, newItem.Price, newItem.CategoryId, newItem.NewCategory, newItem.Popular, null,
             newItem.Groups.Select(g => new ComposeGroup(g.Name, g.Required, g.Multiple, g.Options.Select(o => new ComposeOption(o.Ref, o.Name, o.Price, o.Default)).ToList())).ToList());
         var made = await api.SendAsync<ComposeItemResult>(HttpMethod.Post, "catalog-api", "/api/catalog/items/compose", branch, compose, flow.StepKey(CreateTool, requestId, "item"), ct);
-        if (!made.IsOk) return Finish(newItem, null, done, $"The dish was not made: {made.Error}");
+        if (!made.IsOk) return Finish(newItem, null, done, $"The item was not made: {made.Error}");
         var itemId = made.Value!.ItemId;
         done.Add($"\"{newItem.Name.Both}\" is on the menu at {newItem.Price:0.##}" + (newItem.Groups.Count > 0 ? $", with {string.Join(", ", newItem.Groups.Select(g => g.Name.Display))}" : "") + ".");
         var optionIds = (made.Value.Options ?? []).ToDictionary(o => o.Ref, o => o.Id);
@@ -217,7 +217,7 @@ public sealed class MenuWriteTools(TenantContext tenant, NinjaApiClient api, Wri
                 lines.Add(new RecipeLineInput(stockId, line.Quantity, line.OptionRefs.Select(r => optionIds.GetValueOrDefault(r)).Where(id => id > 0).ToList(), line.Slot, line.None));
             }
             var set = await api.SendAsync<Unit>(HttpMethod.Put, "inventory-api", $"/api/inventory/recipes/{itemId}", branch, new RecipeRequest(lines), null, ct);
-            if (!set.IsOk) return Finish(newItem, itemId, done, $"The recipe was not set ({set.Error}). Set it up on the dish's Stock tab.");
+            if (!set.IsOk) return Finish(newItem, itemId, done, $"The recipe was not set ({set.Error}). Set it up on the item's Stock tab.");
             done.Add($"Recipe set: {lines.Count} line{(lines.Count == 1 ? "" : "s")}; each sale takes its ingredients off the stock.");
         }
 

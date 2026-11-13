@@ -105,8 +105,8 @@ public sealed class MenuScanner(INinjaAgentFactory factory, ILogger<MenuScanner>
         if (plan is { Skipped.Count: > 0 })
         {
             var skipped = plan.Skipped.Count == 1
-                ? $"Page {plan.Skipped[0]} has no dishes on it"
-                : $"Pages {string.Join(", ", plan.Skipped)} have no dishes on them";
+                ? $"Page {plan.Skipped[0]} has no items on it"
+                : $"Pages {string.Join(", ", plan.Skipped)} have no items on them";
             merged = merged with { Notes = $"{skipped}; left out. {merged.Notes}".Trim() };
         }
         return MenuProposalValidator.Validate(merged, categories, items, languages);

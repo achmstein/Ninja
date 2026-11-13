@@ -188,7 +188,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get searchMenu => 'Search menu...';
 
   @override
-  String get noItemsFound => 'No dishes match that';
+  String get noItemsFound => 'No items match that';
 
   @override
   String get noItemsAvailable => 'No items available';
@@ -1251,7 +1251,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get ninjaSending => 'Sending';
 
   @override
-  String get ninjaEmptyTray => 'Your order is empty. Tap a dish to add it.';
+  String get ninjaEmptyTray => 'Your order is empty. Tap an item to add it.';
 
   @override
   String ninjaRemoved(String name) {

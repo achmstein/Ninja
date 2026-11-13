@@ -80,7 +80,7 @@
   "cart": "Cart",
   "settings": "Settings",
   "searchMenu": "Search menu...",
-  "noItemsFound": "No dishes match that",
+  "noItemsFound": "No items match that",
   "noItemsAvailable": "No items available",
   "failedToLoadMenu": "Failed to load menu: {error}",
   "@failedToLoadMenu": {
@@ -711,7 +711,7 @@
   "ninjaYourOrder": "Your order",
   "ninjaOrder": "Order",
   "ninjaSending": "Sending",
-  "ninjaEmptyTray": "Your order is empty. Tap a dish to add it.",
+  "ninjaEmptyTray": "Your order is empty. Tap an item to add it.",
   "ninjaRemoved": "{name} removed",
   "@ninjaRemoved": {"placeholders": {"name": {"type": "String"}}},
   "ninjaUndo": "Undo",

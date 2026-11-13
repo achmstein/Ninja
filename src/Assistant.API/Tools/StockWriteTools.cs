@@ -87,7 +87,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         var pack = packSize is > 0 && MenuWriteTools.Clean(packName) is { } said ? MenuWriteTools.Localized(said) : null;
         var preview = $"Add the stock item \"{given.Both}\", counted in {baseUnit}"
             + (packSize is > 0 ? $", bought in packs of {Qty(packSize.Value, baseUnit)}{(pack is null ? "" : $" ({pack.Display})")}" : "")
-            + (autoSoldOut ? ", and the dishes that need it sell out when it runs out" : "") + ".";
+            + (autoSoldOut ? ", and the items that need it sell out when it runs out" : "") + ".";
         requestId ??= WriteFlow.NewRequestId();
         if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
@@ -143,7 +143,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         if (renamed != old) changes.Add($"renamed \"{renamed.Both}\"");
         if (newUnit != oldUnit) changes.Add($"counted in {newUnit} instead of {oldUnit} (quantities already recorded are not converted)");
         if (newPack != item.PackSize || newPackName != item.PackName) changes.Add(newPack is null ? "no pack" : $"packs of {Qty(newPack.Value, newUnit)}{(newPackName?.Display is { Length: > 0 } pn ? $" ({pn})" : "")}");
-        if (newAuto != item.AutoSoldOut) changes.Add(newAuto ? "dishes that need it sell out when it runs out" : "dishes no longer sell out when it runs out");
+        if (newAuto != item.AutoSoldOut) changes.Add(newAuto ? "items that need it sell out when it runs out" : "items no longer sell out when it runs out");
         if (newActive != item.IsActive) changes.Add(newActive ? "brought back into use" : "retired: it leaves the lists, its history stays");
         if (changes.Count == 0) return ToolResults.Fail($"\"{old.Both}\" is already so; nothing would change.");
 

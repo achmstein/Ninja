@@ -384,7 +384,7 @@ const webExtras = {
   // The dock's way to the order: a tap opens it to look over, and Place order sends it
   ninjaOrder: { en: 'Order', ar: 'اطلب' },
   ninjaSending: { en: 'Sending', ar: 'بيتبعت' },
-  ninjaEmptyTray: { en: 'Your order is empty. Tap a dish to add it.', ar: 'طلبك فاضي. دوس على صنف تضيفه.' },
+  ninjaEmptyTray: { en: 'Your order is empty. Tap an item to add it.', ar: 'طلبك فاضي. دوس على صنف تضيفه.' },
   ninjaYourOrder: { en: 'Your order', ar: 'طلبك' },
   ninjaMoreAtCheckout: { en: 'Note, promo or points', ar: 'ملاحظة أو كود أو نقط' },
   ninjaAdded: { en: '{name} added', ar: 'اتضاف {name}' },

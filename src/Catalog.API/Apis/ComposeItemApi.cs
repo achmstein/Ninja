@@ -37,7 +37,7 @@ public static class ComposeItemApi
         CancellationToken ct)
     {
         if (requestId == Guid.Empty)
-            return Bad("A request id (x-requestid) is needed, so a retry cannot make the dish twice.");
+            return Bad("A request id (x-requestid) is needed, so a retry cannot make the item twice.");
 
         if (await context.ComposedItemRequests.FindAsync([requestId], ct) is { } done)
             return TypedResults.Ok(Result(done));
@@ -124,10 +124,10 @@ public static class ComposeItemApi
     /// <summary>What is wrong with the request, in plain words; null when it can be saved.</summary>
     internal static string? Validate(ComposeItemRequest request)
     {
-        if (request.Name is null || request.Name.IsEmpty) return "The dish needs a name.";
+        if (request.Name is null || request.Name.IsEmpty) return "The item needs a name.";
         if (request.Price < 0) return "The price cannot be negative.";
         if (request.CatalogTypeId is null && (request.NewCategoryName is null || request.NewCategoryName.IsEmpty))
-            return "Say which category the dish goes in, or name a new one.";
+            return "Say which category the item goes in, or name a new one.";
         var groups = request.Customizations ?? [];
         if (groups.Count > MaxGroups) return $"At most {MaxGroups} customization groups.";
         var refs = new HashSet<int>();

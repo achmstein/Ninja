@@ -69,7 +69,7 @@ public static class CatalogAssistApi
         api.MapPost("/assist/photo/restage", RestageItemPhoto)
             .WithName("RestageItemPhoto")
             .WithSummary("Restage the owner's photo of an item")
-            .WithDescription("The image model turns the owner's own photo of the item (a branded can or bottle, a box, a dish) into a menu photo in one of the house looks, keeping the item, its packaging, label and logo as photographed and making only the setting and light. Answers the WebP an upload would store. Nothing is saved (Admin only).")
+            .WithDescription("The image model turns the owner's own photo of the item (a branded can or bottle, a box, a plate of food) into a menu photo in one of the house looks, keeping the item, its packaging, label and logo as photographed and making only the setting and light. Answers the WebP an upload would store. Nothing is saved (Admin only).")
             .WithTags("Assist")
             .RequireAuthorization("Admin")
             .DisableAntiforgery()
@@ -122,7 +122,7 @@ public static class CatalogAssistApi
             return AIProblems.NotConfigured();
 
         if (string.IsNullOrWhiteSpace(request.NameEn) && string.IsNullOrWhiteSpace(request.NameAr))
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Name the dish first: its photo is drawn from its name." });
+            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "Name the item first: its photo is drawn from its name." });
         if (request.Note is { Length: > ItemPhotoDrawer.MaxNoteLength })
             return TypedResults.BadRequest<ProblemDetails>(new() { Detail = $"Keep the note under {ItemPhotoDrawer.MaxNoteLength} characters." });
 
@@ -132,7 +132,7 @@ public static class CatalogAssistApi
         }
         catch (NoImageModelException)
         {
-            return TypedResults.Problem(title: "No image model", detail: "Dish photos are not set up: the platform has no image model yet.", statusCode: StatusCodes.Status503ServiceUnavailable);
+            return TypedResults.Problem(title: "No image model", detail: "Menu photos are not set up: the platform has no image model yet.", statusCode: StatusCodes.Status503ServiceUnavailable);
         }
         catch (AIException ex)
         {

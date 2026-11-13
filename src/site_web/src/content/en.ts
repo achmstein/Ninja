@@ -116,7 +116,7 @@ export const en = {
       {
         name: 'Stock and money',
         items: [
-          'A recipe and a cost for every dish',
+          'A recipe and a cost for every item',
           'Purchases read from the supplier’s receipt',
           'Counts, waste and transfers',
           'Low-stock alerts, sold out by itself',
@@ -131,7 +131,7 @@ export const en = {
       },
       {
         name: 'Done for you by Ninja',
-        items: ['A menu read from photos or a PDF', 'A photo for every dish', 'Names filled in and translated', 'A promotion designed from your photo', 'An assistant in Claude or ChatGPT'],
+        items: ['A menu read from photos or a PDF', 'A photo for every menu item', 'Names filled in and translated', 'A promotion designed from your photo', 'An assistant in Claude or ChatGPT'],
       },
     ],
   },
