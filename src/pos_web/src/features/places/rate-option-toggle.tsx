@@ -1,4 +1,4 @@
-import { User, Users } from 'lucide-react'
+import { Check, User, Users } from 'lucide-react'
 import type { RateOptionViewModel } from '@/api/spaces/types.gen'
 import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -43,13 +43,14 @@ export function RateOptionToggle({
             <button
               key={code}
               type='button'
+              aria-pressed={selected}
               disabled={disabled}
               onClick={() => onChange(code)}
               className={cn(
                 'flex h-12 items-center gap-2 rounded-lg border px-4 text-base transition-colors disabled:opacity-50',
-                // The one in force in the till's darkest fill, as on the
-                // Android till and in the side-by-side picker: a light grey
-                // fill next to a white row did not say which was chosen
+                // The one in force in the till's dark fill with a tick beside
+                // its rate, as on the Android till: a light grey fill next to
+                // a white row did not say which was chosen
                 selected
                   ? 'border-primary bg-primary text-primary-foreground font-semibold'
                   : 'bg-background hover:bg-muted',
@@ -71,6 +72,7 @@ export function RateOptionToggle({
                   {rates[code]}
                 </span>
               )}
+              {selected && <Check className='size-5 shrink-0' />}
             </button>
           )
         })}

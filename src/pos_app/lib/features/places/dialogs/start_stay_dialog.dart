@@ -148,54 +148,61 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
             ),
           ],
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              if (session == null) ...[
-                SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: _busy ? null : _reserve,
-                    prefix: const Icon(FIcons.clock, size: Sizes.icon),
-                    child: Text(l10n.reserve, style: theme.typography.base.forButton),
+          // Two rows, each the dialog's own width: the other ways to take the
+          // place, then cancel and start. On one row the four buttons did not fit
+          if (session == null) ...[
+            Row(
+              children: [
+                Expanded(
+                  child: SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      variant: FButtonVariant.outline,
+                      onPress: _busy ? null : _reserve,
+                      prefix: const Icon(FIcons.clock, size: Sizes.icon),
+                      child: Text(l10n.reserve, style: theme.typography.base.forButton),
+                    ),
                   ),
                 ),
                 // A timed table still seats people who only order
                 if (room.kind != PlaceKind.room) ...[
                   const SizedBox(width: 8),
-                  SizedBox(
-                    height: Sizes.control,
-                    child: FButton(
-                      variant: FButtonVariant.outline,
-                      mainAxisSize: MainAxisSize.min,
-                      onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.billOnly),
-                      prefix: const Icon(FIcons.receiptText, size: Sizes.icon),
-                      child: Text(l10n.billOnly, style: theme.typography.base.forButton),
+                  Expanded(
+                    child: SizedBox(
+                      height: Sizes.control,
+                      child: FButton(
+                        variant: FButtonVariant.outline,
+                        onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.billOnly),
+                        prefix: const Icon(FIcons.receiptText, size: Sizes.icon),
+                        child: Text(l10n.billOnly, style: theme.typography.base.forButton),
+                      ),
                     ),
                   ),
                 ],
-                const Spacer(),
               ],
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  variant: FButtonVariant.outline,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.none),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+            ),
+            const SizedBox(height: 8),
+          ],
+          Row(
+            children: [
+              Expanded(
+                child: SizedBox(
+                  height: Sizes.control,
+                  child: FButton(
+                    variant: FButtonVariant.outline,
+                    onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.none),
+                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  ),
                 ),
               ),
               const SizedBox(width: 8),
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: _busy ? null : _start,
-                  prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : playIcon,
-                  child: Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
+              Expanded(
+                flex: 2,
+                child: SizedBox(
+                  height: Sizes.control,
+                  child: FButton(
+                    onPress: _busy ? null : _start,
+                    prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : playIcon,
                     child: Text(l10n.startSession, style: theme.typography.base.forButton),
                   ),
                 ),
