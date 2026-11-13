@@ -11,8 +11,11 @@ export function BillTitle({ title, className }: { title: string; className?: str
   const parts = deliveryLabelParts(title)
   if (!parts) {
     return (
-      <span dir='auto' className={className}>
-        {title}
+      // The name is isolated in its own script, but the line stays in the page's
+      // direction: dir="auto" on the line itself made a Latin name a left-to-right
+      // block, which in Arabic threw it to the far end of the row
+      <span className={className}>
+        <bdi>{title}</bdi>
       </span>
     )
   }
