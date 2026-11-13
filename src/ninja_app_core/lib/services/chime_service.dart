@@ -9,6 +9,24 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 class ChimeService {
   final AudioPlayer _player = AudioPlayer();
   Timer? _repeat;
+  bool _shared = false;
+
+  /// The chime shares the device's sound with whatever else is playing. Left
+  /// to the player's own setting it asked Android for the sound outright, and
+  /// the music a café plays from the same tablet over its speakers was paused
+  /// by every order and never came back. Asked for this way the music only
+  /// dips for the second the chime lasts, then carries on.
+  static final AudioContext _beside = AudioContext(
+    android: const AudioContextAndroid(
+      contentType: AndroidContentType.sonification,
+      usageType: AndroidUsageType.media,
+      audioFocus: AndroidAudioFocus.gainTransientMayDuck,
+    ),
+    iOS: AudioContextIOS(
+      category: AVAudioSessionCategory.playback,
+      options: const {AVAudioSessionOptions.mixWithOthers, AVAudioSessionOptions.duckOthers},
+    ),
+  );
 
   Future<void> play({int times = 1}) async {
     _repeat?.cancel();
@@ -16,6 +34,10 @@ class ChimeService {
     Future<void> once() async {
       remaining -= 1;
       try {
+        if (!_shared) {
+          await _player.setAudioContext(_beside);
+          _shared = true;
+        }
         await _player.stop();
         await _player.play(AssetSource('sounds/success.mp3'));
       } catch (e) {
