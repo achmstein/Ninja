@@ -11,7 +11,6 @@ import {
 } from 'lucide-react'
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type {
-  LocalizedText,
   TicketDetail,
   TicketSummary,
 } from '@/api/sales/types.gen'

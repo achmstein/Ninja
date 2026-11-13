@@ -1,5 +1,4 @@
 import { isAxiosError } from 'axios'
-import type { LocalizedText } from '@/api/catalog'
 import { apiClient } from '../api-client'
 
 // Handwritten client for Notification.API (no OpenAPI document is emitted
@@ -102,10 +101,8 @@ export type ServiceRequestType =
  *  known by the guest id header the api client already sends. */
 export async function createServiceRequest(request: {
   requestType: ServiceRequestType
+  /** The place by its id alone: what it is called is the server's to say */
   placeId: number
-  /** "Room", "Table" or "Station" */
-  placeKind: string
-  placeName: LocalizedText
   /** The running stay, when the request comes from one */
   sessionId?: number | null
   /** The rate option wanted, for a changeOption request */
