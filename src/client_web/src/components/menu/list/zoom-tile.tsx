@@ -1,6 +1,7 @@
 import { memo, useRef, useState } from 'react'
 import type { CatalogItemDto } from '@/api/catalog'
-import { useLocalized, usePrice } from '@/lib/i18n'
+import { Plus } from 'lucide-react'
+import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'
 import { usePress } from '@/components/ninja/gestures/use-press'
@@ -16,7 +17,8 @@ const TILE_RADIUS = 18
  * An item on the whole menu (the deck zoomed out): a small photo tile, the
  * name and price under it. The photos of the cards that were on screen fly
  * into their tiles (found by `data-photo`); a tap opens the item's options
- * grown out of its photo, a held press puts one straight in the tray.
+ * grown out of its photo; its plus (or a held press) puts one straight in
+ * the tray, or opens it when there is something to choose first.
  */
 export const ZoomTile = memo(function ZoomTile({
   item,
@@ -27,6 +29,7 @@ export const ZoomTile = memo(function ZoomTile({
   onOpen: (item: CatalogItemDto, from: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
+  const t = useT()
   const localized = useLocalized()
   const price = usePrice()
   const [failed, setFailed] = useState(false)
@@ -40,11 +43,18 @@ export const ZoomTile = memo(function ZoomTile({
   })
 
   return (
-    <button
-      type='button'
+    // Not a button itself: it holds one (the plus), and a button may not sit in a button
+    <div
+      role='button'
+      tabIndex={0}
       data-item={String(item.id)}
       {...handlers}
-      className='flex min-w-0 flex-col text-start select-none [-webkit-touch-callout:none]'
+      onKeyDown={(e) => {
+        if (e.target !== e.currentTarget || (e.key !== 'Enter' && e.key !== ' ')) return
+        e.preventDefault()
+        onOpen(item, photo.current)
+      }}
+      className='flex min-w-0 cursor-pointer flex-col text-start select-none [-webkit-touch-callout:none]'
     >
       <div
         ref={photo}
@@ -73,6 +83,21 @@ export const ZoomTile = memo(function ZoomTile({
             <PressRing pressing={pressing} blur={pressing} small />
           </span>
         )}
+        {!soldOut && (
+          <button
+            type='button'
+            aria-label={t('ninjaAddItem', { name: localized(item.name) })}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuickAdd(item, photo.current)
+            }}
+            // Drawn small, reached like any button: 44 px round it
+            className="absolute end-1.5 bottom-1.5 z-10 grid size-9 place-items-center rounded-full bg-white text-black shadow-[0_6px_14px_-6px_rgb(0_0_0/0.55)] transition-transform before:absolute before:-inset-1 before:content-[''] active:scale-90 motion-reduce:transform-none"
+          >
+            <Plus className='size-4' strokeWidth={2.75} />
+          </button>
+        )}
         {hasPhoto ? (
           <div className='bg-muted absolute inset-0'>
             <img
@@ -96,6 +121,6 @@ export const ZoomTile = memo(function ZoomTile({
         <span className={cn(onOffer ? 'text-offer font-semibold' : 'text-muted-foreground')}>{price(onOffer ? item.offerPrice : item.price)}</span>
         {onOffer && <span className='text-muted-foreground ms-1.5 line-through'>{price(item.price)}</span>}
       </span>
-    </button>
+    </div>
   )
 })

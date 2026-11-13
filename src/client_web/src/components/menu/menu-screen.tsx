@@ -1,6 +1,6 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, type ComponentProps, type CSSProperties, type ReactNode, type RefObject } from 'react'
 import { animate, AnimatePresence, LayoutGroup, motion, MotionConfig, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform } from 'motion/react'
-import { ArrowLeft, LayoutGrid, MoveVertical } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { useStore } from 'zustand'
 import { useNavigate } from '@tanstack/react-router'
 import type { CatalogItemDto, PromotionDto } from '@/api/catalog'
@@ -15,10 +15,7 @@ import { useHandler } from '@/lib/use-handler'
 import { usePlaceOrder } from '@/lib/use-place-order'
 import { cn } from '@/lib/utils'
 import { SignInSheet } from '@/components/auth/sign-in-options'
-import { GestureHint } from '@/components/ninja/gestures/gesture-hint'
-import { GESTURE_DELAY_S, GESTURE_GAP_S, GESTURE_S, gestureMs } from '@/components/ninja/gestures/gesture-timing'
-import { HintBubble } from '@/components/ninja/gestures/hint-bubble'
-import { useHint, useNoCueOnScreen, useTimeout } from '@/components/ninja/gestures/use-hint'
+import { useTimeout } from '@/components/ninja/gestures/use-hint'
 import { DECK_COMPACT_TOP, DECK_TOP, DOCK_INSET, DOCK_SIDE, TABS_H } from '@/components/ninja/shell/chrome'
 import { DockBill } from '@/components/ninja/shell/dock-bill'
 import { TuckedTabs } from '@/components/ninja/shell/nav'
@@ -57,7 +54,8 @@ import { Tune, type TuneResult } from './tune'
  * the category again, to see the whole menu. The bar at the top goes up
  * past the first card, the dock's tabs folding with it, so a small screen
  * gives the cards its room; the tray and the app's tabs are one dock below.
- * The gestures are each acted out once by a fingertip, on a first visit.
+ * Nothing is taught up front: each card carries its own add button, the next card and the
+ * categories show there is more, and the gestures are shortcuts for whoever finds them.
  *
  * The screen itself holds only what moves between the deck and the whole
  * menu. What a tap or a scroll changes (the item open, the photos in the
@@ -83,7 +81,6 @@ export function MenuScreen({ menu }: HomeProps) {
   const column = touched ? Math.max(0, columns.findIndex((c) => c.id === activeId)) : 0
   const start = useMemo<DeckPosition>(() => (touched ? moved : { column: 0, row: 0 }), [touched, moved])
   const rows = useRef<Record<number, number>>({})
-  const [activeRow, setActiveRow] = useState(0)
   const [pastFirst, setPastFirst] = useState(false)
   // The tabs keep the rule they have on every page: a card on (scrolling down) puts them away, a
   // card back (scrolling up) brings them back, as does the first card (the top)
@@ -149,54 +146,22 @@ export function MenuScreen({ menu }: HomeProps) {
   }, [gridScroller, compact, barY, reduced])
   const target = useRef<HTMLDivElement>(null)
   const flightId = useRef(0)
-  // When the guest last touched the page: a scroll only counts as their swipe
-  // if they were touching it (a resize or the browser's bars re-snapping the
-  // deck scrolls it too, and must not end the swipe cue)
-  const lastInput = useRef(0)
-  const noteInput = () => {
-    lastInput.current = performance.now()
-  }
-  const byGuest = () => performance.now() - lastInput.current < 1500
-
   const canOrder = menu.orderingEnabled
   const loading = menu.isLoading && columns.length === 0
 
-  // First visit: each gesture shown once, one after another, while nothing else is going on
-  const swipeHint = useHint('swipe')
-  const zoomHint = useHint('zoom')
-  const holdHint = useHint('holdAdd')
   // The customer's saved way of each item: what a quick add puts in, and whether it may
   const preferences = useItemPreferences()
   const quickFor = (item: CatalogItemDto) => canQuickAdd(item, preferences.get(Number(item.id)))
-  const current = swipeHint.pending ? swipeHint : zoomHint.pending ? zoomHint : holdHint.pending ? holdHint : null
   // The promotion running at the branch: shown once on its own as the menu settles, with nothing open over
-  // it and no cue on screen, before any cue; after that its chip in the top bar opens it again
+  // it; after that its chip in the top bar opens it again
   const live = useLivePromotion()
   const [promoOpen, setPromoOpen] = useState(false)
   const promoWaiting = live.promotion != null && !live.seen && !promoOpen
   const promoBlocked = useStore(store, (s) => promoWaiting && (s.tuning != null || s.expanded))
-  useTimeout(promoWaiting && !loading && columns.length > 0 && !promoBlocked && !current?.showing, 900, () => {
+  useTimeout(promoWaiting && !loading && columns.length > 0 && !promoBlocked, 900, () => {
     setPromoOpen(true)
     live.markSeen()
   })
-  // An item or the order open over the deck is something going on. Only a cue still to show asks: with
-  // none left, or on the whole menu (which has none), opening either does not render the screen
-  const covered = useStore(store, (s) => current != null && mode === 'deck' && (s.tuning != null || s.expanded))
-  const idle = !loading && columns.length > 0 && mode === 'deck' && !covered && !promoOpen && !promoWaiting
-  // One cue on screen at a time (the tray's pull may be up); and one showing as an item or the order
-  // opens is over, so no fingertip or words are left over what opened
-  const noCue = useNoCueOnScreen()
-  const endCue = current?.showing && !idle ? current.done : null
-  useEffect(() => {
-    endCue?.()
-  }, [endCue])
-  const activeItem = columns[column]?.items[activeRow]
-  // "Hold to add" waits for a card a long press would add straight away
-  const cueFits = current !== holdHint || (!!activeItem && quickFor(activeItem))
-  useTimeout(idle && noCue && cueFits && current != null && !current.showing, 1400, () => current?.show())
-  useTimeout(!!current?.showing, gestureMs(current === swipeHint ? 'swipe' : current === zoomHint ? 'pinch' : 'hold'), () => current?.done())
-  const holdHintId = holdHint.showing && activeItem && quickFor(activeItem) ? Number(activeItem.id) : null
-
   const labels = columns.map((c) => c.label)
   // The whole menu shows the categories alone (each usual is a tile in its own category)
   const gridCategories = columns.filter((c) => c.kind === 'category')
@@ -207,8 +172,6 @@ export function MenuScreen({ menu }: HomeProps) {
   const selectColumn = useHandler((index: number) => {
     setTouched(true)
     setActiveId(columns[index]?.id ?? null)
-    setActiveRow(rows.current[index] ?? 0)
-    if (swipeHint.pending && byGuest()) swipeHint.done()
   })
 
   const onRowChange = useHandler((c: number, row: number) => {
@@ -221,11 +184,6 @@ export function MenuScreen({ menu }: HomeProps) {
     if (row === was) return
     setPastFirst(row > 0)
     setTabsAsked(row < was)
-    // Only the first visit's "hold to add" cue needs the row as state; a
-    // re-render here on every card scrolled past re-measured the whole deck
-    // for its shared layouts and made the scroll stutter
-    if (row !== activeRow && holdHint.pending) setActiveRow(row)
-    if (row > 0 && swipeHint.pending && byGuest()) swipeHint.done()
   })
 
   const zoomOut = useHandler(() => {
@@ -235,7 +193,6 @@ export function MenuScreen({ menu }: HomeProps) {
     setGridFocus(col?.items[row] ? Number(col.items[row].id) : null)
     store.setState({ tuning: null })
     setMode('grid')
-    if (zoomHint.pending) zoomHint.done()
   })
 
   const zoomIn = useHandler((item?: CatalogItemDto) => {
@@ -245,7 +202,6 @@ export function MenuScreen({ menu }: HomeProps) {
       setTouched(true)
       setActiveId(columns[position.column]?.id ?? null)
       setMoved(position)
-      setActiveRow(position.row)
       setPastFirst(position.row > 0)
       // Back from the whole menu is a page opened afresh, which starts with its tabs
       setTabsAsked(true)
@@ -383,7 +339,6 @@ export function MenuScreen({ menu }: HomeProps) {
       return
     }
     navigator.vibrate?.(8)
-    if (holdHint.pending) holdHint.done()
     const { customizations, unitPrice } = quickAddChoice(item, preferences.get(Number(item.id)))
     fly(item, photo, () => addLine(item, { customizations, unitPrice, quantity: 1, instructions: '' }))
   })
@@ -403,38 +358,13 @@ export function MenuScreen({ menu }: HomeProps) {
     <MotionConfig reducedMotion='user'>
       <div
         className='bg-background fixed inset-x-0 top-[env(safe-area-inset-top)] bottom-0 z-10 mx-auto flex max-w-lg flex-col'
-        onPointerDownCapture={noteInput}
-        onTouchStartCapture={noteInput}
-        onWheelCapture={noteInput}
-        onKeyDownCapture={noteInput}
       >
         <div className='relative flex min-h-0 flex-1 flex-col'>
-          {/* The first-visit demonstrations move the whole deck: a nudge up, then a breath out to the whole menu */}
-          <motion.div
+          <div
             className='deck-top min-h-0 flex-1'
             // Its room at the top eases as the bar comes and goes, except in a move to or from the whole
             // menu, where the cards must be the size their photos fly to
             style={{ '--deck-top': compact ? `${DECK_COMPACT_TOP}px` : DECK_TOP, transition: leaving ? 'none' : undefined } as CSSProperties}
-            animate={
-              swipeHint.showing
-                ? { y: [0, -56, 0, -28, 0], scale: 1 }
-                : zoomHint.showing
-                  ? { scale: [1, 0.9, 0.9, 1], y: 0 }
-                  : { scale: 1, y: 0 }
-            }
-            // Twice, in step with the fingertip acting the gesture out over it
-            transition={
-              swipeHint.showing || zoomHint.showing
-                ? {
-                    duration: GESTURE_S[swipeHint.showing ? 'swipe' : 'pinch'],
-                    times: swipeHint.showing ? [0, 0.3, 0.55, 0.75, 1] : [0, 0.3, 0.7, 1],
-                    ease: 'easeInOut',
-                    delay: GESTURE_DELAY_S,
-                    repeat: 1,
-                    repeatDelay: GESTURE_GAP_S,
-                  }
-                : { duration: 0.3 }
-            }
           >
             {loading ? (
               // In the shape the menu's style will take, so it lands where its placeholder stood
@@ -482,7 +412,6 @@ export function MenuScreen({ menu }: HomeProps) {
                       onRowChange={onRowChange}
                       start={start}
                       usualId={usual ? Number(usual.id) : null}
-                      holdHintId={holdHintId}
                       onOpen={openItem}
                       onQuickAdd={onQuickAdd}
                       onZoom={onZoom}
@@ -494,7 +423,7 @@ export function MenuScreen({ menu }: HomeProps) {
                 ))}
               </div>
             )}
-          </motion.div>
+          </div>
 
           {/* The bar over the cards: the business, where you are; on the whole menu, the way back */}
           {/* Why the app would like the customer's position, before the browser asks for it */}
@@ -553,30 +482,6 @@ export function MenuScreen({ menu }: HomeProps) {
               )}
             </nav>
           )}
-
-          <AnimatePresence>
-            {swipeHint.showing && <GestureHint key='swipe-tip' kind='swipe' />}
-            {zoomHint.showing && <GestureHint key='pinch-tip' kind='pinch' />}
-            {holdHintId != null && <GestureHint key='hold-tip' kind='hold' />}
-          </AnimatePresence>
-          <AnimatePresence>
-            {swipeHint.showing && (
-              <div key='swipe' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
-                <HintBubble>
-                  <MoveVertical className='size-3.5' />
-                  {t('ninjaHintSwipe')}
-                </HintBubble>
-              </div>
-            )}
-            {zoomHint.showing && (
-              <div key='zoom' className='pointer-events-none absolute inset-x-0 z-20 flex justify-center' style={{ top: `calc(${DECK_TOP} + 12px)` }}>
-                <HintBubble>
-                  <LayoutGrid className='size-3.5' />
-                  {t('ninjaHintZoom')}
-                </HintBubble>
-              </div>
-            )}
-          </AnimatePresence>
 
           <TuneLayer store={store} canOrder={canOrder} onAdd={addFromTune} menu={byId} onSuggest={onSuggest} />
         </div>

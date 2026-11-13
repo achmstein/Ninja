@@ -5,8 +5,7 @@ import type { CatalogItemDto } from '@/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureSrcSet, itemPictureUrl } from '@/components/menu/item-picture'
-import { useItemPreference } from '../data/use-item-preferences'
-import { canQuickAdd, CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
+import { CARD_RADIUS, columnAt, pinchIntent, TONE_CLASS, type DeckColumn } from './deck-model'
 import { OfferBadge } from '../offer'
 
 /** How much of the next card shows under the one in view, px */
@@ -57,7 +56,6 @@ export const Deck = memo(function Deck({
   onRowChange,
   start,
   usualId,
-  holdHintId,
   onOpen,
   onQuickAdd,
   onZoom,
@@ -70,8 +68,6 @@ export const Deck = memo(function Deck({
   /** Where the deck opens; read on mount only */
   start: DeckPosition
   usualId: number | null
-  /** The card that carries the one-time "hold to add" cue, if any */
-  holdHintId: number | null
   onOpen: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onZoom: (direction: 'out' | 'in') => void
@@ -239,7 +235,6 @@ export const Deck = memo(function Deck({
               key={String(item.id)}
               item={item}
               usual={col.kind === 'usuals' && Number(item.id) === usualId}
-              hint={Number(item.id) === holdHintId}
               onOpen={open}
               onQuickAdd={quickAdd}
             />
@@ -301,27 +296,25 @@ function UpNext({ column, onGo }: { column: DeckColumn; onGo: () => void }) {
 }
 
 /**
- * One item's card. Memoised: it renders only when something about it
- * changes (the one-time cue), never as the deck scrolls or the menu round it
- * renders. Its photo is what its sheet grows out of and what flies to its
+ * One item's card. Memoised: it never renders as the deck scrolls or the menu
+ * round it renders. A tap opens the item; its plus adds it (or opens it when
+ * there is something to choose first), and a held press does the same. Its photo is what its sheet grows out of and what flies to its
  * tile when the deck zooms out (both find it by its `data-photo`).
  */
 const DeckCard = memo(function DeckCard({
   item,
   usual,
-  hint,
   onOpen,
   onQuickAdd,
 }: {
   item: CatalogItemDto
   usual: boolean
-  hint: boolean
   onOpen: (item: CatalogItemDto, photo: HTMLElement | null) => void
   onQuickAdd: (item: CatalogItemDto, photo: HTMLElement | null) => void
 }) {
   const t = useT()
+  const localized = useLocalized()
   const photo = useRef<HTMLDivElement>(null)
-  const quick = canQuickAdd(item, useItemPreference(Number(item.id)))
   const soldOut = item.isAvailable === false
   const { pressing, handlers } = usePress({
     onTap: () => onOpen(item, photo.current),
@@ -341,19 +334,27 @@ const DeckCard = memo(function DeckCard({
         className='relative isolate h-full w-full cursor-pointer overflow-hidden select-none [-webkit-touch-callout:none]'
         {...handlers}
       >
-        <CardFace item={item} usual={usual} photoRef={photo} />
+        <CardFace item={item} usual={usual} photoRef={photo} action={!soldOut} />
         {/* Held, a ring fills round a plus: at the full ring an item with nothing to choose (or a saved way) is in the tray, any other opens */}
         {!soldOut && (
-          <span
-            aria-hidden
-            className={cn(
-              'absolute end-4 top-4 z-20 flex items-center gap-2 transition-opacity duration-150',
-              pressing || (hint && quick) ? 'opacity-100' : 'opacity-0'
-            )}
-          >
-            {hint && quick && <span className='rounded-full bg-black/55 px-3 py-1.5 text-caption font-semibold text-white backdrop-blur-sm'>{t('ninjaHintHoldAdd')}</span>}
-            <PressRing pressing={pressing} blur={pressing || (hint && quick)} />
+          <span aria-hidden className={cn('absolute end-4 top-4 z-20 transition-opacity duration-150', pressing ? 'opacity-100' : 'opacity-0')}>
+            <PressRing pressing={pressing} blur={pressing} />
           </span>
+        )}
+        {/* The way to add that needs no finding: by the price, under the thumb. Its presses are its own, not the card's */}
+        {!soldOut && (
+          <button
+            type='button'
+            aria-label={t('ninjaAddItem', { name: localized(item.name) })}
+            onPointerDown={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.stopPropagation()
+              onQuickAdd(item, photo.current)
+            }}
+            className='absolute end-5 bottom-5 z-20 grid size-12 place-items-center rounded-full bg-white text-black shadow-[0_8px_20px_-8px_rgb(0_0_0/0.55)] transition-transform active:scale-90 motion-reduce:transform-none'
+          >
+            <Plus className='size-6' strokeWidth={2.5} />
+          </button>
         )}
       </article>
     </div>
@@ -397,10 +398,13 @@ export function CardFace({
   item,
   usual,
   photoRef,
+  action = false,
 }: {
   item: CatalogItemDto
   usual?: boolean
   photoRef?: MutableRefObject<HTMLDivElement | null>
+  /** The card carries an add button at its bottom corner: the words leave it room */
+  action?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -437,7 +441,7 @@ export function CardFace({
       <div
         ref={photoRef}
         data-photo={String(item.id)}
-        className={cn('absolute inset-0 flex flex-col justify-end p-6', TONE_CLASS.primary, soldOut && 'grayscale')}
+        className={cn('absolute inset-0 flex flex-col justify-end p-6', action && 'pe-20', TONE_CLASS.primary, soldOut && 'grayscale')}
       >
         {badges}
         <h2 className='heading text-[calc(2.75rem*var(--heading-scale))] leading-[0.95] break-words hyphens-auto'>{name}</h2>
@@ -468,7 +472,7 @@ export function CardFace({
       </div>
       <div aria-hidden className='absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/15 to-transparent' />
       {badges}
-      <div className='absolute inset-x-0 bottom-0 p-6 text-white'>
+      <div className={cn('absolute inset-x-0 bottom-0 p-6 text-white', action && 'pe-20')}>
         <h2 className='heading text-[calc(2rem*var(--heading-scale))] leading-[1.05] [text-shadow:0_1px_8px_rgba(0,0,0,0.35)]'>{name}</h2>
         {description && <p className='mt-2 line-clamp-2 max-w-[34ch] text-note text-white/80'>{description}</p>}
         <div className='mt-3'>{priceLine}</div>

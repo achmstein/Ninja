@@ -1,6 +1,6 @@
 import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState, type RefObject } from 'react'
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue, type PanInfo } from 'motion/react'
-import { ArrowUp, Check, CreditCard, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
+import { Check, CreditCard, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { lineKey, useCart, type CartLine } from '@/lib/cart'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
@@ -22,12 +22,12 @@ import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
 import { Odometer } from '../ninja/odometer'
 import { ItemPhoto } from '../menu/item-photo'
-import { GestureHint } from '../ninja/gestures/gesture-hint'
-import { gestureMs } from '../ninja/gestures/gesture-timing'
 import { HintBubble } from '../ninja/gestures/hint-bubble'
 import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
 import { useHint, useTimeout } from '../ninja/gestures/use-hint'
 
+/** How long the first item's line about the order stays up, ms */
+const TRAY_CUE_MS = 4500
 const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 
 /** How far the order sheet reaches down into the dock, px: it rises from inside it */
@@ -106,7 +106,7 @@ export function Tray({
     if (empty && expanded) onExpandedChange(false)
   }, [empty, expanded, onExpandedChange])
 
-  // The first item in: a lift, and how to open the order; opening it is the end of that
+  // The first item in: the order peeks out once, with a line saying where it is; opening it is the end of that
   const hint = useHint('tray')
   const { pending: hintPending, show: showHint, done: hintDone } = hint
   useEffect(() => {
@@ -115,7 +115,7 @@ export function Tray({
   useEffect(() => {
     if (expanded && hintPending) hintDone()
   }, [expanded, hintPending, hintDone])
-  useTimeout(hint.showing, gestureMs('drag'), hint.done)
+  useTimeout(hint.showing, TRAY_CUE_MS, hint.done)
 
   // The sheet: mounted while open, opening, closing, peeking or under a finger; y is how far it sits below open
   const [sheetOn, setSheetOn] = useState(false)
@@ -318,12 +318,9 @@ export function Tray({
     <div className='relative z-10 shrink-0 transition-[height] duration-300 ease-out motion-reduce:transition-none' style={{ height: bare ? 0 : DOCK_H }}>
       <AnimatePresence>
         {hint.showing && !expanded && (
-          <GestureHint key='drag-tip' kind='drag' className='pointer-events-none absolute inset-0 z-30 grid place-items-center' />
-        )}
-        {hint.showing && !expanded && (
           <div key='drag-words' className='absolute inset-x-0 bottom-full z-20 mb-4 flex justify-center'>
             <HintBubble>
-              <ArrowUp className='size-3.5' />
+              <ShoppingBag className='size-3.5' />
               {t('ninjaHintTray')}
             </HintBubble>
           </div>
