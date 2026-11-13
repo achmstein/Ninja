@@ -242,7 +242,7 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
-                    onPress: () => _pick(MoveToTable(table.id, table.name)),
+                    onPress: () => _pick(MoveToTable(table.id)),
                     prefix: Icon(FIcons.armchair, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     child: Text(table.name.localized(context), style: theme.typography.base.forButton),
                   ),

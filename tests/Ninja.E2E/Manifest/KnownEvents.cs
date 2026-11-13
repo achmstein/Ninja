@@ -68,6 +68,7 @@ public static class KnownEvents
         new("TenantFeaturesChanged", "Tenant", ["Spaces", "Sales"]),
         new("TenantSettingsChanged", "Tenant", ["Ordering"]),
         new("TicketRefunded", "Sales", ["Finance", "Loyalty", "Accounts"]),
+        new("TicketDiscarded", "Sales", ["Ordering"]),
         new("TicketOpened", "Sales", ["Ordering"]),
         new("TicketSettled", "Sales", ["Finance", "Accounts", "Notification"]),
         new("TicketUpdated", "Sales", ["Notification"]),

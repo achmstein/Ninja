@@ -1,4 +1,3 @@
-import 'package:ninja_app_core/models/localized_text.dart';
 import 'enums.dart';
 
 /// Where selected lines can go: an open bill, a new counter tab, a free
@@ -23,10 +22,9 @@ class MoveToCounter extends MoveTarget {
 }
 
 class MoveToTable extends MoveTarget {
-  /// The Spaces place, and its name for the new bill's header
+  /// The Spaces place, by its id alone: the server names the new bill
   final int placeId;
-  final LocalizedText? placeName;
-  const MoveToTable(this.placeId, this.placeName);
+  const MoveToTable(this.placeId);
 }
 
 /// `POST /api/tickets/{id}/move-lines`. Both destinations null is the
@@ -45,10 +43,9 @@ class MoveLinesRequest {
         },
         'newTicket': switch (target) {
           MoveToCounter(:final label) => {'type': TicketType.counter.value, 'label': label},
-          MoveToTable(:final placeId, :final placeName) => {
+          MoveToTable(:final placeId) => {
               'type': TicketType.table.value,
               'placeId': placeId,
-              'placeName': placeName?.toJson(),
             },
           _ => null,
         },

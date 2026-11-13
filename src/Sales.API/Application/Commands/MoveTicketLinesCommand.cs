@@ -1,9 +1,10 @@
 #nullable enable
+using Ninja.Sales.API.Application.Queries;
 using Ninja.Sales.Infrastructure.Idempotency;
 namespace Ninja.Sales.API.Application.Commands;
 
 /// <summary>A ticket to open for the moved lines: a fresh counter tab, or a table's bill.</summary>
-public record NewTicketTarget(TicketType Type, string? Label, int? PlaceId = null, LocalizedText? PlaceName = null);
+public record NewTicketTarget(TicketType Type, string? Label, int? PlaceId = null);
 
 /// <summary>
 /// Move lines off a ticket. Three destinations: none given is the turnover
@@ -21,6 +22,7 @@ public record MoveTicketLinesCommand(
 
 public class MoveTicketLinesCommandHandler(
     ITicketRepository ticketRepository,
+    IPlaceNames placeNames,
     ILogger<MoveTicketLinesCommandHandler> logger) : IRequestHandler<MoveTicketLinesCommand, int>
 {
     public async Task<int> Handle(MoveTicketLinesCommand command, CancellationToken cancellationToken)
@@ -87,7 +89,7 @@ public class MoveTicketLinesCommandHandler(
                 // Q7: one open ticket per table — a table that already has a
                 // bill takes the lines onto it rather than growing a second
                 var open = await ticketRepository.FindOpenByPlaceAsync(placeId, source.BranchId);
-                return open ?? ticketRepository.Add(Ticket.OpenForTable(placeId, wanted.PlaceName, source.BranchId));
+                return open ?? ticketRepository.Add(Ticket.OpenForTable(placeId, await placeNames.OfAsync(placeId), source.BranchId));
 
             case TicketType.Table:
                 throw new SalesDomainException("Moving to a table takes the table's place.");

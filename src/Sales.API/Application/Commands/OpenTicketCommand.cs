@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Sales.API.Application.Queries;
 using Ninja.Sales.Infrastructure.Idempotency;
 namespace Ninja.Sales.API.Application.Commands;
 
@@ -11,11 +12,11 @@ public record OpenTicketCommand(
     TicketType Type,
     int BranchId,
     string? Label,
-    int? PlaceId = null,
-    LocalizedText? PlaceName = null) : IRequest<int>;
+    int? PlaceId = null) : IRequest<int>;
 
 public class OpenTicketCommandHandler(
     ITicketRepository ticketRepository,
+    IPlaceNames placeNames,
     ILogger<OpenTicketCommandHandler> logger) : IRequestHandler<OpenTicketCommand, int>
 {
     public async Task<int> Handle(OpenTicketCommand command, CancellationToken cancellationToken)
@@ -34,7 +35,8 @@ public class OpenTicketCommandHandler(
                 if (existing is not null)
                     return existing.Id;
 
-                ticket = Ticket.OpenForTable(placeId, command.PlaceName, command.BranchId);
+                // What the table is called is Spaces' to say: read from Sales' copy, never sent by the till
+                ticket = Ticket.OpenForTable(placeId, await placeNames.OfAsync(placeId, cancellationToken), command.BranchId);
                 break;
 
             case TicketType.Table:

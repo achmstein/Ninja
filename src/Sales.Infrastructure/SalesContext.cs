@@ -22,6 +22,9 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings> PaymentSettings { get; set; }
     /// <summary>The business's switches Sales owns a part of (online payments), from Tenant.API's events.</summary>
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
+
+    /// <summary>What each Spaces place is called, kept from its events.</summary>
+    public DbSet<Projections.Place> Places { get; set; }
     /// <summary>The riders' cash for deliveries, waiting for its bill or recorded against it.</summary>
     public DbSet<Projections.DeliveryCashIn> DeliveryCashIns { get; set; }
     /// <summary>Orders paid ahead online, waiting for (or past) the customer's payment, from Ordering's events.</summary>
@@ -56,6 +59,7 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new OnlinePaymentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new DeliveryCashInEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new OrderPaymentDueEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();

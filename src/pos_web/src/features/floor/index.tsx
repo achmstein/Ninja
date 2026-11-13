@@ -321,9 +321,9 @@ export function Floor() {
       headers: { 'x-requestid': crypto.randomUUID() },
       query: { 'api-version': API_VERSION },
       body: {
+        // Which table, by its id: what it is called is the server's to say
         type: TICKET_TYPE_TABLE,
         placeId: toNumber(place.id),
-        placeName: place.name,
       },
     })
   const pickPlace = (place: PlaceViewModel) => {

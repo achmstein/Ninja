@@ -193,7 +193,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     setState(() => _openingTable = true);
     try {
       final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
-            OpenTicketRequest(type: TicketType.table, placeId: table.id, placeName: table.name),
+            OpenTicketRequest(type: TicketType.table, placeId: table.id),
             // A retry on business Wi-Fi must not become a second command
             requestId: const Uuid().v4(),
           );

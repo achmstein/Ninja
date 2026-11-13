@@ -42,7 +42,7 @@ export type MoveTarget =
   | { kind: 'split' }
   | { kind: 'ticket'; ticketId: number }
   | { kind: 'counter'; label: string | null }
-  | { kind: 'table'; placeId: number; placeName: LocalizedText | undefined }
+  | { kind: 'table'; placeId: number }
 
 type MoveTargetDialogProps = {
   open: boolean
@@ -315,7 +315,6 @@ export function MoveTargetDialog({
                         onPick({
                           kind: 'table',
                           placeId: toNumber(table.id),
-                          placeName: table.name,
                         })
                       }
                     >

@@ -1068,6 +1068,27 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("orderpaymentsdue", "sales");
                 });
 
+            modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.Place", b =>
+                {
+                    b.Property<int>("PlaceId")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.HasKey("PlaceId");
+
+                    b.ToTable("places", "sales");
+                });
+
             modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.TenantFeatures", b =>
                 {
                     b.Property<int>("Id")
@@ -1202,6 +1223,30 @@ namespace Sales.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("Details");
+                });
+
+            modelBuilder.Entity("Ninja.Sales.Infrastructure.Projections.Place", b =>
+                {
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
+                        {
+                            b1.Property<int>("PlaceId");
+
+                            b1.Property<string>("Ar");
+
+                            b1.Property<string>("En");
+
+                            b1.HasKey("PlaceId");
+
+                            b1.ToTable("places", "sales");
+
+                            b1.ToJson("Name");
+
+                            b1.WithOwner()
+                                .HasForeignKey("PlaceId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.Shift", b =>

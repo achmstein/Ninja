@@ -94,9 +94,12 @@ public static class Extensions
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();
         services.AddScoped<ITenantFeaturesQueries, TenantFeaturesQueries>();
+        services.AddScoped<IPlaceNames, PlaceNames>();
 
         // Tickets are assembled from the bus and announce themselves back on it
         builder.AddRabbitMqEventBus("eventbus")
+            // What each place is called, kept from Spaces: a till names a table by its id alone
+            .AddSubscription<PlaceUpdatedIntegrationEvent, PlaceUpdatedIntegrationEventHandler>()
             .AddSubscription<SessionStartedIntegrationEvent, SessionStartedIntegrationEventHandler>()
             // Who sat in the room: they may read the receipt later
             .AddSubscription<SessionMemberJoinedIntegrationEvent, SessionMemberJoinedIntegrationEventHandler>()
@@ -121,6 +124,7 @@ public static class Extensions
     }
 }
 
+[JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(SessionStartedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToCancelledIntegrationEvent))]
 [JsonSerializable(typeof(SessionMemberJoinedIntegrationEvent))]
@@ -135,6 +139,7 @@ public static class Extensions
 [JsonSerializable(typeof(OrderPaidOnlineIntegrationEvent))]
 [JsonSerializable(typeof(TicketUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(TicketOpenedIntegrationEvent))]
+[JsonSerializable(typeof(TicketDiscardedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]

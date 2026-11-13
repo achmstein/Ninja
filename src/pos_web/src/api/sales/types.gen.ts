@@ -205,7 +205,6 @@ export type NewTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OnlinePaymentView = {
@@ -233,7 +232,6 @@ export type OpenTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OpenTicketResponse = {

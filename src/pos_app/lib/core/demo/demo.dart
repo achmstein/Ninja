@@ -56,6 +56,7 @@ const bool kDemoOffline = bool.fromEnvironment('POS_DEMO_OFFLINE');
 // flutter_riverpod 3 does not export the `Override` type by name, so the
 // list's type is inferred from its elements instead of being spelled out.
 final _demoTickets = _DemoTicketsRepository();
+final _demoPlaces = _DemoPlaceRepository();
 
 final demoOverrides = [
   authServiceProvider.overrideWith(_DemoAuthService.new),
@@ -70,7 +71,7 @@ final demoOverrides = [
   shiftsRepositoryProvider.overrideWithValue(_DemoShiftsRepository()),
   tillPicksRepositoryProvider.overrideWithValue(_DemoTillPicksRepository()),
   serviceRequestsRepositoryProvider.overrideWithValue(_DemoServiceRequestsRepository()),
-  placeRepositoryProvider.overrideWithValue(_DemoPlaceRepository()),
+  placeRepositoryProvider.overrideWithValue(_demoPlaces),
   customerSearchServiceProvider.overrideWithValue(_DemoCustomerSearchService()),
   // The demo branch delivers, so the sale pad offers a rider beside the customer
   tillDeliveryTermsProvider.overrideWith((ref) async => const TillDeliveryQuote(delivers: true, fee: 20)),
@@ -251,7 +252,7 @@ class _DemoTicketsRepository implements TicketsRepository {
       id: id,
       type: request.type,
       placeId: request.placeId,
-      locationName: request.placeName,
+      locationName: request.placeId == null ? null : _demoPlaces._place(request.placeId!).name,
       label: request.label,
       openedAt: DateTime.now(),
     );
@@ -275,8 +276,8 @@ class _DemoTicketsRepository implements TicketsRepository {
     final target = switch (request.target) {
       MoveToTicket(:final ticketId) => _tickets[ticketId] ?? (throw const TicketNotFound()),
       MoveToCounter(:final label) => TicketDetail(id: _nextTicketId(), type: TicketType.counter, label: label, openedAt: DateTime.now()),
-      MoveToTable(:final placeId, :final placeName) =>
-        TicketDetail(id: _nextTicketId(), type: TicketType.table, placeId: placeId, locationName: placeName, openedAt: DateTime.now()),
+      MoveToTable(:final placeId) =>
+        TicketDetail(id: _nextTicketId(), type: TicketType.table, placeId: placeId, locationName: _demoPlaces._place(placeId).name, openedAt: DateTime.now()),
       MoveToSplit() => TicketDetail(
           id: _nextTicketId(),
           type: source.type,

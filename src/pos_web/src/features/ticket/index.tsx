@@ -602,7 +602,6 @@ export function TicketScreen({
               ? {
                   type: TICKET_TYPE_TABLE,
                   placeId: target.placeId,
-                  placeName: target.placeName,
                 }
               : null,
       },

@@ -151,12 +151,12 @@ public sealed class CashierActor(ApiClient api)
         => Api.GetAsync<PagedResult<TicketHistoryRow>>($"/api/tickets/history?status={status}&pageIndex=0&pageSize=50", ct);
 
     /// <summary>floor: open a table bill or a labelled counter tab before any order lands on it.</summary>
-    public async Task<int> OpenTicketAsync(int type, CancellationToken ct, int? placeId = null, string? placeNameEn = null, string? label = null)
+    public async Task<int> OpenTicketAsync(int type, CancellationToken ct, int? placeId = null, string? label = null)
         => (await Api.PostAsync<OpenTicketResponse>("/api/tickets", new
         {
             type,
+            // Which table, by its id alone: Sales names the bill from Spaces' places
             placeId,
-            placeName = placeNameEn is null ? null : new { en = placeNameEn, ar = placeNameEn },
             label,
         }, ct)).TicketId;
 
@@ -180,7 +180,7 @@ public sealed class CashierActor(ApiClient api)
         {
             lineIds,
             targetTicketId = (int?)null,
-            newTicket = new { type = Codes.TicketType.Counter, placeId = (int?)null, placeName = (object?)null, label },
+            newTicket = new { type = Codes.TicketType.Counter, placeId = (int?)null, label },
         }, ct)).TicketId;
 
     public async Task<int> MoveLinesToAsync(int ticketId, int[] lineIds, int targetTicketId, CancellationToken ct)

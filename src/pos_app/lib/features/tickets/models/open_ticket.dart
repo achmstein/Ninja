@@ -1,4 +1,3 @@
-import 'package:ninja_app_core/models/localized_text.dart';
 import 'enums.dart';
 
 /// `POST /api/tickets`: open a counter tab or a table's bill by hand. A
@@ -6,19 +5,18 @@ import 'enums.dart';
 class OpenTicketRequest {
   final TicketType type;
 
-  /// The Spaces place of a table bill, and its name for the bill's header
+  /// The Spaces place of a table bill. Its id is all the till says: what the
+  /// table is called on the bill is the server's to say
   final int? placeId;
-  final LocalizedText? placeName;
 
   /// What to call a counter tab — a name for humans, not a customer
   final String? label;
 
-  const OpenTicketRequest({required this.type, this.placeId, this.placeName, this.label});
+  const OpenTicketRequest({required this.type, this.placeId, this.label});
 
   Map<String, dynamic> toJson() => {
         'type': type.value,
         'placeId': placeId,
-        'placeName': placeName?.toJson(),
         'label': label,
       };
 }
