@@ -247,19 +247,10 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         )}
       </Field>
 
-      <div className='flex flex-col gap-1.5'>
-        <Label htmlFor={`${ids}-location`}>{t('deliveryLocationLabel')}</Label>
-        <Input
-          id={`${ids}-location`}
-          aria-describedby={`${ids}-location-state`}
-          value={form.location}
-          onChange={(e) => set({ location: e.target.value })}
-          placeholder='https://maps.app.goo.gl/…'
-          className='h-12 text-base'
-          dir='ltr'
-          autoComplete='off'
-        />
-        <div id={`${ids}-location-state`} className='text-muted-foreground text-sm' aria-live='polite'>
+      {/* On the map or not: a search pick or an earlier address put it there. Nobody ringing in sends a
+          link, so there is nothing to paste; without a point the rider goes by the address */}
+      {(pasted !== '' || quote.isError) && (
+        <div className='text-muted-foreground text-sm' aria-live='polite'>
           {reading ? (
             <span className='flex items-center gap-1.5'>
               <Loader2 className='size-3.5 animate-spin' aria-hidden />
@@ -272,18 +263,14 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
                 {t('retry')}
               </Button>
             </span>
-          ) : !pasted ? (
-            t('deliveryLocationHint')
           ) : pinned ? (
             <span className='text-foreground flex items-center gap-1.5'>
               <MapPin className='size-3.5' aria-hidden />
               {t('deliveryLocationFound', { distance: distance(toNumber(terms?.distanceMeters)) })}
             </span>
-          ) : (
-            t('deliveryLocationUnread')
-          )}
+          ) : null}
         </div>
-      </div>
+      )}
 
       {!reading && alternatives.length > 0 && (
         <NearerBranches alternatives={alternatives} chosen={sending?.branchId ?? null} onChoose={setSendTo} />

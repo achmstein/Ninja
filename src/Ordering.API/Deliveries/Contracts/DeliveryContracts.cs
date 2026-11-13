@@ -51,12 +51,21 @@ public record TillDeliveryQuote(
 /// flagged: the call centre picks the first that is not paused, and the agent
 /// may choose another. Empty without a pin, or when none goes that far.
 /// </param>
+/// <param name="Delivering">
+/// Every branch that delivers at all, paused ones flagged, in branch order: what the agent picks from by
+/// hand when the caller only says where they live and no point on the map is known, or when the point
+/// falls outside every branch's area and the business sends it anyway.
+/// </param>
 public record StaffDeliveryResolution(
     bool Delivers,
     double? Latitude,
     double? Longitude,
     bool LocationRead,
-    IReadOnlyList<DeliveryAlternative> Branches);
+    IReadOnlyList<DeliveryAlternative> Branches,
+    IReadOnlyList<StaffDeliveringBranch> Delivering);
+
+/// <summary>A branch that delivers, with what it asks: no distance, since no point is being measured to.</summary>
+public record StaffDeliveringBranch(int BranchId, decimal Fee, decimal MinimumOrder, bool Paused);
 
 /// <summary>Another branch that delivers to the caller's pin, with what it would ask.</summary>
 /// <param name="DistanceMeters">From that branch to the pin, as the crow flies.</param>

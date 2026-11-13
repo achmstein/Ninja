@@ -6,25 +6,6 @@ import type { SaleDelivery } from '@/features/sale/cart'
 import { toNumber } from '@/lib/money'
 
 /**
- * The branch the call centre suggests: the nearest one that delivers there
- * and is not paused. The list comes nearest first; a paused branch may still
- * take the order, but only when the agent picks it. Null when none is open.
- */
-export function suggestedBranch(branches: readonly DeliveryAlternative[]): number | null {
-  const open = branches.find((b) => !b.paused)
-  return open ? toNumber(open.branchId) : null
-}
-
-/**
- * The branch the caller's order goes to: the agent's own pick while it is
- * still among the branches that deliver there, the suggestion otherwise.
- */
-export function chosenBranch(branches: readonly DeliveryAlternative[], picked: number | null): number | null {
-  if (picked != null && branches.some((b) => toNumber(b.branchId) === picked)) return picked
-  return suggestedBranch(branches)
-}
-
-/**
  * The delivery as the sale pad keeps it, at the branch that makes it: the
  * caller's words and the pin read from what they shared. Never sent on to
  * another branch — the till switches to the branch that cooks it.
@@ -39,4 +20,49 @@ export function callerDelivery(form: SaleDelivery, pin: { latitude: number; long
     location: pin ? `${pin.latitude}, ${pin.longitude}` : form.location.trim(),
     sendTo: null,
   }
+}
+
+/** A branch the agent may send the caller's order to. No distance when no point on the map is known. */
+export type BranchOffer = { branchId: number; fee: number; distanceMeters: number | null; paused: boolean }
+
+type Delivering = { branchId: number | string; fee: number | string; paused: boolean }
+
+/**
+ * What the agent chooses from. With a point on the map that some branch's
+ * area takes in: those branches, nearest first, and the nearest open one is
+ * suggested. Otherwise (the caller only said where they live, or the point is
+ * outside every area) every branch that delivers, picked by hand: the agent
+ * hears "Maadi" and knows which branch that is.
+ */
+export function branchOffers(
+  reaching: readonly DeliveryAlternative[],
+  delivering: readonly Delivering[],
+): { offers: BranchOffer[]; byHand: boolean } {
+  if (reaching.length > 0) {
+    return {
+      byHand: false,
+      offers: reaching.map((b) => ({
+        branchId: toNumber(b.branchId),
+        fee: toNumber(b.fee),
+        distanceMeters: toNumber(b.distanceMeters),
+        paused: b.paused,
+      })),
+    }
+  }
+  return {
+    byHand: true,
+    offers: delivering.map((b) => ({ branchId: toNumber(b.branchId), fee: toNumber(b.fee), distanceMeters: null, paused: b.paused })),
+  }
+}
+
+/**
+ * The branch the order goes to. The agent's own pick while it is still
+ * offered. Without one: the nearest open branch when the map chose, and when
+ * picking by hand only a business's single open branch, since any other
+ * choice would be a guess.
+ */
+export function offeredBranch(offers: readonly BranchOffer[], byHand: boolean, picked: number | null): number | null {
+  if (picked != null && offers.some((b) => b.branchId === picked)) return picked
+  if (!byHand) return offers.find((b) => !b.paused)?.branchId ?? null
+  return offers.length === 1 && !offers[0].paused ? offers[0].branchId : null
 }

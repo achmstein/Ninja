@@ -1,7 +1,7 @@
 import { useId, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store } from 'lucide-react'
+import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store, X } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions, resolveDeliveryBranchForStaffOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import type { KnownAddressView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
@@ -21,15 +21,17 @@ import { digitCount, normalizePhone } from '@/lib/phone'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useBranchStore } from '@/stores/branch-store'
-import { callerDelivery, chosenBranch } from './call-centre'
+import { branchOffers, callerDelivery, offeredBranch } from './call-centre'
 
 /**
  * The call centre's "next caller": every sale starts from who is calling and
  * where they are, not from a branch. Their number brings up the addresses any
- * branch delivered them to; the address (searched with Google where the
- * business has it, or a pasted Maps link, or coordinates) picks the nearest
- * branch that delivers there, which the agent may change —
- * or the caller collects, at a branch they name. The till then switches to
+ * branch delivered them to. A caller says where they live, they do not send a
+ * link: where the business has Google's search, the street or landmark they
+ * name is found on the map and the nearest branch whose area takes it in is
+ * chosen, which the agent may change; with no point on the map the agent
+ * picks the branch that delivers to that area. Or the caller collects, at a
+ * branch they name. The till then switches to
  * that branch and the order is rung up there as any other: its menu, its
  * prices, its kitchen, its riders. No drawer, no shift, no tables.
  */
@@ -70,19 +72,20 @@ export function CallCentre() {
     enabled: lookupPhone !== '',
   })
 
-  const location = useDebounced(form.location.trim(), 400)
+  // The point on the map, as coordinates: set by a search pick or an earlier address, never typed.
+  // Asked with none too: the answer then lists every branch that delivers, for the agent to pick from
+  const location = form.location.trim()
   const resolution = useQuery({
     ...resolveDeliveryBranchForStaffOptions({
       query: { 'api-version': API_VERSION, location: location || undefined },
     }),
-    enabled: location !== '',
     staleTime: 60_000,
   })
-  const settled = location === form.location.trim() && !resolution.isFetching
-  const answer = settled && location !== '' ? resolution.data : undefined
-  const reaching = answer?.branches ?? []
-  const branchId = chosenBranch(reaching, picked)
-  const chosen = reaching.find((b) => toNumber(b.branchId) === branchId) ?? null
+  const settled = !resolution.isFetching && resolution.data !== undefined
+  const answer = settled ? resolution.data : undefined
+  const { offers, byHand } = branchOffers(answer?.branches ?? [], answer?.delivering ?? [])
+  const branchId = offeredBranch(offers, byHand, picked)
+  const chosen = offers.find((b) => b.branchId === branchId) ?? null
   const pin =
     answer?.latitude != null && answer.longitude != null
       ? {
@@ -137,7 +140,7 @@ export function CallCentre() {
     startAt(target, null)
   }
 
-  const reading = form.location.trim() !== '' && !settled
+  const reading = !settled && !resolution.isError
 
   return (
     <div className='mx-auto flex w-full max-w-2xl flex-col gap-5 p-4'>
@@ -248,29 +251,32 @@ export function CallCentre() {
             autoComplete='off'
           />
         </Labelled>
-        <Labelled id={`${ids}-location`} label={t('deliveryLocationLabel')}>
-          <Input
-            id={`${ids}-location`}
-            value={form.location}
-            onChange={(e) => {
-              setPicked(null)
-              set({ location: e.target.value })
-            }}
-            placeholder='https://maps.app.goo.gl/…'
-            className='h-12 text-base'
-            dir='ltr'
-            autoComplete='off'
-          />
-        </Labelled>
+        {/* On the map or not: a search pick or an earlier address put it there, and it can be taken off */}
+        {location !== '' && (
+          <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
+            <MapPin className='size-3.5 shrink-0' aria-hidden />
+            {t('callCentreOnMap')}
+            <button
+              type='button'
+              aria-label={t('callCentreOffMap')}
+              className='hover:text-foreground rounded p-1'
+              onClick={() => {
+                setPicked(null)
+                setConfirmingPaused(null)
+                set({ location: '' })
+              }}
+            >
+              <X className='size-3.5' aria-hidden />
+            </button>
+          </p>
+        )}
 
-        {/* Which branches deliver there, nearest first: the suggestion is chosen, the agent may pick another */}
+        {/* Which branch makes it: the nearest whose area takes the point in, or the agent's own pick */}
         <div className='flex flex-col gap-2 text-sm' aria-live='polite'>
-          {!form.location.trim() ? (
-            <p className='text-muted-foreground'>{t(searchOn ? 'callCentreLocationHintSearch' : 'callCentreLocationHint')}</p>
-          ) : reading ? (
+          {reading ? (
             <p className='text-muted-foreground flex items-center gap-1.5'>
               <Loader2 className='size-3.5 animate-spin' aria-hidden />
-              {t('deliveryLocationReading')}
+              {t('callCentreFindingBranch')}
             </p>
           ) : resolution.isError ? (
             <p className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
@@ -279,51 +285,55 @@ export function CallCentre() {
                 {t('retry')}
               </Button>
             </p>
-          ) : answer && !answer.locationRead ? (
-            <p className='text-muted-foreground'>{t('deliveryLocationUnread')}</p>
-          ) : answer && !answer.delivers ? (
-            <p className='text-muted-foreground'>{t('deliveryNotHere')}</p>
-          ) : reaching.length === 0 ? (
+          ) : offers.length === 0 ? (
             <p className='text-amber-700 dark:text-amber-400'>{t('callCentreNoBranchDelivers')}</p>
           ) : (
-            reaching.map((b) => {
-              const id = toNumber(b.branchId)
-              const fee = toNumber(b.fee)
-              const isChosen = id === branchId
-              return (
-                <button
-                  key={id}
-                  type='button'
-                  onClick={() => {
-                    // A paused branch stopped its customers' orders: the agent is asked once more
-                    if (b.paused && confirmingPaused !== id) {
-                      setConfirmingPaused(id)
-                      return
-                    }
-                    setConfirmingPaused(null)
-                    setPicked(id)
-                  }}
-                  className={cn(
-                    'flex min-h-12 items-center gap-2 rounded-lg border p-3 text-start',
-                    isChosen ? 'border-primary bg-primary/5' : 'bg-background',
-                  )}
-                >
-                  <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
-                  <span className='min-w-0 flex-1'>
-                    <span className='font-medium'>{branchName(id)}</span>
-                    <span className='text-muted-foreground'>
-                      {' · '}
-                      {distance(toNumber(b.distanceMeters))} · {fee > 0 ? money(fee) : t('deliveryFree')}
-                    </span>
-                    {b.paused && (
-                      <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
-                        · {confirmingPaused === id ? t('callCentreTapAgainPaused') : t('deliveryBranchPaused')}
-                      </span>
+            <>
+              {byHand && (
+                <p className={location !== '' ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground'}>
+                  {t(location !== '' ? 'callCentreOutsideAreas' : searchOn ? 'callCentrePickBranchSearch' : 'callCentrePickBranch')}
+                </p>
+              )}
+              {offers.map((b) => {
+                const id = b.branchId
+                const isChosen = id === branchId
+                return (
+                  <button
+                    key={id}
+                    type='button'
+                    aria-pressed={isChosen}
+                    onClick={() => {
+                      // A paused branch stopped its customers' orders: the agent is asked once more
+                      if (b.paused && confirmingPaused !== id) {
+                        setConfirmingPaused(id)
+                        return
+                      }
+                      setConfirmingPaused(null)
+                      setPicked(id)
+                    }}
+                    className={cn(
+                      'flex min-h-12 items-center gap-2 rounded-lg border p-3 text-start',
+                      isChosen ? 'border-primary bg-primary/5' : 'bg-background',
                     )}
-                  </span>
-                </button>
-              )
-            })
+                  >
+                    <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
+                    <span className='min-w-0 flex-1'>
+                      <span className='font-medium'>{branchName(id)}</span>
+                      <span className='text-muted-foreground'>
+                        {b.distanceMeters != null && <> · {distance(b.distanceMeters)}</>}
+                        {' · '}
+                        {b.fee > 0 ? t('callCentreFeeIs', { fee: money(b.fee) }) : t('deliveryFree')}
+                      </span>
+                      {b.paused && (
+                        <span className='ms-1.5 font-medium text-amber-700 dark:text-amber-400'>
+                          · {confirmingPaused === id ? t('callCentreTapAgainPaused') : t('deliveryBranchPaused')}
+                        </span>
+                      )}
+                    </span>
+                  </button>
+                )
+              })}
+            </>
           )}
         </div>
 

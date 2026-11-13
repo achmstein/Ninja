@@ -7490,13 +7490,52 @@
           }
         }
       },
+      "StaffDeliveringBranch": {
+        "required": [
+          "branchId",
+          "fee",
+          "minimumOrder",
+          "paused"
+        ],
+        "type": "object",
+        "properties": {
+          "branchId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "fee": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "minimumOrder": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "paused": {
+            "type": "boolean"
+          }
+        }
+      },
       "StaffDeliveryResolution": {
         "required": [
           "delivers",
           "latitude",
           "longitude",
           "locationRead",
-          "branches"
+          "branches",
+          "delivering"
         ],
         "type": "object",
         "properties": {
@@ -7528,6 +7567,12 @@
             "type": "array",
             "items": {
               "$ref": "#/components/schemas/DeliveryAlternative"
+            }
+          },
+          "delivering": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StaffDeliveringBranch"
             }
           }
         }

@@ -121,6 +121,7 @@ public static partial class DeliveryApi
         var asked = !string.IsNullOrWhiteSpace(location) || latitude is not null || longitude is not null;
 
         return TypedResults.Ok(new StaffDeliveryResolution(
-            delivering.Count > 0, pin?.Latitude, pin?.Longitude, !asked || pin is not null, branches));
+            delivering.Count > 0, pin?.Latitude, pin?.Longitude, !asked || pin is not null, branches,
+            [.. delivering.OrderBy(b => b.BranchId).Select(b => new StaffDeliveringBranch(b.BranchId, b.Terms.Fee, b.Terms.MinimumOrder, b.Paused))]));
     }
 }

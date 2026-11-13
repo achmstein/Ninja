@@ -138,6 +138,8 @@ public class CallCentreTest
         Assert.IsFalse(resolution.Branches[1].Paused);
         Assert.AreEqual(25m, resolution.Branches[0].Fee);
         Assert.AreEqual(100m, resolution.Branches[0].MinimumOrder);
+        CollectionAssert.IsSubsetOf(new[] { Maadi, Downtown }, resolution.Delivering.Select(b => b.BranchId).ToArray(),
+            "and every branch that delivers at all is listed, for a caller with no point on the map");
     }
 
     [TestMethod]
@@ -155,6 +157,13 @@ public class CallCentreTest
         Assert.AreEqual(Downtown, pinned.Value!.Branches.Single().BranchId);
         Assert.IsFalse(words.Value!.LocationRead);
         Assert.IsEmpty(words.Value.Branches);
+        // The caller only said where they live: the agent picks from the branches that deliver
+        var none = (Ok<StaffDeliveryResolution>)(await DeliveryApi.ResolveDeliveryBranchForStaffAsync(queries, NoLinks())).Result;
+        Assert.IsTrue(none.Value!.LocationRead);
+        Assert.IsEmpty(none.Value.Branches);
+        Assert.IsNotEmpty(none.Value.Delivering);
+        CollectionAssert.AreEqual(none.Value.Delivering.Select(b => b.BranchId).Order().ToArray(), none.Value.Delivering.Select(b => b.BranchId).ToArray());
+        CollectionAssert.Contains(none.Value.Delivering.Select(b => b.BranchId).ToArray(), Downtown);
         Assert.IsInstanceOfType<ProblemHttpResult>(bad.Result);
     }
 
@@ -168,6 +177,7 @@ public class CallCentreTest
 
         Assert.IsFalse(answer.Value!.Delivers);
         Assert.IsEmpty(answer.Value.Branches);
+        Assert.IsEmpty(answer.Value.Delivering);
     }
 
     // --- A drawn area on the quotes -------------------------------------------

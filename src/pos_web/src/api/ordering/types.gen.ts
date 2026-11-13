@@ -668,12 +668,20 @@ export type SetOrderReadyRequest = {
     ready: boolean;
 };
 
+export type StaffDeliveringBranch = {
+    branchId: number | string;
+    fee: number | string;
+    minimumOrder: number | string;
+    paused: boolean;
+};
+
 export type StaffDeliveryResolution = {
     delivers: boolean;
     latitude: null | number | string;
     longitude: null | number | string;
     locationRead: boolean;
     branches: Array<DeliveryAlternative>;
+    delivering: Array<StaffDeliveringBranch>;
 };
 
 export type StockDisposition = 'Waste' | 'Restock';
