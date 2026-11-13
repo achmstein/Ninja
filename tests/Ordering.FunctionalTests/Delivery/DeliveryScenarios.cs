@@ -298,6 +298,49 @@ public sealed class DeliveryScenarios
     };
 
     [TestMethod]
+    public async Task The_till_picks_a_named_area_and_the_order_is_charged_and_keeps_it()
+    {
+        const int zahraa = 9101, rainy = 9102;
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var settings = ActivatorUtilities.CreateInstance<BranchSettingsChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await settings.Handle(new BranchSettingsChangedIntegrationEvent(
+                PhoneOrders, IsOrderingEnabled: true, IsReservationsEnabled: true, RequireSignInForTableOrders: false,
+                IsDeliveryEnabled: true, Latitude: Lat, Longitude: Lng, DeliveryRadiusKm: 5, DeliveryFee: 20, DeliveryMinimumOrder: 100));
+            var zones = ActivatorUtilities.CreateInstance<BranchDeliveryZonesChangedIntegrationEventHandler>(scope.ServiceProvider);
+            await zones.Handle(new BranchDeliveryZonesChangedIntegrationEvent(PhoneOrders,
+            [
+                new BranchDeliveryZoneData(zahraa, new LocalizedText("Zahraa", "زهراء"), 35, null, 45, true, null, 0),
+                new BranchDeliveryZoneData(rainy, new LocalizedText("Rainy", null), 15, null, null, false, null, 1),
+            ], DateTime.UtcNow.Ticks));
+        }
+        var till = Suite.Ordering.As(Persona.Cashier(PhoneOrders), PhoneOrders);
+        var phone = $"010{Random.Shared.Next(10_000_000, 99_999_999)}";
+
+        // The till's quote: the branch's own fee, then the area's once it is picked by name
+        Assert.AreEqual(20m, (await till.GetAsync<TillQuoteView>($"{Orders}/delivery/till-quote?{Version}")).Fee);
+        Assert.AreEqual(35m, (await till.GetAsync<TillQuoteView>($"{Orders}/delivery/till-quote?zoneId={zahraa}&{Version}")).Fee);
+
+        var (ok, body) = await RingUpAsync(till, PhoneOrder(new { address = "Street 9", phone, zoneId = zahraa }));
+        Assert.AreEqual(HttpStatusCode.OK, ok, body);
+        var (gone, goneBody) = await RingUpAsync(till, PhoneOrder(new { address = "Street 9", phone, zoneId = 424242 }));
+        Assert.AreEqual(HttpStatusCode.BadRequest, gone);
+        Assert.Contains("delivery.area_unknown", goneBody);
+
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>();
+            var kept = $"+20{phone[1..]}";
+            var order = await context.Orders.AsNoTracking().SingleAsync(o => o.Delivery!.Phone == kept);
+            Assert.AreEqual(35m, order.Delivery!.Fee, "the area's fee, not the branch's 20");
+            Assert.AreEqual(zahraa, order.Delivery.ZoneId);
+            Assert.AreEqual("Zahraa", order.Delivery.ZoneNameEn);
+            Assert.AreEqual("زهراء", order.Delivery.ZoneNameAr);
+            Assert.AreEqual(45, order.Delivery.EtaMinutes);
+        }
+    }
+
+    [TestMethod]
     public async Task A_delivery_s_number_kept_the_old_local_way_is_rewritten_at_start_and_still_found()
     {
         using (var scope = Suite.Ordering.Services.CreateScope())
