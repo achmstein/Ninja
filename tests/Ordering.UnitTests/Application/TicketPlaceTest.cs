@@ -70,20 +70,33 @@ public class TicketPlaceTest
     }
 
     [TestMethod]
-    public async Task What_the_till_says_itself_stands_and_a_bill_with_no_place_gives_none()
+    public async Task The_bill_decides_the_place_whatever_the_sender_says_of_one()
     {
         var store = new Store();
         await OpenedAsync(store);
 
         var said = await RungUpAsync(store, Ticket, placeId: 12, placeName: new LocalizedText("Table 1", null));
-        Assert.AreEqual(12, said.PlaceId);
-        Assert.AreEqual("Table 1", said.PlaceName!.En);
 
-        var counterBill = await RungUpAsync(store, ticketId: 999);
-        Assert.IsNull(counterBill.PlaceId, "a counter bill, or one not heard of yet: taken as sent");
+        Assert.AreEqual(RoomFive, said.PlaceId, "the bill is Room 5's: an order on it is not Table 1's");
+        Assert.AreEqual("Room", said.PlaceKind);
+        Assert.AreEqual("Room 5", said.PlaceName!.En);
+    }
+
+    [TestMethod]
+    public async Task With_no_bill_named_the_order_goes_by_the_place_it_names_or_to_the_counter()
+    {
+        var store = new Store();
+        await OpenedAsync(store);
+
+        var toATable = await RungUpAsync(store, ticketId: null, placeId: 12, placeName: new LocalizedText("Table 1", null));
+        Assert.AreEqual(12, toATable.PlaceId, "no bill named: Sales finds or opens that table's");
+        Assert.AreEqual("Table 1", toATable.PlaceName!.En);
 
         var walkIn = await RungUpAsync(store, ticketId: null);
-        Assert.IsNull(walkIn.PlaceId);
+        Assert.IsNull(walkIn.PlaceId, "neither a bill nor a place: a counter sale");
+
+        var counterBill = await RungUpAsync(store, ticketId: 999);
+        Assert.IsNull(counterBill.PlaceId, "a counter bill has no place");
     }
 
     [TestMethod]
@@ -135,5 +148,29 @@ public class TicketPlaceTest
         await using var after = store.NewContext();
         Assert.AreEqual(0, await after.TicketPlaces.CountAsync());
         Assert.IsNull((await RungUpAsync(store, ticketId: 1)).PlaceId);
+    }
+
+    [TestMethod]
+    public async Task An_empty_bill_thrown_away_is_let_go_and_the_room_s_next_bill_is_its_own()
+    {
+        var store = new Store();
+        // Room 5's stay was cancelled with nothing ordered: its bill is thrown away, not settled or voided
+        await OpenedAsync(store, ticketId: 171);
+        await using (var context = store.NewContext())
+        {
+            await new TicketDiscardedIntegrationEventHandler(new TicketPlaces(context)).Handle(new TicketDiscardedIntegrationEvent(171, Branch));
+            // Said twice, or for a bill never heard of: nothing to do
+            await new TicketDiscardedIntegrationEventHandler(new TicketPlaces(context)).Handle(new TicketDiscardedIntegrationEvent(171, Branch));
+            await new TicketDiscardedIntegrationEventHandler(new TicketPlaces(context)).Handle(new TicketDiscardedIntegrationEvent(4242, Branch));
+        }
+        await using (var context = store.NewContext())
+        {
+            Assert.AreEqual(0, await context.TicketPlaces.CountAsync(), "nothing is left behind for a bill that is gone");
+        }
+
+        // The next guests in Room 5: a new bill with a number of its own, never the old one's
+        await OpenedAsync(store, ticketId: 172);
+        Assert.AreEqual(RoomFive, (await RungUpAsync(store, ticketId: 172)).PlaceId);
+        Assert.IsNull((await RungUpAsync(store, ticketId: 171)).PlaceId, "the old bill's number means nothing any more");
     }
 }

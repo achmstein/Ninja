@@ -120,6 +120,7 @@ internal static class Extensions
         // "refunded" reach the customer's list without a call to Sales
         // Which place an open bill is the bill of: an order rung up onto it goes to the kitchen under that place
         eventBus.AddSubscription<TicketOpenedIntegrationEvent, TicketOpenedIntegrationEventHandler>();
+        eventBus.AddSubscription<TicketDiscardedIntegrationEvent, TicketDiscardedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
         eventBus.AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();

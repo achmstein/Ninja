@@ -841,6 +841,8 @@ public class Ticket : Entity, IAggregateRoot
         // The nudge still goes out: the dispatcher reads events off every
         // tracked entry, deleted ones included, so the floor drops the tile
         AddDomainEvent(new TicketChangedDomainEvent(this));
+        // And whoever was told this was a place's bill is told it no longer is
+        AddDomainEvent(new TicketDiscardedDomainEvent(this));
     }
 
     /// <summary>

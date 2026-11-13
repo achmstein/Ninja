@@ -65,6 +65,26 @@ public class TicketOpenedTest
     }
 
     [TestMethod]
+    public async Task An_empty_bill_thrown_away_says_it_is_no_longer_the_place_s()
+    {
+        var outbox = new Outbox();
+        var handler = new TicketDiscardedDomainEventHandler(outbox, NullLogger<TicketDiscardedDomainEventHandler>.Instance);
+
+        var table = Ticket.OpenForTable(placeId: 12, new LocalizedText("Table 1", null), branchId: 2);
+        table.Discard();
+        foreach (var discarded in table.DomainEvents.OfType<TicketDiscardedDomainEvent>()) await handler.Handle(discarded, default);
+        var said = (TicketDiscardedIntegrationEvent)outbox.Queued.Single();
+        Assert.AreEqual(2, said.BranchId);
+
+        // A counter bill was never a place's: nothing to take back
+        outbox.Queued.Clear();
+        var counter = Ticket.OpenForCounter(branchId: 1);
+        counter.Discard();
+        foreach (var discarded in counter.DomainEvents.OfType<TicketDiscardedDomainEvent>()) await handler.Handle(discarded, default);
+        Assert.IsEmpty(outbox.Queued);
+    }
+
+    [TestMethod]
     public async Task A_counter_bill_has_no_place_and_says_nothing()
     {
         Assert.IsEmpty(await SaidOnOpeningAsync(Ticket.OpenForCounter(branchId: 1, label: "Mona")));
