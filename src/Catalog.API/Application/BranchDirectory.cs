@@ -24,7 +24,9 @@ public static class BranchDirectory
             var branches = await client.GetFromJsonAsync<List<BranchRow>>("http://tenant-api/api/branches", ct);
             foreach (var b in branches ?? []) ids.Add(b.Id);
         }
-        catch (Exception ex) when (ex is not OperationCanceledException)
+        // A Tenant.API that does not answer in time ends as a cancellation too (the client's own timeout):
+        // that is "cannot be reached", not the caller giving up, which is the only cancellation let through
+        catch (Exception ex) when (!ct.IsCancellationRequested)
         {
             logger.LogWarning(ex, "Could not list the branches from tenant-api; using the branches the catalog knows");
         }
