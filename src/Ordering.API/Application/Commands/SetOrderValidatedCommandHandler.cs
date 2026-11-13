@@ -37,10 +37,12 @@ public class SetOrderValidatedCommandHandler(
             && order.Source is not (OrderSource.Pos or OrderSource.Talabat)
             && branchSettings is not null
             && await branchSettings.GetDeliveryTermsAsync(order.BranchId, evenWhilePaused: true) is { } terms
-            && order.GetItemsTotalAt(command.Prices) < terms.MinimumOrder)
+            // The minimum it was held to when placed: its named area's, where it is in one
+            && (order.Delivery.MinimumOrder ?? terms.MinimumOrder) is var minimum
+            && order.GetItemsTotalAt(command.Prices) < minimum)
         {
             logger.LogWarning("Order {OrderNumber} is under the delivery minimum at the menu's prices; cancelled", command.OrderNumber);
-            order.SetBelowDeliveryMinimum(terms.MinimumOrder);
+            order.SetBelowDeliveryMinimum(minimum);
             await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
             return false;
         }

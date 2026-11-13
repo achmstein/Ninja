@@ -70,8 +70,23 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
         return row is { IsActive: true, IsDeliveryEnabled: true, Latitude: { } lat, Longitude: { } lng }
             && Reaches(row)
             && (row.IsOrderingEnabled || evenWhilePaused)
-            ? Terms(row, lat, lng)
+            ? Terms(row, lat, lng, await ZonesAsync([branchId]))
             : null;
+    }
+
+    /// <summary>The branches' named areas, each list in its owner's order.</summary>
+    private async Task<ILookup<int, DeliveryZoneTerms>> ZonesAsync(IReadOnlyCollection<int> branchIds)
+    {
+        var rows = await context.BranchDeliveryZones
+            .AsNoTracking()
+            .Where(z => branchIds.Contains(z.BranchId))
+            .OrderBy(z => z.SortOrder)
+            .ThenBy(z => z.Id)
+            .ToListAsync();
+        return rows.ToLookup(
+            z => z.BranchId,
+            z => new DeliveryZoneTerms(z.Id, new LocalizedText(z.NameEn, z.NameAr), z.Fee, z.MinimumOrder, z.EtaMinutes, z.IsOn,
+                z.Shape is { Length: >= 3 } shape ? shape : null));
     }
 
     public async Task<IReadOnlyList<BranchDeliveryTerms>> GetDeliveringBranchesAsync(bool evenWhilePaused = false)
@@ -85,9 +100,10 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
             .ToListAsync();
 
         // The area is a JSON document: whether it has its points is asked here, not of the database
-        return rows
-            .Where(Reaches)
-            .Select(row => new BranchDeliveryTerms(row.BranchId, Terms(row, row.Latitude!.Value, row.Longitude!.Value),
+        var delivering = rows.Where(Reaches).ToList();
+        var zones = await ZonesAsync([.. delivering.Select(r => r.BranchId)]);
+        return delivering
+            .Select(row => new BranchDeliveryTerms(row.BranchId, Terms(row, row.Latitude!.Value, row.Longitude!.Value, zones),
                 Paused: !row.IsOrderingEnabled))
             .ToList();
     }
@@ -95,8 +111,9 @@ public class BranchSettingsQueries(OrderingContext context, IMemoryCache? cache 
     /// <summary>The branch says where it stops: a radius, or an area drawn on the map.</summary>
     private static bool Reaches(BranchSettings row) => row.DeliveryRadiusKm > 0 || row.DeliveryArea is { Length: >= 3 };
 
-    private static DeliveryTerms Terms(BranchSettings row, double latitude, double longitude) => new(
+    private static DeliveryTerms Terms(BranchSettings row, double latitude, double longitude, ILookup<int, DeliveryZoneTerms> zones) => new(
         latitude, longitude, row.DeliveryRadiusKm > 0 ? row.DeliveryRadiusKm.Value : 0,
         row.DeliveryFee, row.DeliveryMinimumOrder, row.RequireSignInForDelivery,
-        row.DeliveryArea is { Length: >= 3 } area ? area : null);
+        row.DeliveryArea is { Length: >= 3 } area ? area : null,
+        zones[row.BranchId].ToList() is { Count: > 0 } named ? named : null);
 }

@@ -15,6 +15,7 @@ public static class KnownEvents
     public static readonly Choreography[] Catalog =
     [
         new("BranchSettingsChanged", "Tenant", ["Ordering", "Spaces", "Notification", "Finance"]),
+        new("BranchDeliveryZonesChanged", "Tenant", ["Ordering"]),
         new("CashMoved", "Sales", ["Finance"]),
         new("CashPaidOut", "Sales", ["Payroll"]),
         new("CatalogItemAvailabilityChanged", "Catalog", ["Notification"]),

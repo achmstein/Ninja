@@ -62,8 +62,24 @@ public interface IBranchSettingsQueries
 /// <param name="RadiusKm">How far the riders go, straight-line; 0 when the branch has only a drawn area.</param>
 /// <param name="SignInRequired">A customer must be signed in to order delivery here (the till's phone orders are not held to it).</param>
 /// <param name="Area">The area drawn on the map, as [lat, lng] points; when there is one it, not the radius, says where the branch delivers.</param>
-public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder, bool SignInRequired = false, IReadOnlyList<double[]>? Area = null)
+/// <param name="Zones">The branch's named areas, in the owner's order: each says what is different there. None is the usual case.</param>
+public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm, decimal Fee, decimal MinimumOrder, bool SignInRequired = false, IReadOnlyList<double[]>? Area = null, IReadOnlyList<DeliveryZoneTerms>? Zones = null)
 {
+    /// <summary>The named areas, never null.</summary>
+    public IReadOnlyList<DeliveryZoneTerms> NamedZones => Zones ?? [];
+
+    /// <summary>The named area a point is in: the first in the owner's order whose shape takes it in, on or off. Null for none.</summary>
+    public DeliveryZoneTerms? ZoneAt(double latitude, double longitude) => NamedZones.FirstOrDefault(z => z.Contains(latitude, longitude));
+
+    /// <summary>The named area with this id, picked by name by staff; null when it is not this branch's.</summary>
+    public DeliveryZoneTerms? ZoneById(int id) => NamedZones.FirstOrDefault(z => z.Id == id);
+
+    /// <summary>The fee there: the area's when it is in one, the branch's own otherwise.</summary>
+    public decimal FeeIn(DeliveryZoneTerms? zone) => zone?.Fee ?? Fee;
+
+    /// <summary>The minimum there: the area's when it has one, the branch's own otherwise.</summary>
+    public decimal MinimumIn(DeliveryZoneTerms? zone) => zone?.MinimumOrder ?? MinimumOrder;
+
     public int RadiusMeters => (int)(RadiusKm * 1000);
 
     /// <summary>The branch delivers to a drawn area rather than a circle.</summary>
@@ -78,9 +94,23 @@ public record DeliveryTerms(double Latitude, double Longitude, decimal RadiusKm,
     /// there", asked by the quote, resolve, the till's quote, the policy and the
     /// alternatives alike.
     /// </summary>
-    public bool Covers(double latitude, double longitude) => HasArea
-        ? Geo.Contains(Area!, latitude, longitude)
-        : DistanceTo(latitude, longitude) <= RadiusMeters;
+    public bool Covers(double latitude, double longitude) =>
+        (HasArea ? Geo.Contains(Area!, latitude, longitude) : DistanceTo(latitude, longitude) <= RadiusMeters)
+        // A named area drawn past the branch's own reach is somewhere it delivers too, while it is on
+        || NamedZones.Any(z => z.IsOn && z.Contains(latitude, longitude));
+}
+
+/// <summary>
+/// One of a branch's named delivery areas, as people here say where they live: its own fee, and
+/// when the owner set them its own minimum and about how long a delivery there takes.
+/// </summary>
+/// <param name="MinimumOrder">Null for the branch's own minimum.</param>
+/// <param name="IsOn">Off for a while: a customer there is told so, and the till is asked twice.</param>
+/// <param name="Shape">The area on the map, [lat, lng] points; null when it is only a name, picked by staff.</param>
+public record DeliveryZoneTerms(int Id, LocalizedText Name, decimal Fee, decimal? MinimumOrder, int? EtaMinutes, bool IsOn, IReadOnlyList<double[]>? Shape = null)
+{
+    /// <summary>Whether a point is inside the area's shape; never, for an area that is only a name.</summary>
+    public bool Contains(double latitude, double longitude) => Shape is { Count: >= 3 } && Geo.Contains(Shape, latitude, longitude);
 }
 
 /// <param name="Paused">The branch paused its customers' orders; only the till's are read with it in.</param>

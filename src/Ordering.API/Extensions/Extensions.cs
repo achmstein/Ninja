@@ -102,6 +102,8 @@ internal static class Extensions
         // Tenant.API's flags, projected locally so a paused branch refuses
         // customer orders without a call across services
         eventBus.AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>();
+        // And its named delivery areas, each with its own fee, on an event of their own
+        eventBus.AddSubscription<BranchDeliveryZonesChangedIntegrationEvent, BranchDeliveryZonesChangedIntegrationEventHandler>();
 
         // The business's own settings, the same way: one row that every branch reads
         eventBus.AddSubscription<TenantSettingsChangedIntegrationEvent, TenantSettingsChangedIntegrationEventHandler>();

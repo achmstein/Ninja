@@ -81,6 +81,10 @@ public record DeliveryView
     public string Phone { get; init; } = string.Empty;
     public decimal Fee { get; init; }
     public int? DistanceMeters { get; init; }
+    /// <summary>The branch's named delivery area it goes to ("Maadi Degla"), as it was when the order was placed; null when in none.</summary>
+    public LocalizedText? ZoneName { get; init; }
+    /// <summary>About how many minutes that area said a delivery there takes; null when unsaid.</summary>
+    public int? EtaMinutes { get; init; }
     /// <summary>"Waiting", "Assigned", "OnTheWay", "Delivered", "Failed" or "Returned".</summary>
     public string Stage { get; init; } = string.Empty;
     public string? RiderName { get; init; }
@@ -106,6 +110,8 @@ public record DeliveryView
         Phone = d.Phone,
         Fee = d.Fee,
         DistanceMeters = d.DistanceMeters,
+        ZoneName = d.ZoneName,
+        EtaMinutes = d.EtaMinutes,
         Stage = d.Stage.ToString(),
         RiderName = d.RiderName,
         AssignedAt = d.AssignedAt,

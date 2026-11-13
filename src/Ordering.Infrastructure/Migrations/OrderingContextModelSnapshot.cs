@@ -774,6 +774,52 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("requests", "ordering");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.BranchDeliveryZone", b =>
+                {
+                    b.Property<int>("Id")
+                        .HasColumnType("integer");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("EtaMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsOn")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("MinimumOrder")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("NameAr")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(80)
+                        .HasColumnType("character varying(80)");
+
+                    b.Property<string>("Shape")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.Property<long>("Version")
+                        .HasColumnType("bigint");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "SortOrder");
+
+                    b.ToTable("branchdeliveryzones", "ordering");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Projections.BranchSettings", b =>
                 {
                     b.Property<int>("BranchId")
@@ -1064,6 +1110,9 @@ namespace Ordering.Infrastructure.Migrations
                             b1.Property<int?>("DistanceMeters")
                                 .HasColumnType("integer");
 
+                            b1.Property<int?>("EtaMinutes")
+                                .HasColumnType("integer");
+
                             b1.Property<DateTime?>("FailedAt")
                                 .HasColumnType("timestamp with time zone");
 
@@ -1084,6 +1133,10 @@ namespace Ordering.Infrastructure.Migrations
 
                             b1.Property<double?>("Longitude")
                                 .HasColumnType("double precision");
+
+                            b1.Property<decimal?>("MinimumOrder")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
 
                             b1.Property<DateTime?>("OutAt")
                                 .HasColumnType("timestamp with time zone");
@@ -1107,6 +1160,17 @@ namespace Ordering.Infrastructure.Migrations
                             b1.Property<int>("Version")
                                 .IsConcurrencyToken()
                                 .HasColumnType("integer");
+
+                            b1.Property<int?>("ZoneId")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("ZoneNameAr")
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)");
+
+                            b1.Property<string>("ZoneNameEn")
+                                .HasMaxLength(80)
+                                .HasColumnType("character varying(80)");
 
                             b1.HasKey("OrderId");
 

@@ -25,7 +25,11 @@ public static partial class DeliveryApi
         }
 
         var distance = terms.DistanceTo(latitude, longitude);
-        return TypedResults.Ok(new DeliveryQuote(true, terms.Covers(latitude, longitude), distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm, terms.SignInRequired, terms.HasArea));
+        // In one of the branch's named areas, the fee and the minimum are that area's
+        var zone = terms.ZoneAt(latitude, longitude);
+        return TypedResults.Ok(new DeliveryQuote(
+            true, terms.Covers(latitude, longitude), distance, terms.FeeIn(zone), terms.MinimumIn(zone), terms.RadiusKm, terms.SignInRequired, terms.HasArea,
+            zone?.Id, zone?.Name, zone?.EtaMinutes, zone is { IsOn: false }));
     }
 
     public static async Task<Results<Ok<DeliveryResolution>, ProblemHttpResult>> ResolveDeliveryBranchAsync(
@@ -41,11 +45,14 @@ public static partial class DeliveryApi
         var delivering = await branchSettings.GetDeliveringBranchesAsync();
         var reaching = delivering
             .Where(b => b.Terms.Covers(latitude, longitude))
-            .Select(b => (b.BranchId, b.Terms, Distance: b.Terms.DistanceTo(latitude, longitude)))
-            // Overlapping areas: the nearer branch first
-            .OrderBy(b => b.Distance)
+            .Select(b => (b.BranchId, b.Terms, Distance: b.Terms.DistanceTo(latitude, longitude), Zone: b.Terms.ZoneAt(latitude, longitude)))
+            // A branch not delivering to its named area there right now comes after one that is;
+            // then overlapping areas: the nearer branch first
+            .OrderBy(b => b.Zone is { IsOn: false })
+            .ThenBy(b => b.Distance)
             .ThenBy(b => b.BranchId)
-            .Select(b => new DeliveringBranch(b.BranchId, b.Distance, b.Terms.Fee, b.Terms.MinimumOrder, b.Terms.SignInRequired))
+            .Select(b => new DeliveringBranch(b.BranchId, b.Distance, b.Terms.FeeIn(b.Zone), b.Terms.MinimumIn(b.Zone), b.Terms.SignInRequired,
+                b.Zone?.Id, b.Zone?.Name, b.Zone?.EtaMinutes, b.Zone is { IsOn: false }))
             .ToList();
 
         return TypedResults.Ok(new DeliveryResolution(delivering.Count > 0, reaching));
@@ -56,6 +63,7 @@ public static partial class DeliveryApi
         IBranchSettingsQueries branchSettings,
         IHttpClientFactory http,
         string? location = null,
+        int? zoneId = null,
         CancellationToken ct = default)
     {
         var branchId = httpContext.GetRequiredBranchId();
@@ -80,9 +88,14 @@ public static partial class DeliveryApi
             ? DeliveryAlternatives.For(branchId, terms, at.Latitude, at.Longitude, await branchSettings.GetDeliveringBranchesAsync(evenWhilePaused: true))
             : [];
 
+        // The named area: the one the cashier picked by name, otherwise the one the pin is in
+        var zone = zoneId is { } picked ? terms.ZoneById(picked) : pin is { } spot ? terms.ZoneAt(spot.Latitude, spot.Longitude) : null;
+
         return TypedResults.Ok(new TillDeliveryQuote(
-            true, pin is not { } door || terms.Covers(door.Latitude, door.Longitude), distance, terms.Fee, terms.MinimumOrder, terms.RadiusKm,
-            pin?.Latitude, pin?.Longitude, string.IsNullOrWhiteSpace(location) || pin is not null, alternatives, terms.HasArea));
+            true, pin is not { } door || terms.Covers(door.Latitude, door.Longitude), distance, terms.FeeIn(zone), terms.MinimumIn(zone), terms.RadiusKm,
+            pin?.Latitude, pin?.Longitude, string.IsNullOrWhiteSpace(location) || pin is not null, alternatives, terms.HasArea,
+            zone?.Id, zone?.Name, zone?.EtaMinutes, zone is { IsOn: false },
+            StaffZones(branchId, terms, paused: false)));
     }
 
     /// <summary>
@@ -122,6 +135,11 @@ public static partial class DeliveryApi
 
         return TypedResults.Ok(new StaffDeliveryResolution(
             delivering.Count > 0, pin?.Latitude, pin?.Longitude, !asked || pin is not null, branches,
-            [.. delivering.OrderBy(b => b.BranchId).Select(b => new StaffDeliveringBranch(b.BranchId, b.Terms.Fee, b.Terms.MinimumOrder, b.Paused))]));
+            [.. delivering.OrderBy(b => b.BranchId).Select(b => new StaffDeliveringBranch(b.BranchId, b.Terms.Fee, b.Terms.MinimumOrder, b.Paused))],
+            [.. delivering.OrderBy(b => b.BranchId).SelectMany(b => StaffZones(b.BranchId, b.Terms, b.Paused))]));
     }
+
+    /// <summary>A branch's named areas as staff pick them, in the owner's order, each with what holds there.</summary>
+    private static IReadOnlyList<StaffDeliveryZone> StaffZones(int branchId, DeliveryTerms terms, bool paused) =>
+        [.. terms.NamedZones.Select(z => new StaffDeliveryZone(z.Id, branchId, z.Name, z.Fee, terms.MinimumIn(z), z.EtaMinutes, z.IsOn, paused, z.Shape is { Count: >= 3 }))];
 }

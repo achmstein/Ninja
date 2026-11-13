@@ -7,7 +7,11 @@ namespace Ninja.Ordering.API.Deliveries;
 /// <param name="RadiusKm">How far the branch delivers, straight-line; 0 when it has only a drawn area.</param>
 /// <param name="SignInRequired">The branch delivers to signed-in customers only: a guest is asked to sign in first.</param>
 /// <param name="HasArea">The branch delivers to an area drawn on the map, not a circle: "outside the area" rather than "beyond so many km".</param>
-public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false, bool HasArea = false);
+/// <param name="ZoneId">The branch's named area the point is in, when it is in one: Fee and MinimumOrder are then that area's.</param>
+/// <param name="EtaMinutes">About how many minutes the area says a delivery there takes; null when unsaid or in no area.</param>
+/// <param name="ZoneOff">The area is switched off for a while: the branch is not delivering there right now.</param>
+public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, decimal Fee, decimal MinimumOrder, decimal RadiusKm, bool SignInRequired = false, bool HasArea = false,
+    int? ZoneId = null, LocalizedText? ZoneName = null, int? EtaMinutes = null, bool ZoneOff = false);
 
 /// <summary>Which of the business's branches deliver to a point.</summary>
 /// <param name="Delivers">Some branch delivers right now; false while the business does not deliver at all.</param>
@@ -15,7 +19,9 @@ public record DeliveryQuote(bool Delivers, bool InRange, int? DistanceMeters, de
 public record DeliveryResolution(bool Delivers, IReadOnlyList<DeliveringBranch> Branches);
 
 /// <param name="SignInRequired">The branch delivers to signed-in customers only.</param>
-public record DeliveringBranch(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool SignInRequired);
+/// <param name="ZoneId">The branch's named area the point is in, when it is in one; Fee and MinimumOrder are then that area's.</param>
+public record DeliveringBranch(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool SignInRequired,
+    int? ZoneId = null, LocalizedText? ZoneName = null, int? EtaMinutes = null, bool ZoneOff = false);
 
 /// <summary>The branch's answer for a delivery the till takes over the phone.</summary>
 /// <param name="InRange">Inside the drawn area, or within the radius without one; true without a pin, where the cashier knows the streets.</param>
@@ -40,7 +46,14 @@ public record TillDeliveryQuote(
     double? Longitude,
     bool LocationRead,
     IReadOnlyList<DeliveryAlternative> Alternatives,
-    bool HasArea = false);
+    bool HasArea = false,
+    // The named area the delivery is in (picked by name, or the one the pin fell in): Fee and MinimumOrder are then its own
+    int? ZoneId = null,
+    LocalizedText? ZoneName = null,
+    int? EtaMinutes = null,
+    bool ZoneOff = false,
+    // This branch's named areas, in the owner's order: what the cashier picks from by name
+    IReadOnlyList<StaffDeliveryZone>? Zones = null);
 
 /// <summary>The call centre's answer for a caller's address: which branches would take the delivery.</summary>
 /// <param name="Delivers">Some branch delivers at all (paused ones included); false while the business does not deliver.</param>
@@ -62,7 +75,16 @@ public record StaffDeliveryResolution(
     double? Longitude,
     bool LocationRead,
     IReadOnlyList<DeliveryAlternative> Branches,
-    IReadOnlyList<StaffDeliveringBranch> Delivering);
+    IReadOnlyList<StaffDeliveringBranch> Delivering,
+    // Every named area of every branch that delivers: the agent types the area the caller says and
+    // gets the branch and the fee in one step. Empty for a business that lists none
+    IReadOnlyList<StaffDeliveryZone>? Zones = null);
+
+/// <summary>A named delivery area as staff pick it: which branch's it is and what a delivery there asks.</summary>
+/// <param name="MinimumOrder">What holds there: the area's own minimum, or the branch's.</param>
+/// <param name="On">False while the branch is not delivering there for a while: taken only on a second tap.</param>
+/// <param name="BranchPaused">Its branch paused its customers' orders; a phone order may still go there.</param>
+public record StaffDeliveryZone(int ZoneId, int BranchId, LocalizedText Name, decimal Fee, decimal MinimumOrder, int? EtaMinutes, bool On, bool BranchPaused, bool Drawn);
 
 /// <summary>A branch that delivers, with what it asks: no distance, since no point is being measured to.</summary>
 public record StaffDeliveringBranch(int BranchId, decimal Fee, decimal MinimumOrder, bool Paused);
@@ -70,7 +92,9 @@ public record StaffDeliveringBranch(int BranchId, decimal Fee, decimal MinimumOr
 /// <summary>Another branch that delivers to the caller's pin, with what it would ask.</summary>
 /// <param name="DistanceMeters">From that branch to the pin, as the crow flies.</param>
 /// <param name="Paused">The branch paused its orders: it still takes one sent from a till, but the cashier is asked twice.</param>
-public record DeliveryAlternative(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool Paused);
+/// <param name="ZoneId">That branch's named area the pin is in, when it is in one; Fee and MinimumOrder are then that area's.</param>
+public record DeliveryAlternative(int BranchId, int DistanceMeters, decimal Fee, decimal MinimumOrder, bool Paused,
+    int? ZoneId = null, LocalizedText? ZoneName = null, int? EtaMinutes = null, bool ZoneOff = false);
 
 public record CustomerAddressRequest(
     double Latitude,

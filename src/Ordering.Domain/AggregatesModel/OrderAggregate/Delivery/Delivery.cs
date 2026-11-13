@@ -60,6 +60,26 @@ public class Delivery
     /// <summary>Straight-line from the branch, when the order was placed; null without a pin.</summary>
     public int? DistanceMeters { get; private set; }
 
+    /// <summary>
+    /// The branch's named delivery area it goes to ("Maadi Degla"), when it is in one: picked by name at
+    /// the till, or the one the pin fell in. Kept as it was when the order was placed, with its name, so
+    /// the list changing later changes nothing here. Null where the branch's own fee applied.
+    /// </summary>
+    public int? ZoneId { get; private set; }
+
+    public string? ZoneNameEn { get; private set; }
+
+    public string? ZoneNameAr { get; private set; }
+
+    /// <summary>The area's name in the business's languages; null when it is in none.</summary>
+    public LocalizedText? ZoneName => ZoneId is null ? null : new LocalizedText(ZoneNameEn, ZoneNameAr);
+
+    /// <summary>About how many minutes the area said a delivery there takes; null when unsaid.</summary>
+    public int? EtaMinutes { get; private set; }
+
+    /// <summary>The minimum the order was held to when placed (the area's, or the branch's); null on older orders.</summary>
+    public decimal? MinimumOrder { get; private set; }
+
     /// <summary>The rider's account (the token's subject); null until someone is given it.</summary>
     public string? RiderUserId { get; private set; }
 
@@ -113,7 +133,11 @@ public class Delivery
         string? directions,
         string phone,
         decimal fee,
-        int? distanceMeters)
+        int? distanceMeters,
+        int? zoneId = null,
+        LocalizedText? zoneName = null,
+        int? etaMinutes = null,
+        decimal? minimumOrder = null)
     {
         if (latitude.HasValue != longitude.HasValue
             || latitude is < -90 or > 90 || longitude is < -180 or > 180
@@ -134,6 +158,14 @@ public class Delivery
             : throw new OrderingDomainException("A delivery needs a phone number to call at the door.", DeliveryErrors.PhoneInvalid);
         Fee = fee >= 0 ? fee : throw new OrderingDomainException("A delivery fee can't be below zero.");
         DistanceMeters = latitude is null || distanceMeters is null ? null : Math.Max(0, distanceMeters.Value);
+        if (zoneId is not null)
+        {
+            ZoneId = zoneId;
+            ZoneNameEn = Tidy(zoneName?.En, DeliveryLimits.ZoneName, "area's name");
+            ZoneNameAr = Tidy(zoneName?.Ar, DeliveryLimits.ZoneName, "area's name");
+            EtaMinutes = etaMinutes is > 0 ? etaMinutes : null;
+        }
+        MinimumOrder = minimumOrder is >= 0 ? minimumOrder : null;
     }
 
     private static string? Tidy(string? value, int max, string what) =>

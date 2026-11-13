@@ -91,6 +91,11 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             d.Property(x => x.Directions).HasMaxLength(DeliveryLimits.Directions);
             d.Property(x => x.Phone).HasMaxLength(DeliveryLimits.Phone).IsRequired();
             d.Property(x => x.Fee).HasPrecision(18, 2);
+            // The named area it went to, as it was when the order was placed
+            d.Property(x => x.ZoneNameEn).HasMaxLength(DeliveryLimits.ZoneName);
+            d.Property(x => x.ZoneNameAr).HasMaxLength(DeliveryLimits.ZoneName);
+            d.Property(x => x.MinimumOrder).HasPrecision(18, 2);
+            d.Ignore(x => x.ZoneName);
             d.Property(x => x.CashCollected).HasPrecision(18, 2);
             d.Property(x => x.RiderUserId).HasMaxLength(DeliveryLimits.RiderUserId);
             d.Property(x => x.RiderName).HasMaxLength(DeliveryLimits.RiderName);

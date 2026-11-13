@@ -7,6 +7,7 @@ namespace Ninja.Ordering.API.Deliveries;
 /// a delivery: <see cref="IDeliveryPolicy"/> holds it to the branch's terms.
 /// </summary>
 /// <param name="Phone">The number the rider calls; the guest's checkout phone when left out.</param>
+/// <param name="ZoneId">The branch's named area the till picked by name; a customer's is read from their pin, never sent.</param>
 public record DeliveryDraft(
     double? Latitude,
     double? Longitude,
@@ -15,7 +16,8 @@ public record DeliveryDraft(
     string? Floor = null,
     string? Apartment = null,
     string? Directions = null,
-    string? Phone = null);
+    string? Phone = null,
+    int? ZoneId = null);
 
 /// <summary>Who is taking the delivery: a customer ordering, or the till over the phone.</summary>
 public enum DeliveryTaker
@@ -71,6 +73,20 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
             : ((double Latitude, double Longitude)?)null;
         int? distance = pin is { } at ? terms.DistanceTo(at.Latitude, at.Longitude) : null;
 
+        // The named area it goes to, when it is in one: the till's own pick by name first, otherwise the one
+        // the pin fell in. Its fee and minimum hold in place of the branch's
+        DeliveryZoneTerms? zone;
+        if (taker == DeliveryTaker.Till && draft.ZoneId is { } picked)
+        {
+            zone = terms.ZoneById(picked)
+                ?? throw new OrderingDomainException("That delivery area isn't one of this branch's any more. Pick the area again.", DeliveryErrors.ZoneUnknown);
+        }
+        else
+        {
+            zone = pin is { } spot ? terms.ZoneAt(spot.Latitude, spot.Longitude) : null;
+        }
+        var minimum = terms.MinimumIn(zone);
+
         if (taker == DeliveryTaker.Customer)
         {
             // The customer pins the door; their order is held to the area and the minimum
@@ -85,9 +101,15 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
                 throw new OrderingDomainException("This address is outside the branch's delivery area.", DeliveryErrors.OutOfRange);
             }
 
-            if (itemsSubtotal < terms.MinimumOrder)
+            // Switched off for a while (rain, no riders): the customer is told which area, not "out of range"
+            if (zone is { IsOn: false })
             {
-                throw new OrderingDomainException($"Delivery needs an order of at least {terms.MinimumOrder:0.##}.", DeliveryErrors.BelowMinimum);
+                throw new OrderingDomainException($"We're not delivering to {zone.Name.Primary} right now.", DeliveryErrors.ZoneOff);
+            }
+
+            if (itemsSubtotal < minimum)
+            {
+                throw new OrderingDomainException($"Delivery needs an order of at least {minimum:0.##}.", DeliveryErrors.BelowMinimum);
             }
         }
 
@@ -100,7 +122,8 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
         // The words, their lengths and the pin (both or neither) are the aggregate's to judge
         return new Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Delivery(
             draft.Latitude, draft.Longitude, draft.Address, draft.Building, draft.Floor,
-            draft.Apartment, draft.Directions, phone!, terms.Fee, distance);
+            draft.Apartment, draft.Directions, phone!, terms.FeeIn(zone), distance,
+            zone?.Id, zone?.Name, zone?.EtaMinutes, minimum);
     }
 
     private static bool IsOnTheMap(double latitude, double longitude) =>
@@ -140,8 +163,17 @@ public static class DeliveryAlternatives
             .Where(b => !coveredHere || IsClearlyNearer(b.Distance, hereDistance))
             .OrderBy(b => b.Distance)
             .ThenBy(b => b.Branch.BranchId)
-            .Select(b => new DeliveryAlternative(b.Branch.BranchId, b.Distance, b.Branch.Terms.Fee, b.Branch.Terms.MinimumOrder, b.Branch.Paused))
+            .Select(b => Offer(b.Branch, b.Distance, latitude, longitude))
             .ToList();
+    }
+
+    /// <summary>A branch as an offer for a point: what it asks there, which is its named area's when the point is in one.</summary>
+    private static DeliveryAlternative Offer(BranchDeliveryTerms branch, int distance, double latitude, double longitude)
+    {
+        var zone = branch.Terms.ZoneAt(latitude, longitude);
+        return new DeliveryAlternative(
+            branch.BranchId, distance, branch.Terms.FeeIn(zone), branch.Terms.MinimumIn(zone), branch.Paused,
+            zone?.Id, zone?.Name, zone?.EtaMinutes, zone is { IsOn: false });
     }
 
     /// <summary>
@@ -154,7 +186,7 @@ public static class DeliveryAlternatives
             .Select(b => (Branch: b, Distance: b.Terms.DistanceTo(latitude, longitude)))
             .OrderBy(b => b.Distance)
             .ThenBy(b => b.Branch.BranchId)
-            .Select(b => new DeliveryAlternative(b.Branch.BranchId, b.Distance, b.Branch.Terms.Fee, b.Branch.Terms.MinimumOrder, b.Branch.Paused))
+            .Select(b => Offer(b.Branch, b.Distance, latitude, longitude))
             .ToList();
 
     /// <summary>At least 30% and a kilometre closer than this branch.</summary>

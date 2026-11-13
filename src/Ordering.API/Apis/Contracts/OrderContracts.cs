@@ -118,7 +118,9 @@ public record PosDeliveryRequest(
     string? Building = null,
     string? Floor = null,
     string? Apartment = null,
-    string? Directions = null);
+    string? Directions = null,
+    // The branch's named delivery area the cashier picked by name; left out, the pin decides when there is one
+    int? ZoneId = null);
 
 /// <summary>
 /// The created order's id — what the POS uses to find the ticket the order

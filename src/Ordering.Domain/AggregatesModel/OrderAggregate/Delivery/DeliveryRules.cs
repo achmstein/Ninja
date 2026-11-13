@@ -14,6 +14,7 @@ public static class DeliveryLimits
     public const int Directions = 500;
     public const int Phone = 30;
     public const int Label = 50;
+    public const int ZoneName = 80;
     public const int RiderUserId = 100;
     public const int RiderName = 200;
     public const int FailureReason = 300;
@@ -27,6 +28,10 @@ public static class DeliveryErrors
 {
     public const string NotDelivering = "delivery.not_delivering";
     public const string OutOfRange = "delivery.out_of_range";
+    /// <summary>The address is in a named area the branch stopped delivering to for a while.</summary>
+    public const string ZoneOff = "delivery.area_off";
+    /// <summary>The named area the till picked is not one of the branch's (any more).</summary>
+    public const string ZoneUnknown = "delivery.area_unknown";
     public const string BelowMinimum = "delivery.below_minimum";
     public const string PhoneInvalid = "delivery.phone_invalid";
     public const string AddressRequired = "delivery.address_required";

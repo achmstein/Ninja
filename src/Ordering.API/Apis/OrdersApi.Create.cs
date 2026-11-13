@@ -315,7 +315,7 @@ public static partial class OrdersApi
                 placeName: request.PlaceName ?? posPlace?.Name,
                 // Held to the branch's terms by the handler: one rule for the app and the till
                 delivery: request.Delivery is { } wanted
-                    ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone)
+                    ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone, wanted.ZoneId)
                     : null,
                 // Who rang it up, and where: every till order says so
                 taker: new OrderTaker(cashierId, cashierName, tillBranchId),
