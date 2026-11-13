@@ -104,6 +104,12 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       authService.refreshToken();
       ref.read(signalRServiceProvider).reconnectIfNeeded();
       ref.read(brandProvider.notifier).refresh();
+      // Timers and the hub sleep while the till is in the background: an order
+      // sent meanwhile is asked for the moment the till is looked at again
+      if (!kDemoMode && ref.read(authServiceProvider).isAuthenticated) {
+        ref.read(pendingOrdersProvider.notifier).refresh();
+        ref.read(serviceRequestsProvider.notifier).refresh();
+      }
       // Android drops immersive mode after some system UI; put it back
       SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       // A till that asked to be pinned stays pinned

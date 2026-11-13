@@ -86,7 +86,8 @@ class AppConfig {
   static const Duration ticketsPoll = Duration(seconds: 20);
   static const Duration roomsPoll = Duration(seconds: 60);
   static const Duration sessionsPoll = Duration(seconds: 30);
-  static const Duration pendingOrdersPoll = Duration(seconds: 60);
+  // A customer's order is somebody waiting: with the hub down it is still seen within seconds
+  static const Duration pendingOrdersPoll = Duration(seconds: 15);
   static const Duration serviceRequestsPoll = Duration(seconds: 30);
 
   /// The deliveries board: the hub's DeliveryChanged is the primary path

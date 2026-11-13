@@ -14,7 +14,8 @@ import { toNumber } from '@/lib/money'
 export function usePendingOrders() {
   const query = useQuery({
     ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
-    refetchInterval: 60_000,
+    // A customer's order is somebody waiting: with the hub down it is still seen within seconds
+    refetchInterval: 15_000,
   })
 
   const pending = useMemo(

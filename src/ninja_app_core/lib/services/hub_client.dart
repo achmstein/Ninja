@@ -26,6 +26,10 @@ class HubClient {
   Timer? _retry;
   static const _retryAfter = Duration(seconds: 30);
 
+  /// A hub was open once already: the next one opened is a reconnection,
+  /// whichever way it comes about
+  bool _wasConnected = false;
+
   final Map<String, StreamController<Map<String, dynamic>>> _streams;
   final _reconnected = StreamController<void>.broadcast();
 
@@ -92,6 +96,12 @@ class HubClient {
       await _joined(hub);
       _retry?.cancel();
       _retry = null;
+      // A hub opened afresh after one was lost (automatic reconnect gave up,
+      // or the app came back to the front with a dead connection) missed what
+      // was sent in between, exactly as a reconnected one did: say so, or the
+      // app waits for its next poll to learn of a new order
+      if (_wasConnected) _reconnected.add(null);
+      _wasConnected = true;
     } catch (e) {
       debugPrint('SignalR connection failed: $e');
       _hubConnection = null;
