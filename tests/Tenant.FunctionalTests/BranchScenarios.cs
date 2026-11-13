@@ -20,6 +20,8 @@ public record BranchView(
 
 /// <summary>A branch as far as its delivery goes.</summary>
 public record DeliveryBranchView(int Id, bool IsDeliveryEnabled, decimal? DeliveryRadiusKm, double[][]? DeliveryArea = null);
+public record ZoneName(string? En, string? Ar);
+public record DeliveryZoneView(int Id, ZoneName Name, decimal Fee, decimal? MinimumOrder, int? EtaMinutes, bool IsOn, double[][]? Shape);
 
 /// <summary>
 /// The business's branches: the list every app reads, the owner's to add and
@@ -156,6 +158,77 @@ public sealed class BranchScenarios
             deliveryFee = -1,
         });
         Assert.AreEqual(HttpStatusCode.BadRequest, negative);
+    }
+
+    [TestMethod]
+    public async Task A_branch_keeps_a_list_of_named_areas_each_with_its_own_fee()
+    {
+        double[][] square = [[30.035, 31.225], [30.055, 31.225], [30.055, 31.245], [30.035, 31.245]];
+        var created = await Owner.PostAsync<DeliveryBranchView>(Branches, new
+        {
+            name = new { en = "Areas", ar = "مناطق" },
+            location = "30.0444, 31.2357",
+            deliveryRadiusKm = 5,
+            deliveryFee = 20,
+        }, HttpStatusCode.Created);
+        var zones = $"{Branches}/{created.Id}/delivery-zones";
+
+        Assert.IsEmpty(await Owner.GetAsync<List<DeliveryZoneView>>(zones), "none until the owner lists some: the branch's own fee is the fee");
+
+        var saved = await Owner.SendAsync<List<DeliveryZoneView>>(HttpMethod.Put, zones, new object[]
+        {
+            new { name = new { en = "Maadi Degla", ar = "دجلة المعادي" }, fee = 25, minimumOrder = 100, etaMinutes = 45, shape = square },
+            new { name = new { en = "Zahraa" }, fee = 35 },
+        }, HttpStatusCode.OK);
+        CollectionAssert.AreEqual(new[] { "Maadi Degla", "Zahraa" }, saved.Select(z => z.Name.En).ToArray(), "in the owner's order");
+        Assert.AreEqual(25m, saved[0].Fee);
+        Assert.AreEqual(100m, saved[0].MinimumOrder);
+        Assert.AreEqual(45, saved[0].EtaMinutes);
+        Assert.HasCount(4, saved[0].Shape!);
+        Assert.IsTrue(saved[1].IsOn);
+        Assert.IsNull(saved[1].Shape, "only a name: staff pick it");
+        Assert.IsNull(saved[1].MinimumOrder);
+
+        // The list is saved whole: reordered, one switched off, one gone, one new. An area keeps its id
+        var again = await Owner.SendAsync<List<DeliveryZoneView>>(HttpMethod.Put, zones, new object[]
+        {
+            new { name = new { en = "New Cairo" }, fee = 50 },
+            new { id = saved[0].Id, name = new { en = "Maadi Degla", ar = "دجلة المعادي" }, fee = 30, isOn = false },
+        }, HttpStatusCode.OK);
+        CollectionAssert.AreEqual(new[] { "New Cairo", "Maadi Degla" }, again.Select(z => z.Name.En).ToArray());
+        Assert.AreEqual(saved[0].Id, again[1].Id, "orders placed there still point at it");
+        Assert.AreEqual(30m, again[1].Fee);
+        Assert.IsFalse(again[1].IsOn);
+        Assert.IsNull(again[1].Shape, "left out of what was sent, so no longer drawn");
+        CollectionAssert.AreEqual(again.Select(z => z.Id).ToArray(), (await Owner.GetAsync<List<DeliveryZoneView>>(zones)).Select(z => z.Id).ToArray());
+
+        // What is not a list of areas never gets in, and the list stays as it was
+        var (twice, twiceDetail) = await Owner.RefusedAsync(HttpMethod.Put, zones, new object[]
+        {
+            new { name = new { en = "Maadi" }, fee = 25 },
+            new { name = new { en = "maadi" }, fee = 30 },
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, twice);
+        Assert.Contains("Two delivery areas", twiceDetail);
+        var (crossed, crossedDetail) = await Owner.RefusedAsync(HttpMethod.Put, zones, new object[]
+        {
+            new { name = new { en = "Bow tie" }, fee = 25, shape = new[] { square[0], square[2], square[1], square[3] } },
+        });
+        Assert.AreEqual(HttpStatusCode.BadRequest, crossed);
+        Assert.Contains("cross", crossedDetail);
+        var (stranger, _) = await Owner.RefusedAsync(HttpMethod.Put, zones, new object[] { new { id = 999999, name = new { en = "Not ours" }, fee = 1 } });
+        Assert.AreEqual(HttpStatusCode.BadRequest, stranger);
+        Assert.HasCount(2, await Owner.GetAsync<List<DeliveryZoneView>>(zones));
+
+        // The till reads them, only the owner writes them, and a branch that is not there has none
+        var cashier = Suite.TenantApi.As(Persona.Cashier(created.Id));
+        Assert.HasCount(2, await cashier.GetAsync<List<DeliveryZoneView>>(zones));
+        var (byCashier, _) = await cashier.RefusedAsync(HttpMethod.Put, zones, Array.Empty<object>());
+        Assert.AreEqual(HttpStatusCode.Forbidden, byCashier);
+        var (missing, _) = await Owner.RefusedAsync(HttpMethod.Get, $"{Branches}/999999/delivery-zones");
+        Assert.AreEqual(HttpStatusCode.NotFound, missing);
+
+        Assert.IsEmpty(await Owner.SendAsync<List<DeliveryZoneView>>(HttpMethod.Put, zones, Array.Empty<object>(), HttpStatusCode.OK), "an empty list takes them all away");
     }
 
     [TestMethod]

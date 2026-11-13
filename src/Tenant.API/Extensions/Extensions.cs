@@ -64,6 +64,7 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(BranchDeliveryZonesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]

@@ -12,6 +12,8 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
 
     public DbSet<Model.Tenant> Tenants => Set<Model.Tenant>();
 
+    public DbSet<Model.DeliveryZone> DeliveryZones => Set<Model.DeliveryZone>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
         // The outbox: events saved in the same transaction as the change they tell of
@@ -40,6 +42,26 @@ public class TenantContext(DbContextOptions<TenantContext> options) : DbContext(
 
             entity.HasIndex(e => e.IsActive);
             entity.HasIndex(e => e.DisplayOrder);
+        });
+
+        modelBuilder.Entity<Model.DeliveryZone>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.OwnsOne(e => e.Name, b => b.ToJson());
+            entity.Property(e => e.Fee).HasPrecision(18, 2);
+            entity.Property(e => e.MinimumOrder).HasPrecision(18, 2);
+            // Drawn like the branch's own area: one jsonb document of [lat, lng] pairs, read whole
+            entity.Property(e => e.Shape)
+                .HasColumnType("jsonb")
+                .HasConversion(
+                    area => JsonSerializer.Serialize(area, (JsonSerializerOptions?)null),
+                    json => JsonSerializer.Deserialize<double[][]>(json, (JsonSerializerOptions?)null),
+                    new ValueComparer<double[][]?>(
+                        (a, b) => JsonSerializer.Serialize(a, (JsonSerializerOptions?)null) == JsonSerializer.Serialize(b, (JsonSerializerOptions?)null),
+                        v => JsonSerializer.Serialize(v, (JsonSerializerOptions?)null).GetHashCode(),
+                        v => v == null ? null : v.Select(p => p.ToArray()).ToArray()));
+            entity.HasOne<Model.Branch>().WithMany().HasForeignKey(e => e.BranchId).OnDelete(DeleteBehavior.Cascade);
+            entity.HasIndex(e => new { e.BranchId, e.SortOrder });
         });
 
         modelBuilder.Entity<Model.Tenant>(entity =>

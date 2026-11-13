@@ -120,6 +120,44 @@ namespace Ninja.Tenant.API.Migrations
                     b.ToTable("Branches");
                 });
 
+            modelBuilder.Entity("Ninja.Tenant.API.Model.DeliveryZone", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("EtaMinutes")
+                        .HasColumnType("integer");
+
+                    b.Property<decimal>("Fee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsOn")
+                        .HasColumnType("boolean");
+
+                    b.Property<decimal?>("MinimumOrder")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("Shape")
+                        .HasColumnType("jsonb");
+
+                    b.Property<int>("SortOrder")
+                        .HasColumnType("integer");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("BranchId", "SortOrder");
+
+                    b.ToTable("DeliveryZones");
+                });
+
             modelBuilder.Entity("Ninja.Tenant.API.Model.Tenant", b =>
                 {
                     b.Property<int>("Id")
@@ -330,6 +368,36 @@ namespace Ninja.Tenant.API.Migrations
                         .IsRequired();
 
                     b.Navigation("ReceiptFooter");
+                });
+
+            modelBuilder.Entity("Ninja.Tenant.API.Model.DeliveryZone", b =>
+                {
+                    b.HasOne("Ninja.Tenant.API.Model.Branch", null)
+                        .WithMany()
+                        .HasForeignKey("BranchId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.OwnsOne("Ninja.LocalizedText", "Name", b1 =>
+                        {
+                            b1.Property<int>("DeliveryZoneId");
+
+                            b1.Property<string>("Ar");
+
+                            b1.Property<string>("En");
+
+                            b1.HasKey("DeliveryZoneId");
+
+                            b1.ToTable("DeliveryZones");
+
+                            b1.ToJson("Name");
+
+                            b1.WithOwner()
+                                .HasForeignKey("DeliveryZoneId");
+                        });
+
+                    b.Navigation("Name")
+                        .IsRequired();
                 });
 
             modelBuilder.Entity("Ninja.Tenant.API.Model.Tenant", b =>

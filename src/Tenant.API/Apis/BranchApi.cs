@@ -46,6 +46,9 @@ public static class BranchApi
             // needs this as much as the admin: "Pos" = Admin, Owner or Cashier
             .RequireAuthorization("Pos");
 
+        // Its named delivery areas, beside it
+        app.MapDeliveryZoneApi();
+
         return app;
     }
 
