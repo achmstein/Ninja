@@ -284,6 +284,16 @@ public sealed record BranchSettingsView(
     bool RequireSignInForDelivery,
     double[][]? DeliveryArea = null);
 
+/// <summary>One of a branch's named delivery areas, as Tenant.API's list gives it.</summary>
+public sealed record DeliveryZoneView(
+    int Id,
+    LocalizedText? Name,
+    decimal Fee,
+    decimal? MinimumOrder,
+    int? EtaMinutes,
+    bool IsOn,
+    double[][]? Shape = null);
+
 // --- Notification ------------------------------------------------------------
 
 public sealed record AnnouncementView(int Id, string? Title, string? Body, string? SentBy, DateTime SentAt, int RecipientCount);

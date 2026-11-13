@@ -239,6 +239,40 @@ public sealed class OperationsReadToolsTests
         var delivery = branches[0].GetProperty("delivery");
         Assert.IsTrue(delivery.GetProperty("on").GetBoolean());
         Assert.AreEqual(25m, delivery.GetProperty("fee").GetDecimal());
+        Assert.IsFalse(
+            branches[0].TryGetProperty("deliveryAreas", out var none) && none.ValueKind != System.Text.Json.JsonValueKind.Null,
+            "none listed: the branch's own fee holds everywhere");
+    }
+
+    [TestMethod]
+    public async Task Branch_settings_list_the_named_delivery_areas_with_what_each_asks()
+    {
+        var bench = new Bench();
+        bench.Handler.OnJson("GET", "tenant-api/api/branches/all", _ => new object[]
+        {
+            new { id = 1, name = new { en = "Nasr City", ar = "مدينة نصر" }, address = (object?)null, phone = (string?)null, taxNumber = (string?)null, isActive = true, displayOrder = 1, dayStartTime = "17:00", dayEndTime = "05:00", isOrderingEnabled = true, isReservationsEnabled = true, requireSignInForTableOrders = false, latitude = 30.05, longitude = 31.34, isDeliveryEnabled = true, deliveryRadiusKm = 5m, deliveryFee = 25m, deliveryMinimumOrder = 100m, requireSignInForDelivery = false },
+        });
+        bench.Handler.OnJson("GET", "tenant-api/api/branches/1/delivery-zones", _ => new object[]
+        {
+            new { id = 7, name = new { en = "Zamalek", ar = "الزمالك" }, fee = 40m, minimumOrder = (decimal?)150m, etaMinutes = (int?)45, isOn = true, shape = new[] { new[] { 30.05, 31.21 }, new[] { 30.07, 31.21 }, new[] { 30.07, 31.23 } } },
+            new { id = 8, name = new { en = "Zahraa", ar = (string?)null }, fee = 30m, minimumOrder = (decimal?)null, etaMinutes = (int?)null, isOn = false, shape = (double[][]?)null },
+        });
+        bench.Handler.OnJson("GET", "tenant-api/api/tenant", _ => new { name = new { en = "Chillax" }, locale = new { country = "EG", currency = "EGP", timeZone = "Africa/Cairo", language = "ar" } });
+
+        var result = await Tools(bench).GetBranchSettings("nasr", CancellationToken.None);
+
+        Assert.AreNotEqual(true, result.IsError, Bench.TextOf(result));
+        var areas = Bench.JsonOf(result).GetProperty("branches")[0].GetProperty("deliveryAreas").EnumerateArray().ToList();
+        Assert.AreEqual(2, areas.Count);
+        Assert.AreEqual("Zamalek", areas[0].GetProperty("name").GetString());
+        Assert.AreEqual("الزمالك", areas[0].GetProperty("nameAr").GetString());
+        Assert.AreEqual(40m, areas[0].GetProperty("fee").GetDecimal());
+        Assert.AreEqual(150m, areas[0].GetProperty("minimumOrder").GetDecimal());
+        Assert.AreEqual(45, areas[0].GetProperty("minutes").GetInt32());
+        Assert.IsTrue(areas[0].GetProperty("drawnOnMap").GetBoolean());
+        Assert.AreEqual(100m, areas[1].GetProperty("minimumOrder").GetDecimal(), "none of its own: the branch's");
+        Assert.IsFalse(areas[1].GetProperty("on").GetBoolean());
+        Assert.IsFalse(areas[1].GetProperty("drawnOnMap").GetBoolean());
     }
 
     [TestMethod]

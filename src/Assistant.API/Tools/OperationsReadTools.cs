@@ -359,7 +359,7 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
     }
 
     [McpServerTool(Name = "get_branch_settings", Title = "Branch settings", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("How each branch is set up: address, phone, tax number, business-day hours, whether online ordering, reservations and delivery are on, whether table orders or deliveries need a signed-in customer, and the delivery radius (or whether an area is drawn on the map instead, which then decides where the branch delivers), fee and minimum order. Use for 'is delivery on at Maadi', 'what is our delivery fee', 'what time does the day start'.")]
+    [Description("How each branch is set up: address, phone, tax number, business-day hours, whether online ordering, reservations and delivery are on, whether table orders or deliveries need a signed-in customer, and the delivery radius (or whether an area is drawn on the map instead, which then decides where the branch delivers), fee and minimum order, and its named delivery areas, each with its own fee (and minimum, minutes, and whether it is switched off for now); the branch's own fee holds anywhere outside them. Use for 'is delivery on at Maadi', 'what is our delivery fee', 'how much is delivery to Zamalek', 'what time does the day start'.")]
     public async Task<CallToolResult> GetBranchSettings(
         [Description(BranchDescription)] string? branch = null,
         CancellationToken ct = default)
@@ -370,6 +370,15 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
         var all = await api.GetAsync<List<BranchSettingsView>>("tenant-api", "/api/branches/all", null, ct);
         if (!all.IsOk) return ToolResults.Fail(all.Error!);
         var asked = branches!.Select(b => b.Id).ToHashSet();
+
+        // The named areas of the branches that deliver: a list each, read beside the branch. One that
+        // cannot be read is left out rather than failing what was asked about the branch itself
+        var areas = new Dictionary<int, List<DeliveryZoneView>>();
+        foreach (var b in all.Value!.Where(b => asked.Contains(b.Id) && b.IsDeliveryEnabled))
+        {
+            var zones = await api.GetAsync<List<DeliveryZoneView>>("tenant-api", $"/api/branches/{b.Id}/delivery-zones", null, ct);
+            if (zones.IsOk && zones.Value is { Count: > 0 } list) areas[b.Id] = list;
+        }
 
         return ToolResults.Ok(new
         {
@@ -391,6 +400,17 @@ public sealed class OperationsReadTools(TenantContext tenant, NinjaApiClient api
                 delivery = b.IsDeliveryEnabled
                     ? new { on = true, radiusKm = b.DeliveryRadiusKm, areaDrawn = (bool?)(b.DeliveryArea is { Length: >= 3 }), fee = (decimal?)b.DeliveryFee, minimumOrder = (decimal?)b.DeliveryMinimumOrder, needsSignIn = (bool?)b.RequireSignInForDelivery }
                     : new { on = false, radiusKm = (decimal?)null, areaDrawn = (bool?)null, fee = (decimal?)null, minimumOrder = (decimal?)null, needsSignIn = (bool?)null },
+                // Null when the branch lists none: its own fee then holds everywhere it delivers
+                deliveryAreas = areas.GetValueOrDefault(b.Id)?.Select(z => new
+                {
+                    name = z.Name?.Display,
+                    nameAr = z.Name?.Arabic,
+                    fee = z.Fee,
+                    minimumOrder = z.MinimumOrder ?? b.DeliveryMinimumOrder,
+                    minutes = z.EtaMinutes,
+                    on = z.IsOn,
+                    drawnOnMap = z.Shape is { Length: >= 3 },
+                }),
                 locationPinned = b.Latitude is not null && b.Longitude is not null,
             }),
         });
