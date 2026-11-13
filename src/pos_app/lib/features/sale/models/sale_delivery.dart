@@ -1,4 +1,42 @@
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../deliveries/models/delivery_order.dart';
+
+/// The branch's named area a delivery on the sale goes to, as it stood when
+/// the cashier picked it: the sale pad asks the branch again for what it
+/// charges there now, and this is what shows until it answers
+class SaleDeliveryZone {
+  final int id;
+  final LocalizedText name;
+  final double fee;
+  final double minimumOrder;
+  final int? etaMinutes;
+
+  const SaleDeliveryZone({required this.id, required this.name, this.fee = 0, this.minimumOrder = 0, this.etaMinutes});
+
+  factory SaleDeliveryZone.of(DeliveryZone zone) => SaleDeliveryZone(
+        id: zone.zoneId,
+        name: zone.name,
+        fee: zone.fee,
+        minimumOrder: zone.minimumOrder,
+        etaMinutes: zone.etaMinutes,
+      );
+
+  Map<String, dynamic> toJson() => {
+        'id': id,
+        'name': name.toJson(),
+        'fee': fee,
+        'minimumOrder': minimumOrder,
+        'etaMinutes': etaMinutes,
+      };
+
+  factory SaleDeliveryZone.fromJson(Map<String, dynamic> json) => SaleDeliveryZone(
+        id: (json['id'] as num?)?.toInt() ?? 0,
+        name: DeliveryZone.nameOf(json['name']) ?? const LocalizedText(),
+        fee: (json['fee'] as num?)?.toDouble() ?? 0,
+        minimumOrder: (json['minimumOrder'] as num?)?.toDouble() ?? 0,
+        etaMinutes: (json['etaMinutes'] as num?)?.toInt(),
+      );
+}
 
 /// Where a sale the till took over the phone goes: the words the caller
 /// said, the number the rider calls, and a pin only when they shared their
@@ -19,6 +57,10 @@ class SaleDelivery {
   /// Another branch, nearer the caller, makes and delivers it; null keeps it here
   final DeliveryAlternative? sendTo;
 
+  /// The branch's named area the cashier picked (or the pin fell in): its fee
+  /// is what the delivery adds. Never with [sendTo]: an area is one branch's own.
+  final SaleDeliveryZone? zone;
+
   const SaleDelivery({
     required this.address,
     required this.phone,
@@ -30,12 +72,21 @@ class SaleDelivery {
     this.latitude,
     this.longitude,
     this.sendTo,
+    this.zone,
   });
 
   bool get hasPin => latitude != null && longitude != null;
 
-  /// The same delivery, made here after all
-  SaleDelivery keptHere() => SaleDelivery(
+  /// The area's id as the order carries it: none on an order sent to another branch
+  int? get zoneId => sendTo == null ? zone?.id : null;
+
+  SaleDelivery copyWith({
+    DeliveryAlternative? sendTo,
+    bool clearSendTo = false,
+    SaleDeliveryZone? zone,
+    bool clearZone = false,
+  }) =>
+      SaleDelivery(
         address: address,
         phone: phone,
         building: building,
@@ -45,10 +96,20 @@ class SaleDelivery {
         location: location,
         latitude: latitude,
         longitude: longitude,
+        sendTo: clearSendTo ? null : sendTo ?? this.sendTo,
+        zone: clearZone ? null : zone ?? this.zone,
       );
 
-  /// What it adds to the bill: the fee of the branch that delivers it
-  double feeWith(double hereFee) => sendTo?.fee ?? hereFee;
+  /// The same delivery, made here after all
+  SaleDelivery keptHere() => copyWith(clearSendTo: true);
+
+  /// The same delivery with no named area: the branch's own fee holds again
+  SaleDelivery withoutZone() => copyWith(clearZone: true);
+
+  /// What it adds to the bill: the fee of the branch that delivers it, or of
+  /// the named area it goes to here. [zoneFee] is what the branch says that
+  /// area costs now; until it has answered, what it cost when it was picked.
+  double feeWith(double hereFee, {double? zoneFee}) => sendTo?.fee ?? (zone == null ? hereFee : zoneFee ?? zone!.fee);
 
   static String? _orNull(String value) => value.trim().isEmpty ? null : value.trim();
 
@@ -62,6 +123,7 @@ class SaleDelivery {
         'floor': _orNull(floor),
         'apartment': _orNull(apartment),
         'directions': _orNull(directions),
+        if (zoneId != null) 'zoneId': zoneId,
       };
 
   Map<String, dynamic> toJson() => {
@@ -75,6 +137,7 @@ class SaleDelivery {
         'latitude': latitude,
         'longitude': longitude,
         'sendTo': sendTo?.toJson(),
+        if (zone != null) 'zone': zone!.toJson(),
       };
 
   factory SaleDelivery.fromJson(Map<String, dynamic> json) => SaleDelivery(
@@ -88,6 +151,7 @@ class SaleDelivery {
         latitude: (json['latitude'] as num?)?.toDouble(),
         longitude: (json['longitude'] as num?)?.toDouble(),
         sendTo: json['sendTo'] is Map ? DeliveryAlternative.fromJson((json['sendTo'] as Map).cast<String, dynamic>()) : null,
+        zone: json['zone'] is Map ? SaleDeliveryZone.fromJson((json['zone'] as Map).cast<String, dynamic>()) : null,
       );
 }
 

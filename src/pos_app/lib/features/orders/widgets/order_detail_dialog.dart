@@ -197,12 +197,16 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                           const SizedBox(width: 8),
                           Expanded(
                             child: Text(
-                              delivery.line(
-                                building: l10n.deliveryBuilding,
-                                floor: l10n.deliveryFloor,
-                                apartment: l10n.deliveryApartment,
-                                separator: l10n.listSeparator,
-                              ),
+                              // The branch's named area first, when the delivery was priced by one
+                              [
+                                if ((delivery.zoneName?.localized(context) ?? '').isNotEmpty) delivery.zoneName!.localized(context),
+                                delivery.line(
+                                  building: l10n.deliveryBuilding,
+                                  floor: l10n.deliveryFloor,
+                                  apartment: l10n.deliveryApartment,
+                                  separator: l10n.listSeparator,
+                                ),
+                              ].join(' · '),
                               style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),
@@ -220,6 +224,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                           [
                             bidiIsolate(showPhone(delivery.phone)),
                             l10n.deliveryFeeIs(money(context, delivery.fee)),
+                            if (delivery.etaMinutes != null) l10n.deliveryAboutMinutes(delivery.etaMinutes!),
                             if ((delivery.riderName ?? '').isNotEmpty) l10n.deliveryRiderIs(delivery.riderName!),
                           ].join(' · '),
                           style: muted,

@@ -97,7 +97,7 @@ class DeliveryCard extends StatelessWidget {
                     Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                     const SizedBox(width: 6),
                     Expanded(
-                      child: Text(addressLine(l10n, order.delivery),
+                      child: Text(areaAddressLine(context, l10n, order.delivery),
                           maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                     ),
                   ],

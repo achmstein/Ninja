@@ -6,6 +6,7 @@ import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:uuid/uuid.dart';
 import '../../orders/models/stock_disposition.dart';
 import '../../orders/services/order_service.dart';
+import '../../sale/models/sale_delivery.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
@@ -53,6 +54,31 @@ final tillDeliveryTermsProvider = FutureProvider.autoDispose<TillDeliveryQuote>(
   ref.watch(selectedBranchIdProvider);
   if (!ref.watch(featuresProvider.select((f) => f.delivery))) return const TillDeliveryQuote();
   return ref.read(deliveryRepositoryProvider).tillQuote();
+});
+
+/// Which of the branch's named areas a sale's delivery is priced by: the one
+/// the cashier picked by name ([zoneId]), else whichever its pin falls in
+/// ([location], "lat, lng"), as Ordering itself decides when the order is placed
+typedef SaleDeliveryWhere = ({int? zoneId, String? location});
+
+/// What the sale pad asks the branch about a delivery on the sale: the area
+/// picked by name, else the pin; null when it has neither (or goes to another
+/// branch), where the branch's own fee holds
+SaleDeliveryWhere? saleDeliveryWhere(SaleDelivery? delivery) {
+  if (delivery == null || delivery.sendTo != null) return null;
+  if (delivery.zoneId != null) return (zoneId: delivery.zoneId, location: null);
+  if (delivery.hasPin) return (zoneId: null, location: '${delivery.latitude}, ${delivery.longitude}');
+  return null;
+}
+
+/// What the branch charges for the delivery on the sale, where a named area
+/// prices it: the area's fee as it is now. Asked by name, an answer for no
+/// area means the owner took it off the list (Ordering answers the branch's
+/// own fee then, without refusing).
+final tillSaleTermsProvider = FutureProvider.autoDispose.family<TillDeliveryQuote, SaleDeliveryWhere>((ref, where) async {
+  ref.watch(selectedBranchIdProvider);
+  if (!ref.watch(featuresProvider.select((f) => f.delivery))) return const TillDeliveryQuote();
+  return ref.read(deliveryRepositoryProvider).tillQuote(location: where.location, zoneId: where.zoneId);
 });
 
 /// The till's moves on a delivery: each one, then the board and the riders

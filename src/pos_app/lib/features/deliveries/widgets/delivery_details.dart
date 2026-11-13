@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/money.dart';
@@ -21,6 +22,13 @@ String addressLine(AppLocalizations l10n, OrderDelivery d) => d.line(
       apartment: l10n.deliveryApartment,
       separator: l10n.listSeparator,
     );
+
+/// The same line with the branch's named area before it ("Maadi Degla · Road 9 · Building 4"),
+/// when the delivery was priced by one
+String areaAddressLine(BuildContext context, AppLocalizations l10n, OrderDelivery d) {
+  final area = d.zoneName?.localized(context) ?? '';
+  return area.isEmpty ? addressLine(l10n, d) : '$area · ${addressLine(l10n, d)}';
+}
 
 /// Why the rider could not hand it over, in the till's language (the server keeps a code)
 String failReasonLabel(AppLocalizations l10n, String? code) => switch (code) {
@@ -74,7 +82,7 @@ class DeliveryDetails extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(addressLine(l10n, delivery), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+                    Text(areaAddressLine(context, l10n, delivery), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
                     if ((delivery.directions ?? '').isNotEmpty)
                       Text('"${delivery.directions}"', style: muted.copyWith(fontStyle: FontStyle.italic)),
                     if (!delivery.hasPin) Text(l10n.deliveryNoPin, style: muted),
@@ -130,6 +138,7 @@ class DeliveryDetails extends StatelessWidget {
                 ),
               if (delivery.distanceMeters != null) Text(distanceLabel(l10n, delivery.distanceMeters!), style: muted),
               Text('${l10n.deliveryFee}: ${delivery.fee > 0 ? money(context, delivery.fee) : l10n.deliveryFree}', style: muted),
+              if (delivery.etaMinutes != null) Text(l10n.deliveryAboutMinutes(delivery.etaMinutes!), style: muted),
             ],
           ),
         ],

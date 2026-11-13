@@ -164,6 +164,18 @@ class TillDeliveryQuote {
   /// outside it is said without a radius (which reads 0 then)
   final bool hasArea;
 
+  /// The branch's named area the delivery is in: the one asked for by name,
+  /// else the one the pin fell in. [fee] and [minimumOrder] are then its own.
+  final int? zoneId;
+  final LocalizedText? zoneName;
+  final int? etaMinutes;
+
+  /// That area is switched off for a while
+  final bool zoneOff;
+
+  /// This branch's named areas, in the owner's order: what the cashier picks from by name
+  final List<DeliveryZone> zones;
+
   const TillDeliveryQuote({
     this.delivers = false,
     this.inRange = true,
@@ -176,9 +188,17 @@ class TillDeliveryQuote {
     this.locationRead = true,
     this.alternatives = const [],
     this.hasArea = false,
+    this.zoneId,
+    this.zoneName,
+    this.etaMinutes,
+    this.zoneOff = false,
+    this.zones = const [],
   });
 
   bool get pinned => latitude != null && longitude != null;
+
+  /// The area the quote is for, off this branch's list; null when it is for none
+  DeliveryZone? get zone => zoneId == null ? null : zoneById(zones, zoneId!);
 
   factory TillDeliveryQuote.fromJson(Map<String, dynamic> json) => TillDeliveryQuote(
         delivers: json['delivers'] == true,
@@ -195,6 +215,11 @@ class TillDeliveryQuote {
             DeliveryAlternative.fromJson((a as Map).cast<String, dynamic>()),
         ],
         hasArea: json['hasArea'] == true,
+        zoneId: json['zoneId'] == null ? null : toInt(json['zoneId']),
+        zoneName: DeliveryZone.nameOf(json['zoneName']),
+        etaMinutes: json['etaMinutes'] == null ? null : toInt(json['etaMinutes']),
+        zoneOff: json['zoneOff'] == true,
+        zones: DeliveryZone.listOf(json['zones']),
       );
 }
 
@@ -218,6 +243,9 @@ class StaffDeliveryResolution {
   /// picks from by hand when the caller only said where they live
   final List<DeliveryAlternative> delivering;
 
+  /// Every named area of every branch that delivers: what the agent picks from by name
+  final List<DeliveryZone> zones;
+
   const StaffDeliveryResolution({
     this.delivers = false,
     this.latitude,
@@ -225,6 +253,7 @@ class StaffDeliveryResolution {
     this.locationRead = true,
     this.branches = const [],
     this.delivering = const [],
+    this.zones = const [],
   });
 
   bool get pinned => latitude != null && longitude != null;
@@ -266,6 +295,7 @@ class StaffDeliveryResolution {
               paused: b['paused'] == true,
             ),
         ],
+        zones: DeliveryZone.listOf(json['zones']),
       );
 }
 
@@ -280,12 +310,25 @@ class DeliveryAlternative {
   /// It paused its orders: it still takes one sent from a till, asked twice
   final bool paused;
 
+  /// That branch's named area the point is in, when it is in one: [fee] and
+  /// [minimumOrder] are then that area's
+  final int? zoneId;
+  final LocalizedText? zoneName;
+  final int? etaMinutes;
+
+  /// That area is switched off for a while
+  final bool zoneOff;
+
   const DeliveryAlternative({
     required this.branchId,
     required this.distanceMeters,
     this.fee = 0,
     this.minimumOrder = 0,
     this.paused = false,
+    this.zoneId,
+    this.zoneName,
+    this.etaMinutes,
+    this.zoneOff = false,
   });
 
   factory DeliveryAlternative.fromJson(Map<String, dynamic> json) => DeliveryAlternative(
@@ -294,6 +337,10 @@ class DeliveryAlternative {
         fee: toNumber(json['fee']),
         minimumOrder: toNumber(json['minimumOrder']),
         paused: json['paused'] == true,
+        zoneId: json['zoneId'] == null ? null : toInt(json['zoneId']),
+        zoneName: DeliveryZone.nameOf(json['zoneName']),
+        etaMinutes: json['etaMinutes'] == null ? null : toInt(json['etaMinutes']),
+        zoneOff: json['zoneOff'] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -302,7 +349,77 @@ class DeliveryAlternative {
         'fee': fee,
         'minimumOrder': minimumOrder,
         'paused': paused,
+        if (zoneId != null) 'zoneId': zoneId,
+        if (zoneName != null) 'zoneName': zoneName!.toJson(),
+        if (etaMinutes != null) 'etaMinutes': etaMinutes,
+        if (zoneOff) 'zoneOff': true,
       };
+}
+
+/// A branch's named delivery area, the way people say where they live
+/// ("Maadi Degla"): its own fee, the minimum that holds there, about how long
+/// it takes, and whether the branch is delivering there right now
+class DeliveryZone {
+  final int zoneId;
+  final int branchId;
+  final LocalizedText name;
+  final double fee;
+
+  /// What holds there: the area's own minimum, else the branch's
+  final double minimumOrder;
+  final int? etaMinutes;
+
+  /// False while the owner switched it off for a while
+  final bool on;
+
+  /// Its branch paused its customers' orders
+  final bool branchPaused;
+
+  /// It has a shape on the map, so a pin can fall in it
+  final bool drawn;
+
+  const DeliveryZone({
+    required this.zoneId,
+    required this.branchId,
+    required this.name,
+    this.fee = 0,
+    this.minimumOrder = 0,
+    this.etaMinutes,
+    this.on = true,
+    this.branchPaused = false,
+    this.drawn = false,
+  });
+
+  /// A localized name off the wire ({en, ar}, whatever map type carried it); null when there is none
+  static LocalizedText? nameOf(Object? value) {
+    if (value == null) return null;
+    final name = value is Map ? LocalizedText.fromJson(value.cast<String, dynamic>()) : LocalizedText.parse(value);
+    return name.isEmpty ? null : name;
+  }
+
+  static List<DeliveryZone> listOf(Object? value) => [
+        for (final z in (value as List<dynamic>? ?? const <dynamic>[])) DeliveryZone.fromJson((z as Map).cast<String, dynamic>()),
+      ];
+
+  factory DeliveryZone.fromJson(Map<String, dynamic> json) => DeliveryZone(
+        zoneId: toInt(json['zoneId']),
+        branchId: toInt(json['branchId']),
+        name: nameOf(json['name']) ?? const LocalizedText(),
+        fee: toNumber(json['fee']),
+        minimumOrder: toNumber(json['minimumOrder']),
+        etaMinutes: json['etaMinutes'] == null ? null : toInt(json['etaMinutes']),
+        on: json['on'] != false,
+        branchPaused: json['branchPaused'] == true,
+        drawn: json['drawn'] == true,
+      );
+}
+
+/// The area with [zoneId] in [zones]; null when the list no longer has it
+DeliveryZone? zoneById(List<DeliveryZone> zones, int zoneId) {
+  for (final z in zones) {
+    if (z.zoneId == zoneId) return z;
+  }
+  return null;
 }
 
 /// An address a caller had before: one they saved, or one an earlier

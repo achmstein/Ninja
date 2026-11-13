@@ -636,7 +636,34 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     // The way to send it out with a rider, while it is not going out yet
     final offerDelivery = canDeliver && !deliveryBlocked && delivery == null;
     // The fee of the branch that delivers it: this one, or the one it is sent to
-    final deliveryFee = delivery != null ? delivery.feeWith(terms!.fee) : 0.0;
+    // A named area prices the delivery as Ordering will: the one picked by name, else the one the
+    // pin falls in (with no area picked, the order is still charged that area's fee). Asked by
+    // name, an answer for no area means the owner took it off: back to the branch's own fee
+    final where = saleDeliveryWhere(delivery);
+    final areaTerms = where == null ? null : ref.watch(tillSaleTermsProvider(where)).value;
+    final saleZoneId = where?.zoneId;
+    final zoneGone = saleZoneId != null && areaTerms != null && areaTerms.delivers && areaTerms.zoneId != saleZoneId;
+    if (zoneGone) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (!mounted) return;
+        final current = ref.read(saleProvider).delivery;
+        if (current?.zoneId != saleZoneId) return;
+        ref.read(saleProvider.notifier).setDelivery(current!.withoutZone());
+        showPosToast(context, PosToastType.warning, l10n.deliveryAreaGone);
+      });
+    }
+    // Until the branch answers: the area's fee as it was when picked, or the branch's own for a pin
+    final answered = areaTerms != null && areaTerms.delivers && !zoneGone;
+    final deliveryFee = delivery == null
+        ? 0.0
+        : saleZoneId != null
+            ? delivery.feeWith(terms!.fee, zoneFee: answered ? areaTerms.fee : null)
+            : delivery.feeWith(answered ? areaTerms.fee : terms!.fee);
+    final deliveryMinutes = where == null || zoneGone
+        ? null
+        : answered
+            ? areaTerms.etaMinutes
+            : delivery?.zone?.etaMinutes;
     final total = saleTotal(lines) + deliveryFee;
     // The call centre says which branch this order is for, and whether it is delivered or collected
     final callCentreBranch = ref.watch(callCentreModeProvider) ? ref.watch(branchProvider).selectedBranch?.name.localized(context) : null;
@@ -1101,7 +1128,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                           Row(
                             children: [
                               Expanded(
-                                child: Text(l10n.deliveryFee,
+                                child: Text(
+                                    deliveryMinutes == null
+                                        ? l10n.deliveryFee
+                                        : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(deliveryMinutes)}',
                                     style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
                               ),
                               Text(deliveryFee > 0 ? money(context, deliveryFee) : l10n.deliveryFree,

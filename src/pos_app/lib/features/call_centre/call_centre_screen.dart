@@ -18,6 +18,7 @@ import '../../core/widgets/pos_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../deliveries/models/delivery_order.dart';
 import '../deliveries/widgets/address_search_field.dart';
+import '../deliveries/widgets/area_picker_field.dart';
 import '../deliveries/widgets/delivery_details.dart';
 import '../sale/models/sale_delivery.dart';
 import '../sale/models/sale_line.dart';
@@ -116,6 +117,8 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
     if (customer == null || !_phoneOk || (delivery && _street.text.trim().isEmpty)) return;
     final resolution = call.resolution;
     final pinned = resolution != null && call.resolvedFor == _location.text.trim() && resolution.pinned;
+    // The named area, when the order goes to its own branch
+    final zone = call.zone != null && call.zone!.branchId == branchId ? call.zone : null;
     await _controller.start(
       branchId: branchId,
       customer: customer,
@@ -130,6 +133,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               location: _location.text.trim(),
               latitude: pinned ? resolution.latitude : null,
               longitude: pinned ? resolution.longitude : null,
+              zone: zone == null ? null : SaleDeliveryZone.of(zone),
             )
           : null,
     );
@@ -182,6 +186,8 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
     final branches = ref.watch(branchProvider).branches;
     final resolution = call.resolvedFor == _location.text.trim() ? call.resolution : null;
     final chosen = resolution == null ? null : call.chosen;
+    // The area the delivery goes to, picked by name or found by the point on the map
+    final zone = chosen != null && call.zone?.branchId == chosen.branchId ? call.zone : null;
 
     String nameOf(int id) {
       for (final b in branches) {
@@ -271,6 +277,20 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                   ),
                 ),
             ],
+            // The area the caller names, where the branches keep a list of them: picking one
+            // picks its branch and its fee, with no point on the map needed
+            if (call.zones.isNotEmpty) ...[
+              const SizedBox(height: 12),
+              AreaPickerField(
+                zones: call.zones,
+                picked: zone,
+                branchName: nameOf,
+                onPick: (picked) {
+                  setState(() => _confirming = null);
+                  _controller.pickZone(picked);
+                },
+              ),
+            ],
             // What a caller says first is the street or a landmark: a pick fills the location and
             // finds the branch at once, and the street when it is still empty. With Google Maps on
             if (ref.watch(brandProvider.select((b) => b.addressSearch))) ...[
@@ -341,7 +361,29 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                   child: Text(l10n.retry),
                 ),
               ),
-            ] else if (resolution != null) ...[
+            ] else if (resolution != null && zone != null && chosen != null)
+              // The area says the branch: what it asks there, on one line
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
+                    child: Icon(FIcons.circleCheck, size: Sizes.iconSmall, color: theme.colors.primary),
+                  ),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      [
+                        l10n.callCentreBranchFee(nameOf(chosen.branchId), zone.fee > 0 ? money(context, zone.fee) : l10n.deliveryFree),
+                        if (zone.minimumOrder > 0) l10n.deliveryAreaMinimum(money(context, zone.minimumOrder)),
+                        if (zone.etaMinutes != null) l10n.deliveryAboutMinutes(zone.etaMinutes!),
+                      ].join(' · '),
+                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                    ),
+                  ),
+                ],
+              )
+            else if (resolution != null) ...[
               if (resolution.offers.isEmpty)
                 Text(l10n.callCentreNoBranch, style: muted.copyWith(color: amber))
               else ...[

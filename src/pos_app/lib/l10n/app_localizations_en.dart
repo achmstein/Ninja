@@ -1938,6 +1938,43 @@ class AppLocalizationsEn extends AppLocalizations {
   String get callCentre => 'Call centre';
 
   @override
+  String get deliveryAreaLabel => 'Area';
+
+  @override
+  String get deliveryAreaSearch => 'Type the area the customer says';
+
+  @override
+  String get deliveryAreaNone => 'No area by that name';
+
+  @override
+  String get deliveryAreaOff => 'off for now';
+
+  @override
+  String get deliveryAreaOffTapAgain =>
+      'off for now, tap again to send it there';
+
+  @override
+  String deliveryAboutMinutes(int minutes) {
+    return 'about $minutes min';
+  }
+
+  @override
+  String deliveryAreaMinimum(String amount) {
+    return 'minimum $amount';
+  }
+
+  @override
+  String get deliveryAreaClear => 'Clear the area';
+
+  @override
+  String get deliveryAreaGone =>
+      'That area isn\'t on this branch\'s list any more. Pick the area again.';
+
+  @override
+  String get deliveryAreaOffNow =>
+      'The branch isn\'t delivering to that area right now.';
+
+  @override
   String get callCentreNextCaller => 'Next caller';
 
   @override

@@ -219,6 +219,12 @@ class OrderDelivery {
   /// What the till counted in from the rider for it
   final double? cashCollected;
 
+  /// The branch's named area it was priced by, as it was called when the order was placed
+  final LocalizedText? zoneName;
+
+  /// About how long that area takes, when the owner said
+  final int? etaMinutes;
+
   const OrderDelivery({
     this.latitude,
     this.longitude,
@@ -238,6 +244,8 @@ class OrderDelivery {
     this.failureReason,
     this.cashHandedInAt,
     this.cashCollected,
+    this.zoneName,
+    this.etaMinutes,
   });
 
   static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
@@ -249,6 +257,12 @@ class OrderDelivery {
   static String? _text(Object? value) {
     final text = value is String ? value.trim() : null;
     return text == null || text.isEmpty ? null : text;
+  }
+
+  static LocalizedText? _name(Object? value) {
+    if (value == null) return null;
+    final name = value is Map ? LocalizedText.fromJson(value.cast<String, dynamic>()) : LocalizedText.parse(value);
+    return name.isEmpty ? null : name;
   }
 
   static OrderDelivery? parse(Object? json) {
@@ -272,6 +286,8 @@ class OrderDelivery {
       failureReason: _text(json['failureReason']),
       cashHandedInAt: _time(json['cashHandedInAt']),
       cashCollected: _maybe(json['cashCollected']),
+      zoneName: _name(json['zoneName']),
+      etaMinutes: _maybe(json['etaMinutes'])?.round(),
     );
   }
 

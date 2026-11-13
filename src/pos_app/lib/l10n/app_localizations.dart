@@ -3488,6 +3488,66 @@ abstract class AppLocalizations {
   /// **'Call centre'**
   String get callCentre;
 
+  /// No description provided for @deliveryAreaLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Area'**
+  String get deliveryAreaLabel;
+
+  /// No description provided for @deliveryAreaSearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Type the area the customer says'**
+  String get deliveryAreaSearch;
+
+  /// No description provided for @deliveryAreaNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No area by that name'**
+  String get deliveryAreaNone;
+
+  /// No description provided for @deliveryAreaOff.
+  ///
+  /// In en, this message translates to:
+  /// **'off for now'**
+  String get deliveryAreaOff;
+
+  /// No description provided for @deliveryAreaOffTapAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'off for now, tap again to send it there'**
+  String get deliveryAreaOffTapAgain;
+
+  /// No description provided for @deliveryAboutMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'about {minutes} min'**
+  String deliveryAboutMinutes(int minutes);
+
+  /// No description provided for @deliveryAreaMinimum.
+  ///
+  /// In en, this message translates to:
+  /// **'minimum {amount}'**
+  String deliveryAreaMinimum(String amount);
+
+  /// No description provided for @deliveryAreaClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear the area'**
+  String get deliveryAreaClear;
+
+  /// No description provided for @deliveryAreaGone.
+  ///
+  /// In en, this message translates to:
+  /// **'That area isn\'t on this branch\'s list any more. Pick the area again.'**
+  String get deliveryAreaGone;
+
+  /// No description provided for @deliveryAreaOffNow.
+  ///
+  /// In en, this message translates to:
+  /// **'The branch isn\'t delivering to that area right now.'**
+  String get deliveryAreaOffNow;
+
   /// No description provided for @callCentreNextCaller.
   ///
   /// In en, this message translates to:

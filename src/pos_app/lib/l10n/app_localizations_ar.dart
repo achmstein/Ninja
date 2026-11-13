@@ -1955,6 +1955,42 @@ class AppLocalizationsAr extends AppLocalizations {
   String get callCentre => 'مركز الاتصال';
 
   @override
+  String get deliveryAreaLabel => 'المنطقة';
+
+  @override
+  String get deliveryAreaSearch => 'اكتب المنطقة التي يذكرها العميل';
+
+  @override
+  String get deliveryAreaNone => 'لا توجد منطقة بهذا الاسم';
+
+  @override
+  String get deliveryAreaOff => 'متوقفة الآن';
+
+  @override
+  String get deliveryAreaOffTapAgain =>
+      'متوقفة الآن، اضغط مرة أخرى للإرسال إليها';
+
+  @override
+  String deliveryAboutMinutes(int minutes) {
+    return 'حوالي $minutes دقيقة';
+  }
+
+  @override
+  String deliveryAreaMinimum(String amount) {
+    return 'الحد الأدنى $amount';
+  }
+
+  @override
+  String get deliveryAreaClear => 'إزالة المنطقة';
+
+  @override
+  String get deliveryAreaGone =>
+      'لم تعد هذه المنطقة ضمن مناطق الفرع. اختر المنطقة مجددًا.';
+
+  @override
+  String get deliveryAreaOffNow => 'الفرع لا يوصّل إلى هذه المنطقة الآن.';
+
+  @override
   String get callCentreNextCaller => 'المتصل التالي';
 
   @override

@@ -39,6 +39,8 @@ String describeDeliveryError(Object error, AppLocalizations l10n) {
     'delivery.send_not_delivery' => l10n.deliveryErrorSendNotDelivery,
     'delivery.send_with_ticket' => l10n.deliveryErrorSendWithTicket,
     'delivery.send_branch_closed' => l10n.deliveryErrorSendBranchClosed,
+    'delivery.area_unknown' => l10n.deliveryAreaGone,
+    'delivery.area_off' => l10n.deliveryAreaOffNow,
     _ => l10n.deliveryActionFailed,
   };
 }

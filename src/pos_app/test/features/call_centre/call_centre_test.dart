@@ -180,6 +180,54 @@ void main() {
       expect([for (final b in resolution.offers) b.branchId], [_maadi]);
       expect(resolution.suggested?.branchId, _maadi);
     });
+
+    test("lists every branch's named areas, and the area the point is in at each branch", () {
+      final resolution = StaffDeliveryResolution.fromJson({
+        'delivers': true,
+        'latitude': 29.96,
+        'longitude': 31.25,
+        'branches': [
+          {
+            'branchId': _maadi,
+            'distanceMeters': 600,
+            'fee': '35.00',
+            'minimumOrder': 150,
+            'paused': false,
+            'zoneId': 11,
+            'zoneName': {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'},
+            'etaMinutes': '40',
+            'zoneOff': true,
+          },
+          {'branchId': _downtown, 'distanceMeters': 9000, 'fee': 20, 'minimumOrder': 0, 'paused': false, 'zoneId': null, 'zoneName': null},
+        ],
+        'zones': [
+          {
+            'zoneId': '11',
+            'branchId': _maadi,
+            'name': {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'},
+            'fee': '35.00',
+            'minimumOrder': 150,
+            'etaMinutes': 40,
+            'on': false,
+            'branchPaused': true,
+            'drawn': true,
+          },
+          {'zoneId': 12, 'branchId': _downtown, 'name': {'en': null, 'ar': 'جاردن سيتي'}, 'fee': 0, 'minimumOrder': 0, 'etaMinutes': null, 'on': true, 'branchPaused': false, 'drawn': false},
+        ],
+      });
+
+      final at = resolution.branches.first;
+      expect((at.zoneId, at.zoneName?.ar, at.etaMinutes, at.zoneOff, at.fee), (11, 'دجلة المعادي', 40, true, 35));
+      expect(resolution.branches.last.zoneId, isNull);
+      expect(resolution.branches.last.zoneName, isNull);
+      final zone = resolution.zones.first;
+      expect((zone.zoneId, zone.branchId, zone.name.en, zone.fee, zone.minimumOrder, zone.etaMinutes), (11, _maadi, 'Maadi Degla', 35, 150, 40));
+      expect((zone.on, zone.branchPaused, zone.drawn), (false, true, true));
+      final other = resolution.zones.last;
+      expect((other.name.en, other.name.ar, other.etaMinutes, other.on, other.drawn), (null, 'جاردن سيتي', null, true, false));
+      expect(const StaffDeliveryResolution().zones, isEmpty);
+      expect(StaffDeliveryResolution.fromJson({'delivers': true}).zones, isEmpty, reason: 'an older answer lists none');
+    });
   });
 
   group('one call', () {
@@ -211,6 +259,142 @@ void main() {
 
       controller.choose(deliveries.resolution.branches.last);
       expect(container.read(callCentreControllerProvider).chosen?.branchId, _downtown);
+    });
+
+    group('a named area', () {
+      const degla = DeliveryZone(zoneId: 11, branchId: _maadi, name: LocalizedText(en: 'Maadi Degla', ar: 'دجلة المعادي'), fee: 35, minimumOrder: 150, etaMinutes: 40);
+      const garden = DeliveryZone(zoneId: 12, branchId: _downtown, name: LocalizedText(en: 'Garden City'), fee: 15, on: false);
+
+      test("picked by name sends the order to that area's branch, whatever the map chose; clearing goes back", () async {
+        final (container, deliveries) = await _container();
+        deliveries.resolution = const StaffDeliveryResolution(
+          delivers: true,
+          latitude: 29.96,
+          longitude: 31.25,
+          branches: [
+            DeliveryAlternative(branchId: _downtown, distanceMeters: 600, fee: 20),
+            DeliveryAlternative(branchId: _maadi, distanceMeters: 9000, fee: 25),
+          ],
+          zones: [degla, garden],
+        );
+        final controller = container.read(callCentreControllerProvider.notifier);
+        await controller.resolve('29.96, 31.25');
+        expect(container.read(callCentreControllerProvider).chosen?.branchId, _downtown);
+        expect(container.read(callCentreControllerProvider).zone, isNull, reason: 'the point is in no named area');
+        expect(container.read(callCentreControllerProvider).zones, hasLength(2));
+
+        controller.pickZone(degla);
+        var call = container.read(callCentreControllerProvider);
+        expect(call.zone?.zoneId, 11);
+        expect(call.chosen?.branchId, _maadi);
+        expect(call.chosen?.fee, 35, reason: "the area's fee, not the branch's");
+        expect(call.chosen?.distanceMeters, 9000);
+
+        // The caller is put on the map afterwards: the area they named still holds
+        await controller.resolve('29.97, 31.26');
+        call = container.read(callCentreControllerProvider);
+        expect(call.zone?.zoneId, 11);
+        expect(call.chosen?.branchId, _maadi);
+
+        controller.pickZone(null);
+        call = container.read(callCentreControllerProvider);
+        expect(call.zone, isNull);
+        expect(call.chosen?.branchId, _downtown, reason: 'back to the branch the map suggests');
+      });
+
+      test('the point on the map pre-selects the area it is in at the suggested branch', () async {
+        final (container, deliveries) = await _container();
+        deliveries.resolution = const StaffDeliveryResolution(
+          delivers: true,
+          latitude: 29.96,
+          longitude: 31.25,
+          branches: [
+            DeliveryAlternative(branchId: _maadi, distanceMeters: 600, fee: 35, minimumOrder: 150, zoneId: 11, etaMinutes: 40),
+            DeliveryAlternative(branchId: _downtown, distanceMeters: 9000, fee: 20),
+          ],
+          zones: [degla, garden],
+        );
+        final controller = container.read(callCentreControllerProvider.notifier);
+        await controller.resolve('29.96, 31.25');
+        var call = container.read(callCentreControllerProvider);
+        expect(call.chosen?.branchId, _maadi);
+        expect(call.zone?.zoneId, 11);
+        expect(call.zone?.name.en, 'Maadi Degla');
+
+        // Another branch picked off the list: its own area at that point, here none
+        controller.choose(deliveries.resolution.branches.last);
+        call = container.read(callCentreControllerProvider);
+        expect(call.chosen?.branchId, _downtown);
+        expect(call.zone, isNull);
+
+        // Off the map again: an area the point found goes with the point
+        deliveries.resolution = const StaffDeliveryResolution(delivers: true, zones: [degla, garden]);
+        controller.choose(const DeliveryAlternative(branchId: _maadi, distanceMeters: 600, zoneId: 11));
+        await controller.resolve('');
+        expect(container.read(callCentreControllerProvider).zone, isNull);
+      });
+
+      test('the point never pre-selects an area that is switched off', () async {
+        final (container, deliveries) = await _container();
+        deliveries.resolution = const StaffDeliveryResolution(
+          delivers: true,
+          latitude: 30.04,
+          longitude: 31.23,
+          branches: [DeliveryAlternative(branchId: _downtown, distanceMeters: 400, fee: 15, zoneId: 12, zoneOff: true)],
+          zones: [degla, garden],
+        );
+        final controller = container.read(callCentreControllerProvider.notifier);
+        await controller.resolve('30.04, 31.23');
+        var call = container.read(callCentreControllerProvider);
+        expect(call.chosen?.branchId, _downtown);
+        expect(call.zone, isNull);
+
+        // The agent's own pick by name is theirs to make
+        controller.pickZone(garden);
+        call = container.read(callCentreControllerProvider);
+        expect(call.zone?.zoneId, 12);
+      });
+
+      test('picked by name with no point on the map chooses its branch; gone from the list, the pick goes', () async {
+        final (container, deliveries) = await _container();
+        deliveries.resolution = const StaffDeliveryResolution(
+          delivers: true,
+          delivering: [DeliveryAlternative(branchId: _downtown, distanceMeters: 0, fee: 20), DeliveryAlternative(branchId: _maadi, distanceMeters: 0, fee: 25)],
+          zones: [degla, garden],
+        );
+        final controller = container.read(callCentreControllerProvider.notifier);
+        await controller.resolve('');
+        expect(container.read(callCentreControllerProvider).chosen, isNull);
+
+        controller.pickZone(garden);
+        var call = container.read(callCentreControllerProvider);
+        expect(call.chosen?.branchId, _downtown);
+        expect(call.chosen?.zoneOff, isTrue);
+
+        deliveries.resolution = const StaffDeliveryResolution(delivers: true, zones: [degla]);
+        await controller.resolve('');
+        call = container.read(callCentreControllerProvider);
+        expect(call.zone, isNull);
+        expect(call.chosen, isNull);
+
+        // The next caller starts with nothing picked
+        controller.pickZone(degla);
+        controller.reset();
+        expect(container.read(callCentreControllerProvider).zone, isNull);
+      });
+
+      test('travels on the sale to its branch', () async {
+        final (container, _) = await _container();
+        await container.read(callCentreControllerProvider.notifier).start(
+              branchId: _maadi,
+              customer: const SaleCustomer(name: 'Mona', phone: '01001234567'),
+              delivery: SaleDelivery(address: 'Road 9', phone: '01001234567', zone: SaleDeliveryZone.of(degla)),
+            );
+        final delivery = container.read(saleProvider).delivery!;
+        expect(delivery.zoneId, 11);
+        expect(delivery.toRequest()['zoneId'], 11);
+        expect(delivery.feeWith(20), 35);
+      });
     });
 
     test('taking the order makes the till that branch, with the caller and the door on the sale', () async {

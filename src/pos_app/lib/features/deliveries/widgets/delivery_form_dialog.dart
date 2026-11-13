@@ -16,6 +16,7 @@ import '../../sale/models/sale_line.dart';
 import '../models/delivery_order.dart';
 import '../providers/delivery_form_controller.dart';
 import 'address_search_field.dart';
+import 'area_picker_field.dart';
 import 'delivery_details.dart';
 
 /// Enough digits to be worth asking whether the caller had deliveries before
@@ -81,7 +82,22 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   void initState() {
     super.initState();
     // The terms (and any pin already pasted) at once, then on every new text
-    _controller.locationChanged(_location.text, debounce: Duration.zero);
+    final area = widget.initial?.zoneId == null ? null : widget.initial!.zone;
+    _controller.locationChanged(
+      _location.text,
+      debounce: Duration.zero,
+      // The area the sale already goes to stays picked; the branch's answer brings it up to date
+      startWith: area == null
+          ? null
+          : DeliveryZone(
+              zoneId: area.id,
+              branchId: 0,
+              name: area.name,
+              fee: area.fee,
+              minimumOrder: area.minimumOrder,
+              etaMinutes: area.etaMinutes,
+            ),
+    );
     unawaited(_controller.lookUpKnown(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
     _location.addListener(() => _controller.locationChanged(_location.text));
     _phone.addListener(() => _controller.phoneChanged(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
@@ -122,6 +138,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     // The pin of the very text in the field, never one an earlier text answered
     final pin = form.pinFor(_location.text);
     final sending = keptSendTo(_sendTo, form.quote?.alternatives ?? const [], pinned: pin != null);
+    // An area is this branch's own: an order sent to another branch has none
+    final zone = sending == null ? form.zone : null;
     Navigator.of(context, rootNavigator: true).pop<DeliveryFormResult>((
       delivery: SaleDelivery(
         address: _street.text.trim(),
@@ -134,6 +152,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         latitude: pin?.latitude,
         longitude: pin?.longitude,
         sendTo: sending,
+        zone: zone == null ? null : SaleDeliveryZone.of(zone),
       ),
       name: _hasAccount ? widget.customer!.name : _name.text.trim(),
     ));
@@ -157,6 +176,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         pinned: pinned, callCentre: ref.watch(featuresProvider.select((f) => f.callCentre)));
     final sending = keptSendTo(_sendTo, alternatives, pinned: pinned);
     final branches = ref.watch(allBranchesProvider).value;
+    // The named area it goes to here, picked by name or found by the pin: the quote's fee and minimum are its own
+    final zone = sending == null ? form.zone : null;
+    final zones = quote?.zones ?? const <DeliveryZone>[];
     final minimum = sending?.minimumOrder ?? quote?.minimumOrder ?? 0;
     final fee = sending?.fee ?? quote?.fee ?? 0;
 
@@ -257,6 +279,18 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 ),
               ),
           ],
+          // The area the caller names, where the branch keeps a list of them: its fee, with no pin needed
+          if (zones.isNotEmpty || zone != null) ...[
+            const SizedBox(height: 12),
+            AreaPickerField(
+              zones: zones,
+              picked: zone,
+              onPick: (picked) {
+                if (picked != null) setState(() => _sendTo = null);
+                _controller.pickZone(picked);
+              },
+            ),
+          ],
           // First what a caller says first, the street or a landmark, when the business has Google Maps:
           // a pick puts its point in the location field, as coordinates, and the street when it is empty.
           // The same order as the call centre's
@@ -315,18 +349,31 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               alternatives: alternatives,
               chosen: sending?.branchId,
               branchName: (id) => branchNameOf(branches, id, context),
-              onChoose: (a) => setState(() => _sendTo = a),
+              onChoose: (a) {
+                setState(() => _sendTo = a);
+                // Sent to another branch, the area picked here no longer holds
+                if (a != null) _controller.pickZone(null);
+              },
             ),
           ],
           // Said, not refused: the cashier knows the streets and the regulars
           if (quote != null && !reading) ...[
             const SizedBox(height: 12),
-            if (pinned && !quote.inRange && sending == null) _Warning(text: outOfRangeWarning(l10n, quote)),
+            // A named area is delivered to wherever it is drawn: only a pin in none is out of reach
+            if (pinned && !quote.inRange && sending == null && zone == null && !form.pinInOffArea)
+              _Warning(text: outOfRangeWarning(l10n, quote)),
+            // Picked by name with a second tap, or where the pin fell (never picked for the cashier)
+            if (sending == null && ((zone != null && !zone.on) || form.pinInOffArea)) _Warning(text: l10n.deliveryAreaOffNow),
             if (minimum > 0 && widget.itemsTotal < minimum)
               _Warning(text: l10n.deliveryUnderMinimum(money(context, minimum))),
             Row(
               children: [
-                Expanded(child: Text(l10n.deliveryFee, style: muted)),
+                Expanded(
+                  child: Text(
+                    zone?.etaMinutes == null ? l10n.deliveryFee : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(zone!.etaMinutes!)}',
+                    style: muted,
+                  ),
+                ),
                 Text(fee > 0 ? money(context, fee) : l10n.deliveryFree,
                     style: muted.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ],

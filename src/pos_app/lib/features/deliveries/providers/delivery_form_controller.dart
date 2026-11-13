@@ -25,7 +25,25 @@ class DeliveryFormState {
 
   final List<KnownAddress> known;
 
-  const DeliveryFormState({this.quote, this.quoteFor, this.reading = false, this.quoteFailed = false, this.known = const []});
+  /// The named area the cashier picked by name, as the branch's list has it
+  final DeliveryZone? picked;
+
+  const DeliveryFormState({
+    this.quote,
+    this.quoteFor,
+    this.reading = false,
+    this.quoteFailed = false,
+    this.known = const [],
+    this.picked,
+  });
+
+  /// The area the delivery goes to: the one picked by name, else the one the
+  /// pin fell in. The quote's fee and minimum are then that area's. An area
+  /// switched off is never chosen by a pin: it takes the cashier's own taps.
+  DeliveryZone? get zone => picked ?? (pinInOffArea ? null : quote?.zone);
+
+  /// The pin fell in an area that is switched off, and the cashier picked none by name
+  bool get pinInOffArea => picked == null && quote?.zoneId != null && (quote!.zoneOff || quote!.zone?.on == false);
 
   DeliveryFormState copyWith({
     TillDeliveryQuote? quote,
@@ -34,6 +52,8 @@ class DeliveryFormState {
     bool? quoteFailed,
     List<KnownAddress>? known,
     bool clearQuote = false,
+    DeliveryZone? picked,
+    bool clearPicked = false,
   }) =>
       DeliveryFormState(
         quote: clearQuote ? null : quote ?? this.quote,
@@ -41,6 +61,7 @@ class DeliveryFormState {
         reading: reading ?? this.reading,
         quoteFailed: quoteFailed ?? this.quoteFailed,
         known: known ?? this.known,
+        picked: clearPicked ? null : picked ?? this.picked,
       );
 
   /// The pin for what is in the field now: only when the branch answered
@@ -73,25 +94,39 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
   }
 
   /// The location field changed. A cursor move or a selection is not a
-  /// change: only new text is asked about.
-  void locationChanged(String text, {Duration debounce = AppConfig.deliveryLookupDebounce}) {
+  /// change: only new text is asked about. [startWith] is the area a sale
+  /// being changed already goes to, when the form opens on it.
+  void locationChanged(String text, {Duration debounce = AppConfig.deliveryLookupDebounce, DeliveryZone? startWith}) {
     final asked = text.trim();
     if (asked == _lastLocation) return;
     _lastLocation = asked;
     _locationDebounce?.cancel();
     // The old answer is not this text's: no pin until the new one comes
-    state = state.copyWith(reading: asked.isNotEmpty, quoteFailed: false);
+    state = state.copyWith(reading: asked.isNotEmpty, quoteFailed: false, picked: startWith);
     _locationDebounce = Timer(debounce, () => readLocation(asked));
   }
 
-  /// Ask the branch about [location] (its terms, and the pin read from it)
+  /// The cashier picked the area the caller named, or cleared it (null): the
+  /// branch is asked again at once, so the fee and minimum said are that
+  /// area's, or the branch's own again
+  void pickZone(DeliveryZone? zone) {
+    if (zone == null && state.picked == null) return;
+    _locationDebounce?.cancel();
+    state = state.copyWith(picked: zone, clearPicked: zone == null, reading: true, quoteFailed: false);
+    unawaited(readLocation(_lastLocation ?? ''));
+  }
+
+  /// Ask the branch about [location] (its terms, and the pin read from it),
+  /// for the area picked by name when there is one
   Future<void> readLocation(String location) async {
     final asked = location.trim();
     final ask = ++_asks;
     try {
-      final quote = await ref.read(deliveryRepositoryProvider).tillQuote(location: asked);
+      final quote = await ref.read(deliveryRepositoryProvider).tillQuote(location: asked, zoneId: state.picked?.zoneId);
       if (!ref.mounted || ask != _asks) return;
-      state = state.copyWith(quote: quote, quoteFor: asked, reading: false, quoteFailed: false);
+      // The area picked, as the list has it now; taken off the list, the pick goes with it
+      final picked = state.picked == null ? null : zoneById(quote.zones, state.picked!.zoneId);
+      state = state.copyWith(quote: quote, quoteFor: asked, reading: false, quoteFailed: false, picked: picked, clearPicked: picked == null);
     } catch (_) {
       if (!ref.mounted || ask != _asks) return;
       // Nothing known about this text: a pin from an earlier text must not stand in for it

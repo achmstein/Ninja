@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../customers/services/customer_search_service.dart';
 import '../deliveries/models/delivery_order.dart';
@@ -27,6 +28,14 @@ class CallCentreState {
   /// The branch the delivery goes to: the nearest taking orders, or the agent's pick
   final DeliveryAlternative? chosen;
 
+  /// Every named area of every delivering branch, as last answered: kept
+  /// while the branches are asked again, so the picker stays where it is
+  final List<DeliveryZone> zones;
+
+  /// The named area the delivery goes to: the agent's pick by name, or the
+  /// one the point on the map is in at the branch chosen. Its branch is [chosen].
+  final DeliveryZone? zone;
+
   const CallCentreState({
     this.customer,
     this.known = const [],
@@ -35,6 +44,8 @@ class CallCentreState {
     this.resolving = false,
     this.resolveFailed = false,
     this.chosen,
+    this.zones = const [],
+    this.zone,
   });
 
   CallCentreState copyWith({
@@ -48,6 +59,9 @@ class CallCentreState {
     bool? resolveFailed,
     DeliveryAlternative? chosen,
     bool clearChosen = false,
+    List<DeliveryZone>? zones,
+    DeliveryZone? zone,
+    bool clearZone = false,
   }) =>
       CallCentreState(
         customer: clearCustomer ? null : customer ?? this.customer,
@@ -57,6 +71,8 @@ class CallCentreState {
         resolving: resolving ?? this.resolving,
         resolveFailed: resolveFailed ?? this.resolveFailed,
         chosen: clearChosen || clearResolution ? null : chosen ?? this.chosen,
+        zones: zones ?? this.zones,
+        zone: clearZone ? null : zone ?? this.zone,
       );
 }
 
@@ -67,6 +83,9 @@ class CallCentreController extends Notifier<CallCentreState> {
   int _asks = 0;
   String _lookedUp = '';
 
+  /// The agent picked the area by name: no point on the map changes it
+  bool _zoneByHand = false;
+
   @override
   CallCentreState build() => const CallCentreState();
 
@@ -74,6 +93,7 @@ class CallCentreController extends Notifier<CallCentreState> {
   void reset() {
     _asks++;
     _lookedUp = '';
+    _zoneByHand = false;
     state = const CallCentreState();
     // Before anything is known of where: the branches that deliver, to pick from
     unawaited(resolve(''));
@@ -112,16 +132,24 @@ class CallCentreController extends Notifier<CallCentreState> {
   Future<void> resolve(String location) async {
     final asked = location.trim();
     final ask = ++_asks;
-    state = state.copyWith(clearResolution: true, resolving: true, resolveFailed: false);
+    // An area the map found goes with the point it was found for; one picked by name stays
+    state = state.copyWith(clearResolution: true, resolving: true, resolveFailed: false, clearZone: !_zoneByHand);
     try {
       final resolution = await ref.read(deliveryRepositoryProvider).resolveForStaff(asked);
       if (!ref.mounted || ask != _asks) return;
+      // The area picked by name, as the list has it now; gone from it, the pick is too
+      final held = _zoneByHand && state.zone != null ? zoneById(resolution.zones, state.zone!.zoneId) : null;
+      _zoneByHand = held != null;
+      final suggested = resolution.suggested;
       state = CallCentreState(
         customer: state.customer,
         known: state.known,
         resolution: resolution,
         resolvedFor: asked,
-        chosen: resolution.suggested,
+        zones: resolution.zones,
+        chosen: held != null ? _branchFor(held, resolution) : suggested,
+        // The point is in one of the suggested branch's areas: that area, without asking
+        zone: held ?? (suggested == null ? null : _zoneAt(suggested, resolution)),
       );
     } catch (_) {
       if (!ref.mounted || ask != _asks) return;
@@ -129,8 +157,70 @@ class CallCentreController extends Notifier<CallCentreState> {
     }
   }
 
-  /// The agent picked another branch (a paused one only after a second tap, on the screen)
-  void choose(DeliveryAlternative branch) => state = state.copyWith(chosen: branch);
+  /// The agent picked another branch (a paused one only after a second tap, on
+  /// the screen): with it, the area of that branch the point is in, if any
+  void choose(DeliveryAlternative branch) {
+    _zoneByHand = false;
+    final zone = state.resolution == null ? null : _zoneAt(branch, state.resolution!);
+    state = state.copyWith(chosen: branch, zone: zone, clearZone: zone == null);
+  }
+
+  /// The agent picked the area the caller named: the order goes to that
+  /// area's branch, whatever the map or an earlier pick said. Null clears it:
+  /// back to the branch the map suggests, or the agent's pick by hand.
+  void pickZone(DeliveryZone? zone) {
+    final resolution = state.resolution;
+    if (zone == null) {
+      _zoneByHand = false;
+      final suggested = resolution?.suggested;
+      state = state.copyWith(chosen: suggested, clearChosen: suggested == null, clearZone: true);
+      return;
+    }
+    _zoneByHand = true;
+    state = state.copyWith(zone: zone, chosen: resolution == null ? null : _branchFor(zone, resolution));
+  }
+
+  /// The branch an area belongs to, as an offer: how far it is when the map
+  /// knows, and what that area asks
+  static DeliveryAlternative _branchFor(DeliveryZone zone, StaffDeliveryResolution resolution) {
+    var distance = 0;
+    for (final b in resolution.branches) {
+      if (b.branchId == zone.branchId) distance = b.distanceMeters;
+    }
+    return DeliveryAlternative(
+      branchId: zone.branchId,
+      distanceMeters: distance,
+      fee: zone.fee,
+      minimumOrder: zone.minimumOrder,
+      paused: zone.branchPaused,
+      zoneId: zone.zoneId,
+      zoneName: zone.name,
+      etaMinutes: zone.etaMinutes,
+      zoneOff: !zone.on,
+    );
+  }
+
+  /// The area of [branch] the point on the map is in, off the list (or as the
+  /// offer itself describes it, should the list not have it); null when it is
+  /// in none, or in one switched off: that takes the agent's own taps, by name
+  static DeliveryZone? _zoneAt(DeliveryAlternative branch, StaffDeliveryResolution resolution) {
+    final id = branch.zoneId;
+    if (id == null || branch.zoneOff) return null;
+    final listed = zoneById(resolution.zones, id);
+    if (listed != null) return listed.on ? listed : null;
+    return
+        DeliveryZone(
+          zoneId: id,
+          branchId: branch.branchId,
+          name: branch.zoneName ?? const LocalizedText(),
+          fee: branch.fee,
+          minimumOrder: branch.minimumOrder,
+          etaMinutes: branch.etaMinutes,
+          on: !branch.zoneOff,
+          branchPaused: branch.paused,
+          drawn: true,
+        );
+  }
 
   /// Start the order at [branchId]: the till becomes that branch (its menu,
   /// prices and stock), and the sale opens with the caller on it, and where

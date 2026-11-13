@@ -54,10 +54,12 @@ class DeliveryRepository {
       });
 
   /// The branch's fee, minimum and radius for a delivery taken over the
-  /// phone; with a pasted [location], the pin read from it and how far
-  Future<TillDeliveryQuote> tillQuote({String? location}) async {
+  /// phone; with a pasted [location], the pin read from it and how far; with
+  /// [zoneId], the fee and minimum of that named area of the branch
+  Future<TillDeliveryQuote> tillQuote({String? location, int? zoneId}) async {
     final response = await _orders.get('delivery/till-quote', queryParameters: {
       if ((location ?? '').trim().isNotEmpty) 'location': location!.trim(),
+      'zoneId': ?zoneId,
     });
     return TillDeliveryQuote.fromJson((response.data as Map).cast<String, dynamic>());
   }

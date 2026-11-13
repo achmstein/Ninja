@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -43,7 +44,12 @@ class DeliverySummary extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      [delivery.address, if (delivery.building.isNotEmpty) delivery.building].join(' · '),
+                      [
+                        // The named area first, as the caller said it; none on an order sent to another branch
+                        if (delivery.zoneId != null && !delivery.zone!.name.isEmpty) delivery.zone!.name.localized(context),
+                        delivery.address,
+                        if (delivery.building.isNotEmpty) delivery.building,
+                      ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
