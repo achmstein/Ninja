@@ -18,18 +18,25 @@ const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 /**
  * In the open order, where the branch delivers and the customer is not at a
  * table: collect it or have it brought. Brought, the address is a tap away,
- * and under it what the branch says about it — the fee, how much more the
- * items must come to, or that it does not go that far (with the nearest
- * branch that does, a tap away too).
+ * and under it what the branch says about it — the fee (with the named
+ * area the address is in and about how long it takes there, when the branch
+ * says), how much more the items must come to, that it does not go that far
+ * (with the nearest branch that does, a tap away too), or that it is not
+ * delivering to that area right now.
  */
 export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryState; cloudKitchen: boolean }) {
   const t = useT()
   const price = usePrice()
+  const localized = useLocalized()
   const language = useLanguage((s) => s.language)
   const [sheetOpen, setSheetOpen] = useState(false)
   const { address } = delivery
   const modes = ['pickup', 'delivery'] as const
   const words = { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') }
+  const area = localized(delivery.zoneName)
+  const off = delivery.problem === 'areaOff'
+  // The area and about how long it takes, whichever the branch said: "Maadi Degla · about 45 min"
+  const areaLine = [area, delivery.etaMinutes != null ? t('deliveryAboutMinutes', { minutes: delivery.etaMinutes }) : null].filter(Boolean).join(' · ')
 
   // A radio group: one stop for Tab, the arrows move between the two (and choose), as a native one does
   const onKeyDown = (e: KeyboardEvent<HTMLDivElement>) => {
@@ -134,11 +141,19 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
               </span>
             )}
             {delivery.problem === 'range' && <OutOfRange delivery={delivery} />}
-            {delivery.quoted && delivery.inRange && (
-              <span className='flex items-center justify-between opacity-80'>
-                <span>{t('deliveryFee')}</span>
-                <span className='font-semibold tabular-nums'>{delivery.fee > 0 ? price(delivery.fee) : t('deliveryFree')}</span>
+            {off && (
+              <span className='font-semibold text-amber-300' role='status'>
+                {area ? t('deliveryAreaOff', { area }) : t('problemAreaOff')}
               </span>
+            )}
+            {delivery.quoted && delivery.inRange && !off && (
+              <>
+                <span className='flex items-center justify-between opacity-80'>
+                  <span>{t('deliveryFee')}</span>
+                  <span className='font-semibold tabular-nums'>{delivery.fee > 0 ? price(delivery.fee) : t('deliveryFree')}</span>
+                </span>
+                {areaLine && <span className='opacity-70'>{areaLine}</span>}
+              </>
             )}
             {delivery.problem === 'minimum' && (
               <span className='font-semibold text-amber-300'>{t('deliveryAddMore', { amount: price(delivery.short) })}</span>

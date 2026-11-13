@@ -16,8 +16,8 @@ Order _order({String status = 'Confirmed', Map<String, dynamic>? delivery}) => O
 
 void main() {
   group('what stands in the way of a delivery', () {
-    DeliveryProblem? problem({bool active = true, bool hasAddress = true, bool quoted = true, bool failed = false, bool inRange = true, double short = 0}) =>
-        deliveryProblem(active: active, hasAddress: hasAddress, quoted: quoted, quoteFailed: failed, inRange: inRange, short: short);
+    DeliveryProblem? problem({bool active = true, bool hasAddress = true, bool quoted = true, bool failed = false, bool inRange = true, bool zoneOff = false, double short = 0}) =>
+        deliveryProblem(active: active, hasAddress: hasAddress, quoted: quoted, quoteFailed: failed, inRange: inRange, zoneOff: zoneOff, short: short);
 
     test('in the order the customer meets it', () {
       expect(problem(active: false, hasAddress: false), isNull, reason: 'collecting it: nothing');
@@ -27,6 +27,69 @@ void main() {
       expect(problem(inRange: false, short: 50), DeliveryProblem.range, reason: 'too far before too little');
       expect(problem(short: 20), DeliveryProblem.minimum);
       expect(problem(), isNull);
+    });
+
+    test('an area the branch switched off is said after too far and before too little', () {
+      expect(problem(zoneOff: true), DeliveryProblem.areaOff);
+      expect(problem(zoneOff: true, short: 20), DeliveryProblem.areaOff);
+      expect(problem(zoneOff: true, inRange: false), DeliveryProblem.range);
+      expect(problem(zoneOff: true, quoted: false), DeliveryProblem.checking);
+      expect(const DeliveryState(offered: true, active: true, problem: DeliveryProblem.areaOff).ready, isFalse);
+    });
+  });
+
+  group('a named area', () {
+    test('comes with the quote: its name, its minutes, whether it is off', () {
+      final quote = DeliveryQuote.fromJson({
+        'delivers': true,
+        'inRange': true,
+        'distanceMeters': 1800,
+        'fee': 35,
+        'minimumOrder': '150',
+        'zoneId': 4,
+        'zoneName': {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'},
+        'etaMinutes': 45,
+        'zoneOff': true,
+      });
+      expect(quote.zoneId, 4);
+      expect(quote.zoneName?.en, 'Maadi Degla');
+      expect(quote.zoneName?.ar, 'دجلة المعادي');
+      expect(quote.etaMinutes, 45);
+      expect(quote.zoneOff, isTrue);
+      expect(quote.fee, 35);
+      expect(quote.minimumOrder, 150);
+    });
+
+    test('is none for a point in no area, or a server that says nothing of areas', () {
+      final plain = DeliveryQuote.fromJson({'delivers': true, 'inRange': true, 'fee': 20, 'zoneId': null, 'zoneName': null, 'etaMinutes': null});
+      expect(plain.zoneId, isNull);
+      expect(plain.zoneName, isNull);
+      expect(plain.etaMinutes, isNull);
+      expect(plain.zoneOff, isFalse);
+      expect(DeliveryQuote.fromJson({'delivers': true, 'inRange': true, 'zoneName': {'en': ' ', 'ar': null}}).zoneName, isNull, reason: 'a blank name is no name');
+    });
+
+    test('comes with each branch that reaches the point', () {
+      final resolution = DeliveryResolution.fromJson({
+        'delivers': true,
+        'branches': [
+          {'branchId': 1, 'distanceMeters': 2500, 'fee': 20, 'minimumOrder': 0, 'signInRequired': false},
+          {'branchId': 2, 'distanceMeters': 900, 'fee': 30, 'minimumOrder': 0, 'signInRequired': false, 'zoneId': 7, 'zoneName': {'ar': 'الزمالك'}, 'etaMinutes': 30, 'zoneOff': true},
+        ],
+      });
+      expect(resolution.branches.map((b) => b.zoneOff), [false, true]);
+      expect(resolution.branches.last.zoneName?.ar, 'الزمالك');
+      expect(resolution.branches.last.etaMinutes, 30);
+      expect(resolution.branches.first.zoneId, isNull);
+    });
+
+    test('is said in the customer\'s words', () {
+      final en = lookupAppLocalizations(const Locale('en'));
+      final ar = lookupAppLocalizations(const Locale('ar'));
+      expect(en.deliveryAboutMinutes(45), 'about 45 min');
+      expect(en.deliveryAreaOff('Zamalek'), "We're not delivering to Zamalek right now.");
+      expect(ar.deliveryAreaOff('الزمالك'), 'مش بنوصّل الزمالك دلوقتي.');
+      expect(deliveryProblemText(en, 'delivery.area_off'), "We're not delivering to this area right now.");
     });
 
     test('ready only when active and nothing stands in the way', () {
@@ -100,6 +163,10 @@ void main() {
       final order = _order(delivery: {'stage': 'OnTheWay', 'riderName': ' Ali ', 'fee': 25});
       expect(order.delivery?.riderName, 'Ali');
       expect(order.delivery?.fee, 25);
+      expect(order.delivery?.zoneName, isNull);
+      final toArea = _order(delivery: {'stage': 'Waiting', 'zoneName': {'en': 'Maadi Degla'}, 'etaMinutes': 45});
+      expect(toArea.delivery?.zoneName?.en, 'Maadi Degla');
+      expect(toArea.delivery?.etaMinutes, 45);
       expect(_order().delivery, isNull);
     });
   });

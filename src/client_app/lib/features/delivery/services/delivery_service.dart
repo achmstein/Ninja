@@ -6,6 +6,7 @@ import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/models/branch.dart';
+import '../../../core/models/localized_text.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/branch_switch.dart';
 import '../../../core/providers/current_place_provider.dart';
@@ -14,7 +15,9 @@ import '../models/delivery_address.dart';
 
 /// The branch's answer for a point (`GET /api/orders/delivery/quote`): whether
 /// it delivers now, whether the point is within its radius, how far, its fee
-/// and its minimum
+/// and its minimum. A point inside one of the branch's named areas is
+/// answered with that area's fee and minimum, its name, about how long a
+/// delivery there takes, and whether the branch has stopped going there for now
 @immutable
 class DeliveryQuote {
   final bool delivers;
@@ -23,9 +26,37 @@ class DeliveryQuote {
   final double fee;
   final double minimumOrder;
 
-  const DeliveryQuote({required this.delivers, required this.inRange, this.distanceMeters, this.fee = 0, this.minimumOrder = 0});
+  /// The branch's named area the point is in, when it is in one
+  final int? zoneId;
+  final LocalizedText? zoneName;
+
+  /// About how many minutes the area says a delivery there takes; null when unsaid
+  final int? etaMinutes;
+
+  /// The area is switched off for a while: the branch is not delivering there right now
+  final bool zoneOff;
+
+  const DeliveryQuote({
+    required this.delivers,
+    required this.inRange,
+    this.distanceMeters,
+    this.fee = 0,
+    this.minimumOrder = 0,
+    this.zoneId,
+    this.zoneName,
+    this.etaMinutes,
+    this.zoneOff = false,
+  });
 
   static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('$v') ?? 0;
+
+  static int? _int(Object? v) => v is num ? v.toInt() : (v == null ? null : int.tryParse('$v'));
+
+  /// A name with nothing in it is no name
+  static LocalizedText? _name(Object? v) {
+    final name = v is Map ? LocalizedText.fromJson(v.cast<String, dynamic>()) : null;
+    return name == null || name.isEmpty ? null : name;
+  }
 
   factory DeliveryQuote.fromJson(Map<String, dynamic> json) => DeliveryQuote(
         delivers: json['delivers'] as bool? ?? false,
@@ -33,37 +64,69 @@ class DeliveryQuote {
         distanceMeters: (json['distanceMeters'] as num?)?.toInt(),
         fee: _num(json['fee']),
         minimumOrder: _num(json['minimumOrder']),
+        zoneId: _int(json['zoneId']),
+        zoneName: _name(json['zoneName']),
+        etaMinutes: _int(json['etaMinutes']),
+        zoneOff: json['zoneOff'] as bool? ?? false,
+      );
+}
+
+/// A branch that reaches a point, how far it is, and the named area of its
+/// the point is in, when it is in one
+@immutable
+class DeliveringBranch {
+  final int branchId;
+  final double meters;
+  final int? zoneId;
+  final LocalizedText? zoneName;
+  final int? etaMinutes;
+
+  /// The branch is not delivering to the point's area right now
+  final bool zoneOff;
+
+  const DeliveringBranch({required this.branchId, required this.meters, this.zoneId, this.zoneName, this.etaMinutes, this.zoneOff = false});
+
+  factory DeliveringBranch.fromJson(Map<String, dynamic> json) => DeliveringBranch(
+        branchId: DeliveryQuote._int(json['branchId']) ?? 0,
+        meters: DeliveryQuote._num(json['distanceMeters']),
+        zoneId: DeliveryQuote._int(json['zoneId']),
+        zoneName: DeliveryQuote._name(json['zoneName']),
+        etaMinutes: DeliveryQuote._int(json['etaMinutes']),
+        zoneOff: json['zoneOff'] as bool? ?? false,
       );
 }
 
 /// Which of the business's branches deliver to a point
 /// (`GET /api/orders/delivery/resolve`): nearest first, none when no branch
-/// goes that far; [delivers] false while the business does not deliver at all
+/// goes that far (those not delivering to the point's area right now after
+/// the others); [delivers] false while the business does not deliver at all
 @immutable
 class DeliveryResolution {
   final bool delivers;
-  final List<({int branchId, double meters})> branches;
+  final List<DeliveringBranch> branches;
 
   const DeliveryResolution({required this.delivers, this.branches = const []});
 
   factory DeliveryResolution.fromJson(Map<String, dynamic> json) => DeliveryResolution(
         delivers: json['delivers'] as bool? ?? false,
         branches: [
-          for (final b in (json['branches'] as List?) ?? const [])
-            (branchId: ((b as Map)['branchId'] as num).toInt(), meters: DeliveryQuote._num(b['distanceMeters'])),
+          for (final b in (json['branches'] as List?) ?? const []) DeliveringBranch.fromJson((b as Map).cast<String, dynamic>()),
         ],
       );
 }
 
 /// The branch that delivers to an address: the nearest of those the server
 /// says reach it that the customer can order from (open, taking orders).
-/// The address, not the last branch used, decides (client_web's servingBranch)
-({int branchId, double meters})? servingBranch(List<({int branchId, double meters})> reaching, List<Branch> branches) {
-  for (final candidate in reaching) {
-    final branch = branches.where((b) => b.id == candidate.branchId).firstOrNull;
-    if (branch != null && branch.isActive && branch.isOrderingEnabled) return candidate;
-  }
-  return null;
+/// The address, not the last branch used, decides. A branch that has stopped
+/// delivering to the address's area for now is the answer only when no other
+/// reaches it (client_web's servingBranch)
+({int branchId, double meters})? servingBranch(List<DeliveringBranch> reaching, List<Branch> branches) {
+  final open = [
+    for (final candidate in reaching)
+      if (branches.any((b) => b.id == candidate.branchId && b.isActive && b.isOrderingEnabled)) candidate,
+  ];
+  final serving = open.where((c) => !c.zoneOff).firstOrNull ?? open.firstOrNull;
+  return serving == null ? null : (branchId: serving.branchId, meters: serving.meters);
 }
 
 /// The customer's own side of delivery, all on Ordering: what a delivery here
@@ -200,17 +263,19 @@ final deliveryResolutionProvider = FutureProvider.autoDispose.family<DeliveryRes
 });
 
 /// What stands in the way of a delivery, in the order the customer meets it
-enum DeliveryProblem { address, checking, quoteFailed, range, minimum }
+enum DeliveryProblem { address, checking, quoteFailed, range, areaOff, minimum }
 
 /// What stands in the way: no address, the branch still answering (or not
-/// answering at all), too far, too little. Pure, so it is tested apart from
-/// the providers (client_web's deliveryProblem)
+/// answering at all), too far, an area the branch has stopped delivering to
+/// for a while, too little. Pure, so it is tested apart from the providers
+/// (client_web's deliveryProblem)
 DeliveryProblem? deliveryProblem({
   required bool active,
   required bool hasAddress,
   required bool quoted,
   required bool quoteFailed,
   required bool inRange,
+  bool zoneOff = false,
   required double short,
 }) {
   if (!active) return null;
@@ -218,6 +283,7 @@ DeliveryProblem? deliveryProblem({
   if (quoteFailed) return DeliveryProblem.quoteFailed;
   if (!quoted) return DeliveryProblem.checking;
   if (!inRange) return DeliveryProblem.range;
+  if (zoneOff) return DeliveryProblem.areaOff;
   return short > 0 ? DeliveryProblem.minimum : null;
 }
 
@@ -244,6 +310,12 @@ class DeliveryState {
   final bool quoted;
   final bool inRange;
 
+  /// The branch's named area the address is in, when it is in one
+  final LocalizedText? zoneName;
+
+  /// About how many minutes the area says a delivery there takes; null when unsaid
+  final int? etaMinutes;
+
   /// The branch the address belongs to, when that is not the one the order
   /// is at: the order moves there ([moveTo]), or, while the customer is at
   /// this one, is offered the move
@@ -266,6 +338,8 @@ class DeliveryState {
     this.short = 0,
     this.quoted = false,
     this.inRange = false,
+    this.zoneName,
+    this.etaMinutes,
     this.servedBy,
     this.reached = true,
     this.moveTo,
@@ -322,17 +396,21 @@ final deliveryStateProvider = Provider<DeliveryState>((ref) {
     quoted: quoted,
     quoteFailed: quote != null && quote.hasError && !quote.isLoading,
     inRange: inRange,
+    zoneOff: quoted && answer.zoneOff,
     short: short,
   );
+  final eta = inRange ? answer.etaMinutes : null;
   return DeliveryState(
     offered: true,
     active: active,
     address: address,
-    fee: active && inRange ? answer.fee : 0,
+    fee: active && inRange && problem != DeliveryProblem.areaOff ? answer.fee : 0,
     minimum: minimum,
     short: short,
     quoted: quoted,
     inRange: inRange,
+    zoneName: inRange ? answer.zoneName : null,
+    etaMinutes: eta != null && eta > 0 ? eta : null,
     servedBy: servedBy,
     reached: reached,
     moveTo: moveTo,

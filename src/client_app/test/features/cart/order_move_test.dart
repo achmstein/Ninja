@@ -75,13 +75,13 @@ void main() {
 
   group('the branch an address belongs to', () {
     test('is the nearest that reaches it and takes orders', () {
-      final reaching = [(branchId: 2, meters: 900.0), (branchId: 1, meters: 2500.0)];
+      const reaching = [DeliveringBranch(branchId: 2, meters: 900), DeliveringBranch(branchId: 1, meters: 2500)];
       expect(servingBranch(reaching, [_branch(1), _branch(2)])?.branchId, 2);
       expect(servingBranch(reaching, [_branch(1), _branch(2, ordering: false)])?.branchId, 1);
     });
 
     test('is none when nothing the customer can order from reaches it', () {
-      expect(servingBranch([(branchId: 9, meters: 100.0)], [_branch(1)]), isNull);
+      expect(servingBranch(const [DeliveringBranch(branchId: 9, meters: 100)], [_branch(1)]), isNull);
       expect(servingBranch(const [], [_branch(1)]), isNull);
     });
 
@@ -93,7 +93,17 @@ void main() {
         ],
       });
       expect(resolution.delivers, isTrue);
-      expect(resolution.branches.single, (branchId: 3, meters: 1200.0));
+      expect(resolution.branches.single.branchId, 3);
+      expect(resolution.branches.single.meters, 1200.0);
+      expect(resolution.branches.single.zoneOff, isFalse);
+      expect(resolution.branches.single.zoneName, isNull);
+    });
+
+    test('passes over a branch that stopped delivering to the area when another reaches it', () {
+      const reaching = [DeliveringBranch(branchId: 2, meters: 900, zoneOff: true), DeliveringBranch(branchId: 1, meters: 2500)];
+      expect(servingBranch(reaching, [_branch(1), _branch(2)]), (branchId: 1, meters: 2500.0));
+      expect(servingBranch(reaching, [_branch(1, ordering: false), _branch(2)]), (branchId: 2, meters: 900.0), reason: 'the only one that reaches');
+      expect(servingBranch(const [DeliveringBranch(branchId: 2, meters: 900, zoneOff: true)], [_branch(1), _branch(2)])?.branchId, 2);
     });
   });
 }

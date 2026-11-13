@@ -19,8 +19,10 @@ import 'address_sheet.dart';
 /// a table: collect it or have it brought (client_web's delivery-choice.tsx).
 /// Collected, from which branch, a tap from another. Brought, the address is
 /// a tap away; it picks the branch (the order moves there by itself), and
-/// under it what that branch says about it: the fee, how much more the items
-/// must come to, or that no branch goes that far.
+/// under it what that branch says about it: the fee (with the named area the
+/// address is in and about how long it takes there, when the branch says),
+/// how much more the items must come to, that no branch goes that far, or
+/// that it is not delivering to that area right now.
 class DeliveryChoiceView extends ConsumerWidget {
   const DeliveryChoiceView({super.key});
 
@@ -38,6 +40,13 @@ class DeliveryChoiceView extends ConsumerWidget {
     final note = context.localeText(theme.typography.caption.copyWith(color: ink.withValues(alpha: 0.75)));
     final warn = note.copyWith(color: NinjaColors.warning, fontWeight: FontWeight.w600);
     final address = delivery.address;
+    final area = delivery.zoneName?.localized(context) ?? '';
+    final off = delivery.problem == DeliveryProblem.areaOff;
+    // The area and about how long it takes, whichever the branch said: "Maadi Degla · about 45 min"
+    final areaLine = [
+      if (area.isNotEmpty) area,
+      if (delivery.etaMinutes != null) l10n.deliveryAboutMinutes(delivery.etaMinutes!),
+    ].join(' · ');
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -158,7 +167,8 @@ class DeliveryChoiceView extends ConsumerWidget {
                     ],
                   ),
                 if (delivery.problem == DeliveryProblem.range) _OutOfRange(delivery: delivery),
-                if (delivery.quoted && delivery.inRange)
+                if (off) AppText(area.isNotEmpty ? l10n.deliveryAreaOff(area) : l10n.problemAreaOff, style: warn),
+                if (delivery.quoted && delivery.inRange && !off) ...[
                   Row(
                     children: [
                       Expanded(child: AppText(l10n.deliveryFee, style: note)),
@@ -168,6 +178,12 @@ class DeliveryChoiceView extends ConsumerWidget {
                       ),
                     ],
                   ),
+                  if (areaLine.isNotEmpty)
+                    Padding(
+                      padding: const EdgeInsets.only(top: 2),
+                      child: AppText(areaLine, maxLines: 1, overflow: TextOverflow.ellipsis, style: note),
+                    ),
+                ],
                 if (delivery.problem == DeliveryProblem.minimum) AppText(l10n.deliveryAddMore(money(delivery.short)), style: warn),
               ],
             ),

@@ -20,14 +20,14 @@ Widget _host(Widget child, {Locale locale = const Locale('en')}) => ProviderScop
       ),
     );
 
-DeliveryOrder _order(String stage) => DeliveryOrder.fromJson({
+DeliveryOrder _order(String stage, {Map<String, dynamic>? zoneName}) => DeliveryOrder.fromJson({
       'orderNumber': 42,
       'customerName': 'Mona',
       'total': 115,
       'items': [
         {'productName': {'en': 'Latte', 'ar': ''}, 'units': 2},
       ],
-      'delivery': {'address': 'Tahrir St', 'building': '12', 'floor': '3', 'phone': '01001234567', 'stage': stage},
+      'delivery': {'address': 'Tahrir St', 'building': '12', 'floor': '3', 'phone': '01001234567', 'stage': stage, 'zoneName': zoneName},
     });
 
 String _money(double v) => v.toStringAsFixed(2);
@@ -41,6 +41,22 @@ void main() {
     // The street on its own line (isolated, so a Latin street keeps its order on an Arabic screen), the door under it
     expect(find.text('\u2068Tahrir St\u2069'), findsOneWidget);
     expect(find.text('Bldg 12, Floor 3'), findsOneWidget, reason: 'an English comma in English');
+  });
+
+  testWidgets('the named area is said over the street, in the rider\'s language', (tester) async {
+    const zone = {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'};
+    await tester.pumpWidget(_host(DeliveryCard(order: _order('Assigned', zoneName: zone), money: _money)));
+    await tester.pumpAndSettle();
+    expect(find.text('Maadi Degla'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('Maadi Degla')).dy, lessThan(tester.getTopLeft(find.text('\u2068Tahrir St\u2069')).dy));
+
+    await tester.pumpWidget(_host(DeliveryCard(order: _order('Assigned', zoneName: zone), money: _money), locale: const Locale('ar')));
+    await tester.pumpAndSettle();
+    expect(find.text('دجلة المعادي'), findsOneWidget);
+
+    await tester.pumpWidget(_host(DeliveryCard(order: _order('Assigned'), money: _money)));
+    await tester.pumpAndSettle();
+    expect(find.text('Maadi Degla'), findsNothing);
   });
 
   testWidgets('not handed over: bring it back, nothing to collect, no next step', (tester) async {

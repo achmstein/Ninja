@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { CustomerAddressView, DeliveringBranch, DeliveryView } from '@/api/ordering'
+import type { CustomerAddressView, DeliveringBranch, DeliveryView, LocalizedText } from '@/api/ordering'
 import { getDeliveryQuoteOptions, getMyAddressesOptions, resolveDeliveryBranchOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import type { BranchResponse } from '@/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
@@ -13,14 +13,15 @@ import type { OrderDestination } from '@/lib/order-destination'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 
 /** What stands in the way of a delivery, for the tray to say */
-export type DeliveryProblem = 'signIn' | 'address' | 'checking' | 'quoteFailed' | 'range' | 'minimum' | null
+export type DeliveryProblem = 'signIn' | 'address' | 'checking' | 'quoteFailed' | 'range' | 'areaOff' | 'minimum' | null
 
 /**
  * Where the order is going when it is brought: what the tray shows and
  * checkout sends. Offered when the branch delivers and the customer is not
  * ordering to a table or a room; then the address is quoted by the branch
  * (in range, the fee, the minimum) and the order can go once it is in range
- * and the items reach the minimum.
+ * and the items reach the minimum. An address inside one of the branch's
+ * named areas is quoted that area's fee and minimum, and carries its name.
  */
 export type DeliveryState = {
   /** The branch delivers and the order is not for a place in it */
@@ -36,6 +37,10 @@ export type DeliveryState = {
   /** The branch answered for this address */
   quoted: boolean
   inRange: boolean
+  /** The branch's named area the address is in, when it is in one */
+  zoneName: LocalizedText | null
+  /** About how many minutes the area says a delivery there takes; null when unsaid */
+  etaMinutes: number | null
   /**
    * The branch the address belongs to, when that is not the one the order
    * is at: the order moves there (lib/use-delivery-branch.ts), or, while the
@@ -58,8 +63,9 @@ export type DeliveryState = {
 /**
  * What stands in the way, in the order the customer meets it: a guest where
  * the branch delivers to accounts only, no address, the branch still
- * answering (or not answering at all), too far, too little. Pure, so it is
- * tested apart from the queries.
+ * answering (or not answering at all), too far, an area the branch has
+ * stopped delivering to for a while, too little. Pure, so it is tested apart
+ * from the queries.
  */
 export function deliveryProblem(s: {
   active: boolean
@@ -69,6 +75,8 @@ export function deliveryProblem(s: {
   quoted: boolean
   quoteFailed: boolean
   inRange: boolean
+  /** The address is in a named area the branch switched off for now */
+  zoneOff?: boolean
   short: number
 }): DeliveryProblem {
   if (!s.active) return null
@@ -77,6 +85,7 @@ export function deliveryProblem(s: {
   if (s.quoteFailed) return 'quoteFailed'
   if (!s.quoted) return 'checking'
   if (!s.inRange) return 'range'
+  if (s.zoneOff) return 'areaOff'
   return s.short > 0 ? 'minimum' : null
 }
 
@@ -84,16 +93,17 @@ export function deliveryProblem(s: {
  * The branch that delivers to an address: the nearest of those the server
  * says reach it that the customer can order from (open, taking orders).
  * The one the order is at already, when it reaches it, is kept only when
- * it is that nearest one: the address, not the last branch, decides.
+ * it is that nearest one: the address, not the last branch, decides. A
+ * branch that has stopped delivering to the address's area for now is the
+ * answer only when no other reaches it.
  */
 export function servingBranch(reaching: DeliveringBranch[], branches: BranchResponse[]): { branchId: number; meters: number } | null {
-  for (const candidate of reaching) {
+  const open = reaching.filter((candidate) => {
     const branch = branches.find((b) => Number(b.id) === Number(candidate.branchId))
-    if (branch?.isActive !== false && branch?.isOrderingEnabled !== false && branch != null) {
-      return { branchId: Number(candidate.branchId), meters: Number(candidate.distanceMeters) }
-    }
-  }
-  return null
+    return branch != null && branch.isActive !== false && branch.isOrderingEnabled !== false
+  })
+  const serving = open.find((candidate) => candidate.zoneOff !== true) ?? open[0]
+  return serving ? { branchId: Number(serving.branchId), meters: Number(serving.distanceMeters) } : null
 }
 
 /** Whose the delivery choice on this device is: the signed-in account, or the guest */
@@ -164,6 +174,7 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   const fee = quoted ? Number(quote.fee) : 0
   const minimum = quoted ? Number(quote.minimumOrder) : 0
   const short = Math.max(0, minimum - subtotal)
+  const eta = inRange && quote.etaMinutes != null ? Number(quote.etaMinutes) : null
   const problem = deliveryProblem({
     active,
     needsSignIn,
@@ -171,6 +182,7 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
     quoted,
     quoteFailed: quoteQuery.isError && !quoteQuery.isFetching,
     inRange,
+    zoneOff: quoted && quote.zoneOff === true,
     short,
   })
 
@@ -178,11 +190,13 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
     offered,
     active,
     address,
-    fee: active && inRange ? fee : 0,
+    fee: active && inRange && problem !== 'areaOff' ? fee : 0,
     minimum,
     short,
     quoted,
     inRange,
+    zoneName: inRange ? (quote.zoneName ?? null) : null,
+    etaMinutes: eta != null && eta > 0 ? eta : null,
     servedBy,
     reached,
     moveTo,

@@ -342,6 +342,7 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
 String? deliveryProblemText(AppLocalizations l10n, String? code) => switch (code) {
       'delivery.not_delivering' => l10n.problemNotDelivering,
       'delivery.out_of_range' => l10n.problemOutOfRange,
+      'delivery.area_off' => l10n.problemAreaOff,
       'delivery.below_minimum' => l10n.problemBelowMinimum,
       'delivery.phone_invalid' => l10n.deliveryNeedPhone,
       'delivery.address_required' => l10n.deliveryNeedStreet,

@@ -78,6 +78,9 @@ class DeliveryOrder {
   final String? apartment;
   final String? directions;
   final String phone;
+
+  /// The branch's named area it goes to ("Maadi Degla"), as it was when the order was placed
+  final LocalizedText? zoneName;
   final DeliveryStage stage;
   final DateTime? outAt;
   final DateTime? deliveredAt;
@@ -108,6 +111,7 @@ class DeliveryOrder {
     this.floor,
     this.apartment,
     this.directions,
+    this.zoneName,
     this.outAt,
     this.deliveredAt,
     this.failureReason,
@@ -117,6 +121,8 @@ class DeliveryOrder {
 
   factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
     final d = (json['delivery'] as Map?)?.cast<String, dynamic>() ?? const {};
+    final zone = d['zoneName'];
+    final zoneName = zone is Map ? LocalizedText.fromJson(zone.cast<String, dynamic>()) : null;
     return DeliveryOrder(
       orderNumber: _num(json['orderNumber']).round(),
       confirmedAt: _time(json['confirmedAt']),
@@ -135,6 +141,7 @@ class DeliveryOrder {
       apartment: _text(d['apartment']),
       directions: _text(d['directions']),
       phone: _text(d['phone']) ?? '',
+      zoneName: zoneName == null || zoneName.isEmpty ? null : zoneName,
       stage: DeliveryStage.parse(d['stage']),
       outAt: _time(d['outAt']),
       deliveredAt: _time(d['deliveredAt']),

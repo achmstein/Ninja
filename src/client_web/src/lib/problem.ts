@@ -30,6 +30,7 @@ export function isModuleOff(error: unknown): boolean {
 export const PROBLEM_KEYS: Record<string, TranslationKey> = {
   'delivery.not_delivering': 'problemNotDelivering',
   'delivery.out_of_range': 'problemOutOfRange',
+  'delivery.area_off': 'problemAreaOff',
   'delivery.below_minimum': 'problemBelowMinimum',
   'delivery.phone_invalid': 'deliveryNeedPhone',
   'delivery.address_required': 'deliveryNeedStreet',

@@ -18,6 +18,14 @@ describe('deliveryProblem', () => {
     expect(deliveryProblem({ ...ok, short: 20 })).toBe('minimum')
   })
 
+  it('says an area the branch switched off after too far and before too little', () => {
+    expect(deliveryProblem({ ...ok, zoneOff: true })).toBe('areaOff')
+    expect(deliveryProblem({ ...ok, zoneOff: true, short: 20 })).toBe('areaOff')
+    expect(deliveryProblem({ ...ok, zoneOff: true, inRange: false })).toBe('range')
+    expect(deliveryProblem({ ...ok, zoneOff: true, quoted: false })).toBe('checking')
+    expect(deliveryProblem({ ...ok, zoneOff: false })).toBeNull()
+  })
+
   it('asks a guest to sign in before anything else where the branch delivers to accounts only', () => {
     expect(deliveryProblem({ ...ok, needsSignIn: true })).toBe('signIn')
     expect(deliveryProblem({ ...ok, needsSignIn: true, hasAddress: false, quoted: false })).toBe('signIn')
@@ -62,5 +70,12 @@ describe('servingBranch', () => {
   it('skips a branch the customer cannot see, and is none when nothing reaches', () => {
     expect(servingBranch([reach(9, 100)], [branch(1)])).toBeNull()
     expect(servingBranch([], [branch(1)])).toBeNull()
+  })
+
+  it('passes over a branch that stopped delivering to the area when another reaches it', () => {
+    const off = (branchId: number, distanceMeters: number) => ({ ...reach(branchId, distanceMeters), zoneOff: true })
+    expect(servingBranch([off(2, 900), reach(1, 2500)], [branch(1), branch(2)])).toEqual({ branchId: 1, meters: 2500 })
+    expect(servingBranch([off(2, 900), reach(1, 2500)], [branch(1, { isOrderingEnabled: false }), branch(2)])).toEqual({ branchId: 2, meters: 900 })
+    expect(servingBranch([off(2, 900)], [branch(1), branch(2)])).toEqual({ branchId: 2, meters: 900 })
   })
 })

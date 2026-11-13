@@ -1632,6 +1632,16 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryNoBranchReaches => 'لسه مش بنوصّل للعنوان ده';
 
   @override
+  String deliveryAboutMinutes(int minutes) {
+    return 'حوالي $minutes دقيقة';
+  }
+
+  @override
+  String deliveryAreaOff(String area) {
+    return 'مش بنوصّل $area دلوقتي.';
+  }
+
+  @override
   String pickupFrom(String name) {
     return 'الاستلام من فرع $name';
   }
@@ -1753,6 +1763,9 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get problemOutOfRange => 'العنوان ده برّه منطقة توصيل الفرع.';
+
+  @override
+  String get problemAreaOff => 'مش بنوصّل للمنطقة دي دلوقتي.';
 
   @override
   String get problemBelowMinimum => 'زوّد شوية عشان التوصيل.';
@@ -3207,6 +3220,16 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get deliveryNoBranchReaches => 'لا نوصّل إلى هذا العنوان بعد';
 
   @override
+  String deliveryAboutMinutes(int minutes) {
+    return 'حوالي $minutes دقيقة';
+  }
+
+  @override
+  String deliveryAreaOff(String area) {
+    return 'لا نوصّل إلى $area حاليًا.';
+  }
+
+  @override
   String pickupFrom(String name) {
     return 'الاستلام من فرع $name';
   }
@@ -3329,6 +3352,9 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get problemOutOfRange => 'هذا العنوان خارج منطقة توصيل الفرع.';
+
+  @override
+  String get problemAreaOff => 'لا نوصّل إلى هذه المنطقة حاليًا.';
 
   @override
   String get problemBelowMinimum => 'أضف المزيد قليلًا للتوصيل.';

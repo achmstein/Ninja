@@ -15,8 +15,8 @@ import 'fail_reason_dialog.dart';
 import 'parts.dart';
 
 /// One delivery still to do, read top to bottom as the rider needs it:
-/// where it stands and whose it is; where it goes (the street, the door, the
-/// note that finds it); what is in the bag; the cash to collect; then the way
+/// where it stands and whose it is; where it goes (the branch's named area
+/// when it is in one, the street, the door, the note that finds it); what is in the bag; the cash to collect; then the way
 /// there and the phone a tap away, and the one next step in a button a thumb
 /// cannot miss: on the way, then delivered. On the way, it can also not be
 /// handed over; then the bag goes back to the branch.
@@ -96,6 +96,7 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
       DeliveryStage.failed => (l10n.bringItBack, amber),
       _ => ready ? (l10n.readyToGo, green) : (l10n.stillCooking, amber),
     };
+    final area = order.zoneName?.getText(locale);
     final details = order.addressDetails(
       building: l10n.building,
       floor: l10n.floor,
@@ -142,10 +143,11 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                   overflow: TextOverflow.ellipsis,
                 ),
                 const SizedBox(height: 12),
-                // Where: the street, the door under it, the note that finds it
+                // Where: the area as the branch names it, the street, the door under it, the note that finds it
                 _Inset(
                   icon: FIcons.mapPin,
                   children: [
+                    if (area != null && area.isNotEmpty) Text(area, style: theme.typography.sm.copyWith(color: muted)),
                     Text(typed(order.address), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
                     if (details != null) Text(details, style: theme.typography.sm.copyWith(color: theme.colors.foreground)),
                     if (order.directions != null) ...[

@@ -2937,6 +2937,18 @@ abstract class AppLocalizations {
   /// **'We don\'t deliver to this address yet'**
   String get deliveryNoBranchReaches;
 
+  /// No description provided for @deliveryAboutMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'about {minutes} min'**
+  String deliveryAboutMinutes(int minutes);
+
+  /// No description provided for @deliveryAreaOff.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re not delivering to {area} right now.'**
+  String deliveryAreaOff(String area);
+
   /// No description provided for @pickupFrom.
   ///
   /// In en, this message translates to:
@@ -3164,6 +3176,12 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This address is outside the branch\'s delivery area.'**
   String get problemOutOfRange;
+
+  /// No description provided for @problemAreaOff.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'re not delivering to this area right now.'**
+  String get problemAreaOff;
 
   /// No description provided for @problemBelowMinimum.
   ///

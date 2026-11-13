@@ -36,6 +36,18 @@ void main() {
       expect(order.lines.single.units, 2);
       expect(order.lines.single.options?.en, 'Oat milk');
       expect(order.apartment, isNull);
+      expect(order.zoneName, isNull, reason: 'in no named area');
+    });
+
+    test('reads the named area the delivery goes to', () {
+      final json = _json();
+      (json['delivery'] as Map<String, dynamic>)['zoneName'] = {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'};
+      final order = DeliveryOrder.fromJson(json);
+      expect(order.zoneName?.getText(const Locale('en')), 'Maadi Degla');
+      expect(order.zoneName?.getText(const Locale('ar')), 'دجلة المعادي');
+
+      (json['delivery'] as Map<String, dynamic>)['zoneName'] = {'en': ' ', 'ar': null};
+      expect(DeliveryOrder.fromJson(json).zoneName, isNull, reason: 'a blank name is no name');
     });
 
     test('says the address on one line, street first, leaving out what is missing, in the language\'s list comma', () {

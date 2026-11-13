@@ -1634,6 +1634,16 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryNoBranchReaches => 'We don\'t deliver to this address yet';
 
   @override
+  String deliveryAboutMinutes(int minutes) {
+    return 'about $minutes min';
+  }
+
+  @override
+  String deliveryAreaOff(String area) {
+    return 'We\'re not delivering to $area right now.';
+  }
+
+  @override
   String pickupFrom(String name) {
     return 'Pick up from $name';
   }
@@ -1759,6 +1769,9 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get problemOutOfRange =>
       'This address is outside the branch\'s delivery area.';
+
+  @override
+  String get problemAreaOff => 'We\'re not delivering to this area right now.';
 
   @override
   String get problemBelowMinimum => 'Add a little more for delivery.';

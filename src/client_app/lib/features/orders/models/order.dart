@@ -91,15 +91,25 @@ class OrderDelivery {
   final String? riderName;
   final double fee;
 
-  const OrderDelivery({required this.stage, this.riderName, this.fee = 0});
+  /// The branch's named area it goes to, as it was when the order was placed
+  final LocalizedText? zoneName;
+
+  /// About how many minutes that area said a delivery there takes
+  final int? etaMinutes;
+
+  const OrderDelivery({required this.stage, this.riderName, this.fee = 0, this.zoneName, this.etaMinutes});
 
   static OrderDelivery? parse(Object? json) {
     if (json is! Map) return null;
     final rider = json['riderName'];
+    final zone = json['zoneName'];
+    final zoneName = zone is Map ? LocalizedText.fromJson(zone.cast<String, dynamic>()) : null;
     return OrderDelivery(
       stage: json['stage'] as String? ?? 'Waiting',
       riderName: rider is String && rider.trim().isNotEmpty ? rider.trim() : null,
       fee: (json['fee'] as num?)?.toDouble() ?? 0,
+      zoneName: zoneName == null || zoneName.isEmpty ? null : zoneName,
+      etaMinutes: (json['etaMinutes'] as num?)?.toInt(),
     );
   }
 }
