@@ -449,7 +449,9 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           type='tel'
           inputMode='tel'
           autoComplete='tel'
+          // The digits read left to right, but the field sits with the others: on the right in Arabic
           dir='ltr'
+          className='rtl:text-right'
         />
       ) : (
         phoneOk && (
