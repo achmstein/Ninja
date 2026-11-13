@@ -670,9 +670,7 @@ public class OrdersWebApiTest
             Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = new LocalizedText("Latte", null), UnitPrice = 50, Quantity = 1 }],
             GuestName: guestName,
             GuestPhone: guestPhone,
-            PlaceId: placeId,
-            PlaceKind: placeId is null ? null : "Table",
-            PlaceName: placeId is null ? null : new LocalizedText("Table 7", null));
+            PlaceId: placeId);
 
     /// <summary>A business in Saudi Arabia takes the numbers its customers have.</summary>
     [TestMethod]

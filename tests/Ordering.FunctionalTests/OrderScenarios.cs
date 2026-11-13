@@ -1,5 +1,6 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
 using Ninja.Testing;
 
 namespace Ninja.Ordering.FunctionalTests;
@@ -72,8 +73,9 @@ public sealed class OrderScenarios
         loyaltyDiscount = 0,
         items = items.Length == 0 ? [Item(1, "Turkish coffee", 35m)] : items,
         placeId = 3,
-        placeKind = "Table",
-        placeName = new { en = "Table 3", ar = "ترابيزة ٣" },
+        // What an app already installed still sends. Nobody reads it: the place is Spaces' to name
+        placeKind = "Room",
+        placeName = new { en = "Whatever the app says", ar = "اي كلام" },
     };
 
     /// <summary>A retry on business Wi-Fi must not become a second order, so every command carries its own id.</summary>
@@ -104,13 +106,33 @@ public sealed class OrderScenarios
     {
         var userId = $"customer-{Guid.NewGuid():N}";
 
+        // Spaces has said what place 3 is. The app says the table by its id; what it sends as a
+        // name or a kind (see Basket) is not read
+        using (var scope = Suite.Ordering.Services.CreateScope())
+        {
+            var context = scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>();
+            if (await context.Places.FindAsync(3) is null)
+            {
+                context.Places.Add(new Ninja.Ordering.Infrastructure.Projections.Place
+                {
+                    PlaceId = 3,
+                    Kind = "Table",
+                    Name = new("Table 3", "ترابيزة ٣"),
+                    BranchId = Suite.Branch,
+                    IsActive = true,
+                    UpdatedAt = DateTime.UtcNow,
+                });
+                await context.SaveChangesAsync();
+            }
+        }
+
         var orderNumber = await PlaceOrderAsync(userId);
 
         var order = await Customer(userId).GetAsync<OrderView>($"{Orders}/{orderNumber}?{Version}");
         Assert.AreEqual(orderNumber, order.OrderNumber);
         Assert.AreEqual(3, order.PlaceId, "the order knows the table it came from");
-        Assert.AreEqual("Table", order.PlaceKind);
-        Assert.AreEqual("Table 3", order.PlaceName!.En);
+        Assert.AreEqual("Table", order.PlaceKind, "what Spaces says it is, not the \"Room\" the app sent");
+        Assert.AreEqual("Table 3", order.PlaceName!.En, "what Spaces calls it, not what the app sent");
         Assert.AreEqual(35m, order.Total);
         var line = order.OrderItems.Single();
         Assert.AreEqual("Turkish coffee", line.ProductName.En);
@@ -165,8 +187,6 @@ public sealed class OrderScenarios
             items = new[] { Item(2, "Tea", 20m, 2) },
             customerNote = "Extra hot",
             placeId = 5,
-            placeKind = "Table",
-            placeName = new { en = "Table 5", ar = "ترابيزة ٥" },
         });
         Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, await response.Content.ReadAsStringAsync());
         var sale = (await response.Content.ReadFromJsonAsync<PosOrderView>(Caller.Json))!;

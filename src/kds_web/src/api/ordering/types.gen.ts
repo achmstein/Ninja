@@ -90,8 +90,6 @@ export type CreateOrderRequest = {
     guestPhone?: null | string;
     sessionId?: null | number | string;
     placeId?: null | number | string;
-    placeKind?: null | string;
-    placeName?: null | LocalizedText;
     promoCode?: null | string;
     delivery?: null | DeliveryRequest;
 };
@@ -518,8 +516,6 @@ export type PosOrderRequest = {
     customerName?: null | string;
     placedAt?: null | string;
     placeId?: null | number | string;
-    placeKind?: null | string;
-    placeName?: null | LocalizedText;
     replay?: boolean;
     delivery?: null | PosDeliveryRequest;
 };

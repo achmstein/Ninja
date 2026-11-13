@@ -20,7 +20,10 @@ using Order = Ninja.Ordering.API.Application.Queries.Order;
 /// <param name="GuestName">Required when ordering without an account.</param>
 /// <param name="GuestPhone">Required when ordering without an account, so staff can reach them.</param>
 /// <param name="SessionId">The active stay the order belongs to, when ordering from a timed place.</param>
-/// <param name="PlaceId">The Spaces place the order goes to; null for an order-ahead.</param>
+/// <param name="PlaceId">
+/// The Spaces place the order goes to; null for an order-ahead. Its id is all a client says: what the
+/// place is called and what kind it is are read from Spaces' places, never from the request.
+/// </param>
 public record CreateOrderRequest(
     string UserId,
     string UserName,
@@ -32,8 +35,6 @@ public record CreateOrderRequest(
     string? GuestPhone = null,
     int? SessionId = null,
     int? PlaceId = null,
-    string? PlaceKind = null,
-    LocalizedText? PlaceName = null,
     /// <summary>A promo code typed at checkout; quoted by Catalog beforehand, redeemed when the items check out.</summary>
     string? PromoCode = null,
     /// <summary>Deliver it with the branch's own rider, to this address; null to eat in or collect.</summary>
@@ -84,10 +85,13 @@ public record PosOrderRequest(
     /// up while offline. Dates the order then instead of now.
     /// </summary>
     DateTime? PlacedAt = null,
-    /// <summary>The Spaces place the order goes to; null for a counter sale.</summary>
+    /// <summary>
+    /// The Spaces place the order goes to, by its id alone, for an order that names no bill: Sales then
+    /// finds or opens that place's bill. With <see cref="TicketId"/> it is not read: the bill is a
+    /// place's already, and the order goes to the kitchen under that place. Null with no bill is a
+    /// counter sale.
+    /// </summary>
     int? PlaceId = null,
-    string? PlaceKind = null,
-    LocalizedText? PlaceName = null,
     /// <summary>
     /// The customer already left with the items: the order lands confirmed
     /// straight away, with no stock check and nothing for the kitchen to

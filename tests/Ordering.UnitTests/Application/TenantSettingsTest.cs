@@ -141,9 +141,7 @@ public class TenantSettingsTest
             Items: [new BasketItem { Id = "1", ProductId = 1, ProductName = new LocalizedText("Latte", null), UnitPrice = 50, Quantity = 1 }],
             GuestName: "Nadia",
             GuestPhone: "01012345678",
-            PlaceId: null,
-            PlaceKind: null,
-            PlaceName: null);
+            PlaceId: null);
 
         return OrdersApi.CreateOrderAsync(Guid.NewGuid(), request, httpContext, services);
     }

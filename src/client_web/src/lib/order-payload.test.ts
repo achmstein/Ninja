@@ -65,7 +65,6 @@ describe('orderBody', () => {
     expect(body).toMatchObject({
       guestName: 'Mona',
       placeId: 7,
-      placeKind: 'Table',
       customerNote: 'by the window',
       promoCode: 'SAVE',
       // A guest never redeems points
@@ -112,7 +111,10 @@ describe('orderBody', () => {
       guestContact: null,
       destination: { ...table, name: { ar: 'ترابيزة ٧' } },
     })
-    expect(body.placeName).toEqual({ en: null, ar: 'ترابيزة ٧' })
+    // The table goes by its id: the site never says what it is called
+    expect(body.placeId).toBe(table.placeId)
+    expect(body).not.toHaveProperty('placeName')
+    expect(body).not.toHaveProperty('placeKind')
     expect(body.items[0]).toMatchObject({
       productName: { en: null, ar: 'شاي' },
       selectedCustomizations: [{ customizationName: { en: null, ar: 'السكر' }, optionName: { en: null, ar: 'زيادة' } }],

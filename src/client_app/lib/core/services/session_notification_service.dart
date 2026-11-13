@@ -306,8 +306,6 @@ class SessionNotificationService {
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
         placeId: _activeSession!.placeId,
-        placeKind: _activeSession!.placeKind.wireName,
-        placeName: _activeSession!.placeName.toJson(),
         sessionId: _activeSession!.id,
         preference: preference,
       );

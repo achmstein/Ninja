@@ -180,9 +180,9 @@ public static partial class OrdersApi
                 isGuest ? guestPhone : null,
                 sessionId: request.SessionId,
                 placeId: request.PlaceId,
-                // The projection fills in what the client left out
-                placeKind: request.PlaceKind ?? place?.Kind,
-                placeName: request.PlaceName ?? place?.Name,
+                // What the place is called and what kind it is: Spaces' to say, read from its places
+                placeKind: place?.Kind,
+                placeName: place?.Name,
                 promoCode: request.PromoCode,
                 guestOrdersAnywhere: guestOrdersAnywhere,
                 // Held to the branch's terms by the handler: one rule for the app and the till
@@ -310,9 +310,9 @@ public static partial class OrdersApi
                 placedAt: request.PlacedAt,
                 replay: request.Replay,
                 placeId: request.PlaceId,
-                // The projection fills in what the till left out
-                placeKind: request.PlaceKind ?? posPlace?.Kind,
-                placeName: request.PlaceName ?? posPlace?.Name,
+                // What the place is called and what kind it is: Spaces' to say, read from its places
+                placeKind: posPlace?.Kind,
+                placeName: posPlace?.Name,
                 // Held to the branch's terms by the handler: one rule for the app and the till
                 delivery: request.Delivery is { } wanted
                     ? new DeliveryDraft(wanted.Latitude, wanted.Longitude, wanted.Address, wanted.Building, wanted.Floor, wanted.Apartment, wanted.Directions, wanted.Phone, wanted.ZoneId)

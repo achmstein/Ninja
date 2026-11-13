@@ -27,8 +27,6 @@ abstract class OrderRepository {
     required String userName,
     required String requestId,
     int? placeId,
-    String? placeKind,
-    Map<String, dynamic>? placeName,
     int? sessionId,
     String? customerNote,
     int pointsToRedeem,
@@ -42,8 +40,6 @@ abstract class OrderRepository {
     required String userId,
     required String userName,
     int? placeId,
-    String? placeKind,
-    Map<String, dynamic>? placeName,
     int? sessionId,
     UserItemPreference? preference,
   });
@@ -104,8 +100,6 @@ class ApiOrderRepository implements OrderRepository {
     required String userName,
     required String requestId,
     int? placeId,
-    String? placeKind,
-    Map<String, dynamic>? placeName,
     int? sessionId,
     String? customerNote,
     int pointsToRedeem = 0,
@@ -119,11 +113,10 @@ class ApiOrderRepository implements OrderRepository {
       data: {
         'userId': userId,
         'userName': userName,
-        // Where the order goes; the server lands it on the place's bill, or
-        // the stay's when a clock runs there.
+        // Where the order goes, by the place's id alone: what it is called is
+        // the server's to say. It lands on the place's bill, or the stay's when
+        // a clock runs there.
         'placeId': placeId,
-        'placeKind': placeKind,
-        'placeName': placeName,
         'sessionId': sessionId,
         'customerNote': customerNote,
         'pointsToRedeem': pointsToRedeem,
@@ -154,8 +147,6 @@ class ApiOrderRepository implements OrderRepository {
     required String userId,
     required String userName,
     int? placeId,
-    String? placeKind,
-    Map<String, dynamic>? placeName,
     int? sessionId,
     UserItemPreference? preference,
   }) async {
@@ -231,8 +222,6 @@ class ApiOrderRepository implements OrderRepository {
       userName: userName,
       requestId: _uuid.v4(),
       placeId: placeId,
-      placeKind: placeKind,
-      placeName: placeName,
       sessionId: sessionId,
     );
   }
@@ -404,8 +393,6 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
   Future<bool> submitOrder({
     required List<CartItem> items,
     int? placeId,
-    String? placeKind,
-    Map<String, dynamic>? placeName,
     int? sessionId,
     String? customerNote,
     int pointsToRedeem = 0,
@@ -442,8 +429,6 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
         userName: _authState.name ?? 'Guest',
         requestId: _requestId!,
         placeId: placeId,
-        placeKind: placeKind,
-        placeName: placeName,
         sessionId: sessionId,
         customerNote: customerNote,
         pointsToRedeem: pointsToRedeem,

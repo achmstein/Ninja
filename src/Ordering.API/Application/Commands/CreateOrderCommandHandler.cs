@@ -79,11 +79,18 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
         var loyaltyDiscount = Order.GetLoyaltyDiscountFor(message.PointsToRedeem, itemsTotal);
         var delivery = await DeliveryOfAsync(message, itemsTotal);
 
-        // Rung up onto an open bill without saying where: the bill is a place's, and the order is that
-        // place's with it. The kitchen's card then says "Room 5" whichever till sent it
-        var ticketPlace = message.TicketId is { } onTicket && message.PlaceId is null && _ticketPlaces is not null
+        // Where an order goes is decided in one order. Rung up onto an open bill, it is the bill's place:
+        // the bill is a table's or a room's in Sales, and nothing the sender says about a place changes
+        // that, so the kitchen's card says "Room 5" whichever till sent it. Only an order that names no
+        // bill goes by the place it names itself (Sales then finds or opens that place's bill), and one
+        // that names neither is a counter sale. A bill not heard of yet is taken as sent, and given its
+        // place when it is heard of
+        var ticketPlace = message.TicketId is { } onTicket && _ticketPlaces is not null
             ? await _ticketPlaces.FindAsync(onTicket, cancellationToken)
             : null;
+        var (placeId, placeKind, placeName) = ticketPlace is not null
+            ? ((int?)ticketPlace.PlaceId, ticketPlace.PlaceKind, ticketPlace.PlaceName)
+            : (message.PlaceId, message.PlaceKind, message.PlaceName);
 
         // Create the order (starts in AwaitingValidation status)
         var order = new Order(
@@ -100,9 +107,9 @@ public class CreateOrderCommandHandler : IRequestHandler<CreateOrderCommand, int
             sessionId: message.SessionId,
             ticketId: message.TicketId,
             placedAt: message.PlacedAt,
-            placeId: message.PlaceId ?? ticketPlace?.PlaceId,
-            placeKind: message.PlaceId is null ? ticketPlace?.PlaceKind : message.PlaceKind,
-            placeName: message.PlaceId is null ? ticketPlace?.PlaceName : message.PlaceName,
+            placeId: placeId,
+            placeKind: placeKind,
+            placeName: placeName,
             promoCode: message.PromoCode,
             guestOrdersAnywhere: message.GuestOrdersAnywhere,
             platform: message.Platform,

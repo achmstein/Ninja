@@ -294,8 +294,6 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
   final success = await ref.read(checkoutProvider.notifier).submitOrder(
         items: cart.items,
         placeId: destination?.placeId,
-        placeKind: destination?.placeKind.wireName,
-        placeName: destination?.name.toJson(),
         sessionId: destination?.sessionId,
         customerNote: note.isEmpty ? null : note,
         pointsToRedeem: redemption.pointsToRedeem,

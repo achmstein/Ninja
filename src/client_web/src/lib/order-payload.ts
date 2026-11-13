@@ -1,6 +1,5 @@
 import type { CartLine } from '@/lib/cart'
 import type { OrderDestination } from '@/lib/order-destination'
-import { placeKindName } from '@/lib/places'
 import type { DeliveryAddress } from '@/stores/delivery-store'
 
 /**
@@ -115,10 +114,9 @@ export function orderBody({
     userName: profile?.name || profile?.preferred_username || '',
     guestName: guestContact?.name ?? null,
     guestPhone: guestContact?.phone ?? null,
-    // Where the order goes, and the customer's running clock there if any
+    // Where the order goes, by the place's id alone (what it is called is the
+    // server's to say), and the customer's running clock there if any
     placeId: destination?.placeId ?? null,
-    placeKind: destination ? placeKindName(destination.placeKind) : null,
-    placeName: destination ? { en: destination.name.en || null, ar: destination.name.ar || null } : null,
     sessionId: destination?.sessionId ?? null,
     // Where the rider goes, and the number to call at the door (a guest's checkout phone when the address has none)
     delivery: delivery

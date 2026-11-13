@@ -299,8 +299,6 @@ public sealed class DemoData(IStackProxy stack, ILogger<DemoData> logger)
             pointsToRedeem = 0,
             placedAt,
             placeId = place?["id"]?.GetValue<int>(),
-            placeKind = place is null ? null : "Table",
-            placeName = place?["name"]?.DeepClone(),
             replay = true,
         }, branch, ct, idempotent: true) as JsonObject;
         var orderId = order?["orderId"]?.GetValue<int>() ?? 0;
