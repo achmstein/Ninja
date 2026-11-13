@@ -16,6 +16,7 @@ import 'order_detail_dialog.dart';
 import 'platform_badge.dart';
 import '../../../core/utils/bidi.dart';
 
+import '../../../core/utils/phone.dart';
 /// The queue of customer app orders waiting for a cashier's tap, wherever
 /// it is shown: sideways on the floor, stacked on the ticket they will land
 /// on. Confirm is right on the card — the usual answer — and the card body
@@ -146,7 +147,7 @@ class _PendingOrderCard extends StatelessWidget {
     final who = (order.userName ?? '').isNotEmpty ? order.userName! : l10n.guest;
     final title = place.isNotEmpty ? place : who;
     // A delivery is named for whom it goes to, and says where
-    final subtitle = order.delivery != null ? order.delivery!.address : place.isNotEmpty ? who : order.guestPhone;
+    final subtitle = order.delivery != null ? order.delivery!.address : place.isNotEmpty ? who : order.guestPhone == null ? null : showPhone(order.guestPhone);
     // A guest: how many orders this device has had confirmed here before —
     // a first-timer at a table is worth a look before the kitchen starts
     final ordersBefore = order.guestOrdersBefore;

@@ -245,7 +245,9 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   late final _floor = TextEditingController(text: _initial?.floor ?? '');
   late final _apartment = TextEditingController(text: _initial?.apartment ?? '');
   late final _directions = TextEditingController(text: _initial?.directions ?? '');
-  late final _phone = TextEditingController(text: _initial?.phone ?? ref.read(authServiceProvider).phoneNumber ?? '');
+  // Shown the local way; kept and sent in the international form
+  late final _phone = TextEditingController(
+      text: ref.read(brandProvider).locale.showPhone(_initial?.phone ?? ref.read(authServiceProvider).phoneNumber));
   late LabelKind _kind = labelKind(_initial?.label);
   late final _labelText = TextEditingController(text: labelKind(_initial?.label) == LabelKind.other ? (_initial?.label ?? '') : '');
 
@@ -300,7 +302,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   }
 
   String? _problem(AppLocalizations l10n) {
-    final phoneOk = ref.read(brandProvider).locale.isValidPhone(_phone.text.trim().replaceAll(RegExp(r'[\s-]'), ''));
+    final phoneOk = ref.read(brandProvider).locale.isValidPhone(_phone.text);
     if (!_pinned) return l10n.deliveryNeedPin;
     if (_street.text.trim().isEmpty) return l10n.deliveryNeedStreet;
     if (!phoneOk) return l10n.deliveryNeedPhone;
@@ -322,7 +324,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       floor: text(_floor),
       apartment: text(_apartment),
       directions: text(_directions),
-      phone: _phone.text.trim(),
+      phone: ref.read(brandProvider).locale.normalizePhone(_phone.text),
     );
     setState(() => _busy = true);
     try {

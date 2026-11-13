@@ -217,7 +217,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
   Future<void> _loadCurrentPhone() async {
     final phone = await widget.ref.read(settingsProvider.notifier).getPhoneNumber();
     if (phone != null && mounted) {
-      _phoneController.text = phone;
+      // Shown the local way; kept and sent in the international form
+      _phoneController.text = widget.ref.read(brandProvider).locale.showPhone(phone);
     }
   }
 
@@ -232,7 +233,8 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
   Future<void> _handleUpdate() async {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final phone = _phoneController.text.trim();
+    // In the one international form, however it was typed or autofilled
+    final phone = widget.ref.read(brandProvider).locale.normalizePhone(_phoneController.text);
 
     if (firstName.isEmpty || lastName.isEmpty || phone.isEmpty) {
       setState(() => _error = widget.l10n.fillAllFields);
@@ -358,9 +360,12 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
                     NinjaField(
                       controller: _phoneController,
                       label: AppText(widget.l10n.phoneNumber),
-                      hint: widget.l10n.enterPhoneNumber,
+                      hint: widget.ref.watch(brandProvider).locale.phonePlaceholder.isNotEmpty
+                          ? widget.ref.watch(brandProvider).locale.phonePlaceholder
+                          : widget.l10n.enterPhoneNumber,
                       enabled: !_isLoading,
                       keyboardType: TextInputType.phone,
+                      autofillHints: const [AutofillHints.telephoneNumber],
                     ),
                     const SizedBox(height: 24),
 

@@ -6,6 +6,7 @@ import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/sale_delivery.dart';
 
+import '../../../core/utils/phone.dart';
 /// The delivery on the sale: where it goes and the number the rider calls
 /// (its digits alone left to right), whether it has a pin; a tap changes
 /// it, the cross makes it a counter sale again. One sent to the branch nearer
@@ -53,7 +54,7 @@ class DeliverySummary extends StatelessWidget {
                           Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                           const SizedBox(width: 4),
                         ],
-                        Text(delivery.phone, textDirection: TextDirection.ltr, style: muted),
+                        Text(showPhone(delivery.phone), textDirection: TextDirection.ltr, style: muted),
                         if (!delivery.hasPin)
                           Flexible(
                             child: Text(' · ${l10n.deliveryNoPin}', maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),

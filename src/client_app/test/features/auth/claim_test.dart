@@ -24,7 +24,7 @@ class _Claims implements ClaimRepository {
   @override
   Future<ClaimPreview> preview(String token) async {
     if (previewFails != null) throw ClaimException(previewFails!);
-    return const ClaimPreview(name: 'Salma Nabil', phoneNumber: '01012345678');
+    return const ClaimPreview(name: 'Salma Nabil', phoneNumber: '+201012345678');
   }
 
   @override
@@ -110,7 +110,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Salma Nabil'), findsOneWidget);
-      expect(find.text('01012345678'), findsOneWidget);
+      expect(find.text('010 12345678'), findsOneWidget);
       expect(find.text('Create my account'), findsOneWidget);
     });
 

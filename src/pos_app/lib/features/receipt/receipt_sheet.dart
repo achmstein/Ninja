@@ -8,6 +8,7 @@ import '../tickets/models/enums.dart';
 import '../tickets/models/ticket_detail.dart';
 import 'sheet_widgets.dart';
 
+import '../../core/utils/phone.dart';
 export 'sheet_widgets.dart' show receiptWidth;
 
 /// What was paid, as the settle dialog knows it before the refetched
@@ -80,7 +81,7 @@ class ReceiptSheet extends StatelessWidget {
             Text(branch!.name.getText(locale), style: const TextStyle(fontSize: 24, fontWeight: FontWeight.w600)),
             if ((branch!.address?.getText(locale) ?? '').isNotEmpty)
               Text(branch!.address!.getText(locale), style: const TextStyle(fontSize: 20)),
-            if (branch!.phone != null) Text(branch!.phone!, style: const TextStyle(fontSize: 20)),
+            if (branch!.phone != null) Text(showPhone(branch!.phone), textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 20)),
             if (branch!.taxNumber != null) Text(l10n.taxNumber(branch!.taxNumber!), style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 6),
           ],

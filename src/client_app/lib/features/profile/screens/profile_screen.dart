@@ -122,7 +122,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ),
                             if (signedIn && authState.hasPhone)
                               Text(
-                                authState.phoneNumber!,
+                                ref.watch(brandProvider).locale.showPhone(authState.phoneNumber),
                                 textDirection: TextDirection.ltr,
                                 style: context.localeText(theme.typography.note.copyWith(color: ink.withValues(alpha: 0.6))),
                               ),
@@ -220,7 +220,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               NinjaTile(
                 icon: LucideIcons.phone,
                 title: AppText(l10n.callUs),
-                subtitle: Text(phone, textDirection: TextDirection.ltr),
+                subtitle: Text(ref.watch(brandProvider).locale.showPhone(phone), textDirection: TextDirection.ltr),
                 onPress: () => launchUrl(Uri.parse('tel:$phone')),
               ),
             NinjaTile(icon: LucideIcons.info, title: AppText(l10n.about), onPress: () => _showAboutSheet(context)),

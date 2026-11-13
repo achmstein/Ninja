@@ -305,7 +305,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                 const BrandMark(size: 64),
                 const SizedBox(height: 12),
                 BrandHeading(preview.name, style: theme.typography.headline.copyWith(color: ink)),
-                if (preview.phoneNumber != null) Text(preview.phoneNumber!, textDirection: TextDirection.ltr, style: note),
+                if (preview.phoneNumber != null) Text(ref.watch(brandProvider).locale.showPhone(preview.phoneNumber), textDirection: TextDirection.ltr, style: note),
                 const SizedBox(height: 12),
                 Text(l10n.claimIntro(_businessName), textAlign: TextAlign.center, style: note),
               ],

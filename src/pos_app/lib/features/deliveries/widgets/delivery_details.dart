@@ -9,6 +9,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
 import '../models/delivery_order.dart';
 
+import '../../../core/utils/phone.dart';
 /// "800 m", "2.4 km" in the app's language
 String distanceLabel(AppLocalizations l10n, int meters) =>
     distanceText(meters, metres: l10n.distanceMeters, kilometres: l10n.distanceKilometres);
@@ -107,7 +108,7 @@ class DeliveryDetails extends StatelessWidget {
               if (delivery.phone.isNotEmpty)
                 Semantics(
                   button: true,
-                  label: delivery.phone,
+                  label: showPhone(delivery.phone),
                   excludeSemantics: true,
                   child: InkWell(
                     onTap: () => openOrSay(context, delivery.phoneUri, l10n.couldNotOpenDialer),
@@ -120,7 +121,7 @@ class DeliveryDetails extends StatelessWidget {
                         children: [
                           Icon(FIcons.phone, size: Sizes.iconSmall, color: theme.colors.foreground),
                           const SizedBox(width: 6),
-                          Text(delivery.phone,
+                          Text(showPhone(delivery.phone),
                               textDirection: TextDirection.ltr, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
                         ],
                       ),

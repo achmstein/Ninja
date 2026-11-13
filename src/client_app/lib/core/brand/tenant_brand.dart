@@ -1,6 +1,7 @@
 import 'dart:ui' show Brightness, Color, Locale;
 import 'package:flutter/foundation.dart' show mapEquals;
 import '../models/localized_text.dart';
+import '../utils/phone.dart' as phones;
 
 /// The switches a tenant can turn off. Every one is on until the brand is
 /// known, so nothing flashes off and back at startup.
@@ -199,11 +200,12 @@ class TenantLocale {
   /// no switch.
   final String contentLanguages;
 
-  /// What a phone number looks like here, as the tenant sends it: the same
-  /// rule the sign-in page and the server check against.
+  /// The loose shape the tenant's sign-in page holds a number to. The app
+  /// itself reads a number against the country ([isValidPhone]); this is only
+  /// carried as the tenant sends it.
   final String phonePattern;
 
-  /// The shape to show in a phone field, e.g. `01xxxxxxxxx`
+  /// A mobile as the country writes one, to show in a phone field: `010 01234567`
   final String phonePlaceholder;
 
   const TenantLocale({
@@ -217,9 +219,17 @@ class TenantLocale {
     this.phonePlaceholder = '',
   });
 
-  /// Whether this is a number a business in that country would recognise.
-  bool isValidPhone(String phone) =>
-      RegExp(phonePattern).hasMatch(phone.trim());
+  /// Whether this is a customer's number here: a mobile of the business's
+  /// country, however it is typed or a phone's autofill hands it over.
+  bool isValidPhone(String phone) => phones.isValidPhone(phone, country);
+
+  /// The number in the one international form it is sent and kept in
+  /// (+201012345678); what was typed, without its separators, when it is not
+  /// a number here.
+  String normalizePhone(String phone) => phones.normalizePhone(phone, country);
+
+  /// A kept number as people here write it: 010 12345678.
+  String showPhone(String? phone) => phones.formatPhone(phone, country);
 
   /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
   bool get speaksStandardArabic => arabicStyle == 'standard';

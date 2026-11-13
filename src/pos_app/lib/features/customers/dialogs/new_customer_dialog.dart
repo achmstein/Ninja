@@ -307,7 +307,7 @@ class _ExistingCard extends ConsumerWidget {
                     Row(
                       children: [
                         if (user.phoneNumber case final phone?)
-                          Directionality(textDirection: TextDirection.ltr, child: Text(phone, style: muted)),
+                          Directionality(textDirection: TextDirection.ltr, child: Text(showPhone(phone), style: muted)),
                         if (points != null) ...[
                           Text('  ·  ', style: muted),
                           Flexible(child: Text(l10n.pointsBalance(points), style: muted, overflow: TextOverflow.ellipsis)),

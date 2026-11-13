@@ -88,7 +88,8 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
     final l10n = AppLocalizations.of(context)!;
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
-    final phone = _phoneController.text.trim();
+    // In the one international form, however it was typed or autofilled
+    final phone = ref.read(brandProvider).locale.normalizePhone(_phoneController.text);
 
     if ((!widget.hasName && (firstName.isEmpty || lastName.isEmpty)) || (!widget.hasPhone && phone.isEmpty)) {
       setState(() => _error = l10n.fillAllFields);
@@ -188,9 +189,12 @@ class _ProfilePromptSheetState extends ConsumerState<_ProfilePromptSheet> {
               NinjaField(
                 controller: _phoneController,
                 label: AppText(l10n.phoneNumber),
-                hint: l10n.enterPhoneNumber,
+                hint: ref.watch(brandProvider).locale.phonePlaceholder.isNotEmpty
+                    ? ref.watch(brandProvider).locale.phonePlaceholder
+                    : l10n.enterPhoneNumber,
                 enabled: !_isSaving,
                 keyboardType: TextInputType.phone,
+                autofillHints: const [AutofillHints.telephoneNumber],
                 textInputAction: TextInputAction.done,
                 onSubmit: (_) => _handleSave(),
               ),

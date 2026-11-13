@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/models/localized_text.dart';
@@ -129,7 +130,7 @@ class _ReceiptBody extends ConsumerWidget {
                   if (branch.address != null)
                     AppText(branch.address!.localized(context), style: muted, textAlign: TextAlign.center),
                   if (branch.phone != null)
-                    Directionality(textDirection: TextDirection.ltr, child: AppText(branch.phone!, style: muted)),
+                    Directionality(textDirection: TextDirection.ltr, child: AppText(ref.watch(brandProvider).locale.showPhone(branch.phone), style: muted)),
                   if (branch.taxNumber != null) AppText(l10n.taxNumber(branch.taxNumber!), style: muted),
                   const SizedBox(height: 6),
                 ],

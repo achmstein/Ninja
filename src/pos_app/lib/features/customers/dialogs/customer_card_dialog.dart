@@ -15,6 +15,7 @@ import '../providers/customer_providers.dart';
 import 'app_link_dialog.dart';
 import 'pay_tab_dialog.dart';
 
+import '../../../core/utils/phone.dart';
 /// The customer in front of the cashier, at a glance: their points (as
 /// information — points are earned, joined and spent in the customer app,
 /// never at the till) and their tab, which the till can take money against.
@@ -118,7 +119,7 @@ class _CustomerCard extends ConsumerWidget {
             Row(children: [
               Icon(FIcons.phone, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               const SizedBox(width: 6),
-              Directionality(textDirection: TextDirection.ltr, child: Text(phone, style: muted)),
+              Directionality(textDirection: TextDirection.ltr, child: Text(showPhone(phone), style: muted)),
               const SizedBox(width: 6),
               // The customer on WhatsApp, from the till's own account
               GestureDetector(

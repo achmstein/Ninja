@@ -66,6 +66,7 @@ dependencies:
   geolocator: ^14.1.1
   maplibre_gl: ^0.27.1
   google_maps_flutter: ^2.18.1
+  phone_numbers_parser: ^9.0.29
 
 dev_dependencies:
   flutter_test:

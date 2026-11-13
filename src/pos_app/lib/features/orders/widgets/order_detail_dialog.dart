@@ -13,6 +13,7 @@ import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 import 'platform_badge.dart';
 
+import '../../../core/utils/phone.dart';
 enum OrderDetailAction { confirm, cancel, rejectGuest }
 
 /// The pick, and, for a delivery platform's order being turned down, why
@@ -77,7 +78,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
         ? null
         : [
             ordersBefore == null ? l10n.accountHolder : l10n.guest,
-            if ((summary.guestPhone ?? '').isNotEmpty) summary.guestPhone!,
+            if ((summary.guestPhone ?? '').isNotEmpty) bidiIsolate(showPhone(summary.guestPhone)),
             if (ordersBefore != null) ordersBefore == 0 ? l10n.guestFirstOrderHere : l10n.guestOrdersBefore(ordersBefore),
           ].join(' · ');
     final identityColor = ordersBefore == 0 ? AppColors.amber(theme.colors.brightness) : theme.colors.mutedForeground;
@@ -217,7 +218,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                         padding: const EdgeInsetsDirectional.only(start: 24),
                         child: Text(
                           [
-                            bidiIsolate(delivery.phone),
+                            bidiIsolate(showPhone(delivery.phone)),
                             l10n.deliveryFeeIs(money(context, delivery.fee)),
                             if ((delivery.riderName ?? '').isNotEmpty) l10n.deliveryRiderIs(delivery.riderName!),
                           ].join(' · '),

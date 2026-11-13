@@ -43,7 +43,8 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
     final firstName = _firstNameController.text.trim();
     final lastName = _lastNameController.text.trim();
     final email = _emailController.text.trim();
-    final phone = _phoneController.text.trim();
+    // In the one international form, however it was typed or autofilled
+    final phone = ref.read(brandProvider).locale.normalizePhone(_phoneController.text);
     final password = _passwordController.text;
     final confirmPassword = _confirmPasswordController.text;
 
@@ -187,9 +188,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> {
             NinjaField(
               controller: _phoneController,
               label: AppText(l10n.phoneNumber),
-              hint: l10n.enterPhoneNumber,
+              hint: ref.watch(brandProvider).locale.phonePlaceholder.isNotEmpty
+                  ? ref.watch(brandProvider).locale.phonePlaceholder
+                  : l10n.enterPhoneNumber,
               textInputAction: TextInputAction.next,
               keyboardType: TextInputType.phone,
+              autofillHints: const [AutofillHints.telephoneNumber],
             ),
             const SizedBox(height: 16),
 

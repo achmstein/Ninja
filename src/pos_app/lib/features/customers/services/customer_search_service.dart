@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/network/api_client.dart';
 
+import '../../../core/utils/phone.dart';
 /// A Keycloak user as the identity BFF route returns it.
 class IdentityUser {
   final String id;
@@ -30,7 +31,7 @@ class IdentityUser {
     return full.isNotEmpty ? full : (username ?? '');
   }
 
-  String? get contact => (phoneNumber?.isNotEmpty == true) ? phoneNumber : email;
+  String? get contact => (phoneNumber?.isNotEmpty == true) ? showPhone(phoneNumber) : email;
 
   factory IdentityUser.fromJson(Map<String, dynamic> json) => IdentityUser(
         id: json['id'] as String,

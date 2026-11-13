@@ -6,6 +6,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'core/brand/brand_provider.dart';
+import 'core/utils/phone.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';
@@ -276,6 +277,9 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
           splashFactory: NoSplash.splashFactory,
           highlightColor: Colors.transparent,
         );
+
+    // Phone numbers are read and shown the way the business's country writes them
+    phoneCountry = ref.watch(brandProvider).locale.country;
 
     return MaterialApp.router(
       title: ref.watch(brandProvider).name.isEmpty ? 'POS' : '${ref.watch(brandProvider).name.primary} POS',
