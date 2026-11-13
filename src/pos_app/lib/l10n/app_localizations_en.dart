@@ -1001,6 +1001,25 @@ class AppLocalizationsEn extends AppLocalizations {
   String get paused => 'Paused';
 
   @override
+  String get openToCustomers => 'Open to customers';
+
+  @override
+  String get ordersPaused => 'Orders paused';
+
+  @override
+  String get reservationsPaused => 'Reservations paused';
+
+  @override
+  String get ordersAndReservations => 'Orders and reservations';
+
+  @override
+  String get customerOrders => 'Customer orders';
+
+  @override
+  String get tradingHint =>
+      'What customers can do from their phones right now. Opening a shift turns these on, and closing it turns them off.';
+
+  @override
   String get shiftTitle => 'Shift';
 
   @override

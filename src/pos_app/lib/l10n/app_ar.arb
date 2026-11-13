@@ -546,6 +546,12 @@
   "takingOrders": "نستقبل الطلبات",
   "takingReservations": "نستقبل الحجوزات",
   "paused": "متوقف",
+  "openToCustomers": "مفتوح للعملاء",
+  "ordersPaused": "الطلبات متوقفة",
+  "reservationsPaused": "الحجوزات متوقفة",
+  "ordersAndReservations": "الطلبات والحجوزات",
+  "customerOrders": "طلبات العملاء",
+  "tradingHint": "ما يستطيع العملاء فعله من هواتفهم الآن. فتح الوردية يفعّلها وإغلاقها يوقفها.",
   "shiftTitle": "الوردية",
   "shiftNumber": "وردية #\u200F{id}",
   "@shiftNumber": {

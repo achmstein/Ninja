@@ -13,7 +13,6 @@ import '../dialogs/open_shift_dialog.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
 import '../widgets/shift_report.dart';
-import '../widgets/trading_switches.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 80.0;
@@ -67,14 +66,6 @@ class ShiftScreen extends ConsumerWidget {
                 child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
               ),
             ),
-            const SizedBox(height: 16),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 448),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 16),
-                child: TradingSwitches(),
-              ),
-            ),
           ],
         ),
       );
@@ -124,7 +115,6 @@ class ShiftScreen extends ConsumerWidget {
                     ],
                   ),
                   const FDivider(),
-                  const TradingSwitches(),
                   const SizedBox(height: 16),
                   ShiftReport(shift: shift),
                 ],

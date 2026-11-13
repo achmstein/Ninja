@@ -567,6 +567,12 @@
   "takingOrders": "Taking orders",
   "takingReservations": "Taking reservations",
   "paused": "Paused",
+  "openToCustomers": "Open to customers",
+  "ordersPaused": "Orders paused",
+  "reservationsPaused": "Reservations paused",
+  "ordersAndReservations": "Orders and reservations",
+  "customerOrders": "Customer orders",
+  "tradingHint": "What customers can do from their phones right now. Opening a shift turns these on, and closing it turns them off.",
   "shiftTitle": "Shift",
   "shiftNumber": "Shift #{id}",
   "@shiftNumber": {

@@ -1850,6 +1850,42 @@ abstract class AppLocalizations {
   /// **'Paused'**
   String get paused;
 
+  /// No description provided for @openToCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Open to customers'**
+  String get openToCustomers;
+
+  /// No description provided for @ordersPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders paused'**
+  String get ordersPaused;
+
+  /// No description provided for @reservationsPaused.
+  ///
+  /// In en, this message translates to:
+  /// **'Reservations paused'**
+  String get reservationsPaused;
+
+  /// No description provided for @ordersAndReservations.
+  ///
+  /// In en, this message translates to:
+  /// **'Orders and reservations'**
+  String get ordersAndReservations;
+
+  /// No description provided for @customerOrders.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer orders'**
+  String get customerOrders;
+
+  /// No description provided for @tradingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What customers can do from their phones right now. Opening a shift turns these on, and closing it turns them off.'**
+  String get tradingHint;
+
   /// No description provided for @shiftTitle.
   ///
   /// In en, this message translates to:

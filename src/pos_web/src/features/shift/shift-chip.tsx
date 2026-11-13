@@ -2,7 +2,6 @@ import { useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { useBranchFlags } from '@/features/branch/use-branch-flags'
 import { cn } from '@/lib/utils'
 import { useLocale, useT } from '@/lib/i18n'
 import { useNetworkStatus } from '@/lib/network-status'
@@ -27,7 +26,6 @@ export function ShiftChip() {
   const { shift: liveShift, noShift: liveNoShift } = useCurrentShift({
     refetchInterval: 60_000,
   })
-  const { paused } = useBranchFlags()
   const online = useNetworkStatus((s) => s.online)
 
   // Keep showing the last definite answer through any transient gap — a tab
@@ -63,7 +61,6 @@ export function ShiftChip() {
         new Date(shift.openedAt)
       )
     : ''
-  const showPaused = !!shift && paused
 
   return (
     <>
@@ -83,21 +80,12 @@ export function ShiftChip() {
           aria-hidden
           className={cn(
             'size-2 rounded-full max-sm:size-3',
-            !shift
-              ? 'bg-muted-foreground/40'
-              : showPaused
-                ? 'bg-amber-500'
-                : 'bg-emerald-500'
+            !shift ? 'bg-muted-foreground/40' : 'bg-emerald-500'
           )}
         />
         <span className='text-sm font-medium tabular-nums max-sm:sr-only'>
           {shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')}
         </span>
-        {showPaused && (
-          <span className='text-xs font-medium text-amber-600 max-sm:sr-only dark:text-amber-400'>
-            {t('paused')}
-          </span>
-        )}
       </Button>
       <OpenShiftDialog open={openShiftOpen} onOpenChange={setOpenShiftOpen} />
     </>

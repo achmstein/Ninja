@@ -6,6 +6,7 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../features/shifts/widgets/shift_chip.dart';
+import '../../features/shifts/widgets/trading_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'branch_switcher.dart';
@@ -62,6 +63,9 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
           const Spacer(),
           const SendingChip(),
           const OfflineChip(),
+          // Whether customers can order and reserve, and the switches for it
+          const TradingChip(),
+          const SizedBox(width: 4),
           const ShiftChip(),
           const SizedBox(width: 4),
           FPopoverMenu(

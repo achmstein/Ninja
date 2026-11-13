@@ -396,6 +396,12 @@ const dictionary = {
   takingOrders: { en: "Taking orders", ar: "نستقبل الطلبات" },
   takingReservations: { en: "Taking reservations", ar: "نستقبل الحجوزات" },
   paused: { en: "Paused", ar: "متوقف" },
+  openToCustomers: { en: "Open to customers", ar: "مفتوح للعملاء" },
+  ordersPaused: { en: "Orders paused", ar: "الطلبات متوقفة" },
+  reservationsPaused: { en: "Reservations paused", ar: "الحجوزات متوقفة" },
+  ordersAndReservations: { en: "Orders and reservations", ar: "الطلبات والحجوزات" },
+  customerOrders: { en: "Customer orders", ar: "طلبات العملاء" },
+  tradingHint: { en: "What customers can do from their phones right now. Opening a shift turns these on, and closing it turns them off.", ar: "ما يستطيع العملاء فعله من هواتفهم الآن. فتح الوردية يفعّلها وإغلاقها يوقفها." },
 
   // Shift / cash drawer (وردية = shift, الدرج = the till drawer)
   shiftTitle: { en: "Shift", ar: "الوردية" },

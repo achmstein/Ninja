@@ -10,6 +10,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
+import { TradingChip } from '@/features/branch/trading-chip'
 import { OfflineChip } from '@/features/offline/offline-chip'
 import { PrintSettingsDialog } from '@/features/printing/print-settings-dialog'
 import { SendingChip } from '@/features/sending/sending-chip'
@@ -40,6 +41,8 @@ export function PosHeader() {
       <div className='ms-auto flex shrink-0 items-center gap-1'>
         <SendingChip />
         <OfflineChip />
+        {/* Whether customers can order and reserve, and the switches for it */}
+        {!callCentre && <TradingChip />}
         {!callCentre && <ShiftChip />}
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

@@ -1012,6 +1012,25 @@ class AppLocalizationsAr extends AppLocalizations {
   String get paused => 'متوقف';
 
   @override
+  String get openToCustomers => 'مفتوح للعملاء';
+
+  @override
+  String get ordersPaused => 'الطلبات متوقفة';
+
+  @override
+  String get reservationsPaused => 'الحجوزات متوقفة';
+
+  @override
+  String get ordersAndReservations => 'الطلبات والحجوزات';
+
+  @override
+  String get customerOrders => 'طلبات العملاء';
+
+  @override
+  String get tradingHint =>
+      'ما يستطيع العملاء فعله من هواتفهم الآن. فتح الوردية يفعّلها وإغلاقها يوقفها.';
+
+  @override
   String get shiftTitle => 'الوردية';
 
   @override

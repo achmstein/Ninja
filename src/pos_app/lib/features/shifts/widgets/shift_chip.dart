@@ -37,7 +37,6 @@ class ShiftChip extends ConsumerWidget {
     final async = ref.watch(currentShiftProvider);
     if (!async.hasValue) return const SizedBox.shrink();
     final shift = async.value;
-    final paused = shift != null && ref.watch(branchFlagsProvider).paused;
     final openedAt = shift?.openedAt;
 
     return ConstrainedBox(
@@ -50,18 +49,10 @@ class ShiftChip extends ConsumerWidget {
           width: 8,
           height: 8,
           decoration: BoxDecoration(
-            color: shift == null
-                ? AppColors.gray400
-                : paused
-                    ? AppColors.amber500
-                    : AppColors.emerald500,
+            color: shift == null ? AppColors.gray400 : AppColors.emerald500,
             shape: BoxShape.circle,
           ),
         ),
-        suffix: paused
-            ? Text(l10n.paused,
-                style: theme.typography.xs.forButton.copyWith(color: AppColors.amber(theme.colors.brightness)))
-            : null,
         child: Text(
           shift == null
               ? l10n.noShiftChip

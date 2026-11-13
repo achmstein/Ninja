@@ -21,7 +21,6 @@ import { CloseShiftDialog } from './close-shift-dialog'
 import { MovementDialog, type MovementDirection } from './movement-dialog'
 import { OpenShiftDialog } from './open-shift-dialog'
 import { ShiftReport } from './shift-report'
-import { TradingSwitches } from './trading-switches'
 import { useCurrentShift } from './use-current-shift'
 
 /**
@@ -87,7 +86,6 @@ export function ShiftScreen() {
             {t('shiftHistory')}
           </Link>
         </Button>
-        <TradingSwitches className='mt-4 w-full max-w-md text-start' />
         <OpenShiftDialog open={openShiftOpen} onOpenChange={setOpenShiftOpen} />
       </div>
     )
@@ -116,8 +114,6 @@ export function ShiftScreen() {
       </div>
 
       <Separator className='my-3' />
-
-      <TradingSwitches className='mb-4' />
 
       <ShiftReport shift={shift} />
 
