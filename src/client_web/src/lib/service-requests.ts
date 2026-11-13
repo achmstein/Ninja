@@ -6,7 +6,6 @@ import type { LocalizedText } from '@/api/spaces'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
 import { toast } from '@/lib/toast'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import { placeKindName } from '@/lib/places'
 import {
   cancelServiceRequest,
   createServiceRequest,
@@ -107,9 +106,8 @@ export function useServiceRequests(target: RequestTarget) {
     try {
       const created = await createServiceRequest({
         requestType: type,
+        // The place by its id alone: what it is called is the server's to say
         placeId: target.placeId,
-        placeKind: placeKindName(target.placeKind),
-        placeName: target.placeName,
         sessionId: target.sessionId ?? null,
         optionCode,
       })

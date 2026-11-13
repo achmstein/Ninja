@@ -152,8 +152,6 @@ public sealed class CustomerActor(ApiClient api, AccessToken identity, ApiClient
         {
             sessionId = stayId,
             placeId,
-            placeKind = "Room",
-            placeName = new { en = placeNameEn, ar = placeNameEn },
             requestType,
         }, ct);
 }

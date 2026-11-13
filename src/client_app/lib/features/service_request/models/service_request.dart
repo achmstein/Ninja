@@ -68,9 +68,8 @@ class CreateServiceRequest {
   Map<String, dynamic> toJson() {
     return {
       'requestType': requestType.value,
+      // The place by its id alone: what it is called is the server's to say
       'placeId': placeId,
-      'placeKind': placeKind.wireName,
-      'placeName': placeName.toJson(),
       if (sessionId != null) 'sessionId': sessionId,
       if (optionCode != null) 'optionCode': optionCode,
     };

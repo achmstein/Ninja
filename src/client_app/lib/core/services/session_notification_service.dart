@@ -280,8 +280,6 @@ class SessionNotificationService {
       await dio.post('service-requests', data: {
         'sessionId': _activeSession!.id,
         'placeId': _activeSession!.placeId,
-        'placeKind': _activeSession!.placeKind.wireName,
-        'placeName': _activeSession!.placeName.toJson(),
         'requestType': requestType,
       });
     } catch (e) {

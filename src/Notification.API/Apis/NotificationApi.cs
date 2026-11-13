@@ -764,30 +764,22 @@ public static class NotificationApi
         {
             return TypedResults.BadRequest("A request names the place it comes from.");
         }
+        // The request names the place by its id. What the place is called and what kind it is are
+        // Spaces' to say, read from the copy kept here: Spaces says every place again at each
+        // start, so a place it has is a place this copy has
         var place = await context.Places.AsNoTracking().FirstOrDefaultAsync(p => p.PlaceId == request.PlaceId);
-        var placeName = request.PlaceName ?? place?.Name;
-        var placeKind = request.PlaceKind ?? place?.Kind;
-        if (placeName is null || placeKind is null)
+        if (place is null)
         {
             return TypedResults.BadRequest("A request names the place it comes from.");
         }
-        // A place the projection has never heard of (created before the
-        // projection existed, or its PlaceUpdated never arrived) still names
-        // its kind in the request: a table takes a waiter or the bill, a room
-        // anything, a rate change needs a running clock either way
-        var allowed = place is not null
-            ? request.RequestType switch
-            {
-                ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
-                ServiceRequestType.ControllerChange => place.TakesControllerRequests,
-                _ => place.HasOptions && request.SessionId is not null,
-            }
-            : request.RequestType switch
-            {
-                ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
-                ServiceRequestType.ControllerChange => placeKind == "Room",
-                _ => request.SessionId is not null,
-            };
+        var placeName = place.Name;
+        var placeKind = place.Kind;
+        var allowed = request.RequestType switch
+        {
+            ServiceRequestType.CallWaiter or ServiceRequestType.ReceiptToPay => true,
+            ServiceRequestType.ControllerChange => place.TakesControllerRequests,
+            _ => place.HasOptions && request.SessionId is not null,
+        };
         if (!allowed)
         {
             return TypedResults.BadRequest("This place cannot take that kind of request.");
@@ -1093,9 +1085,7 @@ public record SubscriptionResponse(
 
 public record CreateServiceRequestDto(
     [property: Description("The type of request")] ServiceRequestType RequestType,
-    [property: Description("The Spaces place the request comes from")] int PlaceId,
-    [property: Description("Room, Table or Station")] string? PlaceKind = null,
-    [property: Description("The place name (localized)")] LocalizedText? PlaceName = null,
+    [property: Description("The Spaces place the request comes from, by its id alone: what it is called and what kind it is are read from Spaces' places")] int PlaceId,
     [property: Description("The stay the request comes from, when a clock runs at the place")] int? SessionId = null,
     [property: Description("The rate option wanted, for a ChangeOption request")] string? OptionCode = null
 );
