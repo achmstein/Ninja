@@ -9,6 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Spaces.API\Spaces.API.csproj" />
     <ProjectReference Include="..\..\src\Spaces.Domain\Spaces.Domain.csproj" />
     <ProjectReference Include="..\..\src\Spaces.Infrastructure\Spaces.Infrastructure.csproj" />

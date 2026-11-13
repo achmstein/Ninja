@@ -60,6 +60,7 @@ public static class Extensions
         builder.Services.AddScoped<ITenantFeaturesQueries, TenantFeaturesQueries>();
 
         builder.Services.AddHostedService<ReservationExpiryService>();
+        builder.Services.AddHostedService<PlacesAnnouncer>();
 
         builder.AddRabbitMqEventBus("eventbus")
             // Tenant.API's flags, projected locally: a branch with reservations
