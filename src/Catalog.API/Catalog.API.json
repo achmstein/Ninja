@@ -406,7 +406,7 @@
           "Assist"
         ],
         "summary": "Restage the owner's photo of an item",
-        "description": "The image model turns the owner's own photo of the item (a branded can or bottle, a box, a dish) into a menu photo in one of the house looks, keeping the item, its packaging, label and logo as photographed and making only the setting and light. Answers the WebP an upload would store. Nothing is saved (Admin only).",
+        "description": "The image model turns the owner's own photo of the item (a branded can or bottle, a box, a plate of food) into a menu photo in one of the house looks, keeping the item, its packaging, label and logo as photographed and making only the setting and light. Answers the WebP an upload would store. Nothing is saved (Admin only).",
         "operationId": "RestageItemPhoto",
         "parameters": [
           {
