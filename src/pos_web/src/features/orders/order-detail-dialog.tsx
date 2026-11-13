@@ -18,6 +18,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useMoney, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
 import { DeliveryDetails, DeliveryFeeRow } from '@/features/deliveries/delivery-details'
 
@@ -94,7 +95,7 @@ export function OrderDetailDialog({
       : toNumber(summary.guestOrdersBefore)
   const identity = [
     ordersBefore == null ? t('accountHolder') : t('guest'),
-    summary?.guestPhone,
+    summary?.guestPhone ? showPhone(summary.guestPhone) : null,
     ordersBefore == null
       ? null
       : ordersBefore === 0

@@ -9,7 +9,8 @@ import {
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
-import { useBrand, usePhoneRule } from '@/lib/brand'
+import { showPhone, useBrand, usePhoneRule } from '@/lib/brand'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useSelectedBranch } from '@/lib/branch'
 import { addressBody, addressLine, fromSaved, useMyAddresses } from '@/lib/delivery'
 import { pointOf, useLocationPermission, useMyLocation, type LatLng } from '@/lib/geo'
@@ -176,7 +177,8 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const queryClient = useQueryClient()
   const branch = useSelectedBranch()
   const country = useBrand()?.locale.country ?? 'EG'
-  const phoneRule = usePhoneRule((s) => s.pattern)
+  // A mobile as the business's country writes one, to show in the field
+  const phonePlaceholder = usePhoneRule((s) => s.placeholder)
   const guestPhone = useGuestStore((s) => s.contact?.phone ?? '')
   const guestName = useGuestStore((s) => s.contact?.name ?? '')
   const isGuest = !auth.isAuthenticated
@@ -208,7 +210,11 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const [apartment, setApartment] = useState(initial?.apartment ?? '')
   const [directions, setDirections] = useState(initial?.directions ?? '')
   // What the customer typed; until then their own number (a guest's checkout one, or the account's)
-  const [typedPhone, setPhone] = useState<string | null>(initial?.phone ?? (guestPhone || null))
+  const [typedPhone, setPhone] = useState<string | null>(() => {
+    const known = initial?.phone ?? (guestPhone || null)
+    // Shown the local way; read however it is typed or a phone's autofill hands it over
+    return known == null ? null : formatPhone(known, country)
+  })
   // A guest's name, asked here beside the rider's number: the two are the
   // guest's contact for the order, so checkout need not ask for them again
   const [name, setName] = useState(guestName)
@@ -235,7 +241,7 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   const remove = useMutation({ ...deleteMyAddressMutation(), onSuccess: refresh })
   const busy = add.isPending || update.isPending
 
-  const phoneOk = phoneRule.test(phone.trim().replace(/[\s-]/g, ''))
+  const phoneOk = isValidPhone(phone, country)
   const streetOk = street.trim().length > 0
   const nameOk = !isGuest || name.trim().length > 0
   const problem = !pinned
@@ -275,11 +281,12 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       floor: floor.trim() || null,
       apartment: apartment.trim() || null,
       directions: directions.trim() || null,
-      phone: phone.trim(),
+      // In the one international form, however it was typed
+      phone: normalizePhone(phone, country),
     }
     if (isGuest) {
       // The guest's contact is now known: placing the order goes straight through
-      useGuestStore.getState().setContact({ name: name.trim(), phone: phone.trim() })
+      useGuestStore.getState().setContact({ name: name.trim(), phone: normalizePhone(phone, country) })
       onDone(address)
       return
     }
@@ -441,7 +448,7 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
             setEditPhone(true)
             setPhone(e.target.value)
           }}
-          placeholder={t('deliveryPhone')}
+          placeholder={phonePlaceholder || t('deliveryPhone')}
           aria-label={t('deliveryPhone')}
           aria-invalid={tried && !phoneOk}
           aria-describedby={tried && problem ? 'address-problem' : undefined}
@@ -459,7 +466,7 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
             <span className='flex min-w-0 flex-1 flex-col'>
               <span className='text-muted-foreground text-caption'>{t('deliveryPhone')}</span>
               <bdi dir='ltr' className='text-note font-semibold'>
-                {phone}
+                {showPhone(phone)}
               </bdi>
             </span>
             <button type='button' onClick={() => setEditPhone(true)} className='min-h-11 px-2 text-note font-semibold underline underline-offset-4'>

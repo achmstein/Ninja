@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { OrderDetailDialog } from './order-detail-dialog'
 import { PlatformBadge, PlatformHandover } from './platform-badge'
@@ -61,7 +62,7 @@ function PendingOrderCard({
     ? order.delivery.address
     : place
       ? who
-      : order.guestPhone
+      : order.guestPhone && showPhone(order.guestPhone)
   const PlaceIcon = order.delivery
     ? Bike
     : !place

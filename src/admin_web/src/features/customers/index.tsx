@@ -6,6 +6,7 @@ import { getGuests } from '@/api/ordering'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { formatWhen } from '@/lib/when'
 import { Badge } from '@/components/ui/badge'
@@ -192,7 +193,7 @@ export function Customers() {
           <>
             {g.phone && (
               <>
-                <span dir='ltr'>{g.phone}</span>
+                <span dir='ltr'>{showPhone(g.phone)}</span>
                 {' · '}
               </>
             )}
@@ -224,7 +225,7 @@ export function Customers() {
     return (directory.data?.pages.flat() ?? []).map((c) => ({
       id: c.id,
       name: getCustomerDisplayName(c),
-      sub: c.phoneNumber || c.email,
+      sub: showPhone(c.phoneNumber) || c.email,
       figure: figureFor(c.id),
       addedAtCounter: c.addedAtCounter,
     }))

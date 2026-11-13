@@ -2,6 +2,7 @@ import { ReceiptText } from 'lucide-react'
 import type { BillView, ReceiptView } from '@/api/sales'
 import { useReceipt } from '@/lib/use-receipt'
 import { useBranches } from '@/lib/branch'
+import { showPhone } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { BillSlip, Paper } from '@/components/bills/bill-slip'
 import { ReceiptBrand } from '@/components/bills/receipt-brand'
@@ -68,7 +69,7 @@ function Receipt({ receipt }: { receipt: ReceiptView }) {
             {localized(branch.address) && (
               <div>{localized(branch.address)}</div>
             )}
-            {branch.phone && <div dir='ltr'>{branch.phone}</div>}
+            {branch.phone && <div dir='ltr'>{showPhone(branch.phone)}</div>}
             {branch.taxNumber && (
               <div>{t('taxNumber', { number: branch.taxNumber })}</div>
             )}

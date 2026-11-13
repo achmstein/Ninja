@@ -2,9 +2,10 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Bike, Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { formatAddressLine } from '@/lib/address-line'
+import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { showPhone } from '@/lib/phone'
 import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
 import { Separator } from '@/components/ui/separator'
@@ -14,7 +15,6 @@ import { EntitySheet } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
 import { StatusChip } from '@/components/status-chip'
 import { PlaceKindIcon } from '@/features/places/components/place-kind-icon'
-import { TakenBy } from './taken-by'
 import {
   defaultPlatformRejectReason,
   formatEgp,
@@ -26,6 +26,7 @@ import {
   PlatformHandover,
   PlatformRejectReasonPicker,
 } from './platform-badge'
+import { TakenBy } from './taken-by'
 
 type OrderDetailsSheetProps = {
   orderId: number | null
@@ -171,7 +172,7 @@ export function OrderDetailsSheet({
                 </div>
               )}
               <div className='text-muted-foreground flex flex-wrap gap-x-3'>
-                <span dir='ltr'>{order.delivery.phone}</span>
+                <span dir='ltr'>{showPhone(order.delivery.phone)}</span>
                 <span>
                   {t('deliveryFee')}: {formatEgp(order.delivery.fee)}
                 </span>

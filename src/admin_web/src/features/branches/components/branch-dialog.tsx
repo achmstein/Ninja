@@ -11,6 +11,7 @@ import {
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { locationText, pointOfText } from '@/lib/maps'
+import { showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -83,7 +84,7 @@ function BranchForm({
     name: toLocalizedValue(branch?.name),
     addressEn: branch?.address?.en ?? '',
     addressAr: branch?.address?.ar ?? '',
-    phone: branch?.phone ?? '',
+    phone: showPhone(branch?.phone),
     taxNumber: branch?.taxNumber ?? '',
     receiptFooter: toLocalizedValue(branch?.receiptFooter),
     // When the day turns over, not when the branch opens: early morning, when nothing is sold

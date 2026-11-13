@@ -56,7 +56,7 @@ import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
 import { Notice } from '@/components/ninja/page/notice'
 import { Slab } from '@/components/ninja/page/parts'
 import { PointsRing } from '@/components/ninja/page/points-ring'
-import { useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
+import { callHref, showPhone, useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
 import { BrandMark, BrandWordmark } from '@/components/brand/brand-mark'
 
 export const Route = createFileRoute('/profile')({
@@ -146,12 +146,12 @@ function ProfilePage() {
               {signedIn && myProfileQuery.data?.phoneNumber && (
                 <div className='truncate text-note opacity-60'>
                   {/* The digits run left to right; the line sits where the page reads from */}
-                  <span dir='ltr'>{myProfileQuery.data.phoneNumber}</span>
+                  <span dir='ltr'>{showPhone(myProfileQuery.data.phoneNumber)}</span>
                 </div>
               )}
               {!signedIn && guestContact && (
                 <div className='truncate text-note opacity-60'>
-                  <span dir='ltr'>{guestContact.phone}</span>
+                  <span dir='ltr'>{showPhone(guestContact.phone)}</span>
                 </div>
               )}
               {loyalty && (
@@ -241,7 +241,7 @@ function ProfilePage() {
             )}
             <TileLink to='/settings' push='settings' icon={Settings} label={t('settings')} />
             {branch?.phone && (
-              <TileAnchor href={`tel:${branch.phone}`} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{branch.phone}</span>} />
+              <TileAnchor href={callHref(branch.phone)} icon={Phone} label={t('callUs')} sublabel={<span dir='ltr'>{showPhone(branch.phone)}</span>} />
             )}
             {install.eligible && <TileButton icon={Download} label={t('installApp')} sublabel={t('installAppSubtitle')} onClick={install.run} />}
             <TileButton icon={Info} label={t('about')} onClick={() => setAboutOpen(true)} />

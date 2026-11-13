@@ -13,7 +13,7 @@ import { useBrand, useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { whatsAppLink } from '@/lib/phone'
+import { showPhone, whatsAppLink } from '@/lib/phone'
 import { PayTabDialog } from './pay-tab-dialog'
 import { useLoyalty, useTab } from './use-customer-card'
 import { AppLinkDialog } from './app-link-dialog'
@@ -106,7 +106,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
             {customer?.phone && (
               <p className='text-muted-foreground flex items-center gap-1.5 text-sm' dir='ltr'>
                 <Phone className='size-3.5' />
-                {customer.phone}
+                <span dir='ltr'>{showPhone(customer.phone)}</span>
                 {/* The customer on WhatsApp, from the cashier's own phone or this browser */}
                 <a
                   href={whatsAppLink(customer.phone, undefined, country)}

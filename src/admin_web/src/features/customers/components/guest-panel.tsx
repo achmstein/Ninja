@@ -8,7 +8,7 @@ import {
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
-import { whatsAppLink } from '@/lib/phone'
+import { showPhone, whatsAppLink } from '@/lib/phone'
 import { formatWhen } from '@/lib/when'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
 import { Badge } from '@/components/ui/badge'
@@ -97,7 +97,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
           </div>
           {phone && (
             <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
-              <span dir='ltr'>{phone}</span>
+              <span dir='ltr'>{showPhone(phone)}</span>
               {/* The guest on WhatsApp: their phone is the only way to reach them */}
               <a
                 href={whatsAppLink(phone)}

@@ -6,6 +6,7 @@ import { useBranchStore } from '@/stores/branch-store'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useTakenByText } from '@/features/branch/use-branch-name'
 
@@ -101,7 +102,7 @@ export function ReceiptSheet({
           <div style={{ fontSize: 11, marginBottom: '1.5mm' }}>
             <div style={{ fontSize: 12, fontWeight: 600 }}>{localized(branch.name)}</div>
             {localized(branch.address) && <div>{localized(branch.address)}</div>}
-            {branch.phone && <div>{branch.phone}</div>}
+            {branch.phone && <div dir='ltr'>{showPhone(branch.phone)}</div>}
             {branch.taxNumber && <div>{t('taxNumber', { number: branch.taxNumber })}</div>}
           </div>
         )}

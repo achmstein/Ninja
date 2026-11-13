@@ -14,6 +14,7 @@ import { apiClient } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
+import { showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import {
@@ -310,8 +311,8 @@ export function CustomerDialog({
                         ) : user.phoneNumber ? (
                           <span className='text-muted-foreground block truncate text-sm'>
                             <Highlight
-                              text={user.phoneNumber}
-                              ranges={phoneRanges(user.phoneNumber, term)}
+                              text={showPhone(user.phoneNumber)}
+                              ranges={phoneRanges(showPhone(user.phoneNumber), term)}
                             />
                           </span>
                         ) : user.email ? (

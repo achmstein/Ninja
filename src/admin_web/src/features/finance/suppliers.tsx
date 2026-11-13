@@ -8,6 +8,7 @@ import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -142,7 +143,11 @@ export function Suppliers() {
                           {s.name}
                         </span>
                       }
-                      meta={s.phone ? <span dir='ltr'>{s.phone}</span> : null}
+                      meta={
+                        s.phone ? (
+                          <span dir='ltr'>{showPhone(s.phone)}</span>
+                        ) : null
+                      }
                       trailing={
                         balance < 0 ? (
                           <span className='text-success'>
@@ -246,7 +251,7 @@ function SupplierForm({
   const t = useT()
   const { saveSupplier, isPending } = useFinanceActions()
   const [name, setName] = useState(supplier?.name ?? '')
-  const [phone, setPhone] = useState(supplier?.phone ?? '')
+  const [phone, setPhone] = useState(() => showPhone(supplier?.phone))
   const [notes, setNotes] = useState(supplier?.notes ?? '')
   const [isActive, setIsActive] = useState(supplier?.isActive ?? true)
 

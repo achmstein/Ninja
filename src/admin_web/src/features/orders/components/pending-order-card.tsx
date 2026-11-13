@@ -10,6 +10,7 @@ import {
 } from 'lucide-react'
 import { type OrderSummary } from '@/api/ordering'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -123,7 +124,7 @@ export function PendingOrderCard({
             className='hover:text-foreground flex items-center gap-1 underline-offset-2 hover:underline'
           >
             <Phone className='h-3 w-3' />
-            {summary.guestPhone}
+            {showPhone(summary.guestPhone)}
           </a>
         )}
         {summary.platform && <PlatformHandover platform={summary.platform} />}

@@ -21,7 +21,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { whatsAppLink } from '@/lib/phone'
+import { showPhone, whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { Avatar, AvatarFallback } from '@/components/ui/avatar'
@@ -159,7 +159,7 @@ function CustomerHub({
               {customer.addedAtCounter && <AddedAtCounterBadge />}
             </div>
             <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
-              {[customer.phoneNumber, customer.email]
+              {[showPhone(customer.phoneNumber), customer.email]
                 .filter(Boolean)
                 .join(' · ') || customer.username}
               {/* The customer on WhatsApp, from the owner's own account */}

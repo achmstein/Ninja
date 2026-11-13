@@ -2,6 +2,7 @@ import { AlertTriangle, Bike, Loader2, MapPin, Store, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { useT } from '@/lib/i18n'
+import { showPhone } from '@/lib/phone'
 import type { SaleDelivery } from './cart'
 import type { DeliveryReadiness } from './sale-delivery'
 
@@ -35,7 +36,7 @@ export function SaleDeliverySummary({
           <span className='block truncate font-medium'>{[delivery.address, delivery.building].filter(Boolean).join(' · ')}</span>
           <span className='text-muted-foreground flex items-center gap-1 text-xs'>
             {delivery.latitude != null && <MapPin className='size-3' aria-hidden />}
-            <span dir='ltr'>{delivery.phone}</span>
+            <span dir='ltr'>{showPhone(delivery.phone)}</span>
             {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
           </span>
           {delivery.sendTo && (

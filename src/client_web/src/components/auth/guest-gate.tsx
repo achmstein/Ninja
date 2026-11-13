@@ -1,4 +1,5 @@
 import { usePhoneRule } from '@/lib/brand'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useRef, useState } from 'react'
 import { useGuestStore, type GuestContact } from '@/stores/guest-store'
 import { useT } from '@/lib/i18n'
@@ -26,7 +27,7 @@ import { GuestSignInChoices } from './sign-in-options'
  */
 export function useGuestGate() {
   const [open, setOpen] = useState(false)
-  const phonePattern = usePhoneRule((s) => s.pattern)
+  const country = usePhoneRule((s) => s.country)
 
   const contact = useGuestStore((s) => s.contact)
   const setContact = useGuestStore((s) => s.setContact)
@@ -42,8 +43,9 @@ export function useGuestGate() {
     const name = (contact?.name || orderKnows.name || '').trim()
     const phone = (contact?.phone || orderKnows.phone || '').trim()
     // A returning guest already gave these, or the order did; don't ask again
-    if (name && phonePattern.test(phone)) {
-      const complete = { name, phone }
+    if (name && isValidPhone(phone, country)) {
+      // Kept in the one international form, however it was given before
+      const complete = { name, phone: normalizePhone(phone, country) }
       if (complete.name !== contact?.name || complete.phone !== contact?.phone) setContact(complete)
       return complete
     }
@@ -91,11 +93,12 @@ function GuestGateDialog({
 }) {
   const t = useT()
   const [name, setName] = useState(initialName)
-  const phonePattern = usePhoneRule((s) => s.pattern)
-  // The business's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
+  const country = usePhoneRule((s) => s.country)
+  // A mobile as the business's country writes one; none until the tenant's locale lands
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)
 
-  const [phone, setPhone] = useState(initialPhone)
+  // Shown the local way; read however it is typed or a phone's autofill hands it over
+  const [phone, setPhone] = useState(() => formatPhone(initialPhone, country))
   const [error, setError] = useState<string | null>(null)
 
   const handleSave = () => {
@@ -103,12 +106,12 @@ function GuestGateDialog({
       setError(t('fillAllFields'))
       return
     }
-    if (!phonePattern.test(phone.trim())) {
+    if (!isValidPhone(phone, country)) {
       setError(t('invalidPhone'))
       return
     }
     setError(null)
-    onSettle({ name: name.trim(), phone: phone.trim() })
+    onSettle({ name: name.trim(), phone: normalizePhone(phone, country) })
   }
 
   return (
@@ -134,6 +137,8 @@ function GuestGateDialog({
             <Input
               id='guestPhone'
               type='tel'
+              inputMode='tel'
+              autoComplete='tel'
               dir='ltr'
               // a number reads left to right, but lines up with the other fields: right-aligned in Arabic
               className='rtl:text-right'

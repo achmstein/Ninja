@@ -8,6 +8,7 @@ import { formatDay } from '@/lib/business-day'
 import { downloadCsv } from '@/lib/csv'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
@@ -134,7 +135,7 @@ export function Partners() {
                         {p.phone && (
                           <>
                             <Dot />
-                            <span dir='ltr'>{p.phone}</span>
+                            <span dir='ltr'>{showPhone(p.phone)}</span>
                           </>
                         )}
                       </>
@@ -237,7 +238,7 @@ function PartnerForm({
     remainingShare(everyone.data, branchId, editingId)
 
   const [name, setName] = useState(partner?.name ?? '')
-  const [phone, setPhone] = useState(partner?.phone ?? '')
+  const [phone, setPhone] = useState(() => showPhone(partner?.phone))
   // Branch → share of its profit, in percent (as typed); a branch not in
   // the map is not theirs. A new partner starts with what is left, not 100%.
   const [shares, setShares] = useState<Map<number, string>>(() =>

@@ -16,7 +16,7 @@ import { useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { sameName } from '@/lib/names'
-import { normalizePhone } from '@/lib/phone'
+import { normalizePhone, showPhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import {
   createCounterCustomer,
@@ -172,7 +172,7 @@ export function NewCustomerDialog({ open, onOpenChange, initialText = '', onPick
                       <span className='block truncate font-medium'>{customerName(customer)}</span>
                       {customer.phoneNumber && (
                         <span className='text-muted-foreground block truncate text-sm' dir='ltr'>
-                          {customer.phoneNumber}
+                          <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
                         </span>
                       )}
                     </span>
@@ -224,7 +224,7 @@ function ExistingCustomer({ customer, onUse }: { customer: IdentityCustomer; onU
             {customer.phoneNumber && (
               <span className='flex items-center gap-1' dir='ltr'>
                 <Phone className='size-3.5' />
-                {customer.phoneNumber}
+                <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
               </span>
             )}
             {features.loyalty && loyalty.account && (

@@ -23,6 +23,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -112,7 +113,9 @@ export function BranchSheet({
       open={open}
       onOpenChange={onOpenChange}
       title={localized(branch.name)}
-      subtitle={[address, branch.phone].filter(Boolean).join(' · ') || null}
+      subtitle={
+        [address, showPhone(branch.phone)].filter(Boolean).join(' · ') || null
+      }
       status={
         <StatusChip tone={branch.isActive ? 'success' : 'muted'}>
           {branch.isActive ? t('active') : t('inactive')}
@@ -301,7 +304,7 @@ export function BranchSheet({
           title={t('phone')}
           value={
             branch.phone ? (
-              <span dir='ltr'>{branch.phone}</span>
+              <span dir='ltr'>{showPhone(branch.phone)}</span>
             ) : (
               t('branchNotSet')
             )

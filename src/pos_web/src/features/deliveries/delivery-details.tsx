@@ -3,6 +3,7 @@ import type { DeliveryView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { directionsUrl, distanceParts, formatAddressLine, telHref, type AddressParts } from './delivery-format'
 
@@ -67,7 +68,7 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
             <a href={tel}>
               <Phone className='size-4 shrink-0' />
               {/* Only the digits run left to right; the icon stays at the start */}
-              <span dir='ltr' className='tabular-nums'>{delivery.phone}</span>
+              <span dir='ltr' className='tabular-nums'>{showPhone(delivery.phone)}</span>
             </a>
           </Button>
         ) : (

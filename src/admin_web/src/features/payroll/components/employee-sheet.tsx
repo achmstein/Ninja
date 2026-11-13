@@ -10,6 +10,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -132,7 +133,7 @@ export function EmployeeForm({
 
   const [name, setName] = useState(employee?.name ?? '')
   const [jobTitle, setJobTitle] = useState(employee?.jobTitle ?? '')
-  const [phone, setPhone] = useState(employee?.phone ?? '')
+  const [phone, setPhone] = useState(() => showPhone(employee?.phone))
   const [branchId, setBranchId] = useState(
     String(employee?.branchId ?? activeBranchId ?? '')
   )

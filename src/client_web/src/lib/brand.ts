@@ -8,6 +8,7 @@ import { useTheme, type ResolvedTheme } from '@/context/theme-provider'
 import { useCurrency } from '@/lib/currency'
 import { useArabicStyle, useLanguage, type Language } from '@/lib/i18n'
 import { applyBrandTheme, type BrandThemeInput } from './brand-theme'
+import { formatPhone, telHref } from './phone'
 import { draftedTheme, onDraftedTheme } from './preview'
 
 /**
@@ -76,23 +77,29 @@ function writeCachedBrand(brand: Brand) {
  * lands; the app then shows a notice instead of a menu that cannot load.
  */
 /**
- * What a phone number looks like where this business is. The tenant sends the
- * rule with the rest of its locale, so the apps never carry one market's
- * shape of their own; until it lands, anything a phone could be.
+ * Where this business is, for reading a phone number (lib/phone reads one
+ * against its country, however it is typed), and a mobile written the way the
+ * country writes it, to show in the field. The tenant sends both with the rest
+ * of its locale; until they land, only a number with its country code reads.
  */
 export const usePhoneRule = create<{
-  pattern: RegExp
+  country: string
   placeholder: string
-  set: (pattern?: string | null, placeholder?: string | null) => void
+  set: (country?: string | null, placeholder?: string | null) => void
 }>((set) => ({
-  pattern: /^\+?[0-9]{7,15}$/,
+  country: '',
   placeholder: '',
-  set: (pattern, placeholder) =>
-    set({
-      pattern: pattern ? new RegExp(pattern) : /^\+?[0-9]{7,15}$/,
-      placeholder: placeholder ?? '',
-    }),
+  set: (country, placeholder) =>
+    set({ country: country ?? '', placeholder: placeholder ?? '' }),
 }))
+
+/** A kept number as people here write it: 010 12345678, or +44 … for one from abroad. */
+export const showPhone = (stored: string | null | undefined): string =>
+  formatPhone(stored, usePhoneRule.getState().country)
+
+/** The tel: link that dials a kept number. */
+export const callHref = (stored: string | null | undefined): string =>
+  telHref(stored, usePhoneRule.getState().country)
 
 export const usePaused = create<{ paused: boolean; set: (paused: boolean) => void }>((set) => ({
   paused: false,
@@ -171,7 +178,7 @@ export function applyBrand(brand: Brand) {
   // Under a preview, the panel's unsaved seeds paint over the saved ones
   paint(draftedTheme() ?? brand)
   useCurrency.getState().set(brand.locale.currency)
-  usePhoneRule.getState().set(brand.locale.phonePattern, brand.locale.phonePlaceholder)
+  usePhoneRule.getState().set(brand.locale.country, brand.locale.phonePlaceholder)
 }
 
 /** The seeds as tokens on the page, so a draft moves them too. */

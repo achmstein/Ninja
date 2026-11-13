@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useAuth } from 'react-oidc-context'
 import { Loader2, Phone } from 'lucide-react'
 import { usePhoneRule } from '@/lib/brand'
+import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useT } from '@/lib/i18n'
 import { getMyProfile, hasWholeName, namePartsOf, updateProfile } from '@/lib/services/identity'
 import { toast } from '@/lib/toast'
@@ -19,7 +20,7 @@ import { NameFields } from './name-fields'
  */
 export function useProfileGate() {
   const auth = useAuth()
-  const phonePattern = usePhoneRule((s) => s.pattern)
+  const country = usePhoneRule((s) => s.country)
 
   const [open, setOpen] = useState(false)
   const [initialName, setInitialName] = useState<[string, string]>(['', ''])
@@ -32,7 +33,7 @@ export function useProfileGate() {
     const phone = profile?.phoneNumber?.trim() ?? ''
     // First and last name both, and a phone: an Apple account, which may come with no name or half
     // of one, is asked for what it lacks (the fields start from whatever is there)
-    if (hasWholeName(profile) && phonePattern.test(phone)) return true
+    if (hasWholeName(profile) && isValidPhone(phone, country)) return true
 
     setInitialName(namePartsOf(profile, auth.user?.profile?.name))
     setInitialPhone(phone)
@@ -78,11 +79,12 @@ function ProfileGateDialog({
   const t = useT()
   const [first, setFirst] = useState(initialName[0])
   const [last, setLast] = useState(initialName[1])
-  const phonePattern = usePhoneRule((s) => s.pattern)
-  // The business's country's own shape (Tenant.API's phone rules); none where it has none, not another country's
+  const country = usePhoneRule((s) => s.country)
+  // A mobile as the business's country writes one; none until the tenant's locale lands
   const phonePlaceholder = usePhoneRule((s) => s.placeholder)
 
-  const [phone, setPhone] = useState(initialPhone)
+  // Shown the local way; read however it is typed or a phone's autofill hands it over
+  const [phone, setPhone] = useState(() => formatPhone(initialPhone, country))
   const [error, setError] = useState<string | null>(null)
   const [saving, setSaving] = useState(false)
 
@@ -91,14 +93,14 @@ function ProfileGateDialog({
       setError(t('fillAllFields'))
       return
     }
-    if (!phonePattern.test(phone.trim())) {
+    if (!isValidPhone(phone, country)) {
       setError(t('invalidPhone'))
       return
     }
     setError(null)
     setSaving(true)
     try {
-      await updateProfile(first.trim(), last.trim(), phone.trim())
+      await updateProfile(first.trim(), last.trim(), normalizePhone(phone, country))
       toast.success(t('profileUpdatedSuccessfully'))
       onSettle(true)
     } catch {

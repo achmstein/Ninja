@@ -13,7 +13,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useTheme } from '@/context/theme-provider'
-import { useBrandName } from '@/lib/brand'
+import { showPhone, useBrandName } from '@/lib/brand'
 import {
   checkClaimForm,
   claimProblem,
@@ -157,7 +157,7 @@ function ClaimPage() {
                       <p className='heading text-headline'>{preview.data?.name}</p>
                       {preview.data?.phoneNumber && (
                         <p className='text-muted-foreground text-note' dir='ltr'>
-                          {preview.data.phoneNumber}
+                          {showPhone(preview.data.phoneNumber)}
                         </p>
                       )}
                     </div>

@@ -5,6 +5,7 @@ import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
+import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { formatWhen } from '@/lib/when'
 import { Separator } from '@/components/ui/separator'
@@ -173,7 +174,7 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
         ticket.settledAt
           ? `${t('settledAtLabel')} ${formatAt(ticket.settledAt)}${ticket.settledBy ? ` · ${ticket.settledBy}` : ''}`
           : `${t('openedAt')} ${formatAt(ticket.openedAt)}`,
-        ticket.guestPhone ?? null,
+        ticket.guestPhone ? showPhone(ticket.guestPhone) : null,
       ]
         .filter(Boolean)
         .join(' · ')

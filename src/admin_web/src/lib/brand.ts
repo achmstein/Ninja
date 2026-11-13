@@ -4,6 +4,7 @@ import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useCurrency } from '@/lib/currency'
 import { useLanguage, type Language } from '@/lib/i18n'
+import { setPhoneCountry } from '@/lib/phone'
 import { useBusinessTheme } from '@/context/theme-provider'
 import { applyBrandTheme } from './brand-theme'
 
@@ -101,6 +102,8 @@ export function applyBrand(brand: Brand, language: Language) {
   useBusinessTheme.getState().set(brand.theme?.mode)
   // Prices are the business's whatever the surface wears
   useCurrency.getState().set(brand.locale.currency)
+  // And its phone numbers are read and shown its country's way
+  setPhoneCountry(brand.locale.country)
   if (STAFF) {
     setLink('icon', brand.icons.favicon, 'image/png')
     setLink('apple-touch-icon', brand.icons.appleTouch)

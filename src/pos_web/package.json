@@ -31,6 +31,7 @@
     "clsx": "^2.1.1",
     "html-to-image": "1.11.13",
     "idb-keyval": "^6.2.2",
+    "libphonenumber-js": "^1.13.16",
     "lucide-react": "^0.554.0",
     "oidc-client-ts": "^3.4.1",
     "qrcode.react": "^4.2.0",
