@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Plus, Trash2 } from 'lucide-react'
+import { Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Phone, Plus, Trash2 } from 'lucide-react'
 import {
   addMyAddressMutation,
   deleteMyAddressMutation,
@@ -158,12 +158,17 @@ function LabelIcon({ kind }: { kind: LabelKind }) {
 }
 
 /**
- * One address: the map first (move it until the pin is on the door), then
- * the words a rider needs. A new one is saved only once its pin was put
- * somewhere (moved, or found by "use my location"): the map's starting point
- * is the branch, and a rider sent there finds nobody. A signed-in customer's
- * is saved on their account; a guest's stays on the device. Removing one is
- * at the foot of its form, asked once more.
+ * One address, in two steps the way delivery apps ask: the map alone first
+ * (move it until the pin is on the door, then confirm), then the few words
+ * a rider needs. Only the area and street (or a landmark, where streets have
+ * no names) is asked for; building, floor and apartment are for those who
+ * have them. A new one is confirmed only once its pin was put somewhere
+ * (moved, or found by "use my location"): the map's starting point is the
+ * branch, and a rider sent there finds nobody. A signed-in customer's number
+ * is their account's, shown and changed only if they ask; theirs is saved on
+ * their account, a guest's stays on the device. An address being changed
+ * opens on its words, the map one tap away. Removing one is at the foot of
+ * its form, asked once more.
  */
 function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onDone: (address: DeliveryAddress | null) => void }) {
   const t = useT()
@@ -208,7 +213,11 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
   // guest's contact for the order, so checkout need not ask for them again
   const [name, setName] = useState(guestName)
   const [kind, setKind] = useState<LabelKind>(labelKind(initial?.label))
-  const [labelText, setLabelText] = useState(labelKind(initial?.label) === 'other' ? (initial?.label ?? '') : '')
+  // A name the customer gave it before is kept; only Home and Work are offered now
+  const labelText = labelKind(initial?.label) === 'other' ? (initial?.label ?? '') : ''
+  const [step, setStep] = useState<'pin' | 'details'>(initial ? 'details' : 'pin')
+  const [pinTried, setPinTried] = useState(false)
+  const [editPhone, setEditPhone] = useState(false)
   const [tried, setTried] = useState(false)
   const [removing, setRemoving] = useState(false)
 
@@ -238,6 +247,20 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         : !phoneOk
           ? t('deliveryNeedPhone')
           : null
+
+  // The account's number is shown, not asked for; a field only for a guest, on request, or when there is none that works
+  const phoneField = isGuest || editPhone || (!phoneOk && !profile.isLoading)
+
+  const confirmPin = () => {
+    if (!pinned) {
+      setPinTried(true)
+      return
+    }
+    // The map is the customer's now: coming back to it starts where they left it, not at a fix
+    setMoved(true)
+    setFlyTo(null)
+    setStep('details')
+  }
 
   const save = async () => {
     setTried(true)
@@ -293,19 +316,12 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       className='flex flex-col gap-3'
       onSubmit={(e) => {
         e.preventDefault()
-        void save()
+        if (step === 'pin') confirmPin()
+        else void save()
       }}
     >
-      {/* A street named rather than found: the map flies there, and the pin is then put on the door */}
-      <AddressSearch
-        near={pointOf(branch)}
-        onPick={(place) => {
-          setFlyTo({ lat: place.lat, lng: place.lng })
-          setPinned(true)
-          setMoved(true)
-          if (!street.trim() && place.address) setStreet(place.address)
-        }}
-      />
+      {step === 'pin' ? (
+        <>
       <div className='relative'>
         <MapPicker
           start={point}
@@ -317,8 +333,20 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               setMoved(true)
             }
           }}
-          className='h-56'
+          className='h-[min(26rem,52dvh)]'
         />
+        {/* A street named rather than found, on the map itself: the map flies there, and the pin is then put on the door */}
+        <div className='absolute inset-x-2 top-2 z-10'>
+          <AddressSearch
+            near={pointOf(branch)}
+            onPick={(place) => {
+              setFlyTo({ lat: place.lat, lng: place.lng })
+              setPinned(true)
+              setMoved(true)
+              if (!street.trim() && place.address) setStreet(place.address)
+            }}
+          />
+        </div>
         {location.canLocate && (
           <button
             type='button'
@@ -351,10 +379,25 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           </span>
         </button>
       ) : (
-        <p className={cn('-mt-1 px-1 text-caption', tried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
-          {tried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
+        <p role={pinTried && !pinned ? 'alert' : undefined} className={cn('-mt-1 px-1 text-caption', pinTried && !pinned ? 'text-destructive' : 'text-muted-foreground')}>
+          {pinTried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
         </p>
       )}
+      <button type='submit' className={pillAction}>
+        <Check className='size-4' strokeWidth={3} />
+        {t('deliveryConfirmPin')}
+      </button>
+        </>
+      ) : (
+        <>
+      {/* Where the pin is, and the way back to the map */}
+      <button type='button' onClick={() => setStep('pin')} className='bg-muted flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start'>
+        <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full'>
+          <MapPin className='size-4' />
+        </span>
+        <span className='flex-1 text-note font-semibold'>{t('deliveryPinSet')}</span>
+        <span className='text-note font-semibold underline underline-offset-4'>{t('deliveryChange')}</span>
+      </button>
 
       <Input
         value={street}
@@ -371,6 +414,7 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
         <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' maxLength={50} />
         <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} maxLength={50} />
       </div>
+      <p className='text-muted-foreground -mt-1 px-1 text-caption'>{t('deliveryIfAny')}</p>
       <Input
         value={directions}
         onChange={(e) => setDirections(e.target.value)}
@@ -390,18 +434,39 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           autoComplete='name'
         />
       )}
-      <Input
-        value={phone}
-        onChange={(e) => setPhone(e.target.value)}
-        placeholder={t('deliveryPhone')}
-        aria-label={t('deliveryPhone')}
-        aria-invalid={tried && !phoneOk}
-        aria-describedby={tried && problem ? 'address-problem' : undefined}
-        type='tel'
-        inputMode='tel'
-        autoComplete='tel'
-        dir='ltr'
-      />
+      {phoneField ? (
+        <Input
+          value={phone}
+          onChange={(e) => {
+            // Typing keeps the field: a number that turns valid mid-way does not fold it away
+            setEditPhone(true)
+            setPhone(e.target.value)
+          }}
+          placeholder={t('deliveryPhone')}
+          aria-label={t('deliveryPhone')}
+          aria-invalid={tried && !phoneOk}
+          aria-describedby={tried && problem ? 'address-problem' : undefined}
+          type='tel'
+          inputMode='tel'
+          autoComplete='tel'
+          dir='ltr'
+        />
+      ) : (
+        phoneOk && (
+          <div className='flex min-h-11 items-center gap-3 px-1'>
+            <Phone className='text-muted-foreground size-4 shrink-0' />
+            <span className='flex min-w-0 flex-1 flex-col'>
+              <span className='text-muted-foreground text-caption'>{t('deliveryPhone')}</span>
+              <bdi dir='ltr' className='text-note font-semibold'>
+                {phone}
+              </bdi>
+            </span>
+            <button type='button' onClick={() => setEditPhone(true)} className='min-h-11 px-2 text-note font-semibold underline underline-offset-4'>
+              {t('deliveryChange')}
+            </button>
+          </div>
+        )
+      )}
       {tried && problem && (
         <p id='address-problem' role='alert' className='text-destructive px-1 text-caption'>
           {problem}
@@ -421,17 +486,6 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               {k === 'home' ? t('deliveryLabelHome') : t('deliveryLabelWork')}
             </button>
           ))}
-          <Input
-            value={kind === 'other' ? labelText : ''}
-            onChange={(e) => {
-              setKind('other')
-              setLabelText(e.target.value)
-            }}
-            placeholder={t('deliveryLabel')}
-            aria-label={t('deliveryLabel')}
-            className='h-11 flex-1 rounded-full'
-            maxLength={40}
-          />
         </div>
       )}
 
@@ -467,6 +521,8 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
             {t('deliveryRemoveAddress')}
           </button>
         ))}
+        </>
+      )}
     </form>
   )
 }

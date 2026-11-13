@@ -8,7 +8,7 @@ import { toast } from '@/lib/toast'
 import { Input } from '@/components/ui/input'
 
 /**
- * A street to type above the map, for a customer who would rather name it
+ * A street to type, laid over the top of the map, for a customer who would rather name it
  * than find it: Google's suggestions, from the business's own server, lean
  * toward the branch; picking one flies the map there, and the pin is then
  * put on the door as before. Shown only when the business has address
@@ -31,7 +31,7 @@ export function AddressSearch({ near, onPick }: { near?: LatLng | null; onPick: 
           onChange={(e) => search.setText(e.target.value)}
           placeholder={t('deliverySearchAddress')}
           aria-label={t('deliverySearchAddress')}
-          className='ps-9 pe-10'
+          className='bg-background ps-9 pe-10 shadow-md'
           maxLength={100}
           autoComplete='off'
           enterKeyHint='search'
@@ -54,7 +54,7 @@ export function AddressSearch({ near, onPick }: { near?: LatLng | null; onPick: 
         )}
       </div>
       {search.suggestions.length > 0 && (
-        <ul className='flex flex-col' role='listbox' aria-label={t('deliverySearchAddress')}>
+        <ul className='bg-background flex max-h-56 flex-col overflow-y-auto rounded-2xl p-1 shadow-md' role='listbox' aria-label={t('deliverySearchAddress')}>
           {search.suggestions.map((s) => (
             <li key={s.placeId}>
               <button
