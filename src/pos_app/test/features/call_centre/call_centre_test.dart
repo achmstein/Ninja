@@ -141,6 +141,45 @@ void main() {
       );
       expect(const StaffDeliveryResolution().suggested, isNull);
     });
+
+    test('with no point on the map, every branch that delivers is offered for the agent to pick', () {
+      final resolution = StaffDeliveryResolution.fromJson({
+        'delivers': true,
+        'locationRead': true,
+        'branches': <dynamic>[],
+        'delivering': [
+          {'branchId': _downtown, 'fee': 20, 'minimumOrder': 0, 'paused': false},
+          {'branchId': _maadi, 'fee': 25, 'minimumOrder': 100, 'paused': true},
+        ],
+      });
+
+      expect(resolution.pinned, isFalse);
+      expect(resolution.byHand, isTrue);
+      expect([for (final b in resolution.offers) b.branchId], [_downtown, _maadi]);
+      expect(resolution.offers.last.fee, 25);
+      expect(resolution.suggested, isNull, reason: 'the caller only said where they live: any choice would be a guess');
+    });
+
+    test('by hand, a business with one open delivering branch needs no pick', () {
+      const one = StaffDeliveryResolution(delivering: [DeliveryAlternative(branchId: _maadi, distanceMeters: 0)]);
+      const paused = StaffDeliveryResolution(delivering: [DeliveryAlternative(branchId: _maadi, distanceMeters: 0, paused: true)]);
+
+      expect(one.suggested?.branchId, _maadi);
+      expect(paused.suggested, isNull);
+    });
+
+    test('the map still chooses when a branch reaches the point', () {
+      const resolution = StaffDeliveryResolution(
+        latitude: 29.96,
+        longitude: 31.25,
+        branches: [DeliveryAlternative(branchId: _maadi, distanceMeters: 600)],
+        delivering: [DeliveryAlternative(branchId: _downtown, distanceMeters: 0), DeliveryAlternative(branchId: _maadi, distanceMeters: 0)],
+      );
+
+      expect(resolution.byHand, isFalse);
+      expect([for (final b in resolution.offers) b.branchId], [_maadi]);
+      expect(resolution.suggested?.branchId, _maadi);
+    });
   });
 
   group('one call', () {

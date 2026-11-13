@@ -1905,25 +1905,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryPhoneLabel => 'Phone for the rider';
 
   @override
-  String get deliveryLocationLabel => 'Shared location (optional)';
-
-  @override
-  String get deliveryLocationHint =>
-      'Paste the Google Maps link the customer sent, on WhatsApp say';
-
-  @override
-  String get deliverySearchAddress => 'Or search the street or area';
+  String get deliverySearchAddress => 'Search the street, area or a landmark';
 
   @override
   String get deliverySearchFailed =>
-      'Couldn\'t find that place. Paste the customer\'s link instead.';
+      'Couldn\'t find that place. Write the address as the customer says it.';
 
   @override
   String get deliveryLocationReading => 'Reading the location…';
 
   @override
   String deliveryLocationFound(String distance) {
-    return 'Pin found, $distance away';
+    return 'Found on the map, $distance away';
   }
 
   @override
@@ -1952,15 +1945,35 @@ class AppLocalizationsEn extends AppLocalizations {
       'Start from the caller: their number, then where it goes.';
 
   @override
-  String get callCentreFindBranch => 'Find the branch';
-
-  @override
   String get callCentreNoBranch =>
-      'No branch delivers there. Take it as a pickup, or check the location.';
+      'No branch delivers right now. Take it as a pickup.';
 
   @override
-  String get callCentreNeedsLocation =>
-      'Paste the caller\'s location, or pick one of their addresses, to find the branch.';
+  String get callCentrePickBranchSearch =>
+      'Search the street or a landmark the caller names and the nearest branch is chosen. Or pick the branch that delivers to their area.';
+
+  @override
+  String get callCentrePickBranch =>
+      'Pick the branch that delivers to the caller\'s area.';
+
+  @override
+  String get callCentreOutsideAreas =>
+      'That place is outside every branch\'s delivery area. Pick a branch to send it anyway, or take it as a pickup.';
+
+  @override
+  String get callCentreOnMap => 'Found on the map';
+
+  @override
+  String get callCentreOffMap => 'Take it off the map';
+
+  @override
+  String get callCentreBranchesNotChecked =>
+      'Couldn\'t check which branches deliver.';
+
+  @override
+  String callCentreBranchFee(String branch, String fee) {
+    return '$branch · delivery $fee';
+  }
 
   @override
   String callCentreBranchFor(String branch, String distance, String fee) {

@@ -76,7 +76,9 @@ class DeliveryRepository {
   /// The call centre's question: which branches deliver to the caller's
   /// [location] (a Google Maps link or coordinates), nearest first
   Future<StaffDeliveryResolution> resolveForStaff(String location) async {
-    final response = await _orders.get('delivery/resolve-staff', queryParameters: {'location': location.trim()});
+    // With no point on the map the answer lists every branch that delivers, for the agent to pick from
+    final response = await _orders.get('delivery/resolve-staff',
+        queryParameters: location.trim().isEmpty ? null : {'location': location.trim()});
     return StaffDeliveryResolution.fromJson((response.data as Map).cast<String, dynamic>());
   }
 }

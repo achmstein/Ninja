@@ -15,7 +15,6 @@ import '../../core/models/money.dart';
 import '../../core/utils/bidi.dart';
 import '../../core/utils/phone.dart';
 import '../../core/widgets/pos_dialog.dart';
-import '../../core/widgets/pos_toast.dart';
 import '../../l10n/app_localizations.dart';
 import '../deliveries/models/delivery_order.dart';
 import '../deliveries/widgets/address_search_field.dart';
@@ -94,7 +93,9 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
     _apartment.text = a.apartment ?? '';
     _directions.text = a.directions ?? '';
     _location.text = a.latitude != null && a.longitude != null ? '${a.latitude}, ${a.longitude}' : '';
-    if (_location.text.isNotEmpty) unawaited(_controller.resolve(_location.text));
+    setState(() => _confirming = null);
+    // With its point on the map the nearest branch is found; without one the agent picks
+    unawaited(_controller.resolve(_location.text));
   }
 
   bool get _phoneOk => phoneDigitCount(_phone.text) >= _minPhoneDigits;
@@ -300,38 +301,63 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             const SizedBox(height: 12),
             field(_directions, l10n.deliveryDirectionsLabel, hint: l10n.deliveryDirectionsHint),
             const SizedBox(height: 12),
-            field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
-            const SizedBox(height: 8),
-            Align(
-              alignment: AlignmentDirectional.centerStart,
-              child: FButton(
-                variant: FButtonVariant.secondary,
-                mainAxisSize: MainAxisSize.min,
-                prefix: call.resolving ? const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()) : const Icon(FIcons.search),
-                onPress: call.resolving
-                    ? null
-                    : () {
-                        if (_location.text.trim().isEmpty) {
-                          showPosToast(context, PosToastType.info, l10n.callCentreNeedsLocation);
-                          return;
-                        }
-                        setState(() => _confirming = null);
-                        _controller.resolve(_location.text);
-                      },
-                child: Text(l10n.callCentreFindBranch),
+            // On the map or not: a search pick or an earlier address put it there, and it can be taken off
+            if (_location.text.trim().isNotEmpty)
+              Row(
+                children: [
+                  Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+                  const SizedBox(width: 6),
+                  Text(l10n.callCentreOnMap, style: muted),
+                  const SizedBox(width: 4),
+                  FTappable(
+                    semanticsLabel: l10n.callCentreOffMap,
+                    onPress: () {
+                      _location.clear();
+                      setState(() => _confirming = null);
+                      _controller.resolve('');
+                    },
+                    child: Padding(
+                      padding: const EdgeInsets.all(6),
+                      child: Icon(FIcons.x, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+                    ),
+                  ),
+                ],
               ),
-            ),
-            if (call.resolveFailed) ...[
+            const SizedBox(height: 8),
+            if (call.resolving)
+              const Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()),
+              )
+            else if (call.resolveFailed) ...[
+              Text(l10n.callCentreBranchesNotChecked, style: muted),
               const SizedBox(height: 8),
-              Text(l10n.deliveryLocationNotChecked, style: muted),
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: FButton(
+                  variant: FButtonVariant.secondary,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => _controller.resolve(_location.text),
+                  child: Text(l10n.retry),
+                ),
+              ),
             ] else if (resolution != null) ...[
-              const SizedBox(height: 12),
-              if (!resolution.locationRead)
-                Text(l10n.deliveryLocationUnread, style: muted)
-              else if (resolution.branches.isEmpty)
-                Text(l10n.callCentreNoBranch, style: muted)
-              else
-                for (final b in resolution.branches)
+              if (resolution.offers.isEmpty)
+                Text(l10n.callCentreNoBranch, style: muted.copyWith(color: amber))
+              else ...[
+                // The map chose nothing: the agent hears the area and knows the branch
+                if (resolution.byHand) ...[
+                  Text(
+                    resolution.pinned
+                        ? l10n.callCentreOutsideAreas
+                        : ref.watch(brandProvider.select((b) => b.addressSearch))
+                            ? l10n.callCentrePickBranchSearch
+                            : l10n.callCentrePickBranch,
+                    style: resolution.pinned ? muted.copyWith(color: amber) : muted,
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                for (final b in resolution.offers)
                   Padding(
                     key: ValueKey(b.branchId),
                     padding: const EdgeInsets.only(bottom: 8),
@@ -364,11 +390,16 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                                 TextSpan(
                                   text: _confirming == b.branchId
                                       ? l10n.deliverySendToPaused(nameOf(b.branchId))
-                                      : l10n.callCentreBranchFor(
-                                          nameOf(b.branchId),
-                                          distanceLabel(l10n, b.distanceMeters),
-                                          b.fee > 0 ? money(context, b.fee) : l10n.deliveryFree,
-                                        ),
+                                      : resolution.byHand
+                                          ? l10n.callCentreBranchFee(
+                                              nameOf(b.branchId),
+                                              b.fee > 0 ? money(context, b.fee) : l10n.deliveryFree,
+                                            )
+                                          : l10n.callCentreBranchFor(
+                                              nameOf(b.branchId),
+                                              distanceLabel(l10n, b.distanceMeters),
+                                              b.fee > 0 ? money(context, b.fee) : l10n.deliveryFree,
+                                            ),
                                 ),
                                 if (b.paused && _confirming != b.branchId)
                                   TextSpan(text: ' · ${l10n.deliveryBranchPaused}', style: TextStyle(color: amber, fontWeight: FontWeight.w600)),
@@ -380,6 +411,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                       ),
                     ),
                   ),
+              ],
             ],
             const SizedBox(height: 16),
             if (chosen != null)

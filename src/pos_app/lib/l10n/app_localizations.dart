@@ -3434,28 +3434,16 @@ abstract class AppLocalizations {
   /// **'Phone for the rider'**
   String get deliveryPhoneLabel;
 
-  /// No description provided for @deliveryLocationLabel.
-  ///
-  /// In en, this message translates to:
-  /// **'Shared location (optional)'**
-  String get deliveryLocationLabel;
-
-  /// No description provided for @deliveryLocationHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Paste the Google Maps link the customer sent, on WhatsApp say'**
-  String get deliveryLocationHint;
-
   /// No description provided for @deliverySearchAddress.
   ///
   /// In en, this message translates to:
-  /// **'Or search the street or area'**
+  /// **'Search the street, area or a landmark'**
   String get deliverySearchAddress;
 
   /// No description provided for @deliverySearchFailed.
   ///
   /// In en, this message translates to:
-  /// **'Couldn\'t find that place. Paste the customer\'s link instead.'**
+  /// **'Couldn\'t find that place. Write the address as the customer says it.'**
   String get deliverySearchFailed;
 
   /// No description provided for @deliveryLocationReading.
@@ -3467,7 +3455,7 @@ abstract class AppLocalizations {
   /// No description provided for @deliveryLocationFound.
   ///
   /// In en, this message translates to:
-  /// **'Pin found, {distance} away'**
+  /// **'Found on the map, {distance} away'**
   String deliveryLocationFound(String distance);
 
   /// No description provided for @deliveryLocationUnread.
@@ -3512,23 +3500,53 @@ abstract class AppLocalizations {
   /// **'Start from the caller: their number, then where it goes.'**
   String get callCentreCallerHint;
 
-  /// No description provided for @callCentreFindBranch.
-  ///
-  /// In en, this message translates to:
-  /// **'Find the branch'**
-  String get callCentreFindBranch;
-
   /// No description provided for @callCentreNoBranch.
   ///
   /// In en, this message translates to:
-  /// **'No branch delivers there. Take it as a pickup, or check the location.'**
+  /// **'No branch delivers right now. Take it as a pickup.'**
   String get callCentreNoBranch;
 
-  /// No description provided for @callCentreNeedsLocation.
+  /// No description provided for @callCentrePickBranchSearch.
   ///
   /// In en, this message translates to:
-  /// **'Paste the caller\'s location, or pick one of their addresses, to find the branch.'**
-  String get callCentreNeedsLocation;
+  /// **'Search the street or a landmark the caller names and the nearest branch is chosen. Or pick the branch that delivers to their area.'**
+  String get callCentrePickBranchSearch;
+
+  /// No description provided for @callCentrePickBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the branch that delivers to the caller\'s area.'**
+  String get callCentrePickBranch;
+
+  /// No description provided for @callCentreOutsideAreas.
+  ///
+  /// In en, this message translates to:
+  /// **'That place is outside every branch\'s delivery area. Pick a branch to send it anyway, or take it as a pickup.'**
+  String get callCentreOutsideAreas;
+
+  /// No description provided for @callCentreOnMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Found on the map'**
+  String get callCentreOnMap;
+
+  /// No description provided for @callCentreOffMap.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it off the map'**
+  String get callCentreOffMap;
+
+  /// No description provided for @callCentreBranchesNotChecked.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t check which branches deliver.'**
+  String get callCentreBranchesNotChecked;
+
+  /// No description provided for @callCentreBranchFee.
+  ///
+  /// In en, this message translates to:
+  /// **'{branch} · delivery {fee}'**
+  String callCentreBranchFee(String branch, String fee);
 
   /// No description provided for @callCentreBranchFor.
   ///

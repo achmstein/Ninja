@@ -209,7 +209,14 @@ class StaffDeliveryResolution {
 
   /// False when a location was given but no point could be read from it
   final bool locationRead;
+
+  /// The branches whose area takes the point in, nearest first. Empty with no
+  /// point on the map, or when none goes that far.
   final List<DeliveryAlternative> branches;
+
+  /// Every branch that delivers at all, with no distance: what the agent
+  /// picks from by hand when the caller only said where they live
+  final List<DeliveryAlternative> delivering;
 
   const StaffDeliveryResolution({
     this.delivers = false,
@@ -217,13 +224,23 @@ class StaffDeliveryResolution {
     this.longitude,
     this.locationRead = true,
     this.branches = const [],
+    this.delivering = const [],
   });
 
   bool get pinned => latitude != null && longitude != null;
 
+  /// The agent picks the branch: no point on the map chose one
+  bool get byHand => branches.isEmpty;
+
+  /// What the agent chooses from: the branches the map found, or every one that delivers
+  List<DeliveryAlternative> get offers => byHand ? delivering : branches;
+
   /// The branch the order goes to unless the agent picks another: the nearest
-  /// one taking orders. A paused branch is never picked for them.
+  /// one taking orders when the map chose (a paused branch is never picked
+  /// for them); by hand only a business's single open branch, since any
+  /// other choice would be a guess.
   DeliveryAlternative? get suggested {
+    if (byHand) return delivering.length == 1 && !delivering.first.paused ? delivering.first : null;
     for (final b in branches) {
       if (!b.paused) return b;
     }
@@ -238,6 +255,16 @@ class StaffDeliveryResolution {
         branches: [
           for (final b in (json['branches'] as List<dynamic>? ?? const <dynamic>[]))
             DeliveryAlternative.fromJson((b as Map).cast<String, dynamic>()),
+        ],
+        delivering: [
+          for (final b in (json['delivering'] as List<dynamic>? ?? const <dynamic>[]))
+            DeliveryAlternative(
+              branchId: toInt((b as Map)['branchId']),
+              distanceMeters: 0,
+              fee: toNumber(b['fee']),
+              minimumOrder: toNumber(b['minimumOrder']),
+              paused: b['paused'] == true,
+            ),
         ],
       );
 }

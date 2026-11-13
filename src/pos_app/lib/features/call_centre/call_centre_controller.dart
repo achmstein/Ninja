@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
@@ -73,6 +75,8 @@ class CallCentreController extends Notifier<CallCentreState> {
     _asks++;
     _lookedUp = '';
     state = const CallCentreState();
+    // Before anything is known of where: the branches that deliver, to pick from
+    unawaited(resolve(''));
   }
 
   /// The caller's account and their earlier addresses, by [phone] (normalized)
@@ -102,13 +106,11 @@ class CallCentreController extends Notifier<CallCentreState> {
     state = customer == null ? state.copyWith(clearCustomer: true, known: known) : state.copyWith(customer: customer, known: known);
   }
 
-  /// Which branches deliver to [location]; the nearest one taking orders is chosen
+  /// Which branches deliver to [location], a point on the map as coordinates:
+  /// the nearest one taking orders is chosen. With none (the caller only said
+  /// where they live) every branch that delivers comes back, and the agent picks.
   Future<void> resolve(String location) async {
     final asked = location.trim();
-    if (asked.isEmpty) {
-      state = state.copyWith(clearResolution: true, resolveFailed: false);
-      return;
-    }
     final ask = ++_asks;
     state = state.copyWith(clearResolution: true, resolving: true, resolveFailed: false);
     try {

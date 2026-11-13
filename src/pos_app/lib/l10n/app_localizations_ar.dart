@@ -1921,25 +1921,19 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryPhoneLabel => 'رقم للمندوب';
 
   @override
-  String get deliveryLocationLabel => 'الموقع المُرسَل (اختياري)';
-
-  @override
-  String get deliveryLocationHint =>
-      'الصق رابط خرائط Google الذي أرسله العميل، عبر واتساب مثلًا';
-
-  @override
-  String get deliverySearchAddress => 'أو ابحث عن الشارع أو المنطقة';
+  String get deliverySearchAddress =>
+      'ابحث عن الشارع أو المنطقة أو علامة مميزة';
 
   @override
   String get deliverySearchFailed =>
-      'تعذّر العثور على هذا المكان. الصق رابط العميل بدلًا من ذلك.';
+      'تعذّر العثور على هذا المكان. اكتب العنوان كما يقوله العميل.';
 
   @override
   String get deliveryLocationReading => 'جارٍ قراءة الموقع…';
 
   @override
   String deliveryLocationFound(String distance) {
-    return 'تحدّد الموقع، على بُعد $distance';
+    return 'تحدّد على الخريطة، على بُعد $distance';
   }
 
   @override
@@ -1967,15 +1961,34 @@ class AppLocalizationsAr extends AppLocalizations {
   String get callCentreCallerHint => 'ابدأ بالمتصل: رقمه، ثم عنوان التوصيل.';
 
   @override
-  String get callCentreFindBranch => 'ابحث عن الفرع';
-
-  @override
   String get callCentreNoBranch =>
-      'لا يوجد فرع يوصّل إلى هناك. سجّله استلامًا من الفرع، أو راجع الموقع.';
+      'لا يوجد فرع يوصّل الآن. سجّله استلامًا من الفرع.';
 
   @override
-  String get callCentreNeedsLocation =>
-      'الصق موقع المتصل، أو اختر أحد عناوينه، للعثور على الفرع.';
+  String get callCentrePickBranchSearch =>
+      'ابحث عن الشارع أو العلامة التي يذكرها المتصل فيُختار أقرب فرع. أو اختر الفرع الذي يوصّل إلى منطقته.';
+
+  @override
+  String get callCentrePickBranch => 'اختر الفرع الذي يوصّل إلى منطقة المتصل.';
+
+  @override
+  String get callCentreOutsideAreas =>
+      'هذا المكان خارج منطقة توصيل كل الفروع. اختر فرعًا لإرساله على أي حال، أو سجّله استلامًا من الفرع.';
+
+  @override
+  String get callCentreOnMap => 'تم تحديده على الخريطة';
+
+  @override
+  String get callCentreOffMap => 'إزالته من الخريطة';
+
+  @override
+  String get callCentreBranchesNotChecked =>
+      'تعذّر التحقق من الفروع التي توصّل.';
+
+  @override
+  String callCentreBranchFee(String branch, String fee) {
+    return '$branch · التوصيل $fee';
+  }
 
   @override
   String callCentreBranchFor(String branch, String distance, String fee) {

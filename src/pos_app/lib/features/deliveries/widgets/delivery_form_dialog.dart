@@ -284,8 +284,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           const SizedBox(height: 12),
           field(_directions, l10n.deliveryDirectionsLabel, hint: l10n.deliveryDirectionsHint),
           const SizedBox(height: 12),
-          field(_location, l10n.deliveryLocationLabel, hint: 'https://maps.app.goo.gl/…', direction: TextDirection.ltr),
-          const SizedBox(height: 4),
+          // On the map or not: a search pick or an earlier address put it there. Nobody ringing in sends
+          // a link, so there is nothing to paste; without a point the rider goes by the address
           if (reading)
             Row(
               children: [
@@ -294,9 +294,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 Text(l10n.deliveryLocationReading, style: muted),
               ],
             )
-          else if (!pasted)
-            Text(l10n.deliveryLocationHint, style: muted)
-          else if (pinned)
+          else if (pasted && pinned)
             Row(
               children: [
                 Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.foreground),
@@ -309,8 +307,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 ),
               ],
             )
-          else
-            Text(form.quoteFailed ? l10n.deliveryLocationNotChecked : l10n.deliveryLocationUnread, style: muted),
+          else if (pasted && form.quoteFailed)
+            Text(l10n.deliveryLocationNotChecked, style: muted),
           if (!reading && alternatives.isNotEmpty) ...[
             const SizedBox(height: 12),
             NearerBranches(
