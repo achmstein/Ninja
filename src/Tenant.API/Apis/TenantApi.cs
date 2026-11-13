@@ -133,6 +133,7 @@ public static partial class TenantApi
         var guestsChanged = request.GuestOrdersAnywhere is { } anywhere && anywhere != tenant.GuestOrdersAnywhere;
         if (guestsChanged) tenant.GuestOrdersAnywhere = request.GuestOrdersAnywhere!.Value;
         if (tillItems is not null) tenant.TillItems = tillItems;
+        if (request.HideSoldOutItems is { } hideSoldOut) tenant.HideSoldOutItems = hideSoldOut;
         if (locale is { } l)
         {
             tenant.Country = l.Country;
@@ -620,6 +621,7 @@ public record TenantSocialProvider(string Provider, string Hint);
 /// <param name="ApiUrl">The host the native till and kitchen apps connect to ("https://api.slug.example.com"); null when the stack was not told.</param>
 /// <param name="AppsUrl">Where those apps are downloaded from, the platform's page; null when the stack was not told.</param>
 /// <param name="TillItems">How the till's sale pad shows the items: photos (tiles with pictures) or compact (text tiles).</param>
+/// <param name="HideSoldOutItems">The customer's menu leaves out an item that is off or sold out; false shows it greyed and marked unavailable.</param>
 public record TenantResponse(
     LocalizedText Name,
     string? PrimaryColor,
@@ -641,7 +643,8 @@ public record TenantResponse(
     TenantWordmark? Cover = null,
     AssistantDto? Assistant = null,
     TenantMaps? Maps = null,
-    string TillItems = TillItemStyles.Photos)
+    string TillItems = TillItemStyles.Photos,
+    bool HideSoldOutItems = false)
 {
     public static TenantResponse From(Model.Tenant t, IConfiguration configuration)
         => From(t, configuration["Tenant:AuthUrl"], configuration["Tenant:ApiUrl"], configuration["Tenant:AppsUrl"], configuration["Tenant:SocialSignIn"])
@@ -676,7 +679,8 @@ public record TenantResponse(
             t.GuestOrdersAnywhere,
             TenantWordmark.From(t, TenantImageSlots.Cover),
             AssistantDto.From(t.Assistant),
-            TillItems: t.TillItems);
+            TillItems: t.TillItems,
+            HideSoldOutItems: t.HideSoldOutItems);
     }
 }
 
@@ -684,7 +688,8 @@ public record TenantResponse(
 /// <param name="GuestOrdersAnywhere">Whether a guest may order without being at a table; null leaves it.</param>
 /// <param name="Features">The switches the owner sets; one left out stays as it is.</param>
 /// <param name="TillItems">How the till shows the items, photos or compact; null leaves it.</param>
-public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, FeatureSwitches? Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null, string? TillItems = null);
+/// <param name="HideSoldOutItems">Whether the customer's menu leaves out an item that is off or sold out, rather than showing it greyed; null leaves it.</param>
+public record UpdateTenantRequest(LocalizedText Name, string? PrimaryColor, string? CustomerUrl, FeatureSwitches? Features, TenantThemeDto? Theme = null, TenantLocaleDto? Locale = null, string? BusinessType = null, bool? GuestOrdersAnywhere = null, string? TillItems = null, bool? HideSoldOutItems = null);
 
 public record WebManifestIcon(string Src, string Sizes, string Type, string Purpose);
 

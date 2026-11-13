@@ -186,6 +186,9 @@ namespace Ninja.Tenant.API.Migrations
                     b.Property<bool>("GuestOrdersAnywhere")
                         .HasColumnType("boolean");
 
+                    b.Property<bool>("HideSoldOutItems")
+                        .HasColumnType("boolean");
+
                     b.Property<string>("Images")
                         .IsRequired()
                         .HasColumnType("jsonb");

@@ -169,6 +169,7 @@ export type TenantResponse = {
     version: number | string;
     businessType?: null | string;
     guestOrdersAnywhere?: boolean;
+    hideSoldOutItems?: boolean;
     cover?: null | TenantWordmark;
     assistant?: null | AssistantDto;
     maps?: null | TenantMaps;

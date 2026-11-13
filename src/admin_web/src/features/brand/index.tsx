@@ -250,6 +250,9 @@ function BrandForm({ brand }: { brand: Brand }) {
   const [tillItems, setTillItems] = useState<TillItems>(
     tillItemsOf(brand.tillItems)
   )
+  const [hideSoldOutItems, setHideSoldOutItems] = useState(
+    brand.hideSoldOutItems ?? false
+  )
   const [error, setError] = useState<string | null>(null)
 
   const put = (next: Brand) => queryClient.setQueryData(brandQueryKey(), next)
@@ -337,6 +340,7 @@ function BrandForm({ brand }: { brand: Brand }) {
         features,
         guestOrdersAnywhere,
         tillItems,
+        hideSoldOutItems,
         theme: fromThemeForm(theme),
         locale: { ...brand.locale, arabicStyle, contentLanguages },
       },
@@ -740,6 +744,14 @@ function BrandForm({ brand }: { brand: Brand }) {
               description={t('guestOrdersAnywhereHint')}
               checked={guestOrdersAnywhere}
               onCheckedChange={setGuestOrdersAnywhere}
+            />
+            {/* The customer's menu only: the till and this back office keep showing every item */}
+            <SwitchRow
+              className='px-5 py-4'
+              title={t('hideSoldOutItems')}
+              description={t('hideSoldOutItemsHint')}
+              checked={hideSoldOutItems}
+              onCheckedChange={setHideSoldOutItems}
             />
           </SettingsCard>
 

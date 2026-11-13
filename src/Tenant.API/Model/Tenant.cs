@@ -89,6 +89,14 @@ public class Tenant
     /// </summary>
     public string TillItems { get; set; } = TillItemStyles.Photos;
 
+    /// <summary>
+    /// What the customer's menu does with an item that is off or sold out:
+    /// off (the default), it stays on the menu, greyed and marked unavailable,
+    /// so a guest sees it exists; on, it is left off the menu until it is back.
+    /// The till and the back office always show every item. The owner picks it in admin.
+    /// </summary>
+    public bool HideSoldOutItems { get; set; }
+
     /// <summary>Reservations: customers book a place ahead or hold it on the way, with or without a clock. Off for a business that only seats people.</summary>
     public bool ReservationsEnabled { get; set; } = true;
 

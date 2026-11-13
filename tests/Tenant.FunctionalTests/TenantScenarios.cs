@@ -123,6 +123,27 @@ public sealed class TenantScenarios
         Assert.Contains("name is required", detail);
     }
 
+    private record SoldOutView(bool HideSoldOutItems);
+
+    [TestMethod]
+    public async Task The_owner_hides_sold_out_items_and_the_menu_reads_it_off_the_brand()
+    {
+        await ResetAsync();
+        var anyone = Suite.TenantApi.AsAnonymous();
+        Assert.IsFalse((await anyone.GetAsync<SoldOutView>(Tenant)).HideSoldOutItems, "a business starts showing what is sold out, greyed");
+
+        await Owner.PutAsync<SoldOutView>(Tenant, new { name = new { en = "Chillax", ar = "تشيلاكس" }, features = FeaturesView.All, hideSoldOutItems = true });
+        Assert.IsTrue((await anyone.GetAsync<SoldOutView>(Tenant)).HideSoldOutItems);
+
+        // A save that does not name it (the control plane's, an older admin's) keeps it
+        await Owner.PutAsync<SoldOutView>(Tenant, Update(FeaturesView.All));
+        Assert.IsTrue((await anyone.GetAsync<SoldOutView>(Tenant)).HideSoldOutItems);
+
+        // Back to the default, so the other scenarios see the menu as every business starts
+        var back = await Owner.PutAsync<SoldOutView>(Tenant, new { name = new { en = "Chillax", ar = "تشيلاكس" }, features = FeaturesView.All, hideSoldOutItems = false });
+        Assert.IsFalse(back.HideSoldOutItems);
+    }
+
     private record TillView(string TillItems, long Version);
 
     [TestMethod]

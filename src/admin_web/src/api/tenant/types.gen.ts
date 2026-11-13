@@ -173,6 +173,7 @@ export type TenantResponse = {
     assistant?: null | AssistantDto;
     maps?: null | TenantMaps;
     tillItems?: string;
+    hideSoldOutItems?: boolean;
 };
 
 export type TenantSocialProvider = {
@@ -252,6 +253,7 @@ export type UpdateTenantRequest = {
     businessType?: null | string;
     guestOrdersAnywhere?: null | boolean;
     tillItems?: null | string;
+    hideSoldOutItems?: null | boolean;
 };
 
 export type GetBranchesData = {
