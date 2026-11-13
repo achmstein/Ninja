@@ -310,10 +310,14 @@ export function CustomerDialog({
                           </span>
                         ) : user.phoneNumber ? (
                           <span className='text-muted-foreground block truncate text-sm'>
-                            <Highlight
-                              text={showPhone(user.phoneNumber)}
-                              ranges={phoneRanges(showPhone(user.phoneNumber), term)}
-                            />
+                            {/* A number reads left to right whatever the till's language:
+                                without this its groups swap places in Arabic */}
+                            <bdi dir='ltr'>
+                              <Highlight
+                                text={showPhone(user.phoneNumber)}
+                                ranges={phoneRanges(showPhone(user.phoneNumber), term)}
+                              />
+                            </bdi>
                           </span>
                         ) : user.email ? (
                           <span className='text-muted-foreground block truncate text-sm'>

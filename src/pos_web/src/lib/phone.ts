@@ -139,3 +139,14 @@ export function whatsAppLink(phone: string, text?: string, country = home): stri
   const url = `https://wa.me/${internationalDigits(phone, country)}`
   return text ? `${url}?text=${encodeURIComponent(text)}` : url
 }
+
+/**
+ * The number for a line of running text ("Guest · 010 0021 2204"). Wrapped in a
+ * left-to-right isolate, so in Arabic its groups keep their order instead of
+ * swapping places. Where the number has an element of its own, give that element
+ * dir="ltr" and use showPhone.
+ */
+export function phoneInText(stored: string | null | undefined): string {
+  const shown = showPhone(stored)
+  return shown ? `⁦${shown}⁩` : shown
+}
