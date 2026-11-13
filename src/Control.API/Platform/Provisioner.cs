@@ -195,11 +195,8 @@ public sealed partial class Provisioner(
             await context.SaveChangesAsync(ct);
             await audit.WriteAsync("tenant.provision.done", tenant.Slug, new { runId, imageTag = tenant.ImageTag, restoredFrom = restore?.Slug }, ct, Source);
 
-            // A new business's items get their photos, whichever way its menu came (read at creation, or the
-            // sample's): drawn in the AI lane, minutes of work that hold nothing up; an item with a photo is left
-            // alone, and without an image model the step says so. A restore brings its own pictures
-            if (restore is null && queue is not null)
-                await queue.EnqueueAsync(new ProvisioningJob(tenant.Id, "photos"), ct);
+            // No photos are drawn here: a new business's menu gets them only when the operator asks, from its
+            // page (ControlApi.GeneratePhotos), since each one is paid work at the image model
         }
         catch (Exception ex) when (!ct.IsCancellationRequested)
         {
@@ -451,8 +448,10 @@ public sealed partial class Provisioner(
             }
         }, ct);
 
-    /// <summary>By hand, for a demo made before there was demo data: fills it once, while it runs.</summary>
-    /// <summary>A photo for every item that has none (<see cref="ItemPhotos"/>); the step says how many, and why any were not made.</summary>
+    /// <summary>
+    /// By hand, from the business's page: a photo for every menu item that has none (<see cref="ItemPhotos"/>);
+    /// the step says how many, and why any were not made.
+    /// </summary>
     public async Task PhotosAsync(Guid tenantId, CancellationToken ct)
     {
         if (photos is null) return;
@@ -465,6 +464,7 @@ public sealed partial class Provisioner(
         await audit.WriteAsync("tenant.photos", tenant.Slug, new { output = said }, ct, Source);
     }
 
+    /// <summary>By hand, for a demo made before there was demo data: fills it once, while it runs.</summary>
     public async Task DemoDataAsync(Guid tenantId, CancellationToken ct)
     {
         var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);

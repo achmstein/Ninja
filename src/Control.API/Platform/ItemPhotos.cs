@@ -38,7 +38,7 @@ public sealed class ItemPhotos(IStackProxy stack, AiImages images, ILogger<ItemP
             .Where(i => string.IsNullOrEmpty(i["pictureUri"]?.GetValue<string>()))
             .Select(i => (Id: i["id"]!.GetValue<int>(), Name: i["name"], Description: i["description"], Category: i["catalogTypeName"]))
             .ToList();
-        if (bare.Count == 0) return "every dish has a photo";
+        if (bare.Count == 0) return "every menu item has a photo";
 
         var made = 0;
         var failed = new List<string>();
