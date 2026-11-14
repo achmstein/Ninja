@@ -320,11 +320,14 @@ export function Profit() {
                     key={String(s.partnerId)}
                     className='flex items-baseline justify-between gap-4 py-1.5'
                   >
+                    {/* Each in its own isolate: an Arabic name beside "50%"
+                        in an English page otherwise takes the figure into
+                        itself, the 50 on one side and the % on the other */}
                     <span>
-                      {s.name}
-                      <span className='text-muted-foreground ms-2 text-xs'>
+                      <bdi>{s.name}</bdi>
+                      <bdi className='text-muted-foreground ms-2 text-xs'>
                         {percent.format(toNumber(s.percent) / 100)}
-                      </span>
+                      </bdi>
                     </span>
                     <span
                       className={cn(
