@@ -29,7 +29,8 @@ export type DrawerFormula = {
 
 /**
  * The drawer as the server works it out (ShiftQueries.BuildViewAsync), term
- * by term, so the report shows parts that add up to Expected: the float,
+ * by term (those of zero left out, but for the float and the cash taken),
+ * so the report shows parts that add up to Expected: the float,
  * the cash taken for bills net of the change handed back, cash paid against
  * tabs, pay-ins, less pay-outs and cash refunds. Card, InstaPay, online and
  * account money never touch the drawer.
@@ -42,7 +43,7 @@ export function drawerFormula(shift: ShiftView): DrawerFormula {
         toNumber(
           (shift.tenderTotals ?? []).find((t) => t.tender === 'Cash')?.amount
         )
-  const terms: DrawerTerm[] = [
+  const every: DrawerTerm[] = [
     { key: 'openingFloat', sign: 1, amount: toNumber(shift.openingFloat) },
     {
       key: 'cashTakenNet',
@@ -54,7 +55,12 @@ export function drawerFormula(shift: ShiftView): DrawerFormula {
     { key: 'payOutsTotal', sign: -1, amount: toNumber(shift.payOutsTotal) },
     { key: 'cashRefunds', sign: -1, amount: toNumber(shift.cashRefunds) },
   ]
-  const expected = round(terms.reduce((sum, t) => sum + t.sign * t.amount, 0))
+  const expected = round(every.reduce((sum, t) => sum + t.sign * t.amount, 0))
+  // The float and the cash taken always; the rest only when there was any,
+  // as the till app lists them: a row of zero says nothing
+  const terms = every.filter(
+    (t) => t.key === 'openingFloat' || t.key === 'cashTakenNet' || t.amount !== 0
+  )
   const closed = shift.status === 'Closed'
   return {
     terms,

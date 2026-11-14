@@ -42,6 +42,26 @@ describe('drawerFormula', () => {
     expect(drawer.adjustedOverShort).toBeNull()
   })
 
+  it('leaves out the parts that came to nothing, but for the float and the cash taken', () => {
+    const drawer = drawerFormula({
+      id: 8,
+      status: 'Open',
+      openingFloat: 0,
+      cashTendered: 0,
+      changeGiven: 0,
+      cashTabPayments: 0,
+      payInsTotal: 0,
+      payOutsTotal: 30,
+      cashRefunds: 0,
+    })
+    expect(drawer.terms.map((t) => [t.key, t.sign * t.amount])).toEqual([
+      ['openingFloat', 0],
+      ['cashTakenNet', 0],
+      ['payOutsTotal', -30],
+    ])
+    expect(drawer.expected).toBe(-30)
+  })
+
   it('takes amounts sent as strings', () => {
     const drawer = drawerFormula({
       ...open,
