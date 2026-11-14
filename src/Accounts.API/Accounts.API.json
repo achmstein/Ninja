@@ -309,6 +309,69 @@
         ]
       }
     },
+    "/api/accounts/{customerId}/old-balance": {
+      "post": {
+        "tags": [
+          "Pos"
+        ],
+        "summary": "Add an old balance",
+        "description": "Put what a customer already owed, from before the tab was kept here, on their account (owner or admin, from the till)",
+        "operationId": "AddOldBalance",
+        "parameters": [
+          {
+            "name": "x-requestid",
+            "in": "header",
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          {
+            "name": "customerId",
+            "in": "path",
+            "description": "The customer ID",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AddChargeRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "400": {
+            "description": "Bad Request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProblemDetails"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/accounts/{customerId}/payment": {
       "post": {
         "tags": [

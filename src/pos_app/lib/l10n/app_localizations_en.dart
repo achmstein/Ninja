@@ -939,6 +939,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get topUp => 'Top up';
 
   @override
+  String get addOldBalance => 'Add old balance';
+
+  @override
+  String get oldBalance => 'Old balance';
+
+  @override
+  String get oldBalanceHint =>
+      'What they already owed from before. No money is taken and the drawer does not change.';
+
+  @override
+  String oldBalanceAdded(String amount) {
+    return '$amount added to their tab';
+  }
+
+  @override
   String get confirmTabPayment => 'Take payment';
 
   @override

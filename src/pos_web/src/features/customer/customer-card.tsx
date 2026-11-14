@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useAuth } from 'react-oidc-context'
 import { Award, MessageCircle, Phone, QrCode, User, Wallet } from 'lucide-react'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -14,6 +15,8 @@ import { useT, type TranslationKey } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { showPhone, whatsAppLink } from '@/lib/phone'
+import { getRealmRoles } from '@/config/oidc-config'
+import { OldBalanceDialog } from './old-balance-dialog'
 import { PayTabDialog } from './pay-tab-dialog'
 import { useLoyalty, useTab } from './use-customer-card'
 import { AppLinkDialog } from './app-link-dialog'
@@ -57,6 +60,11 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
   const country = useBrand()?.locale.country ?? 'EG'
   const [payOpen, setPayOpen] = useState(false)
   const [linkOpen, setLinkOpen] = useState(false)
+  const [oldOpen, setOldOpen] = useState(false)
+  // A debt from before the tabs were kept here is the owner's or a
+  // manager's to put on someone, not a cashier's (Accounts says the same)
+  const roles = getRealmRoles(useAuth().user)
+  const mayAddOldBalance = roles.includes('Owner') || roles.includes('Admin')
   const addedAtCounter = useAddedAtCounter(customer)
   // A link belongs to the customer it was asked for; the next card starts closed
   const customerId = customer?.id
@@ -91,7 +99,10 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
 
   return (
     <>
-      <Dialog open={open && !payOpen && !linkOpen} onOpenChange={onOpenChange}>
+      <Dialog
+        open={open && !payOpen && !linkOpen && !oldOpen}
+        onOpenChange={onOpenChange}
+      >
         <DialogContent className='flex flex-col gap-4 sm:max-w-md'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 text-xl'>
@@ -188,6 +199,16 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               )
             )}
 
+          {features.tabs && mayAddOldBalance && !tab.isPending && !tab.isError && (
+            <Button
+              variant='ghost'
+              className='text-muted-foreground -mt-2 h-10 self-start px-2'
+              onClick={() => setOldOpen(true)}
+            >
+              {t('addOldBalance')}
+            </Button>
+          )}
+
           {/* Their points are theirs to see in the app once they claim the account */}
           {addedAtCounter && (
             <Button
@@ -216,6 +237,14 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
         customer={linkOpen && customer ? customer : null}
         onOpenChange={(next) => !next && setLinkOpen(false)}
       />
+
+      {features.tabs && customer && mayAddOldBalance && (
+        <OldBalanceDialog
+          customer={customer}
+          open={oldOpen}
+          onOpenChange={setOldOpen}
+        />
+      )}
 
       {features.tabs && customer && (
         <PayTabDialog

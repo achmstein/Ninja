@@ -950,6 +950,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get topUp => 'شحن الرصيد';
 
   @override
+  String get addOldBalance => 'إضافة رصيد قديم';
+
+  @override
+  String get oldBalance => 'رصيد قديم';
+
+  @override
+  String get oldBalanceHint =>
+      'ما كان عليه من قبل. لا تُحصَّل نقود ولا يتغير الدرج.';
+
+  @override
+  String oldBalanceAdded(String amount) {
+    return 'أُضيف $amount إلى حسابه';
+  }
+
+  @override
   String get confirmTabPayment => 'استلام';
 
   @override

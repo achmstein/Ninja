@@ -1730,6 +1730,30 @@ abstract class AppLocalizations {
   /// **'Top up'**
   String get topUp;
 
+  /// No description provided for @addOldBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Add old balance'**
+  String get addOldBalance;
+
+  /// No description provided for @oldBalance.
+  ///
+  /// In en, this message translates to:
+  /// **'Old balance'**
+  String get oldBalance;
+
+  /// No description provided for @oldBalanceHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What they already owed from before. No money is taken and the drawer does not change.'**
+  String get oldBalanceHint;
+
+  /// No description provided for @oldBalanceAdded.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} added to their tab'**
+  String oldBalanceAdded(String amount);
+
   /// No description provided for @confirmTabPayment.
   ///
   /// In en, this message translates to:

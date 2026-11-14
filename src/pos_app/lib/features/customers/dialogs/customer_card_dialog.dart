@@ -5,6 +5,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/money.dart';
+import 'package:ninja_app_core/auth/auth_service.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
@@ -13,6 +14,7 @@ import '../../../l10n/app_localizations.dart';
 import '../models/customer_card.dart';
 import '../providers/customer_providers.dart';
 import 'app_link_dialog.dart';
+import 'old_balance_dialog.dart';
 import 'pay_tab_dialog.dart';
 
 import '../../../core/utils/phone.dart';
@@ -63,6 +65,10 @@ class _CustomerCard extends ConsumerWidget {
     // Nothing to read while offline: the hint stands in for both blocks
     final loyalty = online && features.loyalty ? ref.watch(loyaltyAccountProvider(customer.id)) : null;
     final tab = online && features.tabs ? ref.watch(tabAccountProvider(customer.id)) : null;
+    // A debt from before the tabs were kept here is the owner's or a
+    // manager's to put on someone, not a cashier's (Accounts says the same)
+    final roles = ref.watch(authServiceProvider.select((s) => s.roles));
+    final mayAddOldBalance = roles.contains('Owner') || roles.contains('Admin');
 
     Widget block(IconData icon, String title, Widget body) => Container(
           padding: const EdgeInsets.all(12),
@@ -218,6 +224,19 @@ class _CustomerCard extends ConsumerWidget {
                       },
                     ),
             ),
+            if (mayAddOldBalance && tab != null && tab.hasValue)
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: SizedBox(
+                  height: Sizes.controlSmall,
+                  child: FButton(
+                    variant: FButtonVariant.ghost,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: () => showOldBalanceDialog(context, customer: customer),
+                    child: Text(l10n.addOldBalance, style: muted),
+                  ),
+                ),
+              ),
             const SizedBox(height: 12),
           ],
           // Their account, theirs: a link to set an email and a password
