@@ -3,6 +3,7 @@ import { useLang } from '@/lib/lang'
 import type { Script } from '@/live/driver'
 import { LiveApp, type Staff } from '@/live/live-app'
 import { includes, MODULES, PLANS } from '@/plans/plans'
+import { AskForm } from './ask'
 import { ContactButtons, Container } from './chrome'
 
 /** A phone holding the app a guest uses, at its own size, 390 x 844 */
@@ -250,7 +251,10 @@ export function Call() {
     <section id='talk' className='scroll-mt-6 bg-mist py-28 text-center sm:py-44'>
       <Container>
         <h2 className='headline mx-auto max-w-[12ch] text-[clamp(2.75rem,8vw,6rem)]'>{c.cta.title}</h2>
-        <ContactButtons className='mt-10 justify-center' />
+        <p className='mx-auto mt-5 max-w-[30ch] text-[clamp(1.15rem,2vw,1.5rem)] leading-snug text-soft'>{c.cta.lead}</p>
+        <AskForm className='mt-10' />
+        <p className='mt-14 text-[1.0625rem] text-soft'>{c.cta.or}</p>
+        <ContactButtons className='mt-4 justify-center' />
       </Container>
     </section>
   )

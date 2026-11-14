@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 import { mailto, whatsappLink } from '@/content/contact'
 import { cn } from '@/lib/cn'
 import { useLang } from '@/lib/lang'
+import { origin, originNote } from '@/lib/origin'
 
 /** The N mark's path, as in /brand/ninja-mark.svg */
 const N_PATH =
@@ -26,7 +27,14 @@ export function ContactButtons({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-wrap items-center gap-x-7 gap-y-3', className)}>
       {whatsapp && (
-        <a className='inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-[1.0625rem] text-white transition-colors hover:bg-black' href={whatsapp} target='_blank' rel='noreferrer'>
+        <a className='inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-[1.0625rem] text-white transition-colors hover:bg-black' href={whatsapp}
+          target='_blank'
+          rel='noreferrer'
+          // The chat says where the visit came from too; put on at the tap, so the built page and the woken one agree
+          onClick={(e) => {
+            e.currentTarget.href = whatsappLink(c.cta.whatsappText + originNote(origin())) ?? whatsapp
+          }}
+        >
           {c.cta.whatsapp}
         </a>
       )}
