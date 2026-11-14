@@ -145,6 +145,8 @@
 {$PLATFORM_DOMAIN} {
 	# The native apps: one generic build of each, published here by mobile-deploy.yml;
 	# a tablet installs from this page and connects to its café from inside the app
+	# The page names its files beside itself: without the last slash they would be asked for at the top of the site
+	redir /apps /apps/ 308
 	handle_path /apps* {
 		root * /srv/apps
 		file_server

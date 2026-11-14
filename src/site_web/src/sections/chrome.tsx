@@ -62,7 +62,7 @@ export function Header() {
           <a href='#plans' className='hidden hover:text-ink sm:block'>
             {c.nav.plans}
           </a>
-          <a href='/apps' className='hidden hover:text-ink sm:block'>
+          <a href='/apps/' className='hidden hover:text-ink sm:block'>
             {c.nav.apps}
           </a>
           <a href={pathOf(other, page)} lang={other} hrefLang={other} className='hover:text-ink'>
@@ -93,7 +93,7 @@ export function Footer() {
       <Container className='flex flex-wrap items-center justify-between gap-4'>
         <span dir='ltr'>{c.footer.rights}</span>
         <nav className='flex flex-wrap gap-x-6 gap-y-2'>
-          <a href='/apps' className='hover:text-ink'>
+          <a href='/apps/' className='hover:text-ink'>
             {c.footer.apps}
           </a>
           <a href='/privacy' className='hover:text-ink'>
