@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9" xmlns:xhtml="http://www.w3.org/1999/xhtml">
+  <url>
+    <loc>https://ninjapp.net/</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/ar</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/" />
+  </url>
+  <url><loc>https://ninjapp.net/apps/</loc></url>
+  <url><loc>https://ninjapp.net/support</loc></url>
+  <url><loc>https://ninjapp.net/privacy</loc></url>
+  <url><loc>https://ninjapp.net/terms</loc></url>
+</urlset>

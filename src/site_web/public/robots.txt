@@ -1,0 +1,6 @@
+# The site is for reading; the sample apps it shows are the same few screens over and over
+User-agent: *
+Allow: /
+Disallow: /demo/
+
+Sitemap: https://ninjapp.net/sitemap.xml
