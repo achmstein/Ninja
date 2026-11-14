@@ -58,6 +58,7 @@ public static partial class ControlApi
         MapAppApi(api);
         MapAppBuildApi(api);
         MapNodesApi(api);
+        MapLeadsApi(api);
 
         // Caddy asks before issuing a certificate on demand: only hosts we know
         api.MapGet("/tls/ask", TlsAsk).WithName("TlsAsk").WithSummary("200 when the host belongs to a tenant, 404 otherwise").AllowAnonymous().RequireRateLimiting(Extensions.Extensions.AnonymousRateLimit);

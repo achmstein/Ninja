@@ -226,6 +226,10 @@ public static class Extensions
             options.AddPolicy(AnonymousRateLimit, http => RateLimitPartition.GetFixedWindowLimiter(
                 http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 60, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
+            // A request for a demo comes through the edge, so the visitor's address is the one the edge passes on
+            options.AddPolicy(LeadRateLimit, http => RateLimitPartition.GetFixedWindowLimiter(
+                http.Request.Headers["X-Forwarded-For"].ToString().Split(',')[0].Trim() is { Length: > 0 } forwarded ? forwarded : http.Connection.RemoteIpAddress?.ToString() ?? "unknown",
+                _ => new FixedWindowRateLimiterOptions { PermitLimit = 5, Window = TimeSpan.FromMinutes(10), QueueLimit = 0 }));
             options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(http => RateLimitPartition.GetFixedWindowLimiter(
                 http.User.Identity?.IsAuthenticated == true ? "user:" + (http.User.GetUserId() ?? "?") : "ip:" + (http.Connection.RemoteIpAddress?.ToString() ?? "unknown"),
                 _ => new FixedWindowRateLimiterOptions { PermitLimit = 600, Window = TimeSpan.FromMinutes(1), QueueLimit = 0 }));
@@ -234,6 +238,9 @@ public static class Extensions
 
     /// <summary>The policy the anonymous endpoints carry.</summary>
     public const string AnonymousRateLimit = "anonymous";
+
+    /// <summary>The policy the site's demo request carries: a handful per visitor.</summary>
+    public const string LeadRateLimit = "lead";
 
     /// <summary>Who may read the record a business's own app is built from.</summary>
     public const string AppBuildPolicy = "AppBuild";

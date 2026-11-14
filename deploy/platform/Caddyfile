@@ -154,6 +154,14 @@
 		@apk path *.apk
 		header @apk Content-Type application/vnd.android.package-archive
 	}
+	# A request for a demo, left on the site: the one call the bare domain passes to the control plane
+	@lead {
+		method POST
+		path /api/control/leads
+	}
+	handle @lead {
+		reverse_proxy control-api:8080
+	}
 	# The control plane lived at the bare domain before the site did
 	handle /control* {
 		redir https://control.{$PLATFORM_DOMAIN}

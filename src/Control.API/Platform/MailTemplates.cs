@@ -29,11 +29,12 @@ public static class MailTemplates
     public const string OpsStackDownName = "ops-stack-down";
     public const string OpsWorkerDeadName = "ops-worker-dead";
     public const string OpsNodeUnreachableName = "ops-node-unreachable";
+    public const string OpsNewLeadName = "ops-new-lead";
 
     public static readonly string[] All =
     [
         OwnerWelcomeName, DemoExpiringName, DemoStoppedName, DemoDestroyedSoonName, SubscriptionPastDueName, SubscriptionSuspendedName, PaymentReceivedName,
-        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName, OpsDiskLowName, OpsJobStuckName, OpsStackDownName, OpsWorkerDeadName, OpsNodeUnreachableName,
+        OpsProvisionFailedName, OpsBackupFailedName, OpsBackupStaleName, OpsDiskLowName, OpsJobStuckName, OpsStackDownName, OpsWorkerDeadName, OpsNodeUnreachableName, OpsNewLeadName,
     ];
 
     public static MailMessage Welcome(Tenant t, TenantHosts hosts, MailOptions mail)
@@ -177,6 +178,24 @@ public static class MailTemplates
             [$"{node}'s agent has not answered for three minutes; the {tenants} tenant(s) living there may be down, and nothing on that node can be changed until it answers again. Nothing has been moved.",
              "Look at the box itself (SSH, its WireGuard link to the platform). Once it answers, it comes back cordoned: make it active again from the Nodes tab."],
             ("Open the nodes", $"{platform.ControlUrl.TrimEnd('/')}/?tab=nodes"));
+
+    public static MailMessage OpsNewLead(Lead lead, PlatformOptions platform)
+        => Ops(OpsNewLeadName, null, platform, $"{lead.Business} asked for a demo",
+            [
+                $"{lead.Name} of {lead.Business} ({lead.BusinessType}) asked on the site to see Ninja on their own menu.",
+                $"Phone: {lead.Phone}",
+                lead.Photos.Count > 0 ? $"They sent {lead.Photos.Count} menu photo(s)." : "They sent no menu photo.",
+                .. LeadOrigin(lead) is { } origin ? new[] { $"Came from: {origin}" } : [],
+            ],
+            ("Open the requests", $"{platform.ControlUrl.TrimEnd('/')}/?tab=requests"));
+
+    /// <summary>Where a lead came from, in one line: the business that sent them first, then the campaign's tags, then the site before ours.</summary>
+    internal static string? LeadOrigin(Lead lead)
+    {
+        string?[] parts = [lead.Ref is { } r ? $"recommended by {r}" : null, lead.Source, lead.Medium, lead.Campaign, lead.Source is null && lead.Ref is null ? lead.Referrer : null];
+        var said = parts.Where(p => !string.IsNullOrWhiteSpace(p)).ToList();
+        return said.Count == 0 ? null : string.Join(" / ", said);
+    }
 
     // ---------- the frame ----------
 

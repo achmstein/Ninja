@@ -36,8 +36,39 @@ public class ControlContext(DbContextOptions<ControlContext> options) : DbContex
 
     public DbSet<AppBuildSettings> AppBuildSettings => Set<AppBuildSettings>();
 
+    public DbSet<Lead> Leads => Set<Lead>();
+
+    public DbSet<LeadPhoto> LeadPhotos => Set<LeadPhoto>();
+
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
+        modelBuilder.Entity<Lead>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.Name).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.Business).HasMaxLength(80).IsRequired();
+            entity.Property(e => e.Phone).HasMaxLength(24).IsRequired();
+            entity.Property(e => e.BusinessType).HasConversion<string>().HasMaxLength(16);
+            entity.Property(e => e.Language).HasMaxLength(2).IsRequired();
+            entity.Property(e => e.Source).HasMaxLength(60);
+            entity.Property(e => e.Medium).HasMaxLength(60);
+            entity.Property(e => e.Campaign).HasMaxLength(60);
+            entity.Property(e => e.Ref).HasMaxLength(24);
+            entity.Property(e => e.Referrer).HasMaxLength(120);
+            entity.Property(e => e.Landing).HasMaxLength(120);
+            entity.Property(e => e.Status).HasConversion<string>().HasMaxLength(16);
+            entity.Property(e => e.TenantSlug).HasMaxLength(24);
+            entity.Property(e => e.Note).HasMaxLength(500);
+            entity.HasIndex(e => e.CreatedAt);
+            entity.HasMany(e => e.Photos).WithOne().HasForeignKey(p => p.LeadId).OnDelete(DeleteBehavior.Cascade);
+        });
+
+        modelBuilder.Entity<LeadPhoto>(entity =>
+        {
+            entity.HasKey(e => e.Id);
+            entity.Property(e => e.ContentType).HasMaxLength(32).IsRequired();
+        });
+
         modelBuilder.Entity<AppBuildSettings>(entity =>
         {
             entity.HasKey(e => e.Id);

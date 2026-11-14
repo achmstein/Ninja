@@ -44,6 +44,7 @@ public sealed class MailTests
         yield return MailTemplates.OpsStackDown("blue", Platform);
         yield return MailTemplates.OpsWorkerDead("Stamp", Platform);
         yield return MailTemplates.OpsNodeUnreachable("node-2", 3, Platform);
+        yield return MailTemplates.OpsNewLead(new Lead { Name = "Mona", Business = "Level Up", Phone = "+201000000000", Source = "facebook" }, Platform);
     }
 
     [TestMethod]
