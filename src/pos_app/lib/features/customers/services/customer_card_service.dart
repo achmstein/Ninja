@@ -33,22 +33,6 @@ class CustomerCardService {
       rethrow;
     }
   }
-
-  /// What the customer already owed from before the tab was kept here, put
-  /// on it as it stands; [requestId] makes a retry the same line
-  Future<void> addOldBalance(
-    String customerId, {
-    required double amount,
-    required String description,
-    String? customerName,
-    required String requestId,
-  }) async {
-    await _accounts.post<void>(
-      '$customerId/old-balance',
-      data: {'amount': amount, 'description': description, 'customerName': customerName},
-      requestId: requestId,
-    );
-  }
 }
 
 final customerCardServiceProvider = Provider<CustomerCardService>((ref) {

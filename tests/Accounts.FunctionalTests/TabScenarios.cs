@@ -109,37 +109,6 @@ public sealed class TabScenarios
     }
 
     [TestMethod]
-    public async Task What_a_customer_owed_before_goes_on_their_tab_from_the_till_once_and_not_by_a_cashier()
-    {
-        var hany = ACustomer();
-        var body = new { amount = 500m, description = "Balance from before", customerName = "Hany" };
-        var url = Suite.Url($"/{hany}/old-balance");
-
-        // A cashier may not put a debt on anyone
-        var (refused, _) = await Suite.Till.RefusedAsync(HttpMethod.Post, url, body);
-        Assert.AreEqual(HttpStatusCode.Forbidden, refused);
-
-        // A manager signed in at the till may; a retry with the same request id is the same line
-        var requestId = Guid.NewGuid().ToString();
-        for (var attempt = 0; attempt < 2; attempt++)
-        {
-            using var request = new HttpRequestMessage(HttpMethod.Post, url) { Content = System.Net.Http.Json.JsonContent.Create(body) };
-            request.Headers.Add("x-requestid", requestId);
-            var response = await Suite.BackOffice.Http.SendAsync(request);
-            Assert.AreEqual(HttpStatusCode.OK, response.StatusCode, await response.Content.ReadAsStringAsync());
-        }
-
-        var tab = await TabAsync(hany);
-        Assert.AreEqual(500m, tab.Balance);
-        Assert.AreEqual(1, tab.Transactions.Count);
-        Assert.AreEqual("Balance from before", tab.Transactions[0].Description);
-
-        // Nothing, or less than nothing, is not a balance
-        var (zero, _) = await Suite.BackOffice.RefusedAsync(HttpMethod.Post, url, new { amount = 0m });
-        Assert.AreEqual(HttpStatusCode.BadRequest, zero);
-    }
-
-    [TestMethod]
     public async Task Charges_and_payments_landing_on_one_tab_at_once_all_count()
     {
         var customer = ACustomer();

@@ -540,15 +540,6 @@
   },
   "payTab": "Pay tab",
   "topUp": "Top up",
-  "addOldBalance": "Add old balance",
-  "oldBalance": "Old balance",
-  "oldBalanceHint": "What they already owed from before. No money is taken and the drawer does not change.",
-  "oldBalanceAdded": "{amount} added to their tab",
-  "@oldBalanceAdded": {
-    "placeholders": {
-      "amount": {"type": "String"}
-    }
-  },
   "confirmTabPayment": "Take payment",
   "tabPaymentRecorded": "Tab payment recorded",
   "tabPaymentSlip": "Tab payment",

@@ -68,16 +68,6 @@ public static class AccountsApi
             .WithTags("Admin")
             .RequireAuthorization("Admin");
 
-        // What a customer owed before the business kept its tabs here, keyed in
-        // where the customers are looked up: the till. No money moves and no
-        // sale is made, so it is the owner's or a manager's to say, not a cashier's
-        api.MapPost("/{customerId}/old-balance", AddOldBalance)
-            .WithName("AddOldBalance")
-            .WithSummary("Add an old balance")
-            .WithDescription("Put what a customer already owed, from before the tab was kept here, on their account (owner or admin, from the till)")
-            .WithTags("Pos")
-            .RequireAuthorization("Pos");
-
         api.MapPost("/{customerId}/payment", RecordPayment)
             .WithName("RecordPayment")
             .WithSummary("Record payment")
@@ -172,37 +162,6 @@ public static class AccountsApi
                 adminName);
 
             await mediator.Send(command);
-            return TypedResults.Ok();
-        }
-        catch (AccountsDomainException ex)
-        {
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = ex.Message });
-        }
-    }
-
-    public static async Task<Results<Ok, ForbidHttpResult, BadRequest<ProblemDetails>>> AddOldBalance(
-        [FromServices] IMediator mediator,
-        HttpContext httpContext,
-        [FromHeader(Name = "x-requestid")] Guid? requestId,
-        [Description("The customer ID")] string customerId,
-        AddChargeRequest request)
-    {
-        var user = httpContext.User;
-        if (!user.IsInRole(RoleNames.Owner) && !user.IsInRole(RoleNames.Admin))
-            return TypedResults.Forbid();
-        if (request.Amount <= 0)
-            return TypedResults.BadRequest<ProblemDetails>(new() { Detail = "An old balance is an amount above zero." });
-
-        try
-        {
-            // The till's request id makes a retry on shaky Wi-Fi the same line, not a second one
-            await mediator.Send(new AddChargeCommand(
-                customerId,
-                request.CustomerName,
-                request.Amount,
-                request.Description,
-                user.GetUserName() ?? user.GetUserId() ?? "till",
-                requestId is { } id ? $"old-balance:{id:N}" : null));
             return TypedResults.Ok();
         }
         catch (AccountsDomainException ex)
