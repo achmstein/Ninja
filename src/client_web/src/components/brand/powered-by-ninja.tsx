@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { useBrand } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
+import { platformLink } from '@/lib/platform-link'
 import { cn } from '@/lib/utils'
 
 const FONT_LINK_ID = 'ninja-wordmark-font'
@@ -10,7 +11,7 @@ const FONT_LINK_ID = 'ninja-wordmark-font'
  * own display face, the one place a business's app carries it. The face is
  * fetched only when this shows, and only its five letters, so nothing of
  * the business's own look changes. Links to the platform when the stack knows
- * where it is.
+ * where it is, saying which business's app the visitor came from.
  */
 export function PoweredByNinja({ className }: { className?: string }) {
   const t = useT()
@@ -40,7 +41,7 @@ export function PoweredByNinja({ className }: { className?: string }) {
       {/* A Latin wordmark keeps its own direction on an Arabic page */}
       <span dir='ltr'>
         {appsUrl ? (
-          <a href={new URL(appsUrl).origin} target='_blank' rel='noreferrer' className='hover:opacity-80'>
+          <a href={platformLink(appsUrl, window.location.hostname)} target='_blank' rel='noreferrer' className='hover:opacity-80'>
             {wordmark}
           </a>
         ) : (

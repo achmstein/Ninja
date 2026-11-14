@@ -66,6 +66,17 @@ class AppConfig {
   static String get keycloakRealm => _given('REALM', _realm);
   static String get identityUrl => '$keycloakUrl/realms/$keycloakRealm';
 
+  /// The platform's home page, told which business's app sent the visitor:
+  /// what "Powered by ninja" opens. The platform's site is the auth host
+  /// without its `auth.`; null on a dev machine, where there is no site.
+  static Uri? get platformSite => platformSiteFor(keycloakUrl, keycloakRealm);
+
+  static Uri? platformSiteFor(String authUrl, String realm) {
+    final auth = Uri.tryParse(authUrl);
+    if (auth == null || !auth.host.startsWith('auth.')) return null;
+    return Uri.https(auth.host.substring('auth.'.length), '/', {'ref': realm, 'utm_medium': 'guest-app'});
+  }
+
   // OIDC configuration. The scheme must match what the native folders
   // declare (AndroidManifest.xml, Info.plist): a business's own app is
   // stamped with its id as both (tool/stamp_tenant.dart), and its record

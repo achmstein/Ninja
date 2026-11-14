@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import '../ui/ui.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:url_launcher/url_launcher.dart';
+import '../config/app_config.dart';
 import '../../l10n/app_localizations.dart';
 import 'app_text.dart';
 
 /// "Powered by ninja", for the About sheet: the platform's wordmark in its
 /// own display face (Original Surfer), the one place a business's app carries
 /// it. A Latin wordmark, so it keeps left-to-right on an Arabic screen.
+/// A tap opens the platform's site, which is told which business sent them.
 class PoweredByNinja extends StatelessWidget {
   const PoweredByNinja({super.key});
 
@@ -14,7 +17,8 @@ class PoweredByNinja extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    return Row(
+    final site = AppConfig.platformSite;
+    final line = Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.center,
       children: [
@@ -35,6 +39,12 @@ class PoweredByNinja extends StatelessWidget {
           ),
         ),
       ],
+    );
+    if (site == null) return line;
+    return GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: () => launchUrl(site, mode: LaunchMode.externalApplication),
+      child: Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: line),
     );
   }
 }
