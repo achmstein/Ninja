@@ -572,6 +572,28 @@ export type LaneStatus = {
     queued: Array<JobDto>;
 };
 
+export type LeadDto = {
+    id: number | string;
+    createdAt: string;
+    name: string;
+    business: string;
+    phone: string;
+    businessType: BusinessType;
+    language: string;
+    source: null | string;
+    medium: null | string;
+    campaign: null | string;
+    ref: null | string;
+    referrer: null | string;
+    landing: null | string;
+    status: LeadStatus;
+    tenantSlug: null | string;
+    note: null | string;
+    photos: Array<number | string>;
+};
+
+export type LeadStatus = 'New' | 'Contacted' | 'DemoCreated' | 'Dismissed';
+
 export type LocalizedText = {
     en?: null | string;
     ar?: null | string;
@@ -1176,6 +1198,12 @@ export type UpdateBrandRequest = {
     features: BrandFeatures;
     theme?: null | BrandTheme;
     locale?: null | BrandLocale;
+};
+
+export type UpdateLeadRequest = {
+    status: LeadStatus;
+    note: null | string;
+    tenantSlug: null | string;
 };
 
 export type UpdateNodeRequest = {
@@ -5174,6 +5202,212 @@ export type MoveTenantResponses = {
      * Accepted
      */
     202: unknown;
+};
+
+export type ListLeadsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/control/leads';
+};
+
+export type ListLeadsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ListLeadsResponses = {
+    /**
+     * OK
+     */
+    200: Array<LeadDto>;
+};
+
+export type ListLeadsResponse = ListLeadsResponses[keyof ListLeadsResponses];
+
+export type CreateLeadData = {
+    body: {
+        name?: string;
+    } & {
+        business?: string;
+    } & {
+        phone?: string;
+    } & {
+        businessType?: string;
+    } & {
+        language?: string;
+    } & {
+        source?: string;
+    } & {
+        medium?: string;
+    } & {
+        campaign?: string;
+    } & {
+        ref?: string;
+    } & {
+        referrer?: string;
+    } & {
+        landing?: string;
+    } & {
+        website?: string;
+    } & {
+        photos?: IFormFileCollection;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/control/leads';
+};
+
+export type CreateLeadErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+};
+
+export type CreateLeadError = CreateLeadErrors[keyof CreateLeadErrors];
+
+export type CreateLeadResponses = {
+    /**
+     * Accepted
+     */
+    202: unknown;
+};
+
+export type DeleteLeadData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/leads/{id}';
+};
+
+export type DeleteLeadErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteLeadResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type DeleteLeadResponse = DeleteLeadResponses[keyof DeleteLeadResponses];
+
+export type GetLeadData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/leads/{id}';
+};
+
+export type GetLeadErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetLeadResponses = {
+    /**
+     * OK
+     */
+    200: LeadDto;
+};
+
+export type GetLeadResponse = GetLeadResponses[keyof GetLeadResponses];
+
+export type UpdateLeadData = {
+    body: UpdateLeadRequest;
+    path: {
+        id: number;
+    };
+    query?: never;
+    url: '/api/control/leads/{id}';
+};
+
+export type UpdateLeadErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type UpdateLeadError = UpdateLeadErrors[keyof UpdateLeadErrors];
+
+export type UpdateLeadResponses = {
+    /**
+     * OK
+     */
+    200: LeadDto;
+};
+
+export type UpdateLeadResponse = UpdateLeadResponses[keyof UpdateLeadResponses];
+
+export type GetLeadPhotoData = {
+    body?: never;
+    path: {
+        id: number;
+        photoId: number;
+    };
+    query?: never;
+    url: '/api/control/leads/{id}/photos/{photoId}';
+};
+
+export type GetLeadPhotoErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
 };
 
 export type TlsAskData = {

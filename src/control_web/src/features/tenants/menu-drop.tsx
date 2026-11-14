@@ -18,6 +18,8 @@ type MenuDropProps = {
   languages: 'both' | 'en' | 'ar'
   menu: DropCategory[] | null
   onMenu: (menu: DropCategory[] | null) => void
+  /** Menu photos that came with a request from the site: offered under the drop, read when asked */
+  sent?: { count: number; load: () => Promise<File[]> }
 }
 
 /**
@@ -26,7 +28,7 @@ type MenuDropProps = {
  * items and prices appear to tick and fix, and what is ticked goes into the
  * catalog as soon as the business's stack is up.
  */
-export function MenuDrop({ languages, menu, onMenu }: MenuDropProps) {
+export function MenuDrop({ languages, menu, onMenu, sent }: MenuDropProps) {
   const t = useT()
   const input = useRef<HTMLInputElement>(null)
   const [dragging, setDragging] = useState(false)
@@ -72,6 +74,21 @@ export function MenuDrop({ languages, menu, onMenu }: MenuDropProps) {
         onError: (e) => setProblem(problemDetail(e) || t('menuDropFailed')),
       }
     )
+  }
+
+  const readSent = async () => {
+    if (!sent) return
+    setProblem(null)
+    setPreparing(true)
+    let files: File[]
+    try {
+      files = await sent.load()
+    } catch {
+      setPreparing(false)
+      setProblem(t('leadPhotosFailed'))
+      return
+    }
+    await read(files)
   }
 
   const reset = () => {
@@ -138,6 +155,12 @@ export function MenuDrop({ languages, menu, onMenu }: MenuDropProps) {
           </motion.button>
         )}
       </AnimatePresence>
+      {sent && !busy && !menu && (
+        <Button type='button' variant='outline' onClick={() => void readSent()}>
+          <FileText />
+          {t('leadPhotos', { count: sent.count })}
+        </Button>
+      )}
       {problem && (
         <Alert variant={menu ? 'default' : 'destructive'}>
           <AlertDescription>{problem}</AlertDescription>

@@ -1,17 +1,20 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, TriangleAlert } from 'lucide-react'
 import {
   createTenantMutation,
+  getLeadOptions,
   getPlansOptions,
   getPlatformCapacityOptions,
   getPlatformOptions,
   listTenantsQueryKey,
+  listLeadsQueryKey,
   putTenantSeedMenuMutation,
+  updateLeadMutation,
   uploadTenantSeedImageMutation,
 } from '@/api/control/@tanstack/react-query.gen'
-import type { CreateTenantRequest } from '@/api/control'
+import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@/api/control'
 import { ColorField } from '@/components/brand/color-field'
 import { DockField, type Dock } from '@/components/brand/dock-field'
 import { MapsField } from '@/components/brand/maps-field'
@@ -52,6 +55,7 @@ import { IMAGE_SLOTS, type ImageSlot } from '@/lib/brand-slots'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import type { Language } from '@/lib/language'
+import { isArabic, leadOrigin } from '@/lib/lead'
 import { COUNTRIES, countryOf, type Country } from '@/lib/locale'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -128,6 +132,8 @@ function useObjectUrls(files: SlotFiles): Partial<Record<ImageSlot, string>> {
   return urls
 }
 
+const route = getRouteApi('/_authenticated/new')
+
 const FIRST_COUNTRY: Country = COUNTRIES[0]
 
 /** The sample menu first: it is what a demo wants and the toggle reads left to right */
@@ -144,13 +150,54 @@ const SEED_ORDER: TenantSeedName[] = ['Sample', 'None']
  */
 export function NewTenantPage() {
   const t = useT()
+  const { lead: leadId } = route.useSearch()
+  const lead = useQuery({ ...getLeadOptions({ path: { id: leadId ?? 0 } }), enabled: leadId != null, retry: false })
+  if (leadId != null && lead.isLoading)
+    return (
+      <div className='grid min-h-64 place-items-center'>
+        <Spinner />
+      </div>
+    )
+  return (
+    <>
+      {leadId != null && lead.isError && (
+        <Alert variant='destructive' className='mb-4'>
+          <TriangleAlert />
+          <AlertTitle>{t('leadNotFound')}</AlertTitle>
+        </Alert>
+      )}
+      {/* The form starts from the request, so it is made once the request is here */}
+      <NewTenantForm key={lead.data?.id ?? 'blank'} lead={lead.data ?? null} />
+    </>
+  )
+}
+
+/** The menu photos a request came with, fetched as files the menu reader takes. */
+async function leadPhotoFiles(lead: LeadDto): Promise<File[]> {
+  return Promise.all(
+    lead.photos.map(async (photoId, i) => {
+      const { data } = await getLeadPhoto({
+        path: { id: Number(lead.id), photoId: Number(photoId) },
+        responseType: 'blob',
+        throwOnError: true,
+      })
+      const blob = data as Blob
+      return new File([blob], `menu-${i + 1}.${blob.type.split('/')[1] ?? 'jpg'}`, { type: blob.type })
+    })
+  )
+}
+
+function NewTenantForm({ lead }: { lead: LeadDto | null }) {
+  const t = useT()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
   const platform = useQuery(getPlatformOptions())
   const capacity = useQuery(getPlatformCapacityOptions({ query: { refresh: false } }))
 
   // Identity
-  const [name, setName] = useState<LocalizedValue>({ en: '', ar: '' })
+  const [name, setName] = useState<LocalizedValue>(() =>
+    lead ? (isArabic(lead.business) ? { en: '', ar: lead.business } : { en: lead.business, ar: '' }) : { en: '', ar: '' }
+  )
   const [ownerEmail, setOwnerEmail] = useState('')
   const [kind, setKind] = useState<TenantKindName>('Demo')
   const [slug, setSlug] = useState('')
@@ -159,13 +206,13 @@ export function NewTenantPage() {
   const [seedTouched, setSeedTouched] = useState(false)
   const [customerDomain, setCustomerDomain] = useState('')
   const [demoDays, setDemoDays] = useState('')
-  const [contactName, setContactName] = useState('')
-  const [phone, setPhone] = useState('')
+  const [contactName, setContactName] = useState(lead?.name ?? '')
+  const [phone, setPhone] = useState(lead?.phone ?? '')
   const [address, setAddress] = useState('')
   const [plan, setPlan] = useState<TenantPlanName>('Free')
-  const [addons, setAddons] = useState<ModuleName[]>(SUGGESTED_MODULES.CoffeeShop)
+  const [addons, setAddons] = useState<ModuleName[]>(SUGGESTED_MODULES[lead?.businessType ?? 'CoffeeShop'])
   const [addonsTouched, setAddonsTouched] = useState(false)
-  const [business, setBusiness] = useState<BusinessType>('CoffeeShop')
+  const [business, setBusiness] = useState<BusinessType>(lead?.businessType ?? 'CoffeeShop')
   const [arabicStyle, setArabicStyle] = useState<ArabicStyle>(
     FIRST_COUNTRY.code === 'EG' ? 'egyptian' : 'standard'
   )
@@ -174,7 +221,10 @@ export function NewTenantPage() {
   const plans = useQuery(getPlansOptions())
   const planRow = plans.data?.plans.find((p) => p.plan === plan)
   const included = new Set((planRow?.included ?? []).map(moduleName))
-  const [notes, setNotes] = useState('')
+  const [notes, setNotes] = useState(() => {
+    const origin = lead ? leadOrigin(lead) : null
+    return origin ? `Asked on the site. Came from: ${origin}` : lead ? 'Asked on the site.' : ''
+  })
 
   // Locale
   const [countryCode, setCountryCode] = useState(FIRST_COUNTRY.code)
@@ -209,6 +259,7 @@ export function NewTenantPage() {
 
   const uploadImage = useMutation(uploadTenantSeedImageMutation())
   const putMenu = useMutation(putTenantSeedMenuMutation())
+  const closeLead = useMutation(updateLeadMutation())
   // The menu read beside the form, ticked and priced; it goes with the business once it is created
   const [menu, setMenu] = useState<DropCategory[] | null>(null)
 
@@ -237,6 +288,15 @@ export function NewTenantPage() {
           await putMenu.mutateAsync({ path: { slug: tenant.slug }, body: toImportRequest(menu!) })
         } catch (e) {
           toast.error(problemDetail(e) || t('menuDropSaveFailed'))
+        }
+      }
+      // The request has its demo: it says which, and stops waiting
+      if (lead) {
+        try {
+          await closeLead.mutateAsync({ path: { id: Number(lead.id) }, body: { status: 'DemoCreated', note: lead.note, tenantSlug: tenant.slug } })
+          queryClient.invalidateQueries({ queryKey: listLeadsQueryKey() })
+        } catch (e) {
+          toast.error(problemDetail(e) || t('somethingWentWrong'))
         }
       }
       toast.success(t('tenantCreated'))
@@ -313,6 +373,13 @@ export function NewTenantPage() {
   return (
     <div className='flex flex-col gap-6'>
       <PageHeader back={{ to: '/' }} title={t('newTenant')} />
+
+      {lead && (
+        <Alert>
+          <AlertTitle>{t('leadFor', { name: lead.name })}</AlertTitle>
+          <AlertDescription>{t('leadForNote')}</AlertDescription>
+        </Alert>
+      )}
 
       <div className='grid gap-6 lg:grid-cols-[minmax(0,1fr)_380px]'>
         <form onSubmit={submit} className='flex min-w-0 flex-col gap-6'>
@@ -655,6 +722,7 @@ export function NewTenantPage() {
             <p className='text-muted-foreground text-sm'>{t('menuDropSectionHint')}</p>
           </div>
           <MenuDrop
+            sent={lead && lead.photos.length > 0 ? { count: lead.photos.length, load: () => leadPhotoFiles(lead) } : undefined}
             languages={contentLanguages}
             menu={menu}
             onMenu={(next) => {

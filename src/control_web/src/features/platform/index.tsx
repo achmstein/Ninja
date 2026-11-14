@@ -12,6 +12,7 @@ import {
   getPlatformJobsOptions,
   getPlatformMailOptions,
   getPlatformOptions,
+  listLeadsOptions,
   listTenantsOptions,
   listTenantsQueryKey,
 } from '@/api/control/@tanstack/react-query.gen'
@@ -53,13 +54,14 @@ import { CapacityTable } from './capacity-table'
 import { NodesTable } from './nodes-table'
 import { MapsSettings } from './maps-settings'
 import { FirebaseSettings } from './firebase-settings'
+import { LeadsTable, waitingLeads } from './leads-table'
 import { PlatformBackups } from './platform-backups'
 import { QueueSummary, QueueTable } from './queue-table'
 import { TeamTable } from './team-table'
 
 const route = getRouteApi('/_authenticated/')
 
-type Tab = 'tenants' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps' | 'firebase'
+type Tab = 'tenants' | 'requests' | 'queue' | 'capacity' | 'nodes' | 'backups' | 'audit' | 'team' | 'ai' | 'maps' | 'firebase'
 
 /**
  * The platform in one page: the box's headroom always in view, then the
@@ -104,6 +106,10 @@ export function PlatformPage() {
         ? 10_000
         : false,
   })
+
+  // Only the count is read here: who is still waiting for an answer
+  const leads = useQuery({ ...listLeadsOptions(), refetchInterval: 60_000 })
+  const waiting = waitingLeads(leads.data)
 
   const running = (tenants.data ?? []).filter((x) => tenantStatus(x.status) === 'Running')
   // Destroyed tenants are history: off the list unless asked for
@@ -225,6 +231,14 @@ export function PlatformPage() {
         <div className='max-w-full overflow-x-auto overflow-y-hidden [scrollbar-width:none] [&::-webkit-scrollbar]:hidden'>
           <TabsList>
             <TabsTrigger value='tenants'>{t('tabTenants')}</TabsTrigger>
+            <TabsTrigger value='requests'>
+              {t('tabRequests')}
+              {waiting > 0 && (
+                <Badge variant='outline' className='border-transparent bg-sky-500/15 px-1.5 text-sky-700 tabular-nums dark:text-sky-400'>
+                  {waiting}
+                </Badge>
+              )}
+            </TabsTrigger>
             <TabsTrigger value='queue'>{t('tabQueue')}</TabsTrigger>
             <TabsTrigger value='capacity'>{t('tabCapacity')}</TabsTrigger>
             <TabsTrigger value='nodes'>{t('tabNodes')}</TabsTrigger>
@@ -250,6 +264,9 @@ export function PlatformPage() {
             usage={capacity.data?.tenants ?? []}
             loading={tenants.isLoading}
           />
+        </TabsContent>
+        <TabsContent value='requests'>
+          <LeadsTable />
         </TabsContent>
         <TabsContent value='queue'>
           <QueueTable />
