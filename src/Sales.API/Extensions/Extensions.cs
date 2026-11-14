@@ -119,6 +119,8 @@ public static class Extensions
             .AddSubscription<TenantFeaturesChangedIntegrationEvent, TenantFeaturesChangedIntegrationEventHandler>()
             // A customer renamed: their lines on the bills still open say the new name
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
+            // Two accounts that were one person: the merged-away one's lines and payments are the kept one's
+            .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SalesIntegrationEventContext.Default));
     }
@@ -145,6 +147,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
 [JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(CustomersMergedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftOpenedIntegrationEvent))]
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 [JsonSerializable(typeof(CashPaidOutIntegrationEvent))]

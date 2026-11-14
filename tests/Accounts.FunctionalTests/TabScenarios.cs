@@ -109,6 +109,39 @@ public sealed class TabScenarios
     }
 
     [TestMethod]
+    public async Task Two_accounts_of_one_person_become_one_tab_with_one_history()
+    {
+        // Nadia signed up twice and owes on both; Dina's second account never had a tab
+        var (old, kept, onlyOld, neverHadOne) = (ACustomer(), ACustomer(), ACustomer(), ACustomer());
+        await ChargeAsync(old, 300m, "Nadia A", "Breakfast");
+        await ChargeAsync(kept, 200m, "Nadia", "Coffee");
+        await ChargeAsync(onlyOld, 100m, "Dina old", "Tea");
+
+        await TellAsync(new CustomersMergedIntegrationEvent(old, kept, "Nadia"));
+        await TellAsync(new CustomersMergedIntegrationEvent(onlyOld, neverHadOne, "Dina"));
+
+        await ServiceUnderTest<Program>.EventuallyAsync(
+            async () => (await Suite.BackOffice.RawAsync(HttpMethod.Get, Suite.Url($"/{old}"))).StatusCode != HttpStatusCode.OK
+                && (await Suite.BackOffice.RawAsync(HttpMethod.Get, Suite.Url($"/{neverHadOne}"))).StatusCode == HttpStatusCode.OK,
+            "the merged-away tabs are gone and the one that changed hands is there");
+
+        var one = await TabAsync(kept);
+        Assert.AreEqual(500m, one.Balance, "what was owed on both is owed once");
+        CollectionAssert.AreEquivalent(new[] { "Breakfast", "Coffee" }, one.Transactions.Select(t => t.Description).ToList(), "one history");
+
+        var moved = await TabAsync(neverHadOne);
+        Assert.AreEqual(100m, moved.Balance, "a tab with no twin changes hands whole");
+        Assert.AreEqual("Dina", moved.CustomerName);
+        Assert.AreEqual("Tea", moved.Transactions.Single().Description);
+
+        // The bus may deliver twice: nothing is owed twice
+        await TellAsync(new CustomersMergedIntegrationEvent(old, kept, "Nadia"));
+        await TellAsync(new CustomersMergedIntegrationEvent(ACustomer(), kept, "Nadia"));
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        Assert.AreEqual(500m, (await TabAsync(kept)).Balance);
+    }
+
+    [TestMethod]
     public async Task Charges_and_payments_landing_on_one_tab_at_once_all_count()
     {
         var customer = ACustomer();

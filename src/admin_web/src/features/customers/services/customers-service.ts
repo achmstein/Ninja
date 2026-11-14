@@ -29,6 +29,14 @@ export const customersService = {
     return response.data
   },
 
+  // Two accounts that are one person (Owner): everything kept under the
+  // first goes to the second, and the first is switched off. Not undoable
+  async mergeInto(fromId: string, intoId: string): Promise<void> {
+    await apiClient.post(
+      `/api/identity/users/${fromId}/merge-into/${intoId}`
+    )
+  },
+
   // Toggle a user's enabled state (Owner)
   async toggleEnabled(userId: string): Promise<void> {
     await apiClient.put(`/api/identity/users/${userId}/toggle-enabled`)

@@ -145,6 +145,19 @@ public class LoyaltyAccount
     /// <summary>
     /// Update tier based on lifetime points
     /// </summary>
+    /// <summary>
+    /// Take another membership's points into this one, when two accounts turn
+    /// out to be one person: the balance to spend and the lifetime points
+    /// the tier is read from. Its history is moved beside this by the caller.
+    /// </summary>
+    public void Absorb(int pointsBalance, int lifetimePoints)
+    {
+        PointsBalance += Math.Max(0, pointsBalance);
+        LifetimePoints += Math.Max(0, lifetimePoints);
+        UpdatedAt = DateTime.UtcNow;
+        UpdateTier();
+    }
+
     private void UpdateTier()
     {
         CurrentTier = LifetimePoints switch

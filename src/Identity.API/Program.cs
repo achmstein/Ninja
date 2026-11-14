@@ -1039,6 +1039,7 @@ static string[] SplitRoles(string? roles) =>
     (roles ?? "").Split(',', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries);
 
 app.MapCounterCustomers();
+app.MapCustomerMerge();
 
 app.Run();
 

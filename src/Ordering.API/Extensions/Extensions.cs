@@ -130,5 +130,6 @@ internal static class Extensions
 
         // A customer renamed: their buyer, and so every order they placed, says the new name
         eventBus.AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>();
+        eventBus.AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>();
     }
 }

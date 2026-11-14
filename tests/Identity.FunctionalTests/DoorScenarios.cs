@@ -328,6 +328,35 @@ public sealed class DoorScenarios
     }
 
     [TestMethod]
+    public async Task One_person_with_two_accounts_is_merged_by_the_owner_and_the_spare_is_switched_off()
+    {
+        var spare = Suite.Keycloak.Given(AnEmail("nadia-old"), "Nadia", "A", phone: "+201077778888");
+        var kept = Suite.Keycloak.Given(AnEmail("nadia"), "Nadia", "Fouad");
+        var cashier = Suite.Keycloak.Given(AnEmail("cashier"), "Sara", "Till", role: "Cashier");
+        string Merge(string from, string into) => Suite.Url($"/users/{from}/merge-into/{into}");
+
+        // Two histories become one for good: not a manager's call, nor the till's
+        Assert.AreEqual(HttpStatusCode.Forbidden, (await Suite.BackOffice.RefusedAsync(HttpMethod.Post, Merge(spare, kept))).Status);
+        Assert.AreEqual(HttpStatusCode.Forbidden, (await Suite.Till.RefusedAsync(HttpMethod.Post, Merge(spare, kept))).Status);
+        // A login is not a customer, and nobody is merged into themselves or into no one
+        Assert.AreEqual(HttpStatusCode.BadRequest, (await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(cashier, kept))).Status);
+        Assert.AreEqual(HttpStatusCode.BadRequest, (await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(spare, cashier))).Status);
+        Assert.AreEqual(HttpStatusCode.BadRequest, (await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(kept, kept))).Status);
+        Assert.AreEqual(HttpStatusCode.NotFound, (await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(spare, "no-such-user"))).Status);
+        Assert.IsTrue(Suite.Keycloak.User(spare)!["enabled"]!.GetValue<bool>(), "a refused merge switches nobody off");
+
+        var (merged, detail) = await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(spare, kept));
+        Assert.AreEqual(HttpStatusCode.OK, merged, detail);
+        Assert.IsFalse(Suite.Keycloak.User(spare)!["enabled"]!.GetValue<bool>(), "the spare account cannot sign in again");
+        Assert.IsTrue(Suite.Keycloak.User(kept)!["enabled"]!.GetValue<bool>());
+        Assert.AreEqual("+201077778888", Attribute(Suite.Keycloak.User(kept)!, "phoneNumber"), "the kept account had no phone, so it takes the spare's");
+        Assert.IsNull(Attribute(Suite.Keycloak.User(spare)!, "phoneNumber"), "and a number belongs to one account");
+
+        // Pressed twice, or retried: the same answer
+        Assert.AreEqual(HttpStatusCode.OK, (await Suite.Owner.RefusedAsync(HttpMethod.Post, Merge(spare, kept))).Status);
+    }
+
+    [TestMethod]
     public async Task Everything_but_signing_up_needs_a_token()
     {
         var id = Suite.Keycloak.Given(AnEmail("stranger"), "A", "Stranger");

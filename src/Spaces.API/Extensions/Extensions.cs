@@ -74,6 +74,7 @@ public static class Extensions
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
             // A customer renamed: what is still to come or running says the new name
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
+            .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(SpacesIntegrationEventContext.Default));
     }
@@ -93,6 +94,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(SessionPaidIntegrationEvent))]
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(CustomersMergedIntegrationEvent))]
 public partial class SpacesIntegrationEventContext : JsonSerializerContext
 {
 }

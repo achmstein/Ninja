@@ -59,6 +59,8 @@ public static class Extensions
                .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
                .AddSubscription<CatalogItemStockChangedIntegrationEvent, CatalogItemStockChangedIntegrationEventHandler>()
                .AddSubscription<CatalogOptionStockChangedIntegrationEvent, CatalogOptionStockChangedIntegrationEventHandler>()
+               // Two accounts that were one person: the usual, favourites and preferences go to the kept one
+               .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
                // A branch paused or opened here closes or opens it on Talabat
                .AddSubscription<Ninja.Catalog.API.Talabat.BranchSettingsChangedIntegrationEvent, Ninja.Catalog.API.Talabat.BranchSettingsChangedIntegrationEventHandler>();
 

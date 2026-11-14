@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useAuth } from 'react-oidc-context'
 import { Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
   Ban,
   CircleCheck,
+  Merge,
   MessageCircle,
   MoreHorizontal,
   Plus,
@@ -14,6 +16,7 @@ import {
   listItemsOptions,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { isOwner } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -65,11 +68,14 @@ import {
   type Customer,
 } from '../types'
 import { AddedAtCounterBadge } from './counter-customer'
+import { MergeCustomerDialog } from './merge-customer-dialog'
 import { useSendAppLink } from './use-send-app-link'
 
 type CustomerPanelProps = {
   customerId: string
   onBack: () => void
+  /** Show another customer in this panel's place: the one this was merged into */
+  onOpenCustomer?: (id: string) => void
 }
 
 /**
@@ -80,7 +86,11 @@ type CustomerPanelProps = {
  * its own customer so a row from the owing or members lists (which only
  * carry an id and a name) opens the same panel.
  */
-export function CustomerPanel({ customerId, onBack }: CustomerPanelProps) {
+export function CustomerPanel({
+  customerId,
+  onBack,
+  onOpenCustomer,
+}: CustomerPanelProps) {
   const t = useT()
   const query = useCustomer(customerId)
 
@@ -101,21 +111,32 @@ export function CustomerPanel({ customerId, onBack }: CustomerPanelProps) {
       />
     )
   }
-  return <CustomerHub customer={query.data} onBack={onBack} />
+  return (
+    <CustomerHub
+      customer={query.data}
+      onBack={onBack}
+      onOpenCustomer={onOpenCustomer}
+    />
+  )
 }
 
 function CustomerHub({
   customer,
   onBack,
+  onOpenCustomer,
 }: {
   customer: Customer
   onBack: () => void
+  onOpenCustomer?: (id: string) => void
 }) {
   const t = useT()
   const features = useFeatures()
   const queryClient = useQueryClient()
   const name = getCustomerDisplayName(customer)
   const [toggleOpen, setToggleOpen] = useState(false)
+  const [mergeOpen, setMergeOpen] = useState(false)
+  // Two histories become one for good: the owner's call (Identity says the same)
+  const owner = isOwner(useAuth().user)
   const appLink = useSendAppLink(customer)
 
   const toggleEnabled = useMutation({
@@ -190,6 +211,12 @@ function CustomerHub({
               </Link>
             </DropdownMenuItem>
             {appLink.item}
+            {owner && (
+              <DropdownMenuItem onClick={() => setMergeOpen(true)}>
+                <Merge className='h-4 w-4' />
+                {t('mergeCustomer')}
+              </DropdownMenuItem>
+            )}
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant={customer.enabled ? 'destructive' : 'default'}
@@ -264,6 +291,14 @@ function CustomerHub({
         handleConfirm={() => toggleEnabled.mutate()}
       />
       {appLink.dialog}
+      {owner && (
+        <MergeCustomerDialog
+          customer={customer}
+          open={mergeOpen}
+          onOpenChange={setMergeOpen}
+          onMerged={(intoId) => (onOpenCustomer ?? onBack)(intoId)}
+        />
+      )}
     </div>
   )
 }

@@ -42,6 +42,7 @@ public static class Extensions
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(AccountsIntegrationEventContext.Default))
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
+            .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
             .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
             .AddSubscription<TabPaymentRecordedIntegrationEvent, TabPaymentRecordedIntegrationEventHandler>();
@@ -49,6 +50,7 @@ public static class Extensions
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(CustomersMergedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
 [JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]

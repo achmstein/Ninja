@@ -31,12 +31,14 @@ public static class Extensions
                .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
                .AddSubscription<OrderCustomerAssignedIntegrationEvent, OrderCustomerAssignedIntegrationEventHandler>()
                .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
+               .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
                .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
                .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
     }
 }
 
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
+[JsonSerializable(typeof(CustomersMergedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]

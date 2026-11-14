@@ -443,6 +443,7 @@ export function Customers() {
               key={search.customer}
               customerId={search.customer}
               onBack={() => select(undefined)}
+              onOpenCustomer={select}
             />
           </div>
         ) : (

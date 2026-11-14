@@ -169,6 +169,9 @@ public sealed class FakeKeycloak : IAsyncDisposable
             .Select(Copy)
             .ToList()));
 
+        app.MapGet($"{admin}/users/{{id}}/role-mappings/realm", (string id) =>
+            Results.Ok(RolesOf(id).Select(r => new { id = r.ToLowerInvariant(), name = r }).ToList()));
+
         app.MapPost($"{admin}/users/{{id}}/role-mappings/realm", (string id, JsonArray roles) =>
         {
             _rolesOf[id] = roles.Select(r => r?["name"]?.GetValue<string>() ?? "").Where(n => n.Length > 0).ToList();

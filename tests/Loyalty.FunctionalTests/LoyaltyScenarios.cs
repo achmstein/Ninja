@@ -74,6 +74,42 @@ public sealed class LoyaltyScenarios
     }
 
     [TestMethod]
+    public async Task Two_accounts_of_one_person_become_one_card_with_the_tier_they_earned_together()
+    {
+        var (old, kept, onlyOld, neverJoined) = (NewCustomer(), NewCustomer(), NewCustomer(), NewCustomer());
+        var admin = Suite.Loyalty.As(Persona.Admin());
+        foreach (var (id, points) in new[] { (old, 700), (kept, 600), (onlyOld, 150) })
+        {
+            await admin.PostAsync<AccountView>("/api/loyalty/accounts?api-version=1.0", new CreateAccountRequest(id), HttpStatusCode.Created);
+            await admin.PostAsync<TransactionView>("/api/loyalty/transactions/earn?api-version=1.0", new EarnPointsRequest(id, points, "Purchase", $"order-{id}", "Coffee"));
+        }
+        var bus = Suite.Loyalty.Services.GetRequiredService<IEventBus>();
+
+        await bus.PublishAsync(new CustomersMergedIntegrationEvent(old, kept, "Nadia"));
+        await bus.PublishAsync(new CustomersMergedIntegrationEvent(onlyOld, neverJoined, "Dina"));
+
+        await ServiceUnderTest<Program>.EventuallyAsync(
+            async () => (await admin.RawAsync(HttpMethod.Get, $"/api/loyalty/accounts/{old}?api-version=1.0")).StatusCode == HttpStatusCode.NotFound
+                && (await admin.RawAsync(HttpMethod.Get, $"/api/loyalty/accounts/{neverJoined}?api-version=1.0")).StatusCode == HttpStatusCode.OK,
+            "the merged-away card is gone and the one that changed hands is there");
+
+        var one = await admin.GetAsync<AccountView>($"/api/loyalty/accounts/{kept}?api-version=1.0");
+        Assert.AreEqual(1300, one.PointsBalance, "the points of both, to spend");
+        Assert.AreEqual(1300, one.LifetimePoints);
+        Assert.AreEqual("Silver", one.CurrentTier, "neither reached a thousand alone; together they did");
+        Assert.AreEqual(2, (await admin.GetAsync<List<TransactionView>>($"/api/loyalty/transactions/{kept}?api-version=1.0")).Count, "one history");
+
+        var moved = await admin.GetAsync<AccountView>($"/api/loyalty/accounts/{neverJoined}?api-version=1.0");
+        Assert.AreEqual(150, moved.PointsBalance, "a card with no twin changes hands whole");
+        Assert.AreEqual("Dina", moved.UserDisplayName);
+
+        // The bus may deliver twice: no points are given twice
+        await bus.PublishAsync(new CustomersMergedIntegrationEvent(old, kept, "Nadia"));
+        await Task.Delay(TimeSpan.FromSeconds(2));
+        Assert.AreEqual(1300, (await admin.GetAsync<AccountView>($"/api/loyalty/accounts/{kept}?api-version=1.0")).PointsBalance);
+    }
+
+    [TestMethod]
     public async Task A_card_is_joined_once()
     {
         var userId = NewCustomer();
