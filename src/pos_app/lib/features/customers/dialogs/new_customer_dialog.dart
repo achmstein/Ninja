@@ -8,7 +8,6 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/name_match.dart';
 import '../../../core/utils/phone.dart';
-import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/toast_helpers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_line.dart';
@@ -27,24 +26,24 @@ SaleCustomer _saleCustomer(IdentityUser user) =>
 /// against everyone the business already has (normalized the way the server
 /// keeps it: Arabic digits, spaces, +20), and names that look alike are
 /// offered — so the regular who never gave their number twice is not added
-/// twice. Resolves to the customer to attach, or null when cancelled.
-Future<SaleCustomer?> showNewCustomerDialog(BuildContext context, {String name = '', String phone = ''}) {
-  return showPosDialog<SaleCustomer>(
-    context,
-    builder: (context) => _NewCustomerDialog(initialName: name, initialPhone: phone),
-  );
-}
-
-class _NewCustomerDialog extends ConsumerStatefulWidget {
+/// twice.
+///
+/// A form, not a dialog: it takes the place of the search in the customer
+/// picker, so the cashier never has one window over another. [onPicked]
+/// gets the customer to attach (the one just added, or one the till already
+/// had); [onCancel] goes back to the search.
+class NewCustomerForm extends ConsumerStatefulWidget {
   final String initialName;
   final String initialPhone;
-  const _NewCustomerDialog({this.initialName = '', this.initialPhone = ''});
+  final ValueChanged<SaleCustomer> onPicked;
+  final VoidCallback onCancel;
+  const NewCustomerForm({super.key, this.initialName = '', this.initialPhone = '', required this.onPicked, required this.onCancel});
 
   @override
-  ConsumerState<_NewCustomerDialog> createState() => _NewCustomerDialogState();
+  ConsumerState<NewCustomerForm> createState() => _NewCustomerFormState();
 }
 
-class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
+class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
   late final _name = TextEditingController(text: widget.initialName);
   late final _phone = TextEditingController(text: widget.initialPhone);
   Timer? _debounce;
@@ -116,7 +115,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
     }
   }
 
-  void _use(IdentityUser user) => Navigator.of(context, rootNavigator: true).pop(_saleCustomer(user));
+  void _use(IdentityUser user) => widget.onPicked(_saleCustomer(user));
 
   Future<void> _create() async {
     final l10n = AppLocalizations.of(context)!;
@@ -165,13 +164,12 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
     final similar = _lookup.similar.where((u) => u.id != exact?.id).take(3).toList();
     final canCreate = !_saving && exact == null && _name.text.trim().isNotEmpty && typedPhone.isNotEmpty;
 
-    return DialogScroll(
+    return SingleChildScrollView(
+      padding: const EdgeInsets.all(Sizes.gapLg),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.newCustomer, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-          const SizedBox(height: 16),
           FTextField(
             control: FTextFieldControl.managed(controller: _name),
             label: Text(l10n.newCustomerName),
@@ -242,7 +240,7 @@ class _NewCustomerDialogState extends ConsumerState<_NewCustomerDialog> {
                   height: Sizes.control,
                   child: FButton(
                     variant: FButtonVariant.outline,
-                    onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+                    onPress: widget.onCancel,
                     child: Text(l10n.cancel, style: theme.typography.base.forButton),
                   ),
                 ),

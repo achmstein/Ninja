@@ -69,8 +69,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
   final _focus = FocusNode();
   // Tapping the field is the start of a search: the sheet grows to the whole
   // screen, the field on its top row and nothing but results under it, as a
-  // search opens in any phone app. The back arrow brings the sheet back
-  bool _searching = false;
+  // search opens in any phone app. With nobody in the room to offer first,
+  // it opens that way, keyboard up: the search is all there is to do. The
+  // back arrow brings the sheet back, or closes it when there was none
+  late bool _searching = widget.quickPicks.isEmpty;
+  // Adding someone takes the search's place, in the same sheet
+  bool _adding = false;
   Timer? _debounce;
   String _search = '';
   List<IdentityUser> _users = const [];
@@ -87,6 +91,10 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
   }
 
   void _stopSearching() {
+    if (widget.quickPicks.isEmpty) {
+      Navigator.of(context, rootNavigator: true).pop();
+      return;
+    }
     _focus.unfocus();
     setState(() => _searching = false);
   }
@@ -134,13 +142,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
 
   void _pick(SaleCustomer customer) => Navigator.of(context, rootNavigator: true).pop(customer);
 
-  // A customer by name and phone, made here: what was typed in the search
-  // goes into the field it reads as
-  Future<void> _newCustomer() async {
-    final typed = _term.text.trim();
-    final asPhone = looksLikePhone(typed);
-    final added = await showNewCustomerDialog(context, name: asPhone ? '' : typed, phone: asPhone ? typed : '');
-    if (added == null || !mounted) return;
+  // The customer the form made or found: theirs is the bill, unless one of
+  // theirs is already running
+  void _added(SaleCustomer added) {
     final onBill = widget.busy[added.id];
     if (onBill != null) {
       showPosToast(context, PosToastType.error, AppLocalizations.of(context)!.alreadyOnBill(onBill));
@@ -169,10 +173,53 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
     final screen = MediaQuery.sizeOf(context).width;
     // The system's back leaves the search first, the sheet second
+    // A number is nobody's name: that one is a customer to add
+    final asPhone = looksLikePhone(typedName);
+    final offerName = !widget.accountsOnly && typedName.isNotEmpty && !asPhone;
+
+    // A way on that needs no result, as a row of the list
+    Widget actionRow(IconData icon, String title, String? subtitle, VoidCallback onPress) => FTappable(
+          onPress: onPress,
+          builder: (context, states, child) => Container(
+            constraints: const BoxConstraints(minHeight: Sizes.controlLarge),
+            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            decoration: BoxDecoration(
+              color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+              borderRadius: BorderRadius.circular(Sizes.radius),
+            ),
+            child: child,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: Sizes.icon, color: theme.colors.mutedForeground),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                    if (subtitle != null) Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+
+    // The system's back leaves the form first, the search second, the sheet last
     return PopScope(
-      canPop: !_searching,
+      canPop: !_adding && (!_searching || widget.quickPicks.isEmpty),
       onPopInvokedWithResult: (didPop, _) {
-        if (!didPop) _stopSearching();
+        if (didPop) return;
+        if (_adding) {
+          setState(() => _adding = false);
+        } else {
+          _stopSearching();
+        }
       },
       child: AnimatedContainer(
       duration: const Duration(milliseconds: 200),
@@ -183,7 +230,51 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
         border: BorderDirectional(start: BorderSide(color: theme.colors.border)),
       ),
       padding: EdgeInsets.only(bottom: keyboard),
-      child: Column(
+      // Across a whole tablet a row would run from one edge to the other:
+      // the search keeps to a column down the middle
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(
+          constraints: BoxConstraints(maxWidth: _searching ? 640 : double.infinity),
+      child: _adding
+          ? Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                Container(
+                  height: Sizes.header,
+                  padding: const EdgeInsets.symmetric(horizontal: Sizes.gapSm),
+                  decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
+                  child: Row(
+                    children: [
+                      SizedBox.square(
+                        dimension: Sizes.control,
+                        child: FButton.icon(
+                          variant: FButtonVariant.ghost,
+                          onPress: () => setState(() => _adding = false),
+                          child: const Icon(FIcons.arrowLeft, size: Sizes.iconNav),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
+                      Expanded(
+                        child: Text(l10n.newCustomer,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                    ],
+                  ),
+                ),
+                Expanded(
+                  child: NewCustomerForm(
+                    initialName: asPhone ? '' : typedName,
+                    initialPhone: asPhone ? typedName : '',
+                    onPicked: _added,
+                    onCancel: () => setState(() => _adding = false),
+                  ),
+                ),
+              ],
+            )
+          : Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // A header row like every screen's: the title, and the way out
@@ -262,47 +353,13 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                     control: FTextFieldControl.managed(controller: _term),
                     focusNode: _focus,
                     hint: l10n.searchCustomersPlaceholder,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: _newCustomer,
-                    prefix: const Icon(FIcons.userPlus, size: Sizes.icon),
-                    child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
+                    // Open on the search with nobody to offer; and back from
+                    // adding someone, the search is where it was
+                    autofocus: _searching,
                   ),
                 ),
               ],
             ),
-            if (!widget.accountsOnly && typedName.isNotEmpty) ...[
-              const SizedBox(height: 16),
-              // At least 56, and as tall as its two lines need (a fixed 56 clipped the second)
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: Sizes.controlLarge),
-                child: FButton(
-                  variant: FButtonVariant.outline,
-                  mainAxisAlignment: MainAxisAlignment.start,
-                  onPress: () => _pick(SaleCustomer(name: typedName)),
-                  prefix: Icon(FIcons.userPlus, size: Sizes.icon, color: theme.colors.mutedForeground),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        l10n.useNameAction(typedName),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: theme.typography.base.forButton.copyWith(fontWeight: FontWeight.w500),
-                      ),
-                      Text(l10n.noAccountNeeded, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    ],
-                  ),
-                ),
-              ),
-            ],
             const SizedBox(height: 8),
           ],
             ),
@@ -310,7 +367,18 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
           Expanded(
             child: SingleChildScrollView(
               padding: const EdgeInsets.fromLTRB(Sizes.gapLg, 0, Sizes.gapLg, Sizes.gapLg),
-              child: _search.isEmpty
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  // The two ways on that need no result: the typed name as
+                  // it is, first because it is the common case, and a
+                  // customer made here
+                  if (offerName)
+                    actionRow(FIcons.pencil, l10n.useNameAction(typedName), l10n.noAccountNeeded,
+                        () => _pick(SaleCustomer(name: typedName))),
+                  actionRow(FIcons.userPlus, l10n.newCustomer, null, () => setState(() => _adding = true)),
+                  Container(height: 1, margin: const EdgeInsets.symmetric(vertical: 4), color: theme.colors.border),
+              _search.isEmpty
                 ? const SizedBox.shrink()
                 : _loading
                 ? Skeleton(
@@ -343,22 +411,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                 : _failed
                 ? centered(l10n.somethingWentWrong)
                 : _users.isEmpty
-                // Nobody by that name or number: add them, with what was typed
-                ? Column(
-                    mainAxisSize: MainAxisSize.min,
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      centered(l10n.noCustomersFound),
-                      SizedBox(
-                        height: Sizes.control,
-                        child: FButton(
-                          onPress: _newCustomer,
-                          prefix: const Icon(FIcons.userPlus, size: Sizes.icon),
-                          child: Text(l10n.newCustomer, style: theme.typography.base.forButton),
-                        ),
-                      ),
-                    ],
-                  )
+                ? centered(l10n.noCustomersFound)
                 : ListView.builder(
                     shrinkWrap: true,
                     physics: const NeverScrollableScrollPhysics(),
@@ -442,9 +495,13 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                       );
                     },
                   ),
+                ],
+              ),
             ),
           ),
         ],
+      ),
+        ),
       ),
       ),
     );

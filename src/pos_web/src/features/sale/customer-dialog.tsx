@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { ArrowLeft, Info, User, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, Info, Pencil, User, UserPlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -21,7 +21,10 @@ import {
   CustomerCard,
   type CardCustomer,
 } from '@/features/customer/customer-card'
-import { NewCustomerDialog } from '@/features/customer/new-customer-dialog'
+import {
+  looksLikePhone,
+  NewCustomerForm,
+} from '@/features/customer/new-customer-form'
 import {
   customerName,
   type IdentityCustomer,
@@ -100,14 +103,19 @@ export function CustomerDialog({
   const [adding, setAdding] = useState(false)
   // Tapping the field is the start of a search: the sheet grows to the whole
   // screen, the field on its top row and nothing but results under it, as a
-  // search opens in any phone app. The back arrow brings the sheet back
+  // search opens in any phone app. With nobody in the room to offer first,
+  // it opens that way, keyboard up: the search is all there is to do. The
+  // back arrow brings the sheet back, or closes it when there was none
   const [searching, setSearching] = useState(false)
+  const field = useRef<HTMLInputElement>(null)
+  const hasPicks = quickPicks.length > 0
   const debouncedTerm = useDebounced(term.trim(), SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
     if (!open) {
       setTerm('')
       setSearching(false)
+      setAdding(false)
     }
   }, [open])
 
@@ -136,8 +144,11 @@ export function CustomerDialog({
 
   // Most people at a table have no account, and the waiters know them by
   // name anyway. Taking the typed text as the name costs one tap and is the
-  // common case — so it sits above the results, not buried under them.
+  // common case — so it is the first row under the field, not buried under
+  // the results. A number is nobody's name: that one is a customer to add
   const typedName = term.trim()
+  const offerName =
+    !accountsOnly && typedName.length > 0 && !looksLikePhone(typedName)
   const useTypedName = () => {
     onSelect({ id: null, name: typedName })
     onOpenChange(false)
@@ -173,119 +184,168 @@ export function CustomerDialog({
           'transition-[max-width]',
           searching && 'max-w-[100vw] border-s-0',
         )}
-        // The sheet opens with the room's people on show and no keyboard:
-        // the field is focused by the cashier's tap, not by opening
-        onOpenAutoFocus={(e) => e.preventDefault()}
+        // A room's people come first and the keyboard waits for a tap on
+        // the field; with nobody to offer, the field is where it starts
+        onOpenAutoFocus={(e) => {
+          e.preventDefault()
+          if (!hasPicks) field.current?.focus()
+        }}
       >
-        {searching ? (
-          <SheetTitle className='sr-only'>{t(titleKey)}</SheetTitle>
-        ) : (
-          // A header row like every screen's: the title, and the way out
-          <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
-            <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
-              {t(titleKey)}
-            </SheetTitle>
-            <SheetClose asChild>
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-12'
-                aria-label={t('cancel')}
-              >
-                <X className='size-6' />
-              </Button>
-            </SheetClose>
-          </div>
-        )}
         <SheetDescription className='sr-only'>
           {t('searchCustomersPlaceholder')}
         </SheetDescription>
-
+        {/* Across a whole tablet a row would run from one edge to the other:
+            the search keeps to a column down the middle */}
         <div
           className={cn(
-            'flex shrink-0 flex-col gap-4 p-4 pb-2',
-            searching && 'ps-2',
+            'flex min-h-0 flex-1 flex-col',
+            searching && 'mx-auto w-full max-w-2xl',
           )}
         >
-          {!searching && quickPicks.length > 0 && (
-            <div className='flex flex-col gap-2'>
-              <p className='text-muted-foreground text-sm'>{t('inTheRoom')}</p>
-              <div className='flex flex-wrap gap-2'>
-                {quickPicks.map((person) => (
-                  <Button
-                    key={person.id}
-                    variant='outline'
-                    className='h-10 max-w-full gap-2 px-3 text-base'
-                    onClick={() => {
-                      onSelect({ id: person.id, name: person.name })
-                      onOpenChange(false)
-                    }}
-                  >
-                    <User className='text-muted-foreground size-4 shrink-0' />
-                    <span className='truncate'>
-                      {person.name || t('guest')}
-                    </span>
-                  </Button>
-                ))}
+          {adding ? (
+            // Adding someone takes the search's place, in the same sheet:
+            // back is the search again, what was typed still in it
+            <>
+              <div className='flex h-16 shrink-0 items-center gap-2 border-b px-2'>
+                <Button
+                  variant='ghost'
+                  size='icon'
+                  className='size-12 shrink-0'
+                  aria-label={t('goBack')}
+                  onClick={() => setAdding(false)}
+                >
+                  <ArrowLeft className='size-6 rtl:rotate-180' />
+                </Button>
+                <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+                  {t('newCustomer')}
+                </SheetTitle>
               </div>
-            </div>
-          )}
+              <div className='min-h-0 flex-1 overflow-y-auto p-4'>
+                <NewCustomerForm
+                  initialText={typedName}
+                  onPick={pickNew}
+                  onCancel={() => setAdding(false)}
+                />
+              </div>
+            </>
+          ) : (
+            <>
+              {searching ? (
+                <SheetTitle className='sr-only'>{t(titleKey)}</SheetTitle>
+              ) : (
+                // A header row like every screen's: the title, and the way out
+                <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
+                  <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+                    {t(titleKey)}
+                  </SheetTitle>
+                  <SheetClose asChild>
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='size-12'
+                      aria-label={t('cancel')}
+                    >
+                      <X className='size-6' />
+                    </Button>
+                  </SheetClose>
+                </div>
+              )}
 
-          <div className='flex gap-2'>
-            {searching && (
-              <Button
-                variant='ghost'
-                size='icon'
-                className='size-12 shrink-0'
-                aria-label={t('goBack')}
-                onClick={() => {
-                  if (document.activeElement instanceof HTMLElement)
-                    document.activeElement.blur()
-                  setSearching(false)
-                }}
+              <div
+                className={cn(
+                  'flex shrink-0 flex-col gap-4 p-4 pb-2',
+                  searching && 'ps-2',
+                )}
               >
-                <ArrowLeft className='size-6 rtl:rotate-180' />
-              </Button>
-            )}
-            <Input
-              value={term}
-              onChange={(e) => setTerm(e.target.value)}
-              onFocus={() => setSearching(true)}
-              placeholder={t('searchCustomersPlaceholder')}
-              className='h-12 min-w-0 flex-1 text-base'
-              autoComplete='off'
-            />
-            <Button
-              variant='outline'
-              className='h-12 shrink-0 gap-2'
-              onClick={() => setAdding(true)}
-            >
-              <UserPlus className='size-5' />
-              {t('newCustomer')}
-            </Button>
-          </div>
+                {!searching && hasPicks && (
+                  <div className='flex flex-col gap-2'>
+                    <p className='text-muted-foreground text-sm'>
+                      {t('inTheRoom')}
+                    </p>
+                    <div className='flex flex-wrap gap-2'>
+                      {quickPicks.map((person) => (
+                        <Button
+                          key={person.id}
+                          variant='outline'
+                          className='h-10 max-w-full gap-2 px-3 text-base'
+                          onClick={() => {
+                            onSelect({ id: person.id, name: person.name })
+                            onOpenChange(false)
+                          }}
+                        >
+                          <User className='text-muted-foreground size-4 shrink-0' />
+                          <span className='truncate'>
+                            {person.name || t('guest')}
+                          </span>
+                        </Button>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
-          {!accountsOnly && typedName.length > 0 && (
-            <Button
-              variant='outline'
-              className='h-auto min-h-14 w-full justify-start gap-3 py-2 text-base'
-              onClick={useTypedName}
-            >
-              <UserPlus className='text-muted-foreground size-5 shrink-0' />
-              <span className='min-w-0 text-start'>
-                <span className='block truncate font-medium'>
-                  {t('useNameAction', { name: typedName })}
-                </span>
-                <span className='text-muted-foreground block text-sm font-normal'>
-                  {t('noAccountNeeded')}
-                </span>
-              </span>
-            </Button>
-          )}
-        </div>
+                <div className='flex gap-2'>
+                  {searching && (
+                    <Button
+                      variant='ghost'
+                      size='icon'
+                      className='size-12 shrink-0'
+                      aria-label={t('goBack')}
+                      onClick={() => {
+                        if (!hasPicks) return onOpenChange(false)
+                        field.current?.blur()
+                        setSearching(false)
+                      }}
+                    >
+                      <ArrowLeft className='size-6 rtl:rotate-180' />
+                    </Button>
+                  )}
+                  <Input
+                    ref={field}
+                    value={term}
+                    onChange={(e) => setTerm(e.target.value)}
+                    onFocus={() => setSearching(true)}
+                    placeholder={t('searchCustomersPlaceholder')}
+                    className='h-12 min-w-0 flex-1 text-base'
+                    autoComplete='off'
+                    // Back from adding someone, the search is where it was
+                    autoFocus={searching}
+                  />
+                </div>
+              </div>
 
         {/* The results get every row between the field and the bottom */}
         <div className='min-h-0 flex-1 overflow-y-auto px-2 pb-4'>
+          {/* The two ways on that need no result, as rows of the list: the
+              typed name as it is, and a customer made here */}
+          <div className='mb-1 flex flex-col border-b pb-1'>
+            {offerName && (
+              <button
+                type='button'
+                onClick={useTypedName}
+                className='hover:bg-accent flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-start'
+              >
+                <Pencil className='text-muted-foreground size-5 shrink-0' />
+                <span className='min-w-0'>
+                  <span className='block truncate text-base font-medium'>
+                    {t('useNameAction', { name: typedName })}
+                  </span>
+                  <span className='text-muted-foreground block truncate text-sm'>
+                    {t('noAccountNeeded')}
+                  </span>
+                </span>
+              </button>
+            )}
+            <button
+              type='button'
+              onClick={() => setAdding(true)}
+              className='hover:bg-accent flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-start'
+            >
+              <UserPlus className='text-muted-foreground size-5 shrink-0' />
+              <span className='block truncate text-base font-medium'>
+                {t('newCustomer')}
+              </span>
+            </button>
+          </div>
           {search.length === 0 ? null : isFetching && users.length === 0 ? (
             <div className='flex flex-col'>
               {Array.from({ length: 5 }).map((_, i) => (
@@ -307,19 +367,9 @@ export function CustomerDialog({
               {t('somethingWentWrong')}
             </p>
           ) : users.length === 0 ? (
-            <div className='flex flex-col items-center gap-3 py-6'>
-              <p className='text-muted-foreground text-center text-sm'>
-                {t('noCustomersFound')}
-              </p>
-              <Button
-                variant='outline'
-                className='h-11 gap-2'
-                onClick={() => setAdding(true)}
-              >
-                <UserPlus className='size-4' />
-                {t('newCustomer')}
-              </Button>
-            </div>
+            <p className='text-muted-foreground py-6 text-center text-sm'>
+              {t('noCustomersFound')}
+            </p>
           ) : (
             <div className='flex flex-col'>
               {users.map((user) => {
@@ -393,16 +443,13 @@ export function CustomerDialog({
             </div>
           )}
         </div>
+            </>
+          )}
+        </div>
       </SheetContent>
       <CustomerCard
         customer={cardFor}
         onOpenChange={(open) => !open && setCardFor(null)}
-      />
-      <NewCustomerDialog
-        open={adding}
-        onOpenChange={setAdding}
-        initialText={typedName}
-        onPick={pickNew}
       />
     </Sheet>
   )
