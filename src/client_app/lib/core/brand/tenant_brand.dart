@@ -228,8 +228,15 @@ class TenantLocale {
   /// a number here.
   String normalizePhone(String phone) => phones.normalizePhone(phone, country);
 
-  /// A kept number as people here write it: 010 12345678.
-  String showPhone(String? phone) => phones.formatPhone(phone, country);
+  /// A kept number as people here write it (010 12345678), for showing: inside
+  /// a left-to-right isolate, so in an Arabic line its groups keep their order.
+  String showPhone(String? phone) {
+    final shown = phones.formatPhone(phone, country);
+    return shown.isEmpty ? shown : '\u2066$shown\u2069';
+  }
+
+  /// The same number bare, for a field someone types in.
+  String editablePhone(String? phone) => phones.formatPhone(phone, country);
 
   /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
   bool get speaksStandardArabic => arabicStyle == 'standard';

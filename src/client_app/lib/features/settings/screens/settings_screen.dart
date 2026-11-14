@@ -218,7 +218,7 @@ class _UpdateProfileSheetState extends State<_UpdateProfileSheet> {
     final phone = await widget.ref.read(settingsProvider.notifier).getPhoneNumber();
     if (phone != null && mounted) {
       // Shown the local way; kept and sent in the international form
-      _phoneController.text = widget.ref.read(brandProvider).locale.showPhone(phone);
+      _phoneController.text = widget.ref.read(brandProvider).locale.editablePhone(phone);
     }
   }
 

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useT } from '@/lib/i18n'
-import { showPhone } from '@/lib/phone'
+import { editablePhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import {
@@ -58,7 +58,7 @@ function DetailsForm({
   const queryClient = useQueryClient()
   const [firstName, setFirstName] = useState(user.firstName ?? '')
   const [lastName, setLastName] = useState(user.lastName ?? '')
-  const [phone, setPhone] = useState(() => showPhone(user.phoneNumber))
+  const [phone, setPhone] = useState(() => editablePhone(user.phoneNumber))
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
 

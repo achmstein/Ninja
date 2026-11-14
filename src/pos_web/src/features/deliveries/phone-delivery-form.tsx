@@ -22,7 +22,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
-import { digitCount, normalizePhone, showPhone } from '@/lib/phone'
+import { digitCount, normalizePhone, editablePhone } from '@/lib/phone'
 import { isModuleOff } from '@/lib/problem'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
@@ -83,7 +83,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const distance = useDistanceText()
   const country = useBrand()?.locale.country ?? 'EG'
   const ids = useId()
-  const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: showPhone(customer?.phone) })
+  const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: editablePhone(customer?.phone) })
   const [name, setName] = useState(customer?.name ?? '')
   const [tried, setTried] = useState(false)
   const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)

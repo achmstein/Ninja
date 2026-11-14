@@ -8,6 +8,7 @@ import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/highlight.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../core/utils/phone.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/dialogs/new_customer_dialog.dart';
@@ -378,6 +379,10 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                             ),
                                             maxLines: 1,
                                             overflow: TextOverflow.ellipsis,
+                                            // A number reads left to right whatever the till's
+                                            // language: without this its groups swap places in Arabic
+                                            textDirection: user.phoneNumber?.isNotEmpty == true ? TextDirection.ltr : null,
+                                            textAlign: textAlignFor(context),
                                             style: muted,
                                           ),
                                       ],

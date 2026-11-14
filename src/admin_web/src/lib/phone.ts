@@ -113,8 +113,20 @@ export function setPhoneCountry(country: string | null | undefined): void {
   home = country || 'EG'
 }
 
-/** A kept number as people here write it: 010 12345678, or +44 … for one from abroad. */
+/**
+ * A kept number as people here write it (010 12345678, or +44 … for one from
+ * abroad), for showing. It comes inside a left-to-right isolate: a number is
+ * all digits and spaces, which have no direction of their own, so in an
+ * Arabic line its groups would otherwise swap places (12345678 010) wherever
+ * the element was not told dir="ltr". For a field's value use editablePhone.
+ */
 export function showPhone(stored: string | null | undefined): string {
+  const shown = formatPhone(stored, home)
+  return shown ? `\u2066${shown}\u2069` : shown
+}
+
+/** The same number bare, for a field someone types in or text that is searched. */
+export function editablePhone(stored: string | null | undefined): string {
   return formatPhone(stored, home)
 }
 

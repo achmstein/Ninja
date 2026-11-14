@@ -31,7 +31,9 @@ class IdentityUser {
     return full.isNotEmpty ? full : (username ?? '');
   }
 
-  String? get contact => (phoneNumber?.isNotEmpty == true) ? showPhone(phoneNumber) : email;
+  /// Bare, because the search marks the matching part of it; whoever draws a
+  /// phone lays it out left to right
+  String? get contact => (phoneNumber?.isNotEmpty == true) ? plainPhone(phoneNumber) : email;
 
   factory IdentityUser.fromJson(Map<String, dynamic> json) => IdentityUser(
         id: json['id'] as String,

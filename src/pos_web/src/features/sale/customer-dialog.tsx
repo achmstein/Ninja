@@ -14,7 +14,7 @@ import { apiClient } from '@/lib/api-client'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Highlight, matchRanges, phoneRanges } from '@/lib/highlight'
 import { useT, type TranslationKey } from '@/lib/i18n'
-import { showPhone } from '@/lib/phone'
+import { editablePhone } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import {
@@ -314,8 +314,8 @@ export function CustomerDialog({
                                 without this its groups swap places in Arabic */}
                             <bdi dir='ltr'>
                               <Highlight
-                                text={showPhone(user.phoneNumber)}
-                                ranges={phoneRanges(showPhone(user.phoneNumber), term)}
+                                text={editablePhone(user.phoneNumber)}
+                                ranges={phoneRanges(editablePhone(user.phoneNumber), term)}
                               />
                             </bdi>
                           </span>

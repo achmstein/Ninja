@@ -247,7 +247,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   late final _directions = TextEditingController(text: _initial?.directions ?? '');
   // Shown the local way; kept and sent in the international form
   late final _phone = TextEditingController(
-      text: ref.read(brandProvider).locale.showPhone(_initial?.phone ?? ref.read(authServiceProvider).phoneNumber));
+      text: ref.read(brandProvider).locale.editablePhone(_initial?.phone ?? ref.read(authServiceProvider).phoneNumber));
   late LabelKind _kind = labelKind(_initial?.label);
   late final _labelText = TextEditingController(text: labelKind(_initial?.label) == LabelKind.other ? (_initial?.label ?? '') : '');
 

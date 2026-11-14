@@ -111,8 +111,19 @@ String formatPhone(String? stored, String country) {
 /// a kept number is shown against wherever one is drawn.
 String phoneCountry = 'EG';
 
-/// A kept number as people here write it (see [formatPhone]).
-String showPhone(String? stored) => formatPhone(stored, phoneCountry);
+/// A kept number as people here write it (see [formatPhone]), for showing.
+/// It comes inside a left-to-right isolate (U+2066 … U+2069): a number is all
+/// digits and spaces, which have no direction of their own, so in an Arabic
+/// line its groups would otherwise swap places (12345678 010). A first-strong
+/// isolate does not do: with no letter to go by it takes the line's direction.
+/// For a field's text or text that is searched use [plainPhone].
+String showPhone(String? stored) {
+  final shown = formatPhone(stored, phoneCountry);
+  return shown.isEmpty ? shown : '\u2066$shown\u2069';
+}
+
+/// The same number bare.
+String plainPhone(String? stored) => formatPhone(stored, phoneCountry);
 
 /// How many digits were typed, whatever the script
 int phoneDigitCount(String input) => _clean(input).replaceAll('+', '').length;

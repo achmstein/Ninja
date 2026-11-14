@@ -113,8 +113,20 @@ export function setPhoneCountry(country: string | null | undefined): void {
   home = country || 'EG'
 }
 
-/** A kept number as people here write it: 010 12345678, or +44 … for one from abroad. */
+/**
+ * A kept number as people here write it (010 12345678, or +44 … for one from
+ * abroad), for showing. It comes inside a left-to-right isolate: a number is
+ * all digits and spaces, which have no direction of their own, so in an
+ * Arabic line its groups would otherwise swap places (12345678 010) wherever
+ * the element was not told dir="ltr". For a field's value use editablePhone.
+ */
 export function showPhone(stored: string | null | undefined): string {
+  const shown = formatPhone(stored, home)
+  return shown ? `\u2066${shown}\u2069` : shown
+}
+
+/** The same number bare, for a field someone types in or text that is searched. */
+export function editablePhone(stored: string | null | undefined): string {
   return formatPhone(stored, home)
 }
 
@@ -140,13 +152,5 @@ export function whatsAppLink(phone: string, text?: string, country = home): stri
   return text ? `${url}?text=${encodeURIComponent(text)}` : url
 }
 
-/**
- * The number for a line of running text ("Guest · 010 0021 2204"). Wrapped in a
- * left-to-right isolate, so in Arabic its groups keep their order instead of
- * swapping places. Where the number has an element of its own, give that element
- * dir="ltr" and use showPhone.
- */
-export function phoneInText(stored: string | null | undefined): string {
-  const shown = showPhone(stored)
-  return shown ? `⁦${shown}⁩` : shown
-}
+/** The number for a line of running text ("Guest · 010 0021 2204"): showPhone, which isolates it. */
+export const phoneInText = showPhone

@@ -93,9 +93,15 @@ export const usePhoneRule = create<{
     set({ country: country ?? '', placeholder: placeholder ?? '' }),
 }))
 
-/** A kept number as people here write it: 010 12345678, or +44 … for one from abroad. */
-export const showPhone = (stored: string | null | undefined): string =>
-  formatPhone(stored, usePhoneRule.getState().country)
+/**
+ * A kept number as people here write it (010 12345678, or +44 … for one from
+ * abroad), for showing. Inside a left-to-right isolate, so in an Arabic line
+ * its groups keep their order; a field's value takes formatPhone instead.
+ */
+export const showPhone = (stored: string | null | undefined): string => {
+  const shown = formatPhone(stored, usePhoneRule.getState().country)
+  return shown ? `\u2066${shown}\u2069` : shown
+}
 
 /** The tel: link that dials a kept number. */
 export const callHref = (stored: string | null | undefined): string =>

@@ -7,7 +7,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
-import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
@@ -78,7 +77,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
         ? null
         : [
             ordersBefore == null ? l10n.accountHolder : l10n.guest,
-            if ((summary.guestPhone ?? '').isNotEmpty) bidiIsolate(showPhone(summary.guestPhone)),
+            if ((summary.guestPhone ?? '').isNotEmpty) showPhone(summary.guestPhone),
             if (ordersBefore != null) ordersBefore == 0 ? l10n.guestFirstOrderHere : l10n.guestOrdersBefore(ordersBefore),
           ].join(' · ');
     final identityColor = ordersBefore == 0 ? AppColors.amber(theme.colors.brightness) : theme.colors.mutedForeground;
@@ -222,7 +221,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                         padding: const EdgeInsetsDirectional.only(start: 24),
                         child: Text(
                           [
-                            bidiIsolate(showPhone(delivery.phone)),
+                            showPhone(delivery.phone),
                             l10n.deliveryFeeIs(money(context, delivery.fee)),
                             if (delivery.etaMinutes != null) l10n.deliveryAboutMinutes(delivery.etaMinutes!),
                             if ((delivery.riderName ?? '').isNotEmpty) l10n.deliveryRiderIs(delivery.riderName!),
