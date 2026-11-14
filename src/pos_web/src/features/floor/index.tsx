@@ -548,7 +548,9 @@ export function Floor() {
           </div>
         ) : (
           <div className='flex flex-col gap-3'>
-            <div className='flex flex-wrap items-center gap-2'>
+            {/* One row on a phone, slid sideways rather than stacked: the
+                bills are what the screen is for */}
+            <div className='no-scrollbar flex items-center gap-2 max-sm:overflow-x-auto sm:flex-wrap'>
               {(['all', 'Room', 'Table', 'Counter'] as const).map((key) => {
                 if (key === 'Room' && !features.timeBilling) return null
                 if (key !== 'all' && counts[key] === 0) return null
@@ -567,7 +569,7 @@ export function Floor() {
                     size='lg'
                     variant={filter === key ? 'default' : 'outline'}
                     onClick={() => setFilter(key)}
-                    className='gap-2 rounded-full'
+                    className='shrink-0 gap-2 rounded-full'
                   >
                     {label}
                     <Badge variant='secondary' className='tabular-nums'>
@@ -578,7 +580,7 @@ export function Floor() {
               })}
               {bills.length > 6 &&
                 (searchOpen ? (
-                  <div className='relative w-full sm:w-56'>
+                  <div className='relative w-56 shrink-0'>
                     <Search className='text-muted-foreground pointer-events-none absolute start-3 top-1/2 size-4 -translate-y-1/2' />
                     <Input
                       autoFocus
@@ -609,7 +611,7 @@ export function Floor() {
                     type='button'
                     size='icon'
                     variant='outline'
-                    className='size-11 rounded-full'
+                    className='size-11 shrink-0 rounded-full'
                     aria-label={t('searchBills')}
                     onClick={() => setSearchOpen(true)}
                   >

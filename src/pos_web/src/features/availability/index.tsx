@@ -128,7 +128,7 @@ export function Availability() {
       </div>
 
       {!search && (
-        <div className='flex flex-wrap gap-2'>
+        <div className='no-scrollbar flex gap-2 max-md:overflow-x-auto md:flex-wrap'>
           {sortedCategories.map((category) => {
             const id = toNumber(category.id)
             return (

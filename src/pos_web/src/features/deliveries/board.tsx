@@ -89,7 +89,7 @@ export function DeliveriesBoard() {
           <div className='hidden min-h-0 flex-1 grid-cols-4 gap-3 lg:grid'>{BOARD_LANES.map((lane) => column(lane, true))}</div>
           {/* One at a time on a narrow till */}
           <div className='flex min-h-0 flex-1 flex-col gap-3 lg:hidden'>
-            <div className='flex gap-2 overflow-x-auto pb-1' role='tablist'>
+            <div className='no-scrollbar flex gap-2 overflow-x-auto pb-1' role='tablist'>
               {BOARD_LANES.map((lane) => {
                 const meta = LANE_META[lane]
                 const Icon = meta.icon
