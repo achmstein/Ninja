@@ -403,6 +403,14 @@ const webExtras = {
   addLine: { en: "Add line", ar: "أضف سطرًا" },
   owing: { en: "Owing", ar: "مستحق عليهم" },
   tab: { en: "Tab", ar: "الحساب" },
+  // Customers → Old balances: what customers owed before their tabs were kept here
+  oldBalances: { en: "Old balances", ar: "أرصدة قديمة" },
+  oldBalance: { en: "Old balance", ar: "رصيد قديم" },
+  oldBalancesHint: { en: "What customers already owed before their tabs were kept here. Each goes on the customer’s tab; no money is taken and the till does not change.", ar: "ما كان على العملاء قبل تسجيل حساباتهم هنا. يُضاف كل مبلغ إلى حساب العميل؛ لا تُحصَّل نقود ولا يتغير الدرج." },
+  oldBalancesEmpty: { en: "Pick a customer, type what they owe, press Enter.", ar: "اختر العميل، اكتب ما عليه، ثم اضغط Enter." },
+  oldBalancesSave: { en: "Put on tabs ({count})", ar: "أضف إلى الحسابات ({count})" },
+  oldBalancesSaved: { en: "{count} old balances added", ar: "أُضيف {count} من الأرصدة القديمة" },
+  oldBalancesFailed: { en: "{count} could not be added and are still in the list", ar: "تعذّرت إضافة {count} وما زالت في القائمة" },
   enrolInLoyalty: { en: "Enrol in loyalty", ar: "الاشتراك في الولاء" },
   customerEnrolled: { en: "Enrolled in the loyalty programme", ar: "تم التسجيل في برنامج الولاء" },
   usualOrder: { en: "Usual order", ar: "الطلب المعتاد" },
@@ -873,6 +881,8 @@ const webExtras = {
 
   // Loyalty
   lifetimePoints: { en: "Lifetime Points", ar: "إجمالي النقاط" },
+  showHistory: { en: "Show history", ar: "عرض السجل" },
+  hideHistory: { en: "Hide history", ar: "إخفاء السجل" },
   pointsToTier: { plural: "count", en: {"=1":"1 point to {tier}","other":"{points} points to {tier}"}, ar: {"one":"متبقٍّ نقطة واحدة للوصول إلى {tier}","two":"متبقٍّ نقطتان للوصول إلى {tier}","few":"متبقٍّ {points} نقاط للوصول إلى {tier}","other":"متبقٍّ {points} نقطة للوصول إلى {tier}"} },
   eligibleForTier: { en: "Eligible for {tier}!", ar: "مؤهل لـ {tier}!" },
   transactionTypeEarned: { en: "Earned", ar: "مكتسبة" },

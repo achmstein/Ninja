@@ -20,6 +20,7 @@ import { EntityAvatar } from '@/components/entity-avatar'
 import { ErrorState } from '@/components/error-state'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
+import { OldBalancesButton } from '@/features/accounts/components/old-balances-dialog'
 import { accountsService } from '@/features/accounts/services/accounts-service'
 import { tierNameKeys } from '@/features/loyalty/components/tier-name'
 import { useLoyaltyAccounts } from '@/features/loyalty/hooks/use-loyalty'
@@ -302,7 +303,12 @@ export function Customers() {
     <Main fixed>
       <PageHeader
         title={t('customers')}
-        actions={<AddCustomerButton onOpenCustomer={select} />}
+        actions={
+          <>
+            {features.tabs && <OldBalancesButton />}
+            <AddCustomerButton onOpenCustomer={select} />
+          </>
+        }
       >
         <CustomerStats />
       </PageHeader>
