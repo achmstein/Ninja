@@ -198,6 +198,43 @@ public sealed class StockWriteToolsTests
     }
 
     [TestMethod]
+    public async Task A_delivery_adds_what_is_not_kept_yet_in_the_same_go()
+    {
+        var bench = Storeroom();
+        bench.Handler.OnJson("POST", "inventory-api/api/inventory/items", _ => new { id = 40 });
+        bench.Handler.OnJson("POST", "inventory-api/api/inventory/purchases", _ => new { id = 502 });
+        var tools = Tools(bench);
+
+        // Without a unit for it, the unknown line is refused with the way on, and nothing is written
+        var refused = await tools.RecordPurchase([new("beans", 1, UnitCost: 600, Unit: "kg"), new("Oat milk", 6, UnitCost: 90, Unit: "l")], branch: "Maadi");
+        Assert.IsTrue(refused.IsError);
+        StringAssert.Contains(Bench.TextOf(refused), "NewUnit");
+        // A retired item of that name is not added a second time
+        Assert.IsTrue((await tools.RecordPurchase([new("Hazelnut syrup", 1, UnitCost: 50, NewUnit: "ml")], branch: "Maadi")).IsError);
+
+        List<StockWriteTools.PurchaseLine> lines =
+            [new("beans", 1, UnitCost: 600, Unit: "kg"), new("Oat milk", 6, UnitCost: 90, Unit: "l", NewUnit: "ml", NameAr: "لبن شوفان")];
+        var preview = Bench.JsonOf(await tools.RecordPurchase(lines, "abu auf", branch: "Maadi", requestId: "p3"));
+        var text = preview.GetProperty("preview").GetString()!;
+        StringAssert.Contains(text, "- Oat milk / لبن شوفان (new): 6 l = 6000 ml, EGP 540 (90 per l)");
+        StringAssert.Contains(text, "New stock items, added first:\n- Oat milk / لبن شوفان, counted in ml");
+        Assert.AreEqual(1, preview.GetProperty("warnings").GetArrayLength());
+        Assert.IsFalse(Wrote(bench));
+
+        var done = Bench.JsonOf(await tools.RecordPurchase(lines, "abu auf", branch: "Maadi", requestId: "p3", confirm: true));
+        Assert.AreEqual(502, done.GetProperty("purchaseId").GetInt32());
+        var posts = bench.Handler.Requests.Where(r => r.Method == HttpMethod.Post).ToList();
+        Assert.AreEqual(2, posts.Count, "the item, then the delivery");
+        Assert.AreEqual(Key(StockWriteTools.PurchaseTool, "p3", "item-0"), posts[0].RequestId);
+        Assert.AreEqual("ml", BodyOf(posts[0]).GetProperty("unit").GetString());
+        var delivered = BodyOf(posts[1]).GetProperty("lines");
+        Assert.AreEqual(11, delivered[0].GetProperty("stockItemId").GetInt32());
+        Assert.AreEqual(40, delivered[1].GetProperty("stockItemId").GetInt32());
+        Assert.AreEqual(6000m, delivered[1].GetProperty("quantity").GetDecimal());
+        Assert.AreEqual(0.09m, delivered[1].GetProperty("unitCost").GetDecimal());
+    }
+
+    [TestMethod]
     public async Task A_count_shows_the_differences_then_posts_what_was_found()
     {
         var bench = Storeroom();

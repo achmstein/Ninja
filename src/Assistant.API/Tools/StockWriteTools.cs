@@ -48,7 +48,9 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         [property: Description("How much came, in the item's own unit or in Unit")] decimal Quantity,
         [property: Description("The price per unit (per Unit when given); or give Total")] decimal? UnitCost = null,
         [property: Description("What the line cost in all, instead of UnitCost")] decimal? Total = null,
-        [property: Description("kg, g, l, ml or pcs when not the item's own unit")] string? Unit = null);
+        [property: Description("kg, g, l, ml or pcs when not the item's own unit")] string? Unit = null,
+        [property: Description("Only for an item that is not a stock item yet, to add it with this delivery: what it is counted in, g, ml or pcs (kg goes in g, litres in ml). Item is then its name")] string? NewUnit = null,
+        [property: Description("With NewUnit: the new item's Arabic name, when the invoice or the owner gives both")] string? NameAr = null);
 
     // --- Stock items ----------------------------------------------------------
 
@@ -274,7 +276,8 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
 
     [McpServerTool(Name = PurchaseTool, Title = "Receive a delivery into stock", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
     [Description("Receives a delivery into one branch's stock from a supplier's invoice: each line's stock item, quantity and price. It raises what the branch has, sets its average costs, and tells Finance what the supplier is owed. " +
-        "Use for 'we got 10 kg of beans from Abu Auf at 600 a kilo and 20 litres of milk at 35', 'receive invoice 4471'. " + WriteFlow.ConfirmDescription)]
+        "A line for something the business does not keep in stock yet is added in the same go: give that line NewUnit (g, ml or pcs) and the one preview shows the new stock items with the delivery, so the owner agrees once. Do this only after the tool has said no stock item matches, and never for one that is on the shelf under another name. " +
+        "Use for 'we got 10 kg of beans from Abu Auf at 600 a kilo and 20 litres of milk at 35', 'receive invoice 4471', a photo of a supplier's receipt. " + WriteFlow.ConfirmDescription)]
     public async Task<CallToolResult> RecordPurchase(
         [Description("The lines: each stock item (name or id), how much came, and its unit price or the line's total")] List<PurchaseLine> lines,
         [Description("The supplier: a supplier on the books (name or id) or just a name")] string? supplier = null,
@@ -291,21 +294,59 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         var (at, shelf, error) = await ShelfAsync(snapshot.Value!, branch, ct);
         if (at is null) return ToolResults.Fail(error!);
 
-        var posted = new List<PurchaseLineInput>();
+        // A line is for a stock item on the shelf, or (NewUnit given) for one this delivery adds first
+        var planned = new List<(int? StockItemId, int? NewIndex, decimal Quantity, decimal UnitCost)>();
+        var adding = new List<(LocalizedText Name, string Unit)>();
         var described = new StringBuilder();
+        List<StockItemView>? everyItem = null;
         foreach (var line in lines)
         {
             var (item, missing) = Pick(shelf!, line.Item);
-            if (item is null) return ToolResults.Fail(missing!);
-            if (line.Quantity <= 0) return ToolResults.Fail($"Say how much \"{item.Name?.Both}\" came.");
-            var (factor, unitError) = Factor(line.Unit, item.Unit);
+            string name, itemUnit;
+            int? newIndex = null;
+            if (item is not null)
+            {
+                (name, itemUnit) = (item.Name?.Both ?? line.Item, item.Unit ?? "");
+            }
+            else
+            {
+                if (missing!.StartsWith("Several", StringComparison.Ordinal) || string.IsNullOrWhiteSpace(line.Item) || int.TryParse(line.Item.Trim(), out _))
+                    return ToolResults.Fail(missing);
+                if (string.IsNullOrWhiteSpace(line.NewUnit))
+                    return ToolResults.Fail($"No stock item matches '{line.Item}'. If it is on the shelf under another name, send that name; if it is new, send the delivery again with NewUnit (g, ml or pcs) on that line and it is added with the delivery, in one preview.");
+                var baseUnit = BaseUnit(line.NewUnit);
+                if (baseUnit is null) return ToolResults.Fail($"NewUnit for '{line.Item}' must be g, ml or pcs (a kilo is 1000 g, a litre 1000 ml).");
+                var given = MenuWriteTools.Localized(line.Item);
+                if (MenuWriteTools.Clean(line.NameAr) is { } ar) given = new LocalizedText(given.En, ar);
+                // A retired item of that name is brought back by hand, not added a second time
+                if (everyItem is null)
+                {
+                    var all = await api.GetAsync<List<StockItemView>>(Inventory, "/api/inventory/items?includeInactive=true", null, ct);
+                    if (!all.IsOk) return ToolResults.Fail(all.Error!);
+                    everyItem = all.Value!;
+                }
+                if (everyItem.FirstOrDefault(i => !i.IsActive && MenuWriteTools.Same(i.Name, given)) is { } retired)
+                    return ToolResults.Fail($"\"{retired.Name?.Both}\" is a retired stock item (id {retired.Id}); update_stock_item with active=true brings it back, then receive the delivery.");
+                // The same new item on two lines is one item
+                var index = adding.FindIndex(n => MenuWriteTools.Same(n.Name, given));
+                if (index < 0)
+                {
+                    adding.Add((given, baseUnit));
+                    index = adding.Count - 1;
+                }
+                else if (adding[index].Unit != baseUnit)
+                    return ToolResults.Fail($"\"{given.Both}\" is on two lines with two units; it is counted in one.");
+                newIndex = index;
+                (name, itemUnit) = (given.Both + " (new)", baseUnit);
+            }
+            if (line.Quantity <= 0) return ToolResults.Fail($"Say how much \"{name}\" came.");
+            var (factor, unitError) = Factor(line.Unit, itemUnit);
             if (unitError is not null) return ToolResults.Fail(unitError);
             var amount = line.Quantity * factor;
             var unitCost = line.Total is { } total ? total / amount : line.UnitCost is { } each ? each / factor : (decimal?)null;
-            if (unitCost is not >= 0) return ToolResults.Fail($"Say what \"{item.Name?.Both}\" cost: its unit price or the line's total.");
-            posted.Add(new PurchaseLineInput(item.StockItemId, amount, Math.Round(unitCost.Value, 6)));
-            var u = item.Unit ?? "";
-            described.AppendLine($"- {item.Name?.Both}: {(factor != 1 ? $"{line.Quantity:0.###} {line.Unit!.Trim()} = " : "")}{Qty(amount, u)}, {currency} {ToolResults.Money(amount * unitCost.Value)}" + (factor != 1 && line.UnitCost is { } said ? $" ({ToolResults.Money(said)} per {line.Unit!.Trim()})" : ""));
+            if (unitCost is not >= 0) return ToolResults.Fail($"Say what \"{name}\" cost: its unit price or the line's total.");
+            planned.Add((item?.StockItemId, newIndex, amount, Math.Round(unitCost.Value, 6)));
+            described.AppendLine($"- {name}: {(factor != 1 ? $"{line.Quantity:0.###} {line.Unit!.Trim()} = " : "")}{Qty(amount, itemUnit)}, {currency} {ToolResults.Money(amount * unitCost.Value)}" + (factor != 1 && line.UnitCost is { } said ? $" ({ToolResults.Money(said)} per {line.Unit!.Trim()})" : ""));
         }
 
         var warnings = new List<string>();
@@ -324,12 +365,35 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
             else warnings.Add($"The suppliers could not be read ({suppliers.Error}); the delivery is recorded under the name given.");
         }
 
-        var totalCost = posted.Sum(p => p.Quantity * p.UnitCost);
+        var totalCost = planned.Sum(p => p.Quantity * p.UnitCost);
         var preview = $"Receive at {at.BothNames}" + (supplierName is null ? "" : $" from {supplierName}") + (invoiceRef is null ? "" : $", invoice {invoiceRef.Trim()}")
-            + $", {currency} {ToolResults.Money(totalCost)} in all:\n" + described.ToString().TrimEnd();
+            + $", {currency} {ToolResults.Money(totalCost)} in all:\n" + described.ToString().TrimEnd()
+            + (adding.Count == 0 ? "" : "\nNew stock items, added first:\n" + string.Join("\n", adding.Select(n => $"- {n.Name.Both}, counted in {n.Unit}")));
+        if (adding.Count > 0) warnings.Add("The new stock items are not on the shelf under any name the invoice used; if one of them is the same thing as an item already kept, say which instead of adding it.");
         requestId ??= WriteFlow.NewRequestId();
         if (!confirm) return ToolResults.Ok(new { preview, warnings, requestId, nextStep = WriteFlow.NextStep });
         if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+
+        // The new items first, each under its own key: a confirm sent twice adds none twice
+        var newIds = new int[adding.Count];
+        for (var i = 0; i < adding.Count; i++)
+        {
+            var (newName, newUnit) = adding[i];
+            var created = await api.SendAsync<CreatedResponse>(HttpMethod.Post, Inventory, "/api/inventory/items", null,
+                new StockItemRequest(newName, newUnit, null, null, false), flow.StepKey(PurchaseTool, requestId, $"item-{i}"), ct);
+            flow.Audit(CreateTool, new { name = newName.Display, unit = newUnit, with = PurchaseTool, requestId }, created.IsOk ? $"stock item {created.Value!.Id}" : created.Error!);
+            if (!created.IsOk) return ToolResults.Fail($"\"{newName.Both}\" could not be added ({created.Error}); nothing was received. Confirm again to carry on.");
+            var id = created.Value!.Id;
+            if (id == 0)
+            {
+                // Already added by an earlier confirm, which answers without the id: the one by that name is it
+                var all = await api.GetAsync<List<StockItemView>>(Inventory, "/api/inventory/items?includeInactive=true", null, ct);
+                id = all.IsOk ? all.Value!.FirstOrDefault(s => MenuWriteTools.Same(s.Name, newName))?.Id ?? 0 : 0;
+                if (id == 0) return ToolResults.Fail($"\"{newName.Both}\" was added but could not be read back; receive the delivery again by its name.");
+            }
+            newIds[i] = id;
+        }
+        var posted = planned.Select(p => new PurchaseLineInput(p.StockItemId ?? newIds[p.NewIndex!.Value], p.Quantity, p.UnitCost)).ToList();
 
         var result = await api.SendAsync<CreatedResponse>(HttpMethod.Post, Inventory, "/api/inventory/purchases", at.Id,
             new PurchaseRequest(supplierName, MenuWriteTools.Clean(invoiceRef), posted, supplierId), flow.StepKey(PurchaseTool, requestId, "purchase"), ct);
