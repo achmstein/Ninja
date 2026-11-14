@@ -99,6 +99,8 @@ const dictionary = {
   failedToConfirmOrder: { en: "Could not confirm the order", ar: "تعذّر تأكيد الطلب" },
   failedToCancelOrder: { en: "Could not cancel the order", ar: "تعذّر إلغاء الطلب" },
   newOrderToast: { en: "New order #{orderId}", ar: "طلب جديد #\u200F{orderId}" },
+  tillOrderToast: { en: "Order #{orderId} rung up at another till", ar: "الطلب #\u200F{orderId} اتسجّل من كاشير تاني" },
+  tillOrderToastBy: { en: "Order #{orderId} rung up by {name}", ar: "الطلب #\u200F{orderId} سجّله {name}" },
   newOrderToastFrom: { en: "New order #{orderId} from {name}", ar: "طلب جديد #\u200F{orderId} من {name}" },
   orderWaitingToast: { en: "Order #{orderId} has been waiting {minutes} min", ar: "الطلب #\u200F{orderId} ينتظر منذ {minutes} دقيقة" },
   justNow: { en: "just now", ar: "الآن" },

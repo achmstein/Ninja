@@ -1,4 +1,4 @@
-﻿using Ninja.EventBus.Abstractions;
+using Ninja.EventBus.Abstractions;
 using Ninja.Notification.API.Hubs;
 using Ninja.Notification.API.IntegrationEvents.Events;
 using Ninja.Notification.API.Localization;
@@ -28,7 +28,10 @@ public class OrderSubmittedIntegrationEventHandler(
             type = "order_submitted",
             orderId = @event.OrderId,
             buyerName = @event.BuyerName,
-            branchId = @event.BranchId
+            branchId = @event.BranchId,
+            // A till stays quiet about what it rang up itself, and tells its cashier who rang up the rest
+            source = @event.Source,
+            takenBy = @event.TakenByName
         });
 
         // The customer's personal group — their identity when signed in, their

@@ -53,6 +53,8 @@ import {
 } from '@/features/orders/use-pending-orders'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
+import { cn } from '@/lib/utils'
+import { useFreshBills } from '@/stores/fresh-bills'
 import { useMoney, toNumber } from '@/lib/money'
 import { TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import {
@@ -86,6 +88,7 @@ function BillCard({
   waiting,
   delivery,
   nowMs,
+  fresh,
   onClick,
 }: {
   ticket: TicketSummary
@@ -94,6 +97,8 @@ function BillCard({
   /** The bill of an order going out with a rider */
   delivery: boolean
   nowMs: number
+  /** Just opened, or just had something added: the card pops once */
+  fresh: boolean
   onClick: () => void
 }) {
   const t = useT()
@@ -112,7 +117,10 @@ function BillCard({
     <button
       type='button'
       onClick={onClick}
-      className='bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 rounded-xl border p-3 text-start'
+      className={cn(
+        'bg-card hover:bg-accent/50 flex min-h-28 flex-col gap-2 rounded-xl border p-3 text-start',
+        fresh && 'animate-arrived',
+      )}
     >
       <div className='flex items-start gap-2'>
         <Icon className='text-muted-foreground mt-0.5 size-4 shrink-0' />
@@ -151,6 +159,7 @@ function BillCard({
  * building — the list scrolls and searches, the bills are only the open ones.
  */
 export function Floor() {
+  const freshBills = useFreshBills((s) => s.ids)
   const t = useT()
   const localized = useLocalized()
   const locale = useLocale()
@@ -631,6 +640,7 @@ export function Floor() {
                   waiting={waitingIds.has(toNumber(ticket.id))}
                   delivery={deliveryOrders.has(deliveryOrderOfLabel(ticket.label) ?? -1)}
                   nowMs={nowMs}
+                  fresh={toNumber(ticket.id) in freshBills}
                   onClick={() => toTicket(ticket)}
                 />
               ))}

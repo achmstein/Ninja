@@ -1,6 +1,7 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
 import { isConnectionError, networkStatus } from '@/lib/network-status'
+import { trackOwnOrders } from '@/lib/own-orders'
 import { getActiveBranchId } from '@/stores/branch-store'
 
 // Version sent with every API call; generated clients require it explicitly.
@@ -51,3 +52,6 @@ apiClient.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// The sales this till sends are remembered, so it does not alert its own cashier about them (lib/own-orders.ts)
+trackOwnOrders(apiClient)

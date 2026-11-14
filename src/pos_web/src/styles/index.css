@@ -169,6 +169,41 @@
   animation: landed 1200ms ease-out both;
 }
 
+/* A bill that just appeared on the floor, or just had something added: its card
+   pops once with a ring that spreads and fades, so the eye goes to where it
+   happened. Only the tint where the system asks for less motion */
+@keyframes arrived {
+  0% {
+    transform: scale(0.94);
+    background-color: color-mix(in oklab, var(--primary) 14%, var(--card));
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--primary) 45%, transparent);
+  }
+  45% {
+    transform: scale(1.04);
+  }
+  100% {
+    transform: scale(1);
+    background-color: var(--card);
+    box-shadow: 0 0 0 14px transparent;
+  }
+}
+
+@keyframes arrived-still {
+  from {
+    background-color: color-mix(in oklab, var(--primary) 14%, var(--card));
+  }
+  to {
+    background-color: var(--card);
+  }
+}
+
+@utility animate-arrived {
+  animation: arrived 900ms cubic-bezier(0.22, 1, 0.36, 1);
+  @media (prefers-reduced-motion: reduce) {
+    animation: arrived-still 1200ms ease-out;
+  }
+}
+
 @utility no-scrollbar {
   /* Hide scrollbar for Chrome, Safari and Opera */
   &::-webkit-scrollbar {

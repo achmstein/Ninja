@@ -1,4 +1,4 @@
-﻿#nullable enable
+#nullable enable
 namespace Ninja.Ordering.API.Application.IntegrationEvents.Events;
 
 public record OrderStatusChangedToSubmittedIntegrationEvent : IntegrationEvent
@@ -15,9 +15,21 @@ public record OrderStatusChangedToSubmittedIntegrationEvent : IntegrationEvent
     /// </summary>
     public string? GuestId { get; }
 
+    /// <summary>
+    /// Where the order came from (Customer, Guest, Pos, Talabat), so a till can tell an order a
+    /// guest sent, which waits for a tap, from one a cashier rang up, which is only news to the other tills.
+    /// </summary>
+    public string? Source { get; }
+
+    /// <summary>The cashier who rang it up, for an order made at a till.</summary>
+    public string? TakenByName { get; }
+
     public OrderStatusChangedToSubmittedIntegrationEvent(
-        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1, string? guestId = null)
+        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1, string? guestId = null,
+        string? source = null, string? takenByName = null)
     {
+        Source = source;
+        TakenByName = takenByName;
         OrderId = orderId;
         OrderStatus = orderStatus;
         BuyerName = buyerName;

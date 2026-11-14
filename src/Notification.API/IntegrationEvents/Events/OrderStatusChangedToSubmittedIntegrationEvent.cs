@@ -14,9 +14,18 @@ public record OrderStatusChangedToSubmittedIntegrationEvent : IntegrationEvent
     /// <summary>Set instead of BuyerIdentityGuid when a guest placed the order.</summary>
     public string? GuestId { get; }
 
+    /// <summary>Where the order came from (Customer, Guest, Pos, Talabat); absent from an older Ordering.</summary>
+    public string? Source { get; }
+
+    /// <summary>The cashier who rang it up, for an order made at a till.</summary>
+    public string? TakenByName { get; }
+
     public OrderStatusChangedToSubmittedIntegrationEvent(
-        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1, string? guestId = null)
+        int orderId, OrderStatus orderStatus, string buyerName, string buyerIdentityGuid, int branchId = 1, string? guestId = null,
+        string? source = null, string? takenByName = null)
     {
+        Source = source;
+        TakenByName = takenByName;
         OrderId = orderId;
         OrderStatus = orderStatus;
         BuyerName = buyerName;

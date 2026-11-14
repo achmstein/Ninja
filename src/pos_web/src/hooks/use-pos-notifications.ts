@@ -5,9 +5,11 @@ import { getBranchesQueryKey } from '@/api/tenant/@tanstack/react-query.gen'
 import type { BranchResponse } from '@/api/tenant/types.gen'
 import { getStoredUser } from '@/config/oidc-config'
 import { translate, useLanguage } from '@/lib/i18n'
+import { isOwnOrder } from '@/lib/own-orders'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { noteOpenBills } from '@/stores/fresh-bills'
 
 /** A phone delivery another branch's till took and sent to one of the business's branches */
 type OrderSentToBranchEvent = {
@@ -24,6 +26,10 @@ type OrderStatusChangedEvent = {
   reminderCount?: number
   minutesPending?: number
   branchId?: number
+  /** Where the order came from: Customer, Guest, Pos, Talabat. Absent from an older stack */
+  source?: string | null
+  /** The cashier who rang it up, for an order made at a till */
+  takenBy?: string | null
 }
 
 /** A branch by name, in the till's language, off the cached branch list; its number when the list lacks it */
@@ -111,15 +117,30 @@ export function usePosNotifications() {
       if (!isForActiveBranch(event)) return
       if (event?.type === 'order_submitted') {
         const orderId = event.orderId ?? 0
-        playAlertSound()
-        toast.info(
-          event.buyerName
-            ? translate('newOrderToastFrom', {
-                orderId,
-                name: event.buyerName,
-              })
-            : translate('newOrderToast', { orderId }),
-        )
+        // The till that rang it up says nothing: its cashier just did it, and the
+        // floor shows it land. Every other till at the branch is told
+        void isOwnOrder(orderId).then((own) => {
+          if (own) return
+          // An order rung up at another till needs nothing from this one: a
+          // quiet line saying who took it. The chime is kept for what waits for a tap
+          if (event.source === 'Pos') {
+            toast.info(
+              event.takenBy
+                ? translate('tillOrderToastBy', { orderId, name: event.takenBy })
+                : translate('tillOrderToast', { orderId }),
+            )
+            return
+          }
+          playAlertSound()
+          toast.info(
+            event.buyerName
+              ? translate('newOrderToastFrom', {
+                  orderId,
+                  name: event.buyerName,
+                })
+              : translate('newOrderToast', { orderId }),
+          )
+        })
       }
       if (event?.type === 'order_reminder') {
         const reminderCount = event.reminderCount ?? 1
@@ -200,6 +221,16 @@ export function usePosNotifications() {
       invalidateBranches()
     })
 
+    // Every fetch of the open bills is compared with the one before: a bill that is new, or
+    // has something new on it, is marked for the floor to show landing (stores/fresh-bills.ts)
+    const stopWatchingBills = queryClient.getQueryCache().subscribe((cacheEvent) => {
+      if (cacheEvent.type !== 'updated' || cacheEvent.action.type !== 'success') return
+      const key = cacheEvent.query.queryKey[0] as { _id?: string } | undefined
+      if (key?._id !== 'getOpenTickets') return
+      const bills = cacheEvent.query.state.data
+      if (Array.isArray(bills)) noteOpenBills(bills, getActiveBranchId())
+    })
+
     const joinGroup = () =>
       Promise.all([
         connection.invoke('JoinAdminGroup'),
@@ -256,6 +287,7 @@ export function usePosNotifications() {
 
     return () => {
       disposed = true
+      stopWatchingBills()
       document.removeEventListener('visibilitychange', handleVisibility)
       connection.stop().catch(() => {})
     }

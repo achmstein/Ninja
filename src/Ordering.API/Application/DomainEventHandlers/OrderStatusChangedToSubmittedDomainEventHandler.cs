@@ -40,7 +40,9 @@ public class OrderStatusChangedToSubmittedDomainEventHandler(
             buyer?.Name ?? order.GuestName ?? "Walk-in",
             buyer?.IdentityGuid ?? string.Empty,
             order.BranchId,
-            buyer is null ? order.GuestId : null);
+            buyer is null ? order.GuestId : null,
+            order.Source.ToString(),
+            order.TakenByName);
 
         await orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);
     }
