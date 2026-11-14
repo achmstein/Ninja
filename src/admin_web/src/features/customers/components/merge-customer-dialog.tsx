@@ -60,12 +60,12 @@ export function MergeCustomerDialog({
   const [into, setInto] = useState<Customer | null>(null)
   const search = useDebounced(term.trim(), 300)
 
-  useEffect(() => {
-    if (!open) {
-      setTerm('')
-      setInto(null)
-    }
-  }, [open])
+  // Closed by any way out, it opens empty the next time
+  const close = () => {
+    setTerm('')
+    setInto(null)
+    onOpenChange(false)
+  }
 
   const matches = useQuery({
     queryKey: [...customersKeys.all, 'merge', search],
@@ -92,7 +92,7 @@ export function MergeCustomerDialog({
         t('mergeDone', { name: into ? getCustomerDisplayName(into) : '' })
       )
       const keptId = into!.id
-      onOpenChange(false)
+      close()
       onMerged(keptId)
     },
     onError: () => toast.error(t('mergeFailed')),
@@ -103,7 +103,11 @@ export function MergeCustomerDialog({
   return (
     <Dialog
       open={open}
-      onOpenChange={(next) => !merge.isPending && onOpenChange(next)}
+      onOpenChange={(next) => {
+        if (merge.isPending) return
+        if (next) onOpenChange(true)
+        else close()
+      }}
     >
       <DialogContent className='sm:max-w-md'>
         <DialogHeader>
@@ -201,7 +205,7 @@ export function MergeCustomerDialog({
             <Button
               type='button'
               variant='outline'
-              onClick={() => onOpenChange(false)}
+              onClick={close}
             >
               {t('cancel')}
             </Button>
