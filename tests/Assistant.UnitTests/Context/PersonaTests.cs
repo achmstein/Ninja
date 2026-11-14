@@ -15,7 +15,9 @@ public sealed class PersonaTests
         StringAssert.StartsWith(brief, "You are Ninja, the operations partner of this business", "it is always Ninja");
         StringAssert.Contains(brief, "Never guess or invent a number");
         StringAssert.Contains(brief, "confirm=true and the same requestId", "the write rule is always there");
-        StringAssert.Contains(brief, "- Brief:");
+        StringAssert.Contains(brief, "- Brief: answer only what was asked");
+        StringAssert.Contains(brief, "Add nothing that was not asked for");
+        Assert.DoesNotContain("two things worth noticing", brief, "brief is the answer alone");
         StringAssert.Contains(brief, "Friendly");
         StringAssert.Contains(brief, "in the language the owner writes in");
         StringAssert.Contains(brief, "Answering in Arabic, use the Arabic name", "names follow the language of the answer");
@@ -29,6 +31,7 @@ public sealed class PersonaTests
 
         StringAssert.StartsWith(brief, "You are Ninja, the operations partner of Olive & Bean");
         StringAssert.Contains(brief, "- Detailed:");
+        StringAssert.Contains(brief, "two things worth noticing", "detailed keeps the extras");
         StringAssert.Contains(brief, "Formal and precise");
         StringAssert.Contains(brief, "Egyptian Arabic");
         StringAssert.Contains(brief, "you are Ninja, Olive & Bean's assistant");
