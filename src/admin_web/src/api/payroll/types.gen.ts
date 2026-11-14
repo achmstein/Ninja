@@ -181,6 +181,7 @@ export type UpdateEmployeeRequest = {
     branchId: number | string;
     userId: null | string;
     paidDaysOff?: null | number | string;
+    startedOn?: null | string;
 };
 
 export type GetEmployeesData = {

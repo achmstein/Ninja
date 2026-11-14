@@ -138,7 +138,9 @@ export function EmployeeForm({
     String(employee?.branchId ?? activeBranchId ?? '')
   )
   const [userId, setUserId] = useState<string | null>(employee?.userId ?? null)
-  const [startedOn, setStartedOn] = useState(formatDay(new Date()))
+  const [startedOn, setStartedOn] = useState(
+    employee?.startedOn ?? formatDay(new Date())
+  )
   const [scheme, setScheme] = useState(String(PAY_SCHEME.daily))
   const [rate, setRate] = useState('')
   const [paidDaysOff, setPaidDaysOff] = useState(
@@ -184,7 +186,12 @@ export function EmployeeForm({
     e.preventDefault()
     try {
       if (employee) {
-        await update(toNumber(employee.id), common)
+        // The start date goes only when it was put right: the pay they
+        // started on and the months it touches move with it
+        await update(toNumber(employee.id), {
+          ...common,
+          ...(startedOn !== employee.startedOn && { startedOn }),
+        })
       } else {
         await hire({
           ...common,
@@ -365,6 +372,21 @@ export function EmployeeForm({
         </div>
         <InfoTip className='self-end'>{t('paidDaysOffHint')}</InfoTip>
       </div>
+
+      {/* A start date keyed in wrong is put right here */}
+      {employee && (
+        <div className='grid gap-4 sm:grid-cols-2'>
+          <div className='flex flex-col gap-1.5'>
+            <Label htmlFor='emp-started'>{t('startedOn')}</Label>
+            <DatePicker
+              id='emp-started'
+              value={startedOn}
+              onChange={setStartedOn}
+            />
+          </div>
+          <InfoTip className='self-end'>{t('startedOnHint')}</InfoTip>
+        </div>
+      )}
 
       {inSheet ? (
         <SheetActions>{saveButton}</SheetActions>

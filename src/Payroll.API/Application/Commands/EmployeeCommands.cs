@@ -55,9 +55,15 @@ public record UpdateEmployeeCommand(
     string? Phone,
     int BranchId,
     string? UserId,
-    int PaidDaysOff = Employee.DefaultPaidDaysOff) : IRequest<bool>;
+    int PaidDaysOff = Employee.DefaultPaidDaysOff,
+    // A start date keyed in wrong, put right; null leaves it as it is
+    DateOnly? StartedOn = null) : IRequest<bool>;
 
-public class UpdateEmployeeCommandHandler(IEmployeeRepository employees) : IRequestHandler<UpdateEmployeeCommand, bool>
+public class UpdateEmployeeCommandHandler(
+    IEmployeeRepository employees,
+    IPayslipRepository payslips,
+    IPayslipGenerator generator,
+    IMediator mediator) : IRequestHandler<UpdateEmployeeCommand, bool>
 {
     public async Task<bool> Handle(UpdateEmployeeCommand command, CancellationToken cancellationToken)
     {
@@ -67,8 +73,51 @@ public class UpdateEmployeeCommandHandler(IEmployeeRepository employees) : IRequ
         await EmployeeCommands.EnsureLoginFreeAsync(employees, command.UserId, command.Id);
 
         employee.Update(command.Name, command.JobTitle, command.Phone, command.BranchId, command.UserId, command.PaidDaysOff);
+
+        var startedBefore = employee.StartedOn;
+        var startMoved = command.StartedOn is { } startedOn && employee.CorrectStart(startedOn);
+
         await employees.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        if (startMoved)
+            await RedoPayslipsAsync(employee, startedBefore, cancellationToken);
+
         return true;
+    }
+
+    /// <summary>
+    /// The months between the old start and the new one are worth something
+    /// else now: their drafts are worked out again, and a draft for a month
+    /// the person turns out not to have worked in goes. Paid months stay.
+    /// </summary>
+    private async Task RedoPayslipsAsync(Employee employee, DateOnly startedBefore, CancellationToken cancellationToken)
+    {
+        var today = EmployeeCommands.Today();
+        var thisMonth = new DateOnly(today.Year, today.Month, 1);
+        var from = startedBefore < employee.StartedOn ? startedBefore : employee.StartedOn;
+        var to = startedBefore < employee.StartedOn ? employee.StartedOn : startedBefore;
+
+        var months = new SortedSet<DateOnly> { thisMonth };
+        for (var month = new DateOnly(from.Year, from.Month, 1); month <= to; month = month.AddMonths(1))
+            months.Add(month);
+
+        foreach (var month in months)
+        {
+            var draft = await payslips.FindAsync(employee.Id, month);
+
+            // A month never generated stays that way, as after a hire: only this month is made
+            if (draft is null && month != thisMonth)
+                continue;
+
+            if (employee.DaysEmployed(month, month.AddMonths(1).AddDays(-1)) == 0)
+            {
+                if (draft is { IsPaid: false })
+                    await mediator.Send(new DeletePayslipCommand(draft.Id), cancellationToken);
+                continue;
+            }
+
+            await generator.RefreshCurrentAsync([employee], month, "system");
+        }
     }
 }
 

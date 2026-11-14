@@ -1268,6 +1268,7 @@ const webExtras = {
   noLogin: { en: "No login", ar: "بدون حساب" },
   hasLogin: { en: "Has login", ar: "لديه حساب" },
   startedOn: { en: "Started on", ar: "تاريخ البدء" },
+  startedOnHint: { en: "Entered the wrong date? Change it here: their pay and the month's payslip follow it.", ar: "تاريخ خاطئ؟ عدّله هنا، وسيتبعه الأجر وكشف راتب الشهر." },
   pay: { en: "Pay", ar: "الأجر" },
   payScheme: { en: "Paid", ar: "طريقة المحاسبة" },
   payDaily: { en: "By the day", ar: "باليومية" },

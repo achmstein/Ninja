@@ -33,7 +33,7 @@ public static class PayrollApi
 
         api.MapPut("/employees/{id:int}", UpdateEmployee)
             .WithName("UpdateEmployee")
-            .WithSummary("Edit name, job, phone, branch or the linked login");
+            .WithSummary("Edit name, job, phone, branch or the linked login, or put a wrong start date right");
 
         // Changing what someone is paid is the owner's call, not the
         // branch manager's; a hire's starting pay stays with the manager
@@ -149,7 +149,7 @@ public static class PayrollApi
     {
         try
         {
-            await mediator.Send(new UpdateEmployeeCommand(id, request.Name, request.JobTitle, PhoneRules.Tidy(request.Phone, country.Code), request.BranchId, request.UserId, request.PaidDaysOff ?? Employee.DefaultPaidDaysOff));
+            await mediator.Send(new UpdateEmployeeCommand(id, request.Name, request.JobTitle, PhoneRules.Tidy(request.Phone, country.Code), request.BranchId, request.UserId, request.PaidDaysOff ?? Employee.DefaultPaidDaysOff, request.StartedOn));
             return TypedResults.Ok();
         }
         catch (PayrollDomainException ex)
@@ -359,7 +359,7 @@ public record HireEmployeeRequest(
     decimal Rate,
     int? PaidDaysOff = null);
 
-public record UpdateEmployeeRequest(string Name, string? JobTitle, string? Phone, int BranchId, string? UserId, int? PaidDaysOff = null);
+public record UpdateEmployeeRequest(string Name, string? JobTitle, string? Phone, int BranchId, string? UserId, int? PaidDaysOff = null, DateOnly? StartedOn = null);
 
 public record PayTermsRequest(PayScheme Scheme, decimal Rate, DateOnly EffectiveFrom);
 

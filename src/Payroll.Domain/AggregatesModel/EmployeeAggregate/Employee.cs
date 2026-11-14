@@ -103,6 +103,34 @@ public class Employee : Entity, IAggregateRoot
         EndedOn = null;
     }
 
+    /// <summary>
+    /// The start date was keyed in wrong: put it right. The pay the person
+    /// started on moves with it, so no day of theirs is left without terms.
+    /// Answers whether anything changed.
+    /// </summary>
+    public bool CorrectStart(DateOnly startedOn)
+    {
+        if (startedOn == StartedOn)
+            return false;
+
+        if (EndedOn is { } ended && startedOn > ended)
+            throw new PayrollDomainException("Someone cannot start after they left.");
+
+        var first = _terms.MinBy(t => t.EffectiveFrom);
+        if (first is not null && (first.EffectiveFrom == StartedOn || first.EffectiveFrom > startedOn))
+        {
+            if (_terms.Any(t => t != first && t.EffectiveFrom <= startedOn))
+                throw new PayrollDomainException("Their pay was changed before that date. Pick an earlier start date.");
+
+            _terms.Remove(first);
+            _terms.Add(new PayTerms(first.Scheme, first.Rate, startedOn));
+            _terms.Sort((a, b) => a.EffectiveFrom.CompareTo(b.EffectiveFrom));
+        }
+
+        StartedOn = startedOn;
+        return true;
+    }
+
     /// <summary>Whether the person was employed on a day, for attendance and proration.</summary>
     public bool EmployedOn(DateOnly date)
         => date >= StartedOn && (EndedOn is null || date <= EndedOn);
