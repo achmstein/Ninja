@@ -136,6 +136,20 @@ public record PayslipView(
 public sealed class RegisterScenarios
 {
     [TestMethod]
+    public async Task The_till_shows_what_a_salaried_employee_is_still_owed()
+    {
+        var branch = Suite.NewBranch();
+        var books = Suite.BackOfficeAt(branch);
+        await Suite.HireAsync(books, branch, "Reda", PayScheme.Monthly, 7000m);
+
+        var listed = (await books.GetAsync<List<EmployeeView>>(Suite.Url("/employees"))).Single();
+        var pick = (await Suite.TillAt(branch).GetAsync<List<TillEmployeeView>>($"/api/payroll/till/employees?{Suite.Version}")).Single();
+
+        Assert.IsNotNull(pick.Balance, "a salary is drawn on through the month, so the counter sees what is left of it");
+        Assert.AreEqual(listed.Balance, pick.Balance, "the same figure the back office shows");
+    }
+
+    [TestMethod]
     public async Task Someone_hired_is_on_the_register_with_the_pay_they_start_on()
     {
         var branch = Suite.NewBranch();

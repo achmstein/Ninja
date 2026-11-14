@@ -107,19 +107,16 @@ public class PayrollQueries(PayrollContext context) : IPayrollQueries
             .OrderBy(e => e.Name)
             .ToListAsync();
 
-        // A daily worker's balance is what the evening's pay-out hands over,
-        // so the cashier sees it. A monthly employee's is their salary and
-        // advances — the back office's business, not the counter's.
-        var daily = employees.Where(e => (e.CurrentTerms?.Scheme ?? PayScheme.Daily) == PayScheme.Daily).ToList();
-        var balances = await BalancesAsync(daily.Select(e => e.Id));
+        // What each is still owed, beside the name: the cashier hands the
+        // money over and should see how much is left to hand. A salaried
+        // employee draws on the month's salary through the month like a
+        // daily worker draws the day's wage, so both show it (the owner's
+        // call: until 2026-11-14 a salary's balance was kept from the counter)
+        var balances = await BalancesAsync(employees.Select(e => e.Id));
 
         return employees
-            .Select(e =>
-            {
-                var scheme = e.CurrentTerms?.Scheme ?? PayScheme.Daily;
-                decimal? balance = scheme == PayScheme.Daily ? balances.GetValueOrDefault(e.Id) : null;
-                return new TillEmployeeView(e.Id, e.Name, e.JobTitle, scheme, balance);
-            })
+            .Select(e => new TillEmployeeView(
+                e.Id, e.Name, e.JobTitle, e.CurrentTerms?.Scheme ?? PayScheme.Daily, balances.GetValueOrDefault(e.Id)))
             .ToList();
     }
 
