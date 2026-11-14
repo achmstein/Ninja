@@ -20,6 +20,7 @@ import { Main } from '@/components/layout/main'
 import { ListRow } from '@/components/list-row'
 import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
+import { Badge } from '@/components/ui/badge'
 import { StatusChip } from '@/components/status-chip'
 import { customersService } from '@/features/customers/services/customers-service'
 import {
@@ -87,16 +88,23 @@ export function StaffManagement() {
 
   const rolesOf = (user: (typeof staff)[number]) =>
     STAFF_ROLES.filter((role) => (user.realmRoles ?? []).includes(role)).map(
-      (role) => (
-        <StatusChip
-          key={role}
-          tone={
-            role === 'Owner' ? 'info' : role === 'Admin' ? 'success' : 'muted'
-          }
-        >
-          {roleLabel(role)}
-        </StatusChip>
-      )
+      // A role is a label, not a state: no status colour (blue and green
+      // said "scheduled" and "active" elsewhere). Rank is told by weight in
+      // the admin's own slate: the owner solid, an admin outlined, the rest quiet
+      (role) =>
+        role === 'Owner' ? (
+          <Badge key={role} className='rounded-full px-2'>
+            {roleLabel(role)}
+          </Badge>
+        ) : (
+          <StatusChip
+            key={role}
+            tone={role === 'Admin' ? 'outline' : 'muted'}
+            dot={false}
+          >
+            {roleLabel(role)}
+          </StatusChip>
+        )
     )
 
   const enabledSwitch = (user: (typeof staff)[number]) => (
