@@ -3,14 +3,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
   ArrowLeft,
-  Award,
   Ban,
   CircleCheck,
   MessageCircle,
   MoreHorizontal,
   Plus,
-  RefreshCw,
-  Wallet,
 } from 'lucide-react'
 import {
   getCustomerTopItemsOptions,
@@ -36,9 +33,9 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
-import { Section } from '@/components/section'
 import { When } from '@/components/when'
 import { AddChargeDialog } from '@/features/accounts/components/add-charge-dialog'
 import { RecordPaymentDialog } from '@/features/accounts/components/record-payment-dialog'
@@ -77,9 +74,11 @@ type CustomerPanelProps = {
 
 /**
  * The end side of the customers split: who this person is, then the three
- * things the business keeps about them and the actions on each — points,
- * tab, orders. Loads its own customer so a row from the owing or members
- * lists (which only carry an id and a name) opens the same panel.
+ * things the business keeps about them and the actions on each — tab,
+ * points, orders — one at a time, behind a switch: stacked, they were a
+ * page of figures, buttons and lists with no one thing to look at. Loads
+ * its own customer so a row from the owing or members lists (which only
+ * carry an id and a name) opens the same panel.
  */
 export function CustomerPanel({ customerId, onBack }: CustomerPanelProps) {
   const t = useT()
@@ -114,7 +113,6 @@ function CustomerHub({
 }) {
   const t = useT()
   const features = useFeatures()
-  const locale = useLocale()
   const queryClient = useQueryClient()
   const name = getCustomerDisplayName(customer)
   const [toggleOpen, setToggleOpen] = useState(false)
@@ -158,11 +156,13 @@ function CustomerHub({
               )}
               {customer.addedAtCounter && <AddedAtCounterBadge />}
             </div>
-            <p className='text-muted-foreground flex items-center gap-1 truncate text-xs'>
-              {[showPhone(customer.phoneNumber), customer.email]
-                .filter(Boolean)
-                .join(' · ') || customer.username}
-              {/* The customer on WhatsApp, from the owner's own account */}
+            {/* One way to reach them, not everything known about them: the
+                phone (with WhatsApp, from the owner's own account), or the
+                email of someone who gave no phone */}
+            <p className='text-muted-foreground flex items-center gap-1.5 truncate text-xs'>
+              {showPhone(customer.phoneNumber) ||
+                customer.email ||
+                customer.username}
               {customer.phoneNumber && (
                 <a
                   href={whatsAppLink(customer.phoneNumber)}
@@ -173,16 +173,6 @@ function CustomerHub({
                 >
                   <MessageCircle className='size-3.5' />
                 </a>
-              )}
-              {customer.createdTimestamp && (
-                <>
-                  {' · '}
-                  {t('memberSince')}{' '}
-                  {new Date(customer.createdTimestamp).toLocaleDateString(
-                    locale,
-                    { month: 'short', year: 'numeric' }
-                  )}
-                </>
               )}
             </p>
           </div>
@@ -216,12 +206,51 @@ function CustomerHub({
         </DropdownMenu>
       </div>
 
-      <div className='min-h-0 flex-1 overflow-y-auto'>
-        {features.loyalty && <LoyaltySection customer={customer} />}
-        {features.tabs && <TabSection customer={customer} />}
-        <UsualOrder customerId={customer.id} />
-        <RecentOrders customerId={customer.id} name={name} />
-      </div>
+      {/* What they owe comes first where the business keeps tabs: it is
+          what a customer is most often opened for */}
+      <Tabs
+        key={customer.id}
+        defaultValue={
+          features.tabs ? 'tab' : features.loyalty ? 'loyalty' : 'orders'
+        }
+        className='min-h-0 flex-1 gap-0'
+      >
+        {(features.tabs || features.loyalty) && (
+          <div className='flex-none border-b px-4 py-3'>
+            <TabsList className='w-full sm:w-fit'>
+              {features.tabs && (
+                <TabsTrigger value='tab' className='px-4'>
+                  {t('tab')}
+                </TabsTrigger>
+              )}
+              {features.loyalty && (
+                <TabsTrigger value='loyalty' className='px-4'>
+                  {t('loyalty')}
+                </TabsTrigger>
+              )}
+              <TabsTrigger value='orders' className='px-4'>
+                {t('orders')}
+              </TabsTrigger>
+            </TabsList>
+          </div>
+        )}
+        <div className='min-h-0 flex-1 overflow-y-auto'>
+          {features.tabs && (
+            <TabsContent value='tab'>
+              <TabSection customer={customer} />
+            </TabsContent>
+          )}
+          {features.loyalty && (
+            <TabsContent value='loyalty'>
+              <LoyaltySection customer={customer} />
+            </TabsContent>
+          )}
+          <TabsContent value='orders'>
+            <UsualOrder customerId={customer.id} />
+            <RecentOrders customerId={customer.id} name={name} />
+          </TabsContent>
+        </div>
+      </Tabs>
 
       <ConfirmDialog
         open={toggleOpen}
@@ -236,6 +265,32 @@ function CustomerHub({
       />
       {appLink.dialog}
     </div>
+  )
+}
+
+/**
+ * One of the switch's pages: where the customer stands, large, with what can
+ * be done about it beside it, then the lines that led there.
+ */
+function Pane({
+  standing,
+  actions,
+  children,
+}: {
+  standing?: React.ReactNode
+  actions?: React.ReactNode
+  children?: React.ReactNode
+}) {
+  return (
+    <section className='space-y-4 p-5'>
+      {(standing || actions) && (
+        <div className='flex flex-wrap items-start justify-between gap-3'>
+          <div className='min-w-0'>{standing}</div>
+          {actions && <div className='flex flex-wrap gap-2'>{actions}</div>}
+        </div>
+      )}
+      {children}
+    </section>
   )
 }
 
@@ -266,15 +321,15 @@ function LoyaltySection({ customer }: { customer: Customer }) {
 
   if (account.isLoading) {
     return (
-      <Section icon={Award} title={t('loyalty')}>
+      <Pane>
         <Skeleton className='h-16' />
-      </Section>
+      </Pane>
     )
   }
 
   if (!member) {
     return (
-      <Section icon={Award} title={t('loyalty')}>
+      <Pane>
         <div className='flex flex-wrap items-center justify-between gap-3'>
           <p className='text-muted-foreground text-sm'>
             {t('notInLoyaltyProgram')}
@@ -289,7 +344,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
             {t('enrolInLoyalty')}
           </Button>
         </div>
-      </Section>
+      </Pane>
     )
   }
 
@@ -297,14 +352,9 @@ function LoyaltySection({ customer }: { customer: Customer }) {
   const tierIndex = tierOrder.indexOf(tier)
   const nextTier = tierIndex >= 0 ? tierOrder[tierIndex + 1] : undefined
   const nextPoints = nextTier ? tierPointsRequired[nextTier] : null
-  const progress = nextPoints
-    ? Math.min(100, Math.round((member.lifetimePoints / nextPoints) * 100))
-    : 100
 
   return (
-    <Section
-      icon={Award}
-      title={t('loyalty')}
+    <Pane
       actions={
         <>
           <Button size='sm' onClick={() => setEarnOpen(true)}>
@@ -313,48 +363,31 @@ function LoyaltySection({ customer }: { customer: Customer }) {
           </Button>
           <Button
             size='sm'
-            variant='outline'
+            variant='ghost'
+            className='text-muted-foreground'
             onClick={() => setAdjustOpen(true)}
           >
-            <RefreshCw />
             {t('adjust')}
           </Button>
         </>
       }
-    >
-      <div className='flex flex-wrap items-end justify-between gap-x-6 gap-y-2'>
-        <div>
-          <div className='text-3xl font-semibold tracking-tight tabular-nums'>
+      standing={
+      <div>
+        <div className='flex flex-wrap items-baseline gap-x-2'>
+          <span className='text-2xl font-semibold tracking-tight tabular-nums'>
             {member.pointsBalance.toLocaleString(locale)}
-            <span className='text-muted-foreground ms-2 text-sm font-normal'>
-              {t('pointsUnit', { count: member.pointsBalance })}
-            </span>
-          </div>
-          <div className='text-muted-foreground text-xs tabular-nums'>
-            {t('lifetimePoints')}:{' '}
-            {member.lifetimePoints.toLocaleString(locale)}
-          </div>
+          </span>
+          <span className='text-muted-foreground text-sm'>
+            {t('pointsUnit', { count: member.pointsBalance })}
+          </span>
+          <span
+            className='ms-1 text-sm font-medium'
+            style={{ color: tierColors[tier] }}
+          >
+            {t(tierNameKeys[tier])}
+          </span>
         </div>
-        <Badge
-          variant='outline'
-          className='gap-1.5'
-          style={{ borderColor: tierColors[tier], color: tierColors[tier] }}
-        >
-          <Award className='h-3.5 w-3.5' />
-          {t(tierNameKeys[tier])}
-        </Badge>
-      </div>
-      {nextTier && nextPoints && (
-        <div className='space-y-1'>
-          <div className='bg-muted h-1.5 overflow-hidden rounded-full'>
-            <div
-              className='h-full rounded-full'
-              style={{
-                width: `${progress}%`,
-                backgroundColor: tierColors[nextTier],
-              }}
-            />
-          </div>
+        {nextTier && nextPoints && (
           <p className='text-muted-foreground text-xs tabular-nums'>
             {nextPoints - member.lifetimePoints > 0
               ? t('pointsToTier', {
@@ -366,8 +399,10 @@ function LoyaltySection({ customer }: { customer: Customer }) {
                 })
               : t('eligibleForTier', { tier: t(tierNameKeys[nextTier]) })}
           </p>
-        </div>
-      )}
+        )}
+      </div>
+      }
+    >
       <LoyaltyTransactionList
         transactions={transactions.data}
         isLoading={transactions.isLoading}
@@ -384,7 +419,7 @@ function LoyaltySection({ customer }: { customer: Customer }) {
         userId={customer.id}
         currentBalance={member.pointsBalance}
       />
-    </Section>
+    </Pane>
   )
 }
 
@@ -401,21 +436,15 @@ function TabSection({ customer }: { customer: Customer }) {
   })
   const balance = account.data?.balance ?? 0
 
-  const ledger = useMemo(() => {
-    const rows = [...(account.data?.transactions ?? [])].sort(
-      (a, b) =>
-        new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime()
-    )
-    // Running balance after each line, oldest first, shown newest first
-    const withRunning = rows.reduce<
-      { tx: AccountTransaction; running: number }[]
-    >((acc, tx) => {
-      const previous = acc.length ? acc[acc.length - 1].running : 0
-      const delta = tx.type === 'charge' ? tx.amount : -tx.amount
-      return [...acc, { tx, running: previous + delta }]
-    }, [])
-    return withRunning.reverse()
-  }, [account.data])
+  // Newest first
+  const ledger = useMemo(
+    () =>
+      [...(account.data?.transactions ?? [])].sort(
+        (a, b) =>
+          new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+      ),
+    [account.data]
+  )
 
   const label = (tx: AccountTransaction) => {
     if (tx.source === 'posReceipt' && tx.sourceNumber != null)
@@ -428,76 +457,68 @@ function TabSection({ customer }: { customer: Customer }) {
   }
 
   return (
-    <Section
-      icon={Wallet}
-      title={t('tab')}
+    <Pane
       actions={
         <>
-          <Button
-            size='sm'
-            variant='outline'
-            onClick={() => setChargeOpen(true)}
-          >
-            <Plus />
-            {t('addCharge')}
-          </Button>
           {account.data && (
             <Button size='sm' onClick={() => setPaymentOpen(true)}>
               {t('recordPayment')}
             </Button>
           )}
+          <Button
+            size='sm'
+            variant='ghost'
+            className='text-muted-foreground'
+            onClick={() => setChargeOpen(true)}
+          >
+            {t('addCharge')}
+          </Button>
         </>
       }
-    >
-      {account.isLoading ? (
-        <Skeleton className='h-16' />
-      ) : (
-        <>
-          <div>
-            <div
+      standing={
+        account.isLoading ? (
+          <Skeleton className='h-9 w-40' />
+        ) : (
+          <div className='flex flex-wrap items-baseline gap-x-2'>
+            <span
               className={cn(
-                'text-3xl font-semibold tracking-tight tabular-nums',
+                'text-2xl font-semibold tracking-tight tabular-nums',
                 balance > 0 && 'text-destructive',
                 balance < 0 && 'text-success'
               )}
             >
               {formatEgp(Math.abs(balance))}
-            </div>
-            <div className='text-muted-foreground text-xs'>
+            </span>
+            <span className='text-muted-foreground text-sm'>
               {balance > 0
                 ? t('owedByCustomer')
                 : balance < 0
                   ? t('customerCredit')
                   : t('settled')}
-            </div>
+            </span>
           </div>
+        )
+      }
+    >
           {ledger.length > 0 && (
-            <ul className='divide-y text-sm'>
-              {ledger.map(({ tx, running }) => (
-                <li key={tx.id} className='flex items-center gap-3 py-2'>
-                  <When
-                    value={tx.createdAt}
-                    className='text-muted-foreground w-24 shrink-0 text-xs'
-                  />
-                  <span className='min-w-0 flex-1 truncate'>{label(tx)}</span>
-                  <span
-                    className={cn(
-                      'shrink-0 font-medium tabular-nums',
-                      tx.type === 'charge' ? 'text-destructive' : 'text-success'
-                    )}
-                  >
-                    {tx.type === 'charge' ? '+' : '−'}
-                    {formatEgp(tx.amount)}
-                  </span>
-                  <span className='text-muted-foreground w-20 shrink-0 text-end text-xs tabular-nums'>
-                    {formatEgp(running)}
-                  </span>
-                </li>
-              ))}
-            </ul>
+              <ul className='divide-y text-sm'>
+                {ledger.map((tx) => (
+                  <li key={tx.id} className='flex items-center gap-3 py-2'>
+                    <When
+                      value={tx.createdAt}
+                      className='text-muted-foreground w-24 shrink-0 text-xs'
+                    />
+                    <span className='min-w-0 flex-1 truncate'>
+                      {label(tx)}
+                    </span>
+                    <span className='shrink-0 tabular-nums'>
+                      {tx.type === 'charge' ? '+' : '−'}
+                      {formatEgp(tx.amount)}
+                    </span>
+                  </li>
+                ))}
+              </ul>
           )}
-        </>
-      )}
 
       <AddChargeDialog
         open={chargeOpen}
@@ -525,7 +546,7 @@ function TabSection({ customer }: { customer: Customer }) {
           }}
         />
       )}
-    </Section>
+    </Pane>
   )
 }
 
