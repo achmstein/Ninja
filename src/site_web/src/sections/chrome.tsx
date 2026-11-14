@@ -26,11 +26,11 @@ export function ContactButtons({ className }: { className?: string }) {
   return (
     <div className={cn('flex flex-wrap items-center gap-x-7 gap-y-3', className)}>
       {whatsapp && (
-        <a className='inline-flex min-h-12 items-center rounded-full bg-blue px-6 text-[1.0625rem] text-white transition-colors hover:bg-[#0077ed]' href={whatsapp} target='_blank' rel='noreferrer'>
+        <a className='inline-flex min-h-12 items-center rounded-full bg-ink px-6 text-[1.0625rem] text-white transition-colors hover:bg-black' href={whatsapp} target='_blank' rel='noreferrer'>
           {c.cta.whatsapp}
         </a>
       )}
-      <a className='text-[1.0625rem] text-link hover:underline' href={mailto(c.cta.subject)}>
+      <a className='text-[1.0625rem] text-ink underline decoration-ink/30 underline-offset-4 hover:decoration-ink' href={mailto(c.cta.subject)}>
         {c.cta.email}
       </a>
     </div>
@@ -58,7 +58,7 @@ export function Header() {
           <a href={c.nav.otherHref} lang={c.nav.otherLang} hrefLang={c.nav.otherLang} className='hover:text-ink'>
             {c.nav.other}
           </a>
-          <a href='#talk' className='rounded-full bg-blue px-3 py-1 text-white'>
+          <a href='#talk' className='rounded-full bg-ink px-3 py-1 text-white'>
             {c.nav.talk}
           </a>
         </nav>
