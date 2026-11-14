@@ -9,7 +9,10 @@ import { AddCustomerDialog } from './add-customer-dialog'
 export function AddedAtCounterBadge() {
   const t = useT()
   return (
-    <Badge variant='secondary' className='mt-0.5 text-[10px] font-normal'>
+    <Badge
+      variant='outline'
+      className='bg-background text-muted-foreground mt-0.5 text-[10px] font-normal'
+    >
       {t('addedAtCounter')}
     </Badge>
   )
