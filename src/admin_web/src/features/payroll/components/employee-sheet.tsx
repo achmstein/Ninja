@@ -354,11 +354,16 @@ export function EmployeeForm({
         </div>
       )}
 
-      {/* Paid days off: a daily worker's agreed day off is paid within it,
-          a monthly employee's days away beyond it cost a day each */}
+      {/* Paid days off (a daily worker's agreed day off is paid within it,
+          a monthly employee's days away beyond it cost a day each) and,
+          beside it, the start date, where one keyed in wrong is put right.
+          What each means sits by its label, not out past the field */}
       <div className='grid gap-4 sm:grid-cols-2'>
         <div className='flex flex-col gap-1.5'>
-          <Label htmlFor='emp-days-off'>{t('paidDaysOff')}</Label>
+          <div className='flex items-center gap-1.5'>
+            <Label htmlFor='emp-days-off'>{t('paidDaysOff')}</Label>
+            <InfoTip>{t('paidDaysOffHint')}</InfoTip>
+          </div>
           <Input
             id='emp-days-off'
             type='number'
@@ -371,23 +376,20 @@ export function EmployeeForm({
             required
           />
         </div>
-        <InfoTip className='self-end'>{t('paidDaysOffHint')}</InfoTip>
-      </div>
-
-      {/* A start date keyed in wrong is put right here */}
-      {employee && (
-        <div className='grid gap-4 sm:grid-cols-2'>
+        {employee && (
           <div className='flex flex-col gap-1.5'>
-            <Label htmlFor='emp-started'>{t('startedOn')}</Label>
+            <div className='flex items-center gap-1.5'>
+              <Label htmlFor='emp-started'>{t('startedOn')}</Label>
+              <InfoTip>{t('startedOnHint')}</InfoTip>
+            </div>
             <DatePicker
               id='emp-started'
               value={startedOn}
               onChange={setStartedOn}
             />
           </div>
-          <InfoTip className='self-end'>{t('startedOnHint')}</InfoTip>
-        </div>
-      )}
+        )}
+      </div>
 
       {inSheet ? (
         <SheetActions>{saveButton}</SheetActions>
