@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/orders/own_orders.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_client.dart';
 import '../../sale/models/pos_order_request.dart';
@@ -73,9 +74,12 @@ class ApiOrderRepository implements OrderRepository {
   }
 
   @override
-  Future<int> createPosOrder(PosOrderRequest request, {required String requestId}) async {
-    final response = await _api.post<Map<String, dynamic>>('pos', data: request.toJson(), requestId: requestId);
-    return toInt(response.data?['orderId']);
+  Future<int> createPosOrder(PosOrderRequest request, {required String requestId}) {
+    // Remembered as this till's own, so it does not alert its cashier about it (core/orders/own_orders.dart)
+    return ownOrders.placing(() async {
+      final response = await _api.post<Map<String, dynamic>>('pos', data: request.toJson(), requestId: requestId);
+      return toInt(response.data?['orderId']);
+    });
   }
 
   @override

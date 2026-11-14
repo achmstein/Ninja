@@ -95,6 +95,25 @@
       }
     }
   },
+  "tillOrderToast": "Order #{orderId} rung up at another till",
+  "@tillOrderToast": {
+    "placeholders": {
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
+  "tillOrderToastBy": "Order #{orderId} rung up by {name}",
+  "@tillOrderToastBy": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      },
+      "orderId": {
+        "type": "int"
+      }
+    }
+  },
   "newOrderToastFrom": "New order #{orderId} from {name}",
   "@newOrderToastFrom": {
     "placeholders": {

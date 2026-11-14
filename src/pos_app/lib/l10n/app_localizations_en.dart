@@ -228,6 +228,16 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String tillOrderToast(int orderId) {
+    return 'Order #$orderId rung up at another till';
+  }
+
+  @override
+  String tillOrderToastBy(String name, int orderId) {
+    return 'Order #$orderId rung up by $name';
+  }
+
+  @override
   String newOrderToastFrom(String name, int orderId) {
     return 'New order #$orderId from $name';
   }

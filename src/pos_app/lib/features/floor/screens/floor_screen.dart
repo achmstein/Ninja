@@ -702,12 +702,15 @@ class _BillsState extends State<_Bills> {
                       SizedBox(
                         key: ValueKey(ticket.id),
                         width: width,
-                        child: BillCard(
-                          ticket: ticket,
-                          clock: clocks[ticket.id],
-                          waiting: waitingIds.contains(ticket.id),
-                          height: rowHeight(index),
-                          onTap: () => context.go('/ticket/${ticket.id}'),
+                        child: ArrivedPop(
+                          count: ticket.lineCount,
+                          child: BillCard(
+                            ticket: ticket,
+                            clock: clocks[ticket.id],
+                            waiting: waitingIds.contains(ticket.id),
+                            height: rowHeight(index),
+                            onTap: () => context.go('/ticket/${ticket.id}'),
+                          ),
                         ),
                       ),
                   ],

@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'core/orders/own_orders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -185,9 +186,21 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         final orderId = (event['orderId'] as num?)?.toInt() ?? 0;
         switch (event['type']) {
           case 'order_submitted':
-            ref.read(chimeServiceProvider).play();
-            final name = event['buyerName'] as String?;
-            toast(PosToastType.info, (l10n) => name == null || name.isEmpty ? l10n.newOrderToast(orderId) : l10n.newOrderToastFrom(name, orderId));
+            // The till that rang it up says nothing: its cashier just did it, and the
+            // floor shows it land. Every other till at the branch is told
+            unawaited(ownOrders.isOwn(orderId).then((own) {
+              if (own) return;
+              // An order rung up at another till needs nothing from this one: a quiet
+              // line saying who took it. The chime is kept for what waits for a tap
+              if (event['source'] == 'Pos') {
+                final by = event['takenBy'] as String?;
+                toast(PosToastType.info, (l10n) => by == null || by.isEmpty ? l10n.tillOrderToast(orderId) : l10n.tillOrderToastBy(by, orderId));
+                return;
+              }
+              ref.read(chimeServiceProvider).play();
+              final name = event['buyerName'] as String?;
+              toast(PosToastType.info, (l10n) => name == null || name.isEmpty ? l10n.newOrderToast(orderId) : l10n.newOrderToastFrom(name, orderId));
+            }));
           case 'order_reminder':
             final count = (event['reminderCount'] as num?)?.toInt() ?? 1;
             final minutes = (event['minutesPending'] as num?)?.toInt() ?? 0;

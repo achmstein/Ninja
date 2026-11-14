@@ -230,6 +230,16 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String tillOrderToast(int orderId) {
+    return 'الطلب #‏$orderId اتسجّل من كاشير تاني';
+  }
+
+  @override
+  String tillOrderToastBy(String name, int orderId) {
+    return 'الطلب #‏$orderId سجّله $name';
+  }
+
+  @override
   String newOrderToastFrom(String name, int orderId) {
     return 'طلب جديد #‏$orderId من $name';
   }

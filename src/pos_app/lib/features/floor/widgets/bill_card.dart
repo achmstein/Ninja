@@ -155,3 +155,66 @@ class BillCard extends StatelessWidget {
     );
   }
 }
+
+/// A bill something was just added to: its card pops once, with a tint that
+/// fades, so the eye goes to where it happened. It is how the till that rang
+/// an order up sees it land without a notification, and how every other till
+/// sees where. A bill that just opened slides in already (the floor's
+/// Presence); this is for one that grew. Only the tint where the system asks
+/// for less motion.
+class ArrivedPop extends StatefulWidget {
+  /// The bill's line count: a rise is what sets the pop off
+  final int count;
+  final Widget child;
+
+  const ArrivedPop({super.key, required this.count, required this.child});
+
+  @override
+  State<ArrivedPop> createState() => _ArrivedPopState();
+}
+
+class _ArrivedPopState extends State<ArrivedPop> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller = AnimationController(vsync: this, duration: const Duration(milliseconds: 900), value: 1);
+
+  static final _scale = TweenSequence<double>([
+    TweenSequenceItem(tween: Tween(begin: 0.94, end: 1.04).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 45),
+    TweenSequenceItem(tween: Tween(begin: 1.04, end: 1.0).chain(CurveTween(curve: Curves.easeOutCubic)), weight: 55),
+  ]);
+
+  @override
+  void didUpdateWidget(ArrivedPop old) {
+    super.didUpdateWidget(old);
+    if (widget.count > old.count) _controller.forward(from: 0);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final still = MediaQuery.disableAnimationsOf(context);
+    final tint = context.theme.colors.primary;
+    return AnimatedBuilder(
+      animation: _controller,
+      child: widget.child,
+      builder: (context, child) {
+        final t = _controller.value;
+        if (t >= 1) return child!;
+        return Transform.scale(
+          scale: still ? 1 : _scale.transform(t),
+          child: DecoratedBox(
+            position: DecorationPosition.foreground,
+            decoration: BoxDecoration(
+              color: tint.withValues(alpha: 0.14 * (1 - Curves.easeOut.transform(t))),
+              borderRadius: BorderRadius.circular(Sizes.radiusCard),
+            ),
+            child: child,
+          ),
+        );
+      },
+    );
+  }
+}

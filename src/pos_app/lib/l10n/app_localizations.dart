@@ -500,6 +500,18 @@ abstract class AppLocalizations {
   /// **'New order #{orderId}'**
   String newOrderToast(int orderId);
 
+  /// No description provided for @tillOrderToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{orderId} rung up at another till'**
+  String tillOrderToast(int orderId);
+
+  /// No description provided for @tillOrderToastBy.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{orderId} rung up by {name}'**
+  String tillOrderToastBy(String name, int orderId);
+
   /// No description provided for @newOrderToastFrom.
   ///
   /// In en, this message translates to:
