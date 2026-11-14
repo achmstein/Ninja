@@ -3,6 +3,7 @@ import { mailto, whatsappLink } from '@/content/contact'
 import { cn } from '@/lib/cn'
 import { useLang } from '@/lib/lang'
 import { origin, originNote } from '@/lib/origin'
+import { PAGES, pathOf } from '@/lib/pages'
 
 /** The N mark's path, as in /brand/ninja-mark.svg */
 const N_PATH =
@@ -46,11 +47,12 @@ export function ContactButtons({ className }: { className?: string }) {
 }
 
 export function Header() {
-  const { c } = useLang()
+  const { c, lang, page } = useLang()
+  const other = c.nav.otherLang as 'en' | 'ar'
   return (
     <header className='border-b border-ink/10 bg-white/80 backdrop-blur'>
       <Container className='flex h-12 items-center gap-4 text-[0.8125rem]'>
-        <a href={c.nav.otherLang === 'ar' ? '/' : '/ar'} aria-label={c.nav.home} className='flex items-center gap-2'>
+        <a href={pathOf(lang, 'home')} aria-label={c.nav.home} className='flex items-center gap-2'>
           <NMark size={24} />
           <span dir='ltr' className='text-[1.25rem] leading-none' style={{ fontFamily: 'var(--font-wordmark)' }}>
             ninja
@@ -63,7 +65,7 @@ export function Header() {
           <a href='/apps' className='hidden hover:text-ink sm:block'>
             {c.nav.apps}
           </a>
-          <a href={c.nav.otherHref} lang={c.nav.otherLang} hrefLang={c.nav.otherLang} className='hover:text-ink'>
+          <a href={pathOf(other, page)} lang={other} hrefLang={other} className='hover:text-ink'>
             {c.nav.other}
           </a>
           <a href='#talk' className='rounded-full bg-ink px-3 py-1 text-white'>
@@ -76,9 +78,18 @@ export function Header() {
 }
 
 export function Footer() {
-  const { c } = useLang()
+  const { c, lang } = useLang()
   return (
     <footer className='border-t border-ink/10 py-6 text-xs text-soft'>
+      {/* The page for each kind of place: how someone who landed on one finds the others, and a search engine all of them */}
+      <Container className='mb-5 flex flex-wrap items-center gap-x-6 gap-y-2 border-b border-ink/10 pb-5'>
+        <span>{c.footer.made}</span>
+        {PAGES.filter((p) => p !== 'home').map((p) => (
+          <a key={p} href={pathOf(lang, p)} className='text-ink/80 hover:text-ink'>
+            {c.kinds[p].label}
+          </a>
+        ))}
+      </Container>
       <Container className='flex flex-wrap items-center justify-between gap-4'>
         <span dir='ltr'>{c.footer.rights}</span>
         <nav className='flex flex-wrap gap-x-6 gap-y-2'>

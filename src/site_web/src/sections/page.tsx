@@ -115,12 +115,14 @@ const REVIEW: Script = [
 // ——— The top ————————————————————————————————————————————————————
 
 export function Hero() {
-  const { c } = useLang()
+  const { c, page } = useLang()
+  // A kind's page opens in its own words; the app under them is the same
+  const words = page === 'home' ? c.hero : c.kinds[page].hero
   return (
     <section className='overflow-hidden pt-14 pb-24 sm:pt-20 sm:pb-32'>
       <Container className='text-center'>
-        <h1 className='headline mx-auto max-w-[14ch] text-[clamp(2.75rem,8vw,6rem)]'>{c.hero.title}</h1>
-        <p className='mx-auto mt-5 max-w-[30ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug text-soft'>{c.hero.lead}</p>
+        <h1 className='headline mx-auto max-w-[14ch] text-[clamp(2.75rem,8vw,6rem)]'>{words.title}</h1>
+        <p className='mx-auto mt-5 max-w-[30ch] text-[clamp(1.25rem,2.4vw,1.75rem)] leading-snug text-soft'>{words.lead}</p>
         <ContactButtons className='mt-8 justify-center' />
       </Container>
       <Phone script={ORDER} label={c.hero.watch} className='mx-auto mt-14 w-[min(78vw,360px)] sm:mt-20' />

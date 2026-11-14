@@ -1,7 +1,8 @@
 import { StrictMode } from 'react'
 import { renderToString } from 'react-dom/server'
 import { CONTACT } from '@/content/contact'
-import { contentFor, type Lang } from '@/lib/lang'
+import { contentFor, metaFor, type Lang } from '@/lib/lang'
+import { pathOf, type Page } from '@/lib/pages'
 import { App } from './App'
 
 const SITE = 'https://ninjapp.net'
@@ -13,8 +14,9 @@ const escape = (text: string) => text.replace(/&/g, '&amp;').replace(/"/g, '&quo
  * software itself, for which kinds of business, free to start. `<` is written as its escape so nothing
  * in the words can close the script tag.
  */
-function structured(lang: Lang, url: string): string {
+function structured(lang: Lang, page: Page, url: string): string {
   const c = contentFor(lang)
+  const meta = metaFor(lang, page)
   const organization = {
     '@type': 'Organization',
     '@id': `${SITE}/#organization`,
@@ -29,7 +31,7 @@ function structured(lang: Lang, url: string): string {
     name: 'Ninja',
     url,
     inLanguage: lang,
-    description: c.meta.description,
+    description: meta.description,
     applicationCategory: 'BusinessApplication',
     applicationSubCategory: 'Point of sale and restaurant management',
     operatingSystem: 'Web, Android, iOS',
@@ -40,36 +42,36 @@ function structured(lang: Lang, url: string): string {
 }
 
 /** A page as HTML, for scripts/prerender.mjs: what goes in #root and what goes in <head> */
-export function render(lang: Lang): { app: string; head: string } {
-  const c = contentFor(lang)
-  const url = lang === 'ar' ? `${SITE}/ar` : `${SITE}/`
+export function render(lang: Lang, page: Page = 'home'): { app: string; head: string } {
+  const meta = metaFor(lang, page)
+  const url = SITE + pathOf(lang, page)
   // The picture a shared link shows: scripts/share-card.mjs draws one per language
   const card = `${SITE}/brand/share-${lang}.png`
   const head = [
-    `<title>${escape(c.meta.title)}</title>`,
-    `<meta name="description" content="${escape(c.meta.description)}" />`,
+    `<title>${escape(meta.title)}</title>`,
+    `<meta name="description" content="${escape(meta.description)}" />`,
     `<link rel="canonical" href="${url}" />`,
-    `<link rel="alternate" hreflang="en" href="${SITE}/" />`,
-    `<link rel="alternate" hreflang="ar" href="${SITE}/ar" />`,
-    `<link rel="alternate" hreflang="x-default" href="${SITE}/" />`,
+    `<link rel="alternate" hreflang="en" href="${SITE + pathOf('en', page)}" />`,
+    `<link rel="alternate" hreflang="ar" href="${SITE + pathOf('ar', page)}" />`,
+    `<link rel="alternate" hreflang="x-default" href="${SITE + pathOf('en', page)}" />`,
     `<meta property="og:type" content="website" />`,
     `<meta property="og:url" content="${url}" />`,
-    `<meta property="og:title" content="${escape(c.meta.title)}" />`,
-    `<meta property="og:description" content="${escape(c.meta.description)}" />`,
+    `<meta property="og:title" content="${escape(meta.title)}" />`,
+    `<meta property="og:description" content="${escape(meta.description)}" />`,
     `<meta property="og:site_name" content="Ninja" />`,
     `<meta property="og:locale" content="${lang === 'ar' ? 'ar_EG' : 'en_US'}" />`,
     `<meta property="og:image" content="${card}" />`,
     `<meta property="og:image:width" content="1200" />`,
     `<meta property="og:image:height" content="630" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
-    `<meta name="twitter:title" content="${escape(c.meta.title)}" />`,
-    `<meta name="twitter:description" content="${escape(c.meta.description)}" />`,
+    `<meta name="twitter:title" content="${escape(meta.title)}" />`,
+    `<meta name="twitter:description" content="${escape(meta.description)}" />`,
     `<meta name="twitter:image" content="${card}" />`,
-    `<script type="application/ld+json">${structured(lang, url)}</script>`,
+    `<script type="application/ld+json">${structured(lang, page, url)}</script>`,
   ].join('\n    ')
   const app = renderToString(
     <StrictMode>
-      <App lang={lang} />
+      <App lang={lang} page={page} />
     </StrictMode>
   )
   return { app, head }

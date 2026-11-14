@@ -16,13 +16,39 @@ export const en = {
     apps: 'Apps',
     talk: 'Talk to us',
     other: 'العربية',
-    otherHref: '/ar',
     otherLang: 'ar',
   },
   hero: {
     title: 'Everything your café runs on.',
     lead: 'One app for your guests, your team and you.',
     watch: 'The real guest app, running by itself on a sample café',
+  },
+  // A page for each kind of place: its own opening words, and its own title and line for a search engine
+  kinds: {
+    gaming: {
+      label: 'Game lounges',
+      meta: {
+        title: 'Ninja for game lounges and PlayStation cafés',
+        description: 'Rooms by the hour, bookings, and snacks and drinks on the same bill, with a till and an app in your lounge’s own name. Free to start.',
+      },
+      hero: { title: 'Every room. Every hour. One bill.', lead: 'Time, food and bookings for your lounge, in one app.' },
+    },
+    cafes: {
+      label: 'Cafés',
+      meta: {
+        title: 'Ninja for cafés: menu, till and loyalty in one app',
+        description: 'A menu guests order from at the table, a till, a bar screen, loyalty points and stock, in your café’s own name. Free to start.',
+      },
+      hero: { title: 'Your café, in one app.', lead: 'Orders from the table, a till, loyalty and stock.' },
+    },
+    restaurants: {
+      label: 'Restaurants',
+      meta: {
+        title: 'Ninja for restaurants: tables, kitchen and delivery',
+        description: 'Ordering from the table, bookings, a kitchen screen, your own delivery riders, stock and profit, in your restaurant’s own name. Free to start.',
+      },
+      hero: { title: 'From the table to the kitchen.', lead: 'Orders, bookings, delivery and the books, in one app.' },
+    },
   },
   guest: {
     title: 'Their phone is the menu.',
@@ -157,7 +183,7 @@ export const en = {
     done: 'Got it. We will message you on WhatsApp.',
     failed: 'That did not go through. Message us on WhatsApp instead.',
   },
-  footer: { rights: '© 2026 Ninja', privacy: 'Privacy', terms: 'Terms', support: 'Support', apps: 'Apps' },
+  footer: { made: 'Made for', rights: '© 2026 Ninja', privacy: 'Privacy', terms: 'Terms', support: 'Support', apps: 'Apps' },
 }
 
 export type Content = typeof en

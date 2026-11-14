@@ -12,6 +12,42 @@
     <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar" />
     <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/" />
   </url>
+  <url>
+    <loc>https://ninjapp.net/game-lounges</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/game-lounges" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/game-lounges" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/game-lounges" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/ar/game-lounges</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/game-lounges" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/game-lounges" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/game-lounges" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/cafes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/cafes" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/cafes" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/cafes" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/ar/cafes</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/cafes" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/cafes" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/cafes" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/restaurants</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/restaurants" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/restaurants" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/restaurants" />
+  </url>
+  <url>
+    <loc>https://ninjapp.net/ar/restaurants</loc>
+    <xhtml:link rel="alternate" hreflang="en" href="https://ninjapp.net/restaurants" />
+    <xhtml:link rel="alternate" hreflang="ar" href="https://ninjapp.net/ar/restaurants" />
+    <xhtml:link rel="alternate" hreflang="x-default" href="https://ninjapp.net/restaurants" />
+  </url>
   <url><loc>https://ninjapp.net/apps/</loc></url>
   <url><loc>https://ninjapp.net/support</loc></url>
   <url><loc>https://ninjapp.net/privacy</loc></url>

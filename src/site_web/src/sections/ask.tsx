@@ -2,6 +2,7 @@ import { useRef, useState, type FormEvent } from 'react'
 import { cn } from '@/lib/cn'
 import { useLang } from '@/lib/lang'
 import { origin } from '@/lib/origin'
+import { FORM_KIND } from '@/lib/pages'
 import { lighten, MAX_PHOTOS, PHOTO_ACCEPT } from '@/lib/photo'
 
 /** The kinds of place the form offers, by the control plane's names for them */
@@ -17,10 +18,10 @@ const field = 'h-14 w-full rounded-2xl bg-white px-5 text-[1.0625rem] text-ink s
  * write back. Nothing is made by the form itself.
  */
 export function AskForm({ className }: { className?: string }) {
-  const { c, lang } = useLang()
+  const { c, lang, page } = useLang()
   const f = c.form
   const picker = useRef<HTMLInputElement>(null)
-  const [kind, setKind] = useState<Kind>('CoffeeShop')
+  const [kind, setKind] = useState<Kind>(FORM_KIND[page])
   const [photos, setPhotos] = useState<File[]>([])
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'failed'>('idle')
 
