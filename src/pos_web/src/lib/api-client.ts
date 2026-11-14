@@ -1,6 +1,6 @@
 import axios, { AxiosError, type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
-import { isConnectionError, networkStatus } from '@/lib/network-status'
+import { isConnectionError, networkStatus, useNetworkStatus } from '@/lib/network-status'
 import { trackOwnOrders } from '@/lib/own-orders'
 import { getActiveBranchId } from '@/stores/branch-store'
 
@@ -18,9 +18,39 @@ export const apiClient = axios.create({
   params: { 'api-version': API_VERSION },
 })
 
+/**
+ * How an expired sign-in is renewed (context/session.ts), handed in at start
+ * so this file does not reach into the session's own.
+ */
+let renewSession: (() => Promise<unknown>) | null = null
+export const setSessionRenewer = (renew: () => Promise<unknown>) => {
+  renewSession = renew
+}
+
+/** How long a call waits for the renewal before it goes with what it has */
+const RENEWAL_WAIT_MS = 8_000
+
+/**
+ * A till opened after a night shut has a sign-in whose token ran out. Its
+ * pages come up at once on the stored sign-in, and their first calls used to
+ * go out with the dead token: every one was refused together (the bills, the
+ * stays, the orders, the shift), a refusal is not tried again, and the floor
+ * sat with places taken and no bills until a reload. A call now waits for the
+ * renewal first. Offline there is nothing to renew against, so it does not wait.
+ */
+async function freshToken(): Promise<string | undefined> {
+  const user = getStoredUser()
+  if (!user?.expired || !renewSession || !useNetworkStatus.getState().online) return user?.access_token
+  await Promise.race([
+    renewSession().catch(() => {}),
+    new Promise((resolve) => setTimeout(resolve, RENEWAL_WAIT_MS)),
+  ])
+  return getStoredUser()?.access_token
+}
+
 apiClient.interceptors.request.use(
-  (config: InternalAxiosRequestConfig) => {
-    const token = getStoredUser()?.access_token
+  async (config: InternalAxiosRequestConfig) => {
+    const token = await freshToken()
     if (token) {
       config.headers.Authorization = `Bearer ${token}`
     }

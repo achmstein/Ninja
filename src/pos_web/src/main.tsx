@@ -5,10 +5,12 @@ import { QueryCache, QueryClient } from '@tanstack/react-query'
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
 import { getStoredUser } from '@/config/oidc-config'
+import { setSessionRenewer } from '@/lib/api-client'
 import { bootBrand } from '@/lib/brand'
 import { keepPersistedQueries, queryPersistOptions } from '@/lib/query-persist'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
+import { renewSession } from './context/session'
 import { DirectionProvider } from './context/direction-provider'
 import { ThemeProvider } from './context/theme-provider'
 // Generated Routes
@@ -16,6 +18,9 @@ import { routeTree } from './routeTree.gen'
 // Styles
 import 'sileo/styles.css'
 import './styles/index.css'
+
+// A call made on an expired sign-in waits for its renewal instead of being refused (lib/api-client.ts)
+setSessionRenewer(renewSession)
 
 const queryClient = new QueryClient({
   defaultOptions: {

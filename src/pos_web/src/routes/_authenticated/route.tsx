@@ -5,6 +5,7 @@ import {
   useNavigate,
   useRouter,
 } from '@tanstack/react-router'
+import { useQueryClient } from '@tanstack/react-query'
 import { ErrorResponse } from 'oidc-client-ts'
 import { useAuth } from 'react-oidc-context'
 import { BootSplash } from '@/components/boot-splash'
@@ -52,6 +53,7 @@ function AuthenticatedRoute() {
   const router = useRouter()
   const navigate = useNavigate()
   const sentToSignIn = useRef(false)
+  const queryClient = useQueryClient()
 
   const online = useNetworkStatus((s) => s.online)
 
@@ -72,6 +74,10 @@ function AuthenticatedRoute() {
     // Through the shared renewal, so a second tab of the till never spends
     // the same refresh token
     renewSession()
+      .then((renewed) => {
+        // Whatever was refused on the dead token is asked for again now, not at its next poll
+        if (renewed) void queryClient.refetchQueries({ predicate: (query) => query.state.status === 'error' })
+      })
       .catch((error: unknown) => {
         // Keycloak said no: the session is over, and the dead sign-in is
         // already dropped, so the cashier signs in afresh. Anything else is
@@ -82,7 +88,7 @@ function AuthenticatedRoute() {
       .finally(() => {
         renewing.current = false
       })
-  }, [online, renewalPending, user])
+  }, [online, renewalPending, user, queryClient])
   const keepsOfflineSession = !!user && (!online || renewalPending)
 
   const needsSignIn =
