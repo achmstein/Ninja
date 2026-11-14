@@ -110,7 +110,7 @@ void main() {
       await tester.pumpAndSettle();
 
       expect(find.text('Salma Nabil'), findsOneWidget);
-      expect(find.text('⁦010 12345678⁩'), findsOneWidget);
+      expect(find.text('\u2066010 12345678\u2069'), findsOneWidget);
       expect(find.text('Create my account'), findsOneWidget);
     });
 
