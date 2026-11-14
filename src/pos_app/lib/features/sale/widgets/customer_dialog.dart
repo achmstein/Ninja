@@ -40,13 +40,14 @@ Future<SaleCustomer?> showCustomerDialog(
 }) {
   // A sheet down the screen's end side, the whole height: the field stays at
   // its top and the results fill it down to the keyboard, which on a
-  // landscape tablet leaves a dialog no room between itself and the top
+  // landscape tablet leaves a dialog no room between itself and the top.
+  // The sheet takes its width from the picker itself (480, or the whole
+  // screen once the field is tapped), so no width is set here
   return showFSheet<SaleCustomer>(
     context: context,
     useRootNavigator: true,
     side: Directionality.of(context) == TextDirection.rtl ? FLayout.ltr : FLayout.rtl,
     mainAxisMaxRatio: null,
-    constraints: const BoxConstraints(maxWidth: 480),
     draggable: false,
     builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
   );
@@ -65,6 +66,11 @@ class _CustomerDialog extends ConsumerStatefulWidget {
 
 class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
   final _term = TextEditingController();
+  final _focus = FocusNode();
+  // Tapping the field is the start of a search: the sheet grows to the whole
+  // screen, the field on its top row and nothing but results under it, as a
+  // search opens in any phone app. The back arrow brings the sheet back
+  bool _searching = false;
   Timer? _debounce;
   String _search = '';
   List<IdentityUser> _users = const [];
@@ -75,12 +81,21 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
   void initState() {
     super.initState();
     _term.addListener(_onTermChanged);
+    _focus.addListener(() {
+      if (_focus.hasFocus && !_searching) setState(() => _searching = true);
+    });
+  }
+
+  void _stopSearching() {
+    _focus.unfocus();
+    setState(() => _searching = false);
   }
 
   @override
   void dispose() {
     _debounce?.cancel();
     _term.dispose();
+    _focus.dispose();
     super.dispose();
   }
 
@@ -152,7 +167,17 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
     // The sheet ends where the keyboard starts: the results list gets every
     // row between the field and the keyboard, and scrolls only past that
     final keyboard = MediaQuery.viewInsetsOf(context).bottom;
-    return Container(
+    final screen = MediaQuery.sizeOf(context).width;
+    // The system's back leaves the search first, the sheet second
+    return PopScope(
+      canPop: !_searching,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) _stopSearching();
+      },
+      child: AnimatedContainer(
+      duration: const Duration(milliseconds: 200),
+      curve: Curves.easeOut,
+      width: _searching || screen < 480 ? screen : 480,
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: BorderDirectional(start: BorderSide(color: theme.colors.border)),
@@ -162,6 +187,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           // A header row like every screen's: the title, and the way out
+          if (!_searching)
           Container(
             height: Sizes.header,
             padding: const EdgeInsetsDirectional.only(start: Sizes.gapLg, end: Sizes.gapSm),
@@ -186,12 +212,12 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.fromLTRB(Sizes.gapLg, Sizes.gapLg, Sizes.gapLg, 0),
+            padding: EdgeInsetsDirectional.fromSTEB(_searching ? Sizes.gapSm : Sizes.gapLg, Sizes.gapLg, Sizes.gapLg, 0),
             child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            if (widget.quickPicks.isNotEmpty) ...[
+            if (!_searching && widget.quickPicks.isNotEmpty) ...[
               Text(l10n.inTheRoom, style: muted),
               const SizedBox(height: 8),
               Wrap(
@@ -220,11 +246,22 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ],
             Row(
               children: [
+                if (_searching) ...[
+                  SizedBox.square(
+                    dimension: Sizes.control,
+                    child: FButton.icon(
+                      variant: FButtonVariant.ghost,
+                      onPress: _stopSearching,
+                      child: const Icon(FIcons.arrowLeft, size: Sizes.iconNav),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                ],
                 Expanded(
                   child: FTextField(
                     control: FTextFieldControl.managed(controller: _term),
+                    focusNode: _focus,
                     hint: l10n.searchCustomersPlaceholder,
-                    autofocus: true,
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -408,6 +445,7 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
             ),
           ),
         ],
+      ),
       ),
     );
   }

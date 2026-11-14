@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { Info, User, UserPlus, X } from 'lucide-react'
+import { ArrowLeft, Info, User, UserPlus, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import {
   Sheet,
@@ -98,10 +98,17 @@ export function CustomerDialog({
   const [term, setTerm] = useState('')
   const [cardFor, setCardFor] = useState<CardCustomer | null>(null)
   const [adding, setAdding] = useState(false)
+  // Tapping the field is the start of a search: the sheet grows to the whole
+  // screen, the field on its top row and nothing but results under it, as a
+  // search opens in any phone app. The back arrow brings the sheet back
+  const [searching, setSearching] = useState(false)
   const debouncedTerm = useDebounced(term.trim(), SEARCH_DEBOUNCE_MS)
 
   useEffect(() => {
-    if (!open) setTerm('')
+    if (!open) {
+      setTerm('')
+      setSearching(false)
+    }
   }, [open])
 
   const search = debouncedTerm.length >= MIN_SEARCH_LENGTH ? debouncedTerm : ''
@@ -159,29 +166,48 @@ export function CustomerDialog({
           stays at its top and the results fill it down to the keyboard,
           which on a landscape tablet leaves a dialog no room between itself
           and the top */}
-      <SheetContent side='end' showCloseButton={false}>
-        {/* A header row like every screen's: the title, and the way out */}
-        <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
-          <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
-            {t(titleKey)}
-          </SheetTitle>
-          <SheetClose asChild>
-            <Button
-              variant='ghost'
-              size='icon'
-              className='size-12'
-              aria-label={t('cancel')}
-            >
-              <X className='size-6' />
-            </Button>
-          </SheetClose>
-        </div>
+      <SheetContent
+        side='end'
+        showCloseButton={false}
+        className={cn(
+          'transition-[max-width]',
+          searching && 'max-w-[100vw] border-s-0',
+        )}
+        // The sheet opens with the room's people on show and no keyboard:
+        // the field is focused by the cashier's tap, not by opening
+        onOpenAutoFocus={(e) => e.preventDefault()}
+      >
+        {searching ? (
+          <SheetTitle className='sr-only'>{t(titleKey)}</SheetTitle>
+        ) : (
+          // A header row like every screen's: the title, and the way out
+          <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
+            <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+              {t(titleKey)}
+            </SheetTitle>
+            <SheetClose asChild>
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-12'
+                aria-label={t('cancel')}
+              >
+                <X className='size-6' />
+              </Button>
+            </SheetClose>
+          </div>
+        )}
         <SheetDescription className='sr-only'>
           {t('searchCustomersPlaceholder')}
         </SheetDescription>
 
-        <div className='flex shrink-0 flex-col gap-4 p-4 pb-2'>
-          {quickPicks.length > 0 && (
+        <div
+          className={cn(
+            'flex shrink-0 flex-col gap-4 p-4 pb-2',
+            searching && 'ps-2',
+          )}
+        >
+          {!searching && quickPicks.length > 0 && (
             <div className='flex flex-col gap-2'>
               <p className='text-muted-foreground text-sm'>{t('inTheRoom')}</p>
               <div className='flex flex-wrap gap-2'>
@@ -206,13 +232,28 @@ export function CustomerDialog({
           )}
 
           <div className='flex gap-2'>
+            {searching && (
+              <Button
+                variant='ghost'
+                size='icon'
+                className='size-12 shrink-0'
+                aria-label={t('goBack')}
+                onClick={() => {
+                  if (document.activeElement instanceof HTMLElement)
+                    document.activeElement.blur()
+                  setSearching(false)
+                }}
+              >
+                <ArrowLeft className='size-6 rtl:rotate-180' />
+              </Button>
+            )}
             <Input
               value={term}
               onChange={(e) => setTerm(e.target.value)}
+              onFocus={() => setSearching(true)}
               placeholder={t('searchCustomersPlaceholder')}
               className='h-12 min-w-0 flex-1 text-base'
               autoComplete='off'
-              autoFocus
             />
             <Button
               variant='outline'
