@@ -93,8 +93,10 @@ class SessionNotificationHelper(
 
         val waiterPending = createActionPendingIntent(ACTION_CALL_WAITER, 1)
         val controllerPending = createActionPendingIntent(ACTION_CONTROLLER, 2)
-        val drink1Pending = createActionPendingIntent(ACTION_ORDER_DRINK_1, 3)
-        val drink2Pending = createActionPendingIntent(ACTION_ORDER_DRINK_2, 4)
+        // A drink button opens the app on a question instead of ordering from the
+        // notification: a stray tap there used to send a real order to the till
+        val drink1Pending = createDrinkPendingIntent("order_drink_1", 3)
+        val drink2Pending = createDrinkPendingIntent("order_drink_2", 4)
 
         val now = System.currentTimeMillis()
 
@@ -117,7 +119,7 @@ class SessionNotificationHelper(
 
             if (drink1Name != null) {
                 setViewVisibility(R.id.btn_drink_1, View.VISIBLE)
-                setTextViewText(R.id.label_drink_1, getButtonLabel(ACTION_ORDER_DRINK_1, drink1Name, now))
+                setTextViewText(R.id.label_drink_1, drink1Name)
                 setOnClickPendingIntent(R.id.btn_drink_1, drink1Pending)
             } else {
                 setViewVisibility(R.id.btn_drink_1, View.GONE)
@@ -125,7 +127,7 @@ class SessionNotificationHelper(
 
             if (drink2Name != null) {
                 setViewVisibility(R.id.btn_drink_2, View.VISIBLE)
-                setTextViewText(R.id.label_drink_2, getButtonLabel(ACTION_ORDER_DRINK_2, drink2Name, now))
+                setTextViewText(R.id.label_drink_2, drink2Name)
                 setOnClickPendingIntent(R.id.btn_drink_2, drink2Pending)
             } else {
                 setViewVisibility(R.id.btn_drink_2, View.GONE)
@@ -213,6 +215,17 @@ class SessionNotificationHelper(
         if (now >= expiry) return originalLabel
         val remainingSeconds = ((expiry - now) / 1000).toInt()
         return "✓ ${remainingSeconds}s"
+    }
+
+    /** Opens the app, which asks before it orders (MainActivity hands the action to Flutter). */
+    private fun createDrinkPendingIntent(actionId: String, requestCode: Int): PendingIntent {
+        val intent = context.packageManager.getLaunchIntentForPackage(context.packageName)?.apply {
+            putExtra(MainActivity.EXTRA_SESSION_ACTION, actionId)
+        }
+        return PendingIntent.getActivity(
+            context, requestCode, intent,
+            PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
     }
 
     private fun createActionPendingIntent(action: String, requestCode: Int): PendingIntent {

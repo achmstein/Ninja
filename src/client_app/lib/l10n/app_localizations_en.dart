@@ -739,6 +739,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String get fastOrderPlaced => 'Order placed!';
 
   @override
+  String orderItemQuestion(String item) {
+    return 'Order $item?';
+  }
+
+  @override
   String get confirm => 'Confirm';
 
   @override

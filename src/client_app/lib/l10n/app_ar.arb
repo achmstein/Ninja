@@ -225,6 +225,7 @@
   "yourUsuals": "على مزاجك",
   "fastOrder": "طلب سريع",
   "fastOrderPlaced": "تم الطلب!",
+  "orderItemQuestion": "تطلب {item}؟",
   "confirm": "تأكيد",
   "offer": "عرض",
   "specialOffers": "عروض مميزة",

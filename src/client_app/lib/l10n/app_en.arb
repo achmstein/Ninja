@@ -392,6 +392,14 @@
   "yourUsuals": "Your usual",
   "fastOrder": "Fast Order",
   "fastOrderPlaced": "Order placed!",
+  "orderItemQuestion": "Order {item}?",
+  "@orderItemQuestion": {
+    "placeholders": {
+      "item": {
+        "type": "String"
+      }
+    }
+  },
   "confirm": "Confirm",
   "offer": "Offer",
   "specialOffers": "Special Offers",

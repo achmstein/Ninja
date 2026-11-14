@@ -1449,6 +1449,12 @@ abstract class AppLocalizations {
   /// **'Order placed!'**
   String get fastOrderPlaced;
 
+  /// No description provided for @orderItemQuestion.
+  ///
+  /// In en, this message translates to:
+  /// **'Order {item}?'**
+  String orderItemQuestion(String item);
+
   /// No description provided for @confirm.
   ///
   /// In en, this message translates to:

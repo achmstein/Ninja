@@ -3,12 +3,18 @@ import 'dart:io' show Platform;
 
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
+import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
 import '../config/app_config.dart';
+import '../models/localized_text.dart';
+import '../theme/theme_provider.dart';
+import '../ui/ui.dart';
+import '../widgets/app_text.dart';
 import '../providers/branch_provider.dart';
 import '../providers/locale_provider.dart';
 import '../router/app_router.dart';
@@ -43,6 +49,14 @@ class SessionNotificationService {
 
   MenuItem? _drink1Item;
   MenuItem? _drink2Item;
+
+  /// The question for a drink button is on screen: a second tap does not stack another
+  bool _asking = false;
+
+  /// A drink button tapped before the app knew its stay and drinks (it was
+  /// opened by that tap): asked once they are known, if that is soon
+  String? _waitingAction;
+  DateTime? _waitingSince;
 
   /// Cached drinks so we don't re-fetch on every periodic update
   List<_DrinkInfo>? _cachedDrinks;
@@ -151,6 +165,15 @@ class SessionNotificationService {
         _drink1Item = drinks.isNotEmpty ? drinks[0].item : null;
         _drink2Item = drinks.length > 1 ? drinks[1].item : null;
 
+        // The tap that opened the app, now that its drink is known; an old one is dropped
+        final waiting = _waitingAction;
+        final since = _waitingSince;
+        _waitingAction = null;
+        _waitingSince = null;
+        if (waiting != null && since != null && DateTime.now().difference(since) < const Duration(seconds: 20)) {
+          _handleDrinkOrder(waiting);
+        }
+
         if (drinks.isEmpty) return;
 
         try {
@@ -246,12 +269,20 @@ class SessionNotificationService {
   // ── Action handling ──────────────────────────────────────────────────
 
   void _handleAction(String? actionId) async {
-    if (actionId == null || _activeSession == null) return;
+    if (actionId == null) return;
 
     if (actionId == 'order_drink_1' || actionId == 'order_drink_2') {
+      final item = actionId == 'order_drink_1' ? _drink1Item : _drink2Item;
+      if (_activeSession == null || item == null) {
+        _waitingAction = actionId;
+        _waitingSince = DateTime.now();
+        return;
+      }
       await _handleDrinkOrder(actionId);
       return;
     }
+
+    if (_activeSession == null) return;
 
     // Handle service requests (waiter, controller)
     final requestType = switch (actionId) {
@@ -287,13 +318,48 @@ class SessionNotificationService {
     }
   }
 
+  /// A drink button never orders by itself: a tap on the lock screen or in a
+  /// pocket sent a real order to the till. It opens the app on a question,
+  /// and only a yes there sends the order.
   Future<void> _handleDrinkOrder(String actionId) async {
     final item = actionId == 'order_drink_1' ? _drink1Item : _drink2Item;
-    if (item == null) return;
+    final session = _activeSession;
+    if (item == null || session == null || _asking) return;
 
+    final authState = _ref.read(authServiceProvider);
+    if (!authState.isAuthenticated) return;
+
+    final context = _ref.read(routerProvider).routerDelegate.navigatorKey.currentContext;
+    if (context == null || !context.mounted) return;
+
+    _asking = true;
     try {
-      final authState = _ref.read(authServiceProvider);
-      if (!authState.isAuthenticated) return;
+      final yes = await showNinjaSheet<bool>(
+        context: context,
+        builder: (sheetContext) {
+          final l10n = AppLocalizations.of(sheetContext)!;
+          final theme = sheetContext.theme;
+          return NinjaDialog(
+            title: AppText(l10n.orderItemQuestion(item.name.localized(sheetContext))),
+            body: AppText(
+              session.placeName.localized(sheetContext),
+              style: sheetContext.localeText(theme.typography.note.copyWith(color: theme.colors.mutedForeground)),
+            ),
+            actions: [
+              NinjaButton(
+                variant: NinjaButtonVariant.secondary,
+                onPress: () => Navigator.pop(sheetContext, false),
+                child: AppText(l10n.cancel),
+              ),
+              NinjaButton(
+                onPress: () => Navigator.pop(sheetContext, true),
+                child: AppText(l10n.placeOrder),
+              ),
+            ],
+          );
+        },
+      );
+      if (yes != true) return;
 
       final menuRepo = _ref.read(menuRepositoryProvider);
       final preference = await menuRepo.getUserPreference(item.id);
@@ -303,8 +369,8 @@ class SessionNotificationService {
         item: item,
         userId: authState.userId ?? '',
         userName: authState.name ?? '',
-        placeId: _activeSession!.placeId,
-        sessionId: _activeSession!.id,
+        placeId: session.placeId,
+        sessionId: session.id,
         preference: preference,
       );
 
@@ -312,6 +378,8 @@ class SessionNotificationService {
       _ref.read(routerProvider).go('/bills');
     } catch (e) {
       debugPrint('Failed to submit drink order from notification: $e');
+    } finally {
+      _asking = false;
     }
   }
 

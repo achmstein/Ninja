@@ -12,6 +12,7 @@ import io.flutter.plugin.common.MethodChannel
 
 class MainActivity : FlutterActivity() {
     companion object {
+        const val EXTRA_SESSION_ACTION = "session_action"
         var sessionChannel: MethodChannel? = null
         private var navigationChannel: MethodChannel? = null
     }
@@ -94,6 +95,13 @@ class MainActivity : FlutterActivity() {
             navigationChannel?.invokeMethod("navigateTo", route)
             // Clear the extra so it doesn't trigger again on config changes
             intent?.removeExtra("navigate_to")
+        }
+
+        // A drink button on the session notification: the app is open now, and asks before it orders
+        val action = intent?.getStringExtra(EXTRA_SESSION_ACTION)
+        if (action != null) {
+            sessionChannel?.invokeMethod("onAction", action)
+            intent?.removeExtra(EXTRA_SESSION_ACTION)
         }
     }
 

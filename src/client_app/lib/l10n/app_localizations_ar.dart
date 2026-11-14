@@ -731,6 +731,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String get fastOrderPlaced => 'تم الطلب!';
 
   @override
+  String orderItemQuestion(String item) {
+    return 'تطلب $item؟';
+  }
+
+  @override
   String get confirm => 'تأكيد';
 
   @override

@@ -82,7 +82,8 @@ class SessionNotificationHelper: NSObject {
                     action: SessionNotificationHelper.actionOrderDrink1,
                     defaultLabel: name
                 ),
-                options: []
+                // Opens the app, which asks before it orders
+                options: [.foreground]
             ))
         }
 
@@ -93,7 +94,8 @@ class SessionNotificationHelper: NSObject {
                     action: SessionNotificationHelper.actionOrderDrink2,
                     defaultLabel: name
                 ),
-                options: []
+                // Opens the app, which asks before it orders
+                options: [.foreground]
             ))
         }
 
@@ -352,9 +354,13 @@ class SessionNotificationHelper: NSObject {
     private func performAction(internalId: String, dartActionId: String) {
         let now = Date()
 
-        // Check cooldown
-        if let expiry = cooldowns[internalId], now < expiry { return }
-        cooldowns[internalId] = now.addingTimeInterval(SessionNotificationHelper.cooldownSeconds)
+        // A drink button only opens the app's question, which the customer may turn down and
+        // ask for again: no cooldown. The waiter and the controller send at once, so they have one
+        let isDrink = dartActionId == "order_drink_1" || dartActionId == "order_drink_2"
+        if !isDrink {
+            if let expiry = cooldowns[internalId], now < expiry { return }
+            cooldowns[internalId] = now.addingTimeInterval(SessionNotificationHelper.cooldownSeconds)
+        }
 
         // Forward to Flutter
         if sessionChannel != nil {
