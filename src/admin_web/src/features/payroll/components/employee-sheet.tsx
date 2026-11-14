@@ -1,3 +1,4 @@
+import { cn } from '@/lib/utils'
 import { useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { isOwner } from '@/config/oidc-config'
@@ -141,7 +142,7 @@ export function EmployeeForm({
   const [startedOn, setStartedOn] = useState(
     employee?.startedOn ?? formatDay(new Date())
   )
-  const [scheme, setScheme] = useState(String(PAY_SCHEME.daily))
+  const [scheme, setScheme] = useState(String(PAY_SCHEME.monthly))
   const [rate, setRate] = useState('')
   const [paidDaysOff, setPaidDaysOff] = useState(
     String(employee?.paidDaysOff ?? 4)
@@ -324,11 +325,11 @@ export function EmployeeForm({
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(PAY_SCHEME.daily)}>
-                  {schemeLabel(PAY_SCHEME.daily, t)}
-                </SelectItem>
                 <SelectItem value={String(PAY_SCHEME.monthly)}>
                   {schemeLabel(PAY_SCHEME.monthly, t)}
+                </SelectItem>
+                <SelectItem value={String(PAY_SCHEME.daily)}>
+                  {schemeLabel(PAY_SCHEME.daily, t)}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -459,11 +460,11 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value={String(PAY_SCHEME.daily)}>
-                  {schemeLabel(PAY_SCHEME.daily, t)}
-                </SelectItem>
                 <SelectItem value={String(PAY_SCHEME.monthly)}>
                   {schemeLabel(PAY_SCHEME.monthly, t)}
+                </SelectItem>
+                <SelectItem value={String(PAY_SCHEME.daily)}>
+                  {schemeLabel(PAY_SCHEME.daily, t)}
                 </SelectItem>
               </SelectContent>
             </Select>
@@ -542,8 +543,11 @@ export function PayTermsSection({ employee }: { employee: EmployeeView }) {
 export function EmploymentSection({
   employee,
   inSheet = false,
+  showSince = true,
 }: {
   employee: EmployeeView
+  /** False where the dates are already on show: the button alone, at the end */
+  showSince?: boolean
   /** Inside a sheet, Mark left (or Rehire) is the footer's way out */
   inSheet?: boolean
 }) {
@@ -564,14 +568,21 @@ export function EmploymentSection({
   }
 
   return (
-    <div className='flex flex-wrap items-center justify-between gap-2 text-sm'>
-      <span className='text-muted-foreground'>
-        {employee.isActive
-          ? t('workingSince', {
-              date: readableDay(employee.startedOn, locale, t),
-            })
-          : t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}
-      </span>
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-2 text-sm',
+        showSince ? 'justify-between' : 'justify-end'
+      )}
+    >
+      {showSince && (
+        <span className='text-muted-foreground'>
+          {employee.isActive
+            ? t('workingSince', {
+                date: readableDay(employee.startedOn, locale, t),
+              })
+            : t('leftOn', { date: readableDay(employee.endedOn, locale, t) })}
+        </span>
+      )}
       {inSheet ? (
         <SheetActions side='start'>
           <Button

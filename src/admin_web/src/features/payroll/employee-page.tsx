@@ -18,14 +18,16 @@ import {
   PayTermsSection,
 } from './components/employee-sheet'
 import { LedgerSection } from './components/ledger-section'
-import { payLabel, readableDay } from './format'
+import { readableDay } from './format'
 
 /**
  * One employee as a page of their own, where the work on them is done: who
  * they are, what they are paid, what they are owed and why (the ledger),
- * and their employment, side by side on a desk and in turn on a phone, with
- * what they are owed and their pay at the top. A page rather than a sheet:
- * it is worked in, it has history, and it has an address to come back to.
+ * and their employment, side by side on a desk and in turn on a phone.
+ * Each thing is said once: the pay in its own card (not again in a tile
+ * above it), the start date in the details (not again as "working since").
+ * A page rather than a sheet: it is worked in, it has history, and it has
+ * an address to come back to.
  */
 export function EmployeePage({ employeeId }: { employeeId: number }) {
   const t = useT()
@@ -72,19 +74,6 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
         </div>
       ) : (
         <>
-          <MetricStrip>
-            <MetricTile
-              label={balance < 0 ? t('theyOwe') : t('owedToThem')}
-              value={
-                <Money
-                  value={Math.abs(balance)}
-                  tone={balance < 0 ? 'negative' : 'none'}
-                />
-              }
-            />
-            <MetricTile label={t('pay')} value={payLabel(e.currentTerms, t)} />
-          </MetricStrip>
-
           <div className='grid items-start gap-4 lg:grid-cols-2'>
             <Card className='gap-3'>
               <CardHeader>
@@ -99,6 +88,17 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
               </CardContent>
             </Card>
             <div className='grid gap-4'>
+              <MetricStrip>
+                <MetricTile
+                  label={balance < 0 ? t('theyOwe') : t('owedToThem')}
+                  value={
+                    <Money
+                      value={Math.abs(balance)}
+                      tone={balance < 0 ? 'negative' : 'none'}
+                    />
+                  }
+                />
+              </MetricStrip>
               <Card className='gap-3'>
                 <CardHeader>
                   <CardTitle>{t('pay')}</CardTitle>
@@ -107,14 +107,9 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
                   <PayTermsSection employee={e} />
                 </CardContent>
               </Card>
-              <Card className='gap-3'>
-                <CardHeader>
-                  <CardTitle>{t('employment')}</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <EmploymentSection employee={e} />
-                </CardContent>
-              </Card>
+              {/* The start date is in the details and a leaving date by the
+                  name: only the way out (or back) is left to offer */}
+              <EmploymentSection employee={e} showSince={false} />
             </div>
           </div>
 
