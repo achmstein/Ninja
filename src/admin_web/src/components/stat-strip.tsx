@@ -126,7 +126,9 @@ export function StatStrip({ children, className }: StatStripProps) {
       {/* Hairlines on the start/top edges, shifted 1px under the frame:
           overflow before the scroll origin is clipped, so this never grows
           scrollbars the way end/bottom negative margins do */}
-      <div className='-ms-px -mt-px grid grid-cols-2 @2xl:grid-cols-(--cols) [&>*]:border-s [&>*]:border-t'>
+      {/* In two columns a last cell left alone takes the whole row: beside an
+          empty slot its lines stopped halfway across the strip */}
+      <div className='-ms-px -mt-px grid grid-cols-2 @2xl:grid-cols-(--cols) [&>*]:border-s [&>*]:border-t [&>*:last-child:nth-child(odd)]:col-span-2 @2xl:[&>*:last-child:nth-child(odd)]:col-span-1'>
         {children}
       </div>
     </div>

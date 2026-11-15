@@ -156,6 +156,9 @@ export function MetricStrip({
       className={cn(
         'bg-card grid grid-cols-2 overflow-hidden rounded-xl shadow-sm lg:auto-cols-fr lg:grid-flow-col lg:grid-cols-none',
         '[&>*]:border-border/60 [&>*]:border-b [&>*]:odd:border-e lg:[&>*]:border-e lg:[&>*]:border-b-0 lg:[&>*:last-child]:border-e-0',
+        // In two columns a last tile left alone takes the whole row, so its
+        // lines do not stop halfway across the surface
+        '[&>*:last-child:nth-child(odd)]:col-span-2 [&>*:last-child:nth-child(odd)]:border-e-0 lg:[&>*:last-child:nth-child(odd)]:col-span-1',
         className
       )}
     >
