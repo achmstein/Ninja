@@ -16,6 +16,7 @@ import { AiMenu, Assistant as TourAssistant, Profit, Stock } from "./tour/owner"
 import { Branches } from "./tour/team";
 import { Fast } from "./tour/Fast";
 import { Gaming, GAMING_FRAMES } from "./tour/gaming";
+import { Clock, CLOCK_FRAMES, LEVEL_UP } from "./tour/clock";
 import { Tour } from "./tour/Tour";
 import { WebClips } from "./Web";
 
@@ -81,6 +82,26 @@ export const RemotionRoot: React.FC = () => {
             tagline: "One app for your whole café.",
             url: "ninjapp.net",
           }}
+        />
+      </Folder>
+      <Folder name="The-clock">
+        <Composition
+          id="GamingClock"
+          component={Clock}
+          durationInFrames={CLOCK_FRAMES}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{ lang: "en" as const, brand: LEVEL_UP }}
+        />
+        <Composition
+          id="GamingClockAr"
+          component={Clock}
+          durationInFrames={CLOCK_FRAMES}
+          fps={30}
+          width={1920}
+          height={1080}
+          defaultProps={{ lang: "ar" as const, brand: LEVEL_UP }}
         />
       </Folder>
       <Composition

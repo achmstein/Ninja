@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "name": "Level Up",
+    "logoFont": "bungee",
+    "primary": "#7c3aed",
+    "slab": "#1a0b33",
+    "rooms": [
+      { "name": "PS5 Room 1", "rate": 60 },
+      { "name": "PS5 Room 2", "rate": 60 },
+      { "name": "PS5 Room 3", "rate": 60 },
+      { "name": "VIP Room", "rate": 90 },
+      { "name": "PS4 Room 4", "rate": 40 },
+      { "name": "PS4 Room 5", "rate": 40 }
+    ],
+    "snacks": [
+      { "name": "Mini Pizza", "price": 120, "photo": "pizza" },
+      { "name": "Loaded Nachos", "price": 110, "photo": "nachos" },
+      { "name": "Milkshake", "price": 95, "photo": "gshake" }
+    ],
+    "pitch": true
+  }
+}

@@ -31,7 +31,7 @@ const ease = Easing.bezier(0.22, 1, 0.36, 1);
 const PHONE = { x: 1330, y: 70, height: 940 } as const;
 
 // ——— The mark, lit like a product shot: a light sweeps across it, a floor reflection under it
-const LitMark: React.FC<{ size: number; sweepAt: number; drawFrom?: number }> = ({ size, sweepAt, drawFrom }) => {
+export const LitMark: React.FC<{ size: number; sweepAt: number; drawFrom?: number }> = ({ size, sweepAt, drawFrom }) => {
   const frame = useCurrentFrame();
   const sweep = interpolate(frame, [sweepAt, sweepAt + 26], [-60, 160], { ...clamp, easing: Easing.bezier(0.45, 0, 0.2, 1) });
   const drawn = drawFrom === undefined ? null : evolvePath(interpolate(frame, [drawFrom, drawFrom + 20], [0, 1], { ...clamp, easing: glide }), N_PATH);
