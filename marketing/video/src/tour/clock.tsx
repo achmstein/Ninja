@@ -10,7 +10,7 @@ import { loadFont as loadPacifico } from "@remotion/google-fonts/Pacifico";
 import { loadFont as loadPlayfair } from "@remotion/google-fonts/PlayfairDisplay";
 import { Audio } from "@remotion/media";
 import { HtmlInCanvasMotionBlur } from "@remotion/motion-blur";
-import { Bell, Check, Gamepad2, Plus, ReceiptText, Timer } from "lucide-react";
+import { Check, Gamepad2, Send, Timer } from "lucide-react";
 import type React from "react";
 import { AbsoluteFill, Easing, Img, interpolate, Sequence, staticFile, useCurrentFrame, useVideoConfig } from "remotion";
 import { NMark, Wordmark } from "../parts";
@@ -20,7 +20,10 @@ import { FilmFinish } from "./finish";
 import { LitMark } from "./gaming";
 import { LangContext, plexArabic, useLang, useT, type Lang } from "./lang";
 import { Sfx } from "./sfx";
-import { Dock, GuestPhone, PageTitle, S, Screen, TopBar, Touch } from "./ui";
+import { BillRow, Dock, GuestPhone, S, Screen, TopBar, Touch } from "./ui";
+import { BookHeader, HoldForm, HoldPanel, PlaceCard, RoomSheet, TillBills, TillFloor, useClient, YourRoomCard } from "./clock-screens";
+import { Flight, TrayRow, TraySheet } from "./guests";
+import { MenuScreen } from "./menu-screen";
 
 const { fontFamily: anton } = loadAnton("normal", { weights: ["400"], subsets: ["latin"] });
 const { fontFamily: bungee } = loadBungee("normal", { weights: ["400"], subsets: ["latin"] });
@@ -34,6 +37,7 @@ export type ClientBrand = {
   logoImage?: string;
   logoFont?: "bungee" | "anton" | "playfair" | "pacifico" | "inter";
   primary: string; // the brand colour the app wears
+  accent?: string; // the second colour of the background wash
   slab: string; // its deep shade (the dock, the room card)
   rooms: { name: string; rate: number }[]; // the first is the one booked; rate per hour
   snacks: { name: string; price: number; photo: string }[]; // photo: public/dishes/<photo>.jpg or a path
@@ -44,6 +48,7 @@ export const LEVEL_UP: ClientBrand = {
   name: "Level Up",
   logoFont: "bungee",
   primary: "#7c3aed",
+  accent: "#0ea5e9",
   slab: "#1a0b33",
   rooms: [
     { name: "PS5 Room 1", rate: 60 },
@@ -57,12 +62,14 @@ export const LEVEL_UP: ClientBrand = {
     { name: "Mini Pizza", price: 120, photo: "pizza" },
     { name: "Loaded Nachos", price: 110, photo: "nachos" },
     { name: "Milkshake", price: 95, photo: "gshake" },
+    { name: "Hot Dog", price: 80, photo: "hotdog" },
+    { name: "Popcorn", price: 45, photo: "popcorn" },
+    { name: "Blue Mocktail", price: 75, photo: "mocktail" },
   ],
   pitch: false,
 };
 
 const FONTS = { bungee, anton, playfair, pacifico, inter } as const;
-const photoSrc = (p: string) => staticFile(p.includes("/") ? p : `dishes/${p}.jpg`);
 
 const Logo: React.FC<{ brand: ClientBrand; height: number; color: string }> = ({ brand, height, color }) =>
   brand.logoImage ? (
@@ -88,8 +95,8 @@ const toBusiness = (b: ClientBrand): Business => ({
   id: "levelup",
   kind: "PlayStation lounge",
   name: b.name,
-  categories: [],
-  items: [],
+  categories: ["Snacks", "Drinks", "Combos", "Sweets"],
+  items: b.snacks.map((x) => ({ key: x.photo, name: x.name, note: "", price: x.price, img: x.photo })),
   primary: b.primary,
   slab: b.slab,
   logo: (color, h) => <Logo brand={b} height={h} color={color} />,
@@ -135,19 +142,21 @@ const useFont = () => {
 
 // ——— Building blocks ————————————————————————————————————————————————————
 
-// The night: near black, two soft glows in the brand's colour drifting slowly.
-const Night: React.FC<{ primary: string }> = ({ primary }) => {
+// The night: two brand colours washing in from opposite corners and meeting across the frame
+// on a slow diagonal, over near black. Wide linear washes, so there are no round spots.
+const Night: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const frame = useCurrentFrame();
-  const dx = Math.sin(frame / 90) * 6;
-  const dy = Math.cos(frame / 110) * 5;
+  const a = brand.primary;
+  const b = brand.accent ?? "#0ea5e9";
+  const tilt = 118 + Math.sin(frame / 120) * 8;
+  const reach = 62 + Math.sin(frame / 95) * 6;
   return (
-    <AbsoluteFill
-      style={{
-        backgroundColor: "#05050a",
-        background: `radial-gradient(ellipse 55% 60% at ${22 + dx}% ${30 + dy}%, color-mix(in srgb, ${primary} 34%, transparent) 0%, transparent 70%),
-          radial-gradient(ellipse 45% 55% at ${82 - dx}% ${78 - dy}%, rgba(37,99,235,0.22) 0%, transparent 70%), #05050a`,
-      }}
-    />
+    <AbsoluteFill style={{ backgroundColor: "#04040a" }}>
+      <AbsoluteFill style={{ background: `linear-gradient(${tilt}deg, color-mix(in srgb, ${a} 62%, transparent) 0%, color-mix(in srgb, ${a} 18%, transparent) 30%, transparent ${reach}%)` }} />
+      <AbsoluteFill style={{ background: `linear-gradient(${tilt + 180}deg, color-mix(in srgb, ${b} 55%, transparent) 0%, color-mix(in srgb, ${b} 16%, transparent) 30%, transparent ${reach}%)` }} />
+      {/* The middle stays dark enough for white type */}
+      <AbsoluteFill style={{ background: "radial-gradient(ellipse 60% 55% at 50% 50%, rgba(4,4,10,0.55) 0%, transparent 100%)" }} />
+    </AbsoluteFill>
   );
 };
 
@@ -273,7 +282,7 @@ const Cold: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const clockOut = interpolate(frame, [92, 102], [0, 1], clamp);
   const r = (i: number) => brand.rooms[i]?.name ?? brand.rooms[0].name;
   const QS = [
-    { who: r(2), en: "Can we add an hour?", ar: "ممكن نزود ساعة؟", tone: "#60a5fa" },
+    { who: r(2), en: "We're done, how much?", ar: "خلصنا، الحساب كام؟", tone: "#60a5fa" },
     { who: r(0), en: "We need another controller!", ar: "محتاجين دراع تاني!", tone: AMBER },
     { who: r(4), en: `Two ${brand.snacks[0].name}s. Which room?`, ar: `اتنين ${brand.snacks[0].name}. لأنهي أوضة؟`, tone: "#f87171" },
     { who: "Counter", en: `How long has ${r(1)} been playing?`, ar: `${r(1)} بقالها قد إيه؟`, tone: "#2dd4bf" },
@@ -283,7 +292,7 @@ const Cold: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const stackOut = interpolate(frame, [212, 224], [0, 1], { ...clamp, easing: Easing.in(Easing.cubic) });
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       {/* The clock nobody trusts */}
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center", opacity: 1 - clockOut, scale: `${1 + clockOut * 0.2}`, filter: `blur(${clockOut * 16}px)` }}>
         <div style={{ opacity: interpolate(frame, [0, 10], [0, 1], clamp) }}>
@@ -351,7 +360,7 @@ const Turn: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const secs = Math.max(0, Math.floor((frame - 16) / 30) + (frame >= 16 ? 1 : 0));
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       <AbsoluteFill style={{ backgroundColor: "#fff", opacity: interpolate(frame, [0, 6], [0.5, 0], clamp) }} />
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
         <div style={{ opacity: interpolate(frame, [14, 24], [0, 1], clamp), scale: `${interpolate(frame, [14, 30], [0.8, 1], { ...clamp, easing: land })}`, marginBottom: -30 }}>
@@ -370,94 +379,43 @@ const Turn: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
 };
 
 // A room card as the guest app draws it, on the brand's deep shade.
-const RoomCard: React.FC<{ brand: ClientBrand; children: React.ReactNode; top: number; height: number }> = ({ brand, children, top, height }) => (
-  <div style={{ position: "absolute", top, left: 16, right: 16, height, borderRadius: 28, padding: 22, backgroundColor: brand.slab, color: "#fff", overflow: "hidden" }}>
-    <Gamepad2 size={170} style={{ position: "absolute", insetInlineEnd: -30, bottom: -40, opacity: 0.1, rotate: "-12deg" }} />
-    {children}
-  </div>
-);
-
-const Dot: React.FC<{ color: string }> = ({ color }) => <span style={{ width: 7, height: 7, borderRadius: 4, backgroundColor: color }} />;
-
-// ——— 3. Book: a room held from the phone ————————————————————————————————
+// ——— 3. Book: the real Book tab, the booking under the card, then the hold ——————————
 const BookScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const frame = useCurrentFrame();
   const c = useCopy();
-  const tr = useT();
+  const u = useClient();
   const ar = useLang() === "ar";
   const room = brand.rooms[0];
-  const tap = 66;
-  const held = frame >= tap + 4;
-  const left = Math.max(0, 600 - Math.floor((frame - tap - 4) / 30) - (held ? 1 : 0));
-  const ring = held ? interpolate(frame, [tap + 4, tap + 4 + 120], [1, 0.8], clamp) : 1;
-  const y = interpolate(frame, [0, 22], [760, 90], { ...clamp, easing: ease });
+  const t = { open: 34, toggle: 62, reserve: 90, panel: 126 };
+  const y = interpolate(frame, [0, 22], [700, 50], { ...clamp, easing: ease });
+  const list = 1 - interpolate(frame, [t.panel - 4, t.panel + 2], [0, 1], clamp);
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       <Badge />
-      <Rise text={c("book1")} at={14} size={118} style={{ position: "absolute", top: 380, [ar ? "right" : "left"]: 90, width: 560, justifyContent: ar ? "flex-start" : "flex-end", textAlign: ar ? "right" : "right" }} />
-      <Rise
-        text={c("book2")}
-        at={26}
-        size={118}
-        color={`color-mix(in srgb, ${brand.primary} 45%, white)`}
-        style={{ position: "absolute", top: 380, [ar ? "left" : "right"]: 90, width: 560 }}
-      />
-      <GuestPhone x={661} y={y} height={1240}>
+      <Rise text={c("book1")} at={14} size={112} style={{ position: "absolute", top: 400, [ar ? "right" : "left"]: 90, width: 580, justifyContent: "flex-end", textAlign: "end" }} />
+      <Rise text={c("book2")} at={26} size={112} color={`color-mix(in srgb, ${brand.accent ?? "#0ea5e9"} 55%, white)`} style={{ position: "absolute", top: 400, [ar ? "left" : "right"]: 90, width: 580 }} />
+      <GuestPhone x={720} y={y} height={1000}>
         <TopBar />
-        <PageTitle title="Book" sub="2 free now" />
-        <RoomCard brand={brand} top={196} height={290}>
-          <Chip tone={held ? AMBER : "#6EE7B7"} size={13}>
-            <Dot color={held ? AMBER : "#34D399"} /> {tr(held ? "Held for you" : "Available")}
-          </Chip>
-          <div style={{ fontSize: 30, fontWeight: 800, letterSpacing: "-0.02em", marginTop: 14 }}>{tr(room.name)}</div>
-          <div style={{ fontSize: 14, opacity: 0.7, marginTop: 4 }}>{tr("Up to 4 players")}</div>
-          <div style={{ display: "inline-block", marginTop: 10, padding: "5px 12px", borderRadius: 999, fontSize: 13, fontWeight: 700, backgroundColor: "rgba(255,255,255,0.12)" }}>
-            {`${room.rate}/hour`}
+        <div style={{ position: "absolute", inset: 0, opacity: list }}>
+          <BookHeader sub={u("free3")} />
+          <div style={{ position: "absolute", top: 196, left: 16, right: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+            <PlaceCard name={room.name} rate={room.rate} slab={brand.slab} free plus={{ openAt: t.open }}>
+              <HoldForm t={t} primary={brand.primary} />
+            </PlaceCard>
+            <PlaceCard name={brand.rooms[1]?.name ?? room.name} rate={brand.rooms[1]?.rate ?? room.rate} slab={brand.slab} free={false} status="occupied" />
+            <PlaceCard name={brand.rooms[3]?.name ?? room.name} rate={brand.rooms[3]?.rate ?? room.rate} slab={brand.slab} free={false} status="reserved" />
           </div>
-          <div
-            style={{
-              position: "absolute",
-              left: 16,
-              right: 16,
-              bottom: 16,
-              height: 60,
-              borderRadius: 999,
-              backgroundColor: held ? "rgba(255,255,255,0.1)" : "#fff",
-              color: held ? "#fff" : S.fg,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              gap: 12,
-              fontSize: 17,
-              fontWeight: 800,
-              scale: `${interpolate(frame, [tap, tap + 3, tap + 12], [1, 0.94, 1], clamp)}`,
-            }}
-          >
-            {held ? (
-              <>
-                <svg width="34" height="34" viewBox="0 0 34 34">
-                  <circle cx="17" cy="17" r="14" stroke="rgba(255,255,255,0.2)" strokeWidth="4" fill="none" />
-                  <circle cx="17" cy="17" r="14" stroke={AMBER} strokeWidth="4" fill="none" strokeDasharray={88} strokeDashoffset={88 * (1 - ring)} transform="rotate(-90 17 17)" strokeLinecap="round" />
-                </svg>
-                <span style={{ fontVariantNumeric: "tabular-nums", direction: "ltr" }}>{`${Math.floor(left / 60)}:${String(left % 60).padStart(2, "0")}`}</span>
-                <span style={{ opacity: 0.7, fontWeight: 600 }}>{tr("to arrive")}</span>
-              </>
-            ) : (
-              tr("Reserve Now")
-            )}
-          </div>
-        </RoomCard>
-        <div style={{ position: "absolute", top: 502, left: 16, right: 16, height: 150, borderRadius: 28, padding: 22, backgroundColor: S.muted }}>
-          <Chip tone={S.red} size={13}>
-            <Dot color={S.red} /> {tr("Occupied")}
-          </Chip>
-          <div style={{ fontSize: 26, fontWeight: 800, marginTop: 12 }}>{tr(brand.rooms[1]?.name ?? "")}</div>
-          <div style={{ fontSize: 14, color: S.mutedFg, marginTop: 4 }}>{tr("Free in 25 min")}</div>
         </div>
-        <Touch x={195} y={455} at={tap} />
+        {frame >= t.panel - 4 ? <HoldPanel at={t.panel} name={room.name} slab={brand.slab} startNow /> : null}
+        <Dock active="Book" />
+        <Touch x={334} y={236} at={t.open} />
+        <Touch x={330} y={474} at={t.toggle} />
+        <Touch x={195} y={538} at={t.reserve} />
       </GuestPhone>
-      <Sfx name="success" at={tap + 4} />
+      <Sfx name="open" at={t.open + 2} />
+      <Sfx name="switch" at={t.toggle} />
+      <Sfx name="success" at={t.reserve + 16} />
     </AbsoluteFill>
   );
 };
@@ -474,7 +432,7 @@ const ClockScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const pulse = interpolate(frame, [110, 114, 126], [1, 1.04, 1], clamp);
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       <Badge />
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>
         <Rise text={c("bill")} at={4} size={80} color="rgba(255,255,255,0.85)" style={{ justifyContent: "center" }} />
@@ -494,206 +452,94 @@ const ClockScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   );
 };
 
-// ——— 5. Requests: from the seat, straight to the till ———————————————————
+// ——— 5. Requests: the room sheet on the phone, the till's open bills beside it ——————
 const AskScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const frame = useCurrentFrame();
   const c = useCopy();
-  const tr = useT();
+  const u = useClient();
   const ar = useLang() === "ar";
   const room = brand.rooms[0];
   const snack = brand.snacks[0];
-  const ask = 30;
-  const seen = 44;
-  const sent = 80;
-  const order = 104;
-  const lands = 118;
+  const k = { card: 12, sheet: 16, ask: 42, seen: 50, ack: 72, close: 96, menu: 100, add: 108, order: 128, place: 144, sent: 152, lands: 160, confirm: 176 };
   const secs = 2 * 3600 + 14 * 60 + Math.floor(frame / 30);
-  const soFar = Math.floor((2 + 14 / 60) * room.rate) + (frame >= lands ? snack.price : 0);
-  // Guests on the left in English, on the right in Arabic.
+  const roomCost = Math.floor((secs / 3600) * room.rate);
+  const controller = frame >= k.ack + 4 ? "onTheWay" : frame >= k.ask + 2 ? "sent" : "idle";
+  const onMenu = frame >= k.menu;
+  const others = (i: number) => brand.rooms[i] ?? room;
+  // The customer on the left in English, on the right in Arabic.
   const guestX = ar ? 960 : 0;
   const tillX = ar ? 0 : 960;
   const pulse = (from: number) => {
-    const t = interpolate(frame, [from, from + 12], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) });
     if (frame < from || frame > from + 14) return null;
-    const x = ar ? interpolate(t, [0, 1], [1240, 680]) : interpolate(t, [0, 1], [680, 1240]);
+    const p = interpolate(frame, [from, from + 12], [0, 1], { ...clamp, easing: Easing.inOut(Easing.cubic) });
+    const x = ar ? interpolate(p, [0, 1], [1240, 680]) : interpolate(p, [0, 1], [680, 1240]);
     return <div style={{ position: "absolute", left: x - 14, top: 526, width: 28, height: 28, borderRadius: 14, backgroundColor: AMBER, boxShadow: "0 0 40px 10px rgba(245,158,11,0.6)", zIndex: 40 }} />;
   };
+  const row =
+    frame >= k.sent ? (
+      <BillRow Icon={Send} tone="rgba(255,255,255,0.12)" line={`Sent · ${room.name}`} total={money(snack.price)} pill="Your room" />
+    ) : (
+      <TrayRow items={[snack.photo]} count={1} total={snack.price} button={frame >= k.place ? "Sending…" : frame >= k.order + 2 ? "Place Order" : "Order"} />
+    );
   return (
     <AbsoluteFill>
-      {/* The guest's side: the night */}
       <div style={{ position: "absolute", left: guestX, top: 0, width: 960, height: 1080, overflow: "hidden" }}>
-        <Night primary={brand.primary} />
-        <Rise text={c("seat")} at={4} size={64} style={{ position: "absolute", top: 70, left: 0, right: 0, justifyContent: "center" }} />
-        <GuestPhone x={273} y={180} height={880}>
-          <TopBar />
-          <RoomCard brand={brand} top={116} height={230}>
-            <Chip tone="#6EE7B7" size={13}>
-              <Dot color="#34D399" /> {tr("Clock running")}
-            </Chip>
-            <div style={{ fontSize: 26, fontWeight: 800, marginTop: 12 }}>{tr(room.name)}</div>
-            <div style={{ fontSize: 46, fontWeight: 800, letterSpacing: -1, marginTop: 2, fontVariantNumeric: "tabular-nums", direction: "ltr", textAlign: ar ? "right" : "left" }}>{hms(secs)}</div>
-          </RoomCard>
-          <div style={{ position: "absolute", top: 364, left: 16, right: 16 }}>
-            <div style={{ fontSize: 13, fontWeight: 600, color: S.mutedFg, marginBottom: 10 }}>{tr("Need something?")}</div>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: 10 }}>
-              {[
-                { Icon: Bell, label: "Waiter" },
-                { Icon: ReceiptText, label: "Get Bill" },
-                { Icon: Gamepad2, label: "Controller" },
-              ].map(({ Icon, label }) => {
-                const on = label === "Controller" && frame >= ask + 2;
-                return (
-                  <div
-                    key={label}
-                    style={{
-                      height: 96,
-                      borderRadius: 20,
-                      backgroundColor: on ? AMBER : "#fff",
-                      color: on ? "#fff" : S.fg,
-                      boxShadow: S.surface,
-                      display: "flex",
-                      flexDirection: "column",
-                      alignItems: "center",
-                      justifyContent: "center",
-                      gap: 8,
-                      fontSize: 14,
-                      fontWeight: 700,
-                    }}
-                  >
-                    {on ? <Check size={24} strokeWidth={3} /> : <Icon size={24} />}
-                    {tr(on ? "Asked" : label)}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-          <div style={{ position: "absolute", top: 520, left: 16, right: 16, display: "flex", alignItems: "center", gap: 14, padding: 12, borderRadius: 20, boxShadow: S.surface, backgroundColor: "#fff" }}>
-            <Img src={photoSrc(snack.photo)} style={{ width: 64, height: 64, borderRadius: 14, objectFit: "cover" }} />
-            <div style={{ flex: 1 }}>
-              <div style={{ fontSize: 16, fontWeight: 700 }}>{tr(snack.name)}</div>
-              <div style={{ fontSize: 13, color: S.mutedFg, marginTop: 2 }}>{money(snack.price)}</div>
-            </div>
-            <div
-              style={{
-                width: 40,
-                height: 40,
-                borderRadius: 20,
-                display: "grid",
-                placeItems: "center",
-                backgroundColor: frame >= order + 2 ? S.emerald : brand.primary,
-                color: "#fff",
-                scale: `${interpolate(frame, [order, order + 3, order + 12], [1, 0.85, 1], clamp)}`,
-              }}
-            >
-              {frame >= order + 2 ? <Check size={20} strokeWidth={3} /> : <Plus size={20} strokeWidth={3} />}
-            </div>
-          </div>
-          <Dock active="Book" />
-          <Touch x={325} y={412} at={ask} />
-          <Touch x={350} y={552} at={order} />
+        <Night brand={brand} />
+        <Rise text={c("seat")} at={4} size={64} style={{ position: "absolute", top: 60, left: 0, right: 0, justifyContent: "center" }} />
+        <GuestPhone x={273} y={160} height={880}>
+          {!onMenu ? (
+            <>
+              <TopBar />
+              <BookHeader sub={ar ? `انت في ${room.name}` : `You're in ${room.name}`} />
+              <div style={{ position: "absolute", top: 196, left: 16, right: 16, display: "flex", flexDirection: "column", gap: 16 }}>
+                <YourRoomCard name={room.name} secs={secs} slab={brand.slab} pressAt={k.card} />
+                <div style={{ fontSize: 13, fontWeight: 600, color: S.mutedFg, marginTop: 4 }}>{u("otherPlaces")}</div>
+                <div style={{ opacity: 0.6 }}>
+                  <PlaceCard name={others(1).name} rate={others(1).rate} slab={brand.slab} free={false} status="occupied" />
+                </div>
+              </div>
+              <Dock active="Book" />
+              <RoomSheet at={k.sheet} closeAt={k.close} slab={brand.slab} primary={brand.primary} secs={secs} members={["You", "Omar", "Karim", "Nour"]} controller={controller} />
+              <Touch x={195} y={300} at={k.card} />
+              <Touch x={309} y={760} at={k.ask} />
+            </>
+          ) : (
+            <>
+              <MenuScreen counts={{ [snack.photo]: frame >= k.add + 2 ? 1 : 0 }} />
+              <TraySheet openAt={k.order + 2} closeAt={k.sent} lines={[snack.photo]} />
+              <Dock row={row} rowAt={k.add + 10} />
+              <Flight dish={snack.photo} row={0} slot={0} at={k.add} />
+              <Touch x={352} y={192} at={k.add} />
+              <Touch x={318} y={746} at={k.order} />
+              <Touch x={300} y={746} at={k.place} />
+            </>
+          )}
         </GuestPhone>
       </div>
-      {/* The till's side: daylight */}
       <div style={{ position: "absolute", left: tillX, top: 0, width: 960, height: 1080, backgroundColor: "#eef0f4", overflow: "hidden" }}>
-        <Rise text={c("till")} at={20} size={64} color={S.fg} style={{ position: "absolute", top: 70, left: 0, right: 0, justifyContent: "center" }} />
-        <div
-          style={{
-            position: "absolute",
-            left: 150,
-            top: 260,
-            width: 660,
-            padding: 36,
-            borderRadius: 32,
-            backgroundColor: "#fff",
-            border: `2px solid ${frame >= seen && frame < sent ? AMBER : S.border}`,
-            boxShadow: "0 40px 80px -30px rgba(15,23,42,0.35)",
-            fontFamily: ar ? plexArabic : inter,
-            direction: ar ? "rtl" : "ltr",
-            color: S.fg,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 12, fontSize: 32, fontWeight: 800 }}>
-              <Gamepad2 size={32} /> {tr(room.name)}
-            </div>
-            <Chip tone="#047857" size={20}>
-              {tr("In use")}
-            </Chip>
-          </div>
-          <div style={{ display: "flex", alignItems: "center", gap: 14, marginTop: 20, fontSize: 72, fontWeight: 800, fontVariantNumeric: "tabular-nums", direction: "ltr", justifyContent: ar ? "flex-end" : "flex-start" }}>
-            <Timer size={44} color={S.mutedFg} />
-            {hms(secs)}
-          </div>
-          <div style={{ fontSize: 26, color: S.mutedFg, marginTop: 6 }}>
-            {money(soFar)} {tr("so far")}
-          </div>
-          <div style={{ marginTop: 26, display: "flex", flexDirection: "column", gap: 14 }}>
-            {frame >= seen ? (
-              <div
-                style={{
-                  height: 72,
-                  borderRadius: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "0 22px",
-                  fontSize: 26,
-                  fontWeight: 700,
-                  backgroundColor: frame >= sent ? "rgba(16,185,129,0.12)" : AMBER,
-                  color: frame >= sent ? "#047857" : "#fff",
-                  scale: `${interpolate(frame, [seen, seen + 10], [0.7, 1], { ...clamp, easing: land })}`,
-                }}
-              >
-                {frame >= sent ? <Check size={28} /> : <Gamepad2 size={28} />}
-                {tr(frame >= sent ? "Controller sent" : "Controller requested")}
-              </div>
-            ) : null}
-            {frame >= lands ? (
-              <div
-                style={{
-                  height: 72,
-                  borderRadius: 18,
-                  display: "flex",
-                  alignItems: "center",
-                  gap: 14,
-                  padding: "0 14px",
-                  fontSize: 26,
-                  fontWeight: 700,
-                  backgroundColor: S.muted,
-                  scale: `${interpolate(frame, [lands, lands + 10], [0.7, 1], { ...clamp, easing: land })}`,
-                }}
-              >
-                <Img src={photoSrc(snack.photo)} style={{ width: 48, height: 48, borderRadius: 12, objectFit: "cover" }} />
-                {`1x ${tr(snack.name)}`}
-                <span style={{ marginInlineStart: "auto", color: S.mutedFg, fontWeight: 600 }}>{tr("New order")}</span>
-              </div>
-            ) : null}
-          </div>
-          <div style={{ position: "absolute", left: 0, top: 0, width: 660, height: "100%" }}>
-            {frame >= sent - 4 && frame < sent + 20 ? (
-              <div
-                style={{
-                  position: "absolute",
-                  left: ar ? 480 : 180,
-                  top: 340,
-                  width: 52,
-                  height: 52,
-                  borderRadius: 26,
-                  backgroundColor: "rgba(15,23,42,0.18)",
-                  scale: `${interpolate(frame, [sent - 4, sent, sent + 14], [0.4, 1, 1.6], clamp)}`,
-                  opacity: interpolate(frame, [sent - 4, sent, sent + 18], [0, 1, 0], clamp),
-                }}
-              />
-            ) : null}
-          </div>
-        </div>
+        <Rise text={c("till")} at={20} size={64} color={S.fg} style={{ position: "absolute", top: 60, left: 0, right: 0, justifyContent: "center" }} />
+        <Screen x={ar ? -320 : 40} y={170} width={1240} logical={[960, 860]} font={inter}>
+          <TillBills
+            bills={[
+              { name: room.name, secs, total: roomCost + (frame >= k.confirm + 2 ? snack.price : 0) },
+              { name: others(1).name, secs: 38 * 60 + Math.floor(frame / 30), total: 38 + 75 },
+              { name: others(4).name, secs: 2 * 3600 + 5 * 60 + Math.floor(frame / 30), total: 83 + 120 },
+              { name: others(5).name, secs: 54 * 60 + Math.floor(frame / 30), total: 36 },
+            ]}
+            requests={[{ room: room.name, at: k.seen, ackAt: k.ack }]}
+            orders={[{ room: room.name, number: 58, who: "Lina", total: snack.price, at: k.lands, confirmAt: k.confirm }]}
+            popAt={{ [room.name]: k.confirm + 2 }}
+          />
+          <Touch x={90} y={202} at={k.ack} />
+          <Touch x={264} y={331} at={k.confirm} />
+        </Screen>
       </div>
-      {pulse(ask + 2)}
-      {pulse(order + 2)}
-      <Sfx name="ding" at={seen} />
-      <Sfx name="tap" at={sent} />
-      <Sfx name="success" at={sent + 2} />
-      <Sfx name="ding" at={lands} />
+      {pulse(k.ask + 2)}
+      {pulse(k.sent)}
+      <Sfx name="ding" at={k.seen} />
+      <Sfx name="success" at={k.ack + 4} />
+      <Sfx name="ding" at={k.lands} />
+      <Sfx name="success" at={k.confirm + 2} />
     </AbsoluteFill>
   );
 };
@@ -723,7 +569,7 @@ const BillScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const FRIENDS = ["Lina", "Omar", "Karim", "Nour"];
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       <Badge />
       <div style={{ position: "absolute", top: 120, left: 0, right: 0, display: "flex", justifyContent: "center" }}>
         <Rise text={c("onBill")} at={4} size={76} out={split - 6} style={{ position: "absolute", justifyContent: "center" }} />
@@ -839,83 +685,43 @@ const BillScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   );
 };
 
-// ——— 7. The owner: every room live on the till ————————————————————————————
+// ——— 7. The owner: the real till, pulling back from one bill to the whole floor ——————
 const OwnerScene: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const frame = useCurrentFrame();
   const c = useCopy();
-  const tr = useT();
-  const states = [
-    { s: "in", t: 2 * 3600 + 14 * 60 },
-    { s: "in", t: 38 * 60 },
-    { s: "free", t: 0 },
-    { s: "held", t: 0 },
-    { s: "in", t: 2 * 3600 + 5 * 60 },
-    { s: "in", t: 54 * 60 },
-  ] as const;
-  const rooms = Array.from({ length: 6 }, (_, i) => ({ ...states[i], name: brand.rooms[i]?.name ?? `Room ${i + 1}`, rate: brand.rooms[i]?.rate ?? brand.rooms[0].rate }));
-  // The camera starts on the booked room and pulls back to the whole floor, then settles up to make room for the line.
+  const r = (i: number) => brand.rooms[i] ?? brand.rooms[0];
+  const run = (start: number, i: number) => {
+    const secs = start + Math.floor(frame / 30);
+    return { name: r(i).name, secs, total: Math.floor((secs / 3600) * r(i).rate) };
+  };
+  const bills = [run(2 * 3600 + 14 * 60, 0), run(38 * 60, 1), run(2 * 3600 + 5 * 60, 4), run(54 * 60, 5)];
+  bills[0].total += brand.snacks[0].price;
+  // The camera starts on the booked room's bill and pulls back to the whole floor, then makes room for the line.
   const pull = interpolate(frame, [4, 54], [0, 1], { ...clamp, easing: Easing.bezier(0.65, 0, 0.35, 1) });
   const settle = interpolate(frame, [76, 96], [0, 1], { ...clamp, easing: ease });
-  const zoom = interpolate(pull, [0, 1], [2.7, 1]) * (1 - settle * 0.16);
-  const focusX = interpolate(pull, [0, 1], [420, 960]);
-  const focusY = interpolate(pull, [0, 1], [330, 540]) + settle * 60;
+  const zoom = interpolate(pull, [0, 1], [3, 1]) * (1 - settle * 0.14);
+  const fx = interpolate(pull, [0, 1], [682, 960]);
+  const fy = interpolate(pull, [0, 1], [543, 540]) + settle * 60;
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
-      <AbsoluteFill style={{ transformOrigin: "0 0", transform: `translate(960px, 540px) scale(${zoom}) translate(${-focusX}px, ${-focusY}px)` }}>
+      <Night brand={brand} />
+      <AbsoluteFill style={{ transformOrigin: "0 0", transform: `translate(960px, 540px) scale(${zoom}) translate(${-fx}px, ${-fy}px)` }}>
         <Screen x={160} y={60} width={1600} logical={[1280, 800]} font={inter}>
-          <div style={{ height: 64, display: "flex", alignItems: "center", gap: 16, padding: "0 20px", borderBottom: `1px solid ${S.border}` }}>
-            <div style={{ fontSize: 20, fontWeight: 800 }}>{tr("Till")}</div>
-            <div style={{ display: "flex", gap: 6, padding: 4, borderRadius: 12, backgroundColor: S.muted }}>
-              {["Sale", "Open bills"].map((t, i) => (
-                <div key={t} style={{ padding: "8px 16px", borderRadius: 9, fontSize: 14, fontWeight: 600, backgroundColor: i === 1 ? "#fff" : "transparent", color: i === 1 ? S.fg : S.mutedFg }}>
-                  {tr(t)}
-                </div>
-              ))}
-            </div>
-          </div>
-          <div style={{ padding: 20, display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 16 }}>
-            {rooms.map((r) => {
-              const live = r.s === "in";
-              const secs = r.t + Math.floor(frame / 30);
-              return (
-                <div key={r.name} style={{ minHeight: 330, padding: 22, borderRadius: 16, border: `1px solid ${S.border}`, backgroundColor: "#fff", boxShadow: "0 1px 2px rgba(0,0,0,.05)" }}>
-                  <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-                    <div style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 20, fontWeight: 700 }}>
-                      <Gamepad2 size={20} /> {tr(r.name)}
-                    </div>
-                    <span
-                      style={{
-                        padding: "3px 10px",
-                        borderRadius: 999,
-                        fontSize: 13,
-                        fontWeight: 700,
-                        backgroundColor: live ? "rgba(16,185,129,0.12)" : r.s === "held" ? "rgba(245,158,11,0.15)" : S.muted,
-                        color: live ? "#047857" : r.s === "held" ? "#b45309" : S.mutedFg,
-                      }}
-                    >
-                      {tr(live ? "In use" : r.s === "held" ? "Reserved" : "Free")}
-                    </span>
-                  </div>
-                  {live ? (
-                    <>
-                      <div style={{ display: "flex", alignItems: "center", gap: 10, marginTop: 56, fontSize: 52, fontWeight: 800, fontVariantNumeric: "tabular-nums", direction: "ltr" }}>
-                        <Timer size={30} color={S.mutedFg} />
-                        {hms(secs)}
-                      </div>
-                      <div style={{ fontSize: 18, color: S.mutedFg, marginTop: 8 }}>{`${money(Math.floor((secs / 3600) * r.rate))} · ${r.rate}/hour`}</div>
-                    </>
-                  ) : (
-                    <div style={{ marginTop: 64, fontSize: 20, color: S.mutedFg }}>{tr(r.s === "held" ? "Held · 8 min left" : "Free to play")}</div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+          <TillFloor
+            biz={brand.name}
+            places={[
+              { name: r(2).name, dot: "#22c55e" },
+              { name: r(3).name, dot: "#f59e0b", detail: "Omar" },
+            ]}
+          >
+            <TillBills bills={bills} reserved={{ room: r(3).name, who: "Omar", left: 482 }} />
+          </TillFloor>
         </Screen>
       </AbsoluteFill>
       <Rise text={c("live")} at={84} size={84} style={{ position: "absolute", bottom: 54, left: 0, right: 0, justifyContent: "center" }} />
-      <Badge />
+      <AbsoluteFill style={{ opacity: interpolate(frame, [50, 60], [0, 1], clamp) }}>
+        <Badge />
+      </AbsoluteFill>
     </AbsoluteFill>
   );
 };
@@ -928,7 +734,7 @@ const EndCard: React.FC<{ brand: ClientBrand }> = ({ brand }) => {
   const f = useFont();
   return (
     <AbsoluteFill>
-      <Night primary={brand.primary} />
+      <Night brand={brand} />
       <Sfx name="impact" at={10} volume={0.7} />
       <Sfx name="success" at={66} />
       <AbsoluteFill style={{ justifyContent: "center", alignItems: "center" }}>

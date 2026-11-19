@@ -12,6 +12,7 @@
       { "name": "PS4 Room 4", "rate": 40 },
       { "name": "PS4 Room 5", "rate": 40 }
     ],
+    "accent": "#0ea5e9",
     "snacks": [
       { "name": "Mini Pizza", "price": 120, "photo": "pizza" },
       { "name": "Loaded Nachos", "price": 110, "photo": "nachos" },

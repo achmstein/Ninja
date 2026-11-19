@@ -507,7 +507,7 @@ export const Floor = Interactive.withSchema({
 
 // ——— The film
 const BUBBLES: Bubble[] = [
-  { who: "PS5 Room 3", whoAr: "أوضة 3", en: "Can we add an hour?", ar: "ممكن نزود ساعة؟", x: 180, y: 170, r: -3, tone: "#3b82f6" },
+  { who: "PS5 Room 3", whoAr: "أوضة 3", en: "We're done, how much?", ar: "خلصنا، الحساب كام؟", x: 180, y: 170, r: -3, tone: "#3b82f6" },
   { who: "PS5 Room 1", whoAr: "أوضة 1", en: "We need another controller!", ar: "محتاجين دراع تاني!", x: 1080, y: 120, r: 4, tone: "#f59e0b" },
   { who: "PS4 Room 4", whoAr: "أوضة 4", en: "Two more pizzas, please.", ar: "بيتزا كمان اتنين لو سمحت.", x: 980, y: 560, r: -4, tone: "#ef4444" },
   { who: "Counter", whoAr: "الكاشير", en: "How long has Room 2 been playing?", ar: "أوضة 2 بقالها قد إيه؟", x: 120, y: 620, r: 3, tone: "#0d9488" },
