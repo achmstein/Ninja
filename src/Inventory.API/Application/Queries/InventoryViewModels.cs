@@ -27,7 +27,9 @@ public record StockLevelView(
     decimal Value,
     /// <summary>What the branch last paid per base unit (the newest receipt); null when never received here.</summary>
     decimal? LastCost = null,
-    DateTime? LastCostAt = null);
+    DateTime? LastCostAt = null,
+    /// <summary>What the branch uses of it in a day (sold and wasted, over the last two weeks); null when none went out.</summary>
+    decimal? DailyUse = null);
 
 /// <summary>One receipt of an item at the branch, for the cost history.</summary>
 public record CostHistoryView(DateTime At, int? PurchaseId, string? Supplier, decimal Quantity, decimal UnitCost);

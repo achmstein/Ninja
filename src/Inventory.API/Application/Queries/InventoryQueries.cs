@@ -62,6 +62,7 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             .ToListAsync();
         var levels = await context.StockLevels.AsNoTracking().Where(l => l.BranchId == branchId).ToDictionaryAsync(l => l.StockItemId);
         var lastCosts = await GetLastCostsAsync(branchId);
+        var dailyUse = await GetDailyUseAsync(branchId, DateTime.UtcNow);
 
         var views = items.Select(s =>
         {
@@ -76,7 +77,8 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
                 IsLow: reorder is { } r && onHand <= r,
                 Value: StockValue(onHand, avg),
                 LastCost: last?.UnitCost,
-                LastCostAt: last?.At);
+                LastCostAt: last?.At,
+                DailyUse: dailyUse.TryGetValue(s.Id, out var use) ? use : null);
         });
 
         return (lowOnly ? views.Where(v => v.IsLow) : views).ToList();
@@ -332,6 +334,38 @@ public class InventoryQueries(InventoryContext context) : IInventoryQueries
             .ToListAsync();
 
         return last.ToDictionary(m => m.StockItemId, m => m.AvgUnitCostAfter!.Value);
+    }
+
+    /// <summary>
+    /// What the branch uses of each item in a day: what sales (less those taken
+    /// back) and waste took out over the last two weeks, by the days in them.
+    /// Items nothing went out of are left out.
+    /// </summary>
+    private async Task<Dictionary<int, decimal>> GetDailyUseAsync(int branchId, DateTime now)
+    {
+        var from = now - DailyUse.Window;
+        var went = await context.StockMovements.AsNoTracking()
+            .Where(m => m.BranchId == branchId && m.OccurredAt >= from
+                && (m.Type == MovementType.Sale || m.Type == MovementType.SaleReversal || m.Type == MovementType.Waste))
+            .GroupBy(m => m.StockItemId)
+            .Select(g => new { StockItemId = g.Key, Quantity = g.Sum(m => m.Quantity) })
+            .ToListAsync();
+        if (went.Count == 0) return [];
+
+        // An item the branch has had for less than the two weeks is averaged
+        // over the days it has had it, or its use would read as too little
+        var ids = went.Select(w => w.StockItemId).ToList();
+        var since = await context.StockMovements.AsNoTracking()
+            .Where(m => m.BranchId == branchId && ids.Contains(m.StockItemId))
+            .GroupBy(m => m.StockItemId)
+            .Select(g => new { StockItemId = g.Key, First = g.Min(m => m.RecordedAt) })
+            .ToDictionaryAsync(g => g.StockItemId, g => g.First);
+
+        var use = new Dictionary<int, decimal>();
+        foreach (var w in went)
+            if (DailyUse.Of(-w.Quantity, since.GetValueOrDefault(w.StockItemId, from), now) is { } perDay)
+                use[w.StockItemId] = perDay;
+        return use;
     }
 
     public async Task<Dictionary<int, (decimal UnitCost, DateTime At)>> GetLastCostsAsync(int branchId)
