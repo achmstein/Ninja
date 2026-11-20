@@ -150,23 +150,25 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           const SizedBox(height: 16),
           // Two rows, each the dialog's own width: the other ways to take the
           // place, then cancel and start. On one row the four buttons did not fit
-          if (session == null) ...[
+          if (session == null && (room.canReserve || room.kind != PlaceKind.room)) ...[
             Row(
               children: [
-                Expanded(
-                  child: SizedBox(
-                    height: Sizes.control,
-                    child: FButton(
-                      variant: FButtonVariant.outline,
-                      onPress: _busy ? null : _reserve,
-                      prefix: const Icon(FIcons.clock, size: Sizes.icon),
-                      child: Text(l10n.reserve, style: theme.typography.base.forButton),
+                // Only where the place takes bookings (its switch in the admin)
+                if (room.canReserve)
+                  Expanded(
+                    child: SizedBox(
+                      height: Sizes.control,
+                      child: FButton(
+                        variant: FButtonVariant.outline,
+                        onPress: _busy ? null : _reserve,
+                        prefix: const Icon(FIcons.clock, size: Sizes.icon),
+                        child: Text(l10n.reserve, style: theme.typography.base.forButton),
+                      ),
                     ),
                   ),
-                ),
                 // A timed table still seats people who only order
                 if (room.kind != PlaceKind.room) ...[
-                  const SizedBox(width: 8),
+                  if (room.canReserve) const SizedBox(width: 8),
                   Expanded(
                     child: SizedBox(
                       height: Sizes.control,

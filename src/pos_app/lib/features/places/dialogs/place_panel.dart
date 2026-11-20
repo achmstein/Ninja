@@ -492,13 +492,16 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           const SizedBox(height: 16),
           Row(
             children: [
-              Expanded(
-                child: bigButton(l10n.reserve,
-                    variant: FButtonVariant.outline,
-                    icon: const Icon(FIcons.clock, size: Sizes.icon),
-                    onPress: _busy ? null : () => _guarded((a) => a.reserve(room.id))),
-              ),
-              const SizedBox(width: 8),
+              // Reserve only where the place takes bookings (its switch in the admin)
+              if (room.canReserve) ...[
+                Expanded(
+                  child: bigButton(l10n.reserve,
+                      variant: FButtonVariant.outline,
+                      icon: const Icon(FIcons.clock, size: Sizes.icon),
+                      onPress: _busy ? null : () => _guarded((a) => a.reserve(room.id))),
+                ),
+                const SizedBox(width: 8),
+              ],
               Expanded(
                 child: bigButton(l10n.startSession, icon: playIcon, onPress: _busy ? null : () => _start(room)),
               ),

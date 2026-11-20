@@ -444,17 +444,25 @@ export function PlacePanel({
                   {localized(place?.description)}
                 </p>
               )}
-              <div className='mt-2 grid w-full grid-cols-2 gap-2'>
-                <Button
-                  variant='outline'
-                  size='lg'
-                  className='h-12'
-                  disabled={actions.isBusy}
-                  onClick={() => actions.reserve(toNumber(place?.id), null)}
-                >
-                  <Clock className='size-5' />
-                  {t('reserve')}
-                </Button>
+              {/* Reserve only where the place takes bookings (its switch in the admin) */}
+              <div
+                className={cn(
+                  'mt-2 grid w-full gap-2',
+                  place?.canReserve !== false && 'grid-cols-2'
+                )}
+              >
+                {place?.canReserve !== false && (
+                  <Button
+                    variant='outline'
+                    size='lg'
+                    className='h-12'
+                    disabled={actions.isBusy}
+                    onClick={() => actions.reserve(toNumber(place?.id), null)}
+                  >
+                    <Clock className='size-5' />
+                    {t('reserve')}
+                  </Button>
+                )}
                 <Button
                   size='lg'
                   className='h-12'

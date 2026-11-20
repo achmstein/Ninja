@@ -58,6 +58,11 @@ export function StartStayDialog({
 
   const chosen = findOption(place?.tariff, optionCode) ?? options[0]
 
+  // Reserve only where the place takes bookings (its switch in the admin);
+  // a table also seats people who only order
+  const canReserve = place?.canReserve !== false
+  const billOnly = !!onBillOnly && !!place && !isRoom(place)
+
   // The place panel used to offer Reserve beside Start; a free place now
   // opens this dialog directly, so it lives here for a walk-in
   const reserve = () => {
@@ -127,20 +132,23 @@ export function StartStayDialog({
             place, then cancel and start. On one row the four buttons were
             wider than the dialog and spilled out of both its sides */}
         <DialogFooter className='flex-col gap-2 sm:flex-col'>
-          {!reservation && (
+          {!reservation && (canReserve || billOnly) && (
             <div className='flex gap-2'>
-              <Button
-                variant='outline'
-                size='lg'
-                className='h-12 min-w-0 flex-1'
-                disabled={actions.isBusy}
-                onClick={reserve}
-              >
-                <Clock className='size-5' />
-                {t('reserve')}
-              </Button>
+              {/* Only where the place takes bookings (its switch in the admin) */}
+              {canReserve && (
+                <Button
+                  variant='outline'
+                  size='lg'
+                  className='h-12 min-w-0 flex-1'
+                  disabled={actions.isBusy}
+                  onClick={reserve}
+                >
+                  <Clock className='size-5' />
+                  {t('reserve')}
+                </Button>
+              )}
               {/* A timed table still seats people who only order */}
-              {onBillOnly && !isRoom(place) && (
+              {billOnly && onBillOnly && (
                 <Button
                   variant='outline'
                   size='lg'
