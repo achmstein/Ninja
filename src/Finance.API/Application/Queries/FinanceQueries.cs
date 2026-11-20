@@ -201,7 +201,10 @@ public class FinanceQueries(FinanceContext context, IBranchDays days) : IFinance
         var labourFacts = await context.LabourFacts.AsNoTracking()
             .Where(f => f.BranchId == branchId && f.PeriodStart <= to && f.PeriodEnd >= from)
             .ToListAsync();
-        var labour = labourFacts.Sum(f => f.ShareOf(from, to));
+        // A salary is earned a day at a time: while the month runs it has cost
+        // its days so far, not the whole month set against the sales to date
+        var today = await days.OfAsync(branchId, DateTime.UtcNow);
+        var labour = labourFacts.Sum(f => f.ShareOf(from, to, today));
 
         var expenses = await context.Expenses.AsNoTracking()
             .Where(e => e.BranchId == branchId && e.Date >= from && e.Date <= to && e.VoidedAt == null)

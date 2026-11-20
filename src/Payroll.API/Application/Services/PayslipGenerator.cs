@@ -102,7 +102,8 @@ public class PayslipGenerator(
         // costs the business, bonuses and deductions included
         await integrationEvents.AddAndSaveEventAsync(new EmployeeEarningsChangedIntegrationEvent(
             branchId, employee.Id, periodStart, periodEnd, Math.Max(0, statement.NetEarned),
-            PayslipId: payslip.Id, LabourCost: statement.LabourCost));
+            PayslipId: payslip.Id, LabourCost: statement.LabourCost,
+            Salary: statement.Salary, SalaryFrom: statement.SalaryFrom, SalaryTo: statement.SalaryTo));
 
         return payslip;
     }

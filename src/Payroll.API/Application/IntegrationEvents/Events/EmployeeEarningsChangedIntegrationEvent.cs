@@ -14,6 +14,14 @@ namespace Ninja.Payroll.API.Application.IntegrationEvents.Events;
 /// What the period cost the business: <see cref="NetEarned"/> plus the
 /// period's bonuses, less its deductions (<see cref="Domain.Services.PayStatement.LabourCost"/>).
 /// </param>
+/// <param name="Salary">
+/// The part of the cost that is a monthly salary, earned by the calendar a
+/// day at a time (<see cref="Domain.Services.PayStatement.Salary"/>): Finance
+/// counts it up to today while the period runs, so a month in progress is not
+/// charged the whole month's salaries against the sales so far.
+/// </param>
+/// <param name="SalaryFrom">The first day the salary covers inside the period.</param>
+/// <param name="SalaryTo">The last day it covers.</param>
 public record EmployeeEarningsChangedIntegrationEvent(
     int BranchId,
     int EmployeeId,
@@ -21,4 +29,7 @@ public record EmployeeEarningsChangedIntegrationEvent(
     DateOnly PeriodEnd,
     decimal NetEarned,
     int PayslipId = 0,
-    decimal? LabourCost = null) : IntegrationEvent;
+    decimal? LabourCost = null,
+    decimal Salary = 0,
+    DateOnly? SalaryFrom = null,
+    DateOnly? SalaryTo = null) : IntegrationEvent;

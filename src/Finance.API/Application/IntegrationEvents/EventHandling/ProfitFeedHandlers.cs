@@ -132,9 +132,14 @@ public class EmployeeEarningsChangedIntegrationEventHandler(
 
             if (fact is null)
             {
-                facts.Add(new LabourFact(@event.BranchId, @event.EmployeeId, @event.PayslipId, @event.PeriodStart, @event.PeriodEnd, cost, @event.CreationDate));
+                fact = facts.Add(new LabourFact(@event.BranchId, @event.EmployeeId, @event.PayslipId, @event.PeriodStart, @event.PeriodEnd, cost, @event.CreationDate));
+                fact.SetSalary(@event.Salary, @event.SalaryFrom, @event.SalaryTo);
             }
-            else if (!fact.Set(@event.BranchId, @event.PeriodEnd, cost, @event.CreationDate))
+            else if (fact.Set(@event.BranchId, @event.PeriodEnd, cost, @event.CreationDate))
+            {
+                fact.SetSalary(@event.Salary, @event.SalaryFrom, @event.SalaryTo);
+            }
+            else
             {
                 // The bus crossed two of them: a newer figure is already kept
                 logger.LogInformation(

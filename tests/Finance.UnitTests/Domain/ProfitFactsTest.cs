@@ -46,6 +46,32 @@ public class ProfitFactsTest
     }
 
     [TestMethod]
+    public void A_salary_costs_its_days_so_far_while_the_month_runs()
+    {
+        var nov1 = new DateOnly(2026, 11, 1);
+        var nov30 = new DateOnly(2026, 11, 30);
+
+        // 7,000 of salary and a 500 bonus on top
+        var fact = new LabourFact(1, 5, 42, nov1, nov30, 7500m, DateTime.UtcNow);
+        fact.SetSalary(7000m, nov1, nov30);
+
+        Assert.AreEqual(500m + 3500m, fact.ShareOf(nov1, nov30, new DateOnly(2026, 11, 15)), "half the month in: half the salary, and the bonus whole");
+        Assert.AreEqual(7500m, fact.ShareOf(nov1, nov30, nov30), "all of it on the last day");
+        Assert.AreEqual(7500m, fact.ShareOf(nov1, nov30, new DateOnly(2026, 12, 9)), "and ever after");
+        Assert.AreEqual(500m, fact.ShareOf(nov1, nov30, new DateOnly(2026, 10, 20)), "none of the salary before it starts");
+
+        // Hired on the 21st: ten days of salary, spread over those ten days
+        var hired = new LabourFact(1, 6, 43, nov1, nov30, 2000m, DateTime.UtcNow);
+        hired.SetSalary(2000m, new DateOnly(2026, 11, 21), nov30);
+        Assert.AreEqual(0m, hired.ShareOf(nov1, nov30, new DateOnly(2026, 11, 14)), "nothing before the day they started");
+        Assert.AreEqual(1000m, hired.ShareOf(nov1, nov30, new DateOnly(2026, 11, 25)));
+
+        // A daily wage, and a figure from a Payroll that names no salary, is what it says
+        var daily = new LabourFact(1, 7, 44, nov1, nov30, 900m, DateTime.UtcNow);
+        Assert.AreEqual(900m, daily.ShareOf(nov1, nov30, new DateOnly(2026, 11, 2)));
+    }
+
+    [TestMethod]
     public void A_payslip_over_a_months_end_is_shared_between_the_months_by_days()
     {
         // 20 March to 19 April: thirty-one days, twelve of them March's

@@ -48,6 +48,19 @@ public record PayStatement(
     /// and what was carried over belongs to earlier periods. Never below zero.
     /// </summary>
     public decimal LabourCost => Math.Max(0, NetEarned + Bonuses - Deductions);
+
+    /// <summary>
+    /// The part of <see cref="Earned"/> that is a monthly salary: money the
+    /// period earns by the calendar, a day at a time, whether or not a day
+    /// was marked. A daily wage is not in it (it is earned the day it is
+    /// worked). Finance counts it up to today while the period still runs.
+    /// </summary>
+    public decimal Salary { get; init; }
+
+    /// <summary>The first and last day the salary covers inside the period; null when there is none.</summary>
+    public DateOnly? SalaryFrom { get; init; }
+
+    public DateOnly? SalaryTo { get; init; }
 }
 
 /// <summary>
@@ -101,8 +114,23 @@ public static class PayCalculator
         decimal earned = 0, daysWorked = 0, paidOffDays = 0, absentDays = 0, absenceDeduction = 0, overtimeHours = 0, overtimePay = 0;
 
         // A monthly salary covers its segment whether or not days were marked
+        decimal salary = 0;
+        DateOnly? salaryFrom = null, salaryTo = null;
         foreach (var segment in segments.Where(s => s.Terms.Scheme == PayScheme.Monthly))
-            earned += Salary(employee, segment.Terms, segment.Start, segment.End, periodDays);
+        {
+            salary += Salary(employee, segment.Terms, segment.Start, segment.End, periodDays);
+
+            // The days of it the person was employed for: what the salary is spread over
+            var first = segment.Start > employee.StartedOn ? segment.Start : employee.StartedOn;
+            var last = employee.EndedOn is { } ended && ended < segment.End ? ended : segment.End;
+            if (last < first)
+                continue;
+
+            if (salaryFrom is null || first < salaryFrom) salaryFrom = first;
+            if (salaryTo is null || last > salaryTo) salaryTo = last;
+        }
+
+        earned += salary;
 
         // The marked days, oldest first, sharing one allowance of paid days off
         var carriedIn = Math.Max(0m, daysOffCarriedIn);
@@ -176,7 +204,12 @@ public static class PayCalculator
             atEnd.Scheme, atEnd.Rate, changedOn,
             daysWorked, paidOffDays, Math.Round(earned, 2), overtimeHours, Math.Round(overtimePay, 2), absentDays, Math.Round(absenceDeduction, 2),
             carriedIn, allowance, unused,
-            bonuses, deductions, advances, payments, carriedOver);
+            bonuses, deductions, advances, payments, carriedOver)
+        {
+            Salary = Math.Round(salary, 2),
+            SalaryFrom = salaryFrom,
+            SalaryTo = salaryTo,
+        };
     }
 
     /// <summary>

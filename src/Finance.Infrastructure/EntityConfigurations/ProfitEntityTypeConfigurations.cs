@@ -43,6 +43,7 @@ class LabourFactEntityTypeConfiguration : IEntityTypeConfiguration<LabourFact>
         builder.Property(f => f.Id).UseHiLo("labourfactseq", "finance");
         builder.Ignore(f => f.DomainEvents);
         builder.Property(f => f.Amount).HasPrecision(18, 2);
+        builder.Property(f => f.Salary).HasPrecision(18, 2);
         // One figure per payslip, the newest from Payroll; facts from before
         // Payroll named the payslip (0) stay one per employee and period start
         builder.HasIndex(f => new { f.PayslipId, f.EmployeeId, f.PeriodStart }).IsUnique();

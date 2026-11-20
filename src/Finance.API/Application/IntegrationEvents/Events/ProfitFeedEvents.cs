@@ -83,6 +83,19 @@ public record EmployeeEarningsChangedIntegrationEvent : IntegrationEvent
     /// </summary>
     public decimal? LabourCost { get; init; }
 
+    /// <summary>
+    /// The part of the cost that is a monthly salary, earned by the calendar
+    /// a day at a time; 0 for a daily wage and from a Payroll that did not
+    /// send it yet. Counted up to today while the period runs.
+    /// </summary>
+    public decimal Salary { get; init; }
+
+    /// <summary>The first day the salary covers inside the period.</summary>
+    public DateOnly? SalaryFrom { get; init; }
+
+    /// <summary>The last day it covers.</summary>
+    public DateOnly? SalaryTo { get; init; }
+
     /// <summary>The cost to book: <see cref="LabourCost"/>, or the earnings alone from an older Payroll.</summary>
     public decimal Cost() => LabourCost ?? NetEarned;
 }

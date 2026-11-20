@@ -162,6 +162,18 @@ public class LabourFact : Entity, IAggregateRoot
     /// <summary>When Payroll worked the figure out: an older one never replaces a newer.</summary>
     public DateTime AsOf { get; private set; }
 
+    /// <summary>
+    /// The part of <see cref="Amount"/> that is a monthly salary: earned by
+    /// the calendar, a day at a time, from <see cref="SalaryFrom"/> to
+    /// <see cref="SalaryTo"/>. The rest (a daily wage, overtime, bonuses) is
+    /// already only what has happened. 0 when the payslip has no salary.
+    /// </summary>
+    public decimal Salary { get; private set; }
+
+    public DateOnly? SalaryFrom { get; private set; }
+
+    public DateOnly? SalaryTo { get; private set; }
+
     protected LabourFact() { }
 
     public LabourFact(int branchId, int employeeId, int payslipId, DateOnly periodStart, DateOnly periodEnd, decimal amount, DateTime asOf)
@@ -185,6 +197,34 @@ public class LabourFact : Entity, IAggregateRoot
         return true;
     }
 
+    /// <summary>Which part of the figure is salary, and the days it is spread over.</summary>
+    public void SetSalary(decimal salary, DateOnly? from, DateOnly? to)
+    {
+        var known = salary > 0 && from is not null && to is not null && to >= from;
+        Salary = known ? Math.Min(salary, Amount) : 0;
+        SalaryFrom = known ? from : null;
+        SalaryTo = known ? to : null;
+    }
+
+    /// <summary>
+    /// What the period has cost up to <paramref name="today"/>: all of it once
+    /// the salary's last day has come, and before that the salary only for
+    /// its days so far. A month still running is then not charged its whole
+    /// salaries against the sales it has made so far.
+    /// </summary>
+    public decimal AmountBy(DateOnly today)
+    {
+        if (Salary <= 0 || SalaryFrom is not { } from || SalaryTo is not { } to || today >= to)
+            return Amount;
+
+        var rest = Amount - Salary;
+        if (today < from)
+            return rest;
+
+        var days = to.DayNumber - from.DayNumber + 1;
+        return rest + Math.Round(Salary * (today.DayNumber - from.DayNumber + 1) / days, 2, MidpointRounding.AwayFromZero);
+    }
+
     /// <summary>A fact kept before Payroll named the payslip, claimed by the payslip that now does.</summary>
     public void Adopt(int payslipId)
     {
@@ -198,7 +238,12 @@ public class LabourFact : Entity, IAggregateRoot
     /// inside them: a payslip from 20 March to 19 April is twelve days March's
     /// and nineteen April's.
     /// </summary>
-    public decimal ShareOf(DateOnly from, DateOnly to)
+    public decimal ShareOf(DateOnly from, DateOnly to) => ShareOf(from, to, Amount);
+
+    /// <summary>The same share of what the period has cost up to <paramref name="today"/> (<see cref="AmountBy"/>).</summary>
+    public decimal ShareOf(DateOnly from, DateOnly to, DateOnly today) => ShareOf(from, to, AmountBy(today));
+
+    private decimal ShareOf(DateOnly from, DateOnly to, decimal amount)
     {
         var start = PeriodStart > from ? PeriodStart : from;
         var end = PeriodEnd < to ? PeriodEnd : to;
@@ -206,10 +251,10 @@ public class LabourFact : Entity, IAggregateRoot
             return 0;
 
         if (start == PeriodStart && end == PeriodEnd)
-            return Amount;
+            return amount;
 
         var days = PeriodEnd.DayNumber - PeriodStart.DayNumber + 1;
-        return Math.Round(Amount * (end.DayNumber - start.DayNumber + 1) / days, 2, MidpointRounding.AwayFromZero);
+        return Math.Round(amount * (end.DayNumber - start.DayNumber + 1) / days, 2, MidpointRounding.AwayFromZero);
     }
 
     private void Apply(int branchId, DateOnly periodEnd, decimal amount, DateTime asOf)

@@ -415,6 +415,16 @@ namespace Finance.Infrastructure.Migrations
                     b.Property<DateOnly>("PeriodStart")
                         .HasColumnType("date");
 
+                    b.Property<decimal>("Salary")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<DateOnly?>("SalaryFrom")
+                        .HasColumnType("date");
+
+                    b.Property<DateOnly?>("SalaryTo")
+                        .HasColumnType("date");
+
                     b.HasKey("Id");
 
                     b.HasIndex("BranchId", "PeriodStart");

@@ -71,4 +71,20 @@ public class CorrectStartTest
         left.Leave(new DateOnly(2026, 11, 10));
         Assert.ThrowsExactly<PayrollDomainException>(() => left.CorrectStart(Nov14));
     }
+
+    [TestMethod]
+    public void A_statement_says_which_part_is_salary_and_the_days_it_covers()
+    {
+        var islam = Hired(Nov14);
+        var statement = Ninja.Payroll.Domain.Services.PayCalculator.Build(islam, Nov1, Nov30, [], []);
+
+        Assert.AreEqual(3966.67m, statement.Salary, "17 of the month's 30 days");
+        Assert.AreEqual(Nov14, statement.SalaryFrom);
+        Assert.AreEqual(Nov30, statement.SalaryTo);
+
+        var runner = Employee.Hire("Ahmed", null, null, 1, null, Nov1, PayScheme.Daily, 200);
+        var wage = Ninja.Payroll.Domain.Services.PayCalculator.Build(runner, Nov1, Nov30, [], []);
+        Assert.AreEqual(0m, wage.Salary, "a daily wage is earned the day it is worked");
+        Assert.IsNull(wage.SalaryFrom);
+    }
 }
