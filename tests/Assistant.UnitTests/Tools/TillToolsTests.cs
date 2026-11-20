@@ -26,24 +26,14 @@ public sealed class TillToolsTests
     /// <summary>
     /// The café at Nasr City (Maadi is quiet): Ahmed Hassan on the bill at
     /// Room 2, whose session he owns; table 4 free; a latte with a must-pick
-    /// size and an optional milk. Identity answers by the words searched.
+    /// size and an optional milk. Identity gives its whole customer list.
     /// </summary>
     private static Bench Cafe(Action<FakeHandler>? first = null)
     {
         var bench = new Bench().WithTenant();
         var h = bench.Handler;
         first?.Invoke(h);
-        h.OnJson("GET", "identity-api/api/identity/users", r =>
-        {
-            var q = HttpUtility.ParseQueryString(r.RequestUri!.Query)["search"] ?? "";
-            return q.ToLowerInvariant() switch
-            {
-                "ahmed" => new[] { AhmedAli, AhmedHassan },
-                "ahmed hassan" => new[] { AhmedHassan },
-                "منى" => new[] { Mona },
-                _ => Array.Empty<object>(),
-            };
-        });
+        h.OnJson("GET", "identity-api/api/identity/users", _ => new[] { AhmedAli, AhmedHassan, Mona });
         h.On("GET", "sales-api/api/tickets/open", r => FakeHandler.Json(r.Headers.GetValues(NinjaApiClient.BranchHeader).First() == "1"
             ? new object[]
             {
@@ -135,14 +125,14 @@ public sealed class TillToolsTests
     }
 
     [TestMethod]
-    public async Task Both_spellings_are_searched_and_staff_and_switched_off_accounts_are_left_out()
+    public async Task The_whole_list_is_read_once_and_staff_and_switched_off_accounts_are_left_out()
     {
         var bench = Cafe();
         var found = await CustomerFinder.FindAsync(bench.Api, 1, "Mona / منى", CustomerWhereabouts.None, default);
         Assert.AreEqual("u-mona", found.Match?.Id);
-        var searches = bench.Handler.Requests.Where(r => r.Url.Host == "identity-api").ToList();
-        Assert.HasCount(2, searches);
-        Assert.IsTrue(searches.All(r => r.Url.Query.Contains("enabled=true") && r.Url.Query.Contains("excludeRole=Admin,Owner,Cashier")));
+        var reads = bench.Handler.Requests.Where(r => r.Url.Host == "identity-api").ToList();
+        Assert.HasCount(1, reads);
+        Assert.IsTrue(reads.All(r => r.Url.Query.Contains("enabled=true") && r.Url.Query.Contains("excludeRole=Admin,Owner,Cashier") && !r.Url.Query.Contains("search=")));
     }
 
     [TestMethod]
@@ -157,26 +147,9 @@ public sealed class TillToolsTests
     }
 
     [TestMethod]
-    public void A_name_sounds_the_same_in_either_script()
-    {
-        Assert.AreEqual(CustomerFinder.Sound("Ahmed"), CustomerFinder.Sound("أحمد"));
-        Assert.AreEqual(CustomerFinder.Sound("Mohammed"), CustomerFinder.Sound("محمد"));
-        Assert.AreEqual(CustomerFinder.Sound("Mohamed"), CustomerFinder.Sound("محمد"));
-        Assert.AreEqual(CustomerFinder.Sound("Sherif"), CustomerFinder.Sound("شريف"));
-        Assert.AreEqual(CustomerFinder.Sound("Karim"), CustomerFinder.Sound("كريم"));
-        Assert.AreEqual(CustomerFinder.Sound("Mona"), CustomerFinder.Sound("منى"));
-        Assert.AreEqual(CustomerFinder.Sound("Abdallah"), CustomerFinder.Sound("عبدالله"));
-        Assert.AreEqual(CustomerFinder.Sound("Fatma"), CustomerFinder.Sound("فاطمة"));
-        Assert.AreEqual(CustomerFinder.Sound("Gamal"), CustomerFinder.Sound("جمال"));
-        Assert.AreNotEqual(CustomerFinder.Sound("Karim"), CustomerFinder.Sound("Kamal"));
-    }
-
-    [TestMethod]
     public async Task A_name_said_in_Arabic_finds_the_account_saved_in_English()
     {
-        var bench = new Bench().WithTenant();
-        bench.Handler.OnJson("GET", "identity-api/api/identity/users", r =>
-            HttpUtility.ParseQueryString(r.RequestUri!.Query)["search"] is null ? new[] { AhmedHassan, AhmedAli, Mona } : Array.Empty<object>());
+        var bench = Cafe();
 
         var found = await CustomerFinder.FindAsync(bench.Api, 1, "أحمد حسن", CustomerWhereabouts.None, default);
         Assert.AreEqual("u-hassan", found.Match?.Id, found.Why);

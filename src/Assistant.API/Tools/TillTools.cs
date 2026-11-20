@@ -46,7 +46,7 @@ public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlo
     // --- Find a customer ---------------------------------------------------------
 
     [McpServerTool(Name = FindCustomerTool, Title = "Find a customer", ReadOnly = true, Idempotent = true, OpenWorld = false)]
-    [Description("Finds a customer account by name (either language, a typo forgiven), phone or part of it, and tells about them: phone, email, since when, what they owe on their tab (or their credit) with its last moves, loyalty points and tier, the bills they have open now and where they are, how many orders and the latest ones. Picks the one meant when it can (an exact full name, or the only match who is here now); otherwise lists them to choose from. " +
+    [Description("Finds a customer account by name (said in Arabic or English whichever way it is saved, any spelling), phone or part of it, and tells about them: phone, email, since when, what they owe on their tab (or their credit) with its last moves, loyalty points and tier, the bills they have open now and where they are, how many orders and the latest ones. Picks the one meant when it can (an exact full name, or the only match who is here now); otherwise lists them to choose from. " +
         "Use for 'how much does Ahmed owe', 'Mona's points', 'is Karim here', 'when did 0100 123 last come', and before anything done for a customer. ring_up_order and assign_room_customer find the customer themselves.")]
     public async Task<CallToolResult> FindCustomer(
         [Description(CustomerFinder.SpellingDescription)] string customer,
@@ -70,7 +70,7 @@ public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlo
             details,
             candidates = found.Match is null ? found.Candidates.Take(8).Select(u => CustomerFinder.Row(u, floor.Here, snap)) : null,
             others = found.Match is not null && found.Candidates.Count > 1 ? found.Candidates.Count - 1 : (int?)null,
-            note = found.Why ?? (found.Candidates.Count > 1 ? "Picked as the exact name or the only one here now; say so if it is someone else." : null),
+            note = found.Why ?? (found.Candidates.Count > 1 ? "Picked as the closest name or the only one here now; say so if it is someone else." : null),
             errors = floor.Errors.Count > 0 ? floor.Errors : null,
         });
     }
@@ -168,7 +168,7 @@ public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlo
             }
             else if (found.Candidates.Count > 1)
             {
-                customerNote = $"{found.Candidates.Count - 1} other customer{(found.Candidates.Count == 2 ? "" : "s")} matched; this is the {(CustomerFinder.Spellings(customer).Any(s => CustomerFinder.Normalize(s) == CustomerFinder.Normalize(account.Name)) ? "exact name" : "one here now")}.";
+                customerNote = $"{found.Candidates.Count - 1} other customer{(found.Candidates.Count == 2 ? "" : "s")} matched; this is the {(floor.Here.IsHere(account) ? "one here now" : "closest name")}.";
             }
         }
 

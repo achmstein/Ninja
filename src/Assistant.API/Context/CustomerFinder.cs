@@ -29,28 +29,35 @@ public sealed record CustomerWhereabouts(IReadOnlyList<OpenBillView> Bills, IRea
 /// <summary>What a customer search came to: one account, several to pick from, or none.</summary>
 public sealed record CustomerSearch(DirectoryUserView? Match, IReadOnlyList<DirectoryUserView> Candidates, string? Why)
 {
-    public bool Ambiguous => Match is null && Candidates.Count > 1;
+    /// <summary>Nobody was picked, and there is someone to ask about: several alike, or one that is only close.</summary>
+    public bool Ambiguous => Match is null && Candidates.Count > 0;
 }
 
 /// <summary>
-/// Finds the customer the owner named, the way the till's customer search
-/// does (Identity's directory: any word of the name, a typo, Arabic letter
-/// variants, a phone's digits), in every spelling given at once: "Ahmed
-/// Hassan / أحمد حسن" searches both, and a name said in one script is also
-/// matched by sound against every account (أحمد finds the Ahmed saved in
-/// English). Among several, an exact full name wins,
-/// then the one person who is here right now (on an open bill or in a
-/// room); otherwise the owner is asked, with phones to tell them apart.
-/// Staff and switched-off accounts are not customers here.
+/// Finds the customer the owner named. Every customer account is read and
+/// each name is scored against what was said by <see cref="NameMatch"/>:
+/// by sound, so the script it was said in, the spelling (Mohamed, Mohammed,
+/// Muhammad) and words written together or apart (ElAmeen, El Ameen,
+/// الأمين) do not matter, while a different name (Mahmoud) does. Every
+/// spelling given is tried ("Ahmed Hassan / أحمد حسن") and the best counts.
+/// A phone's digits, an email or an id from find_customer find the account
+/// directly. The whole name wins over the same words inside a longer name;
+/// among several alike, the one person who is here right now (on an open
+/// bill or in a room); otherwise the owner is asked, with phones to tell
+/// them apart. A name that is only close (a letter wrong) is asked about,
+/// never acted on. Staff and switched-off accounts are not customers here.
 /// </summary>
 public static class CustomerFinder
 {
     public const string Identity = "identity-api";
     private const string NotCustomers = "Admin,Owner,Cashier";
-    private const int PerSpelling = 10;
+    private const int Listed = 8;
+
+    /// <summary>Names this close to the best are the same answer: one is not picked over the other.</summary>
+    private const double Tie = 0.07;
 
     public const string SpellingDescription =
-        "The customer as the owner said it: a name, a phone number, or an id from find_customer. For a name, also give its spelling in the other script after a slash, e.g. \"Ahmed Hassan / أحمد حسن\" or \"منى / Mona\", since an account may be saved in either.";
+        "The customer as the owner said it: a name, a phone number, or an id from find_customer. Give the name exactly as said, in the script it was said in; it is matched by sound against accounts saved in Arabic or English, so do not translate or respell it. Give the full name when it was said: the more of it, the surer the match.";
 
     public static string[] Spellings(string text) =>
         [.. text.Split(['/', '|', '،'], StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries).Where(s => s.Length > 0).Distinct(StringComparer.OrdinalIgnoreCase)];
@@ -60,152 +67,83 @@ public static class CustomerFinder
         text = text?.Trim();
         if (string.IsNullOrEmpty(text)) return new(null, [], "Say which customer.");
 
+        // The till's own list, whole: a few thousand names are scored here faster than they are searched for twice
+        var listed = await api.GetAsync<List<DirectoryUserView>>(Identity, $"/api/identity/users?max=20000&excludeRole={NotCustomers}&enabled=true", branchId, ct);
+        if (!listed.IsOk) return new(null, [], listed.Error);
+        var everyone = listed.Value ?? [];
+
         if (Guid.TryParse(text, out _))
         {
-            // The till's own list (the by-id read is the admin's): the id from find_customer
-            var listed = await api.GetAsync<List<DirectoryUserView>>(Identity, $"/api/identity/users?max=20000&excludeRole={NotCustomers}&enabled=true", branchId, ct);
-            if (!listed.IsOk) return new(null, [], listed.Error);
-            return (listed.Value ?? []).FirstOrDefault(u => u.Id.Equals(text, StringComparison.OrdinalIgnoreCase)) is { } user
+            return everyone.FirstOrDefault(u => u.Id.Equals(text, StringComparison.OrdinalIgnoreCase)) is { } user
                 ? new(user, [user], null)
                 : new(null, [], $"No customer has id {text}.");
         }
 
-        var spellings = Spellings(text);
-        var found = new List<DirectoryUserView>();
-        foreach (var spelling in spellings)
-        {
-            var result = await api.GetAsync<List<DirectoryUserView>>(Identity,
-                $"/api/identity/users?search={Uri.EscapeDataString(spelling)}&max={PerSpelling}&excludeRole={NotCustomers}&enabled=true", branchId, ct);
-            if (!result.IsOk) return new(null, [], result.Error);
-            foreach (var u in result.Value ?? [])
-                if (found.All(f => f.Id != u.Id)) found.Add(u);
-        }
-
-        // Said in one script only: the account may be saved in the other ("أحمد" for
-        // Ahmed). The whole directory is matched by how the name sounds
-        if (!Mixed(spellings) && !spellings.All(LooksLikePhone))
-        {
-            var everyone = await api.GetAsync<List<DirectoryUserView>>(Identity, $"/api/identity/users?max=20000&excludeRole={NotCustomers}&enabled=true", branchId, ct);
-            if (everyone.IsOk)
-                foreach (var u in SoundsLike(everyone.Value ?? [], spellings))
-                    if (found.All(f => f.Id != u.Id)) found.Add(u);
-        }
-
-        return Pick(found, spellings, here, text);
+        return Pick(everyone, Spellings(text), here, text);
     }
-
-    private static bool IsArabic(char c) => c is >= '\u0600' and <= '\u06FF';
-
-    private static bool Mixed(IEnumerable<string> spellings) =>
-        spellings.Any(s => s.Any(IsArabic)) && spellings.Any(s => s.Any(char.IsAsciiLetter));
 
     private static bool LooksLikePhone(string s) => s.Count(char.IsDigit) >= 3 && !s.Any(char.IsLetter);
 
-    /// <summary>
-    /// The accounts whose name sounds like what was said, in either script:
-    /// every word said is the start of one of the name's words, by sound
-    /// (<see cref="Sound"/>), whole words first.
-    /// </summary>
-    public static IEnumerable<DirectoryUserView> SoundsLike(IEnumerable<DirectoryUserView> users, IEnumerable<string> spellings)
+    /// <summary>The accounts that answer what was said, the closest first.</summary>
+    public static List<(DirectoryUserView User, NameMatch.Result How)> Rank(IEnumerable<DirectoryUserView> users, IReadOnlyList<string> spellings)
     {
-        var queries = spellings.Select(s => s.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(Sound).Where(w => w.Length >= 2).ToArray())
-            .Where(q => q.Length > 0).ToList();
-        if (queries.Count == 0) return [];
+        var phones = spellings.Where(LooksLikePhone).Select(NameMatch.PhoneCore).Where(p => p.Length >= 3).ToList();
+        var emails = spellings.Where(s => s.Contains('@')).ToList();
+        var names = spellings.Where(s => !LooksLikePhone(s) && !s.Contains('@')).Select(NameMatch.Words).Where(w => w.Length > 0).ToList();
 
-        return users
-            .Select(u =>
-            {
-                var words = u.Name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(Sound).Where(w => w.Length > 0).ToArray();
-                var best = 0;
-                foreach (var q in queries)
-                {
-                    var score = 0;
-                    foreach (var w in q)
-                    {
-                        var hit = words.Any(n => n == w) ? 2 : words.Any(n => n.StartsWith(w, StringComparison.Ordinal)) ? 1 : 0;
-                        if (hit == 0) { score = 0; break; }
-                        score += hit;
-                    }
-                    best = Math.Max(best, score);
-                }
-                return (User: u, Score: best);
-            })
-            .Where(x => x.Score > 0)
-            .OrderByDescending(x => x.Score)
-            .Take(PerSpelling)
-            .Select(x => x.User);
-    }
-
-    /// <summary>
-    /// A name word as it sounds, the same in Arabic and in English letters:
-    /// its consonants, with the vowels, alef, waw and ya, hamza and ain left
-    /// out and a doubled sound said once. "أحمد" and "Ahmed" are both hmd,
-    /// "محمد" and "Mohammed" mhmd, "شريف" and "Sherif" xrf.
-    /// </summary>
-    public static string Sound(string word)
-    {
-        // Ta marbuta is said "a" in a name (فاطمة, Fatma): gone before it is read as ه
-        var w = Normalize(word.Replace("ة", ""));
-        var sb = new StringBuilder(w.Length);
-        void Add(char c)
+        var ranked = new List<(DirectoryUserView User, NameMatch.Result How)>();
+        foreach (var user in users)
         {
-            if (sb.Length == 0 || sb[^1] != c) sb.Append(c);
-        }
-        for (var i = 0; i < w.Length; i++)
-        {
-            var c = w[i];
-            var next = i + 1 < w.Length ? w[i + 1] : '\0';
-            // Two Latin letters for one Arabic sound
-            if (next == 'h' && c is 's' or 'c' or 'k' or 't' or 'd' or 'g' or 'z')
+            NameMatch.Result? best = null;
+            void Offer(NameMatch.Result? how)
             {
-                Add(c switch { 's' or 'c' => 'x', 'k' => 'k', 't' => 't', 'd' => 'z', 'g' => 'j', _ => 'z' });
-                i++;
-                continue;
+                if (how is { } h && (best is not { } b || h.Score > b.Score)) best = h;
             }
-            char? sound = c switch
+
+            if (names.Count > 0)
             {
-                'b' or 'p' or 'ب' => 'b',
-                't' or 'ت' or 'ط' or 'ث' => 't',
-                'j' or 'g' or 'ج' or 'غ' => 'j',
-                'h' or 'ح' or 'ه' => 'h',
-                'k' or 'q' or 'c' or 'خ' or 'ق' or 'ك' => 'k',
-                'd' or 'د' or 'ض' => 'd',
-                'z' or 'ذ' or 'ز' or 'ظ' => 'z',
-                'r' or 'ر' => 'r',
-                's' or 'س' or 'ص' => 's',
-                'x' or 'ش' => 'x',
-                'f' or 'v' or 'ف' => 'f',
-                'l' or 'ل' => 'l',
-                'm' or 'م' => 'm',
-                'n' or 'ن' => 'n',
-                _ => null, // vowels, alef, waw, ya, hamza, ain, ta marbuta
-            };
-            if (sound is { } s) Add(s);
+                var saved = NameMatch.Words(user.Name);
+                foreach (var said in names) Offer(NameMatch.Compare(said, saved));
+            }
+            if (phones.Count > 0 && NameMatch.PhoneCore(user.PhoneNumber) is { Length: > 0 } phone)
+            {
+                foreach (var said in phones)
+                    Offer(phone == said ? new(1, 1, 1) : phone.EndsWith(said, StringComparison.Ordinal) ? new(0.97, 0.6, 0.97) : phone.Contains(said, StringComparison.Ordinal) ? new(0.95, 0.5, 0.95) : null);
+            }
+            if (emails.Any(e => e.Equals(user.Email, StringComparison.OrdinalIgnoreCase))) Offer(new(1, 1, 1));
+
+            if (best is { } found) ranked.Add((user, found));
         }
-        return sb.ToString();
+        return [.. ranked.OrderByDescending(x => x.How.Score).ThenBy(x => x.User.Name, StringComparer.OrdinalIgnoreCase)];
     }
 
-    /// <summary>The choice among what the directory found, ranked as it ranked them.</summary>
-    public static CustomerSearch Pick(IReadOnlyList<DirectoryUserView> found, IReadOnlyList<string> spellings, CustomerWhereabouts here, string said)
+    /// <summary>The one meant among <paramref name="users"/>, or those to ask about.</summary>
+    public static CustomerSearch Pick(IReadOnlyList<DirectoryUserView> users, IReadOnlyList<string> spellings, CustomerWhereabouts here, string said)
     {
-        if (found.Count == 0) return new(null, [], $"No customer matches \"{said}\".");
-        if (found.Count == 1) return new(found[0], found, null);
+        var ranked = Rank(users, spellings);
+        if (ranked.Count == 0) return new(null, [], $"No customer matches \"{said}\".");
 
-        var wanted = spellings.Select(Normalize).ToHashSet();
-        var exact = found.Where(u => wanted.Contains(Normalize(u.Name))).ToList();
-        if (exact.Count == 0)
+        var top = ranked[0].How.Score;
+        // What the owner is shown: the best, and those not far behind it
+        List<DirectoryUserView> shown = [.. ranked.Where(x => x.How.Score >= top - 0.25).Take(Listed).Select(x => x.User)];
+
+        // The whole name, as saved: it is that account, whoever else shares part of the name
+        var whole = ranked.Where(x => x.How.WholeName).ToList();
+        if (whole.Count == 1) return new(whole[0].User, shown, null);
+
+        var alike = whole.Count > 1 ? whole : [.. ranked.Where(x => x.How.Score >= top - Tie)];
+        if (alike.Count == 1)
         {
-            static string Sounds(string name) => string.Join(' ', name.Split(' ', StringSplitOptions.RemoveEmptyEntries).Select(Sound));
-            var heard = spellings.Select(Sounds).ToHashSet();
-            exact = [.. found.Where(u => heard.Contains(Sounds(u.Name)))];
+            return alike[0].How.Sure
+                ? new(alike[0].User, shown, null)
+                : new(null, shown, $"No customer is called exactly \"{said}\". The closest is listed: ask if that is who is meant, and never assume it.");
         }
-        if (exact.Count == 1) return new(exact[0], found, null);
 
-        var pool = exact.Count > 1 ? exact : found;
-        var hereNow = pool.Where(here.IsHere).ToList();
-        if (hereNow.Count == 1) return new(hereNow[0], found, null);
+        var hereNow = alike.Where(x => x.How.Sure && here.IsHere(x.User)).ToList();
+        if (hereNow.Count == 1) return new(hereNow[0].User, shown, null);
 
-        return new(null, pool, $"Several customers match \"{said}\". Ask which one; their phones tell them apart.");
+        List<DirectoryUserView> ask = [.. alike.Take(Listed).Select(x => x.User)];
+        return new(null, ask, $"Several customers match \"{said}\". Ask which one; their phones tell them apart.");
     }
 
     /// <summary>"Ahmed Hassan · 0100 123 4567 · on the bill at Room 2": a candidate as the owner reads it.</summary>
