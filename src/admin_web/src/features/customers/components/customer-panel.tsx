@@ -1,22 +1,23 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useAuth } from 'react-oidc-context'
 import { Link } from '@tanstack/react-router'
+import { isOwner } from '@/config/oidc-config'
 import {
   ArrowLeft,
   Ban,
   CircleCheck,
   Merge,
+  Pencil,
   MessageCircle,
   MoreHorizontal,
   Plus,
 } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import {
   getCustomerTopItemsOptions,
   listItemsOptions,
 } from '@/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { isOwner } from '@/config/oidc-config'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -68,6 +69,7 @@ import {
   type Customer,
 } from '../types'
 import { AddedAtCounterBadge } from './counter-customer'
+import { EditCustomerDialog } from './edit-customer-dialog'
 import { MergeCustomerDialog } from './merge-customer-dialog'
 import { useSendAppLink } from './use-send-app-link'
 
@@ -135,6 +137,7 @@ function CustomerHub({
   const name = getCustomerDisplayName(customer)
   const [toggleOpen, setToggleOpen] = useState(false)
   const [mergeOpen, setMergeOpen] = useState(false)
+  const [editOpen, setEditOpen] = useState(false)
   // Two histories become one for good: the owner's call (Identity says the same)
   const owner = isOwner(useAuth().user)
   const appLink = useSendAppLink(customer)
@@ -205,6 +208,10 @@ function CustomerHub({
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align='end'>
+            <DropdownMenuItem onClick={() => setEditOpen(true)}>
+              <Pencil className='h-4 w-4' />
+              {t('editCustomerDetails')}
+            </DropdownMenuItem>
             <DropdownMenuItem asChild>
               <Link to='/orders' search={{ q: name }}>
                 {t('viewAllOrders')}
@@ -291,6 +298,11 @@ function CustomerHub({
         handleConfirm={() => toggleEnabled.mutate()}
       />
       {appLink.dialog}
+      <EditCustomerDialog
+        customer={customer}
+        open={editOpen}
+        onOpenChange={setEditOpen}
+      />
       {owner && (
         <MergeCustomerDialog
           customer={customer}
@@ -407,35 +419,35 @@ function LoyaltySection({ customer }: { customer: Customer }) {
         </>
       }
       standing={
-      <div>
-        <div className='flex flex-wrap items-baseline gap-x-2'>
-          <span className='text-2xl font-semibold tracking-tight tabular-nums'>
-            {member.pointsBalance.toLocaleString(locale)}
-          </span>
-          <span className='text-muted-foreground text-sm'>
-            {t('pointsUnit', { count: member.pointsBalance })}
-          </span>
-          <span
-            className='ms-1 text-sm font-medium'
-            style={{ color: tierColors[tier] }}
-          >
-            {t(tierNameKeys[tier])}
-          </span>
+        <div>
+          <div className='flex flex-wrap items-baseline gap-x-2'>
+            <span className='text-2xl font-semibold tracking-tight tabular-nums'>
+              {member.pointsBalance.toLocaleString(locale)}
+            </span>
+            <span className='text-muted-foreground text-sm'>
+              {t('pointsUnit', { count: member.pointsBalance })}
+            </span>
+            <span
+              className='ms-1 text-sm font-medium'
+              style={{ color: tierColors[tier] }}
+            >
+              {t(tierNameKeys[tier])}
+            </span>
+          </div>
+          {nextTier && nextPoints && (
+            <p className='text-muted-foreground text-xs tabular-nums'>
+              {nextPoints - member.lifetimePoints > 0
+                ? t('pointsToTier', {
+                    count: nextPoints - member.lifetimePoints,
+                    points: (nextPoints - member.lifetimePoints).toLocaleString(
+                      locale
+                    ),
+                    tier: t(tierNameKeys[nextTier]),
+                  })
+                : t('eligibleForTier', { tier: t(tierNameKeys[nextTier]) })}
+            </p>
+          )}
         </div>
-        {nextTier && nextPoints && (
-          <p className='text-muted-foreground text-xs tabular-nums'>
-            {nextPoints - member.lifetimePoints > 0
-              ? t('pointsToTier', {
-                  count: nextPoints - member.lifetimePoints,
-                  points: (nextPoints - member.lifetimePoints).toLocaleString(
-                    locale
-                  ),
-                  tier: t(tierNameKeys[nextTier]),
-                })
-              : t('eligibleForTier', { tier: t(tierNameKeys[nextTier]) })}
-          </p>
-        )}
-      </div>
       }
     >
       <LoyaltyTransactionList
@@ -535,25 +547,23 @@ function TabSection({ customer }: { customer: Customer }) {
         )
       }
     >
-          {ledger.length > 0 && (
-              <ul className='divide-y text-sm'>
-                {ledger.map((tx) => (
-                  <li key={tx.id} className='flex items-center gap-3 py-2'>
-                    <When
-                      value={tx.createdAt}
-                      className='text-muted-foreground w-24 shrink-0 text-xs'
-                    />
-                    <span className='min-w-0 flex-1 truncate'>
-                      {label(tx)}
-                    </span>
-                    <span className='shrink-0 tabular-nums'>
-                      {tx.type === 'charge' ? '+' : '−'}
-                      {formatEgp(tx.amount)}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-          )}
+      {ledger.length > 0 && (
+        <ul className='divide-y text-sm'>
+          {ledger.map((tx) => (
+            <li key={tx.id} className='flex items-center gap-3 py-2'>
+              <When
+                value={tx.createdAt}
+                className='text-muted-foreground w-24 shrink-0 text-xs'
+              />
+              <span className='min-w-0 flex-1 truncate'>{label(tx)}</span>
+              <span className='shrink-0 tabular-nums'>
+                {tx.type === 'charge' ? '+' : '−'}
+                {formatEgp(tx.amount)}
+              </span>
+            </li>
+          ))}
+        </ul>
+      )}
 
       <AddChargeDialog
         open={chargeOpen}

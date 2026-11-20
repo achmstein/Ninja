@@ -176,21 +176,23 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
 
 // List users endpoint (admin only)
 // Supports filtering: role=Admin (only admins), excludeRole=Admin (exclude admins, i.e. customers only)
-app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, int? max, string? search, string? role, string? excludeRole, CancellationToken ct) =>
+app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, int? max, string? search, string? role, string? excludeRole, bool? enabled, CancellationToken ct) =>
 {
-    // Either filter takes one role or a comma-separated list
+    // Either filter takes one role or a comma-separated list; enabled=true
+    // leaves out the accounts switched off (a merged-away duplicate, a
+    // banned one), enabled=false lists only those
     var include = SplitRoles(role);
     var exclude = SplitRoles(excludeRole);
 
     var snapshot = await directory.GetAsync(ct);
-    var matches = snapshot.Search(search, include, exclude).ToList();
+    var matches = snapshot.Search(search, include, exclude).Where(u => enabled is null || u.Enabled == enabled).ToList();
 
     // Nothing found and the index is not fresh: the person may have signed up
     // on Keycloak's own page a minute ago. Rebuild once and look again.
     if (matches.Count == 0 && !string.IsNullOrWhiteSpace(search))
     {
         snapshot = await directory.RefreshIfStaleAsync(ct);
-        matches = snapshot.Search(search, include, exclude).ToList();
+        matches = snapshot.Search(search, include, exclude).Where(u => enabled is null || u.Enabled == enabled).ToList();
     }
 
     var result = matches
@@ -270,10 +272,10 @@ app.MapGet("/api/identity/users/{userId}", async (string userId, IHttpClientFact
 }).RequireAuthorization("Admin");
 
 // Get user count endpoint
-app.MapGet("/api/identity/users/count", async (UserDirectory directory, string? search, string? role, string? excludeRole, CancellationToken ct) =>
+app.MapGet("/api/identity/users/count", async (UserDirectory directory, string? search, string? role, string? excludeRole, bool? enabled, CancellationToken ct) =>
 {
     var snapshot = await directory.GetAsync(ct);
-    var count = snapshot.Search(search, SplitRoles(role), SplitRoles(excludeRole)).Count();
+    var count = snapshot.Search(search, SplitRoles(role), SplitRoles(excludeRole)).Count(u => enabled is null || u.Enabled == enabled);
     return Results.Ok(new { count });
 }).RequireAuthorization("Admin");
 

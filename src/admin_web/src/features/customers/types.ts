@@ -24,6 +24,8 @@ export interface CustomerParams {
   search?: string
   role?: string
   excludeRole?: string
+  /** true: only accounts in use; false: only those switched off */
+  enabled?: boolean
 }
 
 // Helper functions

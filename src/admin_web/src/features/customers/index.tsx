@@ -74,6 +74,8 @@ export function Customers() {
   // A view whose module is off (a /loyalty or /accounts link from before) is the whole list
   const filter = allowedFilter(search.filter, features)
   const guestsView = filter === 'guests'
+  // The directory, of the accounts in use or of those switched off
+  const directoryView = !filter || filter === 'off'
   const [nowMs] = useState(() => Date.now())
 
   const select = (customer: string | undefined) =>
@@ -101,20 +103,30 @@ export function Customers() {
 
   // The directory, a page at a time as the list is scrolled
   const directory = useInfiniteQuery({
-    queryKey: [...customersKeys.lists(), 'directory', query],
+    queryKey: [...customersKeys.lists(), 'directory', filter ?? 'all', query],
     queryFn: ({ pageParam }) =>
       customersService.getCustomers({
         first: pageParam,
         max: PAGE_SIZE,
         search: query || undefined,
         excludeRole: STAFF_ROLES,
+        enabled: filter !== 'off',
       }),
     initialPageParam: 0,
     getNextPageParam: (last, pages) =>
       last.length === PAGE_SIZE ? pages.length * PAGE_SIZE : undefined,
-    enabled: !filter,
+    enabled: directoryView,
   })
-  const count = useCustomerCount(query || undefined)
+  const count = useCustomerCount({
+    search: query || undefined,
+    excludeRole: STAFF_ROLES,
+    enabled: true,
+  })
+  const offCount = useCustomerCount({
+    search: query || undefined,
+    excludeRole: STAFF_ROLES,
+    enabled: false,
+  })
 
   // Guests, paged the same way; Ordering folds their orders into one row
   // per phone number, most recent first
@@ -254,7 +266,7 @@ export function Customers() {
           : directory
   // The directory and the guests load a page at a time
   const paged = guestsView ? guests : directory
-  const pages = !filter || guestsView
+  const pages = directoryView || guestsView
   const owingCount = (accounts.data ?? []).filter((a) => a.balance > 0).length
 
   // Fetch the next page when the sentinel scrolls into view
@@ -291,12 +303,15 @@ export function Customers() {
           ? Number(guests.data.pages[0].totalCount)
           : undefined,
     },
+    { value: 'off', label: t('disabled'), count: offCount.data },
   ]
-  // The owing and members views follow the tabs and loyalty switches
+  // The owing and members views follow the tabs and loyalty switches; the
+  // switched-off accounts show once there are any (or while looked at)
   const filters = allFilters.filter(
     (f) =>
       (f.value !== 'owing' || features.tabs) &&
-      (f.value !== 'members' || features.loyalty)
+      (f.value !== 'members' || features.loyalty) &&
+      (f.value !== 'off' || filter === 'off' || (offCount.data ?? 0) > 0)
   )
 
   return (

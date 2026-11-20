@@ -23,6 +23,9 @@ export const customersService = {
     if (params.excludeRole) {
       queryParams.append('excludeRole', params.excludeRole)
     }
+    if (params.enabled !== undefined) {
+      queryParams.append('enabled', String(params.enabled))
+    }
 
     const url = `/api/identity/users${queryParams.toString() ? `?${queryParams}` : ''}`
     const response = await apiClient.get<Customer[]>(url)
@@ -32,9 +35,7 @@ export const customersService = {
   // Two accounts that are one person (Owner): everything kept under the
   // first goes to the second, and the first is switched off. Not undoable
   async mergeInto(fromId: string, intoId: string): Promise<void> {
-    await apiClient.post(
-      `/api/identity/users/${fromId}/merge-into/${intoId}`
-    )
+    await apiClient.post(`/api/identity/users/${fromId}/merge-into/${intoId}`)
   },
 
   // Toggle a user's enabled state (Owner)
@@ -98,15 +99,25 @@ export const customersService = {
 
   // Get a single customer by ID
   async getCustomer(userId: string): Promise<Customer> {
-    const response = await apiClient.get<Customer>(`/api/identity/users/${userId}`)
+    const response = await apiClient.get<Customer>(
+      `/api/identity/users/${userId}`
+    )
     return response.data
   },
 
   // Get total customer count
-  async getCustomerCount(search?: string): Promise<number> {
-    const queryParams = search ? `?search=${encodeURIComponent(search)}` : ''
+  async getCustomerCount(
+    params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'> = {}
+  ): Promise<number> {
+    const queryParams = new URLSearchParams()
+    if (params.search) queryParams.append('search', params.search)
+    if (params.excludeRole)
+      queryParams.append('excludeRole', params.excludeRole)
+    if (params.enabled !== undefined) {
+      queryParams.append('enabled', String(params.enabled))
+    }
     const response = await apiClient.get<{ count: number }>(
-      `/api/identity/users/count${queryParams}`
+      `/api/identity/users/count${queryParams.toString() ? `?${queryParams}` : ''}`
     )
     return response.data.count
   },

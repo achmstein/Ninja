@@ -406,6 +406,8 @@ const webExtras = {
   // Customers → Old balances: what customers owed before their tabs were kept here
   // Customers → a customer → Merge: one person with two accounts
   mergeCustomer: { en: "Merge into another customer", ar: "دمج مع عميل آخر" },
+  editCustomerDetails: { en: "Edit name and phone", ar: "تعديل الاسم والهاتف" },
+  customerDetailsSaved: { en: "Customer details saved", ar: "تم حفظ بيانات العميل" },
   mergeCustomerTitle: { en: "Merge two accounts", ar: "دمج حسابين" },
   mergeCustomerHint: { en: "For one person who has two accounts. Choose the account to keep.", ar: "لشخص واحد له حسابان. اختر الحساب الذي يبقى." },
   mergeSearchPlaceholder: { en: "Name or phone of the account to keep…", ar: "اسم أو هاتف الحساب الذي يبقى…" },
@@ -1323,6 +1325,11 @@ const webExtras = {
   rehire: { en: "Rehire", ar: "إعادة التوظيف" },
   rehireQuestion: { en: "Back at work?", ar: "عاد إلى العمل؟" },
   employeeRehired: { en: "Back on the register", ar: "عاد إلى السجل" },
+  deleteEmployee: { en: "Delete", ar: "حذف" },
+  deleteEmployeeQuestion: { en: "Delete this employee?", ar: "حذف هذا الموظف؟" },
+  deleteEmployeeHint: { en: "For someone added by mistake. Their draft payslips and marked days go with them. Anyone paid, advanced or given a bonus stays on the books: mark them as left instead.", ar: "لمن أُضيف بالخطأ. تُحذف معه مسودات كشوف الراتب والأيام المسجلة. من صُرف له راتب أو سلفة أو مكافأة يبقى في السجلات: سجّل مغادرته بدلًا من ذلك." },
+  employeeDeleted: { en: "Employee deleted", ar: "تم حذف الموظف" },
+  failedToDeleteEmployee: { en: "Couldn't delete the employee", ar: "تعذّر حذف الموظف" },
   ledger: { en: "Account", ar: "الحساب" },
   ledgerEmpty: { en: "Nothing on the account yet", ar: "لا يوجد شيء على الحساب بعد" },
   ledgerEarned: { en: "Earned", ar: "أجر" },

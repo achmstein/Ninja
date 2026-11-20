@@ -70,6 +70,7 @@ export function OldBalancesDialog({
         search,
         max: 6,
         excludeRole: NOT_CUSTOMERS,
+        enabled: true,
       }),
     enabled: open && !picked && search.length >= 2,
   })

@@ -2,9 +2,11 @@ import { type TenantFeatures } from '@/api/tenant'
 
 /**
  * The customer list's narrowed views: two belong to a module, and the
- * guests — people who ordered without an account — are always there.
+ * guests — people who ordered without an account — are always there, and
+ * so are the accounts switched off (merged-away duplicates, banned ones),
+ * which the whole list leaves out.
  */
-export type CustomerFilter = 'owing' | 'members' | 'guests'
+export type CustomerFilter = 'owing' | 'members' | 'guests' | 'off'
 
 /**
  * Which view the page may actually show. A link saved before the plan

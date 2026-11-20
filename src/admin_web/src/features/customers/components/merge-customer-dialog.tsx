@@ -74,6 +74,7 @@ export function MergeCustomerDialog({
         search,
         max: 8,
         excludeRole: NOT_CUSTOMERS,
+        enabled: true,
       }),
     enabled: open && !into && search.length >= 2,
   })
@@ -202,11 +203,7 @@ export function MergeCustomerDialog({
               {t('mergeChooseAnother')}
             </Button>
           ) : (
-            <Button
-              type='button'
-              variant='outline'
-              onClick={close}
-            >
+            <Button type='button' variant='outline' onClick={close}>
               {t('cancel')}
             </Button>
           )}

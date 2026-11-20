@@ -7,7 +7,8 @@ export const customersKeys = {
   lists: () => [...customersKeys.all, 'list'] as const,
   list: (params: CustomerParams) => [...customersKeys.lists(), params] as const,
   detail: (id: string) => [...customersKeys.all, 'detail', id] as const,
-  count: (search?: string) => [...customersKeys.all, 'count', search] as const,
+  count: (params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'>) =>
+    [...customersKeys.all, 'count', params] as const,
 }
 
 export function useCustomer(userId: string) {
@@ -18,9 +19,11 @@ export function useCustomer(userId: string) {
   })
 }
 
-export function useCustomerCount(search?: string) {
+export function useCustomerCount(
+  params: Pick<CustomerParams, 'search' | 'excludeRole' | 'enabled'>
+) {
   return useQuery({
-    queryKey: customersKeys.count(search),
-    queryFn: () => customersService.getCustomerCount(search),
+    queryKey: customersKeys.count(params),
+    queryFn: () => customersService.getCustomerCount(params),
   })
 }
