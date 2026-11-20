@@ -21,7 +21,7 @@ public class DirectorySnapshotTests
     public void Ranks_the_best_name_match_first_and_drops_non_matches()
     {
         var ids = Snapshot.Search("ahmed", [], []).Select(u => u.Id).ToList();
-        CollectionAssert.AreEqual(new[] { "1", "2", "3" }, ids, "first-name hits before the surname hit, then alphabetical");
+        CollectionAssert.AreEqual(new[] { "1", "2", "7", "3" }, ids, "first-name hits before the surname hit, the script typed in before the other, then alphabetical");
     }
 
     [TestMethod]
@@ -29,14 +29,14 @@ public class DirectorySnapshotTests
     {
         var ids = Snapshot.Search("ahmed hady", [], []).Select(u => u.Id).ToList();
         CollectionAssert.AreEqual(new[] { "1" }, ids);
-        Assert.AreEqual("1", Snapshot.Search("elhady", [], []).Single().Id);
+        CollectionAssert.AreEqual(new[] { "1", "7" }, Snapshot.Search("elhady", [], []).Select(u => u.Id).ToList(), "and the same name saved in Arabic");
     }
 
     [TestMethod]
     public void Arabic_input_finds_an_arabic_name_whatever_the_letter_variant()
     {
         Assert.AreEqual("7", Snapshot.Search("احمد", [], []).First().Id);
-        Assert.AreEqual("7", Snapshot.Search("أحمد الهادى", [], []).Single().Id);
+        CollectionAssert.AreEqual(new[] { "7", "1" }, Snapshot.Search("أحمد الهادى", [], []).Select(u => u.Id).ToList(), "then the same name saved in English");
     }
 
     [TestMethod]

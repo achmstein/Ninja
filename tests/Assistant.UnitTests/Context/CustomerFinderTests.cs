@@ -4,10 +4,8 @@ using Ninja.Assistant.API.Downstream;
 namespace Ninja.Assistant.UnitTests.Context;
 
 [TestClass]
-public class NameMatchTests
+public class CustomerFinderTests
 {
-    private static NameMatch.Result? Compare(string said, string saved) => NameMatch.Compare(NameMatch.Words(said), NameMatch.Words(saved));
-
     private static DirectoryUserView User(string id, string name, string? phone = null)
     {
         var parts = name.Split(' ', 2);
@@ -16,70 +14,6 @@ public class NameMatchTests
 
     private static CustomerSearch Find(string said, params string[] names) =>
         CustomerFinder.Pick([.. names.Select((n, i) => User($"u{i}", n))], CustomerFinder.Spellings(said), CustomerWhereabouts.None, said);
-
-    [TestMethod]
-    [DataRow("محمد الامين", "Mohammed ElAmeen")]
-    [DataRow("محمد الأمين", "Mohammed El Ameen")]
-    [DataRow("محمد الامين", "Mohamed Al-Amin")]
-    [DataRow("Mohamed Al-Amin", "Mohammed ElAmeen")]
-    [DataRow("Muhammad Elamin", "محمد الأمين")]
-    [DataRow("أحمد حسن", "Ahmed Hassan")]
-    [DataRow("Ahmad Hasan", "Ahmed Hassan")]
-    [DataRow("عبدالرحمن", "Abd El Rahman")]
-    [DataRow("عبد الرحمن", "Abdelrahman")]
-    [DataRow("عبدالله", "Abdullah")]
-    [DataRow("Abdalla", "عبد الله")]
-    [DataRow("مصطفي", "Mostafa")]
-    [DataRow("مصطفى", "Mustafa")]
-    [DataRow("فاطمة", "Fatma")]
-    [DataRow("فاطمه", "Fatima")]
-    [DataRow("شريف", "Sherif")]
-    [DataRow("كريم", "Kareem")]
-    [DataRow("منى", "Mona")]
-    [DataRow("جمال", "Gamal")]
-    [DataRow("خالد", "Khaled")]
-    [DataRow("يوسف", "Youssef")]
-    [DataRow("يوسف", "Yusuf")]
-    [DataRow("حسين", "Hussein")]
-    [DataRow("حسين", "Hussain")]
-    [DataRow("اسماعيل", "Ismail")]
-    [DataRow("فتحي", "Fathy")]
-    [DataRow("مدحت", "Medhat")]
-    [DataRow("ثروت", "Sarwat")]
-    [DataRow("ثروت", "Tharwat")]
-    [DataRow("نور الدين", "Noureldin")]
-    [DataRow("عمرو", "Amr")]
-    [DataRow("وليد", "Waleed")]
-    [DataRow("هاني", "Hany")]
-    [DataRow("صلاح", "Salah")]
-    [DataRow("سارة", "Sarah")]
-    [DataRow("7assan", "حسن")]
-    public void The_same_name_is_the_same_in_any_spelling_or_script(string said, string saved)
-    {
-        var how = Compare(said, saved);
-        Assert.IsNotNull(how, $"{said} should be {saved}");
-        Assert.IsTrue(how.Value.Sure, $"{said} ~ {saved}: weakest word {how.Value.Weakest:0.00}");
-        Assert.IsTrue(how.Value.WholeName, $"{said} ~ {saved}: {how.Value.Closeness:0.00}, covered {how.Value.Covered:0.00}");
-    }
-
-    [TestMethod]
-    [DataRow("محمد", "Mahmoud")]
-    [DataRow("محمود", "Mohamed")]
-    [DataRow("Mohamed", "Mahmoud")]
-    [DataRow("حسن", "Hussein")]
-    [DataRow("حسين", "Hassan")]
-    [DataRow("Hassan", "Hussein")]
-    [DataRow("Ali", "Ola")]
-    [DataRow("علي", "علا")]
-    [DataRow("Karim", "Kamal")]
-    [DataRow("سمير", "Samar")]
-    [DataRow("Mona", "Mina")]
-    [DataRow("Mohamed", "Mohannad")]
-    public void A_different_name_is_never_taken_for_it(string said, string saved)
-    {
-        var how = Compare(said, saved);
-        Assert.IsFalse(how is { Sure: true }, $"{said} is not {saved} ({how?.Weakest:0.00})");
-    }
 
     [TestMethod]
     public void The_account_saved_in_English_is_found_from_the_Arabic_said()

@@ -1,6 +1,7 @@
 using System.Globalization;
 using System.Text;
 using Ninja.Assistant.API.Downstream;
+using Ninja.ServiceDefaults.Names;
 
 namespace Ninja.Assistant.API.Context;
 
@@ -87,9 +88,9 @@ public static class CustomerFinder
     /// <summary>The accounts that answer what was said, the closest first.</summary>
     public static List<(DirectoryUserView User, NameMatch.Result How)> Rank(IEnumerable<DirectoryUserView> users, IReadOnlyList<string> spellings)
     {
-        var phones = spellings.Where(LooksLikePhone).Select(NameMatch.PhoneCore).Where(p => p.Length >= 3).ToList();
+        var phones = spellings.Where(LooksLikePhone).Select(PhoneCore).Where(p => p.Length >= 3).ToList();
         var emails = spellings.Where(s => s.Contains('@')).ToList();
-        var names = spellings.Where(s => !LooksLikePhone(s) && !s.Contains('@')).Select(NameMatch.Words).Where(w => w.Length > 0).ToList();
+        var names = spellings.Where(s => !LooksLikePhone(s) && !s.Contains('@')).Select(PreparedName.Of).Where(n => n.Count > 0).ToList();
 
         var ranked = new List<(DirectoryUserView User, NameMatch.Result How)>();
         foreach (var user in users)
@@ -102,10 +103,10 @@ public static class CustomerFinder
 
             if (names.Count > 0)
             {
-                var saved = NameMatch.Words(user.Name);
+                var saved = PreparedName.Of(user.Name);
                 foreach (var said in names) Offer(NameMatch.Compare(said, saved));
             }
-            if (phones.Count > 0 && NameMatch.PhoneCore(user.PhoneNumber) is { Length: > 0 } phone)
+            if (phones.Count > 0 && PhoneCore(user.PhoneNumber) is { Length: > 0 } phone)
             {
                 foreach (var said in phones)
                     Offer(phone == said ? new(1, 1, 1) : phone.EndsWith(said, StringComparison.Ordinal) ? new(0.97, 0.6, 0.97) : phone.Contains(said, StringComparison.Ordinal) ? new(0.95, 0.5, 0.95) : null);
@@ -115,6 +116,16 @@ public static class CustomerFinder
             if (best is { } found) ranked.Add((user, found));
         }
         return [.. ranked.OrderByDescending(x => x.How.Score).ThenBy(x => x.User.Name, StringComparer.OrdinalIgnoreCase)];
+    }
+
+    /// <summary>A phone's digits without the country code or the leading zero, so +20 100 123 and 0100123 compare.</summary>
+    public static string PhoneCore(string? phone)
+    {
+        if (string.IsNullOrEmpty(phone)) return "";
+        var digits = new string([.. phone.Where(char.IsDigit).Select(c => (char)('0' + CharUnicodeInfo.GetDecimalDigitValue(c)))]);
+        if (digits.StartsWith("00", StringComparison.Ordinal)) digits = digits[2..];
+        if (digits.StartsWith("20", StringComparison.Ordinal) && digits.Length >= 12) digits = digits[2..];
+        return digits.TrimStart('0');
     }
 
     /// <summary>The one meant among <paramref name="users"/>, or those to ask about.</summary>

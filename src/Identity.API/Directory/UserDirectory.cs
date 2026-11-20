@@ -1,4 +1,5 @@
 using Ninja.ServiceDefaults;
+using Ninja.ServiceDefaults.Names;
 
 namespace Ninja.Identity.API.Directory;
 
@@ -22,7 +23,7 @@ public sealed record DirectoryUser(
     public string DisplayName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))) is { Length: > 0 } full ? full : Username ?? "";
 
     // Search runs over these, computed once per load
-    public string[] NameTokens { get; } = NameSearch.Tokenize(
+    public PreparedName SearchName { get; } = PreparedName.Of(
         string.IsNullOrWhiteSpace(FirstName) && string.IsNullOrWhiteSpace(LastName) ? Username : $"{FirstName} {LastName}");
     // The local and the international digits, so 0100… and 20100… both find +20100…
     public string PhoneDigits { get; } = PhoneSearch ?? NameSearch.Digits(PhoneNumber);
@@ -65,7 +66,7 @@ public sealed class DirectorySnapshot(IReadOnlyList<DirectoryUser> users, DateTi
         }
 
         return candidates
-            .Select(u => (User: u, Score: NameSearch.Score(term, u.NameTokens, u.PhoneDigits, u.EmailNormalized, u.UsernameNormalized)))
+            .Select(u => (User: u, Score: NameSearch.Score(term, u.SearchName, u.PhoneDigits, u.EmailNormalized, u.UsernameNormalized)))
             .Where(m => m.Score > 0)
             .OrderByDescending(m => m.Score)
             .ThenBy(m => m.User.DisplayName, StringComparer.OrdinalIgnoreCase)

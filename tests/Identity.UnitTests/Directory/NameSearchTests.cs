@@ -1,3 +1,5 @@
+using Ninja.ServiceDefaults.Names;
+
 namespace Identity.UnitTests.Directory;
 
 [TestClass]
@@ -18,43 +20,53 @@ public class NameSearchTests
     [TestMethod]
     public void A_typed_word_matches_the_start_of_any_word_of_the_name()
     {
-        var tokens = NameSearch.Tokenize("Ahmed El-Hady");
-        Assert.IsTrue(Score("ahm", tokens) > 0);
-        Assert.IsTrue(Score("hady", tokens) > 0);
-        Assert.IsTrue(Score("Ahmed El", tokens) > 0);
-        Assert.IsTrue(Score("el ahmed", tokens) > 0, "word order does not matter");
-        Assert.IsTrue(Score("hmed", tokens) < Score("ahme", tokens), "a dropped first letter is a typo, ranked below a real prefix");
-        Assert.AreEqual(0, Score("khaled", tokens), "a different name is no match");
-        Assert.AreEqual(0, Score("ahmed samir", tokens), "every typed word must match");
+        const string name = "Ahmed El-Hady";
+        Assert.IsTrue(Score("ahm", name) > 0);
+        Assert.IsTrue(Score("hady", name) > 0);
+        Assert.IsTrue(Score("Ahmed El", name) > 0);
+        Assert.IsTrue(Score("el ahmed", name) > 0, "word order does not matter");
+        Assert.IsTrue(Score("hmed", name) < Score("ahme", name), "a dropped first letter is a typo, ranked below a real prefix");
+        Assert.AreEqual(0, Score("khaled", name), "a different name is no match");
+        Assert.AreEqual(0, Score("ahmed samir", name), "every typed word must match");
     }
 
     [TestMethod]
     public void The_run_together_form_matches_too()
     {
-        var tokens = NameSearch.Tokenize("Ahmed El Hady");
-        Assert.IsTrue(Score("elhady", tokens) > 0);
-        Assert.IsTrue(Score("ahmedel", tokens) > 0);
-        Assert.IsTrue(Score("abdelrahman", NameSearch.Tokenize("Abd El Rahman")) > 0);
+        Assert.IsTrue(Score("elhady", "Ahmed El Hady") > 0);
+        Assert.IsTrue(Score("ahmedel", "Ahmed El Hady") > 0);
+        Assert.IsTrue(Score("abdelrahman", "Abd El Rahman") > 0);
     }
 
     [TestMethod]
     public void A_typo_in_a_longer_word_still_finds_the_name()
     {
-        var tokens = NameSearch.Tokenize("Mohamed Samir");
-        Assert.IsTrue(Score("mohamd", tokens) > 0, "a dropped letter");
-        Assert.IsTrue(Score("mohmaed", tokens) > 0, "two letters swapped");
-        Assert.IsTrue(Score("muhamed", tokens) > 0, "one wrong letter");
-        Assert.AreEqual(0, Score("moh1", NameSearch.Tokenize("Mona")), "short words are not fuzzed");
+        Assert.IsTrue(Score("mohamd", "Mohamed Samir") > 0, "a dropped letter");
+        Assert.IsTrue(Score("mohmaed", "Mohamed Samir") > 0, "two letters swapped");
+        Assert.IsTrue(Score("muhamed", "Mohamed Samir") > 0, "one wrong letter");
+        Assert.AreEqual(0, Score("moh1", "Mona"), "short words are not fuzzed");
     }
 
     [TestMethod]
     public void The_first_word_of_the_name_ranks_above_a_later_word_and_a_typo()
     {
-        var first = Score("ahmed", NameSearch.Tokenize("Ahmed Samir"));
-        var later = Score("ahmed", NameSearch.Tokenize("Samir Ahmed"));
-        var typo = Score("ahmde", NameSearch.Tokenize("Ahmed Samir"));
+        var first = Score("ahmed", "Ahmed Samir");
+        var later = Score("ahmed", "Samir Ahmed");
+        var typo = Score("ahmde", "Ahmed Samir");
         Assert.IsTrue(first > later);
         Assert.IsTrue(later > typo);
+        Assert.IsTrue(typo > 0);
+    }
+
+    [TestMethod]
+    public void Either_script_finds_a_name_saved_in_the_other_and_never_another_name()
+    {
+        Assert.IsTrue(Score("محمد", "Mohamed Samir") > 0);
+        Assert.IsTrue(Score("مح", "Mohamed Samir") > 0, "while it is being typed");
+        Assert.IsTrue(Score("mohamed", "محمد سمير") > 0);
+        Assert.IsTrue(Score("محمد الامين", "Mohammed ElAmeen") > 0);
+        Assert.IsTrue(Score("محمود", "Mahmoud Samir") > Score("محمود", "Mohamed Samir"), "Mahmoud is ahead of the near name Mohamed");
+        Assert.IsTrue(Score("mohamed", "Mohamed Samir") > Score("mohamed", "محمد سمير"), "the script typed in is ahead");
     }
 
     [TestMethod]
@@ -62,19 +74,22 @@ public class NameSearchTests
     {
         var phone = NameSearch.Digits("+20 100-123-4567");
         Assert.AreEqual("201001234567", phone);
-        Assert.IsTrue(NameSearch.Score("0100", [], phone, "", "") > 0);
-        Assert.IsTrue(NameSearch.Score("4567", [], phone, "", "") > 0);
-        Assert.IsTrue(NameSearch.Score("+20 100", [], phone, "", "") > 0);
-        Assert.AreEqual(0, NameSearch.Score("0199", [], phone, "", ""));
+        Assert.IsTrue(NameSearch.Score("0100", PreparedName.Empty, phone, "", "") > 0);
+        Assert.IsTrue(NameSearch.Score("4567", PreparedName.Empty, phone, "", "") > 0);
+        Assert.IsTrue(NameSearch.Score("+20 100", PreparedName.Empty, phone, "", "") > 0);
+        Assert.AreEqual(0, NameSearch.Score("0199", PreparedName.Empty, phone, "", ""));
+        Assert.IsTrue(NameSearch.Score("ahmed 4567", PreparedName.Of("Ahmed Samir"), phone, "", "") > 0, "a name and digits narrow together");
+        Assert.AreEqual(0, NameSearch.Score("ahmed 9999", PreparedName.Of("Ahmed Samir"), phone, "", ""));
     }
 
     [TestMethod]
     public void Email_and_username_are_the_last_resort()
     {
-        var tokens = NameSearch.Tokenize("Ahmed Samir");
-        Assert.IsTrue(NameSearch.Score("ahmed.s", tokens, "", "ahmed.s@example.com", "ahmed.s") > 0);
-        Assert.AreEqual(0, NameSearch.Score("nobody", tokens, "", "ahmed.s@example.com", "ahmed.s"));
+        var name = PreparedName.Of("Ahmed Samir");
+        Assert.IsTrue(NameSearch.Score("a.samir77", name, "", "a.samir77@example.com", "a.samir77") > 0);
+        Assert.IsTrue(NameSearch.Score("a.samir77", name, "", "a.samir77@example.com", "a.samir77") < NameSearch.Score("ahmed", name, "", "", ""));
+        Assert.AreEqual(0, NameSearch.Score("nobody", name, "", "a.samir77@example.com", "a.samir77"));
     }
 
-    private static int Score(string query, string[] tokens) => NameSearch.Score(query, tokens, "", "", "");
+    private static double Score(string query, string name) => NameSearch.Score(query, PreparedName.Of(name), "", "", "");
 }
