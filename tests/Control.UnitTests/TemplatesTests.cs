@@ -367,6 +367,8 @@ public sealed class TemplatesTests
         StringAssert.Contains(yaml, "services__loyalty-api__http__0: \"http://blue-loyalty-api:8080\"");
         StringAssert.Contains(yaml, "services__accounts-api__http__0: \"http://blue-accounts-api:8080\"");
         StringAssert.Contains(yaml, "services__notification-api__http__0: \"http://blue-notification-api:8080\"");
+        // And the customer directory, for finding a customer the way the till's search does
+        StringAssert.Contains(yaml, "services__identity-api__http__0: \"http://blue-identity-api:8080\"");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH");
         Assert.IsFalse(Regex.IsMatch(yaml, "branch-api|ninja-branch|branchdb"), "nothing runs under the old service's name");
         StringAssert.Contains(yaml, "REVERSEPROXY__ROUTES__route0__MATCH__PATH: \"/api/catalog/items/{id}/pic\"");
