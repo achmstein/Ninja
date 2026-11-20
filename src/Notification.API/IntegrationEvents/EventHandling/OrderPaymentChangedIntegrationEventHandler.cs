@@ -9,6 +9,8 @@ namespace Ninja.Notification.API.IntegrationEvents.EventHandling;
 /// The bill an order sits on changed: nudge the customer who placed it,
 /// over the same "OrderStatusChanged" message both apps already refetch
 /// their orders on. No push — the receipt is not an event to be woken for.
+/// A voided bill also nudges the staff group: the kitchen display drops the
+/// order's card, now that Ordering has stamped it voided.
 /// </summary>
 public class OrderPaymentChangedIntegrationEventHandler(
     IHubContext<NotificationHub> hubContext,
@@ -17,6 +19,16 @@ public class OrderPaymentChangedIntegrationEventHandler(
 {
     public async Task Handle(OrderPaymentChangedIntegrationEvent @event)
     {
+        if (string.Equals(@event.Change, "Voided", StringComparison.OrdinalIgnoreCase))
+        {
+            await hubContext.Clients.Group("admin").SendAsync("OrderStatusChanged", new
+            {
+                type = "order_voided",
+                orderId = @event.OrderId,
+                branchId = @event.BranchId
+            });
+        }
+
         // Their identity when signed in, their guest id when not
         var customerGroup = !string.IsNullOrEmpty(@event.BuyerIdentityGuid)
             ? $"user:{@event.BuyerIdentityGuid}"

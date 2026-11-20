@@ -174,6 +174,8 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .AsNoTracking()
             .Where(o => o.BranchId == branchId)
             .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
+            // Its bill was voided at the till: nothing to make, and not history either
+            .Where(o => o.VoidedAt == null)
             // Confirmed before the kitchen display existed: not its business
             .Where(o => o.ConfirmedAt != null && o.ConfirmedAt >= confirmedSince)
             // A station sees the orders with a part on its screen; the pass
