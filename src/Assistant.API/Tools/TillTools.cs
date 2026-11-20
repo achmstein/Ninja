@@ -16,7 +16,7 @@ namespace Ninja.Assistant.API.Tools;
 /// closing a bill stay at the till.
 /// </summary>
 [McpServerToolType]
-public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlow flow)
+public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlow flow, TimeProvider clock)
 {
     private const string Catalog = "catalog-api";
     private const string Sales = "sales-api";
@@ -26,6 +26,8 @@ public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlo
     internal const string FindCustomerTool = "find_customer";
     internal const string RingUpTool = "ring_up_order";
     internal const string RoomCustomerTool = "assign_room_customer";
+    internal const string StartRoomTool = "start_room_session";
+    internal const string BookRoomTool = "book_room";
 
     private static readonly string[] CounterWords = ["counter", "takeaway", "take away", "new", "new bill", "walk in", "walk-in", "كاونتر", "تيك اواي"];
 
@@ -310,6 +312,191 @@ public sealed class TillTools(TenantContext tenant, NinjaApiClient api, WriteFlo
         flow.Audit(RoomCustomerTool, new { stayId = stay.Id, customerId = user.Id, asOwner, requestId }, done.IsOk ? "done" : done.Error!);
         if (!done.IsOk) return ToolResults.Fail($"{user.Name} was not put on {placeName}: {done.Error}");
         return ToolResults.Ok(new { done = true, room = placeName, customer = user.Name, role = asOwner ? "owner" : "member" });
+    }
+
+    // --- Starting a room, booking one ------------------------------------------------
+
+    [McpServerTool(Name = StartRoomTool, Title = "Start a room's clock", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false)]
+    [Description("Starts the clock on a room or station for a party that is there now, optionally for a customer and at a rate (single, multi); the room's bill opens with it and the time runs onto it, as the till's walk-in does. " +
+        "Use for 'start room 2 for Ahmed', 'open the VIP room on multi', 'start the pool table'. " + WriteFlow.ConfirmDescription)]
+    public async Task<CallToolResult> StartRoomSession(
+        [Description("The room or station: its name in either language")] string room,
+        [Description("Who it is for, optional. " + CustomerFinder.SpellingDescription)] string? customer = null,
+        [Description("The rate by name or code (e.g. single, multi); leave out for the room's usual one")] string? rate = null,
+        [Description("A note for the till, optional")] string? note = null,
+        [Description("Branch id or name; found from the room when the business has several")] string? branch = null,
+        [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
+        [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
+        CancellationToken ct = default)
+    {
+        var snapshot = await tenant.LoadAsync(ct);
+        if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
+        var snap = snapshot.Value!;
+        var scope = BranchSelector.Select(snap.Branches, branch);
+        if (!scope.IsOk) return ToolResults.Fail(scope.Error!);
+
+        var (found, at, placeError) = await PlaceAsync(scope.Value!, room, p => p.IsTimed, "room or station with a clock", ct);
+        if (found is null) return ToolResults.Fail(placeError!);
+        var placeName = found.Name?.Both ?? $"place {found.Id}";
+        var floor = await FloorAsync([at!], ct);
+        if (floor.Here.Stays.FirstOrDefault(s => s.PlaceId == found.Id && s.Status == StayStatus.Running) is { } running)
+            return ToolResults.Fail($"{placeName} already has its clock running{(running.CustomerName is { } holder ? $" for {holder}" : "")}; assign_room_customer adds someone to it.");
+
+        var (option, rateError) = Rate(found, rate);
+        if (rateError is not null) return ToolResults.Fail(rateError);
+
+        var (who, whoError, choice) = await WhoAsync(snap, at!, customer, floor.Here, ct);
+        if (choice is not null) return choice;
+        if (whoError is not null) return ToolResults.Fail(whoError);
+
+        var preview = $"Start the clock in {placeName} at {at!.DisplayName}"
+            + (who.Name is null ? "" : $" for {who.Label}")
+            + (option is null ? "" : $", at {option.Name.Both} ({snap.Currency} {ToolResults.Money(option.HourlyRate)} an hour)")
+            + ". Its bill opens with it and the time runs onto it."
+            + (who.Note is null ? "" : $" {who.Note}");
+        requestId ??= WriteFlow.NewRequestId();
+        if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
+        if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+
+        var started = await api.SendAsync<WalkInResult>(HttpMethod.Post, Spaces, $"/api/places/{found.Id}/walk-in", at.Id,
+            new WalkInRequest(MenuWriteTools.Clean(note), option?.Code, who.Id, who.Name), null, ct);
+        flow.Audit(StartRoomTool, new { placeId = found.Id, customerId = who.Id, customerName = who.Name, rate = option?.Code, requestId }, started.IsOk ? $"stay {started.Value?.StayId}" : started.Error!);
+        if (!started.IsOk) return ToolResults.Fail($"{placeName} was not started: {started.Error}");
+        return ToolResults.Ok(new { done = true, room = placeName, stayId = started.Value?.StayId, customer = who.Name, rate = option?.Name.Display });
+    }
+
+    [McpServerTool(Name = BookRoomTool, Title = "Book a room for a customer", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false)]
+    [Description("Books a room, station or table that takes bookings for a customer: for now or for a time today or another day, with how many and a rate. The till sees it as a reservation it made; it is held until the party arrives and the till seats them (or, with startOnConfirm, the clock starts when the till confirms). " +
+        "Use for 'book the VIP room for Mona at 9', 'hold room 3 for Karim now', 'table 4 for 6 people tomorrow at 8pm'. " + WriteFlow.ConfirmDescription)]
+    public async Task<CallToolResult> BookRoom(
+        [Description("The place: its name in either language")] string room,
+        [Description(CustomerFinder.SpellingDescription)] string customer,
+        [Description("When, in the business's time: \"now\", \"21:00\", \"9pm\", \"tomorrow 20:00\" or \"2026-11-22 20:00\"; default now")] string? at = null,
+        [Description("How many people, optional")] int? people = null,
+        [Description("The rate by name or code (e.g. single, multi), optional")] string? rate = null,
+        [Description("true to start the clock as soon as the till confirms the booking")] bool startOnConfirm = false,
+        [Description("A note for the till, optional")] string? note = null,
+        [Description("Branch id or name; found from the place when the business has several")] string? branch = null,
+        [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
+        [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
+        CancellationToken ct = default)
+    {
+        if (people is < 1 or > 100) return ToolResults.Fail("people must be between 1 and 100.");
+        var snapshot = await tenant.LoadAsync(ct);
+        if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
+        var snap = snapshot.Value!;
+        var scope = BranchSelector.Select(snap.Branches, branch);
+        if (!scope.IsOk) return ToolResults.Fail(scope.Error!);
+
+        var (found, where, placeError) = await PlaceAsync(scope.Value!, room, p => true, "place", ct);
+        if (found is null) return ToolResults.Fail(placeError!);
+        var placeName = found.Name?.Both ?? $"place {found.Id}";
+        if (!found.Reservable) return ToolResults.Fail($"{placeName} does not take bookings (set_place_reservable turns them on).");
+        if (!where!.IsReservationsEnabled) return ToolResults.Fail($"{where.DisplayName} is not taking bookings right now.");
+
+        var (when, whenError) = When(at, snap, clock.GetUtcNow());
+        if (whenError is not null) return ToolResults.Fail(whenError);
+        var (option, rateError) = found.IsTimed ? Rate(found, rate) : (null, null);
+        if (rateError is not null) return ToolResults.Fail(rateError);
+
+        var floor = await FloorAsync([where], ct);
+        var (who, whoError, choice) = await WhoAsync(snap, where, customer, floor.Here, ct);
+        if (choice is not null) return choice;
+        if (whoError is not null) return ToolResults.Fail(whoError);
+
+        var whenText = when is null ? "now (held until they arrive)" : $"for {TimeZoneInfo.ConvertTimeFromUtc(when.Value, snap.Zone):ddd d MMM, HH:mm}";
+        var preview = $"Book {placeName} at {where.DisplayName} for {who.Label}, {whenText}"
+            + (people is null ? "" : $", {people} {(people == 1 ? "person" : "people")}")
+            + (option is null ? "" : $", at {option.Name.Both}")
+            + (startOnConfirm ? "; the clock starts when the till confirms" : "")
+            + "." + (who.Note is null ? "" : $" {who.Note}");
+        requestId ??= WriteFlow.NewRequestId();
+        if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
+        if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+
+        var made = await api.SendAsync<int>(HttpMethod.Post, Spaces, "/api/reservations", where.Id,
+            new ReservePlaceRequest(found.Id, when, people, who.Name, MenuWriteTools.Clean(note), startOnConfirm, option?.Code), null, ct);
+        if (!made.IsOk)
+        {
+            flow.Audit(BookRoomTool, new { placeId = found.Id, customer = who.Name, when, requestId }, made.Error!);
+            return ToolResults.Fail($"{placeName} was not booked: {made.Error}");
+        }
+
+        // A staff booking is made for a typed name; the account goes on it after, so it shows on their phone
+        string? linkNote = null;
+        if (who.Id is not null)
+        {
+            var linked = await api.SendAsync<Unit>(HttpMethod.Post, Spaces, $"/api/reservations/{made.Value}/assign-customer", where.Id, new StayCustomerRequest(who.Id, who.Name), null, ct);
+            if (!linked.IsOk) linkNote = $"Booked under the name {who.Name}, but not tied to their account: {linked.Error}";
+        }
+        flow.Audit(BookRoomTool, new { placeId = found.Id, reservationId = made.Value, customerId = who.Id, customer = who.Name, when, requestId }, linkNote ?? "booked");
+        return ToolResults.Ok(new { done = true, reservationId = made.Value, room = placeName, customer = who.Name, when = when is null ? "now" : ReadSupport.Local(snap, when.Value), note = linkNote });
+    }
+
+    /// <summary>The customer named, as an account or a bare name; several to choose from come back as the answer to give.</summary>
+    private async Task<((string? Id, string? Name, string? Label, string? Note) Who, string? Error, CallToolResult? Choice)> WhoAsync(
+        TenantSnapshot snap, BranchResponse at, string? customer, CustomerWhereabouts here, CancellationToken ct)
+    {
+        if (string.IsNullOrWhiteSpace(customer)) return ((null, null, null, null), null, null);
+        var found = await CustomerFinder.FindAsync(api, at.Id, customer, here, ct);
+        if (found.Ambiguous)
+            return (default, null, ToolResults.Ok(new { needsChoice = true, question = found.Why, candidates = found.Candidates.Take(8).Select(u => CustomerFinder.Row(u, here, snap)), nextStep = "Ask which one, then call again with their id as customer." }));
+        if (found.Match is { } user)
+            return ((user.Id, user.Name, $"{user.Name}{(user.PhoneNumber is { } p ? $" ({p})" : "")}", null), null, null);
+        if (found.Why is { } why && !why.StartsWith("No customer", StringComparison.Ordinal)) return (default, why, null);
+        var bare = CustomerFinder.Spellings(customer)[0];
+        return ((null, bare, bare, $"No account matches \"{customer}\": it goes under the name \"{bare}\" only."), null, null);
+    }
+
+    /// <summary>A place by name in the branches looked at, among those the test keeps.</summary>
+    private async Task<(PlaceDto? Place, BranchResponse? Branch, string? Error)> PlaceAsync(
+        IReadOnlyList<BranchResponse> scope, string text, Func<PlaceDto, bool> keep, string what, CancellationToken ct)
+    {
+        var places = await FanOut.PerBranchAsync(scope, b => api.GetAsync<List<PlaceDto>>(Spaces, "/api/places", b.Id, ct));
+        if (!places.AnyOk) return (null, null, string.Join("\n", places.Errors));
+        var all = places.Ok.SelectMany(x => x.Value.Where(p => p.IsActive && keep(p)).Select(p => (x.Branch, Place: p))).ToList();
+        if (all.Count == 0) return (null, null, $"There is no {what} here.");
+        var (hit, missing) = NameResolver.Pick(all.Select(x => x.Place).ToList(), text, p => p.Id, p => p.Name, what);
+        if (hit is null) return (null, null, missing + $" Here: {string.Join(", ", all.Take(12).Select(x => x.Place.Name?.Display))}.");
+        return (hit, all.First(x => x.Place.Id == hit.Id).Branch, null);
+    }
+
+    /// <summary>The rate named among the place's, or none (the place's usual) when it has one or none was named.</summary>
+    internal static (RateOptionDto? Option, string? Error) Rate(PlaceDto place, string? rate)
+    {
+        var options = place.Tariff?.Options ?? [];
+        if (string.IsNullOrWhiteSpace(rate)) return (options.Count == 1 ? options[0] : null, null);
+        var wanted = CustomerFinder.Normalize(rate);
+        var hit = options.FirstOrDefault(o => CustomerFinder.Normalize(o.Code) == wanted
+            || CustomerFinder.Normalize(o.Name.En) == wanted || CustomerFinder.Normalize(o.Name.Ar) == wanted)
+            ?? options.FirstOrDefault(o => CustomerFinder.Normalize(o.Name.En).Contains(wanted, StringComparison.Ordinal) || CustomerFinder.Normalize(o.Name.Ar).Contains(wanted, StringComparison.Ordinal));
+        return hit is null
+            ? (null, $"{place.Name?.Display} has no rate \"{rate}\"; its rates: {string.Join(", ", options.Select(o => o.Name.Display))}.")
+            : (hit, null);
+    }
+
+    /// <summary>"now", "21:00", "9pm", "tomorrow 20:00", "2026-11-22 20:00" in the business's time, as UTC; null is now.</summary>
+    internal static (DateTime? Utc, string? Error) When(string? text, TenantSnapshot snap, DateTimeOffset nowUtc)
+    {
+        var t = text?.Trim().ToLowerInvariant();
+        if (string.IsNullOrEmpty(t) || t is "now" or "الآن" or "دلوقتي") return (null, null);
+        var localNow = TimeZoneInfo.ConvertTimeFromUtc(nowUtc.UtcDateTime, snap.Zone);
+        var day = localNow.Date;
+        if (t.StartsWith("tomorrow", StringComparison.Ordinal)) { day = day.AddDays(1); t = t["tomorrow".Length..].Trim(); }
+        else if (t.StartsWith("today", StringComparison.Ordinal)) t = t["today".Length..].Trim();
+        if (t.StartsWith("at ", StringComparison.Ordinal)) t = t[3..].Trim();
+
+        DateTime local;
+        var inv = System.Globalization.CultureInfo.InvariantCulture;
+        string[] full = ["yyyy-MM-dd HH:mm", "yyyy-MM-dd H:mm", "yyyy-MM-ddTHH:mm", "yyyy-MM-dd h:mmtt", "yyyy-MM-dd htt"];
+        string[] time = ["HH:mm", "H:mm", "h:mmtt", "htt", "h tt", "h:mm tt"];
+        if (DateTime.TryParseExact(t.ToUpperInvariant(), full, inv, System.Globalization.DateTimeStyles.None, out var whole)) local = whole;
+        else if (DateTime.TryParseExact(t.ToUpperInvariant(), time, inv, System.Globalization.DateTimeStyles.None, out var clockTime)) local = day + clockTime.TimeOfDay;
+        else return (null, $"Say the time like \"21:00\", \"9pm\", \"tomorrow 20:00\" or \"2026-11-22 20:00\", or \"now\".");
+
+        if (local <= localNow) return (null, $"{local:ddd d MMM, HH:mm} has passed; say a later time or \"now\".");
+        if (local > localNow.AddDays(60)) return (null, "A booking can be up to 60 days ahead.");
+        return (TimeZoneInfo.ConvertTimeToUtc(DateTime.SpecifyKind(local, DateTimeKind.Unspecified), snap.Zone), null);
     }
 
     // --- Helpers ---------------------------------------------------------------------

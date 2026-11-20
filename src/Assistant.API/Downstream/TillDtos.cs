@@ -99,6 +99,14 @@ public sealed record PosOrderRequest(
 
 public sealed record PosOrderResponse(int OrderId);
 
+// --- Spaces: starting a room and booking one ---------------------------------
+
+public sealed record WalkInRequest(string? Notes, string? OptionCode, string? CustomerId, string? CustomerName);
+
+public sealed record WalkInResult(int StayId);
+
+public sealed record ReservePlaceRequest(int PlaceId, DateTime? For, int? PartySize, string? CustomerName, string? Notes, bool StartOnConfirm, string? OptionCode);
+
 // --- A customer's details ----------------------------------------------------
 
 public sealed record TabTransactionView(string? Type, decimal Amount, string? Description, string? Source, int? SourceNumber, DateTime CreatedAt);

@@ -16,7 +16,7 @@ public sealed class TillToolsTests
     private static TillTools Tools(Bench bench)
     {
         var signer = new DraftSigner(Microsoft.Extensions.Options.Options.Create(new AssistantOptions { DraftKey = "k" }), bench.Clock, NullLogger<DraftSigner>.Instance);
-        return new TillTools(bench.Tenant, bench.Api, new WriteFlow(bench.Audit, bench.Accessor, signer, new WriteLimiter(bench.Clock)));
+        return new TillTools(bench.Tenant, bench.Api, new WriteFlow(bench.Audit, bench.Accessor, signer, new WriteLimiter(bench.Clock)), bench.Clock);
     }
 
     private static readonly object AhmedHassan = new { id = "u-hassan", firstName = "Ahmed", lastName = "Hassan", enabled = true, phoneNumber = "+201001112233", realmRoles = new[] { "Customer" } };
@@ -63,6 +63,8 @@ public sealed class TillToolsTests
             {
                 new { id = 4, kind = 2, name = new { en = "Table 4", ar = "طاولة ٤" }, branchId = 1, isActive = true, isTimed = false, reservable = false },
                 new { id = 9, kind = 1, name = new { en = "Room 2", ar = "غرفة ٢" }, branchId = 1, isActive = true, isTimed = true, reservable = true },
+                new { id = 11, kind = 1, name = new { en = "VIP Room", ar = "اوضة VIP" }, branchId = 1, isActive = true, isTimed = true, reservable = true,
+                      tariff = new { options = new object[] { new { code = "single", name = new { en = "Single", ar = "فردي" }, hourlyRate = 80 }, new { code = "multi", name = new { en = "Multi", ar = "مالتي" }, hourlyRate = 120 } }, roundingMinutes = 15 } },
             }
             : Array.Empty<object>()));
         h.OnJson("GET", "catalog-api/api/catalog/items/11/customizations", _ => new object[]
@@ -270,6 +272,69 @@ public sealed class TillToolsTests
         Assert.AreEqual(31, TillTools.ChooseOptions(item, groups, null).Chosen!.Single().Option.Id);
         StringAssert.Contains(TillTools.ChooseOptions(item, groups, ["regular", "large"]).Error, "takes one Size");
         StringAssert.Contains(TillTools.ChooseOptions(item, groups, ["caramel"]).Error, "has no option");
+    }
+
+    // --- Starting a room, booking one ---------------------------------------------------
+
+    [TestMethod]
+    public async Task A_free_room_starts_for_a_customer_at_the_rate_named()
+    {
+        var bench = Cafe(h => h.OnJson("POST", "spaces-api/api/places/11/walk-in", _ => new { stayId = 90 }));
+        var tools = Tools(bench);
+
+        var preview = Bench.JsonOf(await tools.StartRoomSession("vip", "منى", rate: "multi")).GetProperty("preview").GetString()!;
+        StringAssert.Contains(preview, "Start the clock in VIP Room / اوضة VIP");
+        StringAssert.Contains(preview, "Multi / مالتي (EGP 120 an hour)");
+        Assert.IsFalse(bench.Handler.Requests.Any(r => r.Method == HttpMethod.Post));
+
+        var done = Bench.JsonOf(await tools.StartRoomSession("vip", "منى", rate: "multi", requestId: "s1", confirm: true));
+        Assert.AreEqual(90, done.GetProperty("stayId").GetInt32(), done.ToString());
+        var body = BodyOf(bench.Handler.Requests.Single(r => r.Method == HttpMethod.Post));
+        Assert.AreEqual("multi", body.GetProperty("optionCode").GetString());
+        Assert.AreEqual("u-mona", body.GetProperty("customerId").GetString());
+    }
+
+    [TestMethod]
+    public async Task A_room_already_running_is_not_started_again_and_a_rate_it_lacks_is_refused()
+    {
+        var bench = Cafe();
+        StringAssert.Contains(Bench.TextOf(await Tools(bench).StartRoomSession("room 2", confirm: true)), "already has its clock running");
+        StringAssert.Contains(Bench.TextOf(await Tools(bench).StartRoomSession("vip", rate: "vip+", confirm: true)), "has no rate");
+        Assert.IsFalse(bench.Handler.Requests.Any(r => r.Method == HttpMethod.Post));
+    }
+
+    [TestMethod]
+    public async Task A_booking_for_tonight_goes_in_under_the_name_and_then_on_the_account()
+    {
+        var bench = Cafe(h =>
+        {
+            h.On("POST", "spaces-api/api/reservations/55/assign-customer", _ => FakeHandler.Json(new { }));
+            h.OnJson("POST", "spaces-api/api/reservations", _ => 55);
+        });
+        var tools = Tools(bench);
+
+        // 12:00 UTC is 15:00 in Cairo on the bench: 21:00 is tonight
+        var preview = Bench.JsonOf(await tools.BookRoom("vip", "Ahmed Hassan", at: "21:00", people: 4)).GetProperty("preview").GetString()!;
+        StringAssert.Contains(preview, "Book VIP Room / اوضة VIP at Nasr City for Ahmed Hassan (+201001112233)");
+        StringAssert.Contains(preview, "21:00, 4 people");
+
+        var done = Bench.JsonOf(await tools.BookRoom("vip", "Ahmed Hassan", at: "21:00", people: 4, requestId: "b1", confirm: true));
+        Assert.AreEqual(55, done.GetProperty("reservationId").GetInt32(), done.ToString());
+        var reserve = BodyOf(bench.Handler.Requests.Single(r => r.Url.AbsolutePath == "/api/reservations"));
+        Assert.AreEqual(11, reserve.GetProperty("placeId").GetInt32());
+        Assert.AreEqual("Ahmed Hassan", reserve.GetProperty("customerName").GetString());
+        Assert.AreEqual(4, reserve.GetProperty("partySize").GetInt32());
+        Assert.AreEqual(new DateTime(2026, 9, 22, 18, 0, 0, DateTimeKind.Utc), reserve.GetProperty("for").GetDateTime().ToUniversalTime());
+        Assert.AreEqual("u-hassan", BodyOf(bench.Handler.Requests.Single(r => r.Url.AbsolutePath.EndsWith("/assign-customer"))).GetProperty("customerId").GetString());
+    }
+
+    [TestMethod]
+    public async Task A_place_without_bookings_and_a_time_gone_by_are_refused()
+    {
+        var bench = Cafe();
+        StringAssert.Contains(Bench.TextOf(await Tools(bench).BookRoom("table 4", "Ahmed Hassan", confirm: true)), "does not take bookings");
+        StringAssert.Contains(Bench.TextOf(await Tools(bench).BookRoom("vip", "Ahmed Hassan", at: "10:00", confirm: true)), "has passed");
+        Assert.IsFalse(bench.Handler.Requests.Any(r => r.Method == HttpMethod.Post));
     }
 
     // --- A customer on a room ----------------------------------------------------------

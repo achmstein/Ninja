@@ -61,7 +61,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 ## Tools
 
-78 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
+80 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
 
 **Read**
 - Sales and money: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_open_tickets`, `get_orders`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_pricing_rules`.
@@ -75,7 +75,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 - Stock: `create_stock_item`, `update_stock_item`, `set_reorder_level`, `record_waste`, `adjust_stock`, `record_purchase`, `record_stock_count`, `transfer_stock`.
 - Books: `record_expense`, `create_expense_category`, `set_recurring_expense`, `save_supplier`, `record_supplier_payment`.
 - Staff and places: `add_employee`, `update_employee`, `mark_attendance`, `create_place`, `update_place`, `set_place_tariff`, `set_place_reservable`, `set_place_active`.
-- Till: `ring_up_order` (a till order from chat, priced by Catalog and sent to the kitchen: to a bill named, a table or room, the bill the customer already has open, or a new counter bill; the lines are the customer's on a shared bill; no payment or closing), `assign_room_customer` (a running room's owner, or one more of its party).
+- Till: `ring_up_order` (a till order from chat, priced by Catalog and sent to the kitchen: to a bill named, a table or room, the bill the customer already has open, or a new counter bill; the lines are the customer's on a shared bill; no payment or closing), `assign_room_customer` (a running room's owner, or one more of its party), `start_room_session` (a room's clock started now for a customer at a rate; its bill opens with it), `book_room` (a booking for a customer now or at a time, with people and rate; the account goes on it after).
 - Business: `update_branch`, `set_pricing_rules`, `pause_online_ordering`, `send_announcement`.
 
 **How a write runs** (`Tools/WriteFlow.cs`)
