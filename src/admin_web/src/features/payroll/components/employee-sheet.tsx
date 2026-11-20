@@ -1,8 +1,7 @@
-import { cn } from '@/lib/utils'
 import { useId, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { isOwner } from '@/config/oidc-config'
-import { KeyRound } from 'lucide-react'
+import { KeyRound, Trash2 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type EmployeeView } from '@/api/payroll'
 import { getEmployeeOptions } from '@/api/payroll/@tanstack/react-query.gen'
@@ -12,6 +11,7 @@ import { formatDay } from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { editablePhone } from '@/lib/phone'
+import { cn } from '@/lib/utils'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -94,7 +94,11 @@ export function EmployeeSheet({
             <LedgerSection employee={employee.data} />
           </Section>
           <Section title={t('employment')}>
-            <EmploymentSection employee={employee.data} inSheet />
+            <EmploymentSection
+              employee={employee.data}
+              inSheet
+              onDeleted={onClose}
+            />
           </Section>
         </>
       ) : (
@@ -546,8 +550,11 @@ export function EmploymentSection({
   employee,
   inSheet = false,
   showSince = true,
+  onDeleted,
 }: {
   employee: EmployeeView
+  /** Where to go once they are deleted: their page or sheet is gone */
+  onDeleted: () => void
   /** False where the dates are already on show: the button alone, at the end */
   showSince?: boolean
   /** Inside a sheet, Mark left (or Rehire) is the footer's way out */
@@ -555,8 +562,9 @@ export function EmploymentSection({
 }) {
   const t = useT()
   const locale = useLocale()
-  const { leave, rehire, isPending } = usePayrollActions()
+  const { leave, rehire, deleteEmployee, isPending } = usePayrollActions()
   const [leaveOpen, setLeaveOpen] = useState(false)
+  const [deleteOpen, setDeleteOpen] = useState(false)
   const [date, setDate] = useState(formatDay(new Date()))
 
   const confirm = async () => {
@@ -568,6 +576,30 @@ export function EmploymentSection({
       // toasted by usePayrollActions
     }
   }
+
+  const confirmDelete = async () => {
+    try {
+      await deleteEmployee(toNumber(employee.id))
+      setDeleteOpen(false)
+      onDeleted()
+    } catch {
+      // toasted by usePayrollActions: the server says why they stay
+    }
+  }
+
+  // Delete sits beside the way out: for a record made by mistake
+  const deleteButton = (
+    <Button
+      type='button'
+      variant='ghost'
+      size={inSheet ? 'default' : 'sm'}
+      className='text-muted-foreground hover:text-destructive'
+      onClick={() => setDeleteOpen(true)}
+    >
+      <Trash2 />
+      {t('deleteEmployee')}
+    </Button>
+  )
 
   return (
     <div
@@ -587,6 +619,7 @@ export function EmploymentSection({
       )}
       {inSheet ? (
         <SheetActions side='start'>
+          {deleteButton}
           <Button
             type='button'
             variant={employee.isActive ? 'ghost' : 'outline'}
@@ -601,16 +634,30 @@ export function EmploymentSection({
           </Button>
         </SheetActions>
       ) : (
-        <Button
-          type='button'
-          variant={employee.isActive ? 'ghost' : 'outline'}
-          size='sm'
-          className={employee.isActive ? 'text-muted-foreground' : undefined}
-          onClick={() => setLeaveOpen(true)}
-        >
-          {employee.isActive ? t('markLeft') : t('rehire')}
-        </Button>
+        <div className='flex items-center gap-1'>
+          {deleteButton}
+          <Button
+            type='button'
+            variant={employee.isActive ? 'ghost' : 'outline'}
+            size='sm'
+            className={employee.isActive ? 'text-muted-foreground' : undefined}
+            onClick={() => setLeaveOpen(true)}
+          >
+            {employee.isActive ? t('markLeft') : t('rehire')}
+          </Button>
+        </div>
       )}
+
+      <ConfirmDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        destructive
+        title={t('deleteEmployeeQuestion')}
+        desc={t('deleteEmployeeHint')}
+        confirmText={t('deleteEmployee')}
+        isLoading={isPending}
+        handleConfirm={confirmDelete}
+      />
 
       <ConfirmDialog
         open={leaveOpen}

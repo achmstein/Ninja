@@ -9,6 +9,9 @@ public interface IPayslipRepository : IRepository<Payslip>
 
     Task<Payslip?> GetAsync(int id);
 
+    /// <summary>Every payslip of one employee's.</summary>
+    Task<List<Payslip>> GetForEmployeeAsync(int employeeId);
+
     /// <summary>The payslip already covering a period start for an employee, if any.</summary>
     Task<Payslip?> FindAsync(int employeeId, DateOnly periodStart);
 

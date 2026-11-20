@@ -9,5 +9,8 @@ public interface IAttendanceRepository : IRepository<AttendanceDay>
 
     Task<AttendanceDay?> GetAsync(int employeeId, DateOnly date);
 
+    /// <summary>Every day ever marked for one employee.</summary>
+    Task<List<AttendanceDay>> GetForEmployeeAsync(int employeeId);
+
     Task<List<AttendanceDay>> GetRangeAsync(IEnumerable<int> employeeIds, DateOnly from, DateOnly to);
 }

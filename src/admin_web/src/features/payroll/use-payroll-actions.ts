@@ -10,6 +10,7 @@ import {
   type UpdateEmployeeRequest,
 } from '@/api/payroll'
 import {
+  deleteEmployeeMutation,
   deletePayslipMutation,
   generatePayslipsMutation,
   hireEmployeeMutation,
@@ -89,6 +90,16 @@ export function usePayrollActions() {
     onError: fail('failedToSaveEmployee'),
   })
 
+  const removeEmployee = useMutation({
+    ...deleteEmployeeMutation(),
+    onSuccess: () => {
+      invalidateEmployees()
+      refresh('getAttendance')
+      toast.success(t('employeeDeleted'))
+    },
+    onError: fail('failedToDeleteEmployee'),
+  })
+
   const rehire = useMutation({
     ...rehireEmployeeMutation(),
     onSuccess: () => {
@@ -153,6 +164,8 @@ export function usePayrollActions() {
       setTerms.mutateAsync({ path: { id }, body, query: version }),
     leave: (id: number, endedOn: string) =>
       leave.mutateAsync({ path: { id }, body: { endedOn }, query: version }),
+    deleteEmployee: (id: number) =>
+      removeEmployee.mutateAsync({ path: { id }, query: version }),
     rehire: (id: number, startedOn: string) =>
       rehire.mutateAsync({ path: { id }, body: { startedOn }, query: version }),
     markAttendance: (date: string, body: MarkAttendanceRequest) =>
@@ -175,6 +188,7 @@ export function usePayrollActions() {
       update.isPending ||
       setTerms.isPending ||
       leave.isPending ||
+      removeEmployee.isPending ||
       rehire.isPending ||
       mark.isPending ||
       postEntry.isPending ||

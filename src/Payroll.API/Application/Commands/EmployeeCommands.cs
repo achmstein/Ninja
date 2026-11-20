@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Payroll.API.Application.IntegrationEvents.Events;
 using Ninja.Payroll.API.Application.Services;
 using Ninja.Payroll.Infrastructure.Idempotency;
 
@@ -170,6 +171,53 @@ public class RehireCommandHandler(IEmployeeRepository employees) : IRequestHandl
 
         employee.Rehire(command.StartedOn);
         await employees.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+        return true;
+    }
+}
+
+/// <summary>
+/// Someone added to the register by mistake, or who never started: gone
+/// for good, with what the system made for them on its own (the drafts of
+/// their pay and the days marked). Anyone money has moved for (a payslip
+/// paid, an advance, a bonus, a pay-out at the till) stays on the books and
+/// is marked as left instead.
+/// </summary>
+public record DeleteEmployeeCommand(int EmployeeId) : IRequest<bool>;
+
+public class DeleteEmployeeCommandHandler(
+    IEmployeeRepository employees,
+    IPayslipRepository payslips,
+    ILedgerRepository ledger,
+    IAttendanceRepository attendance,
+    IPayrollIntegrationEventService integrationEvents) : IRequestHandler<DeleteEmployeeCommand, bool>
+{
+    public async Task<bool> Handle(DeleteEmployeeCommand command, CancellationToken cancellationToken)
+    {
+        var employee = await employees.GetAsync(command.EmployeeId);
+        if (employee is null)
+            return false;
+
+        var slips = await payslips.GetForEmployeeAsync(employee.Id);
+        var lines = await ledger.GetForEmployeeAsync(employee.Id);
+        if (slips.Any(p => p.IsPaid) || lines.Any(l => l.Source != LedgerSource.Payslip))
+            throw new PayrollDomainException("Money has been recorded for this employee, so they stay on the books. Mark them as left instead.");
+
+        foreach (var line in lines)
+            ledger.Remove(line);
+        foreach (var slip in slips)
+            payslips.Remove(slip);
+        foreach (var day in await attendance.GetForEmployeeAsync(employee.Id))
+            attendance.Remove(day);
+        employees.Remove(employee);
+
+        await employees.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        // Finance counted their drafts as labour: those months cost nothing now
+        foreach (var slip in slips)
+            await integrationEvents.AddAndSaveEventAsync(new EmployeeEarningsChangedIntegrationEvent(
+                slip.BranchId, slip.EmployeeId, slip.PeriodStart, slip.PeriodEnd, 0,
+                PayslipId: slip.Id, LabourCost: 0));
+
         return true;
     }
 }

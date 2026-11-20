@@ -5,6 +5,9 @@ public interface IEmployeeRepository : IRepository<Employee>
 {
     Employee Add(Employee employee);
 
+    /// <summary>Someone added by mistake, with no money on record: gone from the register.</summary>
+    void Remove(Employee employee);
+
     Task<Employee?> GetAsync(int id);
 
     Task<List<Employee>> GetManyAsync(IEnumerable<int> ids);

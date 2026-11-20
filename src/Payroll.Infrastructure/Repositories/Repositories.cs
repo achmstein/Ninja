@@ -7,6 +7,8 @@ public class EmployeeRepository(PayrollContext context) : IEmployeeRepository
 
     public Employee Add(Employee employee) => context.Employees.Add(employee).Entity;
 
+    public void Remove(Employee employee) => context.Employees.Remove(employee);
+
     public Task<Employee?> GetAsync(int id)
         => context.Employees.FirstOrDefaultAsync(e => e.Id == id);
 
@@ -39,6 +41,9 @@ public class AttendanceRepository(PayrollContext context) : IAttendanceRepositor
 
     public Task<AttendanceDay?> GetAsync(int employeeId, DateOnly date)
         => context.Attendance.FirstOrDefaultAsync(a => a.EmployeeId == employeeId && a.Date == date);
+
+    public Task<List<AttendanceDay>> GetForEmployeeAsync(int employeeId)
+        => context.Attendance.Where(a => a.EmployeeId == employeeId).ToListAsync();
 
     public Task<List<AttendanceDay>> GetRangeAsync(IEnumerable<int> employeeIds, DateOnly from, DateOnly to)
     {
@@ -74,6 +79,9 @@ public class PayslipRepository(PayrollContext context) : IPayslipRepository
 
     public Task<Payslip?> GetAsync(int id)
         => context.Payslips.FirstOrDefaultAsync(p => p.Id == id);
+
+    public Task<List<Payslip>> GetForEmployeeAsync(int employeeId)
+        => context.Payslips.Where(p => p.EmployeeId == employeeId).ToListAsync();
 
     public Task<Payslip?> FindAsync(int employeeId, DateOnly periodStart)
         => context.Payslips.FirstOrDefaultAsync(p => p.EmployeeId == employeeId && p.PeriodStart == periodStart);

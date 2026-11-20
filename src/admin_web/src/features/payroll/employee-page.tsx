@@ -1,4 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
+import { useNavigate } from '@tanstack/react-router'
 import { getEmployeeOptions } from '@/api/payroll/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
@@ -32,6 +33,7 @@ import { readableDay } from './format'
 export function EmployeePage({ employeeId }: { employeeId: number }) {
   const t = useT()
   const locale = useLocale()
+  const navigate = useNavigate()
   const employee = useQuery(
     getEmployeeOptions({
       path: { id: employeeId },
@@ -109,7 +111,11 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
               </Card>
               {/* The start date is in the details and a leaving date by the
                   name: only the way out (or back) is left to offer */}
-              <EmploymentSection employee={e} showSince={false} />
+              <EmploymentSection
+                employee={e}
+                showSince={false}
+                onDeleted={() => navigate({ to: '/payroll/employees' })}
+              />
             </div>
           </div>
 

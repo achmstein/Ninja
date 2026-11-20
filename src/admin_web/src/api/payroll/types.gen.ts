@@ -258,6 +258,48 @@ export type HireEmployeeResponses = {
 
 export type HireEmployeeResponse = HireEmployeeResponses[keyof HireEmployeeResponses];
 
+export type DeleteEmployeeData = {
+    body?: never;
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/payroll/employees/{id}';
+};
+
+export type DeleteEmployeeErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type DeleteEmployeeError = DeleteEmployeeErrors[keyof DeleteEmployeeErrors];
+
+export type DeleteEmployeeResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type GetEmployeeData = {
     body?: never;
     path: {

@@ -49,6 +49,10 @@ public static class PayrollApi
             .WithName("LeaveEmployee")
             .WithSummary("Record that someone left; the ledger and payslips stay");
 
+        api.MapDelete("/employees/{id:int}", DeleteEmployee)
+            .WithName("DeleteEmployee")
+            .WithSummary("Remove someone added by mistake; refused once money has been recorded for them");
+
         api.MapPost("/employees/{id:int}/rehire", Rehire)
             .WithName("RehireEmployee")
             .WithSummary("Someone who left is back");
@@ -183,6 +187,20 @@ public static class PayrollApi
         {
             await mediator.Send(new LeaveCommand(id, request.EndedOn));
             return TypedResults.Ok();
+        }
+        catch (PayrollDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Results<Ok, NotFound, BadRequest<string>>> DeleteEmployee(
+        int id,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            return await mediator.Send(new DeleteEmployeeCommand(id)) ? TypedResults.Ok() : TypedResults.NotFound();
         }
         catch (PayrollDomainException ex)
         {
