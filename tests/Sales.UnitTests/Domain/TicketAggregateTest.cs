@@ -263,6 +263,40 @@ public class TicketAggregateTest
     }
 
     [TestMethod]
+    public void A_customer_whose_lines_move_onto_a_rooms_bill_is_told_to_the_room()
+    {
+        var counter = Ticket.OpenForCounter(branchId: 1);
+        counter.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+        var ids = counter.Lines.Select(l => l.Id).ToList();
+        counter.AssignLinesCustomer(ids, "u-ahmed", "Ahmed Hassan");
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP", null), branchId: 1);
+        room.ClearDomainEvents();
+
+        counter.MoveLinesTo(room, ids);
+
+        var moved = room.DomainEvents!.OfType<CustomersMovedToSessionDomainEvent>().Single();
+        Assert.AreEqual(7, moved.Ticket.SessionId);
+        Assert.AreEqual("u-ahmed", moved.Customers.Single().CustomerId);
+        Assert.AreEqual("Ahmed Hassan", moved.Customers.Single().CustomerName);
+    }
+
+    [TestMethod]
+    public void Lines_moved_to_a_table_or_with_no_customer_tell_no_room()
+    {
+        var counter = Ticket.OpenForCounter(branchId: 1);
+        counter.AppendOrder(41, [Line("Latte", 1, 50)], 0);
+        var ids = counter.Lines.Select(l => l.Id).ToList();
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP", null), branchId: 1);
+        counter.MoveLinesTo(room, ids);
+        Assert.IsFalse(room.DomainEvents!.OfType<CustomersMovedToSessionDomainEvent>().Any());
+
+        room.AssignLinesCustomer(ids, "u-ahmed", "Ahmed Hassan");
+        var table = Ticket.OpenForTable(1, new LocalizedText("Table 1", null), branchId: 1);
+        room.MoveLinesTo(table, ids);
+        Assert.IsFalse(table.DomainEvents!.OfType<CustomersMovedToSessionDomainEvent>().Any());
+    }
+
+    [TestMethod]
     public void Session_time_never_leaves_its_ticket()
     {
         var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP", null), branchId: 1);

@@ -959,6 +959,18 @@ public class Ticket : Entity, IAggregateRoot
             target._lines.Add(line);
         }
 
+        // Whoever is named on the lines went to the room with them: the room's party takes them
+        if (target.HasSession)
+        {
+            var customers = moving
+                .Where(l => l.CustomerId is not null)
+                .GroupBy(l => l.CustomerId!)
+                .Select(g => new MovedCustomer(g.Key, g.First().CustomerName))
+                .ToList();
+            if (customers.Count > 0)
+                target.AddDomainEvent(new CustomersMovedToSessionDomainEvent(target, customers));
+        }
+
         Touch();
         target.Touch();
     }

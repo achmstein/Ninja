@@ -72,6 +72,8 @@ public static class Extensions
             // Sales' receipt, projected onto the stay it covered: the
             // customer sees the cost as paid without a call to Sales
             .AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>()
+            // A customer's bill moved onto a room's: they are in the room's party
+            .AddSubscription<TicketCustomersMovedToSessionIntegrationEvent, TicketCustomersMovedToSessionIntegrationEventHandler>()
             // A customer renamed: what is still to come or running says the new name
             .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
             .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
@@ -92,6 +94,7 @@ public static class Extensions
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
 [JsonSerializable(typeof(TenantFeaturesChangedIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
+[JsonSerializable(typeof(TicketCustomersMovedToSessionIntegrationEvent))]
 [JsonSerializable(typeof(SessionPaidIntegrationEvent))]
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(CustomersMergedIntegrationEvent))]
