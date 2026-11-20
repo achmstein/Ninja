@@ -265,6 +265,101 @@ public sealed class MenuEditToolsTests
         Assert.AreEqual("كبير", options[1].GetProperty("name").GetProperty("ar").GetString());
     }
 
+    // --- edit_choice_group / remove_customization / draw_item_photo ----------
+
+    [TestMethod]
+    public async Task A_group_made_optional_with_a_new_default_and_order_keeps_every_option_by_id()
+    {
+        var bench = Cafe(h => h.OnJson("PUT", "catalog-api/api/catalog/items/11/customizations/21", _ => new { id = 21, name = new { en = "Size" } }));
+        var tools = Tools(bench);
+
+        var preview = Bench.JsonOf(await tools.EditChoiceGroup("latte", "size", required: false, defaultOption: "large", optionOrder: ["Large"], requestId: "g1")).GetProperty("preview").GetString()!;
+        StringAssert.Contains(preview, "optional");
+        StringAssert.Contains(preview, "\"Large / كبير\" picked by default");
+        StringAssert.Contains(preview, "options in the order Large, Regular");
+        Assert.IsFalse(Wrote(bench));
+
+        await tools.EditChoiceGroup("latte", "size", required: false, defaultOption: "large", optionOrder: ["Large"], requestId: "g1", confirm: true);
+        var body = BodyOf(bench.Handler.Requests.Single(r => r.Method == HttpMethod.Put));
+        Assert.IsFalse(body.GetProperty("isRequired").GetBoolean());
+        var options = body.GetProperty("options").EnumerateArray().ToList();
+        Assert.HasCount(2, options);
+        Assert.AreEqual(32, options[0].GetProperty("id").GetInt32());
+        Assert.IsTrue(options[0].GetProperty("isDefault").GetBoolean());
+        Assert.AreEqual(0, options[0].GetProperty("displayOrder").GetInt32());
+        Assert.AreEqual(31, options[1].GetProperty("id").GetInt32());
+        Assert.IsFalse(options[1].GetProperty("isDefault").GetBoolean());
+    }
+
+    [TestMethod]
+    public async Task A_group_already_so_is_not_written()
+    {
+        var bench = Cafe();
+        var result = await Tools(bench).EditChoiceGroup("latte", "size", required: true, confirm: true);
+        Assert.IsTrue(result.IsError);
+        Assert.IsFalse(Wrote(bench));
+    }
+
+    [TestMethod]
+    public async Task Removing_an_option_sends_the_group_without_it()
+    {
+        var bench = Cafe(h => h.OnJson("PUT", "catalog-api/api/catalog/items/11/customizations/21", _ => new { id = 21, name = new { en = "Size" } }));
+        var tools = Tools(bench);
+
+        StringAssert.Contains(Bench.JsonOf(await tools.RemoveCustomization("latte", "size", "regular")).GetProperty("preview").GetString(), "It was the default");
+        Assert.IsFalse(Wrote(bench));
+
+        await tools.RemoveCustomization("latte", "size", "regular", requestId: "r1", confirm: true);
+        var options = BodyOf(bench.Handler.Requests.Single(r => r.Method == HttpMethod.Put)).GetProperty("options").EnumerateArray().ToList();
+        Assert.HasCount(1, options);
+        Assert.AreEqual(32, options[0].GetProperty("id").GetInt32());
+    }
+
+    [TestMethod]
+    public async Task The_only_option_is_not_removed_alone_and_a_whole_group_is_deleted()
+    {
+        var bench = Cafe(h => h.On("DELETE", "catalog-api/api/catalog/items/11/customizations/22", _ => new HttpResponseMessage(System.Net.HttpStatusCode.NoContent)));
+        var tools = Tools(bench);
+
+        Assert.IsTrue((await tools.RemoveCustomization("latte", "milk", "full cream", confirm: true)).IsError);
+        Assert.IsFalse(Wrote(bench));
+
+        var done = Bench.JsonOf(await tools.RemoveCustomization("latte", "milk", requestId: "r2", confirm: true));
+        Assert.IsTrue(done.GetProperty("done").GetBoolean(), done.ToString());
+        Assert.AreEqual(1, bench.Handler.Requests.Count(r => r.Method == HttpMethod.Delete));
+    }
+
+    [TestMethod]
+    public async Task A_photo_is_drawn_set_on_the_item_and_returned_only_on_the_confirm()
+    {
+        var png = new byte[] { 1, 2, 3, 4 };
+        var bench = Cafe(h =>
+        {
+            h.On("POST", "catalog-api/api/catalog/items/11/pic", _ => FakeHandler.Json(new { }));
+            h.On("POST", "catalog-api/api/catalog/assist/photo", _ => new HttpResponseMessage { Content = new ByteArrayContent(png) });
+        });
+        var tools = Tools(bench);
+
+        StringAssert.Contains(Bench.JsonOf(await tools.DrawItemPhoto("latte", "moody", "with latte art")).GetProperty("preview").GetString(), "Draw a moody photo of \"Latte / لاتيه\" (with latte art)");
+        Assert.IsFalse(bench.Handler.Requests.Any(r => r.Method == HttpMethod.Post), "the preview draws nothing");
+
+        var done = await tools.DrawItemPhoto("latte", "moody", "with latte art", requestId: "p1", confirm: true);
+        Assert.AreNotEqual(true, done.IsError, Bench.TextOf(done));
+        var draw = BodyOf(bench.Handler.Requests.Single(r => r.Url.AbsolutePath.EndsWith("/assist/photo")));
+        Assert.AreEqual("moody", draw.GetProperty("style").GetString());
+        Assert.AreEqual("with latte art", draw.GetProperty("note").GetString());
+        Assert.AreEqual(1, bench.Handler.Requests.Count(r => r.Url.AbsolutePath.EndsWith("/items/11/pic")));
+        Assert.IsTrue(done.Content.OfType<ModelContextProtocol.Protocol.ImageContentBlock>().Any(), "the answer carries the photo");
+    }
+
+    [TestMethod]
+    public async Task An_unknown_photo_style_is_refused()
+    {
+        var bench = Cafe();
+        Assert.IsTrue((await Tools(bench).DrawItemPhoto("latte", "neon", confirm: true)).IsError);
+        Assert.IsFalse(Wrote(bench));
+    }
+
     [TestMethod]
     public async Task Choices_given_are_added_as_new_groups_and_ones_it_has_are_left_alone()
     {

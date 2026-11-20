@@ -12,7 +12,8 @@ namespace Ninja.Assistant.API.Tools;
 /// The menu as the owner keeps it from chat: an item's names, price and
 /// category, its offer, a branch's own price, the categories, the choices on
 /// an item, promo codes and an item's stock recipe. Setup only: nothing here
-/// deletes, and nothing moves money. Each tool previews first and writes on
+/// moves money, and the one delete (a choice on an item) says so in its
+/// preview. Each tool previews first and writes on
 /// the confirm; a preview with the services' AI in it (a name filled in the
 /// other language, suggested choices, a proposed recipe) travels to the
 /// confirm as a signed draft, so what is written is what the owner saw.
@@ -30,6 +31,10 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
     internal const string RenameCategoryTool = "rename_category";
     internal const string EditCustomizationTool = "edit_customization";
     internal const string AddCustomizationsTool = "add_customizations";
+    internal const string EditChoiceGroupTool = "edit_choice_group";
+    internal const string RemoveCustomizationTool = "remove_customization";
+    internal const string DrawPhotoTool = "draw_item_photo";
+    internal static readonly string[] PhotoStyles = ["studio", "rustic", "overhead", "moody", "fresh"];
     internal const string CreatePromoTool = "create_promo_code";
     internal const string UpdatePromoTool = "update_promo_code";
     internal const string PromoActiveTool = "set_promo_active";
@@ -401,6 +406,238 @@ public sealed class MenuEditTools(TenantContext tenant, NinjaApiClient api, Writ
         flow.Audit(EditCustomizationTool, new { itemId = menuItem.Id, groupId = g.Id, option, add, newName, newNameAr, price, requestId }, result.IsOk ? "updated" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
         return ToolResults.Ok(new { done = true, itemId = menuItem.Id, group = g.Name?.Display, groupAr = g.Name?.Arabic, preview });
+    }
+
+    [McpServerTool(Name = EditChoiceGroupTool, Title = "Change a choice group on an item", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]
+    [Description("Changes a choice group itself (not one option's name or price, edit_customization does that): renames it, makes it a must-pick or optional, lets the customer pick one or several, sets which option is picked by default, or puts its options in a new order. " +
+        "Use for 'make size required on the latte', 'let them pick several extras', 'oat milk is the default', 'rename Milk to Milk type', 'show Large first'. " + WriteFlow.ConfirmDescription)]
+    public async Task<CallToolResult> EditChoiceGroup(
+        [Description("The item: its name in English or Arabic, or its id")] string item,
+        [Description("The choice group on it, e.g. Size or Milk (name or id)")] string group,
+        [Description("The group's new English name")] string? newName = null,
+        [Description("The group's new Arabic name")] string? newNameAr = null,
+        [Description("true: the customer must pick from it; false: optional")] bool? required = null,
+        [Description("true: several options can be picked; false: one")] bool? multiple = null,
+        [Description("The option picked by default (name or id); \"none\" for no default")] string? defaultOption = null,
+        [Description("The options in their new order, first to last (names or ids); any left out keep their order after these")] List<string>? optionOrder = null,
+        [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
+        [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
+        CancellationToken ct = default)
+    {
+        if (newName is null && newNameAr is null && required is null && multiple is null && defaultOption is null && optionOrder is not { Count: > 0 })
+            return ToolResults.Fail("Say what to change: newName, newNameAr, required, multiple, defaultOption or optionOrder.");
+
+        var found = await FindGroupAsync(item, group, ct);
+        if (found.Error is { } failed) return ToolResults.Fail(failed);
+        var (menuItem, g) = (found.Item!, found.Group!);
+
+        var options = (g.Options ?? []).OrderBy(o => o.DisplayOrder).ToList();
+        var changes = new List<string>();
+
+        var oldName = g.Name ?? new LocalizedText(null, null);
+        var renamed = new LocalizedText(MenuWriteTools.Clean(newName) ?? oldName.En, MenuWriteTools.Clean(newNameAr) ?? oldName.Ar);
+        if (renamed != oldName) changes.Add($"renamed \"{renamed.Both}\"");
+
+        var isRequired = required ?? g.IsRequired;
+        if (isRequired != g.IsRequired) changes.Add(isRequired ? "the customer must pick from it" : "optional");
+        var allowMultiple = multiple ?? g.AllowMultiple;
+        if (allowMultiple != g.AllowMultiple) changes.Add(allowMultiple ? "several can be picked" : "one can be picked");
+
+        var defaults = options.ToDictionary(o => o.Id, o => o.IsDefault);
+        if (defaultOption is not null)
+        {
+            if (defaultOption.Trim().Equals("none", StringComparison.OrdinalIgnoreCase))
+            {
+                foreach (var id in defaults.Keys) defaults[id] = false;
+                if (options.Any(o => o.IsDefault)) changes.Add("no option picked by default");
+            }
+            else
+            {
+                var (d, dError) = NameResolver.Pick(options, defaultOption, x => x.Id, x => x.Name, "option");
+                if (d is null) return ToolResults.Fail($"{dError} The options of \"{oldName.Both}\" are: {string.Join(", ", options.Select(x => x.Name?.Both))}.");
+                foreach (var id in defaults.Keys) defaults[id] = id == d.Id;
+                if (!d.IsDefault || options.Count(o => o.IsDefault) > 1) changes.Add($"\"{d.Name?.Both}\" picked by default");
+            }
+        }
+
+        var ordered = options;
+        if (optionOrder is { Count: > 0 })
+        {
+            var first = new List<CustomizationOptionDto>();
+            foreach (var said in optionOrder)
+            {
+                var (o, oError) = NameResolver.Pick(options, said, x => x.Id, x => x.Name, "option");
+                if (o is null) return ToolResults.Fail($"{oError} The options of \"{oldName.Both}\" are: {string.Join(", ", options.Select(x => x.Name?.Both))}.");
+                if (!first.Contains(o)) first.Add(o);
+            }
+            ordered = [.. first, .. options.Where(o => !first.Contains(o))];
+            if (!ordered.Select(o => o.Id).SequenceEqual(options.Select(o => o.Id)))
+                changes.Add("options in the order " + string.Join(", ", ordered.Select(o => o.Name?.Display)));
+        }
+
+        if (changes.Count == 0) return ToolResults.Fail($"\"{oldName.Both}\" on \"{menuItem.Name?.Both}\" is already so; nothing would change.");
+
+        var preview = $"On \"{menuItem.Name?.Both}\", the choice \"{oldName.Both}\": {string.Join("; ", changes)}.";
+        requestId ??= WriteFlow.NewRequestId();
+        if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
+        if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+
+        // Every option goes back with its id, or Catalog would delete it
+        var sent = ordered.Select((o, i) => new CustomizationOptionRequest(o.Id, o.Name ?? new LocalizedText(null, null), o.PriceAdjustment, defaults[o.Id], i)).ToList();
+        var body = new CustomizationRequest(renamed, isRequired, allowMultiple, g.DisplayOrder, sent);
+        var result = await api.SendAsync<CustomizationDto>(HttpMethod.Put, Catalog, $"/api/catalog/items/{menuItem.Id}/customizations/{g.Id}", null, body, null, ct);
+        flow.Audit(EditChoiceGroupTool, new { itemId = menuItem.Id, groupId = g.Id, changes, requestId }, result.IsOk ? "updated" : result.Error!);
+        if (!result.IsOk) return ToolResults.Fail(result.Error!);
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, group = renamed.Display, groupAr = renamed.Arabic, preview });
+    }
+
+    [McpServerTool(Name = RemoveCustomizationTool, Title = "Remove a choice from an item", ReadOnly = false, Idempotent = true, Destructive = true, OpenWorld = false)]
+    [Description("Takes a choice off an item: one option out of a group (no more oat milk on the latte), or, with no option named, the whole group (no more sizes). Orders already placed keep what was picked. " +
+        "Use for 'remove oat milk from the latte', 'the burger has no extras any more'. " + WriteFlow.ConfirmDescription)]
+    public async Task<CallToolResult> RemoveCustomization(
+        [Description("The item: its name in English or Arabic, or its id")] string item,
+        [Description("The choice group on it, e.g. Size or Milk (name or id)")] string group,
+        [Description("The option to remove from the group (name or id); leave out to remove the whole group")] string? option = null,
+        [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
+        [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
+        CancellationToken ct = default)
+    {
+        var found = await FindGroupAsync(item, group, ct);
+        if (found.Error is { } failed)
+        {
+            // A confirm repeated after it landed finds the group gone
+            if (confirm && found.Item is not null && option is null) return ToolResults.Ok(new { done = true, note = "That choice is no longer on the item; nothing else was removed." });
+            return ToolResults.Fail(failed);
+        }
+        var (menuItem, g) = (found.Item!, found.Group!);
+        var groupName = g.Name ?? new LocalizedText(null, null);
+        var options = (g.Options ?? []).OrderBy(o => o.DisplayOrder).ToList();
+        requestId ??= WriteFlow.NewRequestId();
+
+        if (option is null)
+        {
+            var preview = $"Remove the choice \"{groupName.Both}\" ({string.Join(", ", options.Select(o => o.Name?.Display))}) from \"{menuItem.Name?.Both}\". It cannot be undone; add_customizations adds it again.";
+            if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
+            if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+            var deleted = await api.SendAsync<Unit>(HttpMethod.Delete, Catalog, $"/api/catalog/items/{menuItem.Id}/customizations/{g.Id}", null, null, null, ct);
+            flow.Audit(RemoveCustomizationTool, new { itemId = menuItem.Id, groupId = g.Id, group = groupName.Display, requestId }, deleted.IsOk ? "removed" : deleted.Error!);
+            if (!deleted.IsOk) return ToolResults.Fail(deleted.Error!);
+            return ToolResults.Ok(new { done = true, itemId = menuItem.Id, removed = groupName.Display });
+        }
+
+        var (o, oError) = NameResolver.Pick(options, option, x => x.Id, x => x.Name, "option");
+        if (o is null)
+        {
+            if (confirm) return ToolResults.Ok(new { done = true, note = $"\"{option}\" is no longer in \"{groupName.Display}\"; nothing else was removed." });
+            return ToolResults.Fail($"{oError} The options of \"{groupName.Both}\" are: {string.Join(", ", options.Select(x => x.Name?.Both))}.");
+        }
+        if (options.Count == 1)
+            return ToolResults.Fail($"\"{o.Name?.Both}\" is the only option of \"{groupName.Both}\"; remove the whole group instead (leave option out).");
+
+        var previewOne = $"Remove \"{o.Name?.Both}\" from \"{groupName.Both}\" on \"{menuItem.Name?.Both}\"; the other options stay."
+            + (o.IsDefault ? " It was the default, so none is picked by default after." : "");
+        if (!confirm) return ToolResults.Ok(new { preview = previewOne, requestId, nextStep = WriteFlow.NextStep });
+        if (flow.Limit() is { } limit) return ToolResults.Fail(limit);
+
+        var kept = options.Where(x => x.Id != o.Id)
+            .Select((x, i) => new CustomizationOptionRequest(x.Id, x.Name ?? new LocalizedText(null, null), x.PriceAdjustment, x.IsDefault, i)).ToList();
+        var body = new CustomizationRequest(groupName, g.IsRequired, g.AllowMultiple, g.DisplayOrder, kept);
+        var result = await api.SendAsync<CustomizationDto>(HttpMethod.Put, Catalog, $"/api/catalog/items/{menuItem.Id}/customizations/{g.Id}", null, body, null, ct);
+        flow.Audit(RemoveCustomizationTool, new { itemId = menuItem.Id, groupId = g.Id, optionId = o.Id, option = o.Name?.Display, requestId }, result.IsOk ? "removed" : result.Error!);
+        if (!result.IsOk) return ToolResults.Fail(result.Error!);
+        return ToolResults.Ok(new { done = true, itemId = menuItem.Id, group = groupName.Display, removed = o.Name?.Display });
+    }
+
+    // --- An item's photo -------------------------------------------------------
+
+    [McpServerTool(Name = DrawPhotoTool, Title = "Draw a photo for an item", ReadOnly = false, Idempotent = false, Destructive = false, OpenWorld = false)]
+    [Description("Draws a new menu photo for an item already on the menu and sets it as the item's picture (the one it had is replaced). Drawn from the item's names, description and category in a house look; or, with fromCurrentPhoto=true, the item's own photo is restaged (a branded can, a box, a real plate keep their label and shape, only the setting and light are made). The answer carries the photo. " +
+        "Use for 'make a photo for the club sandwich', 'give the latte a moody photo', 'redo the Pepsi photo on a wooden table'. Each confirm draws once and costs AI credit. " + WriteFlow.ConfirmDescription)]
+    public async Task<CallToolResult> DrawItemPhoto(
+        [Description("The item: its name in English or Arabic, or its id")] string item,
+        [Description("The look: studio, rustic, overhead, moody or fresh")] string style = "studio",
+        [Description("Anything to add in the owner's words, e.g. 'on a wooden table', 'with ice'")] string? note = null,
+        [Description("true to restage the item's current photo instead of drawing one from its name")] bool fromCurrentPhoto = false,
+        [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
+        [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
+        CancellationToken ct = default)
+    {
+        var look = style.Trim().ToLowerInvariant();
+        if (!PhotoStyles.Contains(look)) return ToolResults.Fail($"style must be one of: {string.Join(", ", PhotoStyles)}.");
+        var said = MenuWriteTools.Clean(note);
+
+        var snapshot = await tenant.LoadAsync(ct);
+        if (!snapshot.IsOk) return ToolResults.Fail(snapshot.Error!);
+        var snap = snapshot.Value!;
+        var (menuItem, missing) = await FindItemAsync(snap, item, ct);
+        if (menuItem is null) return ToolResults.Fail(missing!);
+        var name = menuItem.Name ?? new LocalizedText(null, null);
+
+        var preview = (fromCurrentPhoto
+                ? $"Restage the current photo of \"{name.Both}\" in the {look} look"
+                : $"Draw a {look} photo of \"{name.Both}\"")
+            + (said is null ? "" : $" ({said})")
+            + " and set it as the item's picture, replacing the one it has.";
+        requestId ??= WriteFlow.NewRequestId();
+        if (!confirm) return ToolResults.Ok(new { preview, requestId, nextStep = WriteFlow.NextStep });
+        if (flow.Limit() is { } limited) return ToolResults.Fail(limited);
+
+        var branch = AnyBranch(snap);
+        ApiResult<byte[]> drawn;
+        if (fromCurrentPhoto)
+        {
+            var current = await api.SendAsync<byte[]>(HttpMethod.Get, Catalog, $"/api/catalog/items/{menuItem.Id}/pic", branch, null, null, ct);
+            if (!current.IsOk || current.Value is not { Length: > 0 })
+                return ToolResults.Fail($"\"{name.Both}\" has no photo to restage; leave fromCurrentPhoto out to draw one from its name.");
+            var form = new MultipartFormDataContent();
+            var file = new ByteArrayContent(current.Value);
+            file.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/webp");
+            form.Add(file, "photo", "item.webp");
+            if (name.En is { } en) form.Add(new StringContent(en), "nameEn");
+            if (name.Ar is { } ar) form.Add(new StringContent(ar), "nameAr");
+            form.Add(new StringContent(look), "style");
+            if (said is not null) form.Add(new StringContent(said), "note");
+            drawn = await api.SendAsync<byte[]>(HttpMethod.Post, Catalog, "/api/catalog/assist/photo/restage", branch, form, null, ct);
+        }
+        else
+        {
+            drawn = await api.SendAsync<byte[]>(HttpMethod.Post, Catalog, "/api/catalog/assist/photo", branch,
+                new DrawItemPhotoRequest(name.En, name.Ar, menuItem.Description?.Display, menuItem.CatalogTypeName?.Display, look, said), null, ct);
+        }
+        if (!drawn.IsOk || drawn.Value is not { Length: > 0 })
+        {
+            flow.Audit(DrawPhotoTool, new { itemId = menuItem.Id, style = look, note = said, fromCurrentPhoto, requestId }, drawn.Error ?? "no image");
+            return ToolResults.Fail($"No photo was drawn: {drawn.Error ?? "the image model answered nothing"}.");
+        }
+
+        var upload = new MultipartFormDataContent();
+        var picture = new ByteArrayContent(drawn.Value);
+        picture.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue("image/webp");
+        upload.Add(picture, "file", "item.webp");
+        var saved = await api.SendAsync<Unit>(HttpMethod.Post, Catalog, $"/api/catalog/items/{menuItem.Id}/pic", branch, upload, null, ct);
+        flow.Audit(DrawPhotoTool, new { itemId = menuItem.Id, style = look, note = said, fromCurrentPhoto, requestId }, saved.IsOk ? "photo set" : saved.Error!);
+        if (!saved.IsOk) return ToolResults.Fail($"The photo was drawn but not saved: {saved.Error}");
+
+        var text = ToolResults.Ok(new { done = true, itemId = menuItem.Id, item = name.Display, style = look, note = "The photo is the item's picture now; call again with another style or note to redo it." });
+        text.Content.Add(ImageContentBlock.FromBytes(drawn.Value, "image/webp"));
+        return text;
+    }
+
+    private sealed record FoundGroup(CatalogItemDetail? Item, CustomizationDto? Group, string? Error);
+
+    /// <summary>An item and one of its choice groups, by name or id, or why not.</summary>
+    private async Task<FoundGroup> FindGroupAsync(string item, string group, CancellationToken ct)
+    {
+        var snapshot = await tenant.LoadAsync(ct);
+        if (!snapshot.IsOk) return new(null, null, snapshot.Error);
+        var (menuItem, missing) = await FindItemAsync(snapshot.Value!, item, ct);
+        if (menuItem is null) return new(null, null, missing);
+        var groups = await api.GetAsync<List<CustomizationDto>>(Catalog, $"/api/catalog/items/{menuItem.Id}/customizations", null, ct);
+        if (!groups.IsOk) return new(menuItem, null, groups.Error);
+        if (groups.Value!.Count == 0) return new(menuItem, null, $"\"{menuItem.Name?.Both}\" has no choices yet; add_customizations adds them.");
+        var (g, gError) = NameResolver.Pick(groups.Value!, group, x => x.Id, x => x.Name, "choice group");
+        if (g is null) return new(menuItem, null, $"{gError} Its choices are: {string.Join(", ", groups.Value!.Select(x => x.Name?.Both))}.");
+        return new(menuItem, g, null);
     }
 
     [McpServerTool(Name = AddCustomizationsTool, Title = "Add choices to an item", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]

@@ -63,6 +63,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         [Description("Its Arabic name, when the owner gave both")] string? nameAr = null,
         [Description("How much one pack holds, in its unit (1000 for a 1 kg bag of an item in g); optional")] decimal? packSize = null,
         [Description("What a pack is called, e.g. bag, bottle, carton; optional")] string? packName = null,
+        [Description("The pack's Arabic name, e.g. كيس or كرتونة; optional")] string? packNameAr = null,
         [Description("true when the items that need it should sell out when it runs out")] bool autoSoldOut = false,
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
@@ -86,7 +87,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
                 ? $"\"{there.Name?.Both}\" is already a stock item (id {there.Id}, in {there.Unit})."
                 : $"\"{there.Name?.Both}\" is a retired stock item (id {there.Id}); update_stock_item with active=true brings it back.");
 
-        var pack = packSize is > 0 && MenuWriteTools.Clean(packName) is { } said ? MenuWriteTools.Localized(said) : null;
+        var pack = packSize is > 0 ? PackOf(packName, packNameAr, null) : null;
         var preview = $"Add the stock item \"{given.Both}\", counted in {baseUnit}"
             + (packSize is > 0 ? $", bought in packs of {Qty(packSize.Value, baseUnit)}{(pack is null ? "" : $" ({pack.Display})")}" : "")
             + (autoSoldOut ? ", and the items that need it sell out when it runs out" : "") + ".";
@@ -113,13 +114,14 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         [Description("g, ml or pcs")] string? unit = null,
         [Description("How much one pack holds, in its unit; 0 for no pack")] decimal? packSize = null,
         [Description("What a pack is called, e.g. bag")] string? packName = null,
+        [Description("The pack's Arabic name, e.g. كيس")] string? packNameAr = null,
         [Description("true when the items that need it should sell out when it runs out")] bool? autoSoldOut = null,
         [Description("false to retire it, true to bring it back")] bool? active = null,
         [Description(WriteFlow.RequestIdDescription)] string? requestId = null,
         [Description(WriteFlow.ConfirmDescription)] bool confirm = false,
         CancellationToken ct = default)
     {
-        if (name is null && nameAr is null && unit is null && packSize is null && packName is null && autoSoldOut is null && active is null)
+        if (name is null && nameAr is null && unit is null && packSize is null && packName is null && packNameAr is null && autoSoldOut is null && active is null)
             return ToolResults.Fail("Say what to change: a name, the unit, the pack, autoSoldOut, or active.");
         string? newUnit = null;
         if (unit is not null && (newUnit = BaseUnit(unit)) is null) return ToolResults.Fail("unit must be g, ml or pcs.");
@@ -137,7 +139,7 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         var oldUnit = item.Unit ?? "";
         newUnit ??= oldUnit;
         var newPack = packSize is null ? item.PackSize : packSize == 0 ? null : packSize;
-        var newPackName = newPack is null ? null : packName is null ? item.PackName : MenuWriteTools.Clean(packName) is { } said ? MenuWriteTools.Localized(said) : null;
+        var newPackName = newPack is null ? null : packName is null && packNameAr is null ? item.PackName : PackOf(packName, packNameAr, item.PackName);
         var newAuto = autoSoldOut ?? item.AutoSoldOut;
         var newActive = active ?? item.IsActive;
 
@@ -159,6 +161,21 @@ public sealed class StockWriteTools(TenantContext tenant, NinjaApiClient api, Wr
         flow.Audit(UpdateTool, new { stockItemId = item.Id, name = old.Display, changes, requestId }, result.IsOk ? "updated" : result.Error!);
         if (!result.IsOk) return ToolResults.Fail(result.Error!);
         return ToolResults.Ok(new { done = true, stockItemId = item.Id, name = renamed.Display, nameAr = renamed.Arabic, changes });
+    }
+
+    /// <summary>
+    /// A pack's name as said. A new name in one language replaces the old
+    /// name (a bag that is now a carton is not still a كيس); the Arabic
+    /// alone renames only the Arabic side.
+    /// </summary>
+    private static LocalizedText? PackOf(string? name, string? nameAr, LocalizedText? before)
+    {
+        var en = MenuWriteTools.Clean(name);
+        var ar = MenuWriteTools.Clean(nameAr);
+        if (en is null && ar is null) return before;
+        if (en is null) return new LocalizedText(before?.En, ar);
+        var said = MenuWriteTools.Localized(en);
+        return new LocalizedText(said.En, ar ?? said.Ar);
     }
 
     [McpServerTool(Name = ReorderTool, Title = "Set a stock item's low-stock level", ReadOnly = false, Idempotent = true, Destructive = false, OpenWorld = false)]

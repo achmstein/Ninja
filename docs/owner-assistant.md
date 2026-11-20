@@ -61,7 +61,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 ## Tools
 
-72 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
+75 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
 
 **Read**
 - Sales and money: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_open_tickets`, `get_orders`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_pricing_rules`.
@@ -70,7 +70,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 - People and places: `get_staff`, `get_attendance`, `get_payslips`, `get_reservations`, `get_place_usage`, `get_deliveries`, `get_loyalty_overview`, `get_customer_tabs`, `get_branch_settings`, `get_announcements`.
 
 **Write** (setup and operations only: never a delete, never a refund, void, payslip payment, pay change or loyalty points)
-- Menu: `create_menu_item` (the dish, its choices, its stock recipe with any new stock items, a photo, in one go), `update_menu_item`, `set_item_offer`, `set_branch_price`, `set_item_availability`, `create_category`, `rename_category`, `add_customizations`, `edit_customization`, `set_recipe`, `create_promo_code`, `update_promo_code`, `set_promo_active`.
+- Menu: `create_menu_item` (the dish, its choices, its stock recipe with any new stock items, a photo, in one go), `update_menu_item`, `set_item_offer`, `set_branch_price`, `set_item_availability`, `create_category`, `rename_category`, `add_customizations`, `edit_customization`, `edit_choice_group`, `remove_customization` (the one delete: an option or a whole group), `draw_item_photo` (a new photo for an item on the menu, drawn or restaged from its own, returned in the answer), `set_recipe`, `create_promo_code`, `update_promo_code`, `set_promo_active`.
 - Stock: `create_stock_item`, `update_stock_item`, `set_reorder_level`, `record_waste`, `adjust_stock`, `record_purchase`, `record_stock_count`, `transfer_stock`.
 - Books: `record_expense`, `create_expense_category`, `set_recurring_expense`, `save_supplier`, `record_supplier_payment`.
 - Staff and places: `add_employee`, `update_employee`, `mark_attendance`, `create_place`, `update_place`, `set_place_tariff`, `set_place_reservable`, `set_place_active`.
