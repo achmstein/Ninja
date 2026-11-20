@@ -61,12 +61,13 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 
 ## Tools
 
-75 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
+78 tools. The assistant is part of **Ninja AI** (the `Ai` module: in Pro, an add-on on Free and Starter): without it the gateway answers 402 for `/mcp`, and with it switched off on the admin's brand page every tool says so.
 
 **Read**
 - Sales and money: `get_business_overview` (call first), `get_sales_summary`, `get_sales_breakdown` (hour, weekday, cashier, item), `get_daily_sales_trend`, `get_refunds`, `get_shifts`, `get_open_tickets`, `get_orders`, `get_profit`, `get_profit_trend`, `get_expenses`, `get_supplier_balances`, `get_pricing_rules`.
 - Menu: `get_menu`, `get_menu_item`, `get_recipes`, `get_food_cost` (cost and margin per dish, worst first), `get_menu_engineering` (each dish a star, plowhorse, puzzle or dog from what it sold against its margin), `get_promo_codes`.
 - Stock: `get_stock_levels`, `get_inventory_usage`, `get_stock_movements`, `get_purchases`, `get_stock_counts`, `get_transfers`.
+- Customers: `find_customer` (by name in either script, a phone or part of it; what they owe on their tab, points, open bills, where they are now, recent orders). A name said in one script is also matched by sound against every account, so أحمد finds the Ahmed saved in English (`Context/CustomerFinder.cs`).
 - People and places: `get_staff`, `get_attendance`, `get_payslips`, `get_reservations`, `get_place_usage`, `get_deliveries`, `get_loyalty_overview`, `get_customer_tabs`, `get_branch_settings`, `get_announcements`.
 
 **Write** (setup and operations only: never a delete, never a refund, void, payslip payment, pay change or loyalty points)
@@ -74,6 +75,7 @@ Keycloak 26.4 ignores the OAuth `resource` parameter and has no Client ID Metada
 - Stock: `create_stock_item`, `update_stock_item`, `set_reorder_level`, `record_waste`, `adjust_stock`, `record_purchase`, `record_stock_count`, `transfer_stock`.
 - Books: `record_expense`, `create_expense_category`, `set_recurring_expense`, `save_supplier`, `record_supplier_payment`.
 - Staff and places: `add_employee`, `update_employee`, `mark_attendance`, `create_place`, `update_place`, `set_place_tariff`, `set_place_reservable`, `set_place_active`.
+- Till: `ring_up_order` (a till order from chat, priced by Catalog and sent to the kitchen: to a bill named, a table or room, the bill the customer already has open, or a new counter bill; the lines are the customer's on a shared bill; no payment or closing), `assign_room_customer` (a running room's owner, or one more of its party).
 - Business: `update_branch`, `set_pricing_rules`, `pause_online_ordering`, `send_announcement`.
 
 **How a write runs** (`Tools/WriteFlow.cs`)

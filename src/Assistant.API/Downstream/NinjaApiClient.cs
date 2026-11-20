@@ -135,6 +135,7 @@ public sealed class NinjaApiClient(IHttpClientFactory httpClientFactory, TokenEx
         "spaces-api" => "Rooms and tables",
         "loyalty-api" => "Loyalty",
         "accounts-api" => "Customer tabs",
+        "identity-api" => "Customers",
         "notification-api" => "Notifications",
         _ => service,
     };
