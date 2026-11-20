@@ -241,6 +241,8 @@ const dictionary = {
 
   // Ticket screen
   ticketNumber: { en: "Ticket #{id}", ar: "فاتورة #\u200F{id}" },
+  printBill: { en: "Print bill", ar: "اطبع الفاتورة" },
+  billNotPaid: { en: "Bill · not paid yet", ar: "فاتورة · لم تُدفع بعد" },
   ticketNotFound: { en: "Ticket not found", ar: "الفاتورة غير موجودة" },
   backToFloor: { en: "Floor", ar: "الصالة" },
   emptyTicket: { en: "No items on this ticket yet", ar: "لا توجد أصناف على الفاتورة بعد" },

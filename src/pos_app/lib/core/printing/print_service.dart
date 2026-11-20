@@ -46,6 +46,23 @@ class PrintService {
     return NetworkEscPosPrinter(settings.host, settings.port);
   }
 
+  /// The bill before it is paid: the receipt's sheet, headed as a bill that
+  /// is not one. The drawer stays shut.
+  Future<void> printBill(TicketDetail ticket, {required AppLocalizations l10n, required Locale locale}) async {
+    final printer = _printer();
+    final sheet = ReceiptSheet(
+      ticket: ticket,
+      l10n: l10n,
+      locale: locale,
+      money: _money(locale),
+      brandName: _brandName(locale),
+      logo: await _logo(),
+      branch: _ref.read(branchProvider).selectedBranch,
+      unpaid: true,
+    );
+    await printer.send(await _job(sheet));
+  }
+
   Future<void> printReceipt(
     TicketDetail ticket, {
     required AppLocalizations l10n,

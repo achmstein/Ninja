@@ -47,6 +47,11 @@ class ReceiptSheet extends StatelessWidget {
   /// its own footer line at the bottom
   final Branch? branch;
 
+  /// The bill before it is paid, for the customer to look over and choose
+  /// how to pay: headed as a bill that is not a receipt, with the ticket's
+  /// number, and what is left to pay when part of it already is
+  final bool unpaid;
+
   const ReceiptSheet({
     super.key,
     required this.ticket,
@@ -59,6 +64,7 @@ class ReceiptSheet extends StatelessWidget {
     this.paymentsOverride,
     this.receiptNumberOverride,
     this.provisionalReceiptNumber,
+    this.unpaid = false,
   });
 
   @override
@@ -84,6 +90,10 @@ class ReceiptSheet extends StatelessWidget {
             if (branch!.phone != null) Text(showPhone(branch!.phone), textDirection: TextDirection.ltr, style: const TextStyle(fontSize: 20)),
             if (branch!.taxNumber != null) Text(l10n.taxNumber(branch!.taxNumber!), style: const TextStyle(fontSize: 20)),
             const SizedBox(height: 6),
+          ],
+          if (unpaid) ...[
+            Text(l10n.billNotPaid, style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
+            Text(l10n.ticketNumber(ticket.id), style: const TextStyle(fontSize: 22)),
           ],
           if (receiptNumber != null)
             Text(l10n.receiptNumber(receiptNumber), style: const TextStyle(fontSize: 26, fontWeight: FontWeight.w600)),
@@ -125,6 +135,8 @@ class ReceiptSheet extends StatelessWidget {
           SheetRow(l10n.vatIncluded(rateText(ticket.vatRate)), money(ticket.vat), size: 20),
         for (final payment in payments) SheetRow(tenderLabel(l10n, payment.tender), money(payment.amount)),
         if (change > 0) SheetRow(l10n.changeDue, money(change), weight: FontWeight.w600),
+        if (unpaid && paid > 0 && paid < ticket.total)
+          SheetRow(l10n.remaining, money(ticket.total - paid), weight: FontWeight.w600),
         if (ticket.refunds.isNotEmpty) ...[
           const SizedBox(height: 8),
           const Dashes(),

@@ -483,6 +483,8 @@
     }
   },
   "print": "طباعة",
+  "printBill": "اطبع الفاتورة",
+  "billNotPaid": "فاتورة · لم تُدفع بعد",
   "openBill": "فتح الفاتورة",
   "done": "تم",
   "customerDetails": "تفاصيل العميل",

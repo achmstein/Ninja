@@ -803,6 +803,16 @@ class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderState
     super.dispose();
   }
 
+  Future<void> _printBill(TicketDetail ticket) async {
+    final l10n = AppLocalizations.of(context)!;
+    try {
+      await ref.read(printServiceProvider).printBill(ticket, l10n: l10n, locale: Localizations.localeOf(context));
+      if (mounted) showPosToast(context, PosToastType.success, l10n.printed);
+    } catch (e) {
+      if (mounted) showPosToast(context, PosToastType.error, describePrintError(e, l10n));
+    }
+  }
+
   void _pick(VoidCallback action) {
     _menu.hide();
     action();
@@ -818,6 +828,13 @@ class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderState
     final reprint = canReprintKitchen(ref, ticket);
 
     final menuItems = [
+      // The bill on paper before it is paid: the customer looks it over, then says how they pay
+      if (ticket.isOpen && ticket.lines.isNotEmpty)
+        FItem(
+          prefix: const Icon(FIcons.printer, size: Sizes.icon),
+          title: Text(l10n.printBill, style: rowStyle),
+          onPress: () => _pick(() => _printBill(ticket)),
+        ),
       if (ticket.isOpen)
         FItem(
           prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),

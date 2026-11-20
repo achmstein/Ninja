@@ -890,6 +890,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get print => 'طباعة';
 
   @override
+  String get printBill => 'اطبع الفاتورة';
+
+  @override
+  String get billNotPaid => 'فاتورة · لم تُدفع بعد';
+
+  @override
   String get openBill => 'فتح الفاتورة';
 
   @override

@@ -878,6 +878,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get print => 'Print';
 
   @override
+  String get printBill => 'Print bill';
+
+  @override
+  String get billNotPaid => 'Bill · not paid yet';
+
+  @override
   String get openBill => 'Open bill';
 
   @override

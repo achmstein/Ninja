@@ -1622,6 +1622,18 @@ abstract class AppLocalizations {
   /// **'Print'**
   String get print;
 
+  /// No description provided for @printBill.
+  ///
+  /// In en, this message translates to:
+  /// **'Print bill'**
+  String get printBill;
+
+  /// No description provided for @billNotPaid.
+  ///
+  /// In en, this message translates to:
+  /// **'Bill · not paid yet'**
+  String get billNotPaid;
+
   /// No description provided for @openBill.
   ///
   /// In en, this message translates to:

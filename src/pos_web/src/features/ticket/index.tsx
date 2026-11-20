@@ -662,6 +662,8 @@ export function TicketScreen({
     mySends.length === 0 &&
     (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
   const canVoid = !canDiscard && isOwner
+  // An open bill with something on it can go on paper before it is paid
+  const canPrintBill = isOpen && (ticket.lines?.length ?? 0) > 0
   const hasMenu = isOpen || canReprint
   // The bill's parts (menu money, discount, service, VAT, what went back)
   // are one tap away; the bar carries the total
@@ -808,6 +810,17 @@ export function TicketScreen({
                       −{money(ticket.discount)}
                     </span>
                   )}
+                </DropdownMenuItem>
+              )}
+              {/* The bill on paper before it is paid: the customer looks it
+                  over, then says how they pay */}
+              {canPrintBill && (
+                <DropdownMenuItem
+                  className='h-12 gap-3 px-3 text-base'
+                  onSelect={() => void printSheets()}
+                >
+                  <Printer className='size-5' />
+                  {t('printBill')}
                 </DropdownMenuItem>
               )}
               {canReprint && (
@@ -1380,12 +1393,14 @@ export function TicketScreen({
         customer={cardFor}
         onOpenChange={(open) => !open && setCardFor(null)}
       />
-      {(isSettled || settleOutcome) && (
+      {isSettled || settleOutcome ? (
         <ReceiptSheet
           ticket={ticket}
           paymentsOverride={paymentsOverride}
           receiptNumberOverride={settleOutcome?.receiptNumber}
         />
+      ) : (
+        canPrintBill && <ReceiptSheet ticket={ticket} unpaid />
       )}
     </div>
   )

@@ -26,6 +26,12 @@ type ReceiptSheetProps = {
    * yet: it prints the till's provisional one (P-0001) and says so
    */
   provisionalNumber?: string
+  /**
+   * The bill before it is paid, for the customer to look over and choose
+   * how to pay: headed as a bill that is not a receipt, with the ticket's
+   * number, and what is left to pay when part of it already is
+   */
+  unpaid?: boolean
 }
 
 const row = { display: 'flex', justifyContent: 'space-between', gap: 8 } as const
@@ -46,6 +52,7 @@ export function ReceiptSheet({
   paymentsOverride,
   receiptNumberOverride,
   provisionalNumber,
+  unpaid = false,
 }: ReceiptSheetProps) {
   const t = useT()
   const localized = useLocalized()
@@ -105,6 +112,12 @@ export function ReceiptSheet({
             {branch.phone && <div dir='ltr'>{showPhone(branch.phone)}</div>}
             {branch.taxNumber && <div>{t('taxNumber', { number: branch.taxNumber })}</div>}
           </div>
+        )}
+        {unpaid && (
+          <>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>{t('billNotPaid')}</div>
+            <div style={{ fontSize: 11 }}>{t('ticketNumber', { id: toNumber(ticket.id) })}</div>
+          </>
         )}
         {provisionalNumber ? (
           <>
@@ -203,6 +216,12 @@ export function ReceiptSheet({
         <div style={{ ...row, fontWeight: 600 }}>
           <span>{t('changeDue')}</span>
           <span>{money(change)}</span>
+        </div>
+      )}
+      {unpaid && paid > 0 && paid < total && (
+        <div style={{ ...row, fontWeight: 600 }}>
+          <span>{t('remaining')}</span>
+          <span>{money(total - paid)}</span>
         </div>
       )}
 

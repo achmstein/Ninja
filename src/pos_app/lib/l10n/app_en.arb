@@ -504,6 +504,8 @@
     }
   },
   "print": "Print",
+  "printBill": "Print bill",
+  "billNotPaid": "Bill · not paid yet",
   "openBill": "Open bill",
   "done": "Done",
   "customerDetails": "Customer details",
