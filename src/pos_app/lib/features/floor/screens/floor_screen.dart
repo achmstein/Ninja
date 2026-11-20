@@ -168,7 +168,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
 
   Future<void> _newTab() async {
     final ticketId = await showNewTicketDialog(context);
-    if (ticketId != null && mounted) context.go('/ticket/$ticketId');
+    // A new bill has nothing on it yet: straight to the pad, pointed at it
+    if (ticketId != null && mounted) context.go('/sale?ticket=$ticketId');
   }
 
   // Search, then the card: no sale, no list of everyone
@@ -199,7 +200,8 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           );
       ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
-      context.go('/ticket/$ticketId');
+      // A new bill has nothing on it yet: straight to the pad, pointed at it
+      context.go('/sale?ticket=$ticketId');
     } catch (e) {
       if (!mounted) return;
       showPosToast(context, PosToastType.error, describeError(e, AppLocalizations.of(context)!));

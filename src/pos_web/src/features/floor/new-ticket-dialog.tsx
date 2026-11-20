@@ -122,10 +122,8 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
         }
       }
       onOpenChange(false)
-      navigate({
-        to: '/ticket/$ticketId',
-        params: { ticketId: String(result.ticketId) },
-      })
+      // A new bill has nothing on it yet: straight to the pad, pointed at it
+      navigate({ to: '/sale', search: { ticket: Number(result.ticketId) } })
     },
   })
 
