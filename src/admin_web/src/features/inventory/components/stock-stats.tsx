@@ -61,7 +61,6 @@ export function StockStats({ levels }: StockStatsProps) {
     enabled: open && monthWindow !== null,
   })
 
-  const lowCount = levels.filter((l) => l.isLow).length
   const stockValue = levels.reduce((sum, l) => sum + toNumber(l.value), 0)
 
   type StatRow = { label: string; value: React.ReactNode; tone?: string }
@@ -73,15 +72,7 @@ export function StockStats({ levels }: StockStatsProps) {
   const groups: { title: string | null; stats: StatRow[] }[] = [
     {
       title: null,
-      stats: [
-        { label: t('inventoryItems'), value: levels.length },
-        {
-          label: t('lowItems'),
-          value: lowCount,
-          tone: lowCount > 0 ? 'text-destructive' : undefined,
-        },
-        { label: t('stockValue'), value: formatEgp(stockValue) },
-      ],
+      stats: [{ label: t('stockValue'), value: formatEgp(stockValue) }],
     },
     {
       title: monthName,

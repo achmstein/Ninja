@@ -6,8 +6,8 @@ import {
   ArchiveRestore,
   ArrowLeft,
   MoreHorizontal,
+  PackagePlus,
   Pencil,
-  Wrench,
 } from 'lucide-react'
 import { listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
 import {
@@ -38,6 +38,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ConfirmDialog } from '@/components/confirm-dialog'
+import { SectionCard } from '@/components/section-card'
 import { When } from '@/components/when'
 import {
   costChange,
@@ -49,7 +50,9 @@ import {
   referenceLabel,
   unitLabel,
 } from '../format'
+import { daysLeft } from '../stock-sort'
 import { useInventoryActions } from '../use-inventory-actions'
+import { DaysLeft } from './days-left'
 import { MovementTypeBadge } from './movement-type-badge'
 import { ReorderLevelPopover } from './reorder-level-popover'
 import { StockItemDialog } from './stock-item-dialog'
@@ -57,15 +60,21 @@ import { StockItemDialog } from './stock-item-dialog'
 type StockItemPanelProps = {
   level: StockLevelView
   onBack: () => void
+  /** Receive a delivery, starting on this item */
+  onReceive: () => void
 }
 
 /**
- * The end side of the stock split: the selected item's level as the one
- * big number, its reorder level editable in place, the quick fixes a
- * manager posts by hand (waste, a return, a correction), what
- * moved recently and which menu items consume it.
+ * One stock item as a page: its level as the one big number, how long it
+ * lasts, its reorder level editable in place and which menu items consume
+ * it; then cards for the fixes a manager posts by hand (waste, a return,
+ * a correction), what the branch paid for it, and what moved.
  */
-export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
+export function StockItemPanel({
+  level,
+  onBack,
+  onReceive,
+}: StockItemPanelProps) {
   const t = useT()
   const localized = useLocalized()
   const { updateItem, isPending } = useInventoryActions()
@@ -74,6 +83,7 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
 
   const packs = packsOf(level.onHand, level.packSize)
   const stockItemId = toNumber(level.stockItemId)
+  const days = level.isActive ? daysLeft(level) : null
 
   // StockItemDialog edits the global item; the level carries the same fields
   const asItem: StockItemView = {
@@ -96,13 +106,13 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
   }
 
   return (
-    <div className='flex h-full flex-col'>
-      <div className='flex flex-none items-center justify-between gap-2 border-b p-4'>
+    <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto'>
+      <div className='flex flex-none items-center justify-between gap-2'>
         <div className='flex min-w-0 items-center gap-3'>
           <Button
             size='icon'
             variant='ghost'
-            className='-ms-2 sm:hidden'
+            className='-ms-2'
             onClick={onBack}
             aria-label={t('backToStock')}
           >
@@ -110,9 +120,9 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
           </Button>
           <div className='min-w-0'>
             <div className='flex min-w-0 items-center gap-2'>
-              <h2 className='truncate text-sm font-semibold'>
+              <h1 className='truncate text-lg font-semibold tracking-tight'>
                 {localized(level.name)}
-              </h2>
+              </h1>
               {level.autoSoldOut && (
                 <Badge variant='secondary'>{t('autoSoldOut')}</Badge>
               )}
@@ -142,9 +152,20 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
               {t('restoreItem')}
             </Button>
           )}
+          {level.isActive && (
+            <Button size='sm' onClick={onReceive}>
+              <PackagePlus />
+              {t('receiveStock')}
+            </Button>
+          )}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
-              <Button size='icon' variant='ghost' aria-label={t('actions')}>
+              <Button
+                size='icon'
+                variant='outline'
+                className='size-9'
+                aria-label={t('actions')}
+              >
                 <MoreHorizontal className='h-4 w-4' />
               </Button>
             </DropdownMenuTrigger>
@@ -170,54 +191,66 @@ export function StockItemPanel({ level, onBack }: StockItemPanelProps) {
         </div>
       </div>
 
-      <div className='min-h-0 flex-1 overflow-y-auto'>
-        {/* The level */}
-        <section className='space-y-1 p-4'>
-          <div className='text-muted-foreground text-xs font-medium'>
-            {t('onHand')}
-          </div>
-          <div
-            className={cn(
-              'text-4xl font-semibold tracking-tight tabular-nums',
-              level.isLow && 'text-destructive'
-            )}
-          >
-            {formatQuantity(level.onHand, level.unit, t)}
-            {level.isLow && (
-              <Badge variant='danger' className='ms-3 align-middle'>
-                {t('lowBadge')}
-              </Badge>
-            )}
-          </div>
-          <div className='text-muted-foreground flex flex-wrap items-center gap-x-1 text-sm'>
-            {packs !== null && (
-              <>
-                <span className='tabular-nums'>
-                  {t('approxPacks', {
-                    packs,
-                    packName: localized(level.packName) || t('pack'),
-                  })}
-                </span>
-                <span>·</span>
-              </>
-            )}
-            <ReorderLevelPopover level={level} />
-            <span>·</span>
-            <span className='tabular-nums'>
-              {t('avgCostLine', { cost: formatEgp(level.avgUnitCost) })}
+      {/* The level */}
+      <section className='flex-none space-y-1'>
+        <div className='text-muted-foreground text-xs font-medium'>
+          {t('onHand')}
+        </div>
+        <div
+          className={cn(
+            'text-4xl font-semibold tracking-tight tabular-nums',
+            level.isLow && 'text-destructive'
+          )}
+        >
+          {formatQuantity(level.onHand, level.unit, t)}
+          {level.isLow && (
+            <Badge variant='danger' className='ms-3 align-middle'>
+              {t('lowBadge')}
+            </Badge>
+          )}
+        </div>
+        <div className='text-muted-foreground flex flex-wrap items-center gap-x-1 text-sm'>
+          {packs !== null && (
+            <>
+              <span className='tabular-nums'>
+                {t('approxPacks', {
+                  packs,
+                  packName: localized(level.packName) || t('pack'),
+                })}
+              </span>
+              <span>·</span>
+            </>
+          )}
+          <ReorderLevelPopover level={level} />
+          <span>·</span>
+          <span className='tabular-nums'>
+            {t('avgCostLine', { cost: formatEgp(level.avgUnitCost) })}
+          </span>
+          <span>·</span>
+          <span className='tabular-nums'>
+            {t('worthLine', { value: formatEgp(level.value) })}
+          </span>
+        </div>
+        {days !== null && (
+          <div className='flex flex-wrap items-center gap-x-1 text-sm'>
+            <DaysLeft days={days} left />
+            <span className='text-muted-foreground'>·</span>
+            <span className='text-muted-foreground tabular-nums'>
+              {t('dailyUseLine', {
+                quantity: formatQuantity(level.dailyUse, level.unit, t),
+              })}
             </span>
-            <span>·</span>
-            <span className='tabular-nums'>
-              {t('worthLine', { value: formatEgp(level.value) })}
-            </span>
           </div>
-          <UsedBy stockItemId={stockItemId} />
-        </section>
+        )}
+        <UsedBy stockItemId={stockItemId} />
+      </section>
 
-        {level.isActive && <QuickFix key={stockItemId} level={level} />}
-
-        <CostHistory stockItemId={stockItemId} unit={level.unit} />
-
+      {/* The fixes and what was paid on one side, the ledger on the other */}
+      <div className='grid flex-none items-start gap-4 lg:grid-cols-2'>
+        <div className='space-y-4 empty:hidden'>
+          {level.isActive && <QuickFix key={stockItemId} level={level} />}
+          <CostHistory stockItemId={stockItemId} unit={level.unit} />
+        </div>
         <Movements stockItemId={stockItemId} />
       </div>
 
@@ -311,80 +344,73 @@ function QuickFix({ level }: { level: StockLevelView }) {
   }
 
   return (
-    <section className='space-y-3 border-t p-4'>
-      <h3 className='flex items-center gap-2 text-sm font-medium'>
-        <Wrench className='text-muted-foreground h-4 w-4' />
-        {t('fixTheLevel')}
-      </h3>
-      <ToggleGroup
-        type='single'
-        variant='outline'
-        value={kind ?? ''}
-        onValueChange={(value) => setKind((value as FixKind) || null)}
-        className='max-w-full overflow-x-auto'
-      >
-        {fixKinds.map((k) => (
-          <ToggleGroupItem key={k.kind} value={k.kind} className='px-3'>
-            {labels[k.kind]}
-          </ToggleGroupItem>
-        ))}
-      </ToggleGroup>
-      {picked && (
-        <form
-          onSubmit={submit}
-          className='flex flex-wrap items-end gap-3 rounded-md'
+    <SectionCard title={t('fixTheLevel')}>
+      <div className='space-y-3 px-5 pt-3 pb-5'>
+        <ToggleGroup
+          type='single'
+          variant='outline'
+          value={kind ?? ''}
+          onValueChange={(value) => setKind((value as FixKind) || null)}
+          className='max-w-full overflow-x-auto'
         >
-          <div className='w-36 space-y-1.5'>
-            <Label htmlFor='fix-quantity'>
-              {t('quantity')} ({unitLabel(level.unit, t)})
-            </Label>
-            <Input
-              id='fix-quantity'
-              type='number'
-              step='any'
-              min={picked.sign === null ? undefined : '0'}
-              value={quantity}
-              onChange={(e) => setQuantity(e.target.value)}
-              autoFocus
-            />
-          </div>
-          <div className='min-w-40 flex-1 space-y-1.5'>
-            <Label htmlFor='fix-note'>{t('notesOptional')}</Label>
-            <Input
-              id='fix-note'
-              value={note}
-              onChange={(e) => setNote(e.target.value)}
-            />
-          </div>
-          <div className='flex gap-2'>
-            <Button type='button' variant='ghost' onClick={reset}>
-              {t('cancel')}
-            </Button>
-            <Button type='submit' disabled={!valid || isPending}>
-              {isPending && <Spinner />}
-              {t('postFix')}
-            </Button>
-          </div>
-          <p className='text-muted-foreground w-full text-xs'>
-            {picked.sign === null
-              ? t('adjustmentQuantityHint')
-              : picked.sign > 0 && picked.type === MOVEMENT_ADJUSTMENT
-                ? t('addQuantityHint')
-                : t('removeQuantityHint')}
-          </p>
-        </form>
-      )}
-    </section>
+          {fixKinds.map((k) => (
+            <ToggleGroupItem key={k.kind} value={k.kind} className='px-3'>
+              {labels[k.kind]}
+            </ToggleGroupItem>
+          ))}
+        </ToggleGroup>
+        {picked && (
+          <form
+            onSubmit={submit}
+            className='flex flex-wrap items-end gap-3 rounded-md'
+          >
+            <div className='w-36 space-y-1.5'>
+              <Label htmlFor='fix-quantity'>
+                {t('quantity')} ({unitLabel(level.unit, t)})
+              </Label>
+              <Input
+                id='fix-quantity'
+                type='number'
+                step='any'
+                min={picked.sign === null ? undefined : '0'}
+                value={quantity}
+                onChange={(e) => setQuantity(e.target.value)}
+                autoFocus
+              />
+            </div>
+            <div className='min-w-40 flex-1 space-y-1.5'>
+              <Label htmlFor='fix-note'>{t('notesOptional')}</Label>
+              <Input
+                id='fix-note'
+                value={note}
+                onChange={(e) => setNote(e.target.value)}
+              />
+            </div>
+            <div className='flex gap-2'>
+              <Button type='button' variant='ghost' onClick={reset}>
+                {t('cancel')}
+              </Button>
+              <Button type='submit' disabled={!valid || isPending}>
+                {isPending && <Spinner />}
+                {t('postFix')}
+              </Button>
+            </div>
+            <p className='text-muted-foreground w-full text-xs'>
+              {picked.sign === null
+                ? t('adjustmentQuantityHint')
+                : picked.sign > 0 && picked.type === MOVEMENT_ADJUSTMENT
+                  ? t('addQuantityHint')
+                  : t('removeQuantityHint')}
+            </p>
+          </form>
+        )}
+      </div>
+    </SectionCard>
   )
 }
 
 const PAGE_SIZE = 30
 
-/**
- * The item's whole ledger, newest first, fetched a page at a time as the
- * panel is scrolled to the bottom. Keyed under the generated query id so
- * the postings' invalidation refreshes it too.
- */
 /**
  * What the branch paid for the item, receipt by receipt, newest first, each
  * against the one before it so a creeping price is a column of red.
@@ -408,9 +434,8 @@ function CostHistory({
   if (rows.length === 0) return null
 
   return (
-    <section className='space-y-2 border-t p-4'>
-      <h3 className='text-sm font-medium'>{t('costHistory')}</h3>
-      <ul className='divide-y text-sm'>
+    <SectionCard title={t('costHistory')}>
+      <ul className='divide-y px-5 pt-2 pb-4 text-sm'>
         {rows.map((r, i) => {
           const previous = rows[i + 1]
           const change = previous
@@ -456,10 +481,15 @@ function CostHistory({
           )
         })}
       </ul>
-    </section>
+    </SectionCard>
   )
 }
 
+/**
+ * The item's whole ledger, newest first, fetched a page at a time as the
+ * page is scrolled to the bottom. Keyed under the generated query id so
+ * the postings' invalidation refreshes it too.
+ */
 function Movements({ stockItemId }: { stockItemId: number }) {
   const t = useT()
   const query = useInfiniteQuery({
@@ -505,54 +535,57 @@ function Movements({ stockItemId }: { stockItemId: number }) {
   }, [hasNextPage, isFetchingNextPage, fetchNextPage])
 
   return (
-    <section className='space-y-2 border-t p-4'>
-      <h3 className='flex items-baseline gap-2 text-sm font-medium'>
-        {t('inventoryMovements')}
-        {total > 0 && (
-          <span className='text-muted-foreground text-xs font-normal tabular-nums'>
+    <SectionCard
+      title={t('inventoryMovements')}
+      action={
+        total > 0 ? (
+          <span className='text-muted-foreground text-xs tabular-nums'>
             {total}
           </span>
+        ) : undefined
+      }
+    >
+      <div className='px-5 pt-2 pb-2'>
+        {query.isLoading ? (
+          <div className='space-y-2'>
+            {[...Array(3)].map((_, i) => (
+              <Skeleton key={i} className='h-8' />
+            ))}
+          </div>
+        ) : rows.length === 0 ? (
+          <p className='text-muted-foreground text-sm'>{t('noMovementsYet')}</p>
+        ) : (
+          <ul className='divide-y text-sm'>
+            {rows.map((m) => {
+              const qty = toNumber(m.quantity)
+              return (
+                <li key={String(m.id)} className='flex items-center gap-3 py-2'>
+                  <When
+                    value={m.recordedAt}
+                    className='text-muted-foreground w-24 shrink-0 text-xs'
+                  />
+                  <MovementTypeBadge type={m.type} />
+                  <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
+                    {m.reason || referenceLabel(m.reference, t)}
+                  </span>
+                  <span
+                    className={cn(
+                      'shrink-0 font-medium tabular-nums',
+                      qty < 0 ? 'text-destructive' : 'text-success'
+                    )}
+                  >
+                    {formatSignedQuantity(m.quantity, m.unit, t)}
+                  </span>
+                </li>
+              )
+            })}
+          </ul>
         )}
-      </h3>
-      {query.isLoading ? (
-        <div className='space-y-2'>
-          {[...Array(3)].map((_, i) => (
-            <Skeleton key={i} className='h-8' />
-          ))}
+        <div ref={sentinel} className='flex h-8 items-center justify-center'>
+          {isFetchingNextPage && <Spinner />}
         </div>
-      ) : rows.length === 0 ? (
-        <p className='text-muted-foreground text-sm'>{t('noMovementsYet')}</p>
-      ) : (
-        <ul className='divide-y text-sm'>
-          {rows.map((m) => {
-            const qty = toNumber(m.quantity)
-            return (
-              <li key={String(m.id)} className='flex items-center gap-3 py-2'>
-                <When
-                  value={m.recordedAt}
-                  className='text-muted-foreground w-24 shrink-0 text-xs'
-                />
-                <MovementTypeBadge type={m.type} />
-                <span className='text-muted-foreground min-w-0 flex-1 truncate text-xs'>
-                  {m.reason || referenceLabel(m.reference, t)}
-                </span>
-                <span
-                  className={cn(
-                    'shrink-0 font-medium tabular-nums',
-                    qty < 0 ? 'text-destructive' : 'text-success'
-                  )}
-                >
-                  {formatSignedQuantity(m.quantity, m.unit, t)}
-                </span>
-              </li>
-            )
-          })}
-        </ul>
-      )}
-      <div ref={sentinel} className='flex h-8 items-center justify-center'>
-        {isFetchingNextPage && <Spinner />}
       </div>
-    </section>
+    </SectionCard>
   )
 }
 

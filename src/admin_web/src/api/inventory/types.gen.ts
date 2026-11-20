@@ -336,6 +336,7 @@ export type StockLevelView = {
     value: number | string;
     lastCost?: null | number | string;
     lastCostAt?: null | string;
+    dailyUse?: null | number | string;
 };
 
 export type TrackByUnitRequest = {

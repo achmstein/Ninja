@@ -39,6 +39,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
+import { SectionCard } from '@/components/section-card'
 import { When } from '@/components/when'
 import { AddChargeDialog } from '@/features/accounts/components/add-charge-dialog'
 import { RecordPaymentDialog } from '@/features/accounts/components/record-payment-dialog'
@@ -255,18 +256,18 @@ function CustomerHub({
           )}
         >
           {features.tabs && (
-            <Card title={t('tab')}>
+            <SectionCard title={t('tab')}>
               <TabSection key={customer.id} customer={customer} />
-            </Card>
+            </SectionCard>
           )}
           {features.loyalty && (
-            <Card title={t('loyalty')}>
+            <SectionCard title={t('loyalty')}>
               <LoyaltySection key={customer.id} customer={customer} />
-            </Card>
+            </SectionCard>
           )}
         </div>
       )}
-      <Card
+      <SectionCard
         title={t('recentOrders')}
         action={
           <Button variant='link' size='sm' className='h-auto p-0' asChild>
@@ -277,7 +278,7 @@ function CustomerHub({
         }
       >
         <RecentOrders customerId={customer.id} />
-      </Card>
+      </SectionCard>
 
       <ConfirmDialog
         open={toggleOpen}
@@ -305,29 +306,6 @@ function CustomerHub({
         />
       )}
     </div>
-  )
-}
-
-/** One of the page's cards: a small title, and what goes with it at the end. */
-function Card({
-  title,
-  action,
-  children,
-}: {
-  title: string
-  action?: React.ReactNode
-  children: React.ReactNode
-}) {
-  return (
-    <section className='bg-card flex-none rounded-lg border'>
-      <div className='flex items-center justify-between gap-2 px-5 pt-4'>
-        <h2 className='text-muted-foreground text-xs font-medium tracking-wide uppercase rtl:tracking-normal'>
-          {title}
-        </h2>
-        {action}
-      </div>
-      {children}
-    </section>
   )
 }
 
