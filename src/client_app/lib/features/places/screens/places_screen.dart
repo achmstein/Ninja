@@ -159,11 +159,16 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       for (final (:item, :meters) in branchesByDistance([for (final g in groups) g.branch], branchId, here))
         (branch: item, places: groups.firstWhere((g) => g.branch.id == item.id).places, meters: meters),
     ];
+    // A branch not taking bookings now: its places are there to read, never counted as free
+    bool paused(Branch b) => !b.isReservationsEnabled;
     // One branch at a time, chosen on the dial (client_web's places.tsx): the one picked, else the one
-    // the customer is at, else the nearest
+    // the customer is at while it takes bookings, else the nearest that does, else the nearest
     final viewed = ordered.where((g) => g.branch.id == _viewId).firstOrNull ??
-        ordered.where((g) => g.branch.id == branchId).firstOrNull ??
+        ordered.where((g) => g.branch.id == branchId && !paused(g.branch)).firstOrNull ??
+        ordered.where((g) => !paused(g.branch)).firstOrNull ??
         ordered.firstOrNull;
+    // The branch the page is about: the one on the dial, or the customer's own
+    final shownBranch = multi && viewed != null ? viewed.branch : ref.watch(branchProvider).selectedBranch;
     // Another branch's places book only while the customer is at none (a bill, a scanned table)
     bool canReserveAt(Branch b) =>
         reservedSession == null && stay == null && features.reservations && b.isReservationsEnabled && (b.id == branchId || !atBranch);
@@ -177,7 +182,10 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
     }
 
     // Across branches, every branch on the dial: the heading said this one's alone, under a dial of them all
-    final freeShown = multi ? ordered.fold(0, (sum, g) => sum + g.places.where((p) => p.canBookNow).length) : free;
+    // A paused branch's places are not free to book, whatever their state
+    final freeShown = multi
+        ? ordered.where((g) => !paused(g.branch)).fold(0, (sum, g) => sum + g.places.where((p) => p.canBookNow).length)
+        : free;
     return NinjaPage(
       title: l10n.rooms,
       // In a room the heading says where; otherwise how many places are free
@@ -196,8 +204,8 @@ class _PlacesScreenState extends ConsumerState<PlacesScreen> with WidgetsBinding
       children: [
         // In a room whose card is not on this list (another branch's): the slim card stands in for it
         if (stay != null && !rooms.any((r) => r.id == stay.placeId)) StayBanner(stay: stay),
-        // Not taking bookings for now: the same notice as the menu's
-        if (!(ref.watch(branchProvider).selectedBranch?.isReservationsEnabled ?? true))
+        // Not taking bookings for now: the same notice as the menu's, for the branch looked at only
+        if (shownBranch != null && paused(shownBranch))
           PausedNotice(title: l10n.reservationsPausedTitle, margin: EdgeInsets.zero),
         if (allBusy && reservedSession == null) const NotifyMeBanner(),
         // Booking across branches: the dial, nearest first once the customer's position is known, the way
@@ -1885,7 +1893,9 @@ class _DialChip extends StatelessWidget {
     final theme = context.theme;
     final c = theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    final free = dial.places.where((p) => p.canBookNow).length;
+    // Not taking bookings: none of its places is free to book, and the chip says why
+    final paused = !dial.branch.isReservationsEnabled;
+    final free = paused ? 0 : dial.places.where((p) => p.canBookNow).length;
     final ink = selected ? c.primaryForeground : c.foreground;
     final muted = selected ? c.primaryForeground.withValues(alpha: 0.9) : c.mutedForeground;
     final caption = context.localeText(theme.typography.caption.copyWith(color: muted));
@@ -1946,7 +1956,14 @@ class _DialChip extends StatelessWidget {
               _SeatMeter(free: free, total: dial.places.length, selected: selected),
               Row(
                 children: [
-                  Expanded(child: AppText(l10n.bookFreeShort(free), maxLines: 1, overflow: TextOverflow.ellipsis, style: caption)),
+                  Expanded(
+                    child: AppText(
+                      paused ? l10n.reservationsPausedTitle : l10n.bookFreeShort(free),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: caption,
+                    ),
+                  ),
                   if (dial.meters != null)
                     Text(distanceText(context, dial.meters!), textDirection: TextDirection.ltr, style: caption.copyWith(fontFeatures: NinjaTypography.tabular)),
                 ],

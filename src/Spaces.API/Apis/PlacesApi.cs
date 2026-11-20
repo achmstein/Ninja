@@ -88,10 +88,11 @@ public static class PlacesApi
         [FromServices] IPlaceQueries queries,
         HttpContext httpContext,
         [Description("Only places of this kind")] PlaceKind? kind = null,
-        [Description("Only timed (true) or order-only (false) places")] bool? timed = null)
+        [Description("Only timed (true) or order-only (false) places")] bool? timed = null,
+        [Description("Only the places a customer can book: in service and taking bookings (the customer apps' Book tab)")] bool? bookable = null)
     {
         var branchId = httpContext.GetRequiredBranchId();
-        return TypedResults.Ok(await queries.GetPlacesAsync(branchId, kind, timed));
+        return TypedResults.Ok(await queries.GetPlacesAsync(branchId, kind, timed, bookable ?? false));
     }
 
     public static async Task<Ok<IEnumerable<PlaceViewModel>>> GetAvailablePlaces(

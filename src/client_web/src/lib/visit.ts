@@ -37,7 +37,8 @@ export function useBookablePlaces() {
   const scope = useBranchScope()
   return useQuery({
     // This branch's places by name, so a switch never shows the last one's
-    ...listPlacesOptions(scope.options),
+    // Spaces leaves out what can't be booked (out of service, bookings off for that place)
+    ...listPlacesOptions({ ...scope.options, query: { bookable: true } }),
     enabled: scope.ready,
     refetchInterval: 30_000,
     select: (list) => bookablePlaces(list, features),
@@ -65,7 +66,7 @@ export function useBookablePlacesByBranch(): { groups: BranchPlaces[]; isLoading
   )
   const results = useQueries({
     queries: shown.map((b) => ({
-      ...listPlacesOptions({ headers: { 'X-Branch-Id': String(b.id) } }),
+      ...listPlacesOptions({ headers: { 'X-Branch-Id': String(b.id) }, query: { bookable: true } }),
       refetchInterval: 30_000,
       select: (list: PlaceViewModel[]) => bookablePlaces(list, features),
     })),

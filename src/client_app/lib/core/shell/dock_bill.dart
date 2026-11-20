@@ -343,7 +343,37 @@ Future<void> showDockBills(BuildContext context) => showNinjaSheet<void>(
               ),
             ),
             const OpenBills(),
+            // Settled at the till while it was open: nothing left to show, so the sheet goes too
+            const _ClosesWhenNoBill(),
           ],
         );
       },
     );
+
+/// Closes the bills sheet once there is no bill left on it: the till settled
+/// the last open one (or it was voided) and no order is forming, so the
+/// sheet would stand there with its title alone
+class _ClosesWhenNoBill extends ConsumerWidget {
+  const _ClosesWhenNoBill();
+
+  static bool _anyBill(WidgetRef ref) =>
+      (ref.read(myBillsProvider).value?.any((b) => b.isOpen) ?? false) || ref.read(formingOrdersProvider).isNotEmpty;
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    void check() {
+      if (_anyBill(ref)) return;
+      final route = ModalRoute.of(context);
+      // Only this sheet, and only while it is the one on top
+      if (route != null && route.isCurrent) Navigator.of(context).pop();
+    }
+
+    ref.listen(myBillsProvider, (_, _) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) check();
+        }));
+    ref.listen(formingOrdersProvider, (_, _) => WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (context.mounted) check();
+        }));
+    return const SizedBox.shrink();
+  }
+}

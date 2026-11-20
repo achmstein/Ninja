@@ -26,11 +26,14 @@ public class PlaceQueries(SpacesContext context) : IPlaceQueries
         .Include(s => s.Members)
         .Include(s => s.Segments);
 
-    public async Task<IEnumerable<PlaceViewModel>> GetPlacesAsync(int branchId, PlaceKind? kind = null, bool? timed = null)
+    public async Task<IEnumerable<PlaceViewModel>> GetPlacesAsync(int branchId, PlaceKind? kind = null, bool? timed = null, bool bookable = false)
     {
         var query = context.Places.AsNoTracking().Where(p => p.BranchId == branchId);
         if (kind is { } k)
             query = query.Where(p => p.Kind == k);
+        // The customer's list: a place out of service, or one the owner turned bookings off for, is not on it
+        if (bookable)
+            query = query.Where(p => p.IsActive && p.Reservable);
         var places = await query.OrderBy(p => p.Kind).ThenBy(p => p.Name.En ?? p.Name.Ar).ToListAsync();
         if (timed is { } t)
             places = places.Where(p => p.IsTimed == t).ToList();

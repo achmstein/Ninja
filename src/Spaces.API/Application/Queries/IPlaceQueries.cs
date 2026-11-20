@@ -5,7 +5,7 @@ namespace Ninja.Spaces.API.Application.Queries;
 public interface IPlaceQueries
 {
     /// <summary>Every place of a branch with its display status; narrow by kind or to timed ones.</summary>
-    Task<IEnumerable<PlaceViewModel>> GetPlacesAsync(int branchId, PlaceKind? kind = null, bool? timed = null);
+    Task<IEnumerable<PlaceViewModel>> GetPlacesAsync(int branchId, PlaceKind? kind = null, bool? timed = null, bool bookable = false);
 
     /// <summary>Reservable, active places nobody keeps right now: what a customer can book for now.</summary>
     Task<IEnumerable<PlaceViewModel>> GetAvailablePlacesAsync(int branchId);

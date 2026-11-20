@@ -36,11 +36,14 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<List<Place>> getPlaces({int? branchId}) async {
-    final response = await _places.get<List<dynamic>>('', headers: branchId == null ? null : {'X-Branch-Id': '$branchId'});
-    return (response.data ?? [])
-        .map((e) => Place.fromJson(e as Map<String, dynamic>))
-        .where((p) => p.isActive && (p.isTimed || p.reservable))
-        .toList();
+    // Spaces leaves out what can't be booked: out of service, or bookings off for that place
+    // (a customer in one sees it on their stay's own card)
+    final response = await _places.get<List<dynamic>>(
+      '',
+      queryParameters: const {'bookable': true},
+      headers: branchId == null ? null : {'X-Branch-Id': '$branchId'},
+    );
+    return (response.data ?? []).map((e) => Place.fromJson(e as Map<String, dynamic>)).toList();
   }
 
   @override

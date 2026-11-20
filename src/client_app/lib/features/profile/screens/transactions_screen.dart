@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat, NumberFormat;
 import '../../../core/motion/motion.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -164,7 +165,9 @@ class _LedgerRow extends StatelessWidget {
     final tone = charge ? c.destructive : NinjaColors.success;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final detail = [_when(context, transaction.createdAt), _detail(l10n, transaction)].where((s) => s.isNotEmpty).join(' · ');
-    return Padding(
+    // A charge from a receipt opens that receipt: what was on the bill that went on the tab
+    final ticketId = transaction.source == 'posReceipt' ? transaction.ticketId : null;
+    final row = Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
         children: [
@@ -192,8 +195,17 @@ class _LedgerRow extends StatelessWidget {
             '${charge ? '+' : '−'}${_amount.format(transaction.amount.abs())}',
             style: theme.typography.body.copyWith(fontWeight: FontWeight.w700, color: tone, fontFeatures: NinjaTypography.tabular),
           ),
+          if (ticketId != null) ...[
+            const SizedBox(width: 4),
+            Transform.flip(flipX: rtl, child: Icon(LucideIcons.chevronRight, size: 16, color: c.mutedForeground)),
+          ],
         ],
       ),
+    );
+    if (ticketId == null) return row;
+    return Semantics(
+      button: true,
+      child: Pressable(onTap: () => context.push('/receipts/$ticketId'), child: row),
     );
   }
 

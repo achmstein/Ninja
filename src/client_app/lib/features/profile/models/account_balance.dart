@@ -22,6 +22,9 @@ class AccountTransaction {
   /// last two, so the label is built in the user's language
   final String source;
   final int? sourceNumber;
+
+  /// The bill a receipt charge settled: the receipt page opens on it. Null for every other move
+  final int? ticketId;
   final String recordedBy;
   final DateTime createdAt;
 
@@ -32,6 +35,7 @@ class AccountTransaction {
     this.description,
     this.source = 'manual',
     this.sourceNumber,
+    this.ticketId,
     required this.recordedBy,
     required this.createdAt,
   });
@@ -44,6 +48,7 @@ class AccountTransaction {
       description: json['description'] as String?,
       source: json['source'] as String? ?? 'manual',
       sourceNumber: (json['sourceNumber'] as num?)?.toInt(),
+      ticketId: (json['ticketId'] as num?)?.toInt(),
       recordedBy: json['recordedBy'] as String,
       createdAt: DateTime.parse(json['createdAt'] as String),
     );
