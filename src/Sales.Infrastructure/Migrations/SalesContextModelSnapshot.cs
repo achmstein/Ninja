@@ -593,6 +593,17 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(20)
                         .HasColumnType("character varying(20)");
 
+                    b.Property<DateTime?>("TenderChangedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("TenderChangedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<string>("TenderChangedFrom")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int?>("TicketId")
                         .HasColumnType("integer");
 

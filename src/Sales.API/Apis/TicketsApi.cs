@@ -140,6 +140,11 @@ public static class TicketsApi
             .WithName("RemoveTicketDiscount")
             .WithSummary("Take the discount back off an open ticket");
 
+        api.MapPost("/{id:int}/payments/{paymentId:int}/tender", ChangePaymentTender)
+            .WithName("ChangePaymentTender")
+            .WithSummary("Change how a paid bill's payment was taken")
+            .WithDescription("Cash pressed and the customer sent InstaPay, or the other way: moves one payment between Cash, Card and InstaPay while the bill's shift is open. Cash that took change becomes the exact due and the change goes with it. Refused once the shift is closed, on a bill with a refund, and for tab, online or Talabat payments. Keeps what it was, who changed it and when.");
+
         api.MapPost("/{id:int}/void", VoidTicket)
             .WithName("VoidTicket")
             .WithSummary("Void an open ticket with nothing owed (owner only)")
@@ -589,6 +594,29 @@ public static class TicketsApi
         }
     }
 
+    public static async Task<Results<Ok, BadRequest<string>>> ChangePaymentTender(
+        int id,
+        int paymentId,
+        ChangePaymentTenderRequest request,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator)
+    {
+        if (!Enum.TryParse<PaymentTender>(request.Tender, ignoreCase: true, out var tender) || !Enum.IsDefined(tender))
+            return TypedResults.BadRequest("The method is Cash, Card or InstaPay.");
+
+        try
+        {
+            await mediator.SendIdentified<ChangePaymentTenderCommand, bool>(
+                requestId, new ChangePaymentTenderCommand(id, paymentId, tender, httpContext.GetActor()));
+            return TypedResults.Ok();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Results<Ok, BadRequest<string>>> VoidTicket(
         int id,
         VoidTicketRequest request,
@@ -758,6 +786,9 @@ public record NewTicketRequest(TicketType Type, string? Label = null, int? Place
 /// the kitchen did.
 /// </param>
 public record VoidTicketRequest(string Reason, string? StockDisposition = null);
+
+/// <param name="Tender">Cash, Card or InstaPay.</param>
+public record ChangePaymentTenderRequest(string Tender);
 
 /// <summary>One of Rate (a fraction: 0.1 is 10%) or Amount (money off the bill).</summary>
 public record DiscountRequest(string? Reason = null, decimal? Rate = null, decimal? Amount = null);

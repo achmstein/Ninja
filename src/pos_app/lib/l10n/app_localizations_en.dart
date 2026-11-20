@@ -2488,4 +2488,23 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get sendsFailedHint =>
       'These never reached the server, so the kitchen doesn\'t have them. Try again, or remove them.';
+
+  @override
+  String get changeTenderAction => 'Change method';
+
+  @override
+  String get changeTenderTitle => 'Change payment method';
+
+  @override
+  String changeTenderHint(String amount, String tender) {
+    return '$amount was recorded as $tender. How was it paid?';
+  }
+
+  @override
+  String get tenderChangedToast => 'Payment method changed';
+
+  @override
+  String tenderChangedFrom(String from, String name, String time) {
+    return 'Was $from · changed by $name at $time';
+  }
 }

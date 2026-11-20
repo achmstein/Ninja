@@ -26,6 +26,33 @@ public class Payment : Entity
     public DateTime RecordedAt { get; private set; }
 
     /// <summary>
+    /// What the tender was before the till put it right (the customer sent
+    /// InstaPay after Cash was pressed); null when never changed.
+    /// </summary>
+    public PaymentTender? TenderChangedFrom { get; private set; }
+
+    /// <summary>Who put the tender right.</summary>
+    public string? TenderChangedBy { get; private set; }
+
+    public DateTime? TenderChangedAt { get; private set; }
+
+    /// <summary>The tenders a payment may be moved between: money that went nowhere else than the drawer or the terminal.</summary>
+    public static bool IsCorrectable(PaymentTender tender) => tender is PaymentTender.Cash or PaymentTender.Card or PaymentTender.InstaPay;
+
+    /// <summary>
+    /// The tender put right, the amount with it (a cash payment that took
+    /// change is the exact due on a card or InstaPay). The first tender is kept.
+    /// </summary>
+    internal void CorrectTender(PaymentTender tender, decimal amount, string by, DateTime at)
+    {
+        TenderChangedFrom ??= Tender;
+        Tender = tender;
+        Amount = amount;
+        TenderChangedBy = by;
+        TenderChangedAt = at;
+    }
+
+    /// <summary>
     /// How a bill was paid, in one word for the customer's own screens: the
     /// tender when every payment used the same one, "Mixed" otherwise, "None"
     /// for a bill that needed no money.

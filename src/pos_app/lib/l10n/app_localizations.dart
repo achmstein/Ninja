@@ -4315,6 +4315,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'These never reached the server, so the kitchen doesn\'t have them. Try again, or remove them.'**
   String get sendsFailedHint;
+
+  /// No description provided for @changeTenderAction.
+  ///
+  /// In en, this message translates to:
+  /// **'Change method'**
+  String get changeTenderAction;
+
+  /// No description provided for @changeTenderTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Change payment method'**
+  String get changeTenderTitle;
+
+  /// No description provided for @changeTenderHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} was recorded as {tender}. How was it paid?'**
+  String changeTenderHint(String amount, String tender);
+
+  /// No description provided for @tenderChangedToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Payment method changed'**
+  String get tenderChangedToast;
+
+  /// No description provided for @tenderChangedFrom.
+  ///
+  /// In en, this message translates to:
+  /// **'Was {from} · changed by {name} at {time}'**
+  String tenderChangedFrom(String from, String name, String time);
 }
 
 class _AppLocalizationsDelegate

@@ -1124,5 +1124,33 @@
       }
     }
   },
-  "sendsFailedHint": "These never reached the server, so the kitchen doesn't have them. Try again, or remove them."
+  "sendsFailedHint": "These never reached the server, so the kitchen doesn't have them. Try again, or remove them.",
+  "changeTenderAction": "Change method",
+  "changeTenderTitle": "Change payment method",
+  "changeTenderHint": "{amount} was recorded as {tender}. How was it paid?",
+  "@changeTenderHint": {
+    "placeholders": {
+      "amount": {
+        "type": "String"
+      },
+      "tender": {
+        "type": "String"
+      }
+    }
+  },
+  "tenderChangedToast": "Payment method changed",
+  "tenderChangedFrom": "Was {from} · changed by {name} at {time}",
+  "@tenderChangedFrom": {
+    "placeholders": {
+      "from": {
+        "type": "String"
+      },
+      "name": {
+        "type": "String"
+      },
+      "time": {
+        "type": "String"
+      }
+    }
+  }
 }

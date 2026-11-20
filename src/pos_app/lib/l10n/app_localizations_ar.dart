@@ -2500,4 +2500,23 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get sendsFailedHint =>
       'لم تصل هذه الطلبات إلى الخادم، لذا لا يعلم بها المطبخ. أعد المحاولة أو احذفها.';
+
+  @override
+  String get changeTenderAction => 'تغيير طريقة الدفع';
+
+  @override
+  String get changeTenderTitle => 'تغيير طريقة الدفع';
+
+  @override
+  String changeTenderHint(String amount, String tender) {
+    return 'سُجّل مبلغ $amount على أنه $tender. كيف دُفع؟';
+  }
+
+  @override
+  String get tenderChangedToast => 'تم تغيير طريقة الدفع';
+
+  @override
+  String tenderChangedFrom(String from, String name, String time) {
+    return 'كانت $from · غيّرها $name $time';
+  }
 }

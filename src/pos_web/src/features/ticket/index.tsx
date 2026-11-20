@@ -76,6 +76,12 @@ import { cn } from '@/lib/utils'
 import { DiscardTicketDialog } from './discard-dialog'
 import { MoveTargetDialog, type MoveTarget } from './move-target-dialog'
 import { RefundDialog } from './refund-dialog'
+import {
+  ChangeTenderDialog,
+  CORRECTABLE_TENDERS,
+  type TenderFix,
+} from './change-tender-dialog'
+import { tenderLabelKey } from './tenders'
 import { SettleDialog, type SettleOutcome } from './settle-dialog'
 import { orderIdsOn } from '@/lib/stock-disposition'
 import { VoidTicketDialog } from './void-dialog'
@@ -255,6 +261,8 @@ export function TicketScreen({
   const [discardOpen, setDiscardOpen] = useState(false)
   const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
   const [refundOpen, setRefundOpen] = useState(false)
+  // The paid bill's payment whose method is being put right
+  const [tenderFix, setTenderFix] = useState<TenderFix | null>(null)
   const [breakdownOpen, setBreakdownOpen] = useState(false)
   const [settleOpen, setSettleOpen] = useState(false)
   const [settleGuardOpen, setSettleGuardOpen] = useState(false)
@@ -996,6 +1004,71 @@ export function TicketScreen({
             </div>
           )}
 
+          {/* How a paid bill was paid; a cash, card or InstaPay payment can be
+              put right while the shift is open (Cash pressed, InstaPay sent) */}
+          {ticket.settledAt && (ticket.payments?.length ?? 0) > 0 && (
+            <div className='mt-4 flex flex-col gap-2'>
+              <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+                {t('paymentsTitle')}
+              </h2>
+              <div className='divide-y rounded-lg border'>
+                {ticket.payments!.map((payment, i) => (
+                  <div
+                    key={String(payment.id ?? i)}
+                    className='flex flex-col gap-0.5 px-3 py-2'
+                  >
+                    <div className='flex items-center justify-between gap-4'>
+                      <span className='font-medium'>
+                        {[
+                          t(tenderLabelKey[payment.tender ?? ''] ?? 'cash'),
+                          payment.customerName,
+                        ]
+                          .filter(Boolean)
+                          .join(' · ')}
+                      </span>
+                      <div className='flex items-center gap-2'>
+                        <span className='font-semibold tabular-nums'>
+                          {money(payment.amount)}
+                        </span>
+                        {payment.id != null &&
+                          (ticket.refunds?.length ?? 0) === 0 &&
+                          CORRECTABLE_TENDERS.includes(payment.tender ?? '') && (
+                            <Button
+                              size='sm'
+                              variant='ghost'
+                              onClick={() =>
+                                setTenderFix({
+                                  paymentId: toNumber(payment.id),
+                                  tender: payment.tender ?? '',
+                                  amount: money(payment.amount),
+                                })
+                              }
+                            >
+                              {t('changeTender')}
+                            </Button>
+                          )}
+                      </div>
+                    </div>
+                    {payment.tenderChangedFrom && (
+                      <p className='text-muted-foreground text-xs tabular-nums'>
+                        {t('tenderChangedFrom', {
+                          from: t(tenderLabelKey[payment.tenderChangedFrom] ?? 'cash'),
+                          name: payment.tenderChangedBy ?? '',
+                          time: payment.tenderChangedAt
+                            ? new Intl.DateTimeFormat(locale, {
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              }).format(new Date(payment.tenderChangedAt))
+                            : '',
+                        })}
+                      </p>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Credit notes: money that went back, each with its reason */}
           {(ticket.refunds?.length ?? 0) > 0 && (
             <div className='mt-4 flex flex-col gap-2'>
@@ -1214,6 +1287,11 @@ export function TicketScreen({
         ticket={ticket}
         open={refundOpen}
         onOpenChange={setRefundOpen}
+      />
+      <ChangeTenderDialog
+        ticketId={toNumber(ticket.id)}
+        payment={tenderFix}
+        onOpenChange={(open) => !open && setTenderFix(null)}
       />
       {/* Two guards before Settle. An order still waiting can be settled
           past (it may be stale); a running session cannot — its time is not

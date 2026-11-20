@@ -2,6 +2,7 @@ import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_client.dart';
+import '../models/enums.dart';
 import '../models/move_lines.dart';
 import '../models/open_ticket.dart';
 import '../models/pricing.dart';
@@ -73,6 +74,11 @@ abstract class TicketsRepository {
 
   /// Money taken against a customer's tab — a numbered slip on the open shift
   Future<TabPaymentResult> recordTabPayment(TabPaymentRequest request, {String? requestId});
+
+  /// A settled bill's Cash, Card or InstaPay payment recorded under the
+  /// wrong one: puts it under [tender] (another of those three). Refused
+  /// once the bill's shift has closed
+  Future<void> changePaymentTender(int ticketId, int paymentId, PaymentTender tender, {String? requestId});
 }
 
 class ApiTicketsRepository implements TicketsRepository {
@@ -246,6 +252,19 @@ class ApiTicketsRepository implements TicketsRepository {
         requestId: requestId,
       );
       return TabPaymentResult.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<void> changePaymentTender(int ticketId, int paymentId, PaymentTender tender, {String? requestId}) async {
+    try {
+      await _apiClient.post(
+        'tickets/$ticketId/payments/$paymentId/tender',
+        data: {'tender': tender.name_},
+        requestId: requestId,
+      );
     } on DioException catch (e) {
       throw asSalesException(e);
     }

@@ -62,6 +62,12 @@ class PaymentView {
   final String? customerName;
   final DateTime? recordedAt;
 
+  /// The tender it was first recorded as, once a cashier has put it right
+  /// (Cash, Card or InstaPay); null when it was never changed
+  final PaymentTender? tenderChangedFrom;
+  final String? tenderChangedBy;
+  final DateTime? tenderChangedAt;
+
   const PaymentView({
     required this.id,
     required this.tender,
@@ -69,7 +75,14 @@ class PaymentView {
     this.customerId,
     this.customerName,
     this.recordedAt,
+    this.tenderChangedFrom,
+    this.tenderChangedBy,
+    this.tenderChangedAt,
   });
+
+  /// Only the till's own tenders can be swapped for one another
+  bool get canChangeTender =>
+      tender == PaymentTender.cash || tender == PaymentTender.card || tender == PaymentTender.instaPay;
 
   factory PaymentView.fromJson(Map<String, dynamic> json) {
     return PaymentView(
@@ -79,6 +92,9 @@ class PaymentView {
       customerId: json['customerId'] as String?,
       customerName: json['customerName'] as String?,
       recordedAt: json['recordedAt'] == null ? null : DateTime.tryParse(json['recordedAt'] as String),
+      tenderChangedFrom: json['tenderChangedFrom'] == null ? null : PaymentTender.fromName(json['tenderChangedFrom'] as String?),
+      tenderChangedBy: json['tenderChangedBy'] as String?,
+      tenderChangedAt: json['tenderChangedAt'] == null ? null : DateTime.tryParse(json['tenderChangedAt'] as String),
     );
   }
 }

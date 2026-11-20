@@ -163,6 +163,43 @@ public class Ticket : Entity, IAggregateRoot
     private readonly List<Payment> _payments = [];
     public IReadOnlyCollection<Payment> Payments => _payments.AsReadOnly();
 
+    /// <summary>
+    /// Puts right how one payment of a settled bill was taken: Cash pressed
+    /// and the customer sent InstaPay, or the other way. Only between cash,
+    /// card and InstaPay (a tab, an online or a platform payment already moved
+    /// money elsewhere). Cash that took change becomes the exact due on a card
+    /// or InstaPay, and the change goes with it, so the drawer still adds up;
+    /// a card or InstaPay payment becomes cash for the same amount. Whether
+    /// the bill's shift is still open is the caller's to check.
+    /// </summary>
+    public void CorrectPaymentTender(int paymentId, PaymentTender tender, string by, DateTime? at = null)
+    {
+        if (Status != TicketStatus.Settled)
+            throw new SalesDomainException("Only a paid bill's payment method can be changed.");
+
+        var payment = _payments.FirstOrDefault(p => p.Id == paymentId)
+            ?? throw new SalesDomainException("That payment is not on this bill.");
+        if (!Payment.IsCorrectable(payment.Tender))
+            throw new SalesDomainException($"A {payment.Tender} payment can't be changed: it already went to {(payment.Tender == PaymentTender.Account ? "the customer's tab" : "the payment provider")}.");
+        if (!Payment.IsCorrectable(tender))
+            throw new SalesDomainException("A payment can be changed to Cash, Card or InstaPay.");
+        if (payment.Tender == tender)
+            throw new SalesDomainException($"That payment is already {tender}.");
+
+        var amount = payment.Amount;
+        if (payment.Tender == PaymentTender.Cash)
+        {
+            // The change handed back was out of this cash: the card or InstaPay takes only what was due
+            var change = Math.Min(ChangeGiven, amount);
+            amount -= change;
+            if (amount <= 0)
+                throw new SalesDomainException("That cash payment was all handed back as change.");
+            ChangeGiven -= change;
+        }
+
+        payment.CorrectTender(tender, amount, by, at ?? DateTime.UtcNow);
+    }
+
     /// <summary>Menu money: the lines, before service charge and VAT.</summary>
     public decimal GetSubtotal() => _lines.Sum(l => l.Total);
 

@@ -437,6 +437,51 @@ class _DemoTicketsRepository implements TicketsRepository {
     return RefundResult(number: number, amount: amount);
   }
 
+  @override
+  Future<void> changePaymentTender(int ticketId, int paymentId, PaymentTender tender, {String? requestId}) async {
+    final ticket = _tickets[ticketId];
+    if (ticket == null) throw const TicketNotFound();
+    if (!ticket.isSettled) throw const SalesException("Only a settled bill's payment can change method.");
+    if (ticket.refunds.isNotEmpty) throw const SalesException("A bill with a refund cannot change a payment's method.");
+    final payment = ticket.payments.where((p) => p.id == paymentId).firstOrNull;
+    if (payment == null) throw const TicketNotFound();
+    if (!payment.canChangeTender || payment.tender == tender) throw const SalesException('That payment cannot change to this method.');
+    _tickets[ticketId] = TicketDetail(
+      id: ticket.id,
+      type: ticket.type,
+      status: ticket.status,
+      placeId: ticket.placeId,
+      locationName: ticket.locationName,
+      label: ticket.label,
+      openedAt: ticket.openedAt,
+      settledAt: ticket.settledAt,
+      settledBy: ticket.settledBy,
+      receiptNumber: ticket.receiptNumber,
+      subtotal: ticket.subtotal,
+      total: ticket.total,
+      refundedTotal: ticket.refundedTotal,
+      change: ticket.change,
+      lines: ticket.lines,
+      payments: [
+        for (final p in ticket.payments)
+          p.id != paymentId
+              ? p
+              : PaymentView(
+                  id: p.id,
+                  tender: tender,
+                  amount: p.amount,
+                  customerId: p.customerId,
+                  customerName: p.customerName,
+                  recordedAt: p.recordedAt,
+                  tenderChangedFrom: p.tenderChangedFrom ?? p.tender,
+                  tenderChangedBy: 'Demo Owner',
+                  tenderChangedAt: DateTime.now(),
+                ),
+      ],
+      refunds: ticket.refunds,
+    );
+  }
+
   int _nextTicketId() => _tickets.keys.fold(100, (m, k) => k > m ? k : m) + 1;
 
   static TicketDetail _withLines(TicketDetail t, List<TicketLineView> lines) {

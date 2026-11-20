@@ -27,5 +27,11 @@ class PaymentEntityTypeConfiguration : IEntityTypeConfiguration<Payment>
         builder.Property(p => p.RecordedBy)
             .HasMaxLength(64)
             .IsRequired();
+
+        // A tender put right after the bill was paid: what it was, who, when
+        builder.Property(p => p.TenderChangedFrom)
+            .HasConversion<string>()
+            .HasMaxLength(20);
+        builder.Property(p => p.TenderChangedBy).HasMaxLength(64);
     }
 }

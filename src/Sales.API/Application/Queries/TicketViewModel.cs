@@ -248,6 +248,8 @@ public record TicketLineView
 
 public record PaymentView
 {
+    /// <summary>The payment's id: what a change of method names.</summary>
+    public int Id { get; init; }
     public string Tender { get; init; } = string.Empty;
     public decimal Amount { get; init; }
 
@@ -257,6 +259,11 @@ public record PaymentView
     public string? CustomerId { get; init; }
     public string RecordedBy { get; init; } = string.Empty;
     public DateTime RecordedAt { get; init; }
+
+    /// <summary>What the method was before the till changed it; null when never changed.</summary>
+    public string? TenderChangedFrom { get; init; }
+    public string? TenderChangedBy { get; init; }
+    public DateTime? TenderChangedAt { get; init; }
 }
 
 /// <summary>One page of a back-office listing, with the count behind it.</summary>

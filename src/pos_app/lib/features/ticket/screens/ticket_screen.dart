@@ -48,6 +48,8 @@ import '../../tickets/services/tickets_service.dart';
 import '../dialogs/discard_dialog.dart';
 import '../dialogs/move_target_dialog.dart';
 import '../dialogs/refund_dialog.dart';
+import '../dialogs/change_tender_dialog.dart';
+import '../tenders.dart';
 import 'settle_screen.dart';
 import '../dialogs/void_dialog.dart';
 import '../dialogs/discount_dialog.dart';
@@ -668,6 +670,21 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         const SizedBox(height: Sizes.gapLg),
         _VoidTombstone(ticket: ticket),
       ],
+      // What it was paid with; a Cash, Card or InstaPay payment recorded
+      // under the wrong one can be put right, until a refund leans on it
+      if (ticket.isSettled && ticket.payments.isNotEmpty) ...[
+        const SizedBox(height: Sizes.gapLg),
+        Heading(l10n.payments),
+        for (final payment in ticket.payments) ...[
+          const SizedBox(height: Sizes.gapSm),
+          _PaymentCard(
+            payment: payment,
+            onChangeTender: ticket.refunds.isEmpty && payment.canChangeTender
+                ? () => showChangeTenderDialog(context, ticket, payment)
+                : null,
+          ),
+        ],
+      ],
       if (ticket.refunds.isNotEmpty) ...[
         const SizedBox(height: Sizes.gapLg),
         Heading(l10n.refundsTitle),
@@ -1186,6 +1203,89 @@ class _Rows extends StatelessWidget {
           for (var i = 0; i < children.length; i++) ...[
             if (i > 0) Container(height: 1, color: theme.colors.border),
             children[i],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+/// One payment on a settled bill: its tender and amount, whose tab an
+/// Account payment went on, the way to change a mistyped tender, and, once
+/// changed, what it was and who changed it
+class _PaymentCard extends StatelessWidget {
+  final PaymentView payment;
+  final VoidCallback? onChangeTender;
+
+  const _PaymentCard({required this.payment, this.onChangeTender});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    const tabular = [FontFeature.tabularFigures()];
+    final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
+    final from = payment.tenderChangedFrom;
+    final changedAt = payment.tenderChangedAt;
+    String when(DateTime at) {
+      final local = at.toLocal();
+      final now = DateTime.now();
+      final today = local.year == now.year && local.month == now.month && local.day == now.day;
+      return today ? formatTime(context, at) : formatDateTimeShort(context, at);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+      decoration: BoxDecoration(
+        border: Border.all(color: theme.colors.border),
+        borderRadius: BorderRadius.circular(Sizes.radius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(tenderIcon(payment.tender), size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(
+                  [
+                    tenderLabel(l10n, payment.tender),
+                    if (payment.tender == PaymentTender.account && (payment.customerName ?? '').isNotEmpty)
+                      payment.customerName!,
+                  ].join(' · '),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
+                ),
+              ),
+              if (onChangeTender != null) ...[
+                SizedBox(
+                  height: Sizes.controlSmall,
+                  child: FButton(
+                    variant: FButtonVariant.ghost,
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: onChangeTender,
+                    child: Text(l10n.changeTenderAction,
+                        style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
+                  ),
+                ),
+                const SizedBox(width: 8),
+              ],
+              Text(money(context, payment.amount),
+                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+            ],
+          ),
+          if (from != null) ...[
+            const SizedBox(height: 2),
+            Text(
+              l10n.tenderChangedFrom(
+                tenderLabel(l10n, from),
+                payment.tenderChangedBy ?? '',
+                changedAt == null ? '' : when(changedAt),
+              ),
+              style: muted,
+            ),
           ],
         ],
       ),

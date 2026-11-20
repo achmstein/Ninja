@@ -494,12 +494,16 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             }).ToList(),
             Payments = ticket.Payments.Select(p => new PaymentView
             {
+                Id = p.Id,
                 Tender = p.Tender.ToString(),
                 Amount = p.Amount,
                 CustomerName = p.CustomerName,
                 CustomerId = p.CustomerId,
                 RecordedBy = p.RecordedBy,
                 RecordedAt = p.RecordedAt,
+                TenderChangedFrom = p.TenderChangedFrom?.ToString(),
+                TenderChangedBy = p.TenderChangedBy,
+                TenderChangedAt = p.TenderChangedAt,
             }).ToList(),
             Total = bill.Total,
             Subtotal = bill.Subtotal,

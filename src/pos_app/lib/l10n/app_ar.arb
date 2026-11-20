@@ -1025,5 +1025,10 @@
       }
     }
   },
-  "sendsFailedHint": "لم تصل هذه الطلبات إلى الخادم، لذا لا يعلم بها المطبخ. أعد المحاولة أو احذفها."
+  "sendsFailedHint": "لم تصل هذه الطلبات إلى الخادم، لذا لا يعلم بها المطبخ. أعد المحاولة أو احذفها.",
+  "changeTenderAction": "تغيير طريقة الدفع",
+  "changeTenderTitle": "تغيير طريقة الدفع",
+  "changeTenderHint": "سُجّل مبلغ {amount} على أنه {tender}. كيف دُفع؟",
+  "tenderChangedToast": "تم تغيير طريقة الدفع",
+  "tenderChangedFrom": "كانت {from} · غيّرها {name} {time}"
 }
