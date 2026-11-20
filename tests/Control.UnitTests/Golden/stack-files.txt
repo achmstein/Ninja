@@ -491,6 +491,7 @@ services:
       services__loyalty-api__http__0: "http://blue-loyalty-api:8080"
       services__accounts-api__http__0: "http://blue-accounts-api:8080"
       services__notification-api__http__0: "http://blue-notification-api:8080"
+      services__identity-api__http__0: "http://blue-identity-api:8080"
     networks:
       - "aspire"
   blue-gateway:
