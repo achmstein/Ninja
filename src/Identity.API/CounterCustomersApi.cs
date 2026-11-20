@@ -300,6 +300,99 @@ public static class CounterCustomersApi
                 ClaimGate.Release();
             }
         }).AllowAnonymous().RequireRateLimiting(ClaimPolicy);
+
+        // The customer chose Google or Apple on the claim page and has just
+        // signed in with it. That made (or found) an account of its own; when
+        // it is the one just made, its sign-in and email move onto the counter
+        // account and it is deleted, so the next sign-in with Google or Apple
+        // lands in the account with the points and orders. An account that was
+        // already there is left alone and the claim refused: folding two
+        // histories together is not this link's to do.
+        app.MapPost("/api/identity/claim/social", async (ClaimPreviewRequest request, HttpContext http, KeycloakAdmin keycloak, IEventBus eventBus, ILogger<CounterCustomerLog> logger) =>
+        {
+            var callerId = http.User.GetUserId();
+            if (string.IsNullOrEmpty(callerId)) return Results.Unauthorized();
+
+            await ClaimGate.WaitAsync();
+            try
+            {
+                var (resolved, user, refusal) = await ResolveAsync(request.Token, keycloak);
+                if (refusal is not null) return refusal;
+                var client = resolved!;
+                var userId = user!["id"]!.GetValue<string>();
+                if (userId == callerId)
+                {
+                    return Results.Conflict(new ClaimRefusal("accountExists"));
+                }
+
+                var signedIn = (await keycloak.GetUserAsync(client, callerId))?.Deserialize<KeycloakUser>(JsonSerializerOptions.Web);
+                if (signedIn is null) return Results.Unauthorized();
+
+                var links = await keycloak.GetFederatedIdentitiesAsync(client, callerId);
+                if (links.Count == 0)
+                {
+                    // Signed in with a password: that account is its own
+                    return Results.Conflict(new ClaimRefusal("accountExists"));
+                }
+                var roles = await keycloak.GetUserRealmRolesAsync(client, callerId);
+                if (roles.Intersect(StaffRoles).Any()
+                    || CounterCustomer.IsAddedAtCounter(signedIn.Attributes)
+                    || !CounterCustomer.IsFreshAccount(signedIn.CreatedTimestamp, DateTimeOffset.UtcNow))
+                {
+                    return Results.Conflict(new ClaimRefusal("accountExists"));
+                }
+                var email = (signedIn.Email ?? "").Trim();
+                if (!IsEmail(email) || CounterCustomer.IsStandInEmail(email))
+                {
+                    return Results.BadRequest(new { message = "That sign-in gave no email", field = "email" });
+                }
+
+                // The new account goes first: the realm holds an email, and a
+                // Google or Apple identity, once. Should a later step fail, the
+                // link is still good and signing in again starts over.
+                var deleted = await keycloak.DeleteUserAsync(client, callerId);
+                if (!deleted.IsSuccessStatusCode)
+                {
+                    return Results.Problem("Could not claim the account", statusCode: 502);
+                }
+                foreach (var link in links)
+                {
+                    var linked = await keycloak.AddFederatedIdentityAsync(client, userId, link);
+                    if (!linked.IsSuccessStatusCode)
+                    {
+                        var why = await linked.Content.ReadAsStringAsync();
+                        logger.LogError("Counter customer {UserId} could not take the {Provider} sign-in of {Email}: {Why}", userId, link.IdentityProvider, email, why);
+                        return Results.Problem("Could not claim the account", statusCode: 502);
+                    }
+                }
+
+                user["email"] = email;
+                user["emailVerified"] = true;
+                var attributes = Attributes(user);
+                attributes.Remove(CounterCustomer.OriginAttribute);
+                attributes.Remove(CounterCustomer.ClaimExpiresAttribute);
+                attributes[CounterCustomer.ClaimedAtAttribute] = new JsonArray(DateTimeOffset.UtcNow.ToString("O"));
+
+                var saved = await keycloak.PutUserAsync(client, userId, user);
+                if (!saved.IsSuccessStatusCode)
+                {
+                    var error = await saved.Content.ReadAsStringAsync();
+                    return Results.Problem($"Could not claim the account: {error}", statusCode: (int)saved.StatusCode);
+                }
+
+                var profile = UserProfileUpdatedIntegrationEvent.From(userId, user);
+                if (profile.DisplayName.Length > 0)
+                {
+                    await eventBus.PublishAsync(profile);
+                }
+                logger.LogInformation("Counter customer {UserId} claimed their account with {Providers}", userId, string.Join(", ", links.Select(l => l.IdentityProvider)));
+                return Results.Ok(new ClaimedResponse(email));
+            }
+            finally
+            {
+                ClaimGate.Release();
+            }
+        }).RequireAuthorization().RequireRateLimiting(ClaimPolicy);
     }
 
     /// <summary>

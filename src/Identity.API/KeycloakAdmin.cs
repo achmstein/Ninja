@@ -64,6 +64,19 @@ public sealed class KeycloakAdmin(IHttpClientFactory httpClientFactory, IConfigu
     public Task<HttpResponseMessage> LogoutUserAsync(HttpClient client, string userId) =>
         client.PostAsync($"{AdminUrl}/users/{userId}/logout", null);
 
+    /// <summary>The Google, Apple or other outside sign-ins linked to the user.</summary>
+    public async Task<IReadOnlyList<FederatedIdentity>> GetFederatedIdentitiesAsync(HttpClient client, string userId)
+    {
+        var response = await client.GetAsync($"{AdminUrl}/users/{userId}/federated-identity");
+        response.EnsureSuccessStatusCode();
+        var links = await response.Content.ReadFromJsonAsync<List<FederatedIdentity>>(System.Text.Json.JsonSerializerOptions.Web) ?? [];
+        return links.Where(l => !string.IsNullOrEmpty(l.IdentityProvider) && !string.IsNullOrEmpty(l.UserId)).ToList();
+    }
+
+    /// <summary>Links an outside sign-in to the user: signing in with it then opens this account.</summary>
+    public Task<HttpResponseMessage> AddFederatedIdentityAsync(HttpClient client, string userId, FederatedIdentity link) =>
+        client.PostAsJsonAsync($"{AdminUrl}/users/{userId}/federated-identity/{Uri.EscapeDataString(link.IdentityProvider)}", link, System.Text.Json.JsonSerializerOptions.Web);
+
     /// <summary>A realm role's representation (what a role mapping is made of), or null when the realm has no such role.</summary>
     public async Task<JsonObject?> GetRealmRoleAsync(HttpClient client, string name)
     {
@@ -103,3 +116,6 @@ public sealed class KeycloakAdmin(IHttpClientFactory httpClientFactory, IConfigu
         return users.FirstOrDefault()?["id"]?.GetValue<string>();
     }
 }
+
+/// <summary>One outside sign-in linked to a user: the provider's alias in the realm, and who they are there.</summary>
+public sealed record FederatedIdentity(string IdentityProvider, string UserId, string? UserName);

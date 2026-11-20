@@ -51,4 +51,16 @@ public class CounterCustomerTests
         Assert.IsFalse(CounterCustomer.IsClaimable(new Dictionary<string, string[]>(), "01012345678@counter.invalid"), "not added at the counter");
         Assert.IsFalse(CounterCustomer.IsClaimable(null, null));
     }
+
+    [TestMethod]
+    public void Only_the_account_a_sign_in_just_made_is_new_enough_to_fold_in()
+    {
+        var now = new DateTimeOffset(2026, 11, 20, 12, 0, 0, TimeSpan.Zero);
+        Assert.IsTrue(CounterCustomer.IsFreshAccount(now.AddMinutes(-2).ToUnixTimeMilliseconds(), now));
+        Assert.IsTrue(CounterCustomer.IsFreshAccount(now.AddMinutes(-29).ToUnixTimeMilliseconds(), now));
+        Assert.IsFalse(CounterCustomer.IsFreshAccount(now.AddMinutes(-31).ToUnixTimeMilliseconds(), now), "a customer's own account from before");
+        Assert.IsFalse(CounterCustomer.IsFreshAccount(now.AddDays(-40).ToUnixTimeMilliseconds(), now));
+        Assert.IsFalse(CounterCustomer.IsFreshAccount(null, now), "no date to go by");
+        Assert.IsFalse(CounterCustomer.IsFreshAccount(now.AddHours(3).ToUnixTimeMilliseconds(), now), "a date from the future");
+    }
 }

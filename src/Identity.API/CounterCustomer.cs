@@ -63,6 +63,21 @@ public static class CounterCustomer
     public static bool IsClaimable(IReadOnlyDictionary<string, string[]>? attributes, string? email) =>
         IsAddedAtCounter(attributes) && IsStandInEmail(email);
 
+    /// <summary>
+    /// How new an account made by signing in with Google or Apple must be for
+    /// a claim to fold it into the counter account: the one the sign-in on
+    /// the claim page just made, with nothing on it yet. An older one is a
+    /// customer's own account with its own points and orders, and is left alone.
+    /// </summary>
+    public static readonly TimeSpan SocialAccountFreshFor = TimeSpan.FromMinutes(30);
+
+    /// <summary>Whether an account created then (Keycloak's createdTimestamp, in milliseconds) is new enough to fold in.</summary>
+    public static bool IsFreshAccount(long? createdTimestamp, DateTimeOffset now) =>
+        createdTimestamp is { } ms
+        && DateTimeOffset.FromUnixTimeMilliseconds(ms) is var created
+        && created <= now.AddMinutes(1)
+        && now - created <= SocialAccountFreshFor;
+
     /// <summary>A new token for the user, and the hash to keep of it.</summary>
     public static (string Token, string Hash) NewClaimToken(string userId)
     {
