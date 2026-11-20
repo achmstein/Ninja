@@ -1941,6 +1941,24 @@ abstract class AppLocalizations {
   /// **'That email already has an account'**
   String get claimEmailTaken;
 
+  /// No description provided for @claimIntroChoose.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} added you at the counter. Choose how you will sign in to see your points and orders.'**
+  String claimIntroChoose(String name);
+
+  /// No description provided for @claimOrEmail.
+  ///
+  /// In en, this message translates to:
+  /// **'or use an email'**
+  String get claimOrEmail;
+
+  /// No description provided for @claimSocialTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'That account is already a customer here. Try another one, or use an email.'**
+  String get claimSocialTaken;
+
   /// No description provided for @claimScanOrPaste.
   ///
   /// In en, this message translates to:

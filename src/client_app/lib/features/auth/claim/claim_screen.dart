@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/brand/brand_style.dart';
 import '../../../core/theme/theme_provider.dart';
@@ -17,8 +18,9 @@ import 'claim_service.dart';
 /// A customer the business added at the counter (a name and a phone, nothing
 /// to sign in with) takes the account over: the link the till shared opens
 /// here, or they bring the code in from the sign-in page by scanning the
-/// till's QR or pasting the link. They give an email and a password; the
-/// account, its points and its orders are the same, now theirs.
+/// till's QR or pasting the link. They choose Google or Apple (where the
+/// business has them on) or give an email and a password; the account, its
+/// points and its orders are the same, now theirs.
 class ClaimScreen extends ConsumerStatefulWidget {
   /// From the link, when it opened the app; null from the sign-in page
   final String? token;
@@ -46,6 +48,10 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
   String? _emailError;
   String? _formError;
   String? _codeError;
+
+  /// Google or Apple, while the claim with it is under way, and what went wrong with it
+  SocialProvider? _loadingProvider;
+  String? _socialError;
 
   @override
   void initState() {
@@ -113,6 +119,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
       _linkFailure = null;
       _formError = null;
       _emailError = null;
+      _socialError = null;
       _codeController.clear();
     });
   }
@@ -166,6 +173,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
           case ClaimFailure.used:
             _linkFailure = e.failure;
           case ClaimFailure.emailTaken:
+          case ClaimFailure.accountExists:
             _emailError = l10n.claimEmailTaken;
           case ClaimFailure.badEmail:
             _emailError = l10n.claimBadEmail;
@@ -179,6 +187,65 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
       });
     } finally {
       if (mounted) setState(() => _loading = false);
+    }
+  }
+
+  /// Google or Apple instead of an email and a password. The sign-in makes an account of its
+  /// own; the claim folds it into the counter account, and the same sign-in, traded again,
+  /// then opens that one: the provider is asked once.
+  Future<void> _claimWith(SocialProvider provider) async {
+    final l10n = AppLocalizations.of(context)!;
+    final auth = ref.read(authServiceProvider.notifier);
+    setState(() {
+      _loadingProvider = provider;
+      _emailError = null;
+      _formError = null;
+      _socialError = null;
+    });
+    try {
+      final signIn = await auth.startSocialSignIn(provider);
+      if (!mounted) return;
+      if (signIn == null) {
+        final why = auth.lastSocialError;
+        setState(() {
+          _socialError = auth.lastSocialAccountExists
+              ? l10n.claimSocialTaken
+              : (why == null ? l10n.socialSignInFailed : '${l10n.socialSignInFailed} ($why)');
+        });
+        return;
+      }
+      await ref.read(claimRepositoryProvider).claimWithSocial(_token!, signIn.accessToken);
+      if (!mounted) return;
+      showIsland(
+        context: context,
+        title: Text(l10n.claimDone),
+        icon: Icon(LucideIcons.check, color: context.theme.colors.primary),
+      );
+      // If this fails the account is still theirs: the sign-in page's Google or Apple opens it
+      final signedIn = await auth.keepSocialSignIn(signIn);
+      if (!mounted) return;
+      context.go(signedIn ? '/menu' : '/login');
+    } on ClaimException catch (e) {
+      if (!mounted) return;
+      setState(() {
+        switch (e.failure) {
+          case ClaimFailure.invalid:
+          case ClaimFailure.expired:
+          case ClaimFailure.used:
+            _linkFailure = e.failure;
+          case ClaimFailure.accountExists:
+          case ClaimFailure.emailTaken:
+            _socialError = l10n.claimSocialTaken;
+          case ClaimFailure.tooManyAttempts:
+            _socialError = l10n.claimTooMany;
+          case ClaimFailure.badEmail:
+          case ClaimFailure.badPassword:
+          case ClaimFailure.network:
+            _socialError = l10n.claimFailed;
+        }
+      });
+    } finally {
+      if (mounted) setState(() => _loadingProvider = null);
     }
   }
 
@@ -292,6 +359,12 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
 
   List<Widget> _form(AppLocalizations l10n, ClaimPreview preview) {
     final theme = context.theme;
+    // Only the providers the business has on; a brand that does not say keeps both
+    final social = ref.watch(brandProvider).socialProviders;
+    final google = social == null || social.contains('google');
+    final apple = social == null || social.contains('apple');
+    final busy = _loading || _loadingProvider != null;
+    final mutedNote = context.localeText(theme.typography.note.copyWith(color: theme.colors.mutedForeground));
     return [
       // Whose account it is: the business's mark, the name and phone the counter took
       SlabCard(
@@ -307,7 +380,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
                 BrandHeading(preview.name, style: theme.typography.headline.copyWith(color: ink)),
                 if (preview.phoneNumber != null) Text(ref.watch(brandProvider).locale.showPhone(preview.phoneNumber), textDirection: TextDirection.ltr, style: note),
                 const SizedBox(height: 12),
-                Text(l10n.claimIntro(_businessName), textAlign: TextAlign.center, style: note),
+                Text(google || apple ? l10n.claimIntroChoose(_businessName) : l10n.claimIntro(_businessName), textAlign: TextAlign.center, style: note),
               ],
             );
           },
@@ -318,6 +391,44 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            if (google || apple) ...[
+              // One under the other: the panel is narrower than the sign-in page's row of two
+              if (google)
+                NinjaButton(
+                  variant: NinjaButtonVariant.outline,
+                  busy: _loadingProvider == SocialProvider.google,
+                  onPress: busy ? null : () => _claimWith(SocialProvider.google),
+                  prefix: SvgPicture.asset('assets/images/google_g.svg', width: 18, height: 18),
+                  child: AppText(l10n.google),
+                ),
+              if (google && apple) const SizedBox(height: 10),
+              if (apple)
+                NinjaButton(
+                  variant: NinjaButtonVariant.inverse,
+                  busy: _loadingProvider == SocialProvider.apple,
+                  onPress: busy ? null : () => _claimWith(SocialProvider.apple),
+                  prefix: const Icon(Icons.apple, size: 20),
+                  child: AppText(l10n.apple),
+                ),
+              if (_socialError != null)
+                Padding(
+                  padding: const EdgeInsets.only(top: 12),
+                  child: Text(
+                    _socialError!,
+                    textAlign: TextAlign.center,
+                    style: context.localeText(theme.typography.note.copyWith(color: theme.colors.destructive)),
+                  ),
+                ),
+              const SizedBox(height: 20),
+              Row(
+                children: [
+                  Expanded(child: Divider(color: theme.colors.border, height: 1)),
+                  Padding(padding: const EdgeInsets.symmetric(horizontal: 12), child: Text(l10n.claimOrEmail, style: mutedNote)),
+                  Expanded(child: Divider(color: theme.colors.border, height: 1)),
+                ],
+              ),
+              const SizedBox(height: 20),
+            ],
             NinjaField.email(
               controller: _emailController,
               label: AppText(l10n.email),
@@ -352,7 +463,7 @@ class _ClaimScreenState extends ConsumerState<ClaimScreen> {
             const SizedBox(height: 20),
             NinjaButton(
               lifted: true,
-              onPress: _loading ? null : _submit,
+              onPress: busy ? null : _submit,
               child: _loading
                   ? SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.primaryForeground))
                   : AppText(l10n.claimSubmit),

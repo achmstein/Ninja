@@ -10,7 +10,7 @@ import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 
-function GoogleIcon() {
+export function GoogleIcon() {
   return (
     <svg className='h-4 w-4' viewBox='0 0 24 24' aria-hidden='true'>
       <path fill='#4285F4' d='M23.52 12.27c0-.85-.08-1.66-.22-2.45H12v4.64h6.46a5.53 5.53 0 0 1-2.4 3.62v3h3.88c2.26-2.09 3.58-5.17 3.58-8.81Z' />
@@ -27,7 +27,7 @@ function GoogleIcon() {
   )
 }
 
-function AppleIcon() {
+export function AppleIcon() {
   return (
     <svg className='h-4 w-4 fill-current' viewBox='0 0 24 24' aria-hidden='true'>
       <path d='M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01ZM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25Z' />
@@ -36,7 +36,7 @@ function AppleIcon() {
 }
 
 /** The business's Google and Apple, where it has them on (the brand's auth.social) */
-function useSocial() {
+export function useSocial() {
   const social = useBrand()?.auth?.social ?? []
   return {
     google: social.find((p) => p.provider === 'google'),

@@ -14,6 +14,17 @@ import '../services/signalr_service.dart';
 /// Supported social login providers
 enum SocialProvider { google, apple }
 
+/// A sign-in with Google or Apple that is not kept yet: the provider's token, and the access
+/// token it was traded for (the claim screen's proof of who signed in)
+class SocialSignIn {
+  final String _socialToken;
+  final String _providerAlias;
+  final String _tokenType;
+  final String accessToken;
+
+  const SocialSignIn._(this._socialToken, this._providerAlias, this._tokenType, this.accessToken);
+}
+
 /// Authentication state
 class AuthState {
   final bool isInitializing;
@@ -361,6 +372,21 @@ class AuthService extends Notifier<AuthState> {
     lastSocialError = null;
 
     try {
+      final got = await _providerToken(provider);
+      if (got == null) return false;
+
+      // Exchange social token with Keycloak using token exchange grant
+      return await _exchangeSocialToken(got.token, got.alias, got.type);
+    } catch (e) {
+      debugPrint('Social sign in error: $e');
+      lastSocialError = e.toString();
+      return false;
+    }
+  }
+
+  /// Google's or Apple's own token for whoever signs in with it now, with the name the realm
+  /// knows the provider by; null when they backed out or the provider gave none
+  Future<({String token, String alias, String type})?> _providerToken(SocialProvider provider) async {
       String? socialToken;
       String providerAlias;
       String tokenType;
@@ -382,7 +408,7 @@ class AuthService extends Notifier<AuthState> {
         } on GoogleSignInException catch (e) {
           debugPrint('Google sign in exception: ${e.code}');
           lastSocialError = 'Google ${e.code.name}${e.description == null ? '' : ': ${e.description}'}';
-          return false;
+          return null;
         }
       } else {
         // Use Sign In with Apple
@@ -415,17 +441,56 @@ class AuthService extends Notifier<AuthState> {
 
       if (socialToken == null) {
         debugPrint('No social token received');
-        return false;
+        return null;
       }
+      return (token: socialToken, alias: providerAlias, type: tokenType);
+  }
 
-      // Exchange social token with Keycloak using token exchange grant
-      return await _exchangeSocialToken(socialToken, providerAlias, tokenType);
+  /// Whether the last [startSocialSignIn] found the email already has an account here that is
+  /// not signed in to with that provider
+  bool lastSocialAccountExists = false;
+
+  /// Signs in with Google or Apple without keeping the session: the claim screen's first step.
+  /// The account that sign-in made is folded into the counter account by the claim, and
+  /// [keepSocialSignIn] then signs in to that one. Null when it did not go through
+  /// ([lastSocialError] says why).
+  Future<SocialSignIn?> startSocialSignIn(SocialProvider provider) async {
+    lastSocialError = null;
+    lastSocialAccountExists = false;
+    try {
+      final got = await _providerToken(provider);
+      if (got == null) return null;
+      final response = await _dio.post(
+        _tokenEndpoint,
+        data: {
+          'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
+          'client_id': AppConfig.clientId,
+          'subject_token': got.token,
+          'subject_token_type': got.type,
+          'subject_issuer': got.alias,
+          'scope': AppConfig.scopes.join(' '),
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+      final data = response.data;
+      final accessToken = data is Map ? data['access_token'] as String? : null;
+      if (accessToken == null) return null;
+      return SocialSignIn._(got.token, got.alias, got.type, accessToken);
+    } on DioException catch (e) {
+      final data = e.response?.data;
+      final described = data is Map ? data['error_description']?.toString() : data?.toString();
+      lastSocialAccountExists = e.response?.statusCode == 400 && (described?.contains('User already exists') ?? false);
+      lastSocialError = 'Sign-in ${e.response?.statusCode ?? e.type.name}${described == null ? '' : ': $described'}';
+      return null;
     } catch (e) {
       debugPrint('Social sign in error: $e');
       lastSocialError = e.toString();
-      return false;
+      return null;
     }
   }
+
+  /// Signs in for good with what [startSocialSignIn] got, without asking the provider again
+  Future<bool> keepSocialSignIn(SocialSignIn signIn) => _exchangeSocialToken(signIn._socialToken, signIn._providerAlias, signIn._tokenType);
 
   /// Exchange social provider token for Keycloak tokens
   Future<bool> _exchangeSocialToken(String socialToken, String providerAlias, String tokenType, {bool linked = false}) async {

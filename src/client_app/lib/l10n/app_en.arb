@@ -594,6 +594,16 @@
   "claimUsed": "This link was already used. Sign in instead.",
   "claimInvalid": "This link isn't valid.",
   "claimEmailTaken": "That email already has an account",
+  "claimIntroChoose": "{name} added you at the counter. Choose how you will sign in to see your points and orders.",
+  "@claimIntroChoose": {
+    "placeholders": {
+      "name": {
+        "type": "String"
+      }
+    }
+  },
+  "claimOrEmail": "or use an email",
+  "claimSocialTaken": "That account is already a customer here. Try another one, or use an email.",
   "claimScanOrPaste": "Scan the QR code from {name} or paste the link",
   "@claimScanOrPaste": {
     "placeholders": {

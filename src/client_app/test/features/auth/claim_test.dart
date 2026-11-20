@@ -32,6 +32,12 @@ class _Claims implements ClaimRepository {
     if (claimFails != null) throw ClaimException(claimFails!);
     return email;
   }
+
+  @override
+  Future<String> claimWithSocial(String token, String accessToken) async {
+    if (claimFails != null) throw ClaimException(claimFails!);
+    return 'salma@example.com';
+  }
 }
 
 /// The business, answering without the network
@@ -96,6 +102,7 @@ void main() {
       expect(failureOf(410, {'reason': 'used'}), ClaimFailure.used);
       expect(failureOf(410, {'reason': 'expired'}), ClaimFailure.expired);
       expect(failureOf(409, {'field': 'email'}), ClaimFailure.emailTaken);
+      expect(failureOf(409, {'reason': 'accountExists'}), ClaimFailure.accountExists);
       expect(failureOf(400, {'field': 'password'}), ClaimFailure.badPassword);
       expect(failureOf(400, {'field': 'email'}), ClaimFailure.badEmail);
       expect(failureOf(429, null), ClaimFailure.tooManyAttempts);
@@ -142,6 +149,7 @@ void main() {
       await tester.enterText(fields.at(1), 'a-good-password');
       await tester.enterText(fields.at(2), 'a-good-password');
       await tester.ensureVisible(find.text('Create my account'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Create my account'));
       await tester.pumpAndSettle();
 
@@ -158,6 +166,7 @@ void main() {
       await tester.enterText(fields.at(1), 'short');
       await tester.enterText(fields.at(2), 'short');
       await tester.ensureVisible(find.text('Create my account'));
+      await tester.pumpAndSettle();
       await tester.tap(find.text('Create my account'));
       await tester.pumpAndSettle();
 

@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { createFileRoute } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { Eye, EyeOff, Link2Off, Loader2 } from 'lucide-react'
+import { AppleIcon, GoogleIcon, useSocial } from '@/components/auth/sign-in-options'
 import { BrandMark } from '@/components/brand/brand-mark'
 import { DrawnCheck } from '@/components/motion/morph-button'
 import { NinjaPage, Rise, RiseItem } from '@/components/ninja/page/page'
@@ -17,14 +18,17 @@ import { showPhone, useBrandName } from '@/lib/brand'
 import {
   checkClaimForm,
   claimProblem,
+  forgetPendingClaim,
   isLinkProblem,
   readClaimToken,
+  readPendingClaim,
+  rememberPendingClaim,
   type ClaimProblem,
 } from '@/lib/claim'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
 import { loginPageParams } from '@/lib/oidc'
-import { claimAccount, previewClaim } from '@/lib/services/identity'
+import { claimAccount, claimWithSocial, previewClaim } from '@/lib/services/identity'
 
 export const Route = createFileRoute('/claim')({
   component: ClaimPage,
@@ -40,6 +44,7 @@ const problemText: Record<ClaimProblem, TranslationKey> = {
   expired: 'claimExpired',
   used: 'claimUsed',
   emailTaken: 'claimEmailTaken',
+  socialTaken: 'claimSocialTaken',
   badEmail: 'claimBadEmail',
   weakPassword: 'passwordMustBe8Chars',
   tooMany: 'claimTooMany',
@@ -48,9 +53,11 @@ const problemText: Record<ClaimProblem, TranslationKey> = {
 
 /**
  * A customer the business added at the counter by name and phone takes the
- * account over: the link says whose it is, they give an email and a
- * password, and the same account (points and orders included) is theirs
- * to sign in to. Open to anyone with the link; nothing here needs a
+ * account over: the link says whose it is, they choose Google or Apple
+ * (where the business has them on) or give an email and a password, and
+ * the same account (points and orders included) is theirs to sign in to.
+ * Google and Apple go by the provider's page and back: the sign-in made
+ * there is moved onto this account, and one more pass signs them into it. Open to anyone with the link; nothing here needs a
  * sign-in, and a single-use half-hour token is what guards it. Whose it is
  * sits on the slab, which becomes the drawn tick once it is theirs.
  */
@@ -80,6 +87,50 @@ function ClaimPage() {
     mutationFn: () => claimAccount(token!, email.trim(), password),
     onError: (error) => setFormProblem(claimProblem(error)),
   })
+
+  // Google or Apple: off to the provider, noting the claim for the way back.
+  // prompt=login so a session of another account on this browser is not
+  // what comes back.
+  const { google, apple } = useSocial()
+  const startSocial = async (hint: string) => {
+    if (!token) return
+    setFormProblem(null)
+    rememberPendingClaim(token, hint)
+    const { extraQueryParams } = loginPageParams(resolvedTheme, language)
+    if (auth.isAuthenticated) await auth.removeUser()
+    await auth.signinRedirect({ extraQueryParams: { ...extraQueryParams, kc_idp_hint: hint }, prompt: 'login' })
+  }
+
+  // Back from the provider, signed in: the claim finishes on its own, once
+  const social = useMutation({
+    mutationFn: () => claimWithSocial(token!),
+    onError: (error) => setFormProblem(claimProblem(error)),
+  })
+  const socialHint = useRef<string | null>(null)
+  const { mutate: finishSocial } = social
+  useEffect(() => {
+    if (!token || !auth.isAuthenticated || socialHint.current) return
+    const pending = readPendingClaim()
+    if (pending?.token !== token) return
+    socialHint.current = pending.hint
+    forgetPendingClaim()
+    finishSocial()
+  }, [token, auth.isAuthenticated, finishSocial])
+
+  // Theirs now. What they are signed in as is the account that was folded
+  // in, so one more pass by the provider (no prompt this time) opens the
+  // account with the points and orders.
+  const { removeUser, signinRedirect } = auth
+  useEffect(() => {
+    if (!social.isSuccess || !socialHint.current) return
+    const hint = socialHint.current
+    const timer = setTimeout(async () => {
+      const { extraQueryParams } = loginPageParams(resolvedTheme, language)
+      await removeUser()
+      await signinRedirect({ extraQueryParams: { ...extraQueryParams, kc_idp_hint: hint } })
+    }, 1400)
+    return () => clearTimeout(timer)
+  }, [social.isSuccess, removeUser, signinRedirect, resolvedTheme, language])
 
   // Their own sign-in, with the email they just gave already filled in.
   // prompt=login so a session of another account on this browser does not
@@ -139,13 +190,15 @@ function ClaimPage() {
         <RiseItem>
           <Slab className='flex flex-col items-center gap-3 py-7 text-center'>
             <AnimatePresence mode='popLayout' initial={false}>
-              {claim.isSuccess ? (
+              {claim.isSuccess || social.isSuccess ? (
                 <motion.div key='done' {...swap} className='flex flex-col items-center gap-3'>
                   <span className='grid size-16 place-items-center rounded-full bg-emerald-500 text-white'>
                     <DrawnCheck reduced={!!reduced} className='size-8' />
                   </span>
                   <p className='heading text-headline'>{t('claimDone')}</p>
-                  <p className='text-muted-foreground text-note'>{t('claimDoneHint', { email: claim.data.email })}</p>
+                  <p className='text-muted-foreground text-note'>
+                    {claim.isSuccess ? t('claimDoneHint', { email: claim.data.email }) : t('claimDoneSocialHint')}
+                  </p>
                 </motion.div>
               ) : (
                 <motion.div key='whose' {...swap} className='flex flex-col items-center gap-3'>
@@ -162,7 +215,7 @@ function ClaimPage() {
                       )}
                     </div>
                   )}
-                  <p className='text-muted-foreground text-note'>{t('claimIntro', { name })}</p>
+                  <p className='text-muted-foreground text-note'>{t(google || apple ? 'claimIntroChoose' : 'claimIntro', { name })}</p>
                 </motion.div>
               )}
             </AnimatePresence>
@@ -174,10 +227,42 @@ function ClaimPage() {
             <Button size='lg' className='h-[52px] w-full rounded-full text-body font-bold' onClick={() => signIn(claim.data.email)}>
               {t('signIn')}
             </Button>
-          ) : preview.isPending ? (
+          ) : social.isSuccess ? (
+            <div className='text-muted-foreground flex justify-center py-4'>
+              <Loader2 className='size-5 animate-spin' />
+            </div>
+          ) : preview.isPending || social.isPending ? (
             <Skeleton className='h-64 rounded-[1.5rem]' />
           ) : (
-            <Panel className='p-5'>
+            <Panel className='flex flex-col gap-4 p-5'>
+              {(google || apple) && (
+                <div className='flex flex-col gap-2.5'>
+                  {google && (
+                    <Button size='lg' variant='outline' className='w-full rounded-pill' onClick={() => startSocial(google.hint)}>
+                      <GoogleIcon />
+                      {t('continueWithGoogle')}
+                    </Button>
+                  )}
+                  {apple && (
+                    <Button
+                      size='lg'
+                      className='bg-foreground text-background hover:bg-foreground/90 w-full rounded-pill'
+                      onClick={() => startSocial(apple.hint)}
+                    >
+                      <AppleIcon />
+                      {t('continueWithApple')}
+                    </Button>
+                  )}
+                  {fieldProblem === 'socialTaken' && (
+                    <p className='text-destructive text-center text-note'>{t('claimSocialTaken')}</p>
+                  )}
+                  <div className='text-muted-foreground flex items-center gap-3 px-2 pt-1.5 text-caption'>
+                    <div className='bg-border h-px flex-1' />
+                    {t('claimOrEmail')}
+                    <div className='bg-border h-px flex-1' />
+                  </div>
+                </div>
+              )}
               <form className='flex flex-col gap-4' onSubmit={submit} noValidate>
                 <div className='space-y-2'>
                   <Label htmlFor='claimEmail'>{t('email')}</Label>

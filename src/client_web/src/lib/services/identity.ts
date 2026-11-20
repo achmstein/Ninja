@@ -97,3 +97,12 @@ export async function claimAccount(
   })
   return response.data
 }
+
+/**
+ * The same, for a customer who chose Google or Apple on the claim page and
+ * has just signed in with it: that sign-in moves onto the counter account.
+ */
+export async function claimWithSocial(token: string): Promise<{ email: string }> {
+  const response = await apiClient.post<{ email: string }>(`${BASE}/claim/social`, { token })
+  return response.data
+}

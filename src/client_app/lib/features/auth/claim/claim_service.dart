@@ -44,6 +44,9 @@ enum ClaimFailure {
   expired,
   used,
   emailTaken,
+
+  /// The Google or Apple account is already a customer here, with an account of its own
+  accountExists,
   badEmail,
   badPassword,
   tooManyAttempts,
@@ -64,6 +67,10 @@ abstract class ClaimRepository {
 
   /// The email the account now signs in with
   Future<String> claim(String token, String email, String password);
+
+  /// The same for a customer who has just signed in with Google or Apple ([accessToken] is that
+  /// sign-in's): the sign-in moves onto the counter account
+  Future<String> claimWithSocial(String token, String accessToken);
 }
 
 class DioClaimRepository implements ClaimRepository {
@@ -100,6 +107,20 @@ class DioClaimRepository implements ClaimRepository {
       throw ClaimException(failureOf(e.response?.statusCode, e.response?.data));
     }
   }
+
+  @override
+  Future<String> claimWithSocial(String token, String accessToken) async {
+    try {
+      final response = await _dio.post<Map<String, dynamic>>(
+        'claim/social',
+        data: {'token': token},
+        options: Options(headers: {'Authorization': 'Bearer $accessToken'}),
+      );
+      return (response.data?['email'] as String?) ?? '';
+    } on DioException catch (e) {
+      throw ClaimException(failureOf(e.response?.statusCode, e.response?.data));
+    }
+  }
 }
 
 /// What an answer from Identity means for the screen
@@ -108,7 +129,7 @@ ClaimFailure failureOf(int? status, Object? body) {
   return switch (status) {
     404 => ClaimFailure.invalid,
     410 => data['reason'] == 'used' ? ClaimFailure.used : ClaimFailure.expired,
-    409 => ClaimFailure.emailTaken,
+    409 => data['reason'] == 'accountExists' ? ClaimFailure.accountExists : ClaimFailure.emailTaken,
     400 => data['field'] == 'password' ? ClaimFailure.badPassword : ClaimFailure.badEmail,
     429 => ClaimFailure.tooManyAttempts,
     _ => ClaimFailure.network,

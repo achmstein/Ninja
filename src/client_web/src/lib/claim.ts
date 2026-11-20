@@ -10,6 +10,7 @@ export type ClaimProblem =
   | 'expired'
   | 'used'
   | 'emailTaken'
+  | 'socialTaken'
   | 'badEmail'
   | 'weakPassword'
   | 'tooMany'
@@ -27,7 +28,7 @@ export function claimProblem(error: unknown): ClaimProblem {
   if (status === 429) return 'tooMany'
   if (status === 404) return 'invalid'
   if (status === 410) return body?.reason === 'used' ? 'used' : 'expired'
-  if (status === 409) return 'emailTaken'
+  if (status === 409) return body?.reason === 'accountExists' ? 'socialTaken' : 'emailTaken'
   if (status === 400) return body?.field === 'password' ? 'weakPassword' : 'badEmail'
   return 'failed'
 }
@@ -54,4 +55,42 @@ export function checkClaimForm(email: string, password: string): ClaimProblem | 
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(trimmed)) return 'badEmail'
   if (password.length < MIN_CLAIM_PASSWORD) return 'weakPassword'
   return null
+}
+
+// A claim waiting on Google or Apple: the customer left for the provider's
+// page and comes back signed in, and the claim finishes then
+const PENDING_KEY = 'ninja-claim-pending'
+const PENDING_FOR_MS = 10 * 60 * 1000
+
+export type PendingClaim = { token: string; hint: string; at: number }
+
+/** Note the claim before leaving for the provider (`hint`: the realm's name for it). */
+export function rememberPendingClaim(token: string, hint: string, now = Date.now()): void {
+  try {
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify({ token, hint, at: now } satisfies PendingClaim))
+  } catch {
+    // No storage (a private window): the sign-in still happens, the claim is not finished
+  }
+}
+
+/** The claim that was waiting, if it is recent; an old or broken note is nothing. */
+export function readPendingClaim(now = Date.now()): PendingClaim | null {
+  try {
+    const raw = sessionStorage.getItem(PENDING_KEY)
+    if (!raw) return null
+    const pending = JSON.parse(raw) as Partial<PendingClaim>
+    if (typeof pending.at !== 'number' || now - pending.at > PENDING_FOR_MS || now < pending.at) return null
+    const token = readClaimToken(pending.token)
+    return token && typeof pending.hint === 'string' && pending.hint ? { token, hint: pending.hint, at: pending.at } : null
+  } catch {
+    return null
+  }
+}
+
+export function forgetPendingClaim(): void {
+  try {
+    sessionStorage.removeItem(PENDING_KEY)
+  } catch {
+    // nothing to forget
+  }
 }

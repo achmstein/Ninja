@@ -1016,6 +1016,18 @@ class AppLocalizationsAr extends AppLocalizations {
   String get claimEmailTaken => 'الإيميل ده عليه حساب بالفعل';
 
   @override
+  String claimIntroChoose(String name) {
+    return '$name ضافك من الكاشير. اختار هتدخل ازاي عشان تشوف نقاطك وطلباتك.';
+  }
+
+  @override
+  String get claimOrEmail => 'أو استخدم إيميل';
+
+  @override
+  String get claimSocialTaken =>
+      'الحساب ده متسجل عندنا بالفعل. جرب حساب تاني أو استخدم إيميل.';
+
+  @override
   String claimScanOrPaste(String name) {
     return 'صوّر الكود اللي من $name أو الزق اللينك';
   }
@@ -2626,6 +2638,18 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get claimEmailTaken => 'هذا البريد الإلكتروني مرتبط بحساب بالفعل';
+
+  @override
+  String claimIntroChoose(String name) {
+    return 'أضافك $name عند الكاشير. اختر طريقة تسجيل الدخول لمتابعة نقاطك وطلباتك.';
+  }
+
+  @override
+  String get claimOrEmail => 'أو استخدم بريدًا إلكترونيًا';
+
+  @override
+  String get claimSocialTaken =>
+      'هذا الحساب مسجّل لدينا بالفعل. جرّب حسابًا آخر أو استخدم بريدًا إلكترونيًا.';
 
   @override
   String claimScanOrPaste(String name) {

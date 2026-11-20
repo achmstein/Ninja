@@ -3,6 +3,7 @@ import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { readPendingClaim } from '@/lib/claim'
 
 export const Route = createFileRoute('/auth/callback')({
   component: AuthCallback,
@@ -13,9 +14,11 @@ function AuthCallback() {
   const navigate = useNavigate()
 
   useEffect(() => {
-    if (auth.isAuthenticated) {
-      navigate({ to: '/', replace: true })
-    }
+    if (!auth.isAuthenticated) return
+    // Signed in with Google or Apple from the claim page: back there to finish
+    const claim = readPendingClaim()
+    if (claim) navigate({ to: '/claim', search: { token: claim.token }, replace: true })
+    else navigate({ to: '/', replace: true })
   }, [auth.isAuthenticated, navigate])
 
   if (auth.error) {

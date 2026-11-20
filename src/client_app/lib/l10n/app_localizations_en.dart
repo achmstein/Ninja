@@ -1025,6 +1025,18 @@ class AppLocalizationsEn extends AppLocalizations {
   String get claimEmailTaken => 'That email already has an account';
 
   @override
+  String claimIntroChoose(String name) {
+    return '$name added you at the counter. Choose how you will sign in to see your points and orders.';
+  }
+
+  @override
+  String get claimOrEmail => 'or use an email';
+
+  @override
+  String get claimSocialTaken =>
+      'That account is already a customer here. Try another one, or use an email.';
+
+  @override
   String claimScanOrPaste(String name) {
     return 'Scan the QR code from $name or paste the link';
   }

@@ -238,6 +238,10 @@ const webExtras = {
     en: 'Sign in with {email} to see your points and orders.',
     ar: 'سجل دخول بـ {email} عشان تشوف نقطك وطلباتك.',
   },
+  claimDoneSocialHint: {
+    en: 'Taking you to your points and orders…',
+    ar: 'هندخلك على نقطك وطلباتك…',
+  },
   claimSignedInNote: {
     en: "You're signed in with another account. Creating this one signs you out of it.",
     ar: 'انت داخل بحساب تاني. لما تعمل الحساب ده هتخرج منه.',
