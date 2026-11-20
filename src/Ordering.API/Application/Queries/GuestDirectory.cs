@@ -45,6 +45,19 @@ public record GuestSummary
     public DateTime LastOrderAt { get; init; }
 }
 
+/// <summary>What one customer with an account has ordered: the row beside their name in the back office's list.</summary>
+public record CustomerOrderSummary
+{
+    /// <summary>Their identity id, as the customer directory knows them.</summary>
+    public string CustomerId { get; init; } = string.Empty;
+    /// <summary>Orders that went ahead: confirmed, and not on a bill the till voided.</summary>
+    public int OrderCount { get; init; }
+    /// <summary>What those orders came to, the same total the order list shows.</summary>
+    public double TotalSpent { get; init; }
+    public DateTime FirstOrderAt { get; init; }
+    public DateTime LastOrderAt { get; init; }
+}
+
 /// <summary>
 /// Folds guest orders into guests. Kept apart from the query so the rules —
 /// who is the same guest, what counts toward what they spent — can be tested

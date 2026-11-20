@@ -1,6 +1,7 @@
 import { z } from 'zod'
 import { createFileRoute } from '@tanstack/react-router'
 import { Customers } from '@/features/customers'
+import { customerSorts } from '@/features/customers/sort'
 
 const customersSearchSchema = z.object({
   q: z.string().optional(),
@@ -8,9 +9,11 @@ const customersSearchSchema = z.object({
   // without an account, or the accounts switched off; nothing = the
   // directory of accounts in use
   filter: z.enum(['owing', 'members', 'guests', 'off']).optional(),
-  // Selected customer in the master-detail split (identity id)
+  // What the list is sorted by; nothing = what the view is about
+  sort: z.enum(customerSorts).optional(),
+  // The customer whose page is open (identity id)
   customer: z.string().optional(),
-  // Selected guest in the guests view (the key Ordering gave them)
+  // The guest whose page is open (the key Ordering gave them)
   guest: z.string().optional(),
 })
 

@@ -84,6 +84,9 @@ public interface IOrderQueries
     /// </summary>
     Task<PaginatedResult<GuestSummary>> GetGuestsAsync(int branchId, int pageIndex, int pageSize, string? search = null);
 
+    /// <summary>What each customer with an account has ordered, at every branch: how many orders, what they came to, the first and the last.</summary>
+    Task<List<CustomerOrderSummary>> GetCustomerOrderSummariesAsync();
+
     /// <summary>
     /// Aggregated per-day and per-item order statistics (admin dashboard) of
     /// the orders the business took on in [fromDate, toDate): confirmed and

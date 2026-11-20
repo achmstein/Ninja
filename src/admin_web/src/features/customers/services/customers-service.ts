@@ -1,9 +1,27 @@
-import { apiClient } from '@/lib/api-client'
+import { API_VERSION, apiClient } from '@/lib/api-client'
 import type { Customer, CustomerParams } from '../types'
 
 export type StaffRole = 'Admin' | 'Cashier' | 'Kitchen' | 'Rider'
 
+/** What one customer has ordered, across every branch (Ordering's count). */
+export type CustomerOrderSummary = {
+  customerId: string
+  orderCount: number
+  totalSpent: number
+  firstOrderAt: string
+  lastOrderAt: string
+}
+
 export const customersService = {
+  // What each customer has ordered: the list's last order, orders and spent
+  async getOrderSummaries(): Promise<CustomerOrderSummary[]> {
+    const response = await apiClient.get<CustomerOrderSummary[]>(
+      '/api/orders/customers/summary',
+      { params: { 'api-version': API_VERSION } }
+    )
+    return response.data
+  },
+
   // Get paginated list of customers. `role` / `excludeRole` take one role or
   // a comma-separated list.
   async getCustomers(params: CustomerParams = {}): Promise<Customer[]> {

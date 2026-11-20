@@ -78,7 +78,7 @@ export function GuestPanel({ guestKey, guest, onBack }: GuestPanelProps) {
         <Button
           size='icon'
           variant='ghost'
-          className='-ms-2 sm:hidden'
+          className='-ms-2'
           onClick={onBack}
           aria-label={t('guests')}
         >

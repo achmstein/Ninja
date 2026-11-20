@@ -525,6 +525,32 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
         };
     }
 
+    public async Task<List<CustomerOrderSummary>> GetCustomerOrderSummariesAsync()
+    {
+        // Orders the business took on, as the stats count them: confirmed and
+        // never voided at the till. A narrow projection, grouped in memory as
+        // the guests are: the total does not group in SQL
+        var rows = await context.Orders
+            .AsNoTracking()
+            .Where(o => o.Buyer != null)
+            .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
+            .Where(o => o.VoidedAt == null)
+            .Select(o => new { Customer = o.Buyer!.IdentityGuid, o.OrderDate, Total = (double)OrderTotals.Of(o) })
+            .WithOrderTotals()
+            .ToListAsync();
+
+        return [.. rows
+            .GroupBy(r => r.Customer)
+            .Select(g => new CustomerOrderSummary
+            {
+                CustomerId = g.Key,
+                OrderCount = g.Count(),
+                TotalSpent = g.Sum(r => r.Total),
+                FirstOrderAt = g.Min(r => r.OrderDate),
+                LastOrderAt = g.Max(r => r.OrderDate),
+            })];
+    }
+
     /// <summary>
     /// The branch's guest orders that are still a guest's: an order a guest
     /// claimed by signing in has a buyer now, and is the account's.

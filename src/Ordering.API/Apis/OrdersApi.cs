@@ -141,6 +141,12 @@ public static partial class OrdersApi
             .WithDescription("One row per phone number left at guest checkout at the branch, from orders no account has claimed: the latest name and phone, how many orders went ahead and what they came to (cancelled orders left out), and the first and last order time. Most recent first. Search matches a name or the phone. A row's key filters GetAllOrders to that guest's orders.")
             .RequireAuthorization("Admin");
 
+        api.MapGet("/customers/summary", GetCustomerOrderSummariesAsync)
+            .WithName("GetCustomerOrderSummaries")
+            .WithSummary("What each customer has ordered, for the customer list (admin)")
+            .WithDescription("One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.")
+            .RequireAuthorization("Admin");
+
         api.MapGet("/stats", GetOrderStatsAsync)
             .WithName("GetOrderStats")
             .WithSummary("Get aggregated order statistics (admin)")
@@ -605,6 +611,10 @@ public static partial class OrdersApi
             pageIndex, pageSize, branchId, statuses, buyerId, fromDate, toDate, sessionId, search, sort, guest);
         return TypedResults.Ok(orders);
     }
+
+    public static async Task<Ok<List<CustomerOrderSummary>>> GetCustomerOrderSummariesAsync(
+        [AsParameters] OrderServices services)
+        => TypedResults.Ok(await services.Queries.GetCustomerOrderSummariesAsync());
 
     public static async Task<Ok<PaginatedResult<GuestSummary>>> GetGuestsAsync(
         HttpContext httpContext,

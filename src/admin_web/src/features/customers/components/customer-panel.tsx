@@ -37,7 +37,6 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
 import { When } from '@/components/when'
@@ -60,7 +59,11 @@ import {
   type LoyaltyAccount,
   type LoyaltyTier,
 } from '@/features/loyalty/types'
-import { formatEgp, getOrderStatus } from '@/features/orders/status'
+import {
+  formatEgp,
+  getOrderStatus,
+  relativeTime,
+} from '@/features/orders/status'
 import { customersKeys, useCustomer } from '../hooks/use-customers'
 import { customersService } from '../services/customers-service'
 import {
@@ -81,12 +84,11 @@ type CustomerPanelProps = {
 }
 
 /**
- * The end side of the customers split: who this person is, then the three
- * things the business keeps about them and the actions on each — tab,
- * points, orders — one at a time, behind a switch: stacked, they were a
- * page of figures, buttons and lists with no one thing to look at. Loads
- * its own customer so a row from the owing or members lists (which only
- * carry an id and a name) opens the same panel.
+ * One customer as a page: who this person is and what they have ordered in
+ * a line, then the three things the business keeps about them, each a card
+ * with where they stand, what can be done about it, and the lines that led
+ * there: the tab and the points side by side, the orders under them. Loads
+ * its own customer, so a link carrying only an id opens the same page.
  */
 export function CustomerPanel({
   customerId,
@@ -155,13 +157,13 @@ function CustomerHub({
   })
 
   return (
-    <div className='flex h-full flex-col'>
-      <div className='flex flex-none items-center justify-between gap-2 border-b p-4'>
+    <div className='flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto'>
+      <div className='flex flex-none items-center justify-between gap-2'>
         <div className='flex min-w-0 items-center gap-3'>
           <Button
             size='icon'
             variant='ghost'
-            className='-ms-2 sm:hidden'
+            className='-ms-2'
             onClick={onBack}
             aria-label={t('customers')}
           >
@@ -174,7 +176,9 @@ function CustomerHub({
           </Avatar>
           <div className='min-w-0'>
             <div className='flex items-center gap-2'>
-              <h2 className='truncate text-sm font-semibold'>{name}</h2>
+              <h1 className='truncate text-lg font-semibold tracking-tight'>
+                {name}
+              </h1>
               {!customer.enabled && (
                 <Badge variant='danger'>{t('disabled')}</Badge>
               )}
@@ -240,51 +244,40 @@ function CustomerHub({
         </DropdownMenu>
       </div>
 
-      {/* What they owe comes first where the business keeps tabs: it is
-          what a customer is most often opened for */}
-      <Tabs
-        key={customer.id}
-        defaultValue={
-          features.tabs ? 'tab' : features.loyalty ? 'loyalty' : 'orders'
-        }
-        className='min-h-0 flex-1 gap-0'
-      >
-        {(features.tabs || features.loyalty) && (
-          <div className='flex-none border-b px-4 py-3'>
-            <TabsList className='w-full sm:w-fit'>
-              {features.tabs && (
-                <TabsTrigger value='tab' className='px-4'>
-                  {t('tab')}
-                </TabsTrigger>
-              )}
-              {features.loyalty && (
-                <TabsTrigger value='loyalty' className='px-4'>
-                  {t('loyalty')}
-                </TabsTrigger>
-              )}
-              <TabsTrigger value='orders' className='px-4'>
-                {t('orders')}
-              </TabsTrigger>
-            </TabsList>
-          </div>
-        )}
-        <div className='min-h-0 flex-1 overflow-y-auto'>
+      <OrderFacts customerId={customer.id} />
+
+      {/* What they owe and the points they hold, side by side where there is room */}
+      {(features.tabs || features.loyalty) && (
+        <div
+          className={cn(
+            'grid flex-none gap-4',
+            features.tabs && features.loyalty && 'lg:grid-cols-2'
+          )}
+        >
           {features.tabs && (
-            <TabsContent value='tab'>
-              <TabSection customer={customer} />
-            </TabsContent>
+            <Card title={t('tab')}>
+              <TabSection key={customer.id} customer={customer} />
+            </Card>
           )}
           {features.loyalty && (
-            <TabsContent value='loyalty'>
-              <LoyaltySection customer={customer} />
-            </TabsContent>
+            <Card title={t('loyalty')}>
+              <LoyaltySection key={customer.id} customer={customer} />
+            </Card>
           )}
-          <TabsContent value='orders'>
-            <UsualOrder customerId={customer.id} />
-            <RecentOrders customerId={customer.id} name={name} />
-          </TabsContent>
         </div>
-      </Tabs>
+      )}
+      <Card
+        title={t('recentOrders')}
+        action={
+          <Button variant='link' size='sm' className='h-auto p-0' asChild>
+            <Link to='/orders' search={{ q: name }}>
+              {t('viewAllOrders')}
+            </Link>
+          </Button>
+        }
+      >
+        <RecentOrders customerId={customer.id} />
+      </Card>
 
       <ConfirmDialog
         open={toggleOpen}
@@ -315,9 +308,73 @@ function CustomerHub({
   )
 }
 
+/** One of the page's cards: a small title, and what goes with it at the end. */
+function Card({
+  title,
+  action,
+  children,
+}: {
+  title: string
+  action?: React.ReactNode
+  children: React.ReactNode
+}) {
+  return (
+    <section className='bg-card flex-none rounded-lg border'>
+      <div className='flex items-center justify-between gap-2 px-5 pt-4'>
+        <h2 className='text-muted-foreground text-xs font-medium tracking-wide uppercase rtl:tracking-normal'>
+          {title}
+        </h2>
+        {action}
+      </div>
+      {children}
+    </section>
+  )
+}
+
 /**
- * One of the switch's pages: where the customer stands, large, with what can
- * be done about it beside it, then the lines that led there.
+ * What they have ordered, in one line under the name: when last, how many
+ * and what it came to, and what they usually have.
+ */
+function OrderFacts({ customerId }: { customerId: string }) {
+  const t = useT()
+  const locale = useLocale()
+  const [nowMs] = useState(() => Date.now())
+  // The list's own read: already here when the page was opened from it
+  const summaries = useQuery({
+    queryKey: [...customersKeys.all, 'order-summaries'],
+    queryFn: () => customersService.getOrderSummaries(),
+  })
+  const summary = summaries.data?.find((o) => o.customerId === customerId)
+
+  return (
+    <div className='flex flex-none flex-wrap items-center gap-x-6 gap-y-1 text-sm'>
+      {summaries.isLoading ? (
+        <Skeleton className='h-4 w-56' />
+      ) : summary ? (
+        <>
+          <span>
+            {t('customerLastOrdered', {
+              when: relativeTime(summary.lastOrderAt, nowMs, t, locale),
+            })}
+          </span>
+          <span className='tabular-nums'>
+            {t('customerOrdersSpent', {
+              count: summary.orderCount,
+              spent: formatEgp(summary.totalSpent),
+            })}
+          </span>
+          <UsualOrder customerId={customerId} />
+        </>
+      ) : (
+        <span className='text-muted-foreground'>{t('noOrdersYet')}</span>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Inside a card: where the customer stands, large, with what can be done
+ * about it beside it, then the lines that led there.
  */
 function Pane({
   standing,
@@ -329,7 +386,7 @@ function Pane({
   children?: React.ReactNode
 }) {
   return (
-    <section className='space-y-4 p-5'>
+    <div className='space-y-4 px-5 pt-3 pb-5'>
       {(standing || actions) && (
         <div className='flex flex-wrap items-start justify-between gap-3'>
           <div className='min-w-0'>{standing}</div>
@@ -337,7 +394,7 @@ function Pane({
         </div>
       )}
       {children}
-    </section>
+    </div>
   )
 }
 
@@ -470,11 +527,15 @@ function LoyaltySection({ customer }: { customer: Customer }) {
   )
 }
 
-/** The tab: balance as the hero, charge or pay, the ledger with a running balance */
+// The tab's latest lines shown before the rest is asked for
+const LEDGER_LINES = 6
+
+/** The tab: balance as the hero, charge or pay, then the ledger, newest first */
 function TabSection({ customer }: { customer: Customer }) {
   const t = useT()
   const [chargeOpen, setChargeOpen] = useState(false)
   const [paymentOpen, setPaymentOpen] = useState(false)
+  const [wholeLedger, setWholeLedger] = useState(false)
 
   // Keyed under 'accounts' so the charge/payment dialogs' invalidation hits it
   const account = useQuery({
@@ -549,7 +610,7 @@ function TabSection({ customer }: { customer: Customer }) {
     >
       {ledger.length > 0 && (
         <ul className='divide-y text-sm'>
-          {ledger.map((tx) => (
+          {(wholeLedger ? ledger : ledger.slice(0, LEDGER_LINES)).map((tx) => (
             <li key={tx.id} className='flex items-center gap-3 py-2'>
               <When
                 value={tx.createdAt}
@@ -563,6 +624,16 @@ function TabSection({ customer }: { customer: Customer }) {
             </li>
           ))}
         </ul>
+      )}
+      {!wholeLedger && ledger.length > LEDGER_LINES && (
+        <Button
+          variant='link'
+          size='sm'
+          className='h-auto p-0'
+          onClick={() => setWholeLedger(true)}
+        >
+          {t('viewAll')}
+        </Button>
       )}
 
       <AddChargeDialog
@@ -617,28 +688,19 @@ function UsualOrder({ customerId }: { customerId: string }) {
       .filter(Boolean)
   }, [top.data, catalog.data, localized])
 
+  if (top.isLoading || catalog.isLoading)
+    return <Skeleton className='h-4 w-40' />
+  if (names.length === 0) return null
   return (
-    <div className='flex flex-wrap items-center gap-x-1 border-b p-4 text-sm'>
-      <span className='text-muted-foreground'>{t('usualOrder')}:</span>
-      {top.isLoading || catalog.isLoading ? (
-        <Skeleton className='h-4 w-40' />
-      ) : names.length === 0 ? (
-        <span className='text-muted-foreground'>{t('noOrdersYet')}</span>
-      ) : (
-        <span>{names.join(', ')}</span>
-      )}
-    </div>
+    <span className='min-w-0'>
+      <span className='text-muted-foreground'>{t('usualOrder')}: </span>
+      {names.join(', ')}
+    </span>
   )
 }
 
-/** The last few orders, each linking nowhere yet: the history page has the rest */
-function RecentOrders({
-  customerId,
-  name,
-}: {
-  customerId: string
-  name: string
-}) {
+/** The last few orders: the history page has the rest */
+function RecentOrders({ customerId }: { customerId: string }) {
   const t = useT()
   const orders = useQuery(
     getOrdersByUserIdOptions({
@@ -649,15 +711,7 @@ function RecentOrders({
   const rows = orders.data?.items ?? []
 
   return (
-    <section className='space-y-2 p-4'>
-      <div className='flex items-center justify-between'>
-        <h3 className='text-sm font-medium'>{t('recentOrders')}</h3>
-        <Button variant='link' size='sm' className='h-auto p-0' asChild>
-          <Link to='/orders' search={{ q: name }}>
-            {t('viewAllOrders')}
-          </Link>
-        </Button>
-      </div>
+    <div className='px-5 pt-2 pb-4'>
       {orders.isLoading ? (
         <div className='space-y-2'>
           {[...Array(3)].map((_, i) => (
@@ -701,6 +755,6 @@ function RecentOrders({
           })}
         </ul>
       )}
-    </section>
+    </div>
   )
 }
