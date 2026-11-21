@@ -1,0 +1,14 @@
+/* The PIN pad: three across, keys big enough for a thumb on a till */
+.nj-pin-pad {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.5rem;
+}
+
+.nj-pin-key {
+  height: 3.5rem;
+  font-size: 1.375rem;
+  font-variant-numeric: tabular-nums;
+  touch-action: manipulation;
+  user-select: none;
+}
