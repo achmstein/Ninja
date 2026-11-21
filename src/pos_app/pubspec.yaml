@@ -37,6 +37,8 @@ dependencies:
 
   # Authentication (token storage)
   flutter_secure_storage: ^10.0.0
+  # Taking over the till by name: Keycloak's page in the system browser (core/auth/cashier_sign_in.dart)
+  flutter_appauth: ^12.1.0
 
   # UI Components
   cached_network_image: ^3.3.1

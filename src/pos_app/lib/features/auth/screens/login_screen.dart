@@ -3,6 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/auth/cashier_sign_in.dart';
+import '../cashier_roster.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/brand_mark.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
@@ -12,6 +14,11 @@ import '../../../l10n/app_localizations.dart';
 
 /// Keycloak is the only identity provider and the till signs in with a
 /// staff username and password, once. Same form as admin_app.
+///
+/// A till that has been signed in to before also shows the branch's till
+/// staff by name, above the form: a tap hands the sign-in to Keycloak's own
+/// page, which asks that person for their PIN (core/auth/cashier_sign_in.dart).
+/// That is how one cashier takes over from the next.
 class LoginScreen extends ConsumerStatefulWidget {
   final String? error;
 
@@ -26,6 +33,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
+
+  /// The name being signed in by PIN, so its tile shows the wait
+  String? _signingInAs;
 
   @override
   void didChangeDependencies() {
@@ -97,10 +107,37 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     }
   }
 
+  Future<void> _signInAs(Cashier cashier) async {
+    final l10n = AppLocalizations.of(context)!;
+    setState(() {
+      _signingInAs = cashier.username;
+      _errorMessage = null;
+    });
+    try {
+      final result = await ref.read(authServiceProvider.notifier).signInAs(cashier.username);
+      if (!mounted) return;
+      switch (result) {
+        case SignInResult.success:
+          context.go('/');
+        case SignInResult.notAuthorized:
+          setState(() => _errorMessage = l10n.accessDeniedDescription);
+        case SignInResult.failed:
+          setState(() => _errorMessage = l10n.pinSignInFailed);
+        case SignInResult.cancelled:
+          // They closed Keycloak's page: nothing to say
+          break;
+      }
+    } finally {
+      if (mounted) setState(() => _signingInAs = null);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
+    final roster = ref.watch(cashierRosterProvider).value ?? const <Cashier>[];
+    final busy = _isLoading || _signingInAs != null;
     // Which business this till belongs to, under the platform's name
     final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
 
@@ -152,6 +189,51 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       ),
                     ),
 
+                  // Who is selling: the till staff by name, each a tap and a PIN away
+                  if (roster.isNotEmpty) ...[
+                    Center(
+                      child: AppText(
+                        l10n.whoIsSelling,
+                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, color: theme.colors.foreground),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    LayoutBuilder(
+                      builder: (context, constraints) {
+                        const gap = 8.0;
+                        final width = (constraints.maxWidth - gap) / 2;
+                        return Wrap(
+                          spacing: gap,
+                          runSpacing: gap,
+                          children: [
+                            for (final cashier in roster)
+                              SizedBox(
+                                width: width,
+                                child: ConstrainedBox(
+                                  constraints: const BoxConstraints(minHeight: Sizes.controlLarge),
+                                  child: FButton(
+                                    variant: FButtonVariant.outline,
+                                    onPress: busy ? null : () => _signInAs(cashier),
+                                    child: _signingInAs == cashier.username
+                                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                                        : Text(cashier.name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+                                  ),
+                                ),
+                              ),
+                          ],
+                        );
+                      },
+                    ),
+                    const SizedBox(height: 24),
+                    Center(
+                      child: AppText(
+                        l10n.orSignInWithPassword,
+                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                  ],
+
                   // Username field
                   FTextField.email(
                     control: FTextFieldControl.managed(controller: _usernameController),
@@ -175,7 +257,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   SizedBox(
                     height: Sizes.control,
                     child: FButton(
-                      onPress: _isLoading ? null : _signIn,
+                      onPress: busy ? null : _signIn,
                       child: _isLoading
                           ? SizedBox(
                               height: 20,
