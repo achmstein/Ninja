@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'core/layout/breakpoints.dart';
+import 'core/layout/device_mode.dart';
 import 'core/orders/own_orders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -99,6 +99,13 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     super.dispose();
   }
 
+  /// The screen said its size (at start it had not yet), or changed it: the
+  /// till turns the way it is held (core/layout/device_mode.dart)
+  @override
+  void didChangeMetrics() {
+    applyDeviceMode(View.of(context));
+  }
+
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
     if (state == AppLifecycleState.resumed) {
@@ -114,7 +121,7 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       }
       // Android drops immersive mode after some system UI; put it back.
       // Not on a phone, which keeps its system bars (main.dart)
-      if (!isPhoneView(View.of(context))) {
+      if (!runsAsPhone) {
         SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
       }
       // A till that asked to be pinned stays pinned

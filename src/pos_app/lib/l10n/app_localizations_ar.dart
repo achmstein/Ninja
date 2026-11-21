@@ -2544,4 +2544,20 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get viewOrder => 'عرض الطلب';
+
+  @override
+  String get deviceMode => 'تخطيط الشاشة';
+
+  @override
+  String get deviceModeHint =>
+      'التابلت بالعرض وبالتخطيط الكامل. الهاتف بالطول وبالتخطيط المطوي.';
+
+  @override
+  String get deviceModeAuto => 'تلقائي';
+
+  @override
+  String get deviceModeTablet => 'تابلت';
+
+  @override
+  String get deviceModePhone => 'هاتف';
 }

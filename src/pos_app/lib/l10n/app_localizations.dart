@@ -4393,6 +4393,36 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'View order'**
   String get viewOrder;
+
+  /// No description provided for @deviceMode.
+  ///
+  /// In en, this message translates to:
+  /// **'Screen layout'**
+  String get deviceMode;
+
+  /// No description provided for @deviceModeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet lies on its side with the full layout. Phone stands upright with the folded one.'**
+  String get deviceModeHint;
+
+  /// No description provided for @deviceModeAuto.
+  ///
+  /// In en, this message translates to:
+  /// **'Automatic'**
+  String get deviceModeAuto;
+
+  /// No description provided for @deviceModeTablet.
+  ///
+  /// In en, this message translates to:
+  /// **'Tablet'**
+  String get deviceModeTablet;
+
+  /// No description provided for @deviceModePhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Phone'**
+  String get deviceModePhone;
 }
 
 class _AppLocalizationsDelegate

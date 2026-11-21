@@ -2532,4 +2532,20 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get viewOrder => 'View order';
+
+  @override
+  String get deviceMode => 'Screen layout';
+
+  @override
+  String get deviceModeHint =>
+      'Tablet lies on its side with the full layout. Phone stands upright with the folded one.';
+
+  @override
+  String get deviceModeAuto => 'Automatic';
+
+  @override
+  String get deviceModeTablet => 'Tablet';
+
+  @override
+  String get deviceModePhone => 'Phone';
 }

@@ -3,7 +3,6 @@ import 'dart:ui' show PlatformDispatcher;
 import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_crashlytics/firebase_crashlytics.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
@@ -18,7 +17,7 @@ import 'core/sending/sending.dart';
 import 'core/printing/printer_settings.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
-import 'core/layout/breakpoints.dart';
+import 'core/layout/device_mode.dart';
 import 'features/connect/connect_screen.dart';
 import 'features/call_centre/call_centre_mode.dart';
 import 'features/sale/providers/sale_provider.dart';
@@ -36,16 +35,11 @@ void main() async {
   // A phone is the till in a waiter's hand: upright, as a phone is held, with
   // its status bar and its back gesture left alone; the screens fold for its
   // width (core/layout/breakpoints.dart).
-  final phone = isPhoneView(widgetsBinding.platformDispatcher.views.first);
-  if (phone) {
-    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
-  } else {
-    await SystemChrome.setPreferredOrientations([
-      DeviceOrientation.landscapeLeft,
-      DeviceOrientation.landscapeRight,
-    ]);
-    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  }
+  // Which it is comes from the screen, or from the till's own settings
+  // (core/layout/device_mode.dart); the app asks again once the screen has
+  // reported its size, which at this point it often has not.
+  await initializeDeviceMode();
+  await applyDeviceMode(widgetsBinding.platformDispatcher.views.first);
   WakelockPlus.enable();
 
   // Initialize locale and branch before app starts

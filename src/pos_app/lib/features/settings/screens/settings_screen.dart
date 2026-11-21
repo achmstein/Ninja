@@ -13,6 +13,7 @@ import '../../../core/offline/offline_sale.dart';
 import '../../../core/printing/kitchen_printing.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
+import '../../../core/layout/device_mode.dart';
 import '../../../core/services/kiosk_service.dart';
 import 'package:ninja_app_core/services/update_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
@@ -109,6 +110,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final locale = Localizations.localeOf(context);
     final kiosk = _kiosk;
+    final deviceMode = ref.watch(deviceModeProvider);
 
     // An address and a port, saved with the button beside them
     Widget printerFields(TextEditingController host, TextEditingController port, String label, String example) => Row(
@@ -207,6 +209,23 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     subtitleColor: kiosk?.isPinned == true ? AppColors.emerald(theme.colors.brightness) : null,
                     onPress: kiosk == null ? null : () => _setKiosk(!kiosk.enabled),
                     trailing: FSwitch(value: kiosk?.enabled ?? false, onChange: kiosk == null ? null : _setKiosk),
+                  ),
+                  // How the till is held. A small tablet measures like a phone:
+                  // this is where it is told it stands on a counter. Each press
+                  // moves to the next of the three
+                  SettingsRow(
+                    title: l10n.deviceMode,
+                    hint: l10n.deviceModeHint,
+                    subtitle: switch (deviceMode) {
+                      DeviceMode.auto => l10n.deviceModeAuto,
+                      DeviceMode.tablet => l10n.deviceModeTablet,
+                      DeviceMode.phone => l10n.deviceModePhone,
+                    },
+                    onPress: () => ref.read(deviceModeProvider.notifier).set(
+                          DeviceMode.values[(deviceMode.index + 1) % DeviceMode.values.length],
+                          View.of(context),
+                        ),
+                    trailing: const Icon(FIcons.smartphone, size: Sizes.icon),
                   ),
                   const _UpdateRow(),
                 ],

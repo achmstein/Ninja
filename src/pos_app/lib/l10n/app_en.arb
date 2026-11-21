@@ -1160,5 +1160,10 @@
   "switchCashier": "Switch cashier",
   "setMyPin": "Set my PIN",
   "pinSignInFailed": "That didn't sign you in. Try again, or use your password.",
-  "viewOrder": "View order"
+  "viewOrder": "View order",
+  "deviceMode": "Screen layout",
+  "deviceModeHint": "Tablet lies on its side with the full layout. Phone stands upright with the folded one.",
+  "deviceModeAuto": "Automatic",
+  "deviceModeTablet": "Tablet",
+  "deviceModePhone": "Phone"
 }

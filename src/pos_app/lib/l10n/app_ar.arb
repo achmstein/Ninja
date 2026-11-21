@@ -1038,5 +1038,10 @@
   "switchCashier": "بدّل الكاشير",
   "setMyPin": "اضبط رمزي",
   "pinSignInFailed": "لم يتم تسجيل الدخول. أعد المحاولة أو استخدم كلمة المرور.",
-  "viewOrder": "عرض الطلب"
+  "viewOrder": "عرض الطلب",
+  "deviceMode": "تخطيط الشاشة",
+  "deviceModeHint": "التابلت بالعرض وبالتخطيط الكامل. الهاتف بالطول وبالتخطيط المطوي.",
+  "deviceModeAuto": "تلقائي",
+  "deviceModeTablet": "تابلت",
+  "deviceModePhone": "هاتف"
 }

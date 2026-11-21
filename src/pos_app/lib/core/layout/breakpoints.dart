@@ -2,6 +2,8 @@ import 'dart:ui' show FlutterView;
 
 import 'package:flutter/widgets.dart';
 
+import 'device_mode.dart';
+
 /// Where the till folds for a phone. The same lines pos_web draws
 /// (Tailwind's `sm` and `md`), so a screen reads the same on both tills:
 /// what is side by side on a tablet stacks or moves into a sheet below them.
@@ -21,10 +23,10 @@ abstract final class Breakpoints {
 
 extension LayoutWidth on BuildContext {
   /// Too narrow for labelled button rows
-  bool get isCompact => MediaQuery.sizeOf(this).width < Breakpoints.compact;
+  bool get isCompact => foldsForWidth && MediaQuery.sizeOf(this).width < Breakpoints.compact;
 
   /// Too narrow for a panel beside the content
-  bool get isNarrow => MediaQuery.sizeOf(this).width < Breakpoints.narrow;
+  bool get isNarrow => foldsForWidth && MediaQuery.sizeOf(this).width < Breakpoints.narrow;
 }
 
 /// Whether the device itself is a phone, from the view the app starts in:
