@@ -173,6 +173,10 @@ jobs:
           cp deploy/platform/tenant-routes.caddy platform-artifacts/tenant-routes.caddy.seed
           # The login theme every realm uses, from where the AppHost mounts it
           cp -r src/Ninja.AppHost/KeycloakConfiguration/themes/ninja platform-artifacts/themes/ninja
+          # The till's PIN: a Keycloak extension (src/keycloak-pin), built here and loaded from ./providers
+          (cd src/keycloak-pin && mvn -q -B package)
+          mkdir -p platform-artifacts/providers
+          cp src/keycloak-pin/target/ninja-keycloak-pin.jar platform-artifacts/providers/
           # The native apps' download page; the APKs land beside it from mobile-deploy.yml
           cp deploy/platform/apps/index.html platform-artifacts/apps/
           # Push: the stacks mount it read-only; without it their pushes are only logged
@@ -441,11 +445,12 @@ jobs:
             # Keycloak in production mode caches its themes: new login pages copied in are not served
             # until it starts again (and a replaced folder is only seen by a recreated container).
             # Only when the theme changed, since it drops every sign-in page open at that moment.
-            THEME_SUM=$(find themes/ninja -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
+            # The same goes for its extensions (./providers), read once when it starts
+            THEME_SUM=$(find themes/ninja providers -type f -print0 | sort -z | xargs -0 sha256sum | sha256sum | cut -d' ' -f1)
             if [ "$THEME_SUM" != "$(cat .theme-sum 2>/dev/null)" ]; then
               docker compose up -d --force-recreate keycloak
               echo "$THEME_SUM" > .theme-sum
-              echo "Keycloak recreated for the new login theme"
+              echo "Keycloak recreated for the new login theme or extension"
             fi
 
             docker image prune -f >/dev/null

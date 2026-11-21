@@ -6,6 +6,7 @@ import { getStoredUser, loginPageParams } from '@/config/oidc-config'
 import { useTheme } from '@/context/theme-provider'
 import { useLanguage, useT } from '@/lib/i18n'
 import { claimSignInRetry } from '@/lib/sign-in-retry'
+import { pickedSomeoneElse } from '@/features/cashiers/roster'
 import { Button } from '@/components/ui/button'
 
 export const Route = createFileRoute('/auth/callback')({
@@ -24,10 +25,18 @@ function AuthCallback() {
 
   useEffect(() => {
     if (auth.isAuthenticated) {
+      // A name was tapped on the signed-out screen and somebody else came
+      // back: Keycloak still held their session and asked nothing. They are
+      // signed out (which ends that session), and the names show again
+      if (pickedSomeoneElse(auth.user?.profile)) {
+        void auth.signoutRedirect()
+        return
+      }
       const redirect = sessionStorage.getItem('auth_redirect')
       sessionStorage.removeItem('auth_redirect')
       navigate({ to: redirect || '/', replace: true })
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [auth.isAuthenticated, navigate])
 
   const signInAgain = () =>

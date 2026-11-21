@@ -92,6 +92,8 @@ services:
       - ./realms:/opt/keycloak/data/import:ro
       # The login theme every realm uses (the deploy workflow copies it from the AppHost's folder)
       - ./themes/ninja:/opt/keycloak/themes/ninja:ro
+      # Its extensions: the till's PIN (src/keycloak-pin, built by the deploy workflow)
+      - ./providers:/opt/keycloak/providers:ro
     depends_on:
       postgres:
         condition: service_healthy
