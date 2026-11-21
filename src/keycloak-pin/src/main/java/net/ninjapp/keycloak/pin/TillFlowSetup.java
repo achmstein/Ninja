@@ -16,7 +16,7 @@ import org.keycloak.models.RequiredActionProviderModel;
  *
  * The till's flow is Keycloak's browser flow with one step added: after the
  * session cookie and before the username and password form, the PIN form.
- * It is bound to the till's client only, so the admin, the kitchen screen
+ * It is bound to the tills' clients only (the web till and the app), so the admin, the kitchen screen
  * and the customers' apps sign in exactly as before. Password sign-in on the
  * till keeps its two-step code.
  */
@@ -32,8 +32,11 @@ final class TillFlowSetup {
     private static final String BASIC_FLOW = "basic-flow";
 
     static void ensure(KeycloakSession session, RealmModel realm) {
-        ClientModel till = realm.getClientByClientId(Pin.TILL_CLIENT);
-        if (till == null) {
+        java.util.List<ClientModel> tills = Pin.TILL_CLIENTS.stream()
+                .map(realm::getClientByClientId)
+                .filter(java.util.Objects::nonNull)
+                .toList();
+        if (tills.isEmpty()) {
             return;
         }
         try {
@@ -43,8 +46,10 @@ final class TillFlowSetup {
                 flow = createFlow(realm);
                 LOG.infof("Till sign-in flow created in realm %s", realm.getName());
             }
-            if (!flow.getId().equals(till.getAuthenticationFlowBindingOverride("browser"))) {
-                till.setAuthenticationFlowBindingOverride("browser", flow.getId());
+            for (ClientModel till : tills) {
+                if (!flow.getId().equals(till.getAuthenticationFlowBindingOverride("browser"))) {
+                    till.setAuthenticationFlowBindingOverride("browser", flow.getId());
+                }
             }
         } catch (RuntimeException e) {
             // A realm without the PIN signs in with passwords as before; the others are still set up

@@ -272,6 +272,9 @@ class AuthService extends Notifier<AuthState> {
   /// Get current access token
   Future<String?> getAccessToken() async => state.accessToken;
 
+  /// Who is signed in, by the email Keycloak knows them by; for a sign-in an app runs itself to check who came back
+  String? get signedInEmail => state.email;
+
   Future<void> _saveTokens({required String accessToken, String? refreshToken, String? idToken}) async {
     await _storage.write(key: _accessTokenKey, value: accessToken);
     if (refreshToken != null) {

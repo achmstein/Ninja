@@ -35,8 +35,12 @@ final class Pin {
     /** The action in which a cashier chooses theirs (also the kc_action the till asks for). */
     static final String REQUIRED_ACTION_ID = "ninja-configure-pin";
 
-    /** The till's client: the only one whose sign-in offers the PIN. */
-    static final String TILL_CLIENT = "pos-web";
+    /**
+     * The tills' clients, the web one and the app: the only ones whose
+     * sign-in offers the PIN. The app's is its browser sign-in (a cashier
+     * taking over by name); its password sign-in is untouched.
+     */
+    static final java.util.List<String> TILL_CLIENTS = java.util.List.of("pos-web", "pos-app");
 
     static final int MIN_DIGITS = 4;
     static final int MAX_DIGITS = 6;
