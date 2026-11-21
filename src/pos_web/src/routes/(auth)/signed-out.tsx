@@ -88,14 +88,14 @@ function SignedOut() {
                   key={cashier.username}
                   variant='outline'
                   size='lg'
-                  className='h-16 text-base'
+                  className='h-auto min-h-16 px-2 py-2 text-base whitespace-normal'
                   disabled={going !== null}
                   onClick={() => signIn(cashier.username)}
                 >
                   {going === cashier.username ? (
                     <Loader2 className='size-5 animate-spin' />
                   ) : (
-                    <span className='truncate'>{cashier.name}</span>
+                    <span className='line-clamp-2 break-words'>{cashier.name}</span>
                   )}
                 </Button>
               ))}

@@ -3,7 +3,7 @@ import { cashiersOf, isSomeoneElse } from './roster'
 
 describe('cashiersOf', () => {
   const staff = [
-    { username: 'mona@cafe.com', firstName: 'Mona', realmRoles: ['Cashier'], branches: [1] },
+    { username: 'mona@cafe.com', firstName: 'Mona', lastName: 'Adel', realmRoles: ['Cashier'], branches: [1] },
     { username: 'ali@cafe.com', firstName: 'Ali', realmRoles: ['Cashier'], branches: [2] },
     { username: 'owner@cafe.com', firstName: 'Omar', realmRoles: ['Owner', 'Admin'], branches: [] },
     { username: 'calls@cafe.com', firstName: '', lastName: 'Call centre', realmRoles: ['Cashier'], allBranches: true },
@@ -13,7 +13,7 @@ describe('cashiersOf', () => {
   it('lists who works at the branch, the owner and every-branch accounts with them, by name', () => {
     expect(cashiersOf(staff, 1)).toEqual([
       { username: 'calls@cafe.com', name: 'Call centre' },
-      { username: 'mona@cafe.com', name: 'Mona' },
+      { username: 'mona@cafe.com', name: 'Mona Adel' },
       { username: 'owner@cafe.com', name: 'Omar' },
     ])
   })

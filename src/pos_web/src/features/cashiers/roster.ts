@@ -3,7 +3,7 @@
  * the signed-out screen and typing their PIN on Keycloak's own page (the
  * till names them to Keycloak; nothing about the PIN is ever here). By then
  * nobody is signed in to ask the server who works here, so the till keeps
- * the names from the last time somebody was: first names and sign-in names
+ * the names from the last time somebody was: full names and sign-in names
  * of the branch's till staff, nothing else.
  */
 
@@ -40,7 +40,12 @@ export function cashiersOf(staff: StaffUser[], branchId: number | null): Cashier
     .flatMap((user) => {
       const username = (user.username || user.email || '').trim()
       if (!username) return []
-      const name = (user.firstName || '').trim() || [user.lastName].filter(Boolean).join(' ') || username
+      // The whole name: two Ahmeds work the same till
+      const name =
+        [user.firstName, user.lastName]
+          .map((part) => (part || '').trim())
+          .filter(Boolean)
+          .join(' ') || username
       return [{ username, name }]
     })
     .sort((a, b) => a.name.localeCompare(b.name))

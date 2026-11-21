@@ -54,8 +54,8 @@ export function PosHeader() {
   // The names the signed-out screen offers, kept current while someone is here
   useKeepCashierRoster()
   const cashierName =
-    auth.user?.profile.given_name ||
     auth.user?.profile.name ||
+    auth.user?.profile.given_name ||
     auth.user?.profile.preferred_username
 
   const setMyPin = () => {
