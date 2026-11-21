@@ -495,6 +495,8 @@ const dictionary = {
   receipts: { en: "Receipts", ar: "الإيصالات" },
   searchReceiptNumber: { en: "Receipt number", ar: "رقم الإيصال" },
   noReceipts: { en: "No receipts yet", ar: "لا توجد إيصالات بعد" },
+  openReceipt: { en: "Open", ar: "افتح" },
+  receiptLoadFailed: { en: "Couldn't load this receipt.", ar: "تعذّر تحميل هذا الإيصال." },
 
   // Availability screen (خلص = sold out, the word said across the counter)
   availability: { en: "Availability", ar: "التوفر" },

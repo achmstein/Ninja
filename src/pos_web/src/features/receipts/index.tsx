@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
-import { Link, useNavigate } from '@tanstack/react-router'
+import { Link } from '@tanstack/react-router'
 import {
   Armchair,
   ArrowLeft,
@@ -16,12 +16,16 @@ import {
 import { getSettledTickets } from '@/api/sales/sdk.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
+import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
 import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
+import { useIsMobile } from '@/hooks/use-is-mobile'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
+import { ReceiptPreview } from './receipt-preview'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -35,15 +39,23 @@ const PAGE_SIZE = 50
  * The bills that have closed, newest receipt first — the way back to one
  * after it left the floor, to reprint it or issue a credit note against it.
  * Typing a receipt number finds that one; otherwise the recent ones show.
+ *
+ * A receipt is read where it is picked: the list keeps its place and the
+ * bill shows beside it (the newest to begin with), or in a sheet over it on
+ * a phone. Looking for one bill among a night's used to mean opening each
+ * and coming back. The bill's own page, where it is refunded, is a press
+ * away from what shows.
  */
 export function Receipts() {
   const t = useT()
   const localized = useLocalized()
   const locale = useLocale()
   const money = useMoney()
-  const navigate = useNavigate()
+  const isMobile = useIsMobile()
   const language = useLanguage((s) => s.language)
   const [term, setTerm] = useState('')
+  // The receipt being read; none until one is picked (a wide screen reads the newest)
+  const [pickedId, setPickedId] = useState<number | null>(null)
 
   const digits = term.trim()
   const receiptNumber = /^\d+$/.test(digits) ? Number(digits) : undefined
@@ -91,8 +103,38 @@ export function Receipts() {
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
 
+  const titleOf = (bill: (typeof bills)[number]) => {
+    // A delivery's bill reads "#42 · Mona" (older ones with a scooter
+    // emoji first): drawn with the bike, never the emoji
+    const label = billLabel(bill.label)
+    const typeLabel =
+      bill.type === 'Room'
+        ? t('room')
+        : bill.type === 'Table'
+          ? t('table')
+          : t('counter')
+    return {
+      delivery: label.delivery,
+      title: localized(bill.locationName) || label.text || typeLabel,
+    }
+  }
+
+  // Beside the list there is always a bill to read: the one picked while it
+  // is still listed, the newest otherwise. A phone shows only what was picked
+  const picked = bills.find((bill) => toNumber(bill.id) === pickedId)
+  const shown = picked ?? (isMobile ? undefined : bills[0])
+  const shownId = shown ? toNumber(shown.id) : null
+  const preview = shown && shownId != null && (
+    <ReceiptPreview
+      key={shownId}
+      ticketId={shownId}
+      title={<BillTitle title={titleOf(shown).title} className='block truncate' />}
+    />
+  )
+
   return (
-    <div className='mx-auto flex max-w-3xl flex-col gap-4 p-4'>
+    <div className='mx-auto grid max-w-6xl items-start gap-4 p-4 md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]'>
+    <div className='flex min-w-0 flex-col gap-4'>
       <div className='flex items-center gap-2'>
         <Button asChild variant='ghost' size='icon' className='size-12'>
           <Link to='/' aria-label={t('backToFloor')}>
@@ -136,30 +178,20 @@ export function Receipts() {
       ) : (
         <div className='bg-card divide-y overflow-hidden rounded-xl border'>
           {bills.map((bill) => {
-            // A delivery's bill reads "#42 · Mona" (older ones with a scooter
-            // emoji first): drawn with the bike, never the emoji
-            const label = billLabel(bill.label)
-            const Icon = label.delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
-            const typeLabel =
-              bill.type === 'Room'
-                ? t('room')
-                : bill.type === 'Table'
-                  ? t('table')
-                  : t('counter')
-            const title = localized(bill.locationName) || label.text || typeLabel
+            const { delivery, title } = titleOf(bill)
+            const Icon = delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
             const refunded = toNumber(bill.refundedTotal)
+            const id = toNumber(bill.id)
             return (
               <button
                 key={String(bill.id)}
                 type='button'
-                onClick={() =>
-                  navigate({
-                    to: '/ticket/$ticketId',
-                    params: { ticketId: String(toNumber(bill.id)) },
-                    search: { from: 'receipts' },
-                  })
-                }
-                className='hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start'
+                onClick={() => setPickedId(id)}
+                aria-current={id === shownId ? 'true' : undefined}
+                className={cn(
+                  'hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start',
+                  id === shownId && 'bg-accent hover:bg-accent'
+                )}
               >
                 <span className='w-14 shrink-0 font-semibold tabular-nums'>
                   #{toNumber(bill.receiptNumber)}
@@ -179,7 +211,7 @@ export function Receipts() {
                 <span className='shrink-0 text-lg font-semibold tabular-nums'>
                   {money(bill.total)}
                 </span>
-                <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' />
+                <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />
               </button>
             )
           })}
@@ -197,6 +229,30 @@ export function Receipts() {
             <Loader2 className='size-6 animate-spin' />
           )}
         </div>
+      )}
+    </div>
+
+      {isMobile ? (
+        <Sheet
+          open={picked != null}
+          onOpenChange={(open) => {
+            if (!open) setPickedId(null)
+          }}
+        >
+          <SheetContent aria-describedby={undefined} className='h-[calc(100svh-2.5rem)]'>
+            <SheetTitle className='sr-only'>{t('receipts')}</SheetTitle>
+            {preview}
+          </SheetContent>
+        </Sheet>
+      ) : (
+        // Stays in view under the header while the list scrolls past it
+        <aside className='bg-card sticky top-20 flex h-[calc(100svh-6rem)] min-w-0 flex-col overflow-hidden rounded-xl border'>
+          {preview || (
+            <p className='text-muted-foreground m-auto p-6 text-center'>
+              {isLoading ? '' : t('noReceipts')}
+            </p>
+          )}
+        </aside>
       )}
     </div>
   )
