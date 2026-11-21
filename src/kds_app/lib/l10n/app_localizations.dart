@@ -637,6 +637,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cancelled on Talabat'**
   String get platformCancelled;
+
+  /// No description provided for @orderCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled. Stop making it.'**
+  String get orderCancelled;
+
+  /// No description provided for @cancelledRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'OK, remove'**
+  String get cancelledRemove;
+
+  /// No description provided for @orderCancelledToast.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{orderId} was cancelled'**
+  String orderCancelledToast(int orderId);
 }
 
 class _AppLocalizationsDelegate

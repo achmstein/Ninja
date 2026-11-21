@@ -106,5 +106,8 @@
   "platformRiderAt": "المندوب {time}",
   "platformCollect": "يستلمها العميل",
   "platformOwnRider": "مندوبنا",
-  "platformCancelled": "أُلغي على طلبات"
+  "platformCancelled": "أُلغي على طلبات",
+  "orderCancelled": "أُلغي الطلب. توقف عن تحضيره.",
+  "cancelledRemove": "تم، أزِله",
+  "orderCancelledToast": "أُلغي الطلب #{orderId}"
 }

@@ -62,10 +62,18 @@ class OrderCard extends StatelessWidget {
     const tabular = [FontFeature.tabularFigures()];
 
     final isReady = order.isReady;
+    // Its bill was voided at the till after the kitchen had it. The card
+    // stays, saying so, until whoever was making it clears it: one that just
+    // vanished went unnoticed, and the order went on being made
+    final isCancelled = order.isCancelled;
 
     // The clock runs from confirmation; a ready order shows when it was
     // finished instead
-    final tone = isReady ? CardTone.ready : orderUrgency(order.since, now).tone;
+    final tone = isCancelled
+        ? CardTone.cancelled
+        : isReady
+            ? CardTone.ready
+            : orderUrgency(order.since, now).tone;
     final clock = isReady
         ? MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(order.readyAt!.toLocal()))
         : formatElapsed(order.since, now);
@@ -114,6 +122,12 @@ class OrderCard extends StatelessWidget {
     // whole strip tints with the clock, so a late ticket is read across the
     // room and not from a thin border. The outline picks it up faintly.
     final (Color band, Color clockColor, Color? outline) = switch (tone) {
+      // Heavier than a late card's tint, with a full outline: this one says stop
+      CardTone.cancelled => (
+          theme.colors.destructive.withValues(alpha: dark ? 0.4 : 0.25),
+          theme.colors.destructive,
+          theme.colors.destructive,
+        ),
       CardTone.delayed => (
           theme.colors.destructive.withValues(alpha: dark ? 0.2 : 0.1),
           theme.colors.destructive,
@@ -188,6 +202,19 @@ class OrderCard extends StatelessWidget {
                     ),
                   ],
                 ),
+                if (isCancelled) ...[
+                  const SizedBox(height: 4),
+                  Row(
+                    children: [
+                      Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(l10n.orderCancelled,
+                            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive, height: 1.25)),
+                      ),
+                    ],
+                  ),
+                ],
                 if (who.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
@@ -291,6 +318,9 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(height: 8),
                   if (onBringBack != null)
                     _button(theme, variant: FButtonVariant.outline, icon: FIcons.undo2, label: l10n.bringBack, onPress: onBringBack!)
+                  else if (isCancelled)
+                    // The same call as Ready: it takes the card off this screen
+                    _button(theme, variant: FButtonVariant.destructive, icon: FIcons.x, label: l10n.cancelledRemove, onPress: onReady!)
                   else
                     _button(theme, variant: null, icon: FIcons.check, label: l10n.ready, onPress: onReady!),
                 ],

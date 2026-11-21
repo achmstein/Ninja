@@ -94,6 +94,10 @@ class KitchenOrder {
   final DateTime? confirmedAt;
   final DateTime? readyAt;
 
+  /// When its bill was voided at the till, after the kitchen had it: there
+  /// is nothing left to make. The card stays, saying so, until it is cleared
+  final DateTime? cancelledAt;
+
   /// Who placed it: Customer, Guest or Pos
   final String source;
   /// The place it was ordered from; kind 'Room', 'Table' or 'Station'
@@ -114,6 +118,7 @@ class KitchenOrder {
     required this.date,
     this.confirmedAt,
     this.readyAt,
+    this.cancelledAt,
     this.source = 'Customer',
     this.placeKind,
     this.placeName,
@@ -128,6 +133,7 @@ class KitchenOrder {
   DateTime get since => confirmedAt ?? date;
   bool get isPos => source == 'Pos';
   bool get isReady => readyAt != null;
+  bool get isCancelled => cancelledAt != null && !isReady;
 
   /// The same order marked ready at [readyAt], or back on the board for null
   KitchenOrder withReadyAt(DateTime? readyAt) => KitchenOrder(
@@ -135,6 +141,7 @@ class KitchenOrder {
         date: date,
         confirmedAt: confirmedAt,
         readyAt: readyAt,
+        cancelledAt: cancelledAt,
         source: source,
         placeKind: placeKind,
         placeName: placeName,
@@ -150,6 +157,7 @@ class KitchenOrder {
         date: readUtc(json['date']) ?? DateTime.now().toUtc(),
         confirmedAt: readUtc(json['confirmedAt']),
         readyAt: readUtc(json['readyAt']),
+        cancelledAt: readUtc(json['cancelledAt']),
         source: _text(json['source']) ?? 'Customer',
         placeKind: json['placeKind'] as String?,
         placeName: LocalizedText.parseNullable(json['placeName']),

@@ -243,6 +243,20 @@ public class OrderAggregateTest
     }
 
     [TestMethod]
+    public void Clearing_a_voided_orders_card_tells_nobody_it_is_ready()
+    {
+        // Its bill was voided after the kitchen had it: the card stays until the kitchen clears it,
+        // with the call that marks an order ready, and the customer is not called to the counter
+        var order = ConfirmedOrder();
+        order.MarkVoided(DateTime.UtcNow);
+
+        order.SetReady(true);
+
+        Assert.IsTrue(order.IsReady);
+        Assert.IsFalse(order.DomainEvents.OfType<OrderReadyChangedDomainEvent>().Any());
+    }
+
+    [TestMethod]
     public void Kitchen_brings_a_ready_order_back_to_the_board()
     {
         // Arrange

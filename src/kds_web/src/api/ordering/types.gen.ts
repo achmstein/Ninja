@@ -245,6 +245,7 @@ export type KitchenOrder = {
     date?: string;
     confirmedAt?: null | string;
     readyAt?: null | string;
+    cancelledAt?: null | string;
     source?: string;
     platform?: null | PlatformOrderView;
     isDelivery?: boolean;

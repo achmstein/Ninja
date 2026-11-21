@@ -111,5 +111,9 @@
   "@platformRiderAt": { "placeholders": { "time": { "type": "String" } } },
   "platformCollect": "Customer collects",
   "platformOwnRider": "Our rider",
-  "platformCancelled": "Cancelled on Talabat"
+  "platformCancelled": "Cancelled on Talabat",
+  "orderCancelled": "Cancelled. Stop making it.",
+  "cancelledRemove": "OK, remove",
+  "orderCancelledToast": "Order #{orderId} was cancelled",
+  "@orderCancelledToast": { "placeholders": { "orderId": { "type": "int" } } }
 }

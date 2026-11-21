@@ -8,6 +8,7 @@ import {
   ShoppingBag,
   Store,
   TriangleAlert,
+  X,
   Undo2,
 } from 'lucide-react'
 import type { KitchenOrder } from '@/api/ordering/types.gen'
@@ -71,12 +72,20 @@ export function OrderCard({
   const localized = useLocalized()
 
   const isReady = order.readyAt != null
+  // Its bill was voided at the till after the kitchen had it. The card
+  // stays, saying so, until whoever was making it clears it: one that just
+  // vanished went unnoticed, and the order went on being made
+  const isCancelled = order.cancelledAt != null && !isReady
   const isPos = order.source === 'Pos'
 
   // The clock runs from confirmation — the moment the order reached the
   // kitchen. A ready order shows when it was finished instead.
   const since = order.confirmedAt ?? order.date
-  const tone: CardTone = isReady ? 'ready' : orderUrgency(since, nowMs)
+  const tone: CardTone = isCancelled
+    ? 'cancelled'
+    : isReady
+      ? 'ready'
+      : orderUrgency(since, nowMs)
   const clock = isReady
     ? new Date(order.readyAt!).toLocaleTimeString(locale, {
         hour: '2-digit',
@@ -135,7 +144,12 @@ export function OrderCard({
       >
         <div className='flex items-center gap-2'>
           {/* bdi: in Arabic the hash would otherwise land after the number */}
-          <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums'>
+          <span
+            className={cn(
+              'shrink-0 text-sm font-medium tabular-nums',
+              isCancelled ? 'text-white/80' : 'text-muted-foreground',
+            )}
+          >
             {'#\u200F'}{Number(order.orderNumber)}
           </span>
           {platform ? (
@@ -152,7 +166,7 @@ export function OrderCard({
           ) : (
             <Badge
               variant='outline'
-              className='bg-card min-w-0 gap-1 px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5'
+              className='bg-card text-foreground min-w-0 gap-1 px-2 py-0.5 text-sm font-medium [&>svg]:size-3.5'
             >
               <PlaceIcon className='text-muted-foreground' />
               <span className='truncate'>{channel}</span>
@@ -167,6 +181,12 @@ export function OrderCard({
             {clock}
           </span>
         </div>
+        {isCancelled && (
+          <div className='flex items-center gap-1.5 text-lg leading-tight font-bold'>
+            <TriangleAlert className='size-5 shrink-0' />
+            {t('orderCancelled')}
+          </div>
+        )}
         {who && (
           <div className='line-clamp-2 text-lg leading-tight font-semibold break-words'>
             {who}
@@ -211,7 +231,7 @@ export function OrderCard({
       </CardHeader>
 
       <CardContent className='flex flex-col gap-2 border-t px-3 py-1'>
-        <ul className='divide-border divide-y'>
+        <ul className={cn('divide-border divide-y', isCancelled && 'line-through opacity-60')}>
           {(order.items ?? []).map((item, index) => (
             <li key={index} className='flex gap-2 py-2'>
               <span className='w-7 shrink-0 text-base font-bold tabular-nums'>
@@ -257,6 +277,17 @@ export function OrderCard({
             >
               <Undo2 className='size-5' />
               {t('bringBack')}
+            </Button>
+          ) : isCancelled ? (
+            // The same call as Ready: it takes the card off this screen
+            <Button
+              variant='destructive'
+              className='h-12 flex-1 gap-2 text-base'
+              disabled={isActing}
+              onClick={onReady}
+            >
+              <X className='size-5' />
+              {t('cancelledRemove')}
             </Button>
           ) : (
             <Button

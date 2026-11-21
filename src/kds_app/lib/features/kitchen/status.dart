@@ -17,9 +17,9 @@ enum OrderUrgency {
       };
 }
 
-/// What a card's header band is saying: how late the order is, or that it
-/// is done.
-enum CardTone { fresh, warning, delayed, ready }
+/// What a card's header band is saying: how late the order is, that it is
+/// done, or that it is off.
+enum CardTone { fresh, warning, delayed, ready, cancelled }
 
 OrderUrgency orderUrgency(DateTime? since, DateTime now) {
   if (since == null) return OrderUrgency.fresh;

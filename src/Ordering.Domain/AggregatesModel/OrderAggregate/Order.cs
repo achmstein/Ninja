@@ -770,7 +770,7 @@ public class Order
             if (ready != IsReady)
             {
                 ReadyAt = ready ? DateTime.UtcNow : null;
-                AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
+                AnnounceReady(ready);
             }
             return;
         }
@@ -821,6 +821,21 @@ public class Order
         }
 
         ReadyAt = ready ? now : null;
+        AnnounceReady(ready);
+    }
+
+    /// <summary>
+    /// Nobody is told a voided order is ready: on one, the kitchen's Ready is
+    /// only its card being cleared off the board, and the customer must not
+    /// be called to the counter for it.
+    /// </summary>
+    private void AnnounceReady(bool ready)
+    {
+        if (VoidedAt != null)
+        {
+            return;
+        }
+
         AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
     }
 

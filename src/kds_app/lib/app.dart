@@ -124,7 +124,8 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
 
     // Every order event moves something on the board — a confirmation lands
     // a card, a Ready or Bring back on another screen moves one, a
-    // cancellation removes one. Only a confirmation is worth a sound.
+    // cancellation turns one red. A confirmation is worth a sound, and so is
+    // a cancellation: nobody looks again at a card they have already read.
     _signalRSubscriptions.add(
       signalR.onOrderStatusChanged.listen((event) {
         // A ticket waiting for a kitchen printer: nothing on the board changed
@@ -134,8 +135,13 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
         }
         _refreshBoard();
         if (!forActiveBranch(event)) return;
-        if (event['type'] != 'order_confirmed') return;
         final orderId = (event['orderId'] as num?)?.toInt() ?? 0;
+        if (event['type'] == 'order_voided') {
+          ref.read(chimeServiceProvider).play();
+          toast(KdsToastType.error, (l10n) => l10n.orderCancelledToast(orderId));
+          return;
+        }
+        if (event['type'] != 'order_confirmed') return;
         final name = event['buyerName'] as String?;
         ref.read(chimeServiceProvider).play();
         toast(KdsToastType.info, (l10n) => name == null || name.isEmpty ? l10n.newOrderToast(orderId) : l10n.newOrderToastFrom(name, orderId));

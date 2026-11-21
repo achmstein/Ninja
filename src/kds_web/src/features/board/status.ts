@@ -8,8 +8,8 @@ export const DELAYED_AFTER_MINUTES = 10
 
 export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
 
-/** What the card's header band is saying: how late the order is, or that it is done. */
-export type CardTone = OrderUrgency | 'ready'
+/** What the card's header band is saying: how late the order is, that it is done, or that it is off. */
+export type CardTone = OrderUrgency | 'ready' | 'cancelled'
 
 export function orderUrgency(
   value: string | null | undefined,
@@ -29,6 +29,9 @@ export function orderUrgency(
  */
 export function toneBandClass(tone: CardTone): string {
   switch (tone) {
+    // Solid, where a late card is only tinted: this one says stop
+    case 'cancelled':
+      return 'bg-destructive text-white'
     case 'delayed':
       return 'bg-destructive/10 dark:bg-destructive/20'
     case 'warning':
@@ -43,6 +46,8 @@ export function toneBandClass(tone: CardTone): string {
 /** The clock on the band, in the band's colour. */
 export function toneClockClass(tone: CardTone): string {
   switch (tone) {
+    case 'cancelled':
+      return 'text-white'
     case 'delayed':
       return 'text-destructive'
     case 'warning':
@@ -57,6 +62,8 @@ export function toneClockClass(tone: CardTone): string {
 /** A late card's outline picks up the band's colour too, faintly. */
 export function toneBorderClass(tone: CardTone): string {
   switch (tone) {
+    case 'cancelled':
+      return 'border-destructive'
     case 'delayed':
       return 'border-destructive/40'
     case 'warning':

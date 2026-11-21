@@ -231,6 +231,11 @@ public record KitchenOrder
     public DateTime? ConfirmedAt { get; init; }
     /// <summary>When the kitchen finished it; null while it is still on the board.</summary>
     public DateTime? ReadyAt { get; init; }
+    /// <summary>
+    /// When its bill was voided at the till: there is nothing left to make. The card stays on the
+    /// board saying so until the kitchen clears it, with the call that marks an order ready.
+    /// </summary>
+    public DateTime? CancelledAt { get; init; }
     /// <summary>Who placed it: Customer, Guest, Pos or Talabat.</summary>
     public string Source { get; init; } = string.Empty;
     /// <summary>A delivery platform's details — the code the rider asks for; null on every other order.</summary>

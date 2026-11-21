@@ -303,4 +303,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get platformCancelled => 'Cancelled on Talabat';
+
+  @override
+  String get orderCancelled => 'Cancelled. Stop making it.';
+
+  @override
+  String get cancelledRemove => 'OK, remove';
+
+  @override
+  String orderCancelledToast(int orderId) {
+    return 'Order #$orderId was cancelled';
+  }
 }

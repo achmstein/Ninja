@@ -27,7 +27,8 @@ function isForActiveBranch(event: OrderStatusChangedEvent): boolean {
  * One SignalR connection for the whole kitchen session (mounted in the
  * authenticated layout). Joins the staff ("admin") group and maps every
  * OrderStatusChanged to a refetch of the board — a chime on top when an
- * order is confirmed, which is the moment it reaches the kitchen. Another
+ * order is confirmed, which is the moment it reaches the kitchen, and when
+ * one is cancelled under the kitchen's hands. Another
  * screen's Ready / Bring back arrives the same way (type `order_ready`), so
  * two screens never disagree for long.
  *
@@ -76,6 +77,13 @@ export function useKitchenNotifications() {
               })
             : translate('newOrderToast', { orderId })
         )
+      }
+      // Its bill was voided at the till: the card turns red and stays until
+      // it is cleared, and the kitchen is rung, since nobody looks at a card
+      // they have already read
+      if (event?.type === 'order_voided') {
+        playAlertSound()
+        toast.error(translate('orderCancelledToast', { orderId: event.orderId ?? 0 }))
       }
     })
 

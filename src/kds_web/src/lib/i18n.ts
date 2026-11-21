@@ -61,6 +61,9 @@ const dictionary = {
   platformCollect: { en: "Customer collects", ar: "يستلمها العميل" },
   platformOwnRider: { en: "Our rider", ar: "مندوبنا" },
   platformCancelled: { en: "Cancelled on Talabat", ar: "أُلغي على طلبات" },
+  orderCancelled: { en: "Cancelled. Stop making it.", ar: "أُلغي الطلب. توقف عن تحضيره." },
+  cancelledRemove: { en: "OK, remove", ar: "تم، أزِله" },
+  orderCancelledToast: { en: "Order #{orderId} was cancelled", ar: "أُلغي الطلب #‏{orderId}" },
   soundBanner: { en: "Enable sound", ar: "شغّل الصوت" },
 
   // History

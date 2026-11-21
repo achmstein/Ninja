@@ -302,4 +302,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get platformCancelled => 'أُلغي على طلبات';
+
+  @override
+  String get orderCancelled => 'أُلغي الطلب. توقف عن تحضيره.';
+
+  @override
+  String get cancelledRemove => 'تم، أزِله';
+
+  @override
+  String orderCancelledToast(int orderId) {
+    return 'أُلغي الطلب #$orderId';
+  }
 }

@@ -174,8 +174,13 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
             .AsNoTracking()
             .Where(o => o.BranchId == branchId)
             .Where(o => o.OrderStatus == Ordering.Domain.AggregatesModel.OrderAggregate.OrderStatus.Confirmed)
-            // Its bill was voided at the till: nothing to make, and not history either
-            .Where(o => o.VoidedAt == null)
+            // Its bill was voided at the till: nothing to make, and not history either.
+            // But whoever is making it has to be told: the card stays, saying so, until
+            // they clear it (the same tap as Ready), on each screen that had it. It used
+            // to vanish, and a barista who had read it once went on making it
+            .Where(o => o.VoidedAt == null || (stationId == null
+                ? o.ReadyAt == null
+                : o.StationParts.Any(p => p.StationId == stationId && p.ReadyAt == null)))
             // Confirmed before the kitchen display existed: not its business
             .Where(o => o.ConfirmedAt != null && o.ConfirmedAt >= confirmedSince)
             // A station sees the orders with a part on its screen; the pass
@@ -190,6 +195,7 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                 OrderNumber = o.Id,
                 Date = o.OrderDate,
                 ConfirmedAt = o.ConfirmedAt,
+                CancelledAt = o.VoidedAt,
                 // A station's board and history follow its own part
                 ReadyAt = stationId == null
                     ? o.ReadyAt
