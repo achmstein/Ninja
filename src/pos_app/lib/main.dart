@@ -18,6 +18,7 @@ import 'core/sending/sending.dart';
 import 'core/printing/printer_settings.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
+import 'core/layout/breakpoints.dart';
 import 'features/connect/connect_screen.dart';
 import 'features/call_centre/call_centre_mode.dart';
 import 'features/sale/providers/sale_provider.dart';
@@ -32,11 +33,19 @@ void main() async {
 
   // A till is a landscape tablet with nothing but the till on it: no
   // rotation, no system bars, and a screen that never dims mid-shift.
-  await SystemChrome.setPreferredOrientations([
-    DeviceOrientation.landscapeLeft,
-    DeviceOrientation.landscapeRight,
-  ]);
-  await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  // A phone is the till in a waiter's hand: upright, as a phone is held, with
+  // its status bar and its back gesture left alone; the screens fold for its
+  // width (core/layout/breakpoints.dart).
+  final phone = isPhoneView(widgetsBinding.platformDispatcher.views.first);
+  if (phone) {
+    await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
+  } else {
+    await SystemChrome.setPreferredOrientations([
+      DeviceOrientation.landscapeLeft,
+      DeviceOrientation.landscapeRight,
+    ]);
+    await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+  }
   WakelockPlus.enable();
 
   // Initialize locale and branch before app starts

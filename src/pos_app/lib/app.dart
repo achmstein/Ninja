@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'core/layout/breakpoints.dart';
 import 'core/orders/own_orders.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -111,8 +112,11 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
         ref.read(pendingOrdersProvider.notifier).refresh();
         ref.read(serviceRequestsProvider.notifier).refresh();
       }
-      // Android drops immersive mode after some system UI; put it back
-      SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      // Android drops immersive mode after some system UI; put it back.
+      // Not on a phone, which keeps its system bars (main.dart)
+      if (!isPhoneView(View.of(context))) {
+        SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
+      }
       // A till that asked to be pinned stays pinned
       ref.read(kioskServiceProvider).reapply();
     }
