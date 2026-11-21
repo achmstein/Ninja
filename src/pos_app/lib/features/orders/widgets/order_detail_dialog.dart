@@ -31,11 +31,11 @@ Future<OrderDetailPick?> showOrderDetailDialog(BuildContext context, int orderId
   return showFDialog<OrderDetailPick>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: dialogStyleFor(context, style),
+    builder: (context, style, animation) => DialogPanel(
+      style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _OrderDetailDialog(orderId: orderId, summary: summary),
+      maxWidth: 448,
+      builder: (context) => _OrderDetailDialog(orderId: orderId, summary: summary),
     ),
   );
 }

@@ -9,6 +9,7 @@ import '../models/money.dart';
 import '../layout/breakpoints.dart';
 import '../utils/bidi.dart';
 import '../widgets/compact_chip.dart';
+import '../widgets/pos_dialog.dart';
 import 'sending.dart';
 
 /// Header chip, red, while a charge never reached the server: wherever the
@@ -62,11 +63,11 @@ class SendingChip extends ConsumerWidget {
   static Future<void> _showFailed(BuildContext context) => showFDialog<void>(
         context: context,
         useRootNavigator: true,
-        builder: (context, style, animation) => FDialog.raw(
+        builder: (context, style, animation) => DialogPanel(
           style: style,
           animation: animation,
-          constraints: const BoxConstraints(maxWidth: 512),
-          builder: (context, _) => const _FailedSends(),
+          maxWidth: 512,
+          builder: (context) => const _FailedSends(),
         ),
       );
 }

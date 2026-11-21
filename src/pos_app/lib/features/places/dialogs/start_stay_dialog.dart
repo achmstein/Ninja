@@ -5,6 +5,7 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../stay_actions.dart';
@@ -29,11 +30,11 @@ Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Rese
   final outcome = await showFDialog<StartOutcome>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
+    builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _StartStayDialog(room: room, reservation: reservation),
+      maxWidth: 448,
+      builder: (context) => _StartStayDialog(room: room, reservation: reservation),
     ),
   );
   return outcome ?? StartOutcome.none;

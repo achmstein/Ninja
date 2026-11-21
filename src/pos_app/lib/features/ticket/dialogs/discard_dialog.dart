@@ -21,11 +21,11 @@ Future<bool> showDiscardDialog(BuildContext context, int ticketId) async {
   final discarded = await showFDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: dialogStyleFor(context, style),
+    builder: (context, style, animation) => DialogPanel(
+      style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _DiscardDialog(ticketId: ticketId),
+      maxWidth: 448,
+      builder: (context) => _DiscardDialog(ticketId: ticketId),
     ),
   );
   return discarded ?? false;

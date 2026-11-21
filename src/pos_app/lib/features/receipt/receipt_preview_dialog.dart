@@ -26,11 +26,11 @@ Future<void> showReceiptPreview(BuildContext context, int ticketId) {
   return showFDialog<void>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: dialogStyleFor(context, style),
+    builder: (context, style, animation) => DialogPanel(
+      style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _ReceiptPreview(ticketId: ticketId),
+      maxWidth: 448,
+      builder: (context) => _ReceiptPreview(ticketId: ticketId),
     ),
   );
 }

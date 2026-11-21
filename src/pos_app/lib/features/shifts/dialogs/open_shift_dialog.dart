@@ -20,11 +20,11 @@ Future<bool> showOpenShiftDialog(BuildContext context) async {
   final opened = await showFDialog<bool>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: dialogStyleFor(context, style),
+    builder: (context, style, animation) => DialogPanel(
+      style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => const _OpenShiftDialog(),
+      maxWidth: 448,
+      builder: (context) => const _OpenShiftDialog(),
     ),
   );
   return opened ?? false;

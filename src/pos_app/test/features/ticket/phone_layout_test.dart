@@ -299,12 +299,13 @@ void main() {
         await tester.pumpAndSettle();
         expectFits(tester, reason: '$mode');
         if (mode == MoveMode.move) {
-          // Two cards across, inside the dialog
+          // Two cards across, inside the sheet: the phone's width less its padding
           final first = tester.getRect(find.text(hashNumber(1041)));
           final second = tester.getRect(find.text(hashNumber(1042)));
-          // (a long total shrinks to its card, and its row with it: the tops are a hair apart)
-          expect(first.top, closeTo(second.top, 2));
-          expect((first.left - second.left).abs(), closeTo((280 - 8) / 2 + 8, 40));
+          // (a long total shrinks to its card, and its row with it: the tops are a hair apart,
+          // by up to the few points between a shrunk total's height and a whole one's)
+          expect(first.top, closeTo(second.top, 4));
+          expect((first.left - second.left).abs(), closeTo((360 - 48 - 8) / 2 + 8, 40));
         }
         await tester.pumpWidget(const SizedBox.shrink());
       }

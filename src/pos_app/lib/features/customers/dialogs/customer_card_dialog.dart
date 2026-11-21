@@ -9,6 +9,7 @@ import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/customer_card.dart';
 import '../providers/customer_providers.dart';
@@ -28,11 +29,11 @@ Future<void> showCustomerCard(BuildContext context, {required String id, require
   return showFDialog<void>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
+    builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter),
+      maxWidth: 448,
+      builder: (context) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter),
     ),
   );
 }

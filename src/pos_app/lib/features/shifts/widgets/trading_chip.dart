@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/shifts_provider.dart';
 import 'trading_switches.dart';
@@ -74,11 +75,11 @@ class TradingChip extends ConsumerWidget {
 Future<void> showTradingDialog(BuildContext context) => showFDialog<void>(
       context: context,
       useRootNavigator: true,
-      builder: (context, style, animation) => FDialog.raw(
+      builder: (context, style, animation) => DialogPanel(
         style: style,
         animation: animation,
-        constraints: const BoxConstraints(maxWidth: 448),
-        builder: (context, _) => const _TradingDialog(),
+        maxWidth: 448,
+        builder: (context) => const _TradingDialog(),
       ),
     );
 

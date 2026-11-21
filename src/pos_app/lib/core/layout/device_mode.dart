@@ -19,6 +19,12 @@ DeviceMode _mode = DeviceMode.auto;
 /// What was last applied: a tablet until the screen has said otherwise
 bool _phone = false;
 
+/// What Android says the screen is, asked before the first frame: its own
+/// line between a phone and a tablet (a smallest width of 600 dp), the one
+/// the activity turned the window by (MainActivity.kt). Null where there is
+/// nobody to ask (a test); the view's own size answers then.
+bool? _screenIsPhone;
+
 /// Whether the till is running as a phone right now
 bool get runsAsPhone => _phone;
 
@@ -38,13 +44,18 @@ Future<void> initializeDeviceMode() async {
   } catch (_) {
     _mode = DeviceMode.auto;
   }
+  try {
+    _screenIsPhone = await const MethodChannel('com.ninja.pos/device').invokeMethod<bool>('isPhone');
+  } catch (_) {
+    _screenIsPhone = null;
+  }
 }
 
-/// Turns the screen the way the till is held. Called at start and again
-/// whenever the screen reports its size: at start Android has often not
-/// said it yet, and a size of nothing must not be read as a phone (it was,
-/// and every tablet came up upright). Until the size is known the till
-/// stays as it always was, a tablet.
+/// Turns the screen the way the till is held, as the activity already did
+/// before the first frame, so nothing turns or refolds once the till is up.
+/// The view's own size is only the fallback: at start Android has often not
+/// reported it, and a size of nothing must not be read as a phone (it was,
+/// and every tablet came up upright).
 Future<void> applyDeviceMode(FlutterView view) async {
   final bool phone;
   switch (_mode) {
@@ -53,14 +64,10 @@ Future<void> applyDeviceMode(FlutterView view) async {
     case DeviceMode.phone:
       phone = true;
     case DeviceMode.auto:
-      if (view.physicalSize.isEmpty) {
-        phone = _phone;
-      } else {
-        phone = isPhoneView(view);
-      }
+      phone = _screenIsPhone ?? (view.physicalSize.isEmpty ? _phone : isPhoneView(view));
   }
   _phone = phone;
-  _knownTablet = !phone && (_mode != DeviceMode.auto || !view.physicalSize.isEmpty);
+  _knownTablet = !phone && (_mode != DeviceMode.auto || _screenIsPhone != null || !view.physicalSize.isEmpty);
   if (phone) {
     await SystemChrome.setPreferredOrientations([DeviceOrientation.portraitUp]);
     await SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);

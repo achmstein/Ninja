@@ -12,6 +12,7 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/providers/tickets_provider.dart';
@@ -34,11 +35,11 @@ Future<PlacePanelOutcome> showPlacePanel(BuildContext context, int placeId) asyn
   final outcome = await showFDialog<PlacePanelOutcome>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
+    builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _PlacePanel(placeId: placeId),
+      maxWidth: 448,
+      builder: (context) => _PlacePanel(placeId: placeId),
     ),
   );
   return outcome ?? PlacePanelOutcome.closed;

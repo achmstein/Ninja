@@ -36,11 +36,11 @@ Future<ShiftView?> showCloseShiftDialog(BuildContext context, ShiftView shift) a
   return showFDialog<ShiftView>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: dialogStyleFor(context, style),
+    builder: (context, style, animation) => DialogPanel(
+      style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 512),
-      builder: (context, _) => _CloseShiftDialog(shift: shift),
+      maxWidth: 512,
+      builder: (context) => _CloseShiftDialog(shift: shift),
     ),
   );
 }

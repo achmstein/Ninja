@@ -7,7 +7,9 @@ import '../layout/breakpoints.dart';
 /// gains that much bottom slack so whatever the keyboard covers can be
 /// scrolled up into the part still showing. Forui's default would shove
 /// the dialog up and squeeze it into the half of a landscape tablet the
-/// keyboard leaves — less than most dialogs need.
+/// keyboard leaves — less than most dialogs need. A phone's sheet (see
+/// [DialogPanel]) keeps its height the same way, and rises above the
+/// keyboard where the screen has the room.
 ///
 /// A tap anywhere that is not a control while the keyboard is up — the
 /// dimmed screen or the dialog's own blank space — only puts the keyboard
@@ -53,11 +55,11 @@ Future<T?> showPosDialog<T>(
                 behavior: HitTestBehavior.translucent,
                 excludeFromSemantics: true,
                 onTap: keyboard > 0 ? () => FocusManager.instance.primaryFocus?.unfocus() : null,
-                child: FDialog.raw(
-                  style: dialogStyleFor(context, style),
+                child: DialogPanel(
+                  style: style,
                   animation: animation,
-                  constraints: BoxConstraints(maxWidth: maxWidth),
-                  builder: (context, _) => builder(context),
+                  maxWidth: maxWidth,
+                  builder: builder,
                 ),
               ),
             ],
@@ -68,15 +70,150 @@ Future<T?> showPosDialog<T>(
   );
 }
 
-/// A dialog's style with the margins the screen can spare. Forui keeps 40 dp
-/// clear on each side, which leaves a 360 dp phone a dialog 280 wide and its
-/// body 232: too little for two buttons side by side. A phone keeps 16, as
-/// pos_web's dialogs do; a tablet keeps Forui's.
-FDialogStyle dialogStyleFor(BuildContext context, FDialogStyle style) => context.isCompact
-    ? style.copyWith(
-        insetPadding: const EdgeInsetsGeometryDelta.value(EdgeInsets.symmetric(horizontal: 16, vertical: 24)),
-      )
-    : style;
+/// What every till dialog is drawn on. A tablet gets Forui's dialog: a card
+/// in the middle of the screen, no wider than [maxWidth]. A phone gets a
+/// sheet rising from the bottom edge, as pos_web's dialogs do below the same
+/// width: the whole width of the screen, in thumb reach, its top corners
+/// rounded and a grab handle saying where it came from. A card in the middle
+/// of a phone leaves its buttons a width too small to label.
+///
+/// The sheet is never squeezed by the keyboard. It rises above it as far as
+/// the screen has room, keeping its height; what the keyboard still covers,
+/// a [DialogScroll] body can scroll up into view.
+class DialogPanel extends StatelessWidget {
+  final FDialogStyle style;
+  final Animation<double> animation;
+
+  /// How wide the card may grow on a tablet. A phone's sheet takes the screen's width.
+  final double maxWidth;
+  final WidgetBuilder builder;
+
+  const DialogPanel({
+    super.key,
+    required this.style,
+    required this.animation,
+    required this.builder,
+    this.maxWidth = 448,
+  });
+
+  /// pos_web's `rounded-t-2xl`
+  static const double _radius = 16;
+
+  /// What stays of the screen behind above a full-height sheet, so it still
+  /// reads as something laid over the screen (pos_web keeps the same 1.5rem)
+  static const double _topGap = 24;
+
+  static final Animatable<Offset> _rise = Tween<Offset>(
+    begin: const Offset(0, 1),
+    end: Offset.zero,
+  ).chain(CurveTween(curve: Curves.easeOutCubic));
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.isCompact) {
+      return FDialog.raw(
+        style: style,
+        animation: animation,
+        constraints: BoxConstraints(maxWidth: maxWidth),
+        builder: (context, _) => builder(context),
+      );
+    }
+
+    final theme = context.theme;
+    final media = MediaQuery.of(context);
+    // [showPosDialog] hides the keyboard from what it shows and hands it down
+    // itself; a dialog opened without it still sees the screen's own
+    final keyboard = media.viewInsets.bottom > 0 ? media.viewInsets.bottom : _Keyboard.of(context);
+    const corners = BorderRadius.vertical(top: Radius.circular(_radius));
+
+    return MediaQuery.removeViewInsets(
+      context: context,
+      removeLeft: true,
+      removeTop: true,
+      removeRight: true,
+      removeBottom: true,
+      // The keyboard goes on to the body here too, for the part of the sheet
+      // that could not rise clear of it
+      child: _Keyboard(
+        height: keyboard,
+        child: CustomSingleChildLayout(
+          delegate: _SheetLayout(keyboard: keyboard, top: media.padding.top + _topGap),
+          child: SlideTransition(
+            position: animation.drive(_rise),
+            child: DefaultTextStyle(
+              style: theme.typography.base.copyWith(color: theme.colors.foreground),
+              child: Semantics(
+                scopesRoute: true,
+                explicitChildNodes: true,
+                namesRoute: true,
+                // A border along the top edge only, following the corners: the
+                // card's colour laid one pixel lower on the border's. A box
+                // cannot round a border it draws on one side.
+                child: DecoratedBox(
+                  decoration: BoxDecoration(color: theme.colors.border, borderRadius: corners),
+                  child: Padding(
+                    padding: const EdgeInsets.only(top: 1),
+                    child: Container(
+                      clipBehavior: Clip.antiAlias,
+                      decoration: BoxDecoration(color: style.decoration.color, borderRadius: corners),
+                      // Clear of the home bar
+                      padding: EdgeInsets.only(bottom: media.padding.bottom),
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Center(
+                            child: Container(
+                              margin: const EdgeInsets.only(top: 8),
+                              width: 40,
+                              height: 6,
+                              decoration: BoxDecoration(
+                                color: theme.colors.mutedForeground.withValues(alpha: 0.3),
+                                borderRadius: BorderRadius.circular(3),
+                              ),
+                            ),
+                          ),
+                          Flexible(child: Builder(builder: builder)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+/// Sets a phone's sheet against the bottom edge at the screen's full width,
+/// as tall as its content up to the screen less [top]. With the keyboard up
+/// the sheet moves above it, but no further than [top]: a sheet too tall to
+/// clear the keyboard stays whole and leaves its lower part under it.
+class _SheetLayout extends SingleChildLayoutDelegate {
+  final double keyboard;
+  final double top;
+
+  const _SheetLayout({required this.keyboard, required this.top});
+
+  @override
+  BoxConstraints getConstraintsForChild(BoxConstraints constraints) => BoxConstraints(
+        minWidth: constraints.maxWidth,
+        maxWidth: constraints.maxWidth,
+        maxHeight: (constraints.maxHeight - top).clamp(0.0, double.infinity),
+      );
+
+  @override
+  Offset getPositionForChild(Size size, Size childSize) {
+    final room = (size.height - top - childSize.height).clamp(0.0, double.infinity);
+    return Offset(0, size.height - childSize.height - (keyboard < room ? keyboard : room));
+  }
+
+  @override
+  bool shouldRelayout(_SheetLayout old) => old.keyboard != keyboard || old.top != top;
+}
 
 /// A dialog's closing actions, in reading order with the main one last. A
 /// tablet sets them side by side at the dialog's end. A phone's dialog is too

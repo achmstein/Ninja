@@ -9,6 +9,7 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../receipt/tab_payment_sheet.dart';
 import '../../shifts/providers/shifts_provider.dart';
@@ -31,11 +32,11 @@ Future<TabPaymentSlip?> showPayTabDialog(BuildContext context, {required CardCus
   return showFDialog<TabPaymentSlip>(
     context: context,
     useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
+    builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) => _PayTabDialog(customer: customer, balance: balance),
+      maxWidth: 448,
+      builder: (context) => _PayTabDialog(customer: customer, balance: balance),
     ),
   );
 }
