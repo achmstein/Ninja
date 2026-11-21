@@ -9,6 +9,7 @@ import { setSessionRenewer } from '@/lib/api-client'
 import { bootBrand } from '@/lib/brand'
 import { keepPersistedQueries, queryPersistOptions } from '@/lib/query-persist'
 import { handleServerError } from '@/lib/handle-server-error'
+import { reloadForNewBuild } from '@/lib/stale-build'
 import { AuthProvider } from './context/auth-provider'
 import { renewSession } from './context/session'
 import { DirectionProvider } from './context/direction-provider'
@@ -18,6 +19,11 @@ import { routeTree } from './routeTree.gen'
 // Styles
 import 'sileo/styles.css'
 import './styles/index.css'
+
+// A screen whose code is gone since a release: onto the new release, once (lib/stale-build.ts)
+window.addEventListener('vite:preloadError', (event) => {
+  if (reloadForNewBuild()) event.preventDefault()
+})
 
 // A call made on an expired sign-in waits for its renewal instead of being refused (lib/api-client.ts)
 setSessionRenewer(renewSession)

@@ -8,6 +8,7 @@ import {
 import { Toaster } from 'sileo'
 import { Button } from '@/components/ui/button'
 import { useBrandEffects } from '@/lib/brand'
+import { isStaleBuildError, reloadForNewBuild } from '@/lib/stale-build'
 import { useT } from '@/lib/i18n'
 import { useTheme } from '@/context/theme-provider'
 
@@ -42,8 +43,14 @@ function NotFound() {
   )
 }
 
-function GeneralError() {
+function GeneralError({ error }: { error: unknown }) {
   const t = useT()
+  // The screen's code is gone since a release: the new release is one reload
+  // away, tried once before the cashier is shown anything
+  const stale = isStaleBuildError(error)
+  useLayoutEffect(() => {
+    if (stale) reloadForNewBuild()
+  }, [stale])
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-4'>
       <h1 className='text-2xl font-bold'>{t('somethingWentWrong')}</h1>
