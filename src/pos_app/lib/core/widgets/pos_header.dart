@@ -4,8 +4,8 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
-import '../auth/cashier_sign_in.dart';
 import '../../features/auth/cashier_roster.dart';
+import '../../features/auth/pin_dialogs.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../features/shifts/widgets/shift_chip.dart';
 import '../../features/shifts/widgets/trading_chip.dart';
@@ -120,8 +120,8 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
               ),
               // The till changes hands here: Switch cashier signs out to the
               // names on the sign-in screen, where the next one taps theirs
-              // and types their PIN; Set my PIN is where they choose it, on
-              // Keycloak's own page
+              // and types their PIN; Set my PIN is where they choose it, after
+              // their password
               FItemGroup(
                 children: [
                   FItem(
@@ -132,7 +132,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
                   FItem(
                     prefix: const Icon(FIcons.keyRound, size: Sizes.icon),
                     title: Text(l10n.setMyPin, style: rowStyle),
-                    onPress: () => _pick(ref.read(authServiceProvider.notifier).chooseMyPin),
+                    onPress: () => _pick(() => showChoosePin(context)),
                   ),
                 ],
               ),

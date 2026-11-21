@@ -712,12 +712,10 @@ class _BillsState extends State<_Bills> {
             return name.contains(q) || '${b.id}'.contains(q);
           }).toList();
 
-    return page([
-          ...above,
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
+    // The filters, and the search after them. A tablet wraps them; a phone
+    // keeps them on one line that slides sideways, as pos_web's do: wrapped,
+    // they took two rows of a screen that has few to give
+    final filters = <Widget>[
               for (final f in _Filter.values)
                 if ((f == _Filter.all || counts[f]! > 0) && (f != _Filter.room || widget.rooms))
                   _FilterPill(
@@ -763,8 +761,24 @@ class _BillsState extends State<_Bills> {
                           child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                         ),
                       ),
-            ],
-          ),
+    ];
+
+    return page([
+          ...above,
+          if (context.isCompact)
+            SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: Row(
+                children: [
+                  for (final (index, child) in filters.indexed) ...[
+                    if (index > 0) const SizedBox(width: 8),
+                    child,
+                  ],
+                ],
+              ),
+            )
+          else
+            Wrap(spacing: 8, runSpacing: 8, children: filters),
           const SizedBox(height: 12),
           LayoutBuilder(
             builder: (context, constraints) {

@@ -2560,4 +2560,46 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deviceModePhone => 'هاتف';
+
+  @override
+  String get enterYourPin => 'أدخل رمزك';
+
+  @override
+  String get pinWrong => 'الرمز غير صحيح.';
+
+  @override
+  String get pinUnavailable =>
+      'لا يمكن استخدام الرمز الآن. سجّل الدخول بكلمة المرور.';
+
+  @override
+  String get pinHint => 'من 4 إلى 6 أرقام. ستكتبه لتستلم الكاشير.';
+
+  @override
+  String get newPin => 'الرمز';
+
+  @override
+  String get newPinAgain => 'الرمز مرة أخرى';
+
+  @override
+  String get pinFormat => 'الرمز من 4 إلى 6 أرقام.';
+
+  @override
+  String get pinMismatch => 'الرمزان غير متطابقين.';
+
+  @override
+  String get pinGuessable => 'هذا الرمز سهل التخمين. اختر غيره.';
+
+  @override
+  String get pinWrongPassword => 'كلمة المرور غير صحيحة.';
+
+  @override
+  String get pinSaved => 'تم حفظ الرمز';
+
+  @override
+  String get pinNotSaved => 'لم يُحفظ الرمز. أعد المحاولة.';
+
+  @override
+  String pinDigitsTyped(int count) {
+    return 'كُتب $count أرقام';
+  }
 }

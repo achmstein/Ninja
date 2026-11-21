@@ -32,8 +32,12 @@ class CompactChip extends StatelessWidget {
     final theme = context.theme;
     return FTooltip(
       tipBuilder: (context, _) => Text(label),
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: Sizes.control, minHeight: Sizes.control),
+      // A square the button fills, as the header's menu button is: stretched
+      // only by a minimum size, the button grew and left its sign off-centre.
+      // A chip that counts is as wide as its sign and number need
+      child: SizedBox(
+        width: count == null ? Sizes.control : null,
+        height: Sizes.control,
         child: FButton.icon(
           variant: FButtonVariant.outline,
           onPress: onPress,

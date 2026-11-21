@@ -4423,6 +4423,84 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Phone'**
   String get deviceModePhone;
+
+  /// No description provided for @enterYourPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get enterYourPin;
+
+  /// No description provided for @pinWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That PIN is wrong.'**
+  String get pinWrong;
+
+  /// No description provided for @pinUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No PIN to use right now. Sign in with your password.'**
+  String get pinUnavailable;
+
+  /// No description provided for @pinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'4 to 6 digits. You will type it to take over a till.'**
+  String get pinHint;
+
+  /// No description provided for @newPin.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get newPin;
+
+  /// No description provided for @newPinAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN again'**
+  String get newPinAgain;
+
+  /// No description provided for @pinFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'A PIN is 4 to 6 digits.'**
+  String get pinFormat;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two PINs are not the same.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinGuessable.
+  ///
+  /// In en, this message translates to:
+  /// **'That one is too easy to guess. Choose another.'**
+  String get pinGuessable;
+
+  /// No description provided for @pinWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is wrong.'**
+  String get pinWrongPassword;
+
+  /// No description provided for @pinSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN saved'**
+  String get pinSaved;
+
+  /// No description provided for @pinNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN wasn\'t saved. Try again.'**
+  String get pinNotSaved;
+
+  /// No description provided for @pinDigitsTyped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} digits typed'**
+  String pinDigitsTyped(int count);
 }
 
 class _AppLocalizationsDelegate

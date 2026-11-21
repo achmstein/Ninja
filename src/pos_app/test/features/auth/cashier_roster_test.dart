@@ -25,9 +25,11 @@ void main() {
     expect(Cashier.fromJson('nonsense'), isNull);
   });
 
-  test('the till is only handed to the name that was tapped', () {
-    expect(isSameAccount('Mona@Cafe.com', 'mona@cafe.com'), isTrue);
-    expect(isSameAccount('mona@cafe.com', 'ali@cafe.com'), isFalse);
-    expect(isSameAccount('mona@cafe.com', null), isFalse);
+  test('only 4 to 6 digits are sent as a PIN', () {
+    expect(looksLikePin('4827'), isTrue);
+    expect(looksLikePin('482791'), isTrue);
+    expect(looksLikePin('482'), isFalse);
+    expect(looksLikePin('4827910'), isFalse);
+    expect(looksLikePin('48a7'), isFalse);
   });
 }

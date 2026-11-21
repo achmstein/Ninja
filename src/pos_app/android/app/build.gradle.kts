@@ -43,8 +43,6 @@ android {
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
-        // Where Keycloak's page hands the sign-in back to the till (AppConfig.redirectUri)
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.ninja.pos"
     }
 
     signingConfigs {

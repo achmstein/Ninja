@@ -330,10 +330,24 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
       // shape at either end of every list, which on a till read as a glitch
       scrollBehavior: const MaterialScrollBehavior().copyWith(overscroll: false),
       builder: (context, child) {
-        return FTheme(
-          data: themeState.getForuiTheme(context, locale: locale),
-          child: FToaster(
-            child: child ?? const SizedBox.shrink(),
+        final data = themeState.getForuiTheme(context, locale: locale);
+        final dark = data.colors.brightness == Brightness.dark;
+        // A phone keeps its system bars (core/layout/device_mode.dart): they
+        // are see-through over the till's own background, with signs that
+        // read on it, where Android's default was a black band on top
+        return AnnotatedRegion<SystemUiOverlayStyle>(
+          value: SystemUiOverlayStyle(
+            statusBarColor: Colors.transparent,
+            statusBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+            statusBarBrightness: dark ? Brightness.dark : Brightness.light,
+            systemNavigationBarColor: data.colors.background,
+            systemNavigationBarIconBrightness: dark ? Brightness.light : Brightness.dark,
+          ),
+          child: FTheme(
+            data: data,
+            child: FToaster(
+              child: child ?? const SizedBox.shrink(),
+            ),
           ),
         );
       },

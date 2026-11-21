@@ -1043,5 +1043,18 @@
   "deviceModeHint": "التابلت بالعرض وبالتخطيط الكامل. الهاتف بالطول وبالتخطيط المطوي.",
   "deviceModeAuto": "تلقائي",
   "deviceModeTablet": "تابلت",
-  "deviceModePhone": "هاتف"
+  "deviceModePhone": "هاتف",
+  "enterYourPin": "أدخل رمزك",
+  "pinWrong": "الرمز غير صحيح.",
+  "pinUnavailable": "لا يمكن استخدام الرمز الآن. سجّل الدخول بكلمة المرور.",
+  "pinHint": "من 4 إلى 6 أرقام. ستكتبه لتستلم الكاشير.",
+  "newPin": "الرمز",
+  "newPinAgain": "الرمز مرة أخرى",
+  "pinFormat": "الرمز من 4 إلى 6 أرقام.",
+  "pinMismatch": "الرمزان غير متطابقين.",
+  "pinGuessable": "هذا الرمز سهل التخمين. اختر غيره.",
+  "pinWrongPassword": "كلمة المرور غير صحيحة.",
+  "pinSaved": "تم حفظ الرمز",
+  "pinNotSaved": "لم يُحفظ الرمز. أعد المحاولة.",
+  "pinDigitsTyped": "كُتب {count} أرقام"
 }

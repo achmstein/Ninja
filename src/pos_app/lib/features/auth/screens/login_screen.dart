@@ -3,8 +3,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
-import '../../../core/auth/cashier_sign_in.dart';
 import '../cashier_roster.dart';
+import '../pin_dialogs.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/brand_mark.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
@@ -16,9 +16,8 @@ import '../../../l10n/app_localizations.dart';
 /// staff username and password, once. Same form as admin_app.
 ///
 /// A till that has been signed in to before also shows the branch's till
-/// staff by name, above the form: a tap hands the sign-in to Keycloak's own
-/// page, which asks that person for their PIN (core/auth/cashier_sign_in.dart).
-/// That is how one cashier takes over from the next.
+/// staff by name, above the form: a tap opens the PIN pad for that person
+/// (pin_dialogs.dart). That is how one cashier takes over from the next.
 class LoginScreen extends ConsumerStatefulWidget {
   final String? error;
 
@@ -33,9 +32,6 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   final _passwordController = TextEditingController();
   bool _isLoading = false;
   String? _errorMessage;
-
-  /// The name being signed in by PIN, so its tile shows the wait
-  String? _signingInAs;
 
   @override
   void didChangeDependencies() {
@@ -108,28 +104,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
   }
 
   Future<void> _signInAs(Cashier cashier) async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() {
-      _signingInAs = cashier.username;
-      _errorMessage = null;
-    });
-    try {
-      final result = await ref.read(authServiceProvider.notifier).signInAs(cashier.username);
-      if (!mounted) return;
-      switch (result) {
-        case SignInResult.success:
-          context.go('/');
-        case SignInResult.notAuthorized:
-          setState(() => _errorMessage = l10n.accessDeniedDescription);
-        case SignInResult.failed:
-          setState(() => _errorMessage = l10n.pinSignInFailed);
-        case SignInResult.cancelled:
-          // They closed Keycloak's page: nothing to say
-          break;
-      }
-    } finally {
-      if (mounted) setState(() => _signingInAs = null);
-    }
+    setState(() => _errorMessage = null);
+    final signedIn = await showPinSignIn(context, cashier);
+    if (signedIn && mounted) context.go('/');
   }
 
   @override
@@ -137,7 +114,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final roster = ref.watch(cashierRosterProvider).value ?? const <Cashier>[];
-    final busy = _isLoading || _signingInAs != null;
+    final busy = _isLoading;
     // Which business this till belongs to, under the platform's name
     final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
 
@@ -214,9 +191,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                                   child: FButton(
                                     variant: FButtonVariant.outline,
                                     onPress: busy ? null : () => _signInAs(cashier),
-                                    child: _signingInAs == cashier.username
-                                        ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(strokeWidth: 2))
-                                        : Text(cashier.name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
+                                    child: Text(cashier.name, maxLines: 2, overflow: TextOverflow.ellipsis, textAlign: TextAlign.center),
                                   ),
                                 ),
                               ),

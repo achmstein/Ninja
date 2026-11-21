@@ -49,7 +49,15 @@ Future<SaleCustomer?> showCustomerDialog(
     side: Directionality.of(context) == TextDirection.rtl ? FLayout.ltr : FLayout.rtl,
     mainAxisMaxRatio: null,
     draggable: false,
-    builder: (context) => _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
+    // On a phone the sheet reaches the top of the screen, where the status
+    // bar is: its field starts under the bar, on the sheet's own colour. A
+    // tablet hides its bars and loses nothing to this
+    builder: (context) => ColoredBox(
+      color: context.theme.colors.background,
+      child: SafeArea(
+        child: _CustomerDialog(accountsOnly: accountsOnly, quickPicks: quickPicks, title: title, busy: busy),
+      ),
+    ),
   );
 }
 

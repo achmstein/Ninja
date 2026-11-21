@@ -2548,4 +2548,46 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deviceModePhone => 'Phone';
+
+  @override
+  String get enterYourPin => 'Enter your PIN';
+
+  @override
+  String get pinWrong => 'That PIN is wrong.';
+
+  @override
+  String get pinUnavailable =>
+      'No PIN to use right now. Sign in with your password.';
+
+  @override
+  String get pinHint => '4 to 6 digits. You will type it to take over a till.';
+
+  @override
+  String get newPin => 'PIN';
+
+  @override
+  String get newPinAgain => 'PIN again';
+
+  @override
+  String get pinFormat => 'A PIN is 4 to 6 digits.';
+
+  @override
+  String get pinMismatch => 'The two PINs are not the same.';
+
+  @override
+  String get pinGuessable => 'That one is too easy to guess. Choose another.';
+
+  @override
+  String get pinWrongPassword => 'That password is wrong.';
+
+  @override
+  String get pinSaved => 'PIN saved';
+
+  @override
+  String get pinNotSaved => 'The PIN wasn\'t saved. Try again.';
+
+  @override
+  String pinDigitsTyped(int count) {
+    return '$count digits typed';
+  }
 }

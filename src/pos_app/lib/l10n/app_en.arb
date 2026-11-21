@@ -1165,5 +1165,19 @@
   "deviceModeHint": "Tablet lies on its side with the full layout. Phone stands upright with the folded one.",
   "deviceModeAuto": "Automatic",
   "deviceModeTablet": "Tablet",
-  "deviceModePhone": "Phone"
+  "deviceModePhone": "Phone",
+  "enterYourPin": "Enter your PIN",
+  "pinWrong": "That PIN is wrong.",
+  "pinUnavailable": "No PIN to use right now. Sign in with your password.",
+  "pinHint": "4 to 6 digits. You will type it to take over a till.",
+  "newPin": "PIN",
+  "newPinAgain": "PIN again",
+  "pinFormat": "A PIN is 4 to 6 digits.",
+  "pinMismatch": "The two PINs are not the same.",
+  "pinGuessable": "That one is too easy to guess. Choose another.",
+  "pinWrongPassword": "That password is wrong.",
+  "pinSaved": "PIN saved",
+  "pinNotSaved": "The PIN wasn't saved. Try again.",
+  "pinDigitsTyped": "{count} digits typed",
+  "@pinDigitsTyped": { "placeholders": { "count": { "type": "int" } } }
 }
