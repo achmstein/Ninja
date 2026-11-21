@@ -106,7 +106,22 @@ if (!rootElement.innerHTML) {
   // page's own worker answers for the server, and this one would take the app from it
   if (import.meta.env.PROD && import.meta.env.BASE_URL === '/') {
     const { registerSW } = await import('virtual:pwa-register')
-    registerSW({ immediate: true })
+    // registerSW reloads the page onto a new release the moment it is in.
+    // On the way back from Keycloak that reload lands half-way through the
+    // sign-in: the answer in the address is spent by then, and the cashier
+    // saw Sign-in failed (on an installed till most of all, which opens on
+    // the old release every time one has shipped). There it waits until the
+    // sign-in is done and the till has moved on
+    const onCallback = () => router.state.location.pathname.endsWith('/auth/callback')
+    if (!onCallback()) {
+      registerSW({ immediate: true })
+    } else {
+      const stop = router.subscribe('onResolved', () => {
+        if (onCallback()) return
+        stop()
+        registerSW({ immediate: true })
+      })
+    }
   }
   await bootBrand(queryClient)
   const root = ReactDOM.createRoot(rootElement)

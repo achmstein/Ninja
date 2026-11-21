@@ -41,10 +41,13 @@ function SignIn() {
   const business = useBrandName()
   const auth = useAuth()
   // A renewal that failed is not a sign-in that did: the dead session is
-  // dropped (DropRefusedSession) and Keycloak is asked afresh
+  // dropped (DropRefusedSession) and Keycloak is asked afresh. Nor is an
+  // earlier answer that could not be read (the callback page's own to show):
+  // arriving here is asking again
   const signInError =
     auth.error?.source === 'renewSilent' ||
-    auth.error?.source === 'signinSilent'
+    auth.error?.source === 'signinSilent' ||
+    auth.error?.source === 'signinCallback'
       ? undefined
       : auth.error
   const { resolvedTheme } = useTheme()
