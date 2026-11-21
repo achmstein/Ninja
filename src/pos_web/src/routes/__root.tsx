@@ -48,6 +48,15 @@ function GeneralError({ error }: { error: unknown }) {
   // The screen's code is gone since a release: the new release is one reload
   // away, tried once before the cashier is shown anything
   const stale = isStaleBuildError(error)
+  const detail =
+    error instanceof Error
+      ? [`${error.name}: ${error.message}`, error.stack?.split('\n').slice(1, 3).join(' ').trim()]
+          .filter(Boolean)
+          .join(' ')
+          .slice(0, 400)
+      : typeof error === 'string'
+        ? error.slice(0, 400)
+        : ''
   useLayoutEffect(() => {
     if (stale) reloadForNewBuild()
   }, [stale])
@@ -57,6 +66,13 @@ function GeneralError({ error }: { error: unknown }) {
       <Button size='lg' onClick={() => window.location.assign('/')}>
         {t('backToFloor')}
       </Button>
+      {/* What went wrong, in the browser's own words: the one thing whoever
+          looks into it needs, and a till has no console to read it from */}
+      {detail && (
+        <p dir='ltr' className='text-muted-foreground max-w-full px-6 text-center text-xs break-words select-text'>
+          {detail}
+        </p>
+      )}
     </div>
   )
 }
