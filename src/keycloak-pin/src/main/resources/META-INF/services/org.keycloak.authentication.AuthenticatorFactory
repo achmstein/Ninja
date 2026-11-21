@@ -1,1 +1,3 @@
 net.ninjapp.keycloak.pin.PinFormAuthenticatorFactory
+net.ninjapp.keycloak.pin.PinDirectGrant$Check
+net.ninjapp.keycloak.pin.PinDirectGrant$Choose

@@ -27,6 +27,7 @@ final class TillFlowSetup {
     private static final Logger LOG = Logger.getLogger(TillFlowSetup.class);
 
     static final String FLOW = "till browser";
+    static final String DIRECT_FLOW = "till direct grant";
     private static final String FORMS = "till browser forms";
     private static final String OTP = "till browser conditional otp";
     private static final String BASIC_FLOW = "basic-flow";
@@ -49,6 +50,18 @@ final class TillFlowSetup {
             for (ClientModel till : tills) {
                 if (!flow.getId().equals(till.getAuthenticationFlowBindingOverride("browser"))) {
                     till.setAuthenticationFlowBindingOverride("browser", flow.getId());
+                }
+            }
+
+            ClientModel app = realm.getClientByClientId(Pin.TILL_APP_CLIENT);
+            if (app != null) {
+                AuthenticationFlowModel direct = realm.getFlowByAlias(DIRECT_FLOW);
+                if (direct == null) {
+                    direct = createDirectFlow(realm);
+                    LOG.infof("Till app sign-in flow created in realm %s", realm.getName());
+                }
+                if (!direct.getId().equals(app.getAuthenticationFlowBindingOverride("direct_grant"))) {
+                    app.setAuthenticationFlowBindingOverride("direct_grant", direct.getId());
                 }
             }
         } catch (RuntimeException e) {
@@ -88,6 +101,32 @@ final class TillFlowSetup {
         addSubFlow(realm, forms, otp, Requirement.CONDITIONAL, 20);
         addStep(realm, otp, "conditional-user-configured", Requirement.REQUIRED, 10);
         addStep(realm, otp, "auth-otp-form", Requirement.REQUIRED, 20);
+        return flow;
+    }
+
+    /**
+     * The till app's own sign-in, Keycloak's direct grant with the PIN let
+     * in: username, then ( PIN | password and the two-step code when the
+     * account has one ), then the PIN being chosen, when one was sent.
+     */
+    private static AuthenticationFlowModel createDirectFlow(RealmModel realm) {
+        AuthenticationFlowModel flow = addFlow(realm, DIRECT_FLOW, "The till app's sign-in: the direct grant, with a PIN in place of the password", true);
+        addStep(realm, flow, "direct-grant-validate-username", Requirement.REQUIRED, 10);
+
+        AuthenticationFlowModel credential = addFlow(realm, DIRECT_FLOW + " credential", "A PIN, or the password", false);
+        addSubFlow(realm, flow, credential, Requirement.REQUIRED, 20);
+        addStep(realm, credential, PinDirectGrant.CHECK_ID, Requirement.ALTERNATIVE, 10);
+
+        AuthenticationFlowModel password = addFlow(realm, DIRECT_FLOW + " password", "The password and the two-step code", false);
+        addSubFlow(realm, credential, password, Requirement.ALTERNATIVE, 20);
+        addStep(realm, password, "direct-grant-validate-password", Requirement.REQUIRED, 10);
+
+        AuthenticationFlowModel otp = addFlow(realm, DIRECT_FLOW + " conditional otp", "The two-step code, for an account that has one", false);
+        addSubFlow(realm, password, otp, Requirement.CONDITIONAL, 20);
+        addStep(realm, otp, "conditional-user-configured", Requirement.REQUIRED, 10);
+        addStep(realm, otp, "direct-grant-validate-otp", Requirement.REQUIRED, 20);
+
+        addStep(realm, flow, PinDirectGrant.CHOOSE_ID, Requirement.REQUIRED, 30);
         return flow;
     }
 
