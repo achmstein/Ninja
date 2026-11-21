@@ -4,7 +4,6 @@ import java.util.regex.Pattern;
 
 import org.keycloak.models.KeycloakSession;
 import org.keycloak.models.RealmModel;
-import org.keycloak.models.RoleModel;
 import org.keycloak.models.UserLoginFailureModel;
 import org.keycloak.models.UserModel;
 
@@ -12,11 +11,11 @@ import org.keycloak.models.UserModel;
  * The rules of the till's PIN, in one place.
  *
  * A PIN is a second, short credential a cashier types to take over a till
- * that someone else was selling on. It is weaker than a password by nature,
- * so it is fenced in: only an account that is a cashier and nothing more may
- * have one (an owner's or admin's password, and their two-step code, is never
- * stepped around), only where Keycloak counts wrong tries, and only for a
- * few tries before the password is asked for again.
+ * that someone else was selling on. Anyone who signs in to the till may
+ * choose one, the owner included (the owner's decision, 2026-11-21). It is
+ * weaker than a password by nature, so it is fenced in: it is offered by the
+ * till's sign-in alone, only where Keycloak counts wrong tries, and only for
+ * a few tries before the password is asked for again.
  *
  * Nothing here is its own cryptography or its own session: the PIN is hashed
  * by the realm's password hasher (PinCredentialProvider), wrong tries are
@@ -52,9 +51,6 @@ final class Pin {
 
     private static final Pattern DIGITS = Pattern.compile("\\d{" + MIN_DIGITS + "," + MAX_DIGITS + "}");
 
-    /** The roles a PIN must never open: whoever holds one signs in with their password. */
-    private static final String[] PRIVILEGED_ROLES = {"Owner", "Admin"};
-
     static boolean wellFormed(String pin) {
         return pin != null && DIGITS.matcher(pin).matches();
     }
@@ -71,17 +67,6 @@ final class Pin {
             down &= step == -1;
         }
         return same || up || down;
-    }
-
-    /** Whether the account holds a role a PIN may not stand in for. */
-    static boolean privileged(RealmModel realm, UserModel user) {
-        for (String name : PRIVILEGED_ROLES) {
-            RoleModel role = realm.getRole(name);
-            if (role != null && user.hasRole(role)) {
-                return true;
-            }
-        }
-        return false;
     }
 
     /**

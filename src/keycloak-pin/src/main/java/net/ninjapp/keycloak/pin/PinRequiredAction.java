@@ -15,11 +15,9 @@ import org.keycloak.models.KeycloakSessionFactory;
 import org.keycloak.models.UserModel;
 
 /**
- * Where a cashier chooses their PIN: asked for by the till ("Set my PIN",
- * as kc_action) after they have signed in with their password, so nobody
- * but the cashier ever knows it, and nobody sets one for somebody else.
- *
- * An owner or admin has none to set: their account is never opened by a PIN.
+ * Where someone chooses their PIN: asked for by the till ("Set my PIN", as
+ * kc_action) after they have signed in with their password, so nobody but
+ * them ever knows it, and nobody sets one for somebody else.
  */
 public class PinRequiredAction implements RequiredActionProvider, RequiredActionFactory {
 
@@ -46,23 +44,12 @@ public class PinRequiredAction implements RequiredActionProvider, RequiredAction
 
     @Override
     public void requiredActionChallenge(RequiredActionContext context) {
-        if (Pin.privileged(context.getRealm(), context.getUser())) {
-            context.challenge(page(context, "ninjaPinNotForRole", true));
-            return;
-        }
-        context.challenge(page(context, null, false));
+        context.challenge(page(context, null));
     }
 
     @Override
     public void processAction(RequiredActionContext context) {
         UserModel user = context.getUser();
-        if (Pin.privileged(context.getRealm(), user)) {
-            // Shown the reason; pressing on only leaves
-            user.removeRequiredAction(Pin.REQUIRED_ACTION_ID);
-            context.success();
-            return;
-        }
-
         MultivaluedMap<String, String> form = context.getHttpRequest().getDecodedFormParameters();
         String pin = form.getFirst("pin");
         String again = form.getFirst("pinConfirm");
@@ -71,7 +58,7 @@ public class PinRequiredAction implements RequiredActionProvider, RequiredAction
                 : !pin.equals(again) ? "ninjaPinMismatch"
                 : null;
         if (error != null) {
-            context.challenge(page(context, error, false));
+            context.challenge(page(context, error));
             return;
         }
 
@@ -82,11 +69,10 @@ public class PinRequiredAction implements RequiredActionProvider, RequiredAction
         context.success();
     }
 
-    private Response page(RequiredActionContext context, String error, boolean refused) {
+    private Response page(RequiredActionContext context, String error) {
         var form = context.form()
                 .setAttribute("pinMinDigits", Pin.MIN_DIGITS)
-                .setAttribute("pinMaxDigits", Pin.MAX_DIGITS)
-                .setAttribute("pinRefused", refused);
+                .setAttribute("pinMaxDigits", Pin.MAX_DIGITS);
         if (error != null) {
             form.setError(error, Pin.MIN_DIGITS, Pin.MAX_DIGITS);
         }

@@ -22,8 +22,7 @@ import org.keycloak.sessions.AuthenticationSessionModel;
  * The step of the till's sign-in that asks a cashier for their PIN.
  *
  * It only ever offers itself: when the till named the cashier (login_hint,
- * the name they tapped), that account may have a PIN and has one, and tries
- * are left. In every other case it steps aside and the next step, Keycloak's
+ * the name they tapped), that account has a PIN, and tries are left. In every other case it steps aside and the next step, Keycloak's
  * own username and password form, takes the sign-in, as it does when the
  * cashier asks for their password instead.
  *
@@ -90,7 +89,7 @@ public class PinFormAuthenticator implements Authenticator {
         KeycloakSession session = context.getSession();
         RealmModel realm = context.getRealm();
         UserModel user = KeycloakModelUtils.findUserByNameOrEmail(session, realm, hint.trim());
-        if (user == null || !user.isEnabled() || Pin.privileged(realm, user)) {
+        if (user == null || !user.isEnabled()) {
             return null;
         }
         if (!provider(session).isConfiguredFor(realm, user, Pin.TYPE)) {
