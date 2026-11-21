@@ -5,6 +5,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
@@ -31,7 +32,7 @@ Future<OrderDetailPick?> showOrderDetailDialog(BuildContext context, int orderId
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
-      style: style,
+      style: dialogStyleFor(context, style),
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
       builder: (context, _) => _OrderDetailDialog(orderId: orderId, summary: summary),
@@ -293,8 +294,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 ),
               ],
               const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              DialogActions(
                 children: [
                   SizedBox(
                     height: Sizes.control,
@@ -305,7 +305,6 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       child: Text(l10n.keepOrder, style: theme.typography.base.forButton),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   SizedBox(
                     height: Sizes.control,
                     child: FButton(
@@ -334,8 +333,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 ),
               ],
             ] else
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
+              DialogActions(
                 children: [
                   SizedBox(
                     height: Sizes.control,
@@ -348,7 +346,6 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                           style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
                     ),
                   ),
-                  const SizedBox(width: 8),
                   SizedBox(
                     height: Sizes.control,
                     child: FButton(

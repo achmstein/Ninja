@@ -871,7 +871,9 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg, vertical: Sizes.gap),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-      // A phone stacks the figures over the actions; wider, one row
+      // A phone stacks the figures over the actions; wider, one row. The
+      // exact-cash shortcut gets a row of its own there: beside Settle it had
+      // a third of the bar, less than its words need in either language
       child: phone
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -879,12 +881,8 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
               children: [
                 figures,
                 const SizedBox(height: Sizes.gap),
-                Row(
-                  children: [
-                    if (_offersExactCash) ...[Flexible(child: exact), const SizedBox(width: Sizes.gapSm)],
-                    Expanded(flex: 2, child: settle),
-                  ],
-                ),
+                if (_offersExactCash) ...[exact, const SizedBox(height: Sizes.gapSm)],
+                settle,
               ],
             )
           : Row(
@@ -937,11 +935,16 @@ class _HolderButton extends ConsumerWidget {
             if (holder.subtotal > 0) Text(l10n.thisBill(money(context, holder.subtotal)), style: small),
           ],
         ),
-        child: Text(
-          holder.name.isNotEmpty ? holder.name : l10n.guest,
-          maxLines: 1,
-          overflow: TextOverflow.ellipsis,
-          style: theme.typography.base.forButton,
+        // The name gives way to the figures beside it: on a phone a long one
+        // is wider than what they leave, and only as part of the button's row
+        // does it shorten instead of pushing them off the edge
+        child: Flexible(
+          child: Text(
+            holder.name.isNotEmpty ? holder.name : l10n.guest,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: theme.typography.base.forButton,
+          ),
         ),
       ),
     );

@@ -2525,4 +2525,23 @@ class AppLocalizationsAr extends AppLocalizations {
   String tenderChangedFrom(String from, String name, String time) {
     return 'كانت $from · غيّرها $name $time';
   }
+
+  @override
+  String get whoIsSelling => 'من يبيع الآن؟';
+
+  @override
+  String get orSignInWithPassword => 'أو سجّل الدخول بكلمة المرور';
+
+  @override
+  String get switchCashier => 'بدّل الكاشير';
+
+  @override
+  String get setMyPin => 'اضبط رمزي';
+
+  @override
+  String get pinSignInFailed =>
+      'لم يتم تسجيل الدخول. أعد المحاولة أو استخدم كلمة المرور.';
+
+  @override
+  String get viewOrder => 'عرض الطلب';
 }

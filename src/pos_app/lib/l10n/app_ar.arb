@@ -1032,5 +1032,11 @@
   "changeTenderTitle": "تغيير طريقة الدفع",
   "changeTenderHint": "سُجّل مبلغ {amount} على أنه {tender}. كيف دُفع؟",
   "tenderChangedToast": "تم تغيير طريقة الدفع",
-  "tenderChangedFrom": "كانت {from} · غيّرها {name} {time}"
+  "tenderChangedFrom": "كانت {from} · غيّرها {name} {time}",
+  "whoIsSelling": "من يبيع الآن؟",
+  "orSignInWithPassword": "أو سجّل الدخول بكلمة المرور",
+  "switchCashier": "بدّل الكاشير",
+  "setMyPin": "اضبط رمزي",
+  "pinSignInFailed": "لم يتم تسجيل الدخول. أعد المحاولة أو استخدم كلمة المرور.",
+  "viewOrder": "عرض الطلب"
 }

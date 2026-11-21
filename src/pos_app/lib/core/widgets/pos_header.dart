@@ -4,12 +4,16 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
+import '../auth/cashier_sign_in.dart';
+import '../../features/auth/cashier_roster.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import '../../features/shifts/widgets/shift_chip.dart';
 import '../../features/shifts/widgets/trading_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
+import '../layout/breakpoints.dart';
 import 'branch_switcher.dart';
+import 'compact_status_chips.dart';
 import 'offline_chip.dart';
 import '../sending/sending_chip.dart';
 
@@ -49,24 +53,33 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
     final isDark = themeState.resolveBrightness(context) == Brightness.dark;
 
     final rowStyle = theme.typography.base;
+    // The names the sign-in screen offers, kept current while someone is here
+    ref.watch(cashierRosterKeeperProvider);
+
+    // A phone has no room for four chips that say what they are: each keeps
+    // its sign and loses its words (pos_web's `max-sm:`)
+    final compact = context.isCompact;
 
     return Container(
       height: Sizes.header,
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: EdgeInsets.symmetric(horizontal: compact ? 8 : 12),
       decoration: BoxDecoration(
         color: theme.colors.background,
         border: Border(bottom: BorderSide(color: theme.colors.border)),
       ),
       child: Row(
         children: [
-          const BranchSwitcher(),
-          const Spacer(),
+          // The brand takes what the chips leave, so a long business or
+          // branch name is cut short instead of pushing them off the edge
+          const Expanded(
+            child: Align(alignment: AlignmentDirectional.centerStart, child: BranchSwitcher()),
+          ),
           const SendingChip(),
           const OfflineChip(),
           // Whether customers can order and reserve, and the switches for it
-          const TradingChip(),
+          if (compact) const CompactTradingChip() else const TradingChip(),
           const SizedBox(width: 4),
-          const ShiftChip(),
+          if (compact) const CompactShiftChip() else const ShiftChip(),
           const SizedBox(width: 4),
           FPopoverMenu(
             control: FPopoverControl.managed(controller: _menu),
@@ -102,6 +115,24 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
                     prefix: const Icon(FIcons.printer, size: Sizes.icon),
                     title: Text(l10n.settings, style: rowStyle),
                     onPress: () => _pick(() => context.go('/settings')),
+                  ),
+                ],
+              ),
+              // The till changes hands here: Switch cashier signs out to the
+              // names on the sign-in screen, where the next one taps theirs
+              // and types their PIN; Set my PIN is where they choose it, on
+              // Keycloak's own page
+              FItemGroup(
+                children: [
+                  FItem(
+                    prefix: const Icon(FIcons.users, size: Sizes.icon),
+                    title: Text(l10n.switchCashier, style: rowStyle),
+                    onPress: () => _pick(ref.read(authServiceProvider.notifier).signOut),
+                  ),
+                  FItem(
+                    prefix: const Icon(FIcons.keyRound, size: Sizes.icon),
+                    title: Text(l10n.setMyPin, style: rowStyle),
+                    onPress: () => _pick(ref.read(authServiceProvider.notifier).chooseMyPin),
                   ),
                 ],
               ),

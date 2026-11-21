@@ -1154,5 +1154,11 @@
         "type": "String"
       }
     }
-  }
+  },
+  "whoIsSelling": "Who is selling?",
+  "orSignInWithPassword": "Or sign in with your password",
+  "switchCashier": "Switch cashier",
+  "setMyPin": "Set my PIN",
+  "pinSignInFailed": "That didn't sign you in. Try again, or use your password.",
+  "viewOrder": "View order"
 }

@@ -9,6 +9,7 @@ import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
@@ -156,7 +157,55 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
     // Two columns, like the settle dialog: what the money is for on the
     // start side (kind, whom, the reason it writes), how much on the end
     // side (the keypad). Read in that order, nothing scrolls off a
-    // landscape tablet; the actions run under both.
+    // landscape tablet; the actions run under both. A phone has no room for
+    // two columns: there they stack in the same order and the dialog scrolls.
+    final what = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _Label(l10n.payOutFor),
+        const SizedBox(height: 6),
+        _ButtonGrid(
+          // Three across leave a phone's cell too narrow for "Wage / salary"
+          columns: _isOut && !context.isCompact ? 3 : 2,
+          height: Sizes.control,
+          children: [
+            for (final kind in _kinds)
+              _CellButton(
+                selected: _kind == kind,
+                onPress: _pending ? null : () => _pickKind(kind),
+                child: Center(
+                  child: Text(
+                    _kindLabel(l10n, kind),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.sm.forButton,
+                  ),
+                ),
+              ),
+          ],
+        ),
+        if (picks != null) ...[
+          const SizedBox(height: 16),
+          _Label(switch (picks) {
+            MovementPick.employee => l10n.payOutWho,
+            MovementPick.supplier => l10n.payOutWhichSupplier,
+            MovementPick.partner => l10n.payOutWhichPartner,
+            MovementPick.category => l10n.payOutWhatFor,
+          }),
+          const SizedBox(height: 6),
+          _PickList(pick: picks, picked: _picked, disabled: _pending, onPick: _pick),
+        ],
+        const SizedBox(height: 16),
+        FTextField(
+          control: FTextFieldControl.managed(controller: _reason),
+          label: Text(l10n.reason),
+          maxLines: 1,
+          textInputAction: TextInputAction.done,
+          onSubmit: (_) => _submit(),
+        ),
+      ],
+    );
+    final howMuch = AmountEntry(label: l10n.amount, value: _amount, onChange: (v) => setState(() => _amount = v));
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
       child: DialogScroll(
@@ -166,62 +215,19 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
           children: [
             Text(title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 16),
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      _Label(l10n.payOutFor),
-                      const SizedBox(height: 6),
-                      _ButtonGrid(
-                        columns: _isOut ? 3 : 2,
-                        height: Sizes.control,
-                        children: [
-                          for (final kind in _kinds)
-                            _CellButton(
-                              selected: _kind == kind,
-                              onPress: _pending ? null : () => _pickKind(kind),
-                              child: Center(
-                                child: Text(
-                                  _kindLabel(l10n, kind),
-                                  maxLines: 1,
-                                  overflow: TextOverflow.ellipsis,
-                                  style: theme.typography.sm.forButton,
-                                ),
-                              ),
-                            ),
-                        ],
-                      ),
-                      if (picks != null) ...[
-                        const SizedBox(height: 16),
-                        _Label(switch (picks) {
-                          MovementPick.employee => l10n.payOutWho,
-                          MovementPick.supplier => l10n.payOutWhichSupplier,
-                          MovementPick.partner => l10n.payOutWhichPartner,
-                          MovementPick.category => l10n.payOutWhatFor,
-                        }),
-                        const SizedBox(height: 6),
-                        _PickList(pick: picks, picked: _picked, disabled: _pending, onPick: _pick),
-                      ],
-                      const SizedBox(height: 16),
-                      FTextField(
-                        control: FTextFieldControl.managed(controller: _reason),
-                        label: Text(l10n.reason),
-                        maxLines: 1,
-                        textInputAction: TextInputAction.done,
-                        onSubmit: (_) => _submit(),
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 16),
-                Expanded(
-                  child: AmountEntry(label: l10n.amount, value: _amount, onChange: (v) => setState(() => _amount = v)),
-                ),
-              ],
-            ),
+            if (context.isCompact) ...[
+              what,
+              const SizedBox(height: 16),
+              howMuch,
+            ] else
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Expanded(child: what),
+                  const SizedBox(width: 16),
+                  Expanded(child: howMuch),
+                ],
+              ),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.end,

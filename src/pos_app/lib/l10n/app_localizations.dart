@@ -4357,6 +4357,42 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Was {from} · changed by {name} at {time}'**
   String tenderChangedFrom(String from, String name, String time);
+
+  /// No description provided for @whoIsSelling.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is selling?'**
+  String get whoIsSelling;
+
+  /// No description provided for @orSignInWithPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Or sign in with your password'**
+  String get orSignInWithPassword;
+
+  /// No description provided for @switchCashier.
+  ///
+  /// In en, this message translates to:
+  /// **'Switch cashier'**
+  String get switchCashier;
+
+  /// No description provided for @setMyPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my PIN'**
+  String get setMyPin;
+
+  /// No description provided for @pinSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t sign you in. Try again, or use your password.'**
+  String get pinSignInFailed;
+
+  /// No description provided for @viewOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'View order'**
+  String get viewOrder;
 }
 
 class _AppLocalizationsDelegate

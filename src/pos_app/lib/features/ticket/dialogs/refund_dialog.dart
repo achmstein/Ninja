@@ -164,6 +164,14 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    // Half a phone's dialog is a little short of an icon and "Account": the
+    // word shrinks to its button rather than run over
+    Widget tenderName(String name) => Flexible(
+          child: FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(name, maxLines: 1, style: theme.typography.base.forButton),
+          ),
+        );
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.95),
@@ -270,7 +278,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                       variant: _tender == PaymentTender.cash ? null : FButtonVariant.outline,
                       onPress: () => setState(() => _tender = PaymentTender.cash),
                       prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-                      child: Text(l10n.cash, style: theme.typography.base.forButton),
+                      child: tenderName(l10n.cash),
                     ),
                   ),
                 ),
@@ -282,7 +290,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                       variant: _tender == PaymentTender.account ? null : FButtonVariant.outline,
                       onPress: _holders.isEmpty ? null : () => setState(() => _tender = PaymentTender.account),
                       prefix: const Icon(FIcons.user, size: Sizes.icon),
-                      child: Text(l10n.account, style: theme.typography.base.forButton),
+                      child: tenderName(l10n.account),
                     ),
                   ),
                 ),
@@ -308,8 +316,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
               ),
             ],
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            DialogActions(
               children: [
                 SizedBox(
                   height: Sizes.control,
@@ -320,7 +327,6 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                     child: Text(l10n.cancel, style: theme.typography.base.forButton),
                   ),
                 ),
-                const SizedBox(width: 8),
                 SizedBox(
                   height: Sizes.control,
                   child: FButton(

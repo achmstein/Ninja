@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
@@ -22,8 +23,11 @@ class CartLineRow extends ConsumerWidget {
     final name = line.name.getText(locale);
     final options = line.customizations.map((c) => c.optionName.getText(locale)).join(' · ');
 
+    // In the phone's sheet the steppers are a finger's 48; the tablet's
+    // column keeps its tighter rows
+    final step = context.isNarrow ? Sizes.control : Sizes.controlSmall;
     Widget stepButton(IconData icon, VoidCallback onPress, {Color? color}) => SizedBox.square(
-          dimension: Sizes.controlSmall,
+          dimension: step,
           child: FButton.icon(
             variant: FButtonVariant.outline,
             onPress: onPress,

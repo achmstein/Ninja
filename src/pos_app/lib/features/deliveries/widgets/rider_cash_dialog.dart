@@ -5,6 +5,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../shifts/widgets/amount_entry.dart';
@@ -129,6 +130,25 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
       ],
     );
 
+    final cancel = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        variant: FButtonVariant.outline,
+        onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+        child: Text(l10n.cancel, style: theme.typography.base.forButton),
+      ),
+    );
+    final take = SizedBox(
+      height: Sizes.controlLarge,
+      child: FButton(
+        onPress: !canTake
+            ? null
+            : () => Navigator.of(context, rootNavigator: true).pop(splitCounted(ticked, counted, differenceOn: differenceOn)),
+        prefix: const Icon(FIcons.banknote, size: Sizes.icon),
+        child: Text(l10n.riderCashTakeIn(money(context, counted ?? 0)), style: theme.typography.base.forButton),
+      ),
+    );
+
     return DialogScroll(
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -155,34 +175,20 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
                 : Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: [list, const SizedBox(height: 16), count]),
           ),
           const SizedBox(height: 20),
-          Row(
-            children: [
-              Expanded(
-                child: SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: SizedBox(
-                  height: Sizes.controlLarge,
-                  child: FButton(
-                    onPress: !canTake
-                        ? null
-                        : () => Navigator.of(context, rootNavigator: true).pop(splitCounted(ticked, counted, differenceOn: differenceOn)),
-                    prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-                    child: Text(l10n.riderCashTakeIn(money(context, counted ?? 0)), style: theme.typography.base.forButton),
-                  ),
-                ),
-              ),
-            ],
-          ),
+          // Two thirds of a phone's dialog is less than "Take in" and the
+          // amount need: there the two stack, the taking on top
+          if (context.isCompact) ...[
+            take,
+            const SizedBox(height: 8),
+            cancel,
+          ] else
+            Row(
+              children: [
+                Expanded(child: cancel),
+                const SizedBox(width: 12),
+                Expanded(flex: 2, child: take),
+              ],
+            ),
         ],
       ),
     );

@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/config/app_config.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/network/network_status.dart';
@@ -136,6 +137,26 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ],
         );
 
+    // A printer's address with its Save: beside the fields on a tablet. A
+    // phone gives the address the whole row and puts Save under it, at the end
+    Widget printerRow(Widget fields, Widget save) => context.isCompact
+        ? Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              fields,
+              const SizedBox(height: 12),
+              Align(alignment: AlignmentDirectional.centerEnd, child: save),
+            ],
+          )
+        : Row(
+            crossAxisAlignment: CrossAxisAlignment.end,
+            children: [
+              Expanded(child: fields),
+              const SizedBox(width: 12),
+              save,
+            ],
+          );
+
     Widget button(String label, VoidCallback? onPress, {IconData? icon, bool primary = false}) => SizedBox(
           height: Sizes.control,
           child: FButton(
@@ -196,13 +217,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 children: [
                   Padding(
                     padding: const EdgeInsets.all(16),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Expanded(child: printerFields(_host, _port, l10n.printerHost, '192.168.1.50')),
-                        const SizedBox(width: 12),
-                        button(l10n.save, _busy ? null : _save, primary: true),
-                      ],
+                    child: printerRow(
+                      printerFields(_host, _port, l10n.printerHost, '192.168.1.50'),
+                      button(l10n.save, _busy ? null : _save, primary: true),
                     ),
                   ),
                   // Where the kitchen's chit goes when the network is down
@@ -212,13 +229,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          crossAxisAlignment: CrossAxisAlignment.end,
-                          children: [
-                            Expanded(child: printerFields(_kitchenHost, _kitchenPort, l10n.offlineKitchenPrinter, '192.168.1.51')),
-                            const SizedBox(width: 12),
-                            button(l10n.save, _busy ? null : _save, primary: true),
-                          ],
+                        printerRow(
+                          printerFields(_kitchenHost, _kitchenPort, l10n.offlineKitchenPrinter, '192.168.1.51'),
+                          button(l10n.save, _busy ? null : _save, primary: true),
                         ),
                         const SizedBox(height: 6),
                         Text(l10n.offlineKitchenPrinterHint,
@@ -235,18 +248,14 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                       onChange: (on) => ref.read(kitchenPrintingProvider.notifier).set(on),
                     ),
                   ),
-                  SettingsRow(
+                  _ActionRow(
                     title: l10n.printerTest,
                     hint: l10n.printerHint,
-                    trailing: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        button(l10n.testPrint, _busy ? null : () => _run((s) => s.testPrint(l10n: l10n, locale: locale), l10n.printed),
-                            icon: FIcons.printer),
-                        const SizedBox(width: 8),
-                        button(l10n.kickDrawer, _busy ? null : () => _run((s) => s.kickDrawer(), l10n.printed), icon: FIcons.banknote),
-                      ],
-                    ),
+                    actions: [
+                      button(l10n.testPrint, _busy ? null : () => _run((s) => s.testPrint(l10n: l10n, locale: locale), l10n.printed),
+                          icon: FIcons.printer),
+                      button(l10n.kickDrawer, _busy ? null : () => _run((s) => s.kickDrawer(), l10n.printed), icon: FIcons.banknote),
+                    ],
                   ),
                 ],
               ),
@@ -256,6 +265,52 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ),
       ),
+    );
+  }
+}
+
+/// A setting whose control is a labelled button or two. A tablet has them at
+/// the row's end, beside what they are for. A phone's row is not wide enough
+/// for both, so there the buttons go under the words, still at the end.
+class _ActionRow extends StatelessWidget {
+  final String title;
+  final String? hint;
+  final String? subtitle;
+  final Color? subtitleColor;
+  final List<Widget> actions;
+
+  const _ActionRow({required this.title, this.hint, this.subtitle, this.subtitleColor, required this.actions});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!context.isCompact) {
+      return SettingsRow(
+        title: title,
+        hint: hint,
+        subtitle: subtitle,
+        subtitleColor: subtitleColor,
+        trailing: actions.length == 1
+            ? actions.single
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (index, action) in actions.indexed) ...[
+                    if (index > 0) const SizedBox(width: 8),
+                    action,
+                  ],
+                ],
+              ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsRow(title: title, hint: hint, subtitle: subtitle, subtitleColor: subtitleColor),
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 12),
+          child: Wrap(alignment: WrapAlignment.end, spacing: 8, runSpacing: 8, children: actions),
+        ),
+      ],
     );
   }
 }
@@ -283,21 +338,23 @@ class _UpdateRow extends ConsumerWidget {
     final canInstall = update.phase == UpdatePhase.ready || update.phase == UpdatePhase.needsPermission;
     final busy = update.phase == UpdatePhase.checking || update.phase == UpdatePhase.downloading || update.phase == UpdatePhase.installing;
 
-    return SettingsRow(
+    return _ActionRow(
       title: l10n.appVersion,
       hint: l10n.appVersionHint,
       subtitle: [if (installed != null) l10n.appVersionInstalled(installed, update.installedBuild ?? 0), status].join(' · '),
       subtitleColor: update.phase == UpdatePhase.failed ? theme.colors.destructive : null,
-      trailing: SizedBox(
-        height: Sizes.control,
-        child: FButton(
-          variant: canInstall ? null : FButtonVariant.outline,
-          mainAxisSize: MainAxisSize.min,
-          onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
-          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
-          child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+      actions: [
+        SizedBox(
+          height: Sizes.control,
+          child: FButton(
+            variant: canInstall ? null : FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
+            prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
+            child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+          ),
         ),
-      ),
+      ],
     );
   }
 }
@@ -332,24 +389,23 @@ class _OfflineSales extends ConsumerWidget {
           SettingsRow(title: l10n.nothingQueued, hint: l10n.offlineSalesHint)
         else ...[
           for (final sale in sales)
-            SettingsRow(
-              title: '${sale.provisionalReceiptNumber} · ${money(context, sale.total)}',
-              subtitle: sale.status == OfflineSaleStatus.failed
-                  ? sale.error ?? l10n.somethingWentWrong
-                  : formatDateTimeShort(context, sale.placedAt),
-              subtitleColor: sale.status == OfflineSaleStatus.failed ? theme.colors.destructive : null,
-              trailing: sale.status == OfflineSaleStatus.failed
-                  ? Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        button(l10n.retrySync, () => ref.read(offlineQueueProvider.notifier).retry(sale.id)),
-                        const SizedBox(width: 8),
-                        button(l10n.discardSale, () => ref.read(offlineQueueProvider.notifier).discard(sale.id), color: theme.colors.destructive),
-                      ],
-                    )
-                  : Text(online ? l10n.syncingSales(1) : l10n.offlineQueued(1),
-                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
-            ),
+            if (sale.status == OfflineSaleStatus.failed)
+              _ActionRow(
+                title: '${sale.provisionalReceiptNumber} · ${money(context, sale.total)}',
+                subtitle: sale.error ?? l10n.somethingWentWrong,
+                subtitleColor: theme.colors.destructive,
+                actions: [
+                  button(l10n.retrySync, () => ref.read(offlineQueueProvider.notifier).retry(sale.id)),
+                  button(l10n.discardSale, () => ref.read(offlineQueueProvider.notifier).discard(sale.id), color: theme.colors.destructive),
+                ],
+              )
+            else
+              SettingsRow(
+                title: '${sale.provisionalReceiptNumber} · ${money(context, sale.total)}',
+                subtitle: formatDateTimeShort(context, sale.placedAt),
+                trailing: Text(online ? l10n.syncingSales(1) : l10n.offlineQueued(1),
+                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+              ),
           if (queued > 0 && online)
             Padding(
               padding: const EdgeInsets.all(12),

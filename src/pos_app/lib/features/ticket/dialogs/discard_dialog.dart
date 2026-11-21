@@ -5,6 +5,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/providers/tickets_provider.dart';
@@ -21,7 +22,7 @@ Future<bool> showDiscardDialog(BuildContext context, int ticketId) async {
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
-      style: style,
+      style: dialogStyleFor(context, style),
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
       builder: (context, _) => _DiscardDialog(ticketId: ticketId),

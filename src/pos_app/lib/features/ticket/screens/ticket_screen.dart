@@ -8,6 +8,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:uuid/uuid.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -546,7 +547,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       height: Sizes.header,
       padding: const EdgeInsets.symmetric(horizontal: Sizes.gap, vertical: Sizes.gapSm),
       decoration: BoxDecoration(border: Border(bottom: rule)),
-      child: _Header(
+      child: TicketHeader(
         ticket: ticket,
         title: title,
         backTo: widget.backTo,
@@ -702,7 +703,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     // beside the lines; a narrow screen puts it over them.
     final withPanel = wide && room.isNotEmpty;
 
-    final foot = _ActionBar(
+    final foot = TicketActionBar(
       ticket: ticket,
       activeSession: activeSession,
       selecting: selecting,
@@ -763,7 +764,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
 /// place, then the two things a cashier does most (add, select) as buttons
 /// and the rest (discount, the kitchen's paper, discard or void) in ⋯, away
 /// from Settle in the panel so none of them can be fat-fingered
-class _Header extends ConsumerStatefulWidget {
+class TicketHeader extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final String title;
   final String backTo;
@@ -776,7 +777,8 @@ class _Header extends ConsumerStatefulWidget {
   final VoidCallback onVoid;
   final VoidCallback onDiscount;
 
-  const _Header({
+  const TicketHeader({
+    super.key,
     required this.ticket,
     required this.title,
     required this.backTo,
@@ -791,10 +793,10 @@ class _Header extends ConsumerStatefulWidget {
   });
 
   @override
-  ConsumerState<_Header> createState() => _HeaderState();
+  ConsumerState<TicketHeader> createState() => _HeaderState();
 }
 
-class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderStateMixin {
+class _HeaderState extends ConsumerState<TicketHeader> with SingleTickerProviderStateMixin {
   late final FPopoverController _menu = FPopoverController(vsync: this);
 
   @override
@@ -866,6 +868,28 @@ class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderState
         ),
     ];
 
+    // A phone has no room for the words beside the bill's name: the buttons
+    // keep their icons and their size, and say what they are when held
+    final compact = context.isCompact;
+    Widget action(String label, {required IconData icon, FButtonVariant? variant, VoidCallback? onPress}) => compact
+        ? Tooltip(
+            message: label,
+            child: SizedBox.square(
+              dimension: Sizes.control,
+              child: FButton.icon(variant: variant, onPress: onPress, child: Icon(icon, size: Sizes.icon)),
+            ),
+          )
+        : SizedBox(
+            height: Sizes.control,
+            child: FButton(
+              variant: variant,
+              mainAxisSize: MainAxisSize.min,
+              onPress: onPress,
+              prefix: Icon(icon, size: Sizes.icon),
+              child: Text(label, style: theme.typography.body.forButton),
+            ),
+          );
+
     return Row(
       children: [
         SizedBox.square(
@@ -913,25 +937,13 @@ class _HeaderState extends ConsumerState<_Header> with SingleTickerProviderState
         else ...[
           // The pad, pointed at this bill — same flow as a new sale, the
           // money just comes later
-          SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              mainAxisSize: MainAxisSize.min,
-              onPress: () => context.go('/sale?ticket=${ticket.id}'),
-              prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
-              child: Text(l10n.addItems, style: theme.typography.body.forButton),
-            ),
-          ),
+          action(l10n.addItems, icon: FIcons.shoppingCart, onPress: () => context.go('/sale?ticket=${ticket.id}')),
           const SizedBox(width: Sizes.gapSm),
-          SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              variant: widget.selecting ? FButtonVariant.secondary : FButtonVariant.outline,
-              mainAxisSize: MainAxisSize.min,
-              onPress: widget.canSelect ? widget.onToggleSelecting : null,
-              prefix: const Icon(FIcons.listChecks, size: Sizes.icon),
-              child: Text(l10n.selectLines, style: theme.typography.body.forButton),
-            ),
+          action(
+            l10n.selectLines,
+            icon: FIcons.listChecks,
+            variant: widget.selecting ? FButtonVariant.secondary : FButtonVariant.outline,
+            onPress: widget.canSelect ? widget.onToggleSelecting : null,
           ),
         ],
         if (menuItems.isNotEmpty) ...[
@@ -1371,7 +1383,7 @@ class _RefundCard extends StatelessWidget {
 /// start, and at the end what is done with the bill — Settle; while lines
 /// are picked, where they go; once paid, Print and an owner's Refund. The
 /// actions give way before the total does.
-class _ActionBar extends StatelessWidget {
+class TicketActionBar extends StatelessWidget {
   final TicketDetail ticket;
   // The running session whose time will join the total when it ends
   final Stay? activeSession;
@@ -1395,7 +1407,8 @@ class _ActionBar extends StatelessWidget {
   final VoidCallback onMoveTo;
   final VoidCallback onNewBill;
 
-  const _ActionBar({
+  const TicketActionBar({
+    super.key,
     required this.ticket,
     required this.activeSession,
     required this.selecting,
@@ -1426,23 +1439,47 @@ class _ActionBar extends StatelessWidget {
         ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0 || ticket.refundedTotal > 0;
     final none = selectedCount == 0 || busy;
 
+    // A phone cannot hold the total beside buttons this wide: there the
+    // actions go under it and share the bar's width (pos_web's `max-sm:`)
+    final compact = context.isCompact;
+
     Widget action(String label,
-            {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix, Color? color, bool main = false}) =>
-        ConstrainedBox(
-          // Side by side in the bar, every action the main action's height;
-          // the main one wide enough to be the obvious one
-          constraints: BoxConstraints.tightFor(height: Sizes.controlLarge).copyWith(minWidth: main ? 240 : 160),
+        {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix, Color? color, bool main = false}) {
+      final leading = prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon, color: color));
+      if (compact) {
+        return SizedBox(
+          height: Sizes.controlLarge,
           child: FButton(
             variant: variant,
-            mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon, color: color)),
-            child: Text(label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: (main ? theme.typography.title : theme.typography.body).forButton.copyWith(color: color)),
+            prefix: leading,
+            // Half a phone is a little short of the longer Arabic labels: the
+            // words shrink to their button rather than run over or lose their end
+            child: Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label, maxLines: 1, style: theme.typography.body.forButton.copyWith(color: color)),
+              ),
+            ),
           ),
         );
+      }
+      return ConstrainedBox(
+        // Side by side in the bar, every action the main action's height;
+        // the main one wide enough to be the obvious one
+        constraints: BoxConstraints.tightFor(height: Sizes.controlLarge).copyWith(minWidth: main ? 240 : 160),
+        child: FButton(
+          variant: variant,
+          mainAxisSize: MainAxisSize.min,
+          onPress: onPress,
+          prefix: leading,
+          child: Text(label,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: (main ? theme.typography.title : theme.typography.body).forButton.copyWith(color: color)),
+        ),
+      );
+    }
 
     final actions = ticket.isVoided
         ? const <Widget>[]
@@ -1540,23 +1577,50 @@ class _ActionBar extends StatelessWidget {
             ),
     ];
 
+    Widget across(List<Widget> children) => Row(
+          children: [
+            for (final (index, child) in children.indexed) ...[
+              if (index > 0) const SizedBox(width: Sizes.gapSm),
+              Expanded(child: child),
+            ],
+          ],
+        );
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg, vertical: Sizes.gap),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-      child: Row(
-        children: [
-          // The total takes what is left and shrinks; the actions keep their
-          // size at the bar's end (shared out with the total, they drifted
-          // into the middle)
-          Expanded(
-            child: Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: figures),
-          ),
-          for (final child in actions) ...[
-            const SizedBox(width: Sizes.gapSm),
-            child,
-          ],
-        ],
-      ),
+      child: compact
+          ? Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ...figures,
+                if (actions.isNotEmpty) const SizedBox(height: Sizes.gapSm),
+                // Three do not fit across: the first takes a row of its own
+                // and the main action stays at the end, under the thumb
+                if (actions.length > 2) ...[
+                  across([actions.first]),
+                  const SizedBox(height: Sizes.gapSm),
+                  across(actions.sublist(1)),
+                ] else if (actions.isNotEmpty)
+                  across(actions),
+              ],
+            )
+          : Row(
+              children: [
+                // The total takes what is left and shrinks; the actions keep their
+                // size at the bar's end (shared out with the total, they drifted
+                // into the middle)
+                Expanded(
+                  child:
+                      Column(mainAxisSize: MainAxisSize.min, crossAxisAlignment: CrossAxisAlignment.start, children: figures),
+                ),
+                for (final child in actions) ...[
+                  const SizedBox(width: Sizes.gapSm),
+                  child,
+                ],
+              ],
+            ),
     );
   }
 }

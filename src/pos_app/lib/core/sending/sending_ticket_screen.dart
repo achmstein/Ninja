@@ -15,6 +15,7 @@ import '../../features/tickets/providers/tickets_provider.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../config/app_config.dart';
+import '../layout/breakpoints.dart';
 import '../models/money.dart';
 import '../offline/offline_queue.dart';
 import '../offline/offline_sale.dart';
@@ -24,6 +25,11 @@ import 'sending_lines.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 96.0;
+
+/// A phone's bar: the total on one line over a row of ordinary buttons, or
+/// two rows when the offline sale makes three of them
+const _totalLineHeight = 36.0;
+double _compactBarHeight(int rows) => 12 + _totalLineHeight + rows * (Sizes.gapSm + Sizes.control) + 12;
 
 /// A new counter sale, the moment it is charged: the bill as the till prices
 /// it, its lines on their way, and the Pay button saying it is confirming.
@@ -202,18 +208,80 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
     final sellsOffline = failed && send.offline && (send.customer?.id ?? '').isEmpty;
     final title = (send.customer?.name ?? '').trim().isNotEmpty ? send.customer!.name : l10n.counter;
 
-    Widget big(String label, {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix}) => SizedBox(
-          height: Sizes.controlLarge,
+    // A phone cannot hold the total beside buttons this wide: there they go
+    // under it and share the bar's width (pos_web's `max-sm:flex-1`)
+    final compact = context.isCompact;
+    final barHeight = compact ? _compactBarHeight(sellsOffline ? 2 : 1) : _actionBarHeight;
+
+    Widget big(String label, {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix}) {
+      final leading = prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon));
+      if (compact) {
+        return SizedBox(
+          height: Sizes.control,
           child: FButton(
             variant: variant,
-            mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            prefix: prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon)),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 8),
-              child: Text(label, style: theme.typography.lg.forButton),
+            prefix: leading,
+            // Half a phone is a little short of the longer Arabic labels: the
+            // words shrink to their button rather than run over or lose their end
+            child: Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+              ),
             ),
           ),
+        );
+      }
+      return SizedBox(
+        height: Sizes.controlLarge,
+        child: FButton(
+          variant: variant,
+          mainAxisSize: MainAxisSize.min,
+          onPress: onPress,
+          prefix: leading,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 8),
+            child: Text(label, style: theme.typography.lg.forButton),
+          ),
+        ),
+      );
+    }
+
+    final amount = Text(
+      money(context, total),
+      maxLines: 1,
+      style: theme.typography.figure.copyWith(
+        fontWeight: FontWeight.w700,
+        height: 1.1,
+        fontFeatures: const [FontFeature.tabularFigures()],
+      ),
+    );
+
+    final actions = [
+      if (failed) ...[
+        big(l10n.backToSale, variant: FButtonVariant.outline, icon: FIcons.pencil, onPress: () => _backToSale(send)),
+        if (sellsOffline)
+          big(l10n.sellOffline, variant: FButtonVariant.outline, icon: FIcons.cloudOff, onPress: () => _sellOffline(send)),
+        big(l10n.retrySync, icon: FIcons.refreshCw, onPress: () => ref.read(sendingProvider.notifier).send(send.requestId)),
+      ] else
+        // The money waits for the server's bill: never taken against one it has not got
+        big(
+          l10n.confirming,
+          prefix: SizedBox.square(
+            dimension: Sizes.icon,
+            child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
+          ),
+        ),
+    ];
+
+    Widget across(List<Widget> children) => Row(
+          children: [
+            for (final (index, child) in children.indexed) ...[
+              if (index > 0) const SizedBox(width: Sizes.gapSm),
+              Expanded(child: child),
+            ],
+          ],
         );
 
     return Stack(
@@ -223,7 +291,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxWidth),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, _actionBarHeight + 16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, barHeight + 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -270,7 +338,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
           right: 0,
           bottom: 0,
           child: Container(
-            height: _actionBarHeight,
+            height: barHeight,
             padding: const EdgeInsets.symmetric(horizontal: 12),
             decoration: BoxDecoration(
               color: theme.colors.background.withValues(alpha: 0.95),
@@ -279,47 +347,60 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
             child: Center(
               child: ConstrainedBox(
                 constraints: const BoxConstraints(maxWidth: _maxWidth - 32),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: Column(
+                child: compact
+                    ? Column(
                         mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
                         children: [
-                          Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                          Text(
-                            money(context, total),
-                            style: theme.typography.figure.copyWith(
-                              fontWeight: FontWeight.w700,
-                              height: 1.1,
-                              fontFeatures: const [FontFeature.tabularFigures()],
+                          SizedBox(
+                            height: _totalLineHeight,
+                            child: Row(
+                              children: [
+                                Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                                const SizedBox(width: Sizes.gap),
+                                // One line whatever the amount: it shrinks rather than wraps
+                                Expanded(
+                                  child: FittedBox(
+                                    fit: BoxFit.scaleDown,
+                                    alignment: AlignmentDirectional.centerEnd,
+                                    child: amount,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
+                          // Three do not fit across: the way back takes a row of
+                          // its own and the retry stays at the end, under the thumb
+                          if (actions.length > 2) ...[
+                            const SizedBox(height: Sizes.gapSm),
+                            actions.first,
+                            const SizedBox(height: Sizes.gapSm),
+                            across(actions.sublist(1)),
+                          ] else ...[
+                            const SizedBox(height: Sizes.gapSm),
+                            across(actions),
+                          ],
+                        ],
+                      )
+                    : Row(
+                        children: [
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                                amount,
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 16),
+                          for (final (index, child) in actions.indexed) ...[
+                            if (index > 0) const SizedBox(width: 8),
+                            child,
+                          ],
                         ],
                       ),
-                    ),
-                    const SizedBox(width: 16),
-                    if (failed) ...[
-                      big(l10n.backToSale, variant: FButtonVariant.outline, icon: FIcons.pencil, onPress: () => _backToSale(send)),
-                      if (sellsOffline) ...[
-                        const SizedBox(width: 8),
-                        big(l10n.sellOffline,
-                            variant: FButtonVariant.outline, icon: FIcons.cloudOff, onPress: () => _sellOffline(send)),
-                      ],
-                      const SizedBox(width: 8),
-                      big(l10n.retrySync,
-                          icon: FIcons.refreshCw, onPress: () => ref.read(sendingProvider.notifier).send(send.requestId)),
-                    ] else
-                      // The money waits for the server's bill: never taken against one it has not got
-                      big(
-                        l10n.confirming,
-                        prefix: SizedBox.square(
-                          dimension: Sizes.icon,
-                          child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.mutedForeground),
-                        ),
-                      ),
-                  ],
-                ),
               ),
             ),
           ),

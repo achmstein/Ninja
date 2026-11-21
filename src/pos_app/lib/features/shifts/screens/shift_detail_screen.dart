@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -105,15 +106,29 @@ class ShiftDetailScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             ShiftStatusPill(open: !shift.isClosed),
             const SizedBox(width: 8),
-            SizedBox(
-              height: Sizes.control,
-              child: FButton(
-                mainAxisSize: MainAxisSize.min,
-                onPress: () => _print(context, ref, shift),
-                prefix: const Icon(FIcons.printer, size: Sizes.icon),
-                child: Text(l10n.print, style: theme.typography.base.forButton),
+            // A phone keeps the shift's number whole and Print its icon
+            if (context.isCompact)
+              Tooltip(
+                message: l10n.print,
+                child: SizedBox.square(
+                  dimension: Sizes.control,
+                  child: FButton.icon(
+                    variant: null,
+                    onPress: () => _print(context, ref, shift),
+                    child: const Icon(FIcons.printer, size: Sizes.icon),
+                  ),
+                ),
+              )
+            else
+              SizedBox(
+                height: Sizes.control,
+                child: FButton(
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: () => _print(context, ref, shift),
+                  prefix: const Icon(FIcons.printer, size: Sizes.icon),
+                  child: Text(l10n.print, style: theme.typography.base.forButton),
+                ),
               ),
-            ),
           ],
         ),
         const FDivider(),

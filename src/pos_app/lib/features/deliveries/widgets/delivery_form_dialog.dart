@@ -384,9 +384,15 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             height: Sizes.controlLarge,
             child: FButton(
               onPress: reading ? null : () => _save(form),
-              child: Text(
-                sending != null ? l10n.deliverySaveSend(branchNameOf(branches, sending.branchId, context)) : l10n.deliverySave,
-                style: theme.typography.lg.forButton,
+              // A long branch name is wider than a phone's dialog: as part of
+              // the button's row the words shorten instead of running over
+              child: Flexible(
+                child: Text(
+                  sending != null ? l10n.deliverySaveSend(branchNameOf(branches, sending.branchId, context)) : l10n.deliverySave,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.typography.lg.forButton,
+                ),
               ),
             ),
           ),

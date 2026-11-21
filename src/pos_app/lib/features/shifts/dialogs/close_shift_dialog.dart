@@ -9,6 +9,7 @@ import '../../../core/offline/offline_queue.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
@@ -36,7 +37,7 @@ Future<ShiftView?> showCloseShiftDialog(BuildContext context, ShiftView shift) a
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
-      style: style,
+      style: dialogStyleFor(context, style),
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 512),
       builder: (context, _) => _CloseShiftDialog(shift: shift),
@@ -159,8 +160,10 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
             decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radius)),
             child: Row(
               children: [
-                Text(l10n.expectedInDrawer, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                const Spacer(),
+                Expanded(
+                  child: Text(l10n.expectedInDrawer, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                ),
+                const SizedBox(width: 12),
                 Text(money(context, widget.shift.expectedInDrawer),
                     style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()])),
               ],
@@ -169,27 +172,23 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
           const SizedBox(height: 16),
           AmountEntry(label: l10n.countedAmount, value: _amount, onChange: (v) => setState(() => _amount = v)),
           const SizedBox(height: 16),
-          Row(
+          DialogActions(
+            fill: true,
             children: [
-              Expanded(
-                child: SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
-                  ),
+              SizedBox(
+                height: Sizes.control,
+                child: FButton(
+                  variant: FButtonVariant.outline,
+                  onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
+                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
                 ),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.destructive,
-                    onPress: canClose ? _close : null,
-                    child: Text(l10n.confirmCloseShift, style: theme.typography.base.forButton),
-                  ),
+              SizedBox(
+                height: Sizes.control,
+                child: FButton(
+                  variant: FButtonVariant.destructive,
+                  onPress: canClose ? _close : null,
+                  child: Text(l10n.confirmCloseShift, style: theme.typography.base.forButton),
                 ),
               ),
             ],

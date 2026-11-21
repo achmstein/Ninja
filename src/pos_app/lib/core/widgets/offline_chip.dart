@@ -6,6 +6,8 @@ import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import '../offline/offline_queue.dart';
 import '../offline/offline_sale.dart';
+import '../layout/breakpoints.dart';
+import 'compact_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -32,6 +34,20 @@ class OfflineChip extends ConsumerWidget {
         : failed > 0
             ? (theme.colors.destructive, l10n.offlineSalesFailed(failed))
             : (AppColors.amber500, l10n.syncingSales(queued));
+
+    // A phone's header has no room for the words: the dot and how many
+    if (context.isCompact) {
+      final waiting = online && failed > 0 ? failed : queued;
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(end: 4),
+        child: CompactChip(
+          label: label,
+          icon: Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
+          count: waiting > 0 ? waiting : null,
+          onPress: () => context.go('/settings'),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 8),

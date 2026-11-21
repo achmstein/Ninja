@@ -6,7 +6,9 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/money.dart';
+import '../layout/breakpoints.dart';
 import '../utils/bidi.dart';
+import '../widgets/compact_chip.dart';
 import 'sending.dart';
 
 /// Header chip, red, while a charge never reached the server: wherever the
@@ -21,6 +23,20 @@ class SendingChip extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final failed = ref.watch(sendingProvider).where((s) => s.status == SendStatus.failed).length;
     if (failed == 0) return const SizedBox.shrink();
+
+    // A phone's header has no room for the words: the warning and how many
+    if (context.isCompact) {
+      return Padding(
+        padding: const EdgeInsetsDirectional.only(end: 4),
+        child: CompactChip(
+          label: l10n.sendsFailed(failed),
+          icon: Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
+          count: failed,
+          countColor: theme.colors.destructive,
+          onPress: () => _showFailed(context),
+        ),
+      );
+    }
 
     return Padding(
       padding: const EdgeInsetsDirectional.only(end: 8),

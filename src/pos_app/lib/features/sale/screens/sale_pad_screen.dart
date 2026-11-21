@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -8,6 +9,7 @@ import 'package:shimmer/shimmer.dart';
 import 'package:go_router/go_router.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/layout/breakpoints.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/models/money.dart';
@@ -49,11 +51,10 @@ import '../models/sale_line.dart';
 import '../providers/sale_provider.dart';
 import '../till_suggestions.dart';
 import '../pending_ticket_customer.dart';
-import '../widgets/cart_line_row.dart';
 import '../widgets/customer_dialog.dart';
-import '../widgets/customer_field.dart';
 import '../widgets/customize_dialog.dart';
 import '../widgets/item_tile.dart';
+import '../widgets/sale_order_panel.dart';
 
 /// The item pad: category chips + item grid on the start side, the running
 /// sale on the end side. Charging posts a POS order (the kitchen sees it
@@ -87,6 +88,27 @@ Widget _bar(FThemeData theme, {required double widthFactor, double height = 12})
 /// Two lines of name and the price: well over a finger's 56 tall
 const _compactTileHeight = 76.0;
 
+/// The running sale as the pad and its order panel both read it: what is on
+/// it, who and where it is for, and what that comes to
+typedef _Order = ({
+  SaleState sale,
+  bool synced,
+  List<SaleLine> lines,
+  SaleCustomer? customer,
+  Stay? roomSession,
+  bool showChips,
+  DeliveryCharge charge,
+  bool canDeliver,
+  SaleDelivery? delivery,
+  double deliveryFee,
+  int? deliveryMinutes,
+  double total,
+  String title,
+
+  /// The named area the delivery was priced by, once the owner has taken it off
+  int? goneZoneId,
+});
+
 class SalePadScreen extends ConsumerStatefulWidget {
   final int? ticketId;
 
@@ -110,9 +132,24 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
   /// customer row and the suggestions step aside so the note stays in view
   final _noteFocus = FocusNode();
 
-  /// The compact pad's search, always in view over its category list
+  /// The compact pad's search, always in view over its category list; on a
+  /// phone, the one its search button opens in place of the chips
   final _search = TextEditingController();
+  bool _searchOpen = false;
   bool _placing = false;
+
+  /// The phone's order sheet while it is up. It is a route over the whole
+  /// till, so it does not rebuild with the pad: [_padChanged] tells it of
+  /// every change the pad makes to itself
+  ModalRoute<Object?>? _orderSheet;
+  bool _orderSheetOpen = false;
+  final _padChanged = ValueNotifier<int>(0);
+
+  @override
+  void setState(VoidCallback fn) {
+    super.setState(fn);
+    _padChanged.value++;
+  }
 
   // Idempotency mirror of pos_web's charge: the request id must survive
   // retries of the SAME sale, so a resubmit after a timeout (where the
@@ -133,7 +170,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
   /// The room's session behind the bill being added to, watched so the
   /// customer picker can offer the roster; null for a table or the counter
-  Stay? _watchRoomSession() {
+  Stay? _watchRoomSession(WidgetRef ref) {
     final ticketId = widget.ticketId;
     if (ticketId == null) return null;
     final ticket = ref.watch(ticketProvider(ticketId)).value;
@@ -159,6 +196,15 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    // Left by a way that did not close the sheet first: it goes with the
+    // pad, once this frame is done with the tree
+    final sheet = _orderSheet;
+    if (sheet != null) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (sheet.isActive) sheet.navigator?.removeRoute(sheet);
+      });
+    }
+    _padChanged.dispose();
     _note.dispose();
     _noteFocus.dispose();
     _search.dispose();
@@ -245,7 +291,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
   /// Where a delivery on this sale stands: none, ready to go out with a
   /// rider, or waiting on the branch's terms (never quietly a counter sale)
-  DeliveryCharge _deliveryCharge(SaleState sale, {bool watch = false}) {
+  DeliveryCharge _deliveryCharge(SaleState sale, {bool watch = false, WidgetRef? via}) {
+    final ref = via ?? this.ref;
     final features = watch ? ref.watch(featuresProvider) : ref.read(featuresProvider);
     final asked = !_addingToTicket && features.delivery;
     final terms = asked ? (watch ? ref.watch(tillDeliveryTermsProvider) : ref.read(tillDeliveryTermsProvider)) : null;
@@ -330,6 +377,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
     // No network: a counter sale is kept on the till and paid right here
     if (!ref.read(onlineProvider)) return _chargeOffline(sale, l10n);
+
+    // From here it is on its way: the bill or the floor comes next, and the
+    // blocking "sending" wait would paint under an open sheet
+    _closeOrderSheet();
 
     // Sent to the branch nearer the caller: its menu first, its prices and
     // what it ran out of, so the order is not turned down when it arrives
@@ -502,6 +553,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       _requestSignature = null;
       _requestId = null;
       ref.read(saleProvider.notifier).clear();
+      _closeOrderSheet();
       context.go('/');
     }
   }
@@ -554,6 +606,21 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     }
   }
 
+  // Adding to a room's bill: the people in the room are the first choice
+  // for whose round this is, and somebody picked from the search who is not
+  // in the room yet joins the roster right here — the cashier is telling us
+  // they are there, and their share of the time will need a tab at settle
+  Future<void> _chooseCustomer(Stay? roomSession) async {
+    final roster = roomSession?.roster ?? const <({String id, String name})>[];
+    final picked = await showCustomerDialog(context, quickPicks: roster);
+    if (picked == null || !mounted) return;
+    ref.read(saleProvider.notifier).setCustomer(picked);
+    final id = picked.id;
+    if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
+      StayActions(ref, context).addMember(roomSession.id, id, picked.name);
+    }
+  }
+
   // Someone not shown as a chip: the search, adding them to the room
   Future<void> _chooseSomeoneElse(Stay? session) async {
     final roster = session?.roster ?? const <({String id, String name})>[];
@@ -562,11 +629,12 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     _pickInRoom(picked, session);
   }
 
-  @override
-  Widget build(BuildContext context) {
-    final roomSession = _watchRoomSession();
-    final theme = context.theme;
+  /// Everything the running sale comes to: whose it is, where it goes and
+  /// what that adds. Watched through [ref], the pad's own or the order
+  /// sheet's: the sheet is another route and has to hear of a change itself.
+  _Order _watchOrder(WidgetRef ref, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
+    final roomSession = _watchRoomSession(ref);
     final sale = ref.watch(saleProvider);
     // Until the cart points at this destination, show it empty
     final synced = sale.target == widget.ticketId;
@@ -576,7 +644,213 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     // A room with more than one person: show whose-round chips instead of the
     // plain picker, so attributing a round is one tap.
     final showChips = _addingToTicket && roomSession != null && roster.length >= 2;
-    if (_addingToTicket && synced && !_prefilledCustomer) {
+    // A walk-in sale can go out with a rider instead, where the business and
+    // the branch deliver; a round on an open bill never does
+    final features = ref.watch(featuresProvider);
+    final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
+    final canDeliver = terms?.delivers ?? false;
+    final charge = synced ? _deliveryCharge(sale, watch: true, via: ref) : DeliveryCharge.none;
+    final delivery = charge == DeliveryCharge.ready ? sale.delivery : null;
+    // The fee of the branch that delivers it: this one, or the one it is sent to
+    // A named area prices the delivery as Ordering will: the one picked by name, else the one the
+    // pin falls in (with no area picked, the order is still charged that area's fee). Asked by
+    // name, an answer for no area means the owner took it off: back to the branch's own fee
+    final where = saleDeliveryWhere(delivery);
+    final areaTerms = where == null ? null : ref.watch(tillSaleTermsProvider(where)).value;
+    final saleZoneId = where?.zoneId;
+    final zoneGone = saleZoneId != null && areaTerms != null && areaTerms.delivers && areaTerms.zoneId != saleZoneId;
+    // Until the branch answers: the area's fee as it was when picked, or the branch's own for a pin
+    final answered = areaTerms != null && areaTerms.delivers && !zoneGone;
+    final deliveryFee = delivery == null
+        ? 0.0
+        : saleZoneId != null
+            ? delivery.feeWith(terms!.fee, zoneFee: answered ? areaTerms.fee : null)
+            : delivery.feeWith(answered ? areaTerms.fee : terms!.fee);
+    final deliveryMinutes = where == null || zoneGone
+        ? null
+        : answered
+            ? areaTerms.etaMinutes
+            : delivery?.zone?.etaMinutes;
+    // The call centre says which branch this order is for, and whether it is delivered or collected
+    final callCentreBranch = ref.watch(callCentreModeProvider) ? ref.watch(branchProvider).selectedBranch?.name.localized(context) : null;
+    return (
+      sale: sale,
+      synced: synced,
+      lines: lines,
+      customer: customer,
+      roomSession: roomSession,
+      showChips: showChips,
+      charge: charge,
+      canDeliver: canDeliver,
+      delivery: delivery,
+      deliveryFee: deliveryFee,
+      deliveryMinutes: deliveryMinutes,
+      total: saleTotal(lines) + deliveryFee,
+      title: callCentreBranch == null
+          ? l10n.currentSale
+          : sale.delivery != null
+              ? l10n.callCentreOrderAt(callCentreBranch)
+              : l10n.callCentrePickupAtBranch(callCentreBranch),
+      goneZoneId: zoneGone ? saleZoneId : null,
+    );
+  }
+
+  /// The running sale, drawn from [order]: the column beside the menu, or
+  /// with [onClose] the body of the phone's sheet
+  Widget _orderPanel(BuildContext context, WidgetRef ref, _Order order, {VoidCallback? onClose}) {
+    final l10n = AppLocalizations.of(context)!;
+    final sale = order.sale;
+    final lines = order.lines;
+    final roomSession = order.roomSession;
+    final delivery = order.delivery;
+    final deliveryBlocked = deliveryBlocksCharge(order.charge);
+    // The way to send it out with a rider, while it is not going out yet
+    final offerDelivery = order.canDeliver && !deliveryBlocked && delivery == null;
+    // The note being typed with the keyboard up: the column gives it the
+    // room. Put away with the system's back, the keyboard leaves the focus
+    // behind, so the keyboard itself is what is asked
+    // (the window's own insets: the shell's Scaffold hides them from its body)
+    final typingNote = _noteFocus.hasFocus && View.of(context).viewInsets.bottom > 0;
+    return SaleOrderPanel(
+      title: order.title,
+      lines: lines,
+      customer: order.customer,
+      onClear: lines.isEmpty && order.customer == null && sale.note.isEmpty && sale.delivery == null
+          ? null
+          : () {
+              ref.read(saleProvider.notifier).clear();
+              _note.clear();
+            },
+      onClose: onClose,
+      typingNote: typingNote,
+      roundRoster: order.showChips ? roomSession?.roster : null,
+      onPickRound: (m) => _pickInRoom(SaleCustomer(id: m.id, name: m.name), roomSession),
+      onSomeoneElse: () => _chooseSomeoneElse(roomSession),
+      onChooseCustomer: () => _chooseCustomer(roomSession),
+      onRemoveCustomer: () => ref.read(saleProvider.notifier).setCustomer(null),
+      onDeliver: offerDelivery ? _openDeliveryForm : null,
+      // A delivery the terms do not confirm: said, with the way out of it
+      deliveryDetail: deliveryBlocked
+          ? DeliveryBlockedNote(
+              charge: order.charge,
+              onRetry: () => ref.invalidate(tillDeliveryTermsProvider),
+              onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
+            )
+          : order.canDeliver && delivery != null
+              ? DeliverySummary(
+                  delivery: delivery,
+                  sendToName: delivery.sendTo == null
+                      ? null
+                      : branchNameOf(ref.watch(allBranchesProvider).value, delivery.sendTo!.branchId, context),
+                  onEdit: _openDeliveryForm,
+                  onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
+                )
+              : null,
+      rowKeys: _rowKeys,
+      rungUp: _rungUp,
+      onSetQuantity: (key, quantity) => ref.read(saleProvider.notifier).setQuantity(key, quantity),
+      suggestions: tillSuggestions(_lastAdded, ref.watch(catalogItemsProvider).value ?? const <CatalogItem>[], lines),
+      onSuggestion: (item) => _tapItem(item, suggested: true),
+      deliveryFee: delivery == null ? null : (fee: order.deliveryFee, minutes: order.deliveryMinutes),
+      note: _note,
+      noteFocus: _noteFocus,
+      chargeLabel: _addingToTicket
+          ? l10n.addToTicket
+          : delivery != null
+              ? l10n.deliverySend
+              : l10n.chargeAction,
+      total: order.total,
+      onCharge: lines.isEmpty || _placing || deliveryBlocked ? null : _charge,
+    );
+  }
+
+  /// The phone's order: the running sale in a sheet nearly the screen's
+  /// height, over the menu and the header, as the web till's is
+  Future<void> _openOrderSheet() async {
+    if (_orderSheetOpen) return;
+    _orderSheetOpen = true;
+    ModalRoute<Object?>? opened;
+    await showFSheet<void>(
+      context: context,
+      useRootNavigator: true,
+      side: FLayout.btt,
+      mainAxisMaxRatio: null,
+      // The lines scroll inside it: a drag is theirs, not the sheet's
+      draggable: false,
+      // The sheet keeps its place and gives its foot to the keyboard itself
+      resizeToAvoidBottomInset: false,
+      builder: (sheetContext) {
+        opened = _orderSheet = ModalRoute.of(sheetContext);
+        // Another route: a change on the pad or in the sale reaches it
+        // through these two, not through the pad's own rebuild
+        return ListenableBuilder(
+          listenable: _padChanged,
+          builder: (context, _) => Consumer(builder: (context, ref, _) => _orderSheetBody(context, ref)),
+        );
+      },
+    );
+    // A sheet closed by the charge has been forgotten already, and one
+    // opened since is not this one
+    if (identical(_orderSheet, opened)) {
+      _orderSheet = null;
+      _orderSheetOpen = false;
+    }
+  }
+
+  Widget _orderSheetBody(BuildContext context, WidgetRef ref) {
+    // The pad under it gone, or the screen turned wide enough for the
+    // column beside the menu: nothing to draw while the sheet is taken away
+    if (!mounted || !context.isNarrow) return const SizedBox.shrink();
+    final theme = context.theme;
+    final media = MediaQuery.of(context);
+    final view = View.of(context);
+    // A strip of the menu stays in sight above it, clear of the status bar
+    final clear = math.max(40.0, view.viewPadding.top / view.devicePixelRatio + 8);
+    return Container(
+      width: double.infinity,
+      height: media.size.height - clear,
+      // The charge button rides above the keyboard, or the system's bar
+      padding: EdgeInsets.only(bottom: math.max(media.viewInsets.bottom, media.padding.bottom)),
+      clipBehavior: Clip.antiAlias,
+      decoration: BoxDecoration(
+        color: theme.colors.background,
+        borderRadius: const BorderRadius.vertical(top: Radius.circular(Sizes.radiusCard)),
+      ),
+      child: _orderPanel(
+        context,
+        ref,
+        _watchOrder(ref, context),
+        onClose: () => Navigator.of(context, rootNavigator: true).pop(),
+      ),
+    );
+  }
+
+  /// Takes the order sheet away at once, whatever is on it: the flow has
+  /// moved on to the bill or the floor, which are under it
+  void _closeOrderSheet() {
+    final route = _orderSheet;
+    _orderSheet = null;
+    _orderSheetOpen = false;
+    if (route != null && route.isActive) route.navigator?.removeRoute(route);
+  }
+
+  /// The phone's search: in place of the chips while it is open, and closing
+  /// it brings the category back
+  void _toggleSearch() {
+    if (_searchOpen) _search.clear();
+    setState(() => _searchOpen = !_searchOpen);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final order = _watchOrder(ref, context);
+    final sale = order.sale;
+    final lines = order.lines;
+    final customer = order.customer;
+    final roomSession = order.roomSession;
+    if (_addingToTicket && order.synced && !_prefilledCustomer) {
       final ticket = ref.watch(ticketProvider(widget.ticketId!)).value;
       if (ticket != null) {
         _prefilledCustomer = true;
@@ -605,15 +879,18 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     };
     final wide = MediaQuery.sizeOf(context).width >= 1280;
     final busy = _placing;
-    // A walk-in sale can go out with a rider instead, where the business and
-    // the branch deliver; a round on an open bill never does
-    final features = ref.watch(featuresProvider);
+    // A phone has no room for the sale beside the menu: it is a sheet there,
+    // opened from a bar under the menu
+    final narrow = context.isNarrow;
     // The owner's choice in admin: photo tiles, or text tiles for a long menu
     final compact = ref.watch(compactTillItemsProvider);
     // A long menu lists its categories down the side, with the search always
-    // in view, instead of rows of chips over the items
-    final rail = compact;
-    final needle = rail ? _search.text.trim().toLowerCase() : '';
+    // in view, instead of rows of chips over the items. A phone has no side
+    // to spare: its categories are one row of chips, whichever tiles it shows
+    final rail = compact && !narrow;
+    // The phone's search, opened from the button at the row's end
+    final searching = narrow && _searchOpen;
+    final needle = rail || searching ? _search.text.trim().toLowerCase() : '';
     final countIn = <int, int>{};
     for (final item in itemsAsync.value ?? const <CatalogItem>[]) {
       countIn[item.catalogTypeId] = (countIn[item.catalogTypeId] ?? 0) + 1;
@@ -623,55 +900,52 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       if (_search.text.isNotEmpty) _search.clear();
       setState(() => _activeCategory = id);
     }
-    final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
-    final canDeliver = terms?.delivers ?? false;
-    final charge = synced ? _deliveryCharge(sale, watch: true) : DeliveryCharge.none;
-    final deliveryBlocked = deliveryBlocksCharge(charge);
-    final delivery = charge == DeliveryCharge.ready ? sale.delivery : null;
-    // The note being typed with the keyboard up: the column gives it the
-    // room. Put away with the system's back, the keyboard leaves the focus
-    // behind, so the keyboard itself is what is asked
-    // (the window's own insets: the shell's Scaffold hides them from its body)
-    final typingNote = _noteFocus.hasFocus && View.of(context).viewInsets.bottom > 0;
-    // The way to send it out with a rider, while it is not going out yet
-    final offerDelivery = canDeliver && !deliveryBlocked && delivery == null;
-    // The fee of the branch that delivers it: this one, or the one it is sent to
-    // A named area prices the delivery as Ordering will: the one picked by name, else the one the
-    // pin falls in (with no area picked, the order is still charged that area's fee). Asked by
-    // name, an answer for no area means the owner took it off: back to the branch's own fee
-    final where = saleDeliveryWhere(delivery);
-    final areaTerms = where == null ? null : ref.watch(tillSaleTermsProvider(where)).value;
-    final saleZoneId = where?.zoneId;
-    final zoneGone = saleZoneId != null && areaTerms != null && areaTerms.delivers && areaTerms.zoneId != saleZoneId;
-    if (zoneGone) {
+    final goneZoneId = order.goneZoneId;
+    if (goneZoneId != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
         final current = ref.read(saleProvider).delivery;
-        if (current?.zoneId != saleZoneId) return;
+        if (current?.zoneId != goneZoneId) return;
         ref.read(saleProvider.notifier).setDelivery(current!.withoutZone());
         showPosToast(context, PosToastType.warning, l10n.deliveryAreaGone);
       });
     }
-    // Until the branch answers: the area's fee as it was when picked, or the branch's own for a pin
-    final answered = areaTerms != null && areaTerms.delivers && !zoneGone;
-    final deliveryFee = delivery == null
-        ? 0.0
-        : saleZoneId != null
-            ? delivery.feeWith(terms!.fee, zoneFee: answered ? areaTerms.fee : null)
-            : delivery.feeWith(answered ? areaTerms.fee : terms!.fee);
-    final deliveryMinutes = where == null || zoneGone
-        ? null
-        : answered
-            ? areaTerms.etaMinutes
-            : delivery?.zone?.etaMinutes;
-    final total = saleTotal(lines) + deliveryFee;
-    // The call centre says which branch this order is for, and whether it is delivered or collected
-    final callCentreBranch = ref.watch(callCentreModeProvider) ? ref.watch(branchProvider).selectedBranch?.name.localized(context) : null;
-    final saleTitle = callCentreBranch == null
-        ? l10n.currentSale
-        : sale.delivery != null
-            ? l10n.callCentreOrderAt(callCentreBranch)
-            : l10n.callCentrePickupAtBranch(callCentreBranch);
+    // Turned or unfolded wide enough for the column: the sale is beside the
+    // menu again, and the sheet has nothing left to show
+    if (!narrow && _orderSheetOpen) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _closeOrderSheet();
+      });
+    }
+
+    // One category chip: a tablet's wrap into rows at their own height, a
+    // phone's run in one row at a finger's 48
+    Widget chip({required String label, required bool active, required VoidCallback onPress, bool usual = false}) =>
+        ConstrainedBox(
+          constraints: BoxConstraints(minHeight: narrow ? Sizes.control : Sizes.controlSmall),
+          child: FButton(
+            variant: active ? null : FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: onPress,
+            prefix: usual ? const Icon(FIcons.sparkles, size: Sizes.iconSmall) : null,
+            child: Text(label, style: theme.typography.base.forButton),
+          ),
+        );
+    final chips = [
+      if (usuals.isNotEmpty)
+        chip(
+          label: l10n.usuals,
+          active: activeCategoryId == _usualsCategory,
+          onPress: () => setState(() => _activeCategory = _usualsCategory),
+          usual: true,
+        ),
+      for (final category in categories)
+        chip(
+          label: category.name.localized(context),
+          active: category.id == activeCategoryId,
+          onPress: () => setState(() => _activeCategory = category.id),
+        ),
+    ];
 
     return Stack(
       children: [
@@ -686,8 +960,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                     child: Row(
-                      // The search sits level with the back button; rows of chips hang from the top
-                      crossAxisAlignment: rail ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                      // The search and a phone's one row of chips sit level with the back button;
+                      // rows of chips hang from the top
+                      crossAxisAlignment: rail || narrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                       children: [
                         SizedBox.square(
                           dimension: Sizes.control,
@@ -699,51 +974,60 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                         ),
                         const SizedBox(width: 8),
                         // Compact: the search, the categories being the list beside the items
-                        if (rail)
+                        if (rail || searching)
                           Expanded(
                             child: FTextField(
                               control: FTextFieldControl.managed(controller: _search),
                               hint: l10n.searchItems,
                               textInputAction: TextInputAction.search,
+                              // Opened by its button on a phone, it is what is typed into next
+                              autofocus: searching,
                               prefixBuilder: (context, style, states) => Padding(
                                 padding: const EdgeInsetsDirectional.only(start: 10),
                                 child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
                               ),
-                              clearable: (value) => value.text.isNotEmpty,
+                              // The phone's field is closed, and emptied, by the button beside it:
+                              // a second cross inside it would be one too many
+                              clearable: (value) => !searching && value.text.isNotEmpty,
+                            ),
+                          )
+                        // A phone has no room for rows of chips above the
+                        // menu: there they are one row that swipes
+                        else if (narrow)
+                          Expanded(
+                            child: SingleChildScrollView(
+                              scrollDirection: Axis.horizontal,
+                              child: Row(
+                                children: [
+                                  for (final (index, one) in chips.indexed)
+                                    Padding(
+                                      padding: EdgeInsetsDirectional.only(start: index == 0 ? 0 : 8),
+                                      child: one,
+                                    ),
+                                ],
+                              ),
                             ),
                           )
                         // Every category in view: the chips wrap into rows
                         // rather than scrolling sideways
                         else
-                        Expanded(
-                          child: Wrap(
-                            spacing: 8,
-                            runSpacing: 8,
-                            children: [
-                              if (usuals.isNotEmpty)
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                                  child: FButton(
-                                    variant: activeCategoryId == _usualsCategory ? null : FButtonVariant.outline,
-                                    mainAxisSize: MainAxisSize.min,
-                                    onPress: () => setState(() => _activeCategory = _usualsCategory),
-                                    prefix: const Icon(FIcons.sparkles, size: Sizes.iconSmall),
-                                    child: Text(l10n.usuals, style: theme.typography.base.forButton),
-                                  ),
-                                ),
-                              for (final category in categories)
-                                ConstrainedBox(
-                                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                                  child: FButton(
-                                    variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
-                                    mainAxisSize: MainAxisSize.min,
-                                    onPress: () => setState(() => _activeCategory = category.id),
-                                    child: Text(category.name.localized(context), style: theme.typography.base.forButton),
-                                  ),
-                                ),
-                            ],
+                          Expanded(child: Wrap(spacing: 8, runSpacing: 8, children: chips)),
+                        // Search is the phone's shortcut past the one-row
+                        // chips; a tablet has every category in view already
+                        if (narrow) ...[
+                          const SizedBox(width: 4),
+                          SizedBox.square(
+                            dimension: Sizes.control,
+                            child: Semantics(
+                              label: searching ? l10n.close : l10n.searchItems,
+                              child: FButton.icon(
+                                variant: FButtonVariant.ghost,
+                                onPress: _toggleSearch,
+                                child: Icon(searching ? FIcons.x : FIcons.search, size: Sizes.icon),
+                              ),
+                            ),
                           ),
-                        ),
+                        ],
                       ],
                     ),
                   ),
@@ -916,260 +1200,59 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                       ],
                     ),
                   ),
+                  // The phone's way to the order: always on screen under the
+                  // menu, reading what is in it and what it comes to
+                  if (narrow)
+                    Container(
+                      padding: EdgeInsets.fromLTRB(8, 8, 8, 8 + MediaQuery.paddingOf(context).bottom),
+                      decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
+                      child: SizedBox(
+                        height: Sizes.controlLarge,
+                        child: FButton(
+                          onPress: _openOrderSheet,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          suffix: Text(money(context, order.total),
+                              style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              if (lines.isNotEmpty) ...[
+                                Container(
+                                  constraints: const BoxConstraints(minWidth: 28, minHeight: 28),
+                                  padding: const EdgeInsets.symmetric(horizontal: 8),
+                                  alignment: Alignment.center,
+                                  decoration: BoxDecoration(
+                                    color: theme.colors.primaryForeground,
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  child: Text(
+                                    '${saleCount(lines)}',
+                                    style: theme.typography.sm.copyWith(
+                                      color: theme.colors.primary,
+                                      fontWeight: FontWeight.w700,
+                                      fontFeatures: const [FontFeature.tabularFigures()],
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                              ],
+                              Text(l10n.viewOrder, style: theme.typography.base.forButton.copyWith(fontWeight: FontWeight.w600)),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
                 ],
               ),
             ),
             // ----- running sale -----
-            Container(
-              width: wide ? 380 : 340,
-              // The rule on the side that meets the pad, whichever way the page runs
-              decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: theme.colors.border))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Built like the pad's header (8 + 48 + 8), so the two rules under them meet in one line
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Text.rich(
-                            TextSpan(
-                              text: saleTitle,
-                              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
-                              children: [
-                                if (lines.isNotEmpty)
-                                  TextSpan(
-                                    text: '  ${l10n.linesCount(saleCount(lines))}',
-                                    style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground),
-                                  ),
-                              ],
-                            ),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ),
-                        SizedBox.square(
-                          dimension: Sizes.control,
-                          child: FButton.icon(
-                            variant: FButtonVariant.ghost,
-                            onPress: lines.isEmpty && customer == null && sale.note.isEmpty && sale.delivery == null
-                                ? null
-                                : () {
-                                    ref.read(saleProvider.notifier).clear();
-                                    _note.clear();
-                                  },
-                            child: const Icon(FIcons.trash2, size: Sizes.icon),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                  // Who it is for and whether a rider takes it, side by side on
-                  // one row; out of the way while the note is typed into
-                  if (!typingNote)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                    decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (showChips) ...[
-                          _WhoseRoundChips(
-                            roster: roster,
-                            selectedId: customer?.id,
-                            onPick: (m) => _pickInRoom(SaleCustomer(id: m.id, name: m.name), roomSession),
-                            onSomeoneElse: () => _chooseSomeoneElse(roomSession),
-                          ),
-                          if (customer != null || offerDelivery) const SizedBox(height: 8),
-                        ],
-                        if (customer != null || !showChips || offerDelivery)
-                        Row(
-                          children: [
-                        if (customer != null)
-                          Expanded(
-                            child: SelectedCustomerChip(
-                              customer: customer,
-                              onRemove: () => ref.read(saleProvider.notifier).setCustomer(null),
-                            ),
-                          )
-                        else if (!showChips)
-                          Expanded(
-                            child: ChooseCustomerButton(
-                            // Beside the delivery button there is no room for "(optional)"
-                            showOptional: !offerDelivery,
-                            onPress: () async {
-                              // Adding to a room's bill: the people in the
-                              // room are the first choice for whose round
-                              // this is, and somebody picked from the
-                              // search who is not in the room yet joins the
-                              // roster right here — the cashier is telling
-                              // us they are there, and their share of the
-                              // time will need a tab at settle
-                              final roster = roomSession?.roster ?? const <({String id, String name})>[];
-                              final picked = await showCustomerDialog(context, quickPicks: roster);
-                              if (picked == null || !context.mounted) return;
-                              ref.read(saleProvider.notifier).setCustomer(picked);
-                              final id = picked.id;
-                              if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
-                                StayActions(ref, context).addMember(roomSession.id, id, picked.name);
-                              }
-                            },
-                            ),
-                          ),
-                            if (offerDelivery) ...[
-                              if (customer != null || !showChips) const SizedBox(width: 8),
-                              SizedBox(
-                                height: Sizes.control,
-                                child: FButton(
-                                  variant: FButtonVariant.outline,
-                                  mainAxisSize: MainAxisSize.min,
-                                  onPress: _openDeliveryForm,
-                                  prefix: const Icon(FIcons.bike, size: Sizes.icon),
-                                  child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        // A delivery the terms do not confirm: said, with the way out of it
-                        if (deliveryBlocked) ...[
-                          const SizedBox(height: 8),
-                          DeliveryBlockedNote(
-                            charge: charge,
-                            onRetry: () => ref.invalidate(tillDeliveryTermsProvider),
-                            onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
-                          ),
-                        ] else if (canDeliver && delivery != null) ...[
-                          const SizedBox(height: 8),
-                          DeliverySummary(
-                            delivery: delivery,
-                            sendToName: delivery.sendTo == null
-                                ? null
-                                : branchNameOf(ref.watch(allBranchesProvider).value, delivery.sendTo!.branchId, context),
-                            onEdit: _openDeliveryForm,
-                            onRemove: () => ref.read(saleProvider.notifier).setDelivery(null),
-                          ),
-                        ],
-                      ],
-                    ),
-                  ),
-                  Expanded(
-                    child: lines.isEmpty
-                        ? const SizedBox.shrink()
-                        // Every row built (a sale is a few dozen at most), so the
-                        // one just rung up can always be brought into view
-                        : SingleChildScrollView(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.stretch,
-                              children: [
-                                for (final (index, line) in lines.indexed) ...[
-                                  if (index > 0) Container(height: 1, color: theme.colors.border),
-                                  KeyedSubtree(
-                                    key: _rowKeys.putIfAbsent(line.key, GlobalKey.new),
-                                    child: _RungUp(
-                                      tick: _rungUp[line.key] ?? 0,
-                                      child: CartLineRow(
-                                        line: line,
-                                        onSetQuantity: (key, quantity) => ref.read(saleProvider.notifier).setQuantity(key, quantity),
-                                      ),
-                                    ),
-                                  ),
-                                ],
-                              ],
-                            ),
-                          ),
-                  ),
-                  // What the item rung up last goes well with: one tap to offer it
-                  if (tillSuggestions(_lastAdded, itemsAsync.value ?? const <CatalogItem>[], lines) case final suggestions
-                      when suggestions.isNotEmpty && !typingNote)
-                    Container(
-                      padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-                      decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(l10n.goesWellWith, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
-                          const SizedBox(height: 6),
-                          SingleChildScrollView(
-                            scrollDirection: Axis.horizontal,
-                            child: Row(
-                              children: [
-                                for (final item in suggestions)
-                                  Padding(
-                                    padding: const EdgeInsetsDirectional.only(end: 8, bottom: 4),
-                                    child: ConstrainedBox(
-                                      constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                                      child: FButton(
-                                        variant: FButtonVariant.outline,
-                                        mainAxisSize: MainAxisSize.min,
-                                        onPress: () => _tapItem(item, suggested: true),
-                                        prefix: const Icon(FIcons.plus, size: Sizes.iconSmall),
-                                        child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
-                                            style: theme.typography.base.forButton),
-                                      ),
-                                    ),
-                                  ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  Container(
-                    padding: const EdgeInsets.all(12),
-                    decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.stretch,
-                      children: [
-                        if (delivery != null) ...[
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(
-                                    deliveryMinutes == null
-                                        ? l10n.deliveryFee
-                                        : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(deliveryMinutes)}',
-                                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                              ),
-                              Text(deliveryFee > 0 ? money(context, deliveryFee) : l10n.deliveryFree,
-                                  style: theme.typography.sm.copyWith(
-                                      color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()])),
-                            ],
-                          ),
-                          const SizedBox(height: 8),
-                        ],
-                        FTextField(
-                          control: FTextFieldControl.managed(controller: _note),
-                          focusNode: _noteFocus,
-                          hint: l10n.orderNoteOptional,
-                          maxLines: 1,
-                        ),
-                        const SizedBox(height: 12),
-                        SizedBox(
-                          height: Sizes.controlLarge,
-                          child: FButton(
-                            onPress: lines.isEmpty || busy || deliveryBlocked ? null : _charge,
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            suffix: Text(money(context, total),
-                                style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
-                            child: Text(
-                                _addingToTicket
-                                    ? l10n.addToTicket
-                                    : delivery != null
-                                        ? l10n.deliverySend
-                                        : l10n.chargeAction,
-                                style: theme.typography.lg.forButton),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ],
+            if (!narrow)
+              Container(
+                width: wide ? 380 : 340,
+                // The rule on the side that meets the pad, whichever way the page runs
+                decoration: BoxDecoration(border: BorderDirectional(start: BorderSide(color: theme.colors.border))),
+                child: _orderPanel(context, ref, order),
               ),
-            ),
           ],
         ),
         // Blocking wait for a delivery or a call-centre order, which has no
@@ -1191,62 +1274,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
               ),
             ),
           ),
-      ],
-    );
-  }
-}
-
-/// "Whose round?" — the room's members as one-tap chips, the selected one
-/// filled, plus a "someone else" chip for a person not in the room yet.
-class _WhoseRoundChips extends StatelessWidget {
-  final List<({String id, String name})> roster;
-  final String? selectedId;
-  final void Function(({String id, String name}) member) onPick;
-  final VoidCallback onSomeoneElse;
-
-  const _WhoseRoundChips({
-    required this.roster,
-    required this.selectedId,
-    required this.onPick,
-    required this.onSomeoneElse,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.whoseRound, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final member in roster)
-              ConstrainedBox(
-                constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                child: FButton(
-                  variant: member.id == selectedId ? null : FButtonVariant.outline,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => onPick(member),
-                  child: Text(member.name.isEmpty ? l10n.guest : member.name, style: theme.typography.base.forButton),
-                ),
-              ),
-            ConstrainedBox(
-              constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-              child: FButton(
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: onSomeoneElse,
-                prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                child: Text(l10n.someoneElse, style: theme.typography.base.forButton),
-              ),
-            ),
-          ],
-        ),
       ],
     );
   }
@@ -1344,31 +1371,6 @@ class _RailCategory extends StatelessWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// A line just rung up: a soft tint behind its row fades out, the way a line
-/// landing on the bill does, so the eye finds what was added. [tick] counts
-/// the taps, so each one starts it again
-class _RungUp extends StatelessWidget {
-  final int tick;
-  final Widget child;
-
-  const _RungUp({required this.tick, required this.child});
-
-  @override
-  Widget build(BuildContext context) {
-    if (tick == 0) return child;
-    final theme = context.theme;
-    return TweenAnimationBuilder<double>(
-      key: ValueKey(tick),
-      tween: Tween(begin: 1, end: 0),
-      duration: const Duration(milliseconds: 1200),
-      curve: Curves.easeOut,
-      builder: (context, t, child) =>
-          DecoratedBox(decoration: BoxDecoration(color: theme.colors.primary.withValues(alpha: 0.08 * t)), child: child),
-      child: child,
     );
   }
 }

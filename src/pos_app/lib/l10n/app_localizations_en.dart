@@ -2513,4 +2513,23 @@ class AppLocalizationsEn extends AppLocalizations {
   String tenderChangedFrom(String from, String name, String time) {
     return 'Was $from · changed by $name at $time';
   }
+
+  @override
+  String get whoIsSelling => 'Who is selling?';
+
+  @override
+  String get orSignInWithPassword => 'Or sign in with your password';
+
+  @override
+  String get switchCashier => 'Switch cashier';
+
+  @override
+  String get setMyPin => 'Set my PIN';
+
+  @override
+  String get pinSignInFailed =>
+      'That didn\'t sign you in. Try again, or use your password.';
+
+  @override
+  String get viewOrder => 'View order';
 }

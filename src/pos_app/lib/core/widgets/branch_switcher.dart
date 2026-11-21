@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
 import '../brand/brand_mark.dart';
+import '../layout/breakpoints.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
@@ -18,6 +19,10 @@ import '../../features/call_centre/call_centre_mode.dart';
 /// starts from the caller, and the active branch is the one the order is for.
 class BranchSwitcher extends ConsumerWidget {
   const BranchSwitcher({super.key});
+
+  /// The least width the brand shows its chevron in: the mark, the chevron
+  /// and a few letters of the name between them
+  static const _chevronFrom = 120.0;
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -34,7 +39,10 @@ class BranchSwitcher extends ConsumerWidget {
     final business = ref.watch(brandProvider).displayName(Localizations.localeOf(context));
     final switchable = branchState.branches.length > 1 || mayCallCentre;
 
-    Widget brand({required bool withChevron}) => Row(
+    // With every chip in the header at once a phone leaves the brand room
+    // for its mark and little else: the chevron goes before the mark does
+    Widget brand({required bool withChevron}) => LayoutBuilder(
+          builder: (context, box) => Row(
           mainAxisSize: MainAxisSize.min,
           children: [
             const BrandMark(size: 32),
@@ -73,18 +81,22 @@ class BranchSwitcher extends ConsumerWidget {
                 ],
               ),
             ),
-            if (withChevron) ...[
+            if (withChevron && box.maxWidth >= _chevronFrom) ...[
               const SizedBox(width: 8),
               Icon(FIcons.chevronsUpDown, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             ],
           ],
+          ),
         );
+
+    // A phone gives the name every dp it can (pos_web's `px-2`)
+    final inset = EdgeInsets.symmetric(horizontal: context.isCompact ? 8 : 12);
 
     if (!switchable) {
       return SizedBox(
         height: Sizes.control,
         child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 12),
+          padding: inset,
           child: brand(withChevron: false),
         ),
       );
@@ -128,7 +140,7 @@ class BranchSwitcher extends ConsumerWidget {
         child: SizedBox(
           height: Sizes.control,
           child: Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 12),
+            padding: inset,
             child: brand(withChevron: true),
           ),
         ),

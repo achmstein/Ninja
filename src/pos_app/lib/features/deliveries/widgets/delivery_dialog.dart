@@ -123,8 +123,15 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
               variant: primary ? null : destructive ? FButtonVariant.ghost : FButtonVariant.outline,
               onPress: _busy ? null : onPress,
               prefix: Icon(icon, size: primary ? 20 : 16, color: destructive ? theme.colors.destructive : null),
-              child: Text(label,
-                  style: theme.typography.base.forButton.copyWith(color: destructive ? theme.colors.destructive : null)),
+              // "Take <amount> from <rider>" with a long name is wider than a
+              // phone's dialog: as part of the button's row it gives up its
+              // end (the name, which the dialog shows above) instead of running over
+              child: Flexible(
+                child: Text(label,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.base.forButton.copyWith(color: destructive ? theme.colors.destructive : null)),
+              ),
             ),
           ),
         );

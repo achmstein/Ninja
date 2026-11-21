@@ -8,6 +8,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/brand/brand_provider.dart';
+import '../../../core/layout/breakpoints.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import '../../../core/widgets/skeleton.dart';
@@ -340,192 +341,286 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
     // places' rule and the bills' meet in one line, and a rule on the side
     // the places meet the bills
     BoxDecoration headerRule() => BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border)));
-    return Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // Places with no bill yet — scrolling on its own, collapsed away
-          // when the cashier wants the full width
-          if (_placesOpen && !cloudKitchen)
-            Container(
-              width: _placesWidth + 32,
-              decoration: BoxDecoration(border: BorderDirectional(end: BorderSide(color: theme.colors.border))),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
+
+    final toggle = SizedBox.square(
+      dimension: Sizes.controlSmall,
+      child: FButton.icon(
+        variant: FButtonVariant.ghost,
+        onPress: _togglePlaces,
+        child: Icon(
+          // Lucide's panel icons do not mirror with the text
+          // direction (the arrows do), so pick the side by hand:
+          // the places list sits at the start, which is the
+          // right in Arabic
+          _placesOpen
+              ? (rtl ? FIcons.panelRightClose : FIcons.panelLeftClose)
+              : (rtl ? FIcons.panelRightOpen : FIcons.panelLeftOpen),
+          size: Sizes.icon,
+          color: theme.colors.mutedForeground,
+        ),
+      ),
+    );
+    final title = Text(l10n.openBills, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700));
+    // On a tablet the two worded buttons are as wide as their words; on a
+    // phone they stretch over the row the icon buttons leave them
+    Widget saleButton({bool stretch = false}) => SizedBox(
+          height: Sizes.control,
+          child: FButton(
+            mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
+            onPress: () => context.go('/sale'),
+            prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(l10n.newSale, style: theme.typography.base.forButton),
+            ),
+          ),
+        );
+    Widget tabButton({bool stretch = false}) => SizedBox(
+          height: Sizes.control,
+          child: FButton(
+            variant: FButtonVariant.outline,
+            mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
+            onPress: _newTab,
+            prefix: const Icon(FIcons.plus, size: Sizes.icon),
+            child: Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+              child: Text(l10n.newTab, style: theme.typography.base.forButton),
+            ),
+          ),
+        );
+    final receipts = SizedBox.square(
+      dimension: Sizes.control,
+      child: FButton.icon(
+        variant: FButtonVariant.outline,
+        onPress: () => context.go('/receipts'),
+        child: const Icon(FIcons.receiptText, size: Sizes.icon),
+      ),
+    );
+    // The customer who walked in only to pay their tab:
+    // search, then their card — no sale, no list of everyone
+    final findCustomer = SizedBox.square(
+      dimension: Sizes.control,
+      child: FButton.icon(
+        variant: FButtonVariant.outline,
+        onPress: _findCustomer,
+        child: const Icon(FIcons.idCard, size: Sizes.icon),
+      ),
+    );
+    final availability = SizedBox.square(
+      dimension: Sizes.control,
+      child: FButton.icon(
+        variant: FButtonVariant.outline,
+        onPress: () => context.go('/availability'),
+        child: const Icon(FIcons.packageCheck, size: Sizes.icon),
+      ),
+    );
+    final billsHeader = Row(
+      children: [
+        if (!cloudKitchen) toggle,
+        if (!cloudKitchen) const SizedBox(width: 8),
+        title,
+        const Spacer(),
+        saleButton(),
+        // The places column is where a named counter tab opens;
+        // with no places it opens from here
+        if (cloudKitchen) ...[
+          const SizedBox(width: 8),
+          tabButton(),
+        ],
+        const SizedBox(width: 8),
+        receipts,
+        const SizedBox(width: 8),
+        findCustomer,
+        const SizedBox(width: 8),
+        availability,
+      ],
+    );
+
+    final placeList = placesLoading
+        ? _placesSkeleton(context)
+        : PlaceList(
+            places: sortedRooms,
+            sessions: placesState.openStays,
+            reservations: placesState.openReservations,
+            // Its place frees up as the card folds
+            tickets: [...?tickets.value, ?leaving],
+            busy: _openingTable,
+            timeBilling: features.timeBilling,
+            onNewTab: _newTab,
+            onPick: (place) => _pickPlace(place.id),
+            search: _placeSearch,
+          );
+
+    // The bills scroll by themselves beside the places; on a phone they are
+    // one part of a page that scrolls as a whole
+    Widget billsBody({required bool scrolls}) => tickets.when(
+          loading: () => Skeleton(
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                final (columns, width) = _billColumns(context, constraints.maxWidth);
+                return Wrap(
+                  spacing: _billGap,
+                  runSpacing: _billGap,
+                  children: [
+                    for (var i = 0; i < columns * 2; i++) SizedBox(width: width, child: _billCardSkeleton(context)),
+                  ],
+                );
+              },
+            ),
+          ),
+          error: (e, _) => Center(
+            child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+          ),
+          data: (list) => _Bills(
+            bills: [...list, ?leaving]..sort(compareBills),
+            above: above,
+            // An order still waiting lights the bill it will land on
+            waitingIds: {
+              for (final b in list)
+                if (pendingForTicket(pending, sessionId: b.sessionId, placeId: b.placeId).isNotEmpty) b.id,
+            },
+            // A running room shows its clock on the bill
+            clocks: {
+              for (final b in list)
+                if (stayForTicket(b) case final s?) b.id: formatClock(s.elapsedSeconds(now)),
+            },
+            filter: _filter,
+            onFilter: (filter) => setState(() => _filter = filter),
+            rooms: rooms,
+            scrolls: scrolls,
+          ),
+        );
+
+    // No room for the places beside the bills: one page, the bills first
+    // because they are what the screen is for, the places under them
+    // (pos_web below `md`). The toggle still puts the places away.
+    if (context.isNarrow) {
+      final compact = context.isCompact;
+      return SingleChildScrollView(
+        padding: EdgeInsets.all(compact ? 12 : 16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // A phone puts the buttons on a row of their own under the title
+            if (compact) ...[
+              Row(
                 children: [
-                  // The search is the column's header: the list needs no title
-                  Container(
-                    height: Sizes.header,
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
-                    alignment: Alignment.center,
-                    decoration: headerRule(),
-                    child: PlaceSearchField(controller: _placeSearch),
-                  ),
-                  Expanded(
-                    child: SingleChildScrollView(
-                      padding: const EdgeInsets.all(16),
-                      child: placesLoading
-                          ? _placesSkeleton(context)
-                          : PlaceList(
-                              places: sortedRooms,
-                              sessions: placesState.openStays,
-                              reservations: placesState.openReservations,
-                              // Its place frees up as the card folds
-                              tickets: [...?tickets.value, ?leaving],
-                              busy: _openingTable,
-                              timeBilling: features.timeBilling,
-                              onNewTab: _newTab,
-                              onPick: (place) => _pickPlace(place.id),
-                              search: _placeSearch,
-                            ),
-                    ),
-                  ),
+                  if (!cloudKitchen) toggle,
+                  if (!cloudKitchen) const SizedBox(width: 8),
+                  Expanded(child: title),
                 ],
               ),
-            ),
-          Expanded(
+              const SizedBox(height: 12),
+              if (cloudKitchen) ...[
+                // Two worded buttons and three icons are more than one row holds
+                Row(
+                  children: [
+                    Expanded(child: saleButton(stretch: true)),
+                    const SizedBox(width: 8),
+                    Expanded(child: tabButton(stretch: true)),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  children: [
+                    receipts,
+                    const SizedBox(width: 8),
+                    findCustomer,
+                    const SizedBox(width: 8),
+                    availability,
+                  ],
+                ),
+              ] else
+                Row(
+                  children: [
+                    Expanded(child: saleButton(stretch: true)),
+                    const SizedBox(width: 8),
+                    receipts,
+                    const SizedBox(width: 8),
+                    findCustomer,
+                    const SizedBox(width: 8),
+                    availability,
+                  ],
+                ),
+            ] else
+              billsHeader,
+            const SizedBox(height: 20),
+            billsBody(scrolls: false),
+            if (_placesOpen && !cloudKitchen) ...[
+              const SizedBox(height: 24),
+              PlaceSearchField(controller: _placeSearch),
+              const SizedBox(height: 8),
+              placeList,
+            ],
+          ],
+        ),
+      );
+    }
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Places with no bill yet — scrolling on its own, collapsed away
+        // when the cashier wants the full width
+        if (_placesOpen && !cloudKitchen)
+          Container(
+            width: _placesWidth + 32,
+            decoration: BoxDecoration(border: BorderDirectional(end: BorderSide(color: theme.colors.border))),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
+                // The search is the column's header: the list needs no title
                 Container(
                   height: Sizes.header,
                   padding: const EdgeInsets.symmetric(horizontal: 16),
+                  alignment: Alignment.center,
                   decoration: headerRule(),
-                  child: Row(
-                  children: [
-                    if (!cloudKitchen) SizedBox.square(
-                      dimension: Sizes.controlSmall,
-                      child: FButton.icon(
-                        variant: FButtonVariant.ghost,
-                        onPress: _togglePlaces,
-                        child: Icon(
-                          // Lucide's panel icons do not mirror with the text
-                          // direction (the arrows do), so pick the side by hand:
-                          // the places list sits at the start, which is the
-                          // right in Arabic
-                          _placesOpen
-                              ? (rtl ? FIcons.panelRightClose : FIcons.panelLeftClose)
-                              : (rtl ? FIcons.panelRightOpen : FIcons.panelLeftOpen),
-                          size: Sizes.icon,
-                          color: theme.colors.mutedForeground,
-                        ),
-                      ),
-                    ),
-                    if (!cloudKitchen) const SizedBox(width: 8),
-                    Text(l10n.openBills, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
-                    const Spacer(),
-                    SizedBox(
-                      height: Sizes.control,
-                      child: FButton(
-                        mainAxisSize: MainAxisSize.min,
-                        onPress: () => context.go('/sale'),
-                        prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 4),
-                          child: Text(l10n.newSale, style: theme.typography.base.forButton),
-                        ),
-                      ),
-                    ),
-                    // The places column is where a named counter tab opens;
-                    // with no places it opens from here
-                    if (cloudKitchen) ...[
-                      const SizedBox(width: 8),
-                      SizedBox(
-                        height: Sizes.control,
-                        child: FButton(
-                          variant: FButtonVariant.outline,
-                          mainAxisSize: MainAxisSize.min,
-                          onPress: _newTab,
-                          prefix: const Icon(FIcons.plus, size: Sizes.icon),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 4),
-                            child: Text(l10n.newTab, style: theme.typography.base.forButton),
-                          ),
-                        ),
-                      ),
-                    ],
-                    const SizedBox(width: 8),
-                    SizedBox.square(
-                      dimension: Sizes.control,
-                      child: FButton.icon(
-                        variant: FButtonVariant.outline,
-                        onPress: () => context.go('/receipts'),
-                        child: const Icon(FIcons.receiptText, size: Sizes.icon),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    // The customer who walked in only to pay their tab:
-                    // search, then their card — no sale, no list of everyone
-                    SizedBox.square(
-                      dimension: Sizes.control,
-                      child: FButton.icon(
-                        variant: FButtonVariant.outline,
-                        onPress: _findCustomer,
-                        child: const Icon(FIcons.idCard, size: Sizes.icon),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    SizedBox.square(
-                      dimension: Sizes.control,
-                      child: FButton.icon(
-                        variant: FButtonVariant.outline,
-                        onPress: () => context.go('/availability'),
-                        child: const Icon(FIcons.packageCheck, size: Sizes.icon),
-                      ),
-                    ),
-                  ],
-                  ),
+                  child: PlaceSearchField(controller: _placeSearch),
                 ),
                 Expanded(
-                  child: Padding(
+                  child: SingleChildScrollView(
                     padding: const EdgeInsets.all(16),
-                    child: tickets.when(
-                    loading: () => Skeleton(
-                      child: LayoutBuilder(
-                        builder: (context, constraints) {
-                          const gap = 12.0;
-                          final columns = math.max(1, ((constraints.maxWidth + gap) / (180 + gap)).floor());
-                          final width = math.min(220.0, (constraints.maxWidth - gap * (columns - 1)) / columns);
-                          return Wrap(
-                            spacing: gap,
-                            runSpacing: gap,
-                            children: [
-                              for (var i = 0; i < columns * 2; i++)
-                                SizedBox(width: width, child: _billCardSkeleton(context)),
-                            ],
-                          );
-                        },
-                      ),
-                    ),
-                    error: (e, _) => Center(
-                      child: Text(l10n.somethingWentWrong,
-                          style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-                    ),
-                    data: (list) => _Bills(
-                      bills: [...list, ?leaving]..sort(compareBills),
-                      above: above,
-                      // An order still waiting lights the bill it will land on
-                      waitingIds: {
-                        for (final b in list)
-                          if (pendingForTicket(pending, sessionId: b.sessionId, placeId: b.placeId).isNotEmpty) b.id,
-                      },
-                      // A running room shows its clock on the bill
-                      clocks: {
-                        for (final b in list)
-                          if (stayForTicket(b) case final s?) b.id: formatClock(s.elapsedSeconds(now)),
-                      },
-                      filter: _filter,
-                      onFilter: (filter) => setState(() => _filter = filter),
-                      rooms: rooms,
-                    ),
-                    ),
+                    child: placeList,
                   ),
                 ),
               ],
             ),
           ),
-        ],
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Container(
+                height: Sizes.header,
+                padding: const EdgeInsets.symmetric(horizontal: 16),
+                decoration: headerRule(),
+                child: billsHeader,
+              ),
+              Expanded(
+                child: Padding(
+                  padding: const EdgeInsets.all(16),
+                  child: billsBody(scrolls: true),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ],
     );
   }
+}
+
+const _billGap = 12.0;
+
+/// How many bill cards stand in a row of [maxWidth], and how wide each is.
+/// From `sm` up as many as fit at 180 dp or more, none wider than 220 so a
+/// lone bill stays a normal card, not a full-width banner; a phone shows two
+/// across whatever its width (pos_web's `grid-cols-2`).
+(int, double) _billColumns(BuildContext context, double maxWidth) {
+  // Rounded down, so the two never add up to a hair more than the row
+  if (context.isCompact) return (2, ((maxWidth - _billGap) / 2).floorToDouble());
+  final columns = math.max(1, ((maxWidth + _billGap) / (180 + _billGap)).floor());
+  return (columns, math.min(220.0, (maxWidth - _billGap * (columns - 1)) / columns));
 }
 
 class _Bills extends StatefulWidget {
@@ -539,6 +634,9 @@ class _Bills extends StatefulWidget {
   /// Whether this tenant has rooms; without them there is no Room filter
   final bool rooms;
 
+  /// Whether the bills scroll by themselves; not on a phone, where the page they are part of does
+  final bool scrolls;
+
   const _Bills({
     required this.bills,
     required this.above,
@@ -547,6 +645,7 @@ class _Bills extends StatefulWidget {
     required this.filter,
     required this.onFilter,
     required this.rooms,
+    this.scrolls = true,
   });
 
   @override
@@ -586,14 +685,12 @@ class _BillsState extends State<_Bills> {
     final onFilter = widget.onFilter;
     // Already in place order: rooms, tables, then counter tabs
     final sorted = bills;
-    if (sorted.isEmpty) {
-      return SingleChildScrollView(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [...above, _EmptyFloor(l10n: l10n)],
-        ),
-      );
+    Widget page(List<Widget> children) {
+      final column = Column(crossAxisAlignment: CrossAxisAlignment.stretch, children: children);
+      return widget.scrolls ? SingleChildScrollView(child: column) : column;
     }
+
+    if (sorted.isEmpty) return page([...above, _EmptyFloor(l10n: l10n)]);
 
     final counts = {
       _Filter.all: sorted.length,
@@ -615,10 +712,7 @@ class _BillsState extends State<_Bills> {
             return name.contains(q) || '${b.id}'.contains(q);
           }).toList();
 
-    return SingleChildScrollView(
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
+    return page([
           ...above,
           Wrap(
             spacing: 8,
@@ -672,13 +766,10 @@ class _BillsState extends State<_Bills> {
             ],
           ),
           const SizedBox(height: 12),
-          // Cards cap at ~220 dp so a lone bill stays a normal card, not a
-          // full-width banner
           LayoutBuilder(
             builder: (context, constraints) {
-              const gap = 12.0;
-              final columns = math.max(1, ((constraints.maxWidth + gap) / (180 + gap)).floor());
-              final width = math.min(220.0, (constraints.maxWidth - gap * (columns - 1)) / columns);
+              const gap = _billGap;
+              final (columns, width) = _billColumns(context, constraints.maxWidth);
               // Each row as tall as its tallest card, as pos_web's grid rows are: one with a two-line name or a
               // room's clock grows its row, the rest keep the card's least height
               final needs = [
@@ -720,9 +811,7 @@ class _BillsState extends State<_Bills> {
               );
             },
           ),
-        ],
-      ),
-    );
+    ]);
   }
 }
 

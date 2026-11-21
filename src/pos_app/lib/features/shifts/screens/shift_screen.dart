@@ -6,6 +6,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../l10n/app_localizations.dart';
 import '../dialogs/close_shift_dialog.dart';
 import '../dialogs/movement_dialog.dart';
@@ -16,6 +17,9 @@ import '../widgets/shift_report.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 80.0;
+
+/// A phone's bar is two rows of ordinary buttons, with the same 12 dp around them
+const _actionBarHeightCompact = 12 + Sizes.control + Sizes.gapSm + Sizes.control + 12;
 
 /// The live X report of the branch's open shift: what the drawer should
 /// hold right now and how it got there — where the header chip lands. The
@@ -71,6 +75,8 @@ class ShiftScreen extends ConsumerWidget {
       );
     }
 
+    final compact = context.isCompact;
+
     return Stack(
       children: [
         Align(
@@ -78,7 +84,7 @@ class ShiftScreen extends ConsumerWidget {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: _maxWidth),
             child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, _actionBarHeight + 16),
+              padding: EdgeInsets.fromLTRB(16, 16, 16, (compact ? _actionBarHeightCompact : _actionBarHeight) + 16),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -102,16 +108,29 @@ class ShiftScreen extends ConsumerWidget {
                       const SizedBox(width: 8),
                       const ShiftStatusPill(open: true),
                       const SizedBox(width: 8),
-                      SizedBox(
-                        height: Sizes.control,
-                        child: FButton(
-                          variant: FButtonVariant.outline,
-                          mainAxisSize: MainAxisSize.min,
-                          onPress: () => context.go('/shifts'),
-                          prefix: const Icon(FIcons.history, size: Sizes.icon),
-                          child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+                      // A phone keeps the shift's number whole and the history its icon
+                      if (compact)
+                        Tooltip(
+                          message: l10n.shiftHistory,
+                          child: SizedBox.square(
+                            dimension: Sizes.control,
+                            child: FButton.icon(
+                              onPress: () => context.go('/shifts'),
+                              child: const Icon(FIcons.history, size: Sizes.icon),
+                            ),
+                          ),
+                        )
+                      else
+                        SizedBox(
+                          height: Sizes.control,
+                          child: FButton(
+                            variant: FButtonVariant.outline,
+                            mainAxisSize: MainAxisSize.min,
+                            onPress: () => context.go('/shifts'),
+                            prefix: const Icon(FIcons.history, size: Sizes.icon),
+                            child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+                          ),
                         ),
-                      ),
                     ],
                   ),
                   const FDivider(),
@@ -122,65 +141,96 @@ class ShiftScreen extends ConsumerWidget {
             ),
           ),
         ),
-        // Sticky action bar: drawer movements + the shift close
         Positioned(
           left: 0,
           right: 0,
           bottom: 0,
-          child: Container(
-            height: _actionBarHeight,
-            padding: const EdgeInsets.symmetric(horizontal: 12),
-            decoration: BoxDecoration(
-              color: theme.colors.background.withValues(alpha: 0.95),
-              border: Border(top: BorderSide(color: theme.colors.border)),
-            ),
-            child: Center(
-              child: ConstrainedBox(
-                constraints: const BoxConstraints(maxWidth: _maxWidth - 32),
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: SizedBox(
-                        height: Sizes.controlLarge,
-                        child: FButton(
-                          variant: FButtonVariant.outline,
-                          onPress: () => showMovementDialog(context, shift.id, CashMovementType.payIn),
-                          prefix: const Icon(FIcons.arrowDownToLine, size: Sizes.icon),
-                          child: Text(l10n.payIn, style: theme.typography.base.forButton),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: SizedBox(
-                        height: Sizes.controlLarge,
-                        child: FButton(
-                          variant: FButtonVariant.outline,
-                          onPress: () => showMovementDialog(context, shift.id, CashMovementType.payOut),
-                          prefix: const Icon(FIcons.arrowUpFromLine, size: Sizes.icon),
-                          child: Text(l10n.payOut, style: theme.typography.base.forButton),
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: SizedBox(
-                        height: Sizes.controlLarge,
-                        child: FButton(
-                          variant: FButtonVariant.destructive,
-                          onPress: () => showCloseShiftDialog(context, shift),
-                          prefix: const Icon(FIcons.lock, size: Sizes.icon),
-                          child: Text(l10n.closeShiftAction, style: theme.typography.base.forButton),
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
+          child: ShiftActionBar(
+            onPayIn: () => showMovementDialog(context, shift.id, CashMovementType.payIn),
+            onPayOut: () => showMovementDialog(context, shift.id, CashMovementType.payOut),
+            onClose: () => showCloseShiftDialog(context, shift),
           ),
         ),
       ],
+    );
+  }
+}
+
+/// The sticky bar under the open shift: the drawer's movements and the
+/// shift's close. Three across do not fit a phone, so there the close takes
+/// a row of its own, as on pos_web.
+class ShiftActionBar extends StatelessWidget {
+  final VoidCallback onPayIn;
+  final VoidCallback onPayOut;
+  final VoidCallback onClose;
+
+  const ShiftActionBar({super.key, required this.onPayIn, required this.onPayOut, required this.onClose});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final compact = context.isCompact;
+
+    Widget action(String label, {required IconData icon, required FButtonVariant variant, required VoidCallback onPress}) =>
+        SizedBox(
+          height: compact ? Sizes.control : Sizes.controlLarge,
+          child: FButton(
+            variant: variant,
+            onPress: onPress,
+            prefix: Icon(icon, size: Sizes.icon),
+            // Half a phone is a few pixels short of the Arabic for the drawer's
+            // two movements: the words shrink to their button rather than run over
+            child: Flexible(
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+              ),
+            ),
+          ),
+        );
+
+    final payIn = action(l10n.payIn, icon: FIcons.arrowDownToLine, variant: FButtonVariant.outline, onPress: onPayIn);
+    final payOut = action(l10n.payOut, icon: FIcons.arrowUpFromLine, variant: FButtonVariant.outline, onPress: onPayOut);
+    final close = action(l10n.closeShiftAction, icon: FIcons.lock, variant: FButtonVariant.destructive, onPress: onClose);
+
+    return Container(
+      height: compact ? _actionBarHeightCompact : _actionBarHeight,
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: theme.colors.background.withValues(alpha: 0.95),
+        border: Border(top: BorderSide(color: theme.colors.border)),
+      ),
+      child: Center(
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: _maxWidth - 32),
+          child: compact
+              ? Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Row(
+                      children: [
+                        Expanded(child: payIn),
+                        const SizedBox(width: Sizes.gapSm),
+                        Expanded(child: payOut),
+                      ],
+                    ),
+                    const SizedBox(height: Sizes.gapSm),
+                    close,
+                  ],
+                )
+              : Row(
+                  children: [
+                    Expanded(child: payIn),
+                    const SizedBox(width: 8),
+                    Expanded(child: payOut),
+                    const SizedBox(width: 8),
+                    Expanded(child: close),
+                  ],
+                ),
+        ),
+      ),
     );
   }
 }

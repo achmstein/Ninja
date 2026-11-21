@@ -6,6 +6,7 @@ import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/heading.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
@@ -162,13 +163,20 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
             if (visible.any((t) => t.type == type)) ...[
               Heading(label),
               const SizedBox(height: 8),
-              Wrap(
-                spacing: 8,
-                runSpacing: 8,
-                children: [
-                  for (final target in visible.where((t) => t.type == type))
-                    _BillCard(target: target, onTap: () => _pick(MoveToTicket(target.id))),
-                ],
+              LayoutBuilder(
+                builder: (context, constraints) {
+                  // A phone's dialog holds one card of the tablet's width and
+                  // a gap: there the cards go two across, as on pos_web
+                  final width = context.isCompact ? (constraints.maxWidth - 8) / 2 : _billCardWidth;
+                  return Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [
+                      for (final target in visible.where((t) => t.type == type))
+                        _BillCard(target: target, width: width, onTap: () => _pick(MoveToTicket(target.id))),
+                    ],
+                  );
+                },
               ),
               const SizedBox(height: 16),
             ],
@@ -255,13 +263,16 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
   }
 }
 
+const _billCardWidth = 190.0;
+
 /// One open bill as a card in the move grid: kind icon and name, then its
 /// number and running total.
 class _BillCard extends StatelessWidget {
   final TicketSummary target;
+  final double width;
   final VoidCallback onTap;
 
-  const _BillCard({required this.target, required this.onTap});
+  const _BillCard({required this.target, required this.width, required this.onTap});
 
   @override
   Widget build(BuildContext context) {
@@ -272,7 +283,7 @@ class _BillCard extends StatelessWidget {
         : (target.label ?? ticketTypeLabel(l10n, target.type));
 
     return SizedBox(
-      width: 190,
+      width: width,
       child: FTappable(
         onPress: onTap,
         builder: (context, states, child) => Container(
@@ -306,9 +317,18 @@ class _BillCard extends StatelessWidget {
               children: [
                 Text(hashNumber(target.id),
                     style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                Text(money(context, target.total),
-                    style: theme.typography.base.copyWith(
-                        fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                const SizedBox(width: 8),
+                // Whole whatever the amount: in a narrow card it shrinks rather than runs over
+                Flexible(
+                  child: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: Text(money(context, target.total),
+                        maxLines: 1,
+                        style: theme.typography.base.copyWith(
+                            fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                  ),
+                ),
               ],
             ),
           ],

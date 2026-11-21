@@ -7,10 +7,12 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../core/layout/breakpoints.dart';
 import '../../core/models/money.dart';
 import '../../core/network/api_errors.dart';
 import '../../core/printing/brand_logo.dart';
 import '../../core/printing/print_service.dart';
+import '../../core/widgets/pos_dialog.dart';
 import '../../core/widgets/pos_toast.dart';
 import '../../l10n/app_localizations.dart';
 import '../tickets/models/ticket_detail.dart';
@@ -25,7 +27,7 @@ Future<void> showReceiptPreview(BuildContext context, int ticketId) {
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => FDialog.raw(
-      style: style,
+      style: dialogStyleFor(context, style),
       animation: animation,
       constraints: const BoxConstraints(maxWidth: 448),
       builder: (context, _) => _ReceiptPreview(ticketId: ticketId),
@@ -71,6 +73,31 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
     final number = ticket.value?.receiptNumber;
     // The business's brand, as the printer lays it down
     final brand = ref.watch(brandProvider);
+
+    final openBill = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        variant: FButtonVariant.outline,
+        onPress: _openBill,
+        child: Text(l10n.openBill),
+      ),
+    );
+    final close = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        variant: FButtonVariant.outline,
+        onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+        child: Text(l10n.close),
+      ),
+    );
+    final print = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        onPress: ticket.value == null || _printing ? null : () => _print(ticket.value!),
+        prefix: Icon(FIcons.printer, size: Sizes.icon),
+        child: Text(l10n.print),
+      ),
+    );
 
     return Padding(
       padding: const EdgeInsets.all(24),
@@ -124,36 +151,28 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  variant: FButtonVariant.outline,
-                  onPress: _openBill,
-                  child: Text(l10n.openBill),
-                ),
-              ),
-              const Spacer(),
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  variant: FButtonVariant.outline,
-                  onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.close),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  onPress: ticket.value == null || _printing ? null : () => _print(ticket.value!),
-                  prefix: Icon(FIcons.printer, size: Sizes.icon),
-                  child: Text(l10n.print),
-                ),
-              ),
-            ],
-          ),
+          // Three across are wider than a phone's dialog: there Print takes
+          // the first row and the other two share the next
+          if (context.isCompact) ...[
+            print,
+            const SizedBox(height: 8),
+            Row(
+              children: [
+                Expanded(child: openBill),
+                const SizedBox(width: 8),
+                Expanded(child: close),
+              ],
+            ),
+          ] else
+            Row(
+              children: [
+                openBill,
+                const Spacer(),
+                close,
+                const SizedBox(width: 8),
+                print,
+              ],
+            ),
         ],
       ),
     );

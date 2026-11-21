@@ -22,12 +22,17 @@ class PosShell extends ConsumerWidget {
     final blocked = ref.watch(branchProvider.select((s) => s.noBranch)) && !ref.watch(isOwnerProvider);
     return Scaffold(
       backgroundColor: theme.colors.background,
-      body: Column(
-        children: [
-          const PosHeader(),
-          if (!blocked) const KitchenPrinterBanner(),
-          Expanded(child: blocked ? const NoBranchScreen() : child),
-        ],
+      // A phone keeps its status bar and its gesture area, and the till stays
+      // out from under both. A tablet hides them (main.dart), so there is
+      // nothing to keep clear of and this adds nothing.
+      body: SafeArea(
+        child: Column(
+          children: [
+            const PosHeader(),
+            if (!blocked) const KitchenPrinterBanner(),
+            Expanded(child: blocked ? const NoBranchScreen() : child),
+          ],
+        ),
       ),
     );
   }

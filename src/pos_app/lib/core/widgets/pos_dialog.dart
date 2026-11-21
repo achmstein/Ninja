@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
+import '../layout/breakpoints.dart';
 
 /// A dialog the keyboard slides over rather than pushes. It keeps its place
 /// and its height when the keyboard opens; the body, a [DialogScroll],
@@ -53,7 +54,7 @@ Future<T?> showPosDialog<T>(
                 excludeFromSemantics: true,
                 onTap: keyboard > 0 ? () => FocusManager.instance.primaryFocus?.unfocus() : null,
                 child: FDialog.raw(
-                  style: style,
+                  style: dialogStyleFor(context, style),
                   animation: animation,
                   constraints: BoxConstraints(maxWidth: maxWidth),
                   builder: (context, _) => builder(context),
@@ -65,6 +66,54 @@ Future<T?> showPosDialog<T>(
       );
     },
   );
+}
+
+/// A dialog's style with the margins the screen can spare. Forui keeps 40 dp
+/// clear on each side, which leaves a 360 dp phone a dialog 280 wide and its
+/// body 232: too little for two buttons side by side. A phone keeps 16, as
+/// pos_web's dialogs do; a tablet keeps Forui's.
+FDialogStyle dialogStyleFor(BuildContext context, FDialogStyle style) => context.isCompact
+    ? style.copyWith(
+        insetPadding: const EdgeInsetsGeometryDelta.value(EdgeInsets.symmetric(horizontal: 16, vertical: 24)),
+      )
+    : style;
+
+/// A dialog's closing actions, in reading order with the main one last. A
+/// tablet sets them side by side at the dialog's end. A phone's dialog is too
+/// narrow for two labelled buttons, so there each takes the full width, the
+/// main one on top, as pos_web's dialog footer stacks them.
+class DialogActions extends StatelessWidget {
+  final List<Widget> children;
+
+  /// On a tablet the actions share the dialog's width instead of sitting at its end
+  final bool fill;
+
+  const DialogActions({super.key, required this.children, this.fill = false});
+
+  @override
+  Widget build(BuildContext context) {
+    if (context.isCompact) {
+      return Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          for (final (index, child) in children.reversed.indexed) ...[
+            if (index > 0) const SizedBox(height: 8),
+            child,
+          ],
+        ],
+      );
+    }
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.end,
+      children: [
+        for (final (index, child) in children.indexed) ...[
+          if (index > 0) const SizedBox(width: 8),
+          fill ? Expanded(child: child) : child,
+        ],
+      ],
+    );
+  }
 }
 
 /// The body of a [showPosDialog]: padded like every till dialog, scrolling

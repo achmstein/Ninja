@@ -462,7 +462,12 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                 child: FButton(
                   prefix: const Icon(FIcons.bike),
                   onPress: () => _take(branchId: chosen.branchId, delivery: true),
-                  child: Text(l10n.callCentreTakeAt(nameOf(chosen.branchId)), style: theme.typography.lg.forButton),
+                  // A long branch name is wider than a phone: as part of the
+                  // button's row the words shorten instead of running over
+                  child: Flexible(
+                    child: Text(l10n.callCentreTakeAt(nameOf(chosen.branchId)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.lg.forButton),
+                  ),
                 ),
               ),
             const SizedBox(height: 8),

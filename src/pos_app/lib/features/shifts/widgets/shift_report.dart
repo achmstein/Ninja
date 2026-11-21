@@ -1,9 +1,11 @@
+import 'package:collection/collection.dart';
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../ticket/tenders.dart';
 import '../models/shift.dart';
@@ -73,6 +75,8 @@ class ShiftReport extends StatelessWidget {
     final emerald = AppColors.emerald(theme.colors.brightness);
     final overShort = shift.overShort ?? 0;
 
+    final compact = context.isCompact;
+
     Widget stat(String label, String value) => Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
@@ -84,7 +88,16 @@ class ShiftReport extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(label, style: muted),
-              Text(value, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+              // One line whatever the amount: in a phone's tile it shrinks rather than wraps
+              if (compact)
+                FittedBox(
+                  fit: BoxFit.scaleDown,
+                  alignment: AlignmentDirectional.centerStart,
+                  child: Text(value,
+                      maxLines: 1, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                )
+              else
+                Text(value, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
             ],
           ),
         );
@@ -94,12 +107,17 @@ class ShiftReport extends StatelessWidget {
           child: Row(
             children: [
               Text(label, style: muted),
-              const Spacer(),
-              Text.rich(
-                TextSpan(
-                  text: at == null ? '' : formatDateTime(context, at),
-                  style: theme.typography.sm.copyWith(fontFeatures: _tabular),
-                  children: [if (by != null && by.isNotEmpty) TextSpan(text: ' · $by', style: muted)],
+              const SizedBox(width: 16),
+              // At the row's end, and onto a second line when the time and a
+              // long name are more than a phone's row holds
+              Expanded(
+                child: Text.rich(
+                  TextSpan(
+                    text: at == null ? '' : formatDateTime(context, at),
+                    style: theme.typography.sm.copyWith(fontFeatures: _tabular),
+                    children: [if (by != null && by.isNotEmpty) TextSpan(text: ' · $by', style: muted)],
+                  ),
+                  textAlign: TextAlign.end,
                 ),
               ),
             ],
@@ -114,6 +132,15 @@ class ShiftReport extends StatelessWidget {
                 style: style ?? theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: _tabular)),
           ],
         );
+
+    final stats = [
+      stat(l10n.ticketsSettled, '${shift.ticketsSettled}'),
+      stat(l10n.grossSales, money(context, shift.grossSales)),
+      stat(l10n.discount, money(context, shift.discounts)),
+      stat(l10n.refundsAllTenders, money(context, shift.refundsTotal)),
+      stat(l10n.netSales, money(context, shift.netSales)),
+      stat(l10n.changeGiven, money(context, shift.changeGiven)),
+    ];
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -151,19 +178,9 @@ class ShiftReport extends StatelessWidget {
         meta(l10n.openedAt, shift.openedAt, shift.openedBy),
         if (shift.isClosed) meta(l10n.closedAt, shift.closedAt, shift.closedBy),
         const SizedBox(height: 16),
-        // Three tiles a row, each as tall as its two lines need
-        for (final row in [
-          [
-            stat(l10n.ticketsSettled, '${shift.ticketsSettled}'),
-            stat(l10n.grossSales, money(context, shift.grossSales)),
-            stat(l10n.discount, money(context, shift.discounts)),
-          ],
-          [
-            stat(l10n.refundsAllTenders, money(context, shift.refundsTotal)),
-            stat(l10n.netSales, money(context, shift.netSales)),
-            stat(l10n.changeGiven, money(context, shift.changeGiven)),
-          ],
-        ]) ...[
+        // Three tiles a row (two on a phone, as on pos_web), each as tall as
+        // its two lines need
+        for (final row in stats.slices(compact ? 2 : 3)) ...[
           Row(
             children: [
               for (final (index, tile) in row.indexed) ...[

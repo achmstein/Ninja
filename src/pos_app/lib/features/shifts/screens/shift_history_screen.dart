@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
@@ -140,6 +141,9 @@ class _ShiftRow extends StatelessWidget {
     final theme = context.theme;
     const tabular = [FontFeature.tabularFigures()];
     String at(DateTime? value) => value == null ? '' : formatDateTimeShort(context, value);
+    final sales = Text(money(context, shift.salesTotal),
+        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular));
+    final verdict = OverShortPill(value: shift.overShort ?? 0);
     return FTappable(
       onPress: onTap,
       builder: (context, states, child) => Container(
@@ -175,10 +179,18 @@ class _ShiftRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 12),
-          Text(money(context, shift.salesTotal),
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
-          const SizedBox(width: 12),
-          OverShortPill(value: shift.overShort ?? 0),
+          // Side by side they leave a phone's row nothing for the dates: there
+          // the verdict goes under the sales
+          if (context.isCompact)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [sales, const SizedBox(height: 4), verdict],
+            )
+          else ...[
+            sales,
+            const SizedBox(width: 12),
+            verdict,
+          ],
         ],
       ),
     );
