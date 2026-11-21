@@ -7,8 +7,11 @@ namespace Ninja.Ordering.API.Deliveries;
 /// <summary>The admin's Riders page: the branch's riders now, and each one's deliveries over time.</summary>
 public static partial class DeliveryApi
 {
-    /// <summary>The widest a time-zone offset reaches (UTC−14 to UTC+12), in minutes.</summary>
-    private const int MaxTzOffsetMinutes = 14 * 60;
+    /// <summary>
+    /// Under a day either way, in minutes. Wider than any clock's offset on purpose: the admin
+    /// sends the one whose midnight is the branch's day start, and any time of day is one.
+    /// </summary>
+    private const int MaxTzOffsetMinutes = 24 * 60 - 1;
 
     public static async Task<Results<Ok<List<RiderOverview>>, ProblemHttpResult>> GetRidersOverviewAsync(
         HttpContext httpContext,
@@ -17,7 +20,7 @@ public static partial class DeliveryApi
     {
         if (Math.Abs(tzOffsetMinutes) > MaxTzOffsetMinutes)
         {
-            return OrderingProblems.Of(RiderHistoryErrors.TimeZoneInvalid, "The time-zone offset is not one a clock can have.");
+            return OrderingProblems.Of(RiderHistoryErrors.TimeZoneInvalid, "The time-zone offset must be under a day.");
         }
 
         return TypedResults.Ok(await riders.GetOverviewAsync(httpContext.GetRequiredBranchId(), tzOffsetMinutes));

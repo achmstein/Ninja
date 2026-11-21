@@ -94,6 +94,8 @@ public class RiderOverviewTest
         var utc = new DateTime(2026, 10, 4, 23, 30, 0, DateTimeKind.Utc);
         Assert.AreEqual(new DateTime(2026, 10, 4, 22, 0, 0, DateTimeKind.Utc), RiderPresenceRule.StartOfDay(utc, -120));
         Assert.AreEqual(new DateTime(2026, 10, 4, 0, 0, 0, DateTimeKind.Utc), RiderPresenceRule.StartOfDay(utc, 0));
+        // The same midnight said the long way round (22:00 UTC as minutes of the day) is the same start
+        Assert.AreEqual(new DateTime(2026, 10, 4, 22, 0, 0, DateTimeKind.Utc), RiderPresenceRule.StartOfDay(utc, 1320));
     }
 
     [TestMethod]

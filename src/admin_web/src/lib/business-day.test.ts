@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import {
   businessDateOf,
+  businessDayOffsetMinutes,
   businessDayWindow,
   businessMonthWindow,
   formatDay,
@@ -328,5 +329,22 @@ describe('a day in a URL', () => {
     expect(parseDay(undefined)).toBeUndefined()
     expect(parseDay('yesterday')).toBeUndefined()
     expect(parseDay('2026-3-5')).toBeUndefined()
+  })
+})
+
+// Ordering counts a rider's day from an offset's midnight and refuses one no
+// clock can have: a day starting at midnight in Cairo once went as 1320 and
+// the Riders page never loaded
+describe('the offset that makes a fixed-offset endpoint count the business day', () => {
+  const now = at('2026-11-21T18:00:00+02:00')
+
+  it('is the day start seen from UTC, as getTimezoneOffset would say it', () => {
+    expect(businessDayOffsetMinutes(now, MORNING)).toBe(240)
+    expect(businessDayOffsetMinutes(now, { dayStart: '02:00', timeZone: CAIRO })).toBe(0)
+  })
+
+  it('stays within half a day of UTC for a day that starts at midnight', () => {
+    expect(businessDayOffsetMinutes(now, { dayStart: '00:00', timeZone: CAIRO })).toBe(-120)
+    expect(businessDayOffsetMinutes(now, LATE)).toBe(-540)
   })
 })

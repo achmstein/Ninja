@@ -197,5 +197,9 @@ export function businessDayOffsetMinutes(
   hours: BusinessHours
 ): number {
   const start = businessDayWindow(businessDateOf(now, hours), hours).from
-  return start.getUTCHours() * 60 + start.getUTCMinutes()
+  // Within half a day either side of UTC, as a clock's own offset is: a day
+  // starting at midnight in Cairo is 22:00 UTC, which is -120 and not 1320
+  // (the server refuses an offset no clock can have)
+  const minutes = start.getUTCHours() * 60 + start.getUTCMinutes()
+  return minutes > 720 ? minutes - 1440 : minutes
 }
