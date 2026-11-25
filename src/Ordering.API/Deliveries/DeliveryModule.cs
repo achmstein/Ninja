@@ -23,7 +23,11 @@ public static class DeliveryModule
     /// <summary>A caller's earlier addresses, at the till: per staff account, enough for a busy phone line.</summary>
     public const string KnownAddressesPolicy = "delivery-known-addresses";
 
+    /// <summary>A connected courier company's status calls, signed but not signed in: per company, generous for a busy one.</summary>
+    public const string CourierStatusPolicy = "courier-status";
+
     private const int QuotesPerMinute = 60;
+    private const int CourierStatusesPerMinute = 600;
     private const int KnownAddressLookupsPerMinute = 30;
 
     /// <summary>
@@ -81,6 +85,16 @@ public static class DeliveryModule
                     _ => new FixedWindowRateLimiterOptions
                     {
                         PermitLimit = KnownAddressLookupsPerMinute,
+                        Window = TimeSpan.FromMinutes(1),
+                        QueueLimit = 0,
+                    }));
+
+            options.AddPolicy(CourierStatusPolicy, context =>
+                RateLimitPartition.GetFixedWindowLimiter(
+                    $"courier:{context.Request.RouteValues["providerId"]}",
+                    _ => new FixedWindowRateLimiterOptions
+                    {
+                        PermitLimit = CourierStatusesPerMinute,
                         Window = TimeSpan.FromMinutes(1),
                         QueueLimit = 0,
                     }));

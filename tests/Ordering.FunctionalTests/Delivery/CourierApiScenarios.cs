@@ -268,6 +268,23 @@ public sealed class CourierApiScenarios
     }
 
     [TestMethod]
+    public async Task A_voided_bill_stops_the_company_carrying_its_delivery()
+    {
+        var (company, host, secret) = await ConnectedCompanyAsync();
+        var orderId = await ConfirmedDeliveryAsync();
+        await GiveAsync(orderId, company);
+
+        using (var scope = Suite.Ordering.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<MediatR.IMediator>().Send(
+                new Ninja.Ordering.API.Application.Commands.MarkOrdersVoidedCommand([orderId], DateTime.UtcNow));
+
+        var cancel = FakeCourierSystem.To(host).Single(c => c.Path.EndsWith("/cancel", StringComparison.Ordinal));
+        Assert.AreEqual("order_voided", (string?)cancel.Body!["reason"]);
+        using var late = await StatusAsync(company, secret, new { jobId = $"job-{orderId}", orderId, sequence = 1, status = "delivered", collected = 140m });
+        Assert.AreEqual(HttpStatusCode.Gone, late.StatusCode, "nothing to settle on a voided bill");
+    }
+
+    [TestMethod]
     public async Task Only_the_owner_connects_a_company_and_its_key_never_comes_back()
     {
         var (company, _, _) = await ConnectedCompanyAsync();

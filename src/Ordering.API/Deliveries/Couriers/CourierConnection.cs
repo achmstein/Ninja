@@ -230,3 +230,24 @@ public sealed record CourierItem(string Name, int Quantity);
 public sealed record CourierJobResponse(string? JobId, string? TrackingUrl, decimal? Fee);
 
 public sealed record CourierCancelRequest(int OrderId, string Reason);
+
+/// <summary>
+/// These orders' bills were voided: a connected company still carrying one of them is told to stop.
+/// Best effort, as a take-back is; a job already delivered or brought back is left alone.
+/// </summary>
+public sealed record CancelCourierJobsCommand(IReadOnlyCollection<int> OrderIds, string Reason) : IRequest;
+
+public sealed class CancelCourierJobsCommandHandler(OrderingContext context, ICourierDispatch couriers) : IRequestHandler<CancelCourierJobsCommand>
+{
+    public async Task Handle(CancelCourierJobsCommand command, CancellationToken cancellationToken)
+    {
+        var ids = command.OrderIds.Distinct().ToList();
+        var jobs = await context.Orders.AsNoTracking()
+            .Where(o => ids.Contains(o.Id) && o.Delivery != null && o.Delivery.CourierJobId != null
+                && o.Delivery.DeliveredAt == null && o.Delivery.ReturnedAt == null)
+            .Select(o => new { o.Id, o.Delivery!.CourierProviderId, o.Delivery.CourierJobId })
+            .ToListAsync(cancellationToken);
+        foreach (var job in jobs)
+            await couriers.CancelAsync(job.CourierProviderId!.Value, job.CourierJobId!, job.Id, command.Reason, CancellationToken.None);
+    }
+}

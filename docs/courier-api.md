@@ -77,7 +77,7 @@ Answer `2xx` with the job:
 ### Cancel a job: `POST {address}/jobs/{jobId}/cancel`
 
 Sent when the till takes the delivery back, or gives it to a rider or another company, before it
-left. Body `{ "orderId": 4182, "reason": "taken_back" }` (`taken_back` or `reassigned`). Answer
+left, or when the order's bill is voided. Body `{ "orderId": 4182, "reason": "taken_back" }` (`taken_back`, `reassigned` or `order_voided`). Answer
 `2xx`, or `404` for a job it does not know. Ninja does not retry a cancel that failed; the company
 should still treat any later status for that job as refused (`410`, below).
 
@@ -142,7 +142,8 @@ A status may skip ahead: `delivered` without `picked_up` first is taken as both.
 | `401` | Signature or timestamp wrong | Check the secret and the clock |
 | `404` | No such connected company at this address | Check the status address; the business may have disconnected it |
 | `409` | A step the order cannot take now (for example `cancelled` after pickup) | Send the status that is true instead |
-| `410` | Not the company's job any more: taken back or given to someone else | Stop the job |
+| `410` | Not the company's job any more: taken back, given to someone else, or its bill voided | Stop the job |
+| `429` | More than 600 statuses a minute to this business | Slow down and send it again |
 | `503`, `5xx`, no answer | Ninja was busy | Send the same status again, with backoff |
 
 ## 4. Money

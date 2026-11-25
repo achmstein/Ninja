@@ -66,6 +66,7 @@ public static partial class DeliveryApi
             .WithSummary("A connected courier company's status for one of its jobs (signed by the company)")
             .WithDescription("Signed, not signed in: X-Ninja-Timestamp (unix seconds, within five minutes) and X-Ninja-Signature (sha256= and the hex HMAC-SHA256 of timestamp + '.' + raw body, keyed with the company's signing secret). 200 applied or sent again; 401 not signed; 404 no such connected company; 410 not the company's job any more; 400 not a status; 409 a step the order cannot take. See docs/courier-api.md.")
             .AllowAnonymous()
+            .RequireRateLimiting(DeliveryModule.CourierStatusPolicy)
             .ExcludeFromDescription();
 
         orders.MapPut("/{orderId:int}/delivery/courier-delivered", MarkCourierDeliveredAsync)

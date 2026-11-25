@@ -96,7 +96,9 @@ public sealed class ApplyCourierStatusCommandHandler(IOrderRepository orders, IL
         var (companyId, status) = command;
         var order = await orders.GetAsync(status.OrderId);
         var delivery = order?.Delivery;
-        if (order is null || delivery is null || delivery.CourierProviderId != companyId || delivery.CourierJobId != status.JobId!.Trim())
+        // A voided bill's order is nobody's job any more, whatever the company says of it
+        if (order is null || delivery is null || order.VoidedAt != null
+            || delivery.CourierProviderId != companyId || delivery.CourierJobId != status.JobId!.Trim())
             return (CourierStatusOutcome.NotYourJob, null);
 
         // Checked before anything on the order moves: whatever is changed is saved with the transaction
