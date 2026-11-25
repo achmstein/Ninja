@@ -3368,6 +3368,30 @@ abstract class AppLocalizations {
   /// **'Sent to their system'**
   String get deliveryCourierConnected;
 
+  /// No description provided for @deliveryCourierWaitingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for {name} to send a courier'**
+  String deliveryCourierWaitingFor(String name);
+
+  /// No description provided for @deliveryCourierSystemHas.
+  ///
+  /// In en, this message translates to:
+  /// **'{name}\'s system has it: its steps come back here by themselves.'**
+  String deliveryCourierSystemHas(String name);
+
+  /// No description provided for @deliveryCourierTrack.
+  ///
+  /// In en, this message translates to:
+  /// **'Track the courier'**
+  String get deliveryCourierTrack;
+
+  /// No description provided for @deliveryCourierTrackFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open the tracking link'**
+  String get deliveryCourierTrackFailed;
+
   /// No description provided for @deliveryCourierGive.
   ///
   /// In en, this message translates to:

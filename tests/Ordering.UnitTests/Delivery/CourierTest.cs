@@ -321,4 +321,13 @@ public class CourierTest
         AssertRefused(DeliveryErrors.NoCourier, () => order.RecordCourierJob("job-1", null, null));
         AssertRefused(DeliveryErrors.NoCourier, () => order.UpdateCourier("Karim", null, null));
     }
+
+    [TestMethod]
+    public void A_cancel_the_company_did_not_take_is_tried_again_soon_then_less_often()
+    {
+        Assert.AreEqual(TimeSpan.FromSeconds(15), Ninja.Ordering.API.Deliveries.CourierCancelSender.Backoff(1));
+        Assert.AreEqual(TimeSpan.FromSeconds(30), Ninja.Ordering.API.Deliveries.CourierCancelSender.Backoff(2));
+        Assert.AreEqual(TimeSpan.FromMinutes(1), Ninja.Ordering.API.Deliveries.CourierCancelSender.Backoff(3));
+        Assert.AreEqual(TimeSpan.FromMinutes(15), Ninja.Ordering.API.Deliveries.CourierCancelSender.Backoff(30), "never longer than a quarter of an hour");
+    }
 }

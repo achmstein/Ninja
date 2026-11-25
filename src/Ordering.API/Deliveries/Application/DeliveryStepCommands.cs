@@ -73,22 +73,23 @@ public abstract class DeliveryStepHandler<TCommand>(
             return DeliveryStepResult.NotYours;
         }
 
-        // A connected company's job before the step: cancelled there once the step has taken it away
+        // A connected company's job before the step: told to stop when the step takes it away
         var jobBefore = order.Delivery is { CourierProviderId: { } companyBefore, CourierJobId: { } jobIdBefore }
             ? (Company: companyBefore, JobId: jobIdBefore)
             : ((int Company, string JobId)?)null;
 
         await ApplyAsync(order, command);
 
+        // The company is told to stop, saved with the step: sent until it answers
+        if (Couriers is not null && jobBefore is { } job
+            && (order.Delivery.CourierProviderId != job.Company || order.Delivery.CourierJobId != job.JobId))
+            Couriers.QueueCancel(job.Company, job.JobId, order.Id, order.Delivery.RiderUserId is null && !order.Delivery.HasCourier ? "taken_back" : "reassigned");
+
         logger.LogInformation(
             "Delivery of order {OrderId}: {Step} by {Actor} ({By})",
             order.Id, typeof(TCommand).Name, identity.GetUserIdentity(), byTill ? "till" : "rider");
 
         await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
-
-        if (Couriers is not null && jobBefore is { } job
-            && (order.Delivery.CourierProviderId != job.Company || order.Delivery.CourierJobId != job.JobId))
-            await Couriers.CancelAsync(job.Company, job.JobId, order.Id, order.Delivery.RiderUserId is null && !order.Delivery.HasCourier ? "taken_back" : "reassigned", CancellationToken.None);
 
         return DeliveryStepResult.Done;
     }

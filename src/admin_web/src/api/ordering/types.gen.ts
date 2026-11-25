@@ -269,6 +269,7 @@ export type DeliveryStaffView = {
     courierPhone?: null | string;
     courierFee?: null | number | string;
     courierTrackingUrl?: null | string;
+    courierJobId?: null | string;
     courierCollected?: null | number | string;
     version?: number | string;
     latitude?: null | number | string;

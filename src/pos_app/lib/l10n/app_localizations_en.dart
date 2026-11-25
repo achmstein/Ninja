@@ -1870,6 +1870,22 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryCourierConnected => 'Sent to their system';
 
   @override
+  String deliveryCourierWaitingFor(String name) {
+    return 'Waiting for $name to send a courier';
+  }
+
+  @override
+  String deliveryCourierSystemHas(String name) {
+    return '$name\'s system has it: its steps come back here by themselves.';
+  }
+
+  @override
+  String get deliveryCourierTrack => 'Track the courier';
+
+  @override
+  String get deliveryCourierTrackFailed => 'Couldn\'t open the tracking link';
+
+  @override
   String deliveryCourierGive(String name) {
     return 'Give it to $name';
   }

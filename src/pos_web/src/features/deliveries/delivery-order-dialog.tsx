@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { AlertTriangle, Banknote, Bike, Check, Undo2, UserRound, X } from 'lucide-react'
+import { AlertTriangle, Banknote, Bike, Check, ExternalLink, Truck, Undo2, UserRound, X } from 'lucide-react'
 import type { RiderView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
@@ -84,6 +84,43 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           <AlertTriangle className='mt-0.5 size-4 shrink-0' aria-hidden />
           {d.failureReason}
         </p>
+      )}
+      {/* A connected company: its system has the job, who it sent, and where to follow the courier */}
+      {courier && d.courierJobId && (
+        <div className='bg-muted/50 flex flex-col gap-1.5 rounded-lg px-3 py-2 text-sm'>
+          <span className='flex items-start gap-1.5'>
+            <Truck className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
+            <span>
+              {d.courierName ? (
+                <>
+                  <bdi className='font-medium'>{d.courierName}</bdi>
+                  {d.courierPhone && (
+                    <span className='text-muted-foreground'>
+                      {' · '}
+                      <bdi dir='ltr'>{d.courierPhone}</bdi>
+                    </span>
+                  )}
+                </>
+              ) : !out ? (
+                t('deliveryCourierWaiting')
+              ) : null}
+              <span className='text-muted-foreground block text-xs'>
+                {t('deliveryCourierSystemHas', { name: d.courierProvider ?? '' })}
+              </span>
+            </span>
+          </span>
+          {d.courierTrackingUrl?.toLowerCase().startsWith('https://') && (
+            <a
+              href={d.courierTrackingUrl}
+              target='_blank'
+              rel='noopener noreferrer'
+              className='text-primary inline-flex items-center gap-1.5 self-start font-medium underline-offset-4 hover:underline'
+            >
+              <ExternalLink className='size-4' aria-hidden />
+              {t('deliveryCourierTrack')}
+            </a>
+          )}
+        </div>
       )}
       <ul className='flex flex-col gap-1 text-sm'>
         {/* The count and the name apart, so an English item name in Arabic still reads count first */}

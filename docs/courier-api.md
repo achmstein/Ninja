@@ -78,8 +78,10 @@ Answer `2xx` with the job:
 
 Sent when the till takes the delivery back, or gives it to a rider or another company, before it
 left, or when the order's bill is voided. Body `{ "orderId": 4182, "reason": "taken_back" }` (`taken_back`, `reassigned` or `order_voided`). Answer
-`2xx`, or `404` for a job it does not know. Ninja does not retry a cancel that failed; the company
-should still treat any later status for that job as refused (`410`, below).
+`2xx`, or `404` for a job it does not know. Any other answer, or none, and Ninja sends it again: after
+15 seconds, then less often (never more than 15 minutes apart), for a day. A `4xx` other than `408`,
+`409` or `429` is taken as refused for good and not sent again. Any status for a cancelled job is
+answered `410` (below).
 
 ## 3. The company calls Ninja: `POST {status address}`
 

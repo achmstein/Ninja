@@ -86,12 +86,18 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
           <Truck className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.courierProvider}</bdi>
-            {order.delivery.courierName && (
+            {order.delivery.courierName ? (
               <span className='text-muted-foreground font-normal'>
                 {' · '}
                 <bdi>{order.delivery.courierName}</bdi>
               </span>
-            )}
+            ) : order.delivery.courierJobId && !order.delivery.outAt ? (
+              // A connected company has the job and has not said who it sends yet
+              <span className='text-muted-foreground font-normal'>
+                {' · '}
+                {t('deliveryCourierWaiting')}
+              </span>
+            ) : null}
           </span>
         </div>
       )}

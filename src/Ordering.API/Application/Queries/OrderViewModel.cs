@@ -146,6 +146,8 @@ public record DeliveryStaffView : DeliveryView
     /// <summary>What the courier company charges the business for it.</summary>
     public decimal? CourierFee { get; init; }
     public string? CourierTrackingUrl { get; init; }
+    /// <summary>A connected company's id for the job: set, its own system has it and says who it sends.</summary>
+    public string? CourierJobId { get; init; }
     /// <summary>What the courier company said its courier collected; null until it said.</summary>
     public decimal? CourierCollected { get; init; }
     /// <summary>One more with every step; what the board has, to say it is behind.</summary>
@@ -166,6 +168,7 @@ public record DeliveryStaffView : DeliveryView
         CourierPhone = d.CourierPhone,
         CourierFee = d.CourierFee,
         CourierTrackingUrl = d.CourierTrackingUrl,
+        CourierJobId = d.CourierJobId,
         CourierCollected = d.CourierCollected,
         Version = d.Version,
     };

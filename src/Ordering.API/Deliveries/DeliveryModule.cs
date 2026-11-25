@@ -58,7 +58,12 @@ public static class DeliveryModule
         services.AddSingleton<CourierSecrets>();
         services.AddScoped<ICourierDispatch, CourierDispatch>();
         services.AddScoped<CourierStatusReceiver>();
-        services.AddHttpClient(CourierDispatch.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
+        services.AddHostedService<CourierCancelSender>();
+        // Not the shared retries: the till hears at once when a company does not take a job, and a cancel has its own
+#pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is marked experimental, as in Control.API
+        services.AddHttpClient(CourierDispatch.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15))
+            .RemoveAllResilienceHandlers();
+#pragma warning restore EXTEXP0001
 
         // The till reads a caller's shared short map link by following it: https, Google's hosts, a few hops
         services.AddMapLinkClient();

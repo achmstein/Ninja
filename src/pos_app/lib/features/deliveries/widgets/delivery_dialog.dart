@@ -154,6 +154,10 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
               style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           DeliveryDetails(delivery: d),
+          if (d.hasCourier && d.courierJobId != null) ...[
+            const SizedBox(height: 12),
+            ConnectedCourierBox(delivery: d, out: out),
+          ],
           const SizedBox(height: 12),
           // The count and the name apart, so an English item name in Arabic still reads count first
           for (final item in order.items)
@@ -455,6 +459,71 @@ String stageText(AppLocalizations l10n, DeliveryOrder order) {
     DeliveryLane.failed => l10n.deliveryComingBack(rider),
     DeliveryLane.returned => l10n.deliveryBackAtBranch,
     DeliveryLane.done => l10n.deliveryCashTaken,
+    // A connected company has the job and has not said who it sends yet
+    DeliveryLane.withRider when d.courierJobId != null && d.courierName == null && d.stage != DeliveryStage.onTheWay =>
+      l10n.deliveryCourierWaitingFor(d.courierProvider ?? ''),
     DeliveryLane.withRider => d.stage == DeliveryStage.onTheWay ? l10n.deliveryOnTheWayWith(rider) : l10n.deliveryWith(rider),
   };
+}
+
+/// A connected company's job: who it sent (or that it has not said yet), that its steps come back
+/// by themselves, and the link to follow the courier when it gave one.
+class ConnectedCourierBox extends StatelessWidget {
+  final OrderDelivery delivery;
+  final bool out;
+
+  const ConnectedCourierBox({super.key, required this.delivery, required this.out});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final d = delivery;
+    final tracking = d.courierTrackingUrl == null ? null : Uri.tryParse(d.courierTrackingUrl!);
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: theme.colors.muted.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(Sizes.radius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Padding(padding: const EdgeInsets.only(top: 2), child: Icon(FIcons.truck, size: Sizes.iconSmall, color: theme.colors.mutedForeground)),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    if (d.courierName != null)
+                      Text([d.courierName!, ?d.courierPhone].join(' · '), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500))
+                    else if (!out)
+                      Text(l10n.deliveryCourierWaitingFor(d.courierProvider ?? ''), style: theme.typography.sm),
+                    Text(l10n.deliveryCourierSystemHas(d.courierProvider ?? ''),
+                        style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          if (tracking != null && tracking.scheme == 'https') ...[
+            const SizedBox(height: 8),
+            Align(
+              alignment: AlignmentDirectional.centerStart,
+              child: FButton(
+                variant: FButtonVariant.outline,
+                size: FButtonSizeVariant.sm,
+                onPress: () => openOrSay(context, tracking, l10n.deliveryCourierTrackFailed),
+                prefix: const Icon(FIcons.externalLink, size: Sizes.iconSmall),
+                child: Text(l10n.deliveryCourierTrack),
+              ),
+            ),
+          ],
+        ],
+      ),
+    );
+  }
 }

@@ -233,6 +233,12 @@ class OrderDelivery {
   /// What the courier collected, once said: the company owes it, nothing is taken in at the till
   final double? courierCollected;
 
+  /// A connected company's id for the job: set, its own system has it and says who it sends
+  final String? courierJobId;
+
+  /// Where the company lets the courier be followed, when it gave one
+  final String? courierTrackingUrl;
+
   /// The branch's named area it was priced by, as it was called when the order was placed
   final LocalizedText? zoneName;
 
@@ -264,6 +270,8 @@ class OrderDelivery {
     this.courierPhone,
     this.courierFee,
     this.courierCollected,
+    this.courierJobId,
+    this.courierTrackingUrl,
     this.zoneName,
     this.etaMinutes,
   });
@@ -318,6 +326,8 @@ class OrderDelivery {
       courierPhone: _text(json['courierPhone']),
       courierFee: _maybe(json['courierFee']),
       courierCollected: _maybe(json['courierCollected']),
+      courierJobId: _text(json['courierJobId']),
+      courierTrackingUrl: _text(json['courierTrackingUrl']),
       zoneName: _name(json['zoneName']),
       etaMinutes: _maybe(json['etaMinutes'])?.round(),
     );

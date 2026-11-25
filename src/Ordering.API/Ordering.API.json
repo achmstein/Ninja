@@ -5862,6 +5862,12 @@
               "string"
             ]
           },
+          "courierJobId": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
           "courierCollected": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [

@@ -1889,6 +1889,22 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryCourierConnected => 'تُرسل إلى نظامهم';
 
   @override
+  String deliveryCourierWaitingFor(String name) {
+    return 'بانتظار أن ترسل $name مندوبًا';
+  }
+
+  @override
+  String deliveryCourierSystemHas(String name) {
+    return 'الطلب لدى نظام $name: تعود خطواته إلى هنا تلقائيًا.';
+  }
+
+  @override
+  String get deliveryCourierTrack => 'تتبّع المندوب';
+
+  @override
+  String get deliveryCourierTrackFailed => 'تعذّر فتح رابط التتبّع';
+
+  @override
   String deliveryCourierGive(String name) {
     return 'سلّمه إلى $name';
   }

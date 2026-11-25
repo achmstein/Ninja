@@ -46,10 +46,12 @@ public static class FakeCourierSystem
             var text = request.Content is null ? null : await request.Content.ReadAsStringAsync(cancellationToken);
             var body = string.IsNullOrEmpty(text) ? null : JsonNode.Parse(text);
             var url = request.RequestUri!.ToString();
+            // Decided before the call is kept, so a test that sees the call knows how it was answered
+            var refusing = Refusing.ContainsKey(request.RequestUri.Host);
             Calls.Enqueue(new(request.Method.Method, url, request.Headers.Authorization?.ToString(),
                 request.Headers.TryGetValues("Idempotency-Key", out var keys) ? keys.First() : null, body));
 
-            if (Refusing.ContainsKey(request.RequestUri.Host))
+            if (refusing)
                 return new HttpResponseMessage(HttpStatusCode.ServiceUnavailable) { Content = new StringContent("busy") };
             if (url.EndsWith("/jobs", StringComparison.Ordinal))
                 return Json(new { jobId = $"job-{body!["orderId"]}", trackingUrl = $"https://track.test/{body["orderId"]}", fee = 35m });
@@ -147,6 +149,25 @@ public sealed class CourierApiScenarios
         request.Headers.Add(CourierStatusReceiver.SignatureHeader, signature ?? CourierSecrets.Sign(secret, timestamp, body));
         // Nobody signed in: the signature is the company's word
         return await Suite.Ordering.CreateClient().SendAsync(request);
+    }
+
+    /// <summary>The cancel the company was sent: queued with the step, sent by the background sender within seconds</summary>
+    private static async Task<FakeCourierSystem.Received> CancelSentAsync(string host)
+    {
+        for (var waited = 0; waited < 150; waited++)
+        {
+            if (FakeCourierSystem.To(host).LastOrDefault(c => c.Path.EndsWith("/cancel", StringComparison.Ordinal)) is { } cancel)
+                return cancel;
+            await Task.Delay(100);
+        }
+        throw new AssertFailedException($"No cancel reached {host}.");
+    }
+
+    private static async Task<Ninja.Ordering.Infrastructure.Deliveries.CourierCancel> QueuedCancelAsync(int orderId)
+    {
+        using var scope = Suite.Ordering.Services.CreateScope();
+        var context = scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>();
+        return await context.CourierCancels.AsNoTracking().SingleAsync(c => c.OrderId == orderId);
     }
 
     private static async Task GiveAsync(int orderId, int companyId, HttpStatusCode expected = HttpStatusCode.NoContent)
@@ -252,7 +273,7 @@ public sealed class CourierApiScenarios
 
         using (var back = await Till.RawAsync(HttpMethod.Delete, $"{Orders}/{takenBack}/delivery/courier?{Version}"))
             Assert.AreEqual(HttpStatusCode.NoContent, back.StatusCode);
-        var cancel = FakeCourierSystem.To(host).Single(c => c.Path.EndsWith("/cancel", StringComparison.Ordinal));
+        var cancel = await CancelSentAsync(host);
         Assert.AreEqual($"https://{host}/ninja/jobs/job-{takenBack}/cancel", cancel.Path);
         Assert.AreEqual("taken_back", (string?)cancel.Body!["reason"]);
 
@@ -268,6 +289,35 @@ public sealed class CourierApiScenarios
     }
 
     [TestMethod]
+    public async Task A_company_down_when_the_delivery_is_taken_back_is_told_once_it_answers()
+    {
+        var (company, host, _) = await ConnectedCompanyAsync();
+        var orderId = await ConfirmedDeliveryAsync();
+        await GiveAsync(orderId, company);
+
+        FakeCourierSystem.Refusing[host] = true;
+        using (var back = await Till.RawAsync(HttpMethod.Delete, $"{Orders}/{orderId}/delivery/courier?{Version}"))
+            Assert.AreEqual(HttpStatusCode.NoContent, back.StatusCode, "the till is never held up by the company");
+        await CancelSentAsync(host);
+        FakeCourierSystem.Refusing.TryRemove(host, out _);
+
+        Ninja.Ordering.Infrastructure.Deliveries.CourierCancel queued = null!;
+        for (var waited = 0; waited < 50 && (queued = await QueuedCancelAsync(orderId)).Attempts == 0; waited++)
+            await Task.Delay(100);
+        Assert.IsNull(queued.SentAt, $"not taken while it was down: attempts {queued.Attempts}, error {queued.LastError}, calls {string.Join(" | ", FakeCourierSystem.To(host).Select(c => c.Path))}");
+        Assert.IsNotNull(queued.LastError);
+
+        // Its next try, brought forward rather than waited for
+        using (var scope = Suite.Ordering.Services.CreateScope())
+            await scope.ServiceProvider.GetRequiredService<Ninja.Ordering.Infrastructure.OrderingContext>().CourierCancels
+                .Where(c => c.OrderId == orderId).ExecuteUpdateAsync(c => c.SetProperty(x => x.NextAttemptAt, DateTime.UtcNow.AddSeconds(-1)));
+        for (var waited = 0; waited < 150 && (queued = await QueuedCancelAsync(orderId)).SentAt is null; waited++)
+            await Task.Delay(100);
+        Assert.IsNotNull(queued.SentAt, "taken once the company answered");
+        Assert.IsGreaterThanOrEqualTo(2, queued.Attempts);
+    }
+
+    [TestMethod]
     public async Task A_voided_bill_stops_the_company_carrying_its_delivery()
     {
         var (company, host, secret) = await ConnectedCompanyAsync();
@@ -278,7 +328,7 @@ public sealed class CourierApiScenarios
             await scope.ServiceProvider.GetRequiredService<MediatR.IMediator>().Send(
                 new Ninja.Ordering.API.Application.Commands.MarkOrdersVoidedCommand([orderId], DateTime.UtcNow));
 
-        var cancel = FakeCourierSystem.To(host).Single(c => c.Path.EndsWith("/cancel", StringComparison.Ordinal));
+        var cancel = await CancelSentAsync(host);
         Assert.AreEqual("order_voided", (string?)cancel.Body!["reason"]);
         using var late = await StatusAsync(company, secret, new { jobId = $"job-{orderId}", orderId, sequence = 1, status = "delivered", collected = 140m });
         Assert.AreEqual(HttpStatusCode.Gone, late.StatusCode, "nothing to settle on a voided bill");

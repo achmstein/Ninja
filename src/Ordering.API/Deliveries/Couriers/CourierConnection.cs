@@ -95,8 +95,14 @@ public interface ICourierDispatch
     /// <summary>Sends the job; throws <see cref="OrderingDomainException"/> (courier.unreachable) when the company did not take it.</summary>
     Task<CourierJobTaken> RequestAsync(DomainOrder order, CourierCompany company, CancellationToken ct = default);
 
-    /// <summary>Cancels a job the company has, as best it can: a company that cannot be reached is logged, never refused.</summary>
-    Task CancelAsync(int companyId, string jobId, int orderId, string reason, CancellationToken ct = default);
+    /// <summary>
+    /// Tells the company to stop a job: saved with the step that took it away, in its transaction, and
+    /// sent by <see cref="CourierCancelSender"/> until the company answers.
+    /// </summary>
+    void QueueCancel(int companyId, string jobId, int orderId, string reason);
+
+    /// <summary>Sends one cancel: Done when the company took it, GiveUp when it never will, otherwise try again.</summary>
+    Task<(bool Done, bool GiveUp, string? Error)> SendCancelAsync(CourierCancel cancel, CancellationToken ct = default);
 
     /// <summary>Where a company sends its status for its jobs.</summary>
     string StatusUrl(int companyId);
@@ -177,27 +183,49 @@ public sealed class CourierDispatch(
         }
     }
 
-    public async Task CancelAsync(int companyId, string jobId, int orderId, string reason, CancellationToken ct = default)
+    public void QueueCancel(int companyId, string jobId, int orderId, string reason)
     {
+        var now = DateTime.UtcNow;
+        context.CourierCancels.Add(new CourierCancel
+        {
+            CompanyId = companyId,
+            JobId = jobId,
+            OrderId = orderId,
+            Reason = reason,
+            CreatedAt = now,
+            NextAttemptAt = now,
+        });
+    }
+
+    public async Task<(bool Done, bool GiveUp, string? Error)> SendCancelAsync(CourierCancel cancel, CancellationToken ct = default)
+    {
+        var company = await context.CourierProviders.AsNoTracking().FirstOrDefaultAsync(c => c.Id == cancel.CompanyId, ct);
+        if (company is not { IsConnected: true })
+            return (false, true, "The company is no longer connected.");
         try
         {
-            var company = await context.CourierProviders.AsNoTracking().FirstOrDefaultAsync(c => c.Id == companyId, ct);
-            if (company is not { IsConnected: true })
-                return;
-            using var request = new HttpRequestMessage(HttpMethod.Post, $"{company.ApiBaseUrl!.TrimEnd('/')}/jobs/{Uri.EscapeDataString(jobId)}/cancel")
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{company.ApiBaseUrl!.TrimEnd('/')}/jobs/{Uri.EscapeDataString(cancel.JobId)}/cancel")
             {
-                Content = JsonContent.Create(new CourierCancelRequest(orderId, reason), options: JsonSerializerOptions.Web),
+                Content = JsonContent.Create(new CourierCancelRequest(cancel.OrderId, cancel.Reason), options: JsonSerializerOptions.Web),
             };
             Authorize(request, company);
             using var response = await http.CreateClient(HttpClientName).SendAsync(request, ct);
+            var code = (int)response.StatusCode;
+            // Taken, or a job it does not know: either way it will not carry it
             if (response.IsSuccessStatusCode || response.StatusCode == System.Net.HttpStatusCode.NotFound)
-                logger.LogInformation("Cancelled courier job {JobId} of order {OrderId} with company {Company}", jobId, orderId, companyId);
-            else
-                logger.LogWarning("Courier company {Company} did not cancel job {JobId} of order {OrderId}: {Status}", companyId, jobId, orderId, (int)response.StatusCode);
+            {
+                logger.LogInformation("Cancelled courier job {JobId} of order {OrderId} with company {Company}", cancel.JobId, cancel.OrderId, cancel.CompanyId);
+                return (true, false, null);
+            }
+            // Refused for good (bad key, a request it will never take): sending it again changes nothing
+            var forGood = code is >= 400 and < 500 and not 408 and not 409 and not 429;
+            logger.LogWarning("Courier company {Company} did not cancel job {JobId} of order {OrderId}: {Status}", cancel.CompanyId, cancel.JobId, cancel.OrderId, code);
+            return (false, forGood, $"The company answered {code}.");
         }
-        catch (Exception ex) when (ex is not OperationCanceledException || !ct.IsCancellationRequested)
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
         {
-            logger.LogWarning(ex, "Cancelling courier job {JobId} of order {OrderId} with company {Company} failed", jobId, orderId, companyId);
+            logger.LogWarning(ex, "Cancelling courier job {JobId} of order {OrderId} with company {Company} failed", cancel.JobId, cancel.OrderId, cancel.CompanyId);
+            return (false, false, ex.Message.Length > 400 ? ex.Message[..400] : ex.Message);
         }
     }
 
@@ -233,7 +261,7 @@ public sealed record CourierCancelRequest(int OrderId, string Reason);
 
 /// <summary>
 /// These orders' bills were voided: a connected company still carrying one of them is told to stop.
-/// Best effort, as a take-back is; a job already delivered or brought back is left alone.
+/// Queued with the void, sent until the company answers; a job already delivered or brought back is left alone.
 /// </summary>
 public sealed record CancelCourierJobsCommand(IReadOnlyCollection<int> OrderIds, string Reason) : IRequest;
 
@@ -247,7 +275,8 @@ public sealed class CancelCourierJobsCommandHandler(OrderingContext context, ICo
                 && o.Delivery.DeliveredAt == null && o.Delivery.ReturnedAt == null)
             .Select(o => new { o.Id, o.Delivery!.CourierProviderId, o.Delivery.CourierJobId })
             .ToListAsync(cancellationToken);
+        // Queued on the caller's context: saved with the void, in its transaction
         foreach (var job in jobs)
-            await couriers.CancelAsync(job.CourierProviderId!.Value, job.CourierJobId!, job.Id, command.Reason, CancellationToken.None);
+            couriers.QueueCancel(job.CourierProviderId!.Value, job.CourierJobId!, job.Id, command.Reason);
     }
 }

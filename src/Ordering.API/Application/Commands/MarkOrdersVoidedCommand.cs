@@ -31,9 +31,8 @@ public class MarkOrdersVoidedCommandHandler(
             order.MarkVoided(command.VoidedAt, command.StockDisposition);
             await PaymentNotice.QueueAsync(order, "Voided", buyerRepository, integrationEvents);
         }
-        var saved = await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
-        // A connected courier company still carrying one of them is told to stop
+        // A connected courier company still carrying one of them is told to stop, saved with the void
         await mediator.Send(new Ninja.Ordering.API.Deliveries.CancelCourierJobsCommand(command.OrderNumbers, "order_voided"), cancellationToken);
-        return saved;
+        return await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
     }
 }
