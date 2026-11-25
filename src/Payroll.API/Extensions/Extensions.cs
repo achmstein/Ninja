@@ -1,3 +1,4 @@
+using Ninja.IntegrationEventLogEF;
 using System.Text.Json.Serialization;
 using Ninja.Payroll.API.Application.IntegrationEvents.EventHandling;
 using Ninja.Payroll.API.Application.IntegrationEvents.Events;
@@ -50,6 +51,8 @@ public static class Extensions
 
         // The outbox, ready for Phase 2 (nothing is published yet)
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<PayrollContext>>();
+        // An event saved but never sent (the broker was out) is sent again, not left for nobody
+        services.AddOutboxRelay();
         services.AddTransient<IPayrollIntegrationEventService, PayrollIntegrationEventService>();
         services.AddScoped<PayrollTransaction>();
 

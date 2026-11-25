@@ -1,3 +1,4 @@
+using Ninja.IntegrationEventLogEF;
 using System.Text.Json.Serialization;
 using Ninja.Spaces.API.Application.BackgroundServices;
 using Ninja.Spaces.API.Application.IntegrationEvents.Events;
@@ -50,6 +51,8 @@ public static class Extensions
         // the unit of work out, so every endpoint and bus handler is in it.
         builder.Services.AddScoped<IUnitOfWork, SpacesUnitOfWork>();
         builder.Services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<SpacesContext>>();
+        // An event saved but never sent (the broker was out) is sent again, not left for nobody
+        builder.Services.AddOutboxRelay();
         builder.Services.AddScoped<ISpacesIntegrationEventService, SpacesIntegrationEventService>();
         builder.Services.AddScoped<IOutboxPublisher>(sp => sp.GetRequiredService<ISpacesIntegrationEventService>());
         builder.Services.AddScoped<IRequestManager, RequestManager>();

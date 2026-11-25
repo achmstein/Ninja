@@ -1,3 +1,4 @@
+using Ninja.IntegrationEventLogEF;
 using System.Text.Json.Serialization;
 using Ninja.AI;
 using Ninja.Inventory.API.Application.Assist;
@@ -64,6 +65,8 @@ public static class Extensions
         // The outbox: sold-out and low-stock events are written with the
         // movements that caused them and published after the commit
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<InventoryContext>>();
+        // An event saved but never sent (the broker was out) is sent again, not left for nobody
+        services.AddOutboxRelay();
         services.AddTransient<IInventoryIntegrationEventService, InventoryIntegrationEventService>();
         services.AddScoped<InventoryTransaction>();
 

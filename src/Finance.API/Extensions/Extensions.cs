@@ -1,3 +1,4 @@
+using Ninja.IntegrationEventLogEF;
 using System.Text.Json.Serialization;
 using Ninja.AI;
 using Ninja.Finance.API.Application.Assist;
@@ -61,6 +62,8 @@ public static class Extensions
         // The outbox: nothing leaves Finance yet; it is here so that when
         // something does, it is never fire-and-forget
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<FinanceContext>>();
+        // An event saved but never sent (the broker was out) is sent again, not left for nobody
+        services.AddOutboxRelay();
         services.AddTransient<IFinanceIntegrationEventService, FinanceIntegrationEventService>();
         services.AddScoped<FinanceTransaction>();
 

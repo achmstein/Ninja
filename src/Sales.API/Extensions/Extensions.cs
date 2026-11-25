@@ -1,3 +1,4 @@
+using Ninja.IntegrationEventLogEF;
 using Microsoft.Extensions.DependencyInjection.Extensions;
 using System.Text.Json.Serialization;
 using Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
@@ -78,6 +79,8 @@ public static class Extensions
         // bus handlers that assemble tickets run through the same
         // SalesTransaction the command behavior uses.
         services.AddTransient<IIntegrationEventLogService, IntegrationEventLogService<SalesContext>>();
+        // An event saved but never sent (the broker was out) is sent again, not left for nobody
+        services.AddOutboxRelay();
         services.AddTransient<ISalesIntegrationEventService, SalesIntegrationEventService>();
         services.AddScoped<SalesTransaction>();
         // A rider's cash for a delivery, met with its bill whichever comes first
