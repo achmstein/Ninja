@@ -11,6 +11,14 @@ public interface IIntegrationEventLogService
     /// times, oldest first, a batch at a time.
     /// </summary>
     Task<IEnumerable<IntegrationEventLogEntry>> RetrieveStuckEventLogsAsync(DateTime createdBefore, int maxAttempts);
+
+    /// <summary>
+    /// Events that used up their quick tries (the broker was out for longer
+    /// than they last) and were created after the given time: tried again,
+    /// slowly, rather than left for nobody to send. Oldest first, a batch at a time.
+    /// </summary>
+    Task<IEnumerable<IntegrationEventLogEntry>> RetrieveParkedEventLogsAsync(DateTime createdAfter, int minAttempts)
+        => Task.FromResult(Enumerable.Empty<IntegrationEventLogEntry>());
     Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction);
     Task MarkEventAsPublishedAsync(Guid eventId);
     Task MarkEventAsInProgressAsync(Guid eventId);

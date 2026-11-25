@@ -66,6 +66,23 @@ public class IntegrationEventLogService<TContext> : IIntegrationEventLogService,
             .ToList();
     }
 
+    public async Task<IEnumerable<IntegrationEventLogEntry>> RetrieveParkedEventLogsAsync(DateTime createdAfter, int minAttempts)
+    {
+        var result = await _context.Set<IntegrationEventLogEntry>()
+            .Where(e => e.State != EventStateEnum.Published
+                        && e.CreationTime > createdAfter
+                        && e.TimesSent >= minAttempts)
+            .OrderBy(e => e.CreationTime)
+            .Take(100)
+            .ToListAsync();
+
+        return result
+            .Select(e => (Entry: e, Type: _eventTypes.FirstOrDefault(t => t.Name == e.EventTypeShortName)))
+            .Where(x => x.Type is not null)
+            .Select(x => x.Entry.DeserializeJsonContent(x.Type!))
+            .ToList();
+    }
+
     public Task SaveEventAsync(IntegrationEvent @event, IDbContextTransaction transaction)
     {
         if (transaction == null) throw new ArgumentNullException(nameof(transaction));
