@@ -68,7 +68,7 @@ public sealed class ProcHostCapacity(IShell shell, IOptions<NodeSettings> option
             }
         }
 
-        var ps = await shell.RunAsync("docker", ["ps", "-a", "--format", "{{.Names}}\t{{.Label \"com.docker.compose.project\"}}\t{{.State}}"], null, ct);
+        var ps = await shell.RunAsync("docker", ["ps", "-a", "--format", "{{.Names}}\t{{.Label \"com.docker.compose.project\"}}\t{{.State}}\t{{.Status}}"], null, ct);
         var stats = await shell.RunAsync("docker", ["stats", "--no-stream", "--format", "{{json .}}"], null, ct);
         var projects = CapacityMath.Group(ps.Ok ? ps.Stdout : "", stats.Ok ? stats.Stdout : "");
         // Which of those projects is the platform itself: the one its own Postgres runs under

@@ -65,6 +65,8 @@ public sealed class MoveTests
         public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct) => Task.CompletedTask;
         public Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
             => Task.FromResult<IReadOnlyDictionary<string, long>>(new Dictionary<string, long> { ["ordering"] = Waiting, ["ninja_dead_letters"] = 3 });
+
+        public Task<IReadOnlyList<string>> VHostsAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>([]);
     }
 
     /// <summary>The recording shell, except for the commands told to fail.</summary>

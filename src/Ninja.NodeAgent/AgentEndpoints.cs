@@ -125,6 +125,8 @@ internal static class AgentEndpoints
         v1.MapGet("/broker/vhosts/{vhost}/queues", (string vhost, IBrokerAdmin broker, CancellationToken ct) =>
             broker.QueueDepthsAsync(AgentNames.Check(vhost, "The vhost"), ct));
 
+        v1.MapGet("/broker/vhosts", (IBrokerAdmin broker, CancellationToken ct) => broker.VHostsAsync(ct));
+
         // --- what the node has
         v1.MapGet("/capacity", (IHostCapacity capacity, CancellationToken ct) => capacity.ProbeAsync(ct));
         v1.MapGet("/images/running", (IImageInventory images, CancellationToken ct) => images.RunningAsync(ct));

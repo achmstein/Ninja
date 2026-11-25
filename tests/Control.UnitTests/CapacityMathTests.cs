@@ -29,6 +29,20 @@ public sealed class CapacityMathTests
         => Assert.AreEqual(mb, CapacityMath.ParseDockerSizeMb(text));
 
     [TestMethod]
+    public void A_running_container_failing_its_health_check_is_counted_unhealthy()
+    {
+        var ps = "ninja-blue-blue-catalog-api-1\tninja-blue\trunning\tUp 3 hours (unhealthy)\n" +
+                 "ninja-blue-blue-sales-api-1\tninja-blue\trunning\tUp 3 hours (healthy)\n" +
+                 "ninja-blue-blue-gateway-1\tninja-blue\trunning\tUp 3 hours\n" +
+                 "ninja-blue-blue-ordering-api-1\tninja-blue\texited\tExited (1) 2 minutes ago\n";
+
+        var blue = CapacityMath.Group(ps, "").Single();
+
+        Assert.AreEqual(1, blue.Unhealthy, "healthy, no check and exited are not unhealthy");
+        Assert.AreEqual(3, blue.Running);
+    }
+
+    [TestMethod]
     public void Containers_group_by_compose_project_and_join_their_stats_by_name()
     {
         var ps = "ninja-blue-blue-catalog-api-1\tninja-blue\trunning\n" +

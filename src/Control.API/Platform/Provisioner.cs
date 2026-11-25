@@ -813,6 +813,45 @@ public sealed partial class Provisioner(
         }
     }
 
+    /// <summary>
+    /// The broker account a running stack lost (the broker started empty), put back as the record has it, and the
+    /// stack restarted: a service whose broker login failed gives up reconnecting for good, and the new vhost has
+    /// none of its queues until it declares them at start. The watchdog asks for it (PlatformWatchdog); nothing
+    /// else about the stack changes, and a stack that is not Running is left alone.
+    /// </summary>
+    public async Task RepairBrokerAsync(Guid tenantId, CancellationToken ct)
+    {
+        var tenant = await context.Tenants.SingleAsync(t => t.Id == tenantId, ct);
+        if (tenant.Status != TenantStatus.Running || string.IsNullOrEmpty(tenant.BrokerPassword)) return;
+        var runId = Guid.NewGuid();
+        var stacks = Stacks(tenant);
+        try
+        {
+            await Step(tenant, runId, "broker-user", async () =>
+            {
+                await nodes.For(tenant).Broker.EnsureUserAsync(TenantNaming.BrokerUser(tenant.Slug), tenant.BrokerPassword, ct);
+                return $"user {TenantNaming.BrokerUser(tenant.Slug)}";
+            }, ct);
+            await BrokerStepAsync(tenant, runId, ct);
+            await Step(tenant, runId, "restart", async () =>
+            {
+                await stacks.StopAsync(tenant.Slug, ct);
+                return await stacks.UpAsync(tenant.Slug, pull: false, ct);
+            }, ct);
+            await QueuesStepAsync(tenant, runId, ct);
+            await HealthStepAsync(tenant, runId, ct);
+            await audit.WriteAsync("tenant.broker-repair.done", tenant.Slug, null, ct, Source);
+        }
+        catch (Exception ex) when (!ct.IsCancellationRequested)
+        {
+            // The stack keeps its Running record: the watchdog says what is wrong with it, and asks again next time
+            logger.LogError(ex, "Broker repair of {Slug} failed", tenant.Slug);
+            tenant.LastError = ex.Message;
+            await context.SaveChangesAsync(ct);
+            await audit.WriteAsync("tenant.broker-repair.failed", tenant.Slug, new { error = ex.Message }, ct, Source);
+        }
+    }
+
     /// <summary>A backup of the databases and the uploads, then the oldest go once there are more than kept; a copy off the box when there is somewhere to send it.</summary>
     public async Task BackupAsync(Guid tenantId, CancellationToken ct)
     {

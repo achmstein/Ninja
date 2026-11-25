@@ -224,6 +224,9 @@ internal sealed class AgentBrokerAdmin(AgentHttp agent) : IBrokerAdmin
 
     public async Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
         => await agent.GetAsync<Dictionary<string, long>>(AgentHttp.Path("broker", "vhosts", vhost, "queues"), ct);
+
+    public async Task<IReadOnlyList<string>> VHostsAsync(CancellationToken ct)
+        => await agent.GetAsync<List<string>>(AgentHttp.Path("broker", "vhosts"), ct);
 }
 
 internal sealed class AgentCapacity(AgentHttp agent) : IHostCapacity

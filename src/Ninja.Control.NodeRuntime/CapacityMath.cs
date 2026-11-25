@@ -5,7 +5,8 @@ using System.Text.RegularExpressions;
 namespace Ninja.Control.NodeRuntime;
 
 /// <summary>What one compose project's containers weigh right now.</summary>
-public sealed record ProjectUsage(string Project, int Containers, int Running, long MemoryMb, double CpuPercent);
+/// <param name="Unhealthy">Containers running but failing their health check (a service that lost its broker or its database).</param>
+public sealed record ProjectUsage(string Project, int Containers, int Running, long MemoryMb, double CpuPercent, int Unhealthy = 0);
 
 /// <summary>The arithmetic of a box's room, on text the host and docker print; pure, so it is testable without a box.</summary>
 public static partial class CapacityMath
@@ -60,7 +61,8 @@ public static partial class CapacityMath
 
     /// <summary>
     /// The usage per compose project. <paramref name="psLines"/> is
-    /// <c>docker ps -a --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.State}}'</c>;
+    /// <c>docker ps -a --format '{{.Names}}\t{{.Label "com.docker.compose.project"}}\t{{.State}}\t{{.Status}}'</c>
+    /// (the status reads "Up 3 hours (unhealthy)" for one failing its health check);
     /// <paramref name="statsJsonLines"/> is <c>docker stats --no-stream --format '{{json .}}'</c>
     /// (one object per running container: Name, CPUPerc, MemUsage). Stats carry
     /// no labels, so the two are joined on the container name.
@@ -82,7 +84,7 @@ public static partial class CapacityMath
             catch (JsonException) { }
         }
 
-        var byProject = new Dictionary<string, (int Containers, int Running, long Mb, double Cpu)>(StringComparer.Ordinal);
+        var byProject = new Dictionary<string, (int Containers, int Running, long Mb, double Cpu, int Unhealthy)>(StringComparer.Ordinal);
         foreach (var line in psLines.Split('\n', StringSplitOptions.RemoveEmptyEntries))
         {
             var cols = line.Split('\t');
@@ -91,13 +93,14 @@ public static partial class CapacityMath
             var project = cols[1].Trim();
             if (project.Length == 0) continue;
             var running = cols.Length > 2 && string.Equals(cols[2].Trim(), "running", StringComparison.OrdinalIgnoreCase);
+            var unhealthy = running && cols.Length > 3 && cols[3].Contains("(unhealthy)", StringComparison.OrdinalIgnoreCase);
             var (mb, cpu) = stats.TryGetValue(name, out var s) ? s : (0, 0);
             var acc = byProject.GetValueOrDefault(project);
-            byProject[project] = (acc.Containers + 1, acc.Running + (running ? 1 : 0), acc.Mb + mb, acc.Cpu + cpu);
+            byProject[project] = (acc.Containers + 1, acc.Running + (running ? 1 : 0), acc.Mb + mb, acc.Cpu + cpu, acc.Unhealthy + (unhealthy ? 1 : 0));
         }
 
         return byProject
-            .Select(kv => new ProjectUsage(kv.Key, kv.Value.Containers, kv.Value.Running, kv.Value.Mb, Math.Round(kv.Value.Cpu, 1)))
+            .Select(kv => new ProjectUsage(kv.Key, kv.Value.Containers, kv.Value.Running, kv.Value.Mb, Math.Round(kv.Value.Cpu, 1), kv.Value.Unhealthy))
             .OrderBy(p => p.Project, StringComparer.Ordinal)
             .ToList();
     }

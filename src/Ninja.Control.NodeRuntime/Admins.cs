@@ -33,6 +33,9 @@ public interface IBrokerAdmin
 
     /// <summary>Every queue in the vhost and how many messages wait in it, ready or not yet acknowledged.</summary>
     Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct);
+
+    /// <summary>The vhosts the broker has: what the watchdog holds the running stacks against.</summary>
+    Task<IReadOnlyList<string>> VHostsAsync(CancellationToken ct);
 }
 
 /// <summary>As the superuser: roles and databases in and out, and the hand-over of a database created before its tenant had a role of its own.</summary>
@@ -240,6 +243,11 @@ public sealed class RabbitCtlBrokerAdmin(IShell shell, IOptions<NodeSettings> op
     public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct)
         => CtlAsync(["delete_queue", "-p", vhost, queue], ct, tolerate: true);
 
+    public async Task<IReadOnlyList<string>> VHostsAsync(CancellationToken ct)
+        => (await CtlAsync(["list_vhosts", "--quiet", "--no-table-headers"], ct))
+            .Split('\n', StringSplitOptions.RemoveEmptyEntries | StringSplitOptions.TrimEntries)
+            .ToList();
+
     public async Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
     {
         // name, then ready plus unacknowledged, a tab between, one queue a line
@@ -286,11 +294,16 @@ public sealed class DryRunBrokerAdmin(ILogger<DryRunBrokerAdmin> logger) : IBrok
     public Task<IReadOnlyDictionary<string, long>> QueueDepthsAsync(string vhost, CancellationToken ct)
         => Task.FromResult<IReadOnlyDictionary<string, long>>(new Dictionary<string, long>());
 
+    /// <summary>The vhosts asked for so far.</summary>
+    public Task<IReadOnlyList<string>> VHostsAsync(CancellationToken ct) => Task.FromResult<IReadOnlyList<string>>(VHosts);
+
+    public List<string> VHosts { get; } = [];
+
     public List<string> Users { get; } = [];
     public Task EnsureUserAsync(string user, string password, CancellationToken ct) { if (!Users.Contains(user)) Users.Add(user); logger.LogInformation("(dry run) broker user {User}", user); return Task.CompletedTask; }
-    public Task EnsureVHostAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) vhost {VHost} for {User}", vhost, user); return Task.CompletedTask; }
+    public Task EnsureVHostAsync(string vhost, string user, CancellationToken ct) { if (!VHosts.Contains(vhost)) VHosts.Add(vhost); logger.LogInformation("(dry run) vhost {VHost} for {User}", vhost, user); return Task.CompletedTask; }
     public Task ClearPermissionsAsync(string vhost, string user, CancellationToken ct) { logger.LogInformation("(dry run) {User} off vhost {VHost}", user, vhost); return Task.CompletedTask; }
-    public Task DeleteVHostAsync(string vhost, CancellationToken ct) { logger.LogInformation("(dry run) delete vhost {VHost}", vhost); return Task.CompletedTask; }
+    public Task DeleteVHostAsync(string vhost, CancellationToken ct) { VHosts.Remove(vhost); logger.LogInformation("(dry run) delete vhost {VHost}", vhost); return Task.CompletedTask; }
     public Task DeleteUserAsync(string user, CancellationToken ct) { Users.Remove(user); logger.LogInformation("(dry run) delete broker user {User}", user); return Task.CompletedTask; }
     public List<string> DeletedQueues { get; } = [];
     public Task DeleteQueueAsync(string vhost, string queue, CancellationToken ct) { DeletedQueues.Add($"{vhost}/{queue}"); logger.LogInformation("(dry run) delete queue {Queue} on {VHost}", queue, vhost); return Task.CompletedTask; }

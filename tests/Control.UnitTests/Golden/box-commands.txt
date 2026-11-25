@@ -62,7 +62,7 @@ docker exec ninja-eventbus-1 rabbitmqctl delete_vhost blue
 docker exec ninja-eventbus-1 rabbitmqctl delete_user blue
 ## capacity
 docker system df --format {{json .}}
-docker ps -a --format {{.Names}}	{{.Label "com.docker.compose.project"}}	{{.State}}
+docker ps -a --format {{.Names}}	{{.Label "com.docker.compose.project"}}	{{.State}}	{{.Status}}
 docker stats --no-stream --format {{json .}}
 ## destroy
 docker compose -p ninja-blue down -v --remove-orphans

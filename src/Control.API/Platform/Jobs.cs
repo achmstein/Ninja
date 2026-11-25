@@ -22,7 +22,7 @@ public sealed record ProvisioningJob(Guid TenantId, string Action, string? Image
     /// <summary>What an admin or a sweep needs now goes before a stamp already waiting; a backup after both.</summary>
     public static int PriorityOf(string action) => action switch
     {
-        "stop" or "suspend" or "destroy" or "start" or "resume" or "edge" or "entitlements" => 0,
+        "stop" or "suspend" or "destroy" or "start" or "resume" or "edge" or "entitlements" or "broker" => 0,
         "backup" => 20,
         _ => 10,
     };
@@ -323,6 +323,7 @@ public abstract class ProvisioningWorker(JobLane lane, ProvisioningQueue queue, 
         "entitlements" => provisioner.EntitlementsAsync(job.TenantId, ct),
         "upgrade" => provisioner.UpgradeAsync(job.TenantId, job.ImageTag, job.CanaryId, ct),
         "rollback" => provisioner.RollbackAsync(job.TenantId, ct),
+        "broker" => provisioner.RepairBrokerAsync(job.TenantId, ct),
         "demo-data" => provisioner.DemoDataAsync(job.TenantId, ct),
         "photos" => provisioner.PhotosAsync(job.TenantId, ct),
         "move" => provisioner.MoveAsync(job.TenantId, ct),

@@ -107,13 +107,22 @@ public static class Reconciler
 /// Once a minute: the drive against its floor, each lane's heartbeat, and
 /// jobs running past their time; every hour, the record against what
 /// docker actually runs. Each finding is a warning on the platform page and,
-/// the first time it appears, an audit row and a mail to ops. Nothing is
-/// changed on its own: a stack that is down is for someone to look at.
+/// the first time it appears, an audit row and a mail to ops. Every five
+/// minutes, each running stack's health: services that run but fail their
+/// checks, and a broker account that is gone. Nothing is changed on its own
+/// but that account: the broker starting empty took every stack's at once,
+/// and putting it back (RepairBrokerAsync) only restores what the record
+/// says. A stack that is down is for someone to look at.
 /// </summary>
-public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache capacity, WorkerHeartbeat heartbeat, PlatformWarnings warnings, INodes nodes, IOptions<PlatformOptions> options, ILogger<PlatformWatchdog> logger) : BackgroundService
+public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache capacity, WorkerHeartbeat heartbeat, PlatformWarnings warnings, INodes nodes, ProvisioningQueue queue, IOptions<PlatformOptions> options, ILogger<PlatformWatchdog> logger) : BackgroundService
 {
     private static readonly TimeSpan Tick = TimeSpan.FromMinutes(1);
     private static readonly TimeSpan Reconcile = TimeSpan.FromHours(1);
+    internal static readonly TimeSpan HealthEvery = TimeSpan.FromMinutes(5);
+
+    /// <summary>The findings only the five-minute health pass makes, so only it clears them.</summary>
+    private static readonly string[] HealthKeys = ["unhealthy:", "broker:", "broker-node:"];
+    private DateTimeOffset _lastHealth = DateTimeOffset.MinValue;
 
     private readonly HashSet<string> _seen = new(StringComparer.Ordinal);
     private DateTimeOffset _lastReconcile = DateTimeOffset.MinValue;
@@ -133,6 +142,52 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             try { await TickAsync(stoppingToken); }
             catch (Exception ex) when (!stoppingToken.IsCancellationRequested) { logger.LogError(ex, "Watchdog tick failed"); }
         } while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+
+    /// <summary>
+    /// Each running stack on each node that could be read: one whose services run but fail their health
+    /// checks is said (the record only knows it is Running), and one whose broker vhost is gone is said and
+    /// put back, as the record has it, by a broker job.
+    /// </summary>
+    private async Task WatchStacksAsync(ControlContext context, List<(string Key, string Warning, string Action, object Details, MailMessage? Mail)> findings, HashSet<int> unreachable, CancellationToken ct)
+    {
+        var running = await context.Tenants.AsNoTracking().Where(t => t.Status == TenantStatus.Running).Select(t => new { t.Id, t.Slug, t.NodeId }).ToListAsync(ct);
+        var box = await capacity.RefreshAsync(ct);
+        var unread = (await capacity.RefreshAgentsAsync(ct)).Select(f => f.Node.Id).ToHashSet();
+        var readings = new List<(int NodeId, string? Name, CapacitySnapshot Box)> { (Node.HomeId, null, box) };
+        foreach (var node in nodes.Known.Where(n => n.Kind == NodeKind.Agent && n.Status != NodeStatus.Retired))
+            if (!unread.Contains(node.Id) && !unreachable.Contains(node.Id) && capacity.For(node.Id) is { } reading)
+                readings.Add((node.Id, node.Name, reading));
+
+        foreach (var (nodeId, name, reading) in readings)
+        {
+            var on = name ?? "the box";
+            var here = running.Where(t => t.NodeId == nodeId).ToList();
+            if (here.Count == 0) continue;
+            foreach (var t in here)
+                if (reading.Projects.FirstOrDefault(p => p.Project == TenantNaming.Project(t.Slug)) is { Unhealthy: > 0 } usage)
+                    findings.Add(($"unhealthy:{t.Slug}", $"{t.Slug}: {usage.Unhealthy} of its {usage.Running} running services fail their health check on {on}",
+                        "tenant.unhealthy", new { slug = t.Slug, node = on, unhealthy = usage.Unhealthy }, null));
+
+            IReadOnlyList<string> vhosts;
+            try
+            {
+                vhosts = await nodes.For(nodeId).Broker.VHostsAsync(ct);
+            }
+            catch (Exception ex) when (!ct.IsCancellationRequested)
+            {
+                logger.LogWarning(ex, "The broker on {Node} could not be read", on);
+                findings.Add(($"broker-node:{on}", $"The broker on {on} does not answer: no stack there can pass events", "platform.broker-down", new { node = on }, null));
+                continue;
+            }
+            foreach (var t in here.Where(t => !vhosts.Contains(TenantNaming.VHost(t.Slug))))
+            {
+                findings.Add(($"broker:{t.Slug}", $"{t.Slug} has no broker account on {on}, so its services cannot pass events: it is being put back",
+                    "tenant.broker-missing", new { slug = t.Slug, node = on }, null));
+                // One waiting at a time: the queue adds nothing while the last is still there
+                await queue.EnqueueAsync(new ProvisioningJob(t.Id, "broker"), ct);
+            }
+        }
     }
 
     /// <summary>
@@ -271,9 +326,27 @@ public sealed class PlatformWatchdog(IServiceScopeFactory scopes, CapacityCache 
             }
         }
 
+        // Each running stack's health, and its broker account, every few minutes
+        var healthPass = false;
+        if (snapshot is not null && now - _lastHealth >= HealthEvery)
+        {
+            _lastHealth = now;
+            healthPass = true;
+            await WatchStacksAsync(context, findings, unreachable, ct);
+        }
+
         // What cleared, clears; what is new is said once
         var current = findings.Select(f => f.Key).ToHashSet(StringComparer.Ordinal);
-        foreach (var key in _seen.Where(k => !current.Contains(k) && !k.StartsWith("down:", StringComparison.Ordinal) && !k.StartsWith("orphan:", StringComparison.Ordinal)).ToList())
+        if (healthPass)
+        {
+            foreach (var key in _seen.Where(k => HealthKeys.Any(h => k.StartsWith(h, StringComparison.Ordinal)) && !current.Contains(k)).ToList())
+            {
+                _seen.Remove(key);
+                warnings.Clear(key);
+            }
+        }
+        foreach (var key in _seen.Where(k => !current.Contains(k) && !k.StartsWith("down:", StringComparison.Ordinal) && !k.StartsWith("orphan:", StringComparison.Ordinal)
+                                             && !HealthKeys.Any(h => k.StartsWith(h, StringComparison.Ordinal))).ToList())
         {
             _seen.Remove(key);
             warnings.Clear(key);
