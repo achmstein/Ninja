@@ -15,6 +15,7 @@ class CourierCompanyEntityTypeConfiguration : IEntityTypeConfiguration<CourierCo
         builder.Property(c => c.ApiBaseUrl).HasMaxLength(500);
         builder.Property(c => c.SealedApiKey).HasMaxLength(1000);
         builder.Property(c => c.SealedWebhookSecret).HasMaxLength(1000);
+        builder.Property(c => c.TestJobId).HasMaxLength(DeliveryLimits.CourierJobId);
         builder.Ignore(c => c.IsConnected);
     }
 }

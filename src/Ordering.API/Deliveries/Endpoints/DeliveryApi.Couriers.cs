@@ -61,6 +61,18 @@ public static partial class DeliveryApi
             .WithDescription("The company signs its status calls with it; the one before stops working at once.")
             .RequireAuthorization("Admin");
 
+        orders.MapPost("/couriers/{providerId:int}/test-job", SendCourierTestJobAsync)
+            .WithName("SendCourierTestJob")
+            .WithSummary("Send a connected courier company a test job, then cancel it, and say what its system answered (admin)")
+            .WithDescription("Marked test, with nothing to deliver and nothing to collect. The job id it gives is kept, so a status the company sends for it is checked and answered without touching an order.")
+            .RequireAuthorization("Admin");
+
+        orders.MapGet("/couriers/{providerId:int}/calls", GetCourierCallsAsync)
+            .WithName("GetCourierCalls")
+            .WithSummary("A connected courier company's recent status calls and how each was answered (admin)")
+            .WithDescription("Newest first, the last fifty, kept two weeks: what to read when its steps do not arrive (401 a wrong secret or clock, 410 a job it no longer has).")
+            .RequireAuthorization("Admin");
+
         orders.MapPost("/couriers/{providerId:int}/status", ReceiveCourierStatusAsync)
             .WithName("ReceiveCourierStatus")
             .WithSummary("A connected courier company's status for one of its jobs (signed by the company)")
@@ -192,12 +204,45 @@ public static partial class DeliveryApi
         return TypedResults.Ok(new CourierWebhookSecretView(secret, couriers.StatusUrl(provider.Id)));
     }
 
-    public static async Task<IResult> ReceiveCourierStatusAsync(int providerId, HttpRequest request, CourierStatusReceiver receiver, CancellationToken ct)
+    public static async Task<Results<Ok<CourierTestJobView>, ProblemHttpResult>> SendCourierTestJobAsync(
+        int providerId, OrderingContext context, ICourierDispatch couriers, CancellationToken ct)
+    {
+        var provider = await context.CourierProviders.AsNoTracking().FirstOrDefaultAsync(p => p.Id == providerId, ct);
+        if (provider is null)
+            return OrderingProblems.Of("courier.not_found", "There is no such courier company.");
+        if (!provider.IsConnected)
+            return OrderingProblems.Of("courier.not_connected", "Connect the company's system first.");
+        return TypedResults.Ok(await couriers.SendTestJobAsync(provider, ct));
+    }
+
+    public static async Task<Ok<List<CourierCallView>>> GetCourierCallsAsync(int providerId, OrderingContext context)
+    {
+        var calls = await context.CourierStatusCalls.AsNoTracking()
+            .Where(c => c.CompanyId == providerId)
+            .OrderByDescending(c => c.ReceivedAt).ThenByDescending(c => c.Id)
+            .Take(50)
+            .Select(c => new CourierCallView(c.ReceivedAt, c.Status, c.OrderId, c.JobId, c.Sequence, c.Result, c.Detail))
+            .ToListAsync();
+        return TypedResults.Ok(calls);
+    }
+
+    public static async Task<IResult> ReceiveCourierStatusAsync(
+        int providerId, HttpRequest request, CourierStatusReceiver receiver, CourierCallLog log, CancellationToken ct)
+    {
+        var (result, code, detail, body) = await AnswerCourierStatusAsync(providerId, request, receiver, ct);
+        // Kept with its answer, whatever it was: what the owner reads when the company's steps do not arrive
+        if (body is not null)
+            await log.RecordAsync(providerId, body, code, detail);
+        return result;
+    }
+
+    private static async Task<(IResult Result, int Code, string? Detail, string? Body)> AnswerCourierStatusAsync(
+        int providerId, HttpRequest request, CourierStatusReceiver receiver, CancellationToken ct)
     {
         using var reader = new StreamReader(request.Body);
         var body = await reader.ReadToEndAsync(ct);
         if (body.Length > 64 * 1024)
-            return TypedResults.Problem("The status is too long.", statusCode: StatusCodes.Status413PayloadTooLarge);
+            return Problem(StatusCodes.Status413PayloadTooLarge, "The status is too long.", null);
         try
         {
             var (outcome, detail) = await receiver.ReceiveAsync(
@@ -207,22 +252,27 @@ public static partial class DeliveryApi
                 ct);
             return outcome switch
             {
-                CourierStatusOutcome.Applied => TypedResults.Ok(),
-                CourierStatusOutcome.Unsigned => TypedResults.Problem("Not signed by the company, or too old.", statusCode: StatusCodes.Status401Unauthorized),
-                CourierStatusOutcome.UnknownCompany => TypedResults.Problem("No such connected courier company.", statusCode: StatusCodes.Status404NotFound),
-                CourierStatusOutcome.NotYourJob => TypedResults.Problem("The order is not this company's job any more.", statusCode: StatusCodes.Status410Gone),
-                _ => TypedResults.Problem(detail ?? "Not a status.", statusCode: StatusCodes.Status400BadRequest),
+                CourierStatusOutcome.Applied => (TypedResults.Ok(), StatusCodes.Status200OK, detail, body),
+                CourierStatusOutcome.Unsigned => Problem(StatusCodes.Status401Unauthorized, "Not signed by the company, or too old.", body),
+                // No such company: nothing is kept for a call to a number the business does not list
+                CourierStatusOutcome.UnknownCompany => Problem(StatusCodes.Status404NotFound, "No such connected courier company.", body),
+                CourierStatusOutcome.NotYourJob => Problem(StatusCodes.Status410Gone, "The order is not this company's job any more.", body),
+                _ => Problem(StatusCodes.Status400BadRequest, detail ?? "Not a status.", body),
             };
         }
         catch (OrderingDomainException ex)
         {
-            return OrderingProblems.From(ex);
+            var problem = OrderingProblems.From(ex);
+            return (problem, problem.StatusCode, $"{ex.Code}: {ex.Message}", body);
         }
         catch (DbUpdateConcurrencyException)
         {
             // Two statuses crossed: the company sends this one again
-            return TypedResults.Problem("Send it again.", statusCode: StatusCodes.Status503ServiceUnavailable);
+            return Problem(StatusCodes.Status503ServiceUnavailable, "Send it again.", body);
         }
+
+        static (IResult, int, string?, string?) Problem(int code, string detail, string? body) =>
+            (TypedResults.Problem(detail, statusCode: code), code, detail, body);
     }
 
     private static CourierConnectionView ConnectionView(CourierCompany p, CourierSecrets secrets, ICourierDispatch couriers) =>

@@ -334,6 +334,59 @@ public sealed class CourierApiScenarios
         Assert.AreEqual(HttpStatusCode.Gone, late.StatusCode, "nothing to settle on a voided bill");
     }
 
+    private sealed record TestJob(bool Taken, int? StatusCode, string? JobId, string? Detail, int ElapsedMs, bool Cancelled);
+    private sealed record Call(DateTime ReceivedAt, string? Status, int? OrderId, string? JobId, int? Sequence, int Result, string? Detail);
+
+    [TestMethod]
+    public async Task A_test_job_shows_what_the_companys_system_answered_and_a_status_for_it_is_checked_without_an_order()
+    {
+        var (company, host, secret) = await ConnectedCompanyAsync();
+
+        var test = await Owner.PostAsync<TestJob>($"{Orders}/couriers/{company}/test-job?{Version}");
+        Assert.IsTrue(test.Taken, test.Detail);
+        Assert.AreEqual(200, test.StatusCode);
+        Assert.AreEqual("job-0", test.JobId);
+        Assert.IsTrue(test.Cancelled, "its cancel is tried too");
+        var sent = FakeCourierSystem.To(host).First(c => c.Path.EndsWith("/jobs", StringComparison.Ordinal));
+        Assert.IsTrue((bool)sent.Body!["test"]!, "marked test: the company sends nobody");
+        Assert.AreEqual(0m, (decimal)sent.Body["cashToCollect"]!);
+
+        // The company tries its signing on the test job: answered, and no order moves
+        using (var tried = await StatusAsync(company, secret, new { jobId = "job-0", orderId = 0, sequence = 1, status = "assigned", courierName = "Karim" }))
+            Assert.AreEqual(HttpStatusCode.OK, tried.StatusCode, await tried.Content.ReadAsStringAsync());
+        using (var forged = await StatusAsync(company, "whsec_wrong", new { jobId = "job-0", orderId = 0, sequence = 2, status = "picked_up" }))
+            Assert.AreEqual(HttpStatusCode.Unauthorized, forged.StatusCode);
+
+        // Both kept, newest first, with how each was answered
+        var calls = await Owner.GetAsync<List<Call>>($"{Orders}/couriers/{company}/calls?{Version}");
+        Assert.AreEqual(2, calls.Count);
+        Assert.AreEqual(401, calls[0].Result);
+        Assert.AreEqual(200, calls[1].Result);
+        Assert.AreEqual("assigned", calls[1].Status);
+        StringAssert.Contains(calls[1].Detail, "Test job");
+
+        var (cashier, _) = await Till.RefusedAsync(HttpMethod.Get, $"{Orders}/couriers/{company}/calls?{Version}");
+        Assert.AreEqual(HttpStatusCode.Forbidden, cashier);
+    }
+
+    [TestMethod]
+    public async Task A_test_job_the_company_does_not_take_says_what_it_answered()
+    {
+        var (company, host, _) = await ConnectedCompanyAsync();
+        FakeCourierSystem.Refusing[host] = true;
+        try
+        {
+            var test = await Owner.PostAsync<TestJob>($"{Orders}/couriers/{company}/test-job?{Version}");
+            Assert.IsFalse(test.Taken);
+            Assert.AreEqual(503, test.StatusCode);
+            Assert.AreEqual("busy", test.Detail);
+        }
+        finally
+        {
+            FakeCourierSystem.Refusing.TryRemove(host, out _);
+        }
+    }
+
     [TestMethod]
     public async Task Only_the_owner_connects_a_company_and_its_key_never_comes_back()
     {

@@ -35,6 +35,12 @@ public class CourierCompany
     /// <summary>The secret its status calls are signed with, made by Ninja and given to the company, sealed.</summary>
     public string? SealedWebhookSecret { get; set; }
 
+    /// <summary>
+    /// The job id the company gave the last test job the owner sent from admin: a status for it is
+    /// checked (signature, body) and answered, and changes no order.
+    /// </summary>
+    public string? TestJobId { get; set; }
+
     /// <summary>Connected: a delivery given to it is sent to its system as a job.</summary>
     public bool IsConnected => !string.IsNullOrWhiteSpace(ApiBaseUrl);
 

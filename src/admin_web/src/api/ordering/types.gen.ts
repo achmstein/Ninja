@@ -81,6 +81,16 @@ export type ConnectorPairingView = {
     expiresAt: string;
 };
 
+export type CourierCallView = {
+    receivedAt: string;
+    status: null | string;
+    orderId: null | number | string;
+    jobId: null | string;
+    sequence: null | number | string;
+    result: number | string;
+    detail: null | string;
+};
+
 export type CourierConnectionRequest = {
     apiBaseUrl: null | string;
     apiKey?: null | string;
@@ -113,6 +123,15 @@ export type CourierProviderView = {
     defaultFee: null | number | string;
     isActive: boolean;
     isConnected?: boolean;
+};
+
+export type CourierTestJobView = {
+    taken: boolean;
+    statusCode: null | number | string;
+    jobId: null | string;
+    detail: null | string;
+    elapsedMs: number | string;
+    cancelled: boolean;
 };
 
 export type CourierWebhookSecretView = {
@@ -2623,6 +2642,74 @@ export type NewCourierWebhookSecretResponses = {
 };
 
 export type NewCourierWebhookSecretResponse = NewCourierWebhookSecretResponses[keyof NewCourierWebhookSecretResponses];
+
+export type SendCourierTestJobData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}/test-job';
+};
+
+export type SendCourierTestJobErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SendCourierTestJobResponses = {
+    /**
+     * OK
+     */
+    200: CourierTestJobView;
+};
+
+export type SendCourierTestJobResponse = SendCourierTestJobResponses[keyof SendCourierTestJobResponses];
+
+export type GetCourierCallsData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}/calls';
+};
+
+export type GetCourierCallsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierCallsResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierCallView>;
+};
+
+export type GetCourierCallsResponse = GetCourierCallsResponses[keyof GetCourierCallsResponses];
 
 export type MarkCourierDeliveredData = {
     body: CourierDeliveredRequest;

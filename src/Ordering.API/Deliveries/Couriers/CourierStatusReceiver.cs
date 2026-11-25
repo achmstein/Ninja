@@ -80,6 +80,10 @@ public sealed class CourierStatusReceiver(
         if (status is null || string.IsNullOrWhiteSpace(status.JobId) || status.Sequence <= 0 || string.IsNullOrWhiteSpace(status.Status))
             return (CourierStatusOutcome.Invalid, "jobId, sequence (from 1) and status are required.");
 
+        // A status for the test job the owner sent: signed and whole, which is what was being tried
+        if (company.TestJobId is { } testJob && status.JobId.Trim() == testJob)
+            return (CourierStatusOutcome.Applied, "Test job: the signature and the status are right.");
+
         // The step in Ordering's own transaction, as the till's are: its events go out through the outbox
         return await mediator.Send(new ApplyCourierStatusCommand(companyId, status), ct);
     }

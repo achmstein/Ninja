@@ -58,6 +58,7 @@ public static class DeliveryModule
         services.AddSingleton<CourierSecrets>();
         services.AddScoped<ICourierDispatch, CourierDispatch>();
         services.AddScoped<CourierStatusReceiver>();
+        services.AddSingleton<CourierCallLog>();
         services.AddHostedService<CourierCancelSender>();
         // Not the shared retries: the till hears at once when a company does not take a job, and a cancel has its own
 #pragma warning disable EXTEXP0001 // RemoveAllResilienceHandlers is marked experimental, as in Control.API

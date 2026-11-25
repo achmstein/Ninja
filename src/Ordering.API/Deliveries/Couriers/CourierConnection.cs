@@ -106,6 +106,12 @@ public interface ICourierDispatch
 
     /// <summary>Where a company sends its status for its jobs.</summary>
     string StatusUrl(int companyId);
+
+    /// <summary>
+    /// Sends a test job (marked test, nothing to deliver) as a real one is sent, then cancels it, and
+    /// says what the company answered. The job id it gave is kept so a status for it can be tried.
+    /// </summary>
+    Task<CourierTestJobView> SendTestJobAsync(CourierCompany company, CancellationToken ct = default);
 }
 
 public sealed class CourierDispatch(
@@ -229,6 +235,63 @@ public sealed class CourierDispatch(
         }
     }
 
+    public async Task<CourierTestJobView> SendTestJobAsync(CourierCompany company, CancellationToken ct = default)
+    {
+        var branch = await context.BranchSettings.AsNoTracking().OrderBy(b => b.BranchId).FirstOrDefaultAsync(b => b.IsActive, ct);
+        var reference = $"test-{Guid.NewGuid():N}"[..13];
+        var job = new CourierJobRequest(
+            OrderId: 0,
+            Reference: reference,
+            CallbackUrl: StatusUrl(company.Id),
+            Pickup: new CourierPickup(
+                branch?.NameEn ?? branch?.NameAr, branch?.NameAr, branch?.AddressEn ?? branch?.AddressAr, branch?.AddressAr,
+                branch?.Phone, branch?.Latitude, branch?.Longitude),
+            Dropoff: new CourierDropoff("Test customer", "+200000000000", "Test job: nothing to deliver", null, null, null, null, branch?.Latitude, branch?.Longitude),
+            CashToCollect: 0,
+            Items: [new CourierItem("Test item", 1)],
+            Test: true);
+
+        var started = System.Diagnostics.Stopwatch.StartNew();
+        try
+        {
+            using var request = new HttpRequestMessage(HttpMethod.Post, $"{company.ApiBaseUrl!.TrimEnd('/')}/jobs")
+            {
+                Content = JsonContent.Create(job, options: JsonSerializerOptions.Web),
+            };
+            Authorize(request, company);
+            request.Headers.Add("Idempotency-Key", $"ninja-{reference}");
+            using var response = await http.CreateClient(HttpClientName).SendAsync(request, ct);
+            var elapsed = (int)started.ElapsedMilliseconds;
+            var text = await response.Content.ReadAsStringAsync(ct);
+            var detail = text.Length > 500 ? text[..500] : text;
+            if (!response.IsSuccessStatusCode)
+                return new(false, (int)response.StatusCode, null, detail, elapsed, false);
+
+            string? jobId = null;
+            try
+            {
+                jobId = JsonSerializer.Deserialize<CourierJobResponse>(text, JsonSerializerOptions.Web)?.JobId?.Trim();
+            }
+            catch (JsonException)
+            {
+            }
+            if (string.IsNullOrEmpty(jobId))
+                return new(false, (int)response.StatusCode, null, "It answered without a jobId: " + detail, elapsed, false);
+
+            var tracked = await context.CourierProviders.FirstAsync(c => c.Id == company.Id, ct);
+            tracked.TestJobId = jobId.Length > DeliveryLimits.CourierJobId ? jobId[..DeliveryLimits.CourierJobId] : jobId;
+            await context.SaveChangesAsync(ct);
+
+            // Cancelled at once, as a real one taken back is: the company's cancel is tried too
+            var (cancelled, _, _) = await SendCancelAsync(new CourierCancel { CompanyId = company.Id, JobId = jobId, OrderId = 0, Reason = "test" }, ct);
+            return new(true, (int)response.StatusCode, jobId, null, elapsed, cancelled);
+        }
+        catch (Exception ex) when (ex is HttpRequestException or TaskCanceledException && !ct.IsCancellationRequested)
+        {
+            return new(false, null, null, ex is TaskCanceledException ? "No answer within 15 seconds." : ex.Message, (int)started.ElapsedMilliseconds, false);
+        }
+    }
+
     private void Authorize(HttpRequestMessage request, CourierCompany company)
     {
         if (company.SealedApiKey is { } sealedKey)
@@ -246,7 +309,9 @@ public sealed record CourierJobRequest(
     CourierPickup Pickup,
     CourierDropoff Dropoff,
     decimal CashToCollect,
-    List<CourierItem> Items);
+    List<CourierItem> Items,
+    // A test job the owner sent from admin: the company answers it as a real one and sends nobody
+    bool Test = false);
 
 public sealed record CourierPickup(string? Name, string? NameAr, string? Address, string? AddressAr, string? Phone, double? Latitude, double? Longitude);
 
@@ -279,4 +344,62 @@ public sealed class CancelCourierJobsCommandHandler(OrderingContext context, ICo
         foreach (var job in jobs)
             couriers.QueueCancel(job.CourierProviderId!.Value, job.CourierJobId!, job.Id, command.Reason);
     }
+}
+
+/// <summary>What a test job found: whether the company took it, what it answered, how fast, and whether its cancel was taken.</summary>
+public sealed record CourierTestJobView(bool Taken, int? StatusCode, string? JobId, string? Detail, int ElapsedMs, bool Cancelled);
+
+/// <summary>One status call from the company, as its page lists it.</summary>
+public sealed record CourierCallView(DateTime ReceivedAt, string? Status, int? OrderId, string? JobId, int? Sequence, int Result, string? Detail);
+
+/// <summary>
+/// Keeps each status call a connected company makes, with its answer, in a context of its own (the
+/// call's own may hold a step that was refused), and lets go of calls older than two weeks.
+/// </summary>
+public sealed class CourierCallLog(IServiceScopeFactory scopes, ILogger<CourierCallLog> logger)
+{
+    public static readonly TimeSpan KeptFor = TimeSpan.FromDays(14);
+
+    public async Task RecordAsync(int companyId, string body, int result, string? detail)
+    {
+        try
+        {
+            using var scope = scopes.CreateScope();
+            var context = scope.ServiceProvider.GetRequiredService<OrderingContext>();
+            // Only for a company the business lists: a call to any other number is not kept
+            if (!await context.CourierProviders.AnyAsync(c => c.Id == companyId))
+                return;
+
+            CourierStatusRequest? status = null;
+            try
+            {
+                status = JsonSerializer.Deserialize<CourierStatusRequest>(body, JsonSerializerOptions.Web);
+            }
+            catch (JsonException)
+            {
+            }
+            var now = DateTime.UtcNow;
+            context.CourierStatusCalls.Add(new CourierStatusCall
+            {
+                CompanyId = companyId,
+                ReceivedAt = now,
+                OrderId = status is { OrderId: > 0 } ? status.OrderId : null,
+                JobId = Cut(status?.JobId, DeliveryLimits.CourierJobId),
+                Status = Cut(status?.Status, 30),
+                Sequence = status?.Sequence,
+                Result = result,
+                Detail = Cut(detail, 300),
+            });
+            await context.SaveChangesAsync();
+            var before = now - KeptFor;
+            await context.CourierStatusCalls.Where(c => c.ReceivedAt < before).ExecuteDeleteAsync();
+        }
+        catch (Exception ex)
+        {
+            logger.LogWarning(ex, "Keeping a status call of courier company {Company} failed", companyId);
+        }
+    }
+
+    private static string? Cut(string? text, int max) =>
+        string.IsNullOrWhiteSpace(text) ? null : text.Trim().Length > max ? text.Trim()[..max] : text.Trim();
 }

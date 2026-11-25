@@ -4,13 +4,18 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, Plug, Plus, Truck } from 'lucide-react'
 import {
   addCourierProviderMutation,
+  getCourierCallsOptions,
   getCourierConnectionOptions,
   getCourierProvidersOptions,
   newCourierWebhookSecretMutation,
+  sendCourierTestJobMutation,
   setCourierConnectionMutation,
   updateCourierProviderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
-import { type CourierProviderView } from '@/api/ordering/types.gen'
+import {
+  type CourierProviderView,
+  type CourierTestJobView,
+} from '@/api/ordering/types.gen'
 import {
   addCourierPayoutMutation,
   getCourierBalancesOptions,
@@ -568,7 +573,144 @@ function CourierConnection({ providerId }: { providerId: number }) {
               </Button>
             </div>
           )}
+          <CourierTestKit providerId={providerId} />
         </div>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Trying a connection: a test job sent to the company's system (marked test,
+ * nothing to deliver) and what it answered, then the company's recent status
+ * calls and how each was answered. A wrong secret or a clock off shows as 401.
+ */
+function CourierTestKit({ providerId }: { providerId: number }) {
+  const t = useT()
+  const path = { providerId }
+  const calls = useQuery(getCourierCallsOptions({ path, query: q }))
+  const [result, setResult] = useState<CourierTestJobView | null>(null)
+  const test = useMutation({
+    ...sendCourierTestJobMutation(),
+    onSuccess: setResult,
+    onError: (e) => toast.error(refusal(e) ?? t('somethingWentWrong')),
+  })
+  const rows = calls.data ?? []
+
+  return (
+    <div className='space-y-3 border-t pt-4'>
+      <div className='flex flex-wrap items-center justify-between gap-2'>
+        <span className='text-sm font-medium'>{t('courierTestTitle')}</span>
+        <Button
+          type='button'
+          variant='outline'
+          size='sm'
+          disabled={test.isPending}
+          onClick={() => test.mutate({ path, query: q })}
+        >
+          {test.isPending && <Spinner />}
+          {t('courierTestSend')}
+        </Button>
+      </div>
+      <p className='text-muted-foreground text-sm'>{t('courierTestHint')}</p>
+      {result && (
+        <div
+          className={cn(
+            'rounded-md border px-3 py-2 text-sm',
+            result.taken ? 'border-success/40' : 'border-destructive/40'
+          )}
+        >
+          <p className='font-medium'>
+            {result.taken
+              ? t('courierTestTaken', {
+                  job: result.jobId ?? '',
+                  ms: toNumber(result.elapsedMs),
+                })
+              : result.statusCode != null
+                ? t('courierTestRefused', {
+                    code: toNumber(result.statusCode),
+                  })
+                : t('courierTestNoAnswer')}
+          </p>
+          {result.taken && (
+            <p className='text-muted-foreground text-xs'>
+              {t(
+                result.cancelled
+                  ? 'courierTestCancelled'
+                  : 'courierTestNotCancelled'
+              )}
+            </p>
+          )}
+          {result.detail && (
+            <pre
+              dir='ltr'
+              className='text-muted-foreground mt-1 text-xs break-all whitespace-pre-wrap'
+            >
+              {result.detail}
+            </pre>
+          )}
+        </div>
+      )}
+
+      <div className='flex items-center justify-between gap-2 pt-1'>
+        <span className='text-sm font-medium'>{t('courierCallsTitle')}</span>
+        <Button
+          type='button'
+          variant='ghost'
+          size='sm'
+          disabled={calls.isFetching}
+          onClick={() => calls.refetch()}
+        >
+          {calls.isFetching && <Spinner />}
+          {t('courierCallsRefresh')}
+        </Button>
+      </div>
+      {calls.isError ? (
+        <ErrorState error={calls.error} onRetry={calls.refetch} />
+      ) : rows.length === 0 ? (
+        <p className='text-muted-foreground text-sm'>{t('courierCallsNone')}</p>
+      ) : (
+        <ul className='divide-y rounded-md border text-sm'>
+          {rows.map((call, i) => {
+            const result = toNumber(call.result)
+            return (
+              <li key={i} className='flex items-start gap-3 px-3 py-2'>
+                <span
+                  className={cn(
+                    'w-10 shrink-0 font-mono text-xs tabular-nums',
+                    result < 300 ? 'text-success' : 'text-destructive'
+                  )}
+                >
+                  {result}
+                </span>
+                <span className='min-w-0 flex-1'>
+                  <span className='block truncate' dir='ltr'>
+                    {[
+                      call.status,
+                      call.orderId != null
+                        ? `#${toNumber(call.orderId)}`
+                        : null,
+                      call.sequence != null
+                        ? `seq ${toNumber(call.sequence)}`
+                        : null,
+                    ]
+                      .filter(Boolean)
+                      .join(' · ') || '—'}
+                  </span>
+                  {call.detail && (
+                    <span className='text-muted-foreground block text-xs break-all'>
+                      {call.detail}
+                    </span>
+                  )}
+                </span>
+                <When
+                  value={call.receivedAt}
+                  className='text-muted-foreground shrink-0 text-xs'
+                />
+              </li>
+            )
+          })}
+        </ul>
       )}
     </div>
   )

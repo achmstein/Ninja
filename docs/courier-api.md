@@ -27,6 +27,13 @@ In Ninja's admin, the business lists the company (**Courier companies**), opens 
 The company stores, per business: the key it issued, the signing secret and the status address.
 Making a new secret replaces the old one at once.
 
+To try the connection, the owner presses **Send a test job**: Ninja sends a job marked `"test": true`,
+with nothing to deliver and nothing to collect, then cancels it, and shows what the company answered
+and how fast. The company must answer it like a real job but send nobody. It may then send statuses
+for that job id: Ninja checks the signature and the body, answers `200`, and moves no order. The
+company's page lists its last fifty status calls (kept two weeks) with the code each was answered,
+so a wrong secret or a clock off shows as `401` there.
+
 ## 2. Ninja calls the company
 
 All bodies are JSON, camelCase. Ninja waits 15 seconds for an answer.
@@ -57,6 +64,7 @@ after a timeout must return the job already made, not a second one.
 }
 ```
 
+- `test` is `true` only for a test job sent from admin (see section 1); `orderId` is `0` then.
 - `cashToCollect` is what the courier collects at the door, in the business's currency; `0` when
   the customer paid online.
 - Pickup fields can be missing for a business that has not filled them in; dropoff coordinates can
