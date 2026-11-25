@@ -165,6 +165,12 @@ public record DeliveryOrder
     public DateTime? ConfirmedAt { get; init; }
     /// <summary>The kitchen finished it: it can leave.</summary>
     public DateTime? ReadyAt { get; init; }
+    /// <summary>
+    /// Whether a kitchen screen will say when it is ready: true when part of it is on a screen, false
+    /// when all of it went to kitchen printers (nobody marks those ready, so "not ready yet" would never
+    /// change), null when the branch has no stations and the app goes by whether the business has screens.
+    /// </summary>
+    public bool? KitchenMarksReady { get; init; }
     /// <summary>The bill was settled.</summary>
     public DateTime? PaidAt { get; init; }
     public string? CustomerName { get; init; }

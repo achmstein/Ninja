@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
+import '../business_data.dart';
+import 'pos_toast.dart';
 import '../brand/brand_provider.dart';
 import '../config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
@@ -27,6 +29,13 @@ class ConnectionRow extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     Future<void> change() async {
+      // Sales this business has not been sent yet stay with it: the tablet does not move on
+      final unsent = await unsentToBusiness();
+      if (!context.mounted) return;
+      if (unsent > 0) {
+        showPosToast(context, PosToastType.error, l10n.changeBusinessUnsent(unsent));
+        return;
+      }
       final ok = await showConfirmDialog(
         context,
         title: l10n.changeBusiness,
@@ -39,6 +48,8 @@ class ConnectionRow extends ConsumerWidget {
       await ref.read(authServiceProvider.notifier).signOut();
       await forgetBranch();
       await forgetBrand();
+      // Its cashiers, its menu and prices kept for offline, a sale half rung up
+      await forgetBusinessData();
       // The gate tears the app down and shows the connect screen
       await TenantConnection.clear();
     }

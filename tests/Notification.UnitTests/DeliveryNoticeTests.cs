@@ -63,6 +63,38 @@ public sealed class DeliveryNoticeTests
     private int PushesTo(string token) =>
         _fcm.ReceivedCalls().Count(c => c.GetMethodInfo().Name == nameof(IFcmService.SendNotificationAsync) && (string)c.GetArguments()[0]! == token);
 
+    private OrderReadyChangedIntegrationEventHandler ReadyHandler() =>
+        new(_context, _fcm, _hub, NullLogger<OrderReadyChangedIntegrationEventHandler>.Instance);
+
+    [TestMethod]
+    public async Task The_kitchen_marking_a_delivery_ready_rings_the_rider_waiting_for_it()
+    {
+        await ReadyHandler().Handle(new OrderReadyChangedIntegrationEvent(42, 1, true, "rider-1"));
+
+        Assert.AreEqual(1, PushesTo("phone-r1"));
+        Assert.HasCount(1, _sent["user:rider-1"], "their list moves");
+        Assert.HasCount(1, _sent["admin"], "the kitchen screens are nudged as before");
+        Assert.AreEqual(0, PushesTo("phone-c1"), "the customer is never told about the kitchen");
+    }
+
+    [TestMethod]
+    public async Task Brought_back_to_the_board_moves_the_riders_list_and_rings_nobody()
+    {
+        await ReadyHandler().Handle(new OrderReadyChangedIntegrationEvent(42, 1, false, "rider-1"));
+
+        Assert.AreEqual(0, PushesTo("phone-r1"));
+        Assert.HasCount(1, _sent["user:rider-1"]);
+    }
+
+    [TestMethod]
+    public async Task An_order_no_rider_waits_for_rings_no_rider()
+    {
+        await ReadyHandler().Handle(new OrderReadyChangedIntegrationEvent(42, 1, true));
+
+        Assert.AreEqual(0, PushesTo("phone-r1"));
+        Assert.IsFalse(_sent.ContainsKey("user:rider-1"));
+    }
+
     [TestMethod]
     public void A_stage_this_copy_does_not_know_is_unknown()
     {

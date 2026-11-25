@@ -206,6 +206,12 @@ abstract class AppLocalizations {
   /// **'Sign out and forget this business. The tablet starts over at the connect screen.'**
   String get changeBusinessConfirm;
 
+  /// No description provided for @changeBusinessUnsent.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 sale has not reached this business yet. Send it or discard it in Settings first.} other{{count} sales have not reached this business yet. Send or discard them in Settings first.}}'**
+  String changeBusinessUnsent(int count);
+
   /// No description provided for @language.
   ///
   /// In en, this message translates to:

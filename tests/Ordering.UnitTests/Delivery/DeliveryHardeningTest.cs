@@ -342,6 +342,27 @@ public class DeliveryHardeningTest
     }
 
     [TestMethod]
+    public void The_kitchen_marking_it_ready_names_the_rider_waiting_for_it_and_nobody_once_it_has_left()
+    {
+        var nobody = ConfirmedDelivery();
+        nobody.SetReady(true);
+        Assert.IsNull(nobody.DomainEvents.OfType<Ninja.Ordering.Domain.Events.OrderReadyChangedDomainEvent>().Single().RiderUserId, "given to nobody yet");
+
+        var waiting = ConfirmedDelivery();
+        waiting.AssignRider("rider-1", "Ali");
+        waiting.SetReady(true);
+        Assert.AreEqual("rider-1", waiting.DomainEvents.OfType<Ninja.Ordering.Domain.Events.OrderReadyChangedDomainEvent>().Single().RiderUserId);
+
+        var left = ConfirmedDelivery();
+        left.AssignRider("rider-1", "Ali");
+        left.SetReady(true);
+        left.MarkOutForDelivery();
+        left.ClearDomainEvents();
+        left.SetReady(false);
+        Assert.IsNull(left.DomainEvents.OfType<Ninja.Ordering.Domain.Events.OrderReadyChangedDomainEvent>().Single().RiderUserId, "already on its way: the rider is not at the branch");
+    }
+
+    [TestMethod]
     public async Task A_rider_given_two_branches_is_on_duty_at_both_whichever_their_phone_said_it_from()
     {
         var store = new Store();

@@ -386,6 +386,14 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
+  String deliveryReady(int number) {
+    return 'الطلب #‏$number جاهز للاستلام';
+  }
+
+  @override
+  String get collectAtBranch => 'استلمه من الفرع';
+
+  @override
   String get failedToUpdate => 'لم تتم العملية. أعد المحاولة.';
 
   @override

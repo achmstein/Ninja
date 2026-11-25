@@ -788,6 +788,18 @@ abstract class AppLocalizations {
   /// **'Order #{number} was given to someone else'**
   String deliveryTakenBack(int number);
 
+  /// No description provided for @deliveryReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{number} is ready to collect'**
+  String deliveryReady(int number);
+
+  /// No description provided for @collectAtBranch.
+  ///
+  /// In en, this message translates to:
+  /// **'Collect at the branch'**
+  String get collectAtBranch;
+
   /// No description provided for @failedToUpdate.
   ///
   /// In en, this message translates to:

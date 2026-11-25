@@ -197,6 +197,15 @@
       }
     }
   },
+  "deliveryReady": "Order #{number} is ready to collect",
+  "@deliveryReady": {
+    "placeholders": {
+      "number": {
+        "type": "int"
+      }
+    }
+  },
+  "collectAtBranch": "Collect at the branch",
   "failedToUpdate": "That didn't go through. Try again.",
   "customerNote": "Note",
   "guest": "Guest",

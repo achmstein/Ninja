@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
+import '../business_data.dart';
+import 'pos_toast.dart';
 import '../brand/brand_provider.dart';
 import '../config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
@@ -23,9 +25,18 @@ class ConnectionFoot extends ConsumerWidget {
     final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground);
 
     Future<void> change() async {
+      // Sales this business has not been sent yet stay with it: the tablet does not move on
+      final unsent = await unsentToBusiness();
+      if (!context.mounted) return;
+      if (unsent > 0) {
+        showPosToast(context, PosToastType.error, l10n.changeBusinessUnsent(unsent));
+        return;
+      }
       await ref.read(authServiceProvider.notifier).signOut();
       await forgetBranch();
       await forgetBrand();
+      // The last business's cashiers must not be offered on the next one's sign-in screen
+      await forgetBusinessData();
       await TenantConnection.clear();
     }
 

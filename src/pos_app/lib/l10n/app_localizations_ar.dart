@@ -67,6 +67,23 @@ class AppLocalizationsAr extends AppLocalizations {
       'سيتم تسجيل الخروج ونسيان هذا النشاط، ويعود الجهاز اللوحي إلى شاشة الاتصال.';
 
   @override
+  String changeBusinessUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count عملية بيع لم تصل إلى هذا النشاط بعد. أرسلها أو تجاهلها من الإعدادات أولًا.',
+      few:
+          '$count عمليات بيع لم تصل إلى هذا النشاط بعد. أرسلها أو تجاهلها من الإعدادات أولًا.',
+      two:
+          'عمليتا بيع لم تصلا إلى هذا النشاط بعد. أرسلهما أو تجاهلهما من الإعدادات أولًا.',
+      one:
+          'عملية بيع واحدة لم تصل إلى هذا النشاط بعد. أرسلها أو تجاهلها من الإعدادات أولًا.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get language => 'اللغة';
 
   @override

@@ -60,6 +60,11 @@ class DeliveryOrder {
 
   /// The branch it leaves from: where the bag is collected (null from a server that does not say)
   final int? branchId;
+
+  /// Whether a kitchen screen will say when it is ready: false when all of it went to kitchen
+  /// printers (nobody marks those ready), null when the server cannot tell and the business's
+  /// having screens at all decides
+  final bool? kitchenMarksReady;
   final DateTime? confirmedAt;
 
   /// The kitchen finished it: it can leave
@@ -100,6 +105,7 @@ class DeliveryOrder {
   const DeliveryOrder({
     required this.orderNumber,
     this.branchId,
+    this.kitchenMarksReady,
     required this.total,
     required this.address,
     required this.phone,
@@ -130,6 +136,7 @@ class DeliveryOrder {
     return DeliveryOrder(
       orderNumber: _num(json['orderNumber']).round(),
       branchId: _numOrNull(json['branchId'])?.round(),
+      kitchenMarksReady: json['kitchenMarksReady'] is bool ? json['kitchenMarksReady'] as bool : null,
       confirmedAt: _time(json['confirmedAt']),
       readyAt: _time(json['readyAt']),
       customerName: _text(json['customerName']),

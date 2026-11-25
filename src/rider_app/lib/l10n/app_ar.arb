@@ -115,6 +115,8 @@
   "cashWithYou": "النقود معك",
   "newDelivery": "طلب توصيل جديد #‏{number}",
   "deliveryTakenBack": "أُسند الطلب #‏{number} إلى مندوب آخر",
+  "deliveryReady": "الطلب #‏{number} جاهز للاستلام",
+  "collectAtBranch": "استلمه من الفرع",
   "failedToUpdate": "لم تتم العملية. أعد المحاولة.",
   "customerNote": "ملاحظة",
   "guest": "ضيف",

@@ -18,6 +18,14 @@
   "connectedTo": "Connected to",
   "changeBusiness": "Change business",
   "changeBusinessConfirm": "Sign out and forget this business. The tablet starts over at the connect screen.",
+  "changeBusinessUnsent": "{count, plural, =1{1 sale has not reached this business yet. Send it or discard it in Settings first.} other{{count} sales have not reached this business yet. Send or discard them in Settings first.}}",
+  "@changeBusinessUnsent": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
   "language": "Language",
   "theme": "Theme",
   "themeLight": "Light",

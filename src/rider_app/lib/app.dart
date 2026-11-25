@@ -152,6 +152,9 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
         if (event.type == 'delivery_assigned') {
           ref.read(chimeServiceProvider).play(times: 2);
           _toast(RiderToastType.info, (l10n) => l10n.newDelivery(event.orderId));
+        } else if (event.type == 'delivery_ready') {
+          ref.read(chimeServiceProvider).play();
+          _toast(RiderToastType.success, (l10n) => l10n.deliveryReady(event.orderId));
         } else if (event.type == 'delivery_unassigned') {
           _toast(RiderToastType.warning, (l10n) => l10n.deliveryTakenBack(event.orderId));
         }

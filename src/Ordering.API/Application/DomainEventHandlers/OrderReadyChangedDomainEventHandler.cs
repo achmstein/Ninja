@@ -17,7 +17,8 @@ public class OrderReadyChangedDomainEventHandler(
         var integrationEvent = new OrderReadyChangedIntegrationEvent(
             domainEvent.OrderId,
             domainEvent.BranchId,
-            domainEvent.IsReady);
+            domainEvent.IsReady,
+            domainEvent.RiderUserId);
 
         await orderingIntegrationEventService.AddAndSaveEventAsync(integrationEvent);
     }

@@ -32,6 +32,7 @@ public class DeliveryBoardQueries(
         context.Orders
             .AsNoTracking()
             .Include(o => o.OrderItems)
+            .Include(o => o.StationParts)
             .Include(o => o.Buyer)
             .Where(o => o.Delivery != null)
             .Where(o => o.OrderStatus == OrderStatus.Confirmed)
@@ -146,6 +147,7 @@ public class DeliveryBoardQueries(
             Date = o.OrderDate,
             ConfirmedAt = o.ConfirmedAt,
             ReadyAt = o.ReadyAt,
+            KitchenMarksReady = o.StationParts.Count == 0 ? null : o.StationParts.Any(p => p.ShowsOnScreen),
             PaidAt = o.PaidAt,
             PaidOnline = o.PaysOnline,
             ToCollect = o.ToCollect,

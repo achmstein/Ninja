@@ -4883,6 +4883,12 @@
             ],
             "format": "date-time"
           },
+          "kitchenMarksReady": {
+            "type": [
+              "null",
+              "boolean"
+            ]
+          },
           "paidAt": {
             "type": [
               "null",

@@ -836,7 +836,9 @@ public class Order
             return;
         }
 
-        AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready));
+        // The rider it was given to, while the bag is still at the branch: they are told it can be collected
+        var waitingRider = Delivery is { OutAt: null, ReturnedAt: null } delivery ? delivery.RiderUserId : null;
+        AddDomainEvent(new OrderReadyChangedDomainEvent(Id, BranchId, ready, waitingRider));
     }
 
     private void EnsureInKitchen()

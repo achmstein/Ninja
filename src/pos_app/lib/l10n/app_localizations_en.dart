@@ -67,6 +67,19 @@ class AppLocalizationsEn extends AppLocalizations {
       'Sign out and forget this business. The tablet starts over at the connect screen.';
 
   @override
+  String changeBusinessUnsent(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other:
+          '$count sales have not reached this business yet. Send or discard them in Settings first.',
+      one:
+          '1 sale has not reached this business yet. Send it or discard it in Settings first.',
+    );
+    return '$_temp0';
+  }
+
+  @override
   String get language => 'Language';
 
   @override

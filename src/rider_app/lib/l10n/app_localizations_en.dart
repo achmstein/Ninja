@@ -386,6 +386,14 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
+  String deliveryReady(int number) {
+    return 'Order #$number is ready to collect';
+  }
+
+  @override
+  String get collectAtBranch => 'Collect at the branch';
+
+  @override
   String get failedToUpdate => 'That didn\'t go through. Try again.';
 
   @override

@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/launcher.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
@@ -94,10 +95,19 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
     final green = AppColors.emerald(theme.colors.brightness);
     final sky = theme.colors.brightness == Brightness.dark ? const Color(0xFF38BDF8) : const Color(0xFF0284C7);
 
+    // "Still being made" is only said where a kitchen screen will later say "ready": an order that
+    // went to kitchen printers, or a business with no screens, is never marked, and would read as
+    // being made for ever
+    final hasScreens = ref.watch(featuresProvider.select((f) => f.kds));
+    final bool kitchenSays = order.kitchenMarksReady ?? hasScreens;
     final (statusText, statusColor) = switch (order.stage) {
       DeliveryStage.onTheWay => (l10n.onTheWay, sky),
       DeliveryStage.failed => (l10n.bringItBack, amber),
-      _ => ready ? (l10n.readyToGo, green) : (l10n.stillCooking, amber),
+      _ => ready
+          ? (l10n.readyToGo, green)
+          : kitchenSays
+              ? (l10n.stillCooking, amber)
+              : (l10n.collectAtBranch, muted),
     };
     final area = order.zoneName?.getText(locale);
     // A rider given one branch knows where the bag is; one shared by branches is told

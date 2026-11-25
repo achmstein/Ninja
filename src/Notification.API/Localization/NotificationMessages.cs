@@ -101,19 +101,24 @@ public static class NotificationMessages
     public static LocalizedText ShiftClosedBody(ShiftClosedIntegrationEvent shift) =>
         new(Digest(shift, "en"), Digest(shift, "ar"));
 
-    public static readonly LocalizedText NewDeliveryTitle = new("New delivery", "توصيلة جديدة");
+    // To the rider: staff, so Modern Standard Arabic, as the rider app speaks
+    public static readonly LocalizedText NewDeliveryTitle = new("New delivery", "طلب توصيل جديد");
     public static LocalizedText NewDeliveryBody(int orderId, string? address) =>
         string.IsNullOrWhiteSpace(address)
-            ? new($"Order #{orderId} is yours to deliver", $"طلب #{orderId} عليك توصيله")
-            : new($"Order #{orderId} to {address}", $"طلب #{orderId} إلى {address}");
+            ? new($"Order #{orderId} is yours to deliver", $"الطلب #{orderId} بانتظار توصيلك")
+            : new($"Order #{orderId} to {address}", $"الطلب #{orderId} إلى {address}");
 
-    public static readonly LocalizedText DeliveryTakenBackTitle = new("Delivery taken back", "التوصيلة اتسحبت");
+    public static readonly LocalizedText DeliveryReadyTitle = new("Ready to collect", "جاهز للاستلام");
+    public static LocalizedText DeliveryReadyBody(int orderId) =>
+        new($"Order #{orderId} is ready at the branch", $"الطلب #{orderId} جاهز في الفرع");
+
+    public static readonly LocalizedText DeliveryTakenBackTitle = new("Delivery taken back", "سُحب طلب التوصيل");
     public static LocalizedText DeliveryTakenBackBody(int orderId) =>
-        new($"Order #{orderId} was given to someone else", $"طلب #{orderId} اتحول لمندوب تاني");
+        new($"Order #{orderId} was given to someone else", $"أُسند الطلب #{orderId} إلى مندوب آخر");
 
-    public static readonly LocalizedText DeliveryFailedTitle = new("Couldn't be delivered", "التوصيلة متسلمتش");
+    public static readonly LocalizedText DeliveryFailedTitle = new("Couldn't be delivered", "تعذّر التوصيل");
     public static LocalizedText DeliveryFailedBody(int orderId) =>
-        new($"Order #{orderId} couldn't be delivered. Bring it back to the branch.", $"طلب #{orderId} متسلمش. رجّعه للفرع.");
+        new($"Order #{orderId} couldn't be delivered. Bring it back to the branch.", $"تعذّر توصيل الطلب #{orderId}. أعِده إلى الفرع.");
 
     // -----------------------------------------------------------------
     // To the customer: their order, their table, their reservation
