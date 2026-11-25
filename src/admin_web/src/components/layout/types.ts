@@ -23,6 +23,8 @@ type NavLink = BaseNavItem & {
    * owner switches it on (the setup comes first)
    */
   entitled?: FeatureKey
+  /** A connection the platform makes, not a switch: shown once the business has it */
+  connection?: 'talabat'
   /**
    * The page's other tabs: they light this entry, and Go to… still finds
    * each by its own name
@@ -32,6 +34,8 @@ type NavLink = BaseNavItem & {
     url: LinkProps['to']
     /** A tab only the owner sees */
     ownerOnly?: boolean
+    /** About tables: not offered to a cloud kitchen */
+    needsPlaces?: boolean
   }[]
   /** Further paths that belong to this entry (a detail page off a tab) */
   match?: string[]

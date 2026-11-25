@@ -448,10 +448,10 @@ export function PlacePanel({
               <div
                 className={cn(
                   'mt-2 grid w-full gap-2',
-                  place?.canReserve !== false && 'grid-cols-2'
+                  features.reservations && place?.canReserve !== false && 'grid-cols-2'
                 )}
               >
-                {place?.canReserve !== false && (
+                {features.reservations && place?.canReserve !== false && (
                   <Button
                     variant='outline'
                     size='lg'

@@ -14,6 +14,7 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Label } from '@/components/ui/label'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { RateOptionToggle } from './rate-option-toggle'
@@ -60,7 +61,8 @@ export function StartStayDialog({
 
   // Reserve only where the place takes bookings (its switch in the admin);
   // a table also seats people who only order
-  const canReserve = place?.canReserve !== false
+  // Booked only where the business takes bookings, and the place does
+  const canReserve = useFeatures().reservations && place?.canReserve !== false
   const billOnly = !!onBillOnly && !!place && !isRoom(place)
 
   // The place panel used to offer Reserve beside Start; a free place now

@@ -78,6 +78,9 @@ const FEATURE_ROWS: {
   label: TranslationKey
   needsPlaces?: boolean
   addon?: boolean
+  /** Another module it works through: off, this one cannot be switched on */
+  needs?: keyof TenantFeatures
+  needsLabel?: TranslationKey
 }[] = [
   // Both hang off a place: a cloud kitchen, with none, is not offered them
   { key: 'reservations', label: 'featureReservations', needsPlaces: true },
@@ -91,7 +94,13 @@ const FEATURE_ROWS: {
   // An add-on on every plan: not offered at all until it is bought
   { key: 'onlinePayments', label: 'featureOnlinePayments', addon: true },
   // Delivery and pickup orders paid before the branch sees them; with online payments only
-  { key: 'payAhead', label: 'featurePayAhead', addon: true },
+  {
+    key: 'payAhead',
+    label: 'featurePayAhead',
+    addon: true,
+    needs: 'onlinePayments',
+    needsLabel: 'featureNeedsOnlinePayments',
+  },
   { key: 'delivery', label: 'featureDelivery', addon: true },
   // Every AI helper and the owner's assistant: in Pro, bought on top of the others
   { key: 'ai', label: 'featureAi' },
@@ -526,35 +535,36 @@ function BrandForm({ brand }: { brand: Brand }) {
                   </Select>
                 </Field>
                 {/* The Book tab is there only where places are booked or timed */}
-                {(features.reservations || features.timeBilling) && (
-                  <Field
-                    label={t('placesLayout')}
-                    htmlFor='brand-places'
-                    hint={t('placesLayoutHint')}
-                  >
-                    <Select
-                      value={theme.places || NONE}
-                      onValueChange={(v) =>
-                        setTheme({ ...theme, places: v === NONE ? '' : v })
-                      }
+                {!cloudKitchen &&
+                  (features.reservations || features.timeBilling) && (
+                    <Field
+                      label={t('placesLayout')}
+                      htmlFor='brand-places'
+                      hint={t('placesLayoutHint')}
                     >
-                      <SelectTrigger id='brand-places' className='w-full'>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value={NONE}>
-                          {t('placesLayoutCards')}
-                        </SelectItem>
-                        <SelectItem value='list'>
-                          {t('placesLayoutList')}
-                        </SelectItem>
-                        <SelectItem value='grid'>
-                          {t('placesLayoutGrid')}
-                        </SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </Field>
-                )}
+                      <Select
+                        value={theme.places || NONE}
+                        onValueChange={(v) =>
+                          setTheme({ ...theme, places: v === NONE ? '' : v })
+                        }
+                      >
+                        <SelectTrigger id='brand-places' className='w-full'>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value={NONE}>
+                            {t('placesLayoutCards')}
+                          </SelectItem>
+                          <SelectItem value='list'>
+                            {t('placesLayoutList')}
+                          </SelectItem>
+                          <SelectItem value='grid'>
+                            {t('placesLayoutGrid')}
+                          </SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </Field>
+                  )}
                 <Field
                   label={t('startingTheme')}
                   htmlFor='brand-mode'
@@ -769,21 +779,25 @@ function BrandForm({ brand }: { brand: Brand }) {
             ).map((row) => {
               // What the plan allows: a module outside it stays off, and says why
               const entitled = brand.entitlements?.[row.key] ?? true
+              // Works through another module that is off in this draft: stays off, and says which
+              const blocked = row.needs != null && !features[row.needs]
               return (
                 <SwitchRow
                   key={row.key}
                   className='px-5 py-4'
                   title={t(row.label)}
                   description={
-                    entitled ? undefined : (
+                    !entitled ? (
                       <span className='flex items-center gap-1'>
                         <Lock className='size-3.5' />
                         {t('notInPlan')}
                       </span>
-                    )
+                    ) : blocked && row.needsLabel ? (
+                      t(row.needsLabel)
+                    ) : undefined
                   }
-                  checked={Boolean(entitled && features[row.key])}
-                  disabled={!entitled}
+                  checked={Boolean(entitled && !blocked && features[row.key])}
+                  disabled={!entitled || blocked}
                   onCheckedChange={(v) =>
                     setFeatures({ ...features, [row.key]: v })
                   }

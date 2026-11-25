@@ -430,8 +430,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         const SizedBox(width: 8),
         receipts,
         const SizedBox(width: 8),
-        findCustomer,
-        const SizedBox(width: 8),
+        // Their card holds a tab and points: nothing to find them for without either
+        if (features.tabs || features.loyalty) ...[
+          findCustomer,
+          const SizedBox(width: 8),
+        ],
         availability,
       ],
     );

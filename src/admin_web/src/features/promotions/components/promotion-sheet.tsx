@@ -19,6 +19,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { formatDay } from '@/lib/business-day'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
+import { useModules } from '@/lib/modules'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
@@ -97,6 +98,7 @@ function PromotionForm({
   onOpenChange: (open: boolean) => void
 }) {
   const t = useT()
+  const modules = useModules()
   const locale = useLocale()
   const localized = useLocalized()
   const queryClient = useQueryClient()
@@ -252,7 +254,10 @@ function PromotionForm({
               <SelectItem value='Category'>
                 {t('promotionLinkCategory')}
               </SelectItem>
-              <SelectItem value='Book'>{t('promotionLinkBook')}</SelectItem>
+              {((modules.reservations && modules.places) ||
+                form.link === 'Book') && (
+                <SelectItem value='Book'>{t('promotionLinkBook')}</SelectItem>
+              )}
             </SelectContent>
           </Select>
           {(form.link === 'Item' || form.link === 'Category') && (

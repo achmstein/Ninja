@@ -28,7 +28,12 @@ export function ProfitWaterfall({
   expenses,
   shares = 0,
   profit,
+  showGoods = true,
+  showLabour = true,
 }: {
+  /** Inventory's step and payroll's: left out where the module is off and nothing was booked */
+  showGoods?: boolean
+  showLabour?: boolean
   /** Net sales ex VAT */
   sales: number
   /** Cost of goods with waste */
@@ -45,7 +50,16 @@ export function ProfitWaterfall({
   const locale = useLocale()
   const steps: Step[] = [
     { key: 'sales', label: t('netSalesExVat'), value: sales, kind: 'total' },
-    { key: 'goods', label: t('costOfGoods'), value: goods, kind: 'cost' },
+    ...(showGoods
+      ? [
+          {
+            key: 'goods',
+            label: t('costOfGoods'),
+            value: goods,
+            kind: 'cost' as const,
+          },
+        ]
+      : []),
     ...(shrinkage !== 0
       ? [
           {
@@ -56,7 +70,16 @@ export function ProfitWaterfall({
           },
         ]
       : []),
-    { key: 'labour', label: t('labourCost'), value: labour, kind: 'cost' },
+    ...(showLabour
+      ? [
+          {
+            key: 'labour',
+            label: t('labourCost'),
+            value: labour,
+            kind: 'cost' as const,
+          },
+        ]
+      : []),
     {
       key: 'expenses',
       label: t('operatingExpenses'),

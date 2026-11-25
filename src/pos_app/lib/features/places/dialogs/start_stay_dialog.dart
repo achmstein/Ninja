@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/brand/brand_provider.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -81,6 +82,8 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
+    // A place is reserved only where the business takes bookings
+    final reservations = ref.watch(featuresProvider.select((f) => f.reservations));
     final l10n = AppLocalizations.of(context)!;
     final rtl = Directionality.of(context) == TextDirection.rtl;
     final room = widget.room;
@@ -151,11 +154,11 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           const SizedBox(height: 16),
           // Two rows, each the dialog's own width: the other ways to take the
           // place, then cancel and start. On one row the four buttons did not fit
-          if (session == null && (room.canReserve || room.kind != PlaceKind.room)) ...[
+          if (session == null && ((reservations && room.canReserve) || room.kind != PlaceKind.room)) ...[
             Row(
               children: [
-                // Only where the place takes bookings (its switch in the admin)
-                if (room.canReserve)
+                // Only where the business takes bookings and the place does (its switch in the admin)
+                if (reservations && room.canReserve)
                   Expanded(
                     child: SizedBox(
                       height: Sizes.control,

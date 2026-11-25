@@ -1,16 +1,19 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/orders/models/stock_disposition.dart';
 import '../../l10n/app_localizations.dart';
+import '../brand/brand_provider.dart';
 import 'pos_dialog.dart';
 
 /// "Was the food made?" when the till cancels or voids an order that took its
 /// ingredients: waste it, or back to stock. Two cards side by side (mirrored
 /// in Arabic by the row itself), each a radio to a screen reader and to the
-/// keyboard: Enter or Space picks the focused one.
-class StockDispositionChoice extends StatelessWidget {
+/// keyboard: Enter or Space picks the focused one. Without inventory there is
+/// no stock to put it back in, so nothing is asked.
+class StockDispositionChoice extends ConsumerWidget {
   final StockDisposition value;
   final ValueChanged<StockDisposition> onChanged;
   final bool enabled;
@@ -18,7 +21,8 @@ class StockDispositionChoice extends StatelessWidget {
   const StockDispositionChoice({super.key, required this.value, required this.onChanged, this.enabled = true});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    if (!ref.watch(featuresProvider.select((f) => f.inventory))) return const SizedBox.shrink();
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     return Column(

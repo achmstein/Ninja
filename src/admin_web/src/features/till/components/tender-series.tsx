@@ -1,6 +1,6 @@
 import { type RangeReport } from '@/api/sales'
-import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
+import { useModules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'
 import { SegmentedBar } from '@/components/segmented-bar'
 import { tenderSeries } from '../report-math'
@@ -26,8 +26,8 @@ export function TenderSeriesView({
   tabsSearch,
 }: TenderSeriesViewProps) {
   const t = useT()
-  const features = useFeatures()
-  const series = tenderSeries(report, features.onlinePayments)
+  const modules = useModules()
+  const series = tenderSeries(report, modules)
   const change = toNumber(report?.changeGiven)
 
   return (
@@ -57,7 +57,8 @@ export function TenderSeriesView({
         )}
       </div>
 
-      {features.tabs && series.tabs.length > 0 && (
+      {/* Tab payments that came in show, whatever the switch says now */}
+      {series.tabs.length > 0 && (
         <div className='flex flex-col gap-2'>
           <div className='flex items-baseline justify-between gap-2 text-xs'>
             <span className='text-muted-foreground font-medium'>

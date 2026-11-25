@@ -5,6 +5,7 @@ import { CheckCircle2, Clock } from 'lucide-react'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
+import { useModules } from '@/lib/modules'
 import { Badge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
@@ -89,6 +90,10 @@ export function OrdersBoard() {
     ? pending.filter((order) => orderPlace(order) === place)
     : pending
   const showFilter = pending.length > FILTER_THRESHOLD || place != null
+  // Rooms where time is billed, tables where there are places; either still shows while it has orders
+  const modules = useModules()
+  const showRooms = modules.rooms || counts.rooms > 0 || place === 'rooms'
+  const showTables = modules.places || counts.tables > 0 || place === 'tables'
 
   const setPlace = (value: string) =>
     navigate({
@@ -132,18 +137,22 @@ export function OrdersBoard() {
                 <ToggleGroupItem value='all' className='px-3'>
                   {t('all')}
                 </ToggleGroupItem>
-                <ToggleGroupItem value='rooms' className='gap-1.5 px-3'>
-                  {t('rooms')}
-                  <span className='text-muted-foreground tabular-nums'>
-                    {counts.rooms}
-                  </span>
-                </ToggleGroupItem>
-                <ToggleGroupItem value='tables' className='gap-1.5 px-3'>
-                  {t('tables')}
-                  <span className='text-muted-foreground tabular-nums'>
-                    {counts.tables}
-                  </span>
-                </ToggleGroupItem>
+                {showRooms && (
+                  <ToggleGroupItem value='rooms' className='gap-1.5 px-3'>
+                    {t('rooms')}
+                    <span className='text-muted-foreground tabular-nums'>
+                      {counts.rooms}
+                    </span>
+                  </ToggleGroupItem>
+                )}
+                {showTables && (
+                  <ToggleGroupItem value='tables' className='gap-1.5 px-3'>
+                    {t('tables')}
+                    <span className='text-muted-foreground tabular-nums'>
+                      {counts.tables}
+                    </span>
+                  </ToggleGroupItem>
+                )}
                 <ToggleGroupItem value='counter' className='gap-1.5 px-3'>
                   {t('counter')}
                   <span className='text-muted-foreground tabular-nums'>

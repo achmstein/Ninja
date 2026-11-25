@@ -184,11 +184,18 @@ export function PlacesManagement() {
                 </SelectValue>
               </SelectTrigger>
               <SelectContent>
-                {statusFilters.map((option) => (
-                  <SelectItem key={option.value} value={option.value}>
-                    {t(option.key)}
-                  </SelectItem>
-                ))}
+                {statusFilters
+                  .filter(
+                    (option) =>
+                      option.value !== '3' ||
+                      features.reservations ||
+                      status === '3'
+                  )
+                  .map((option) => (
+                    <SelectItem key={option.value} value={option.value}>
+                      {t(option.key)}
+                    </SelectItem>
+                  ))}
               </SelectContent>
             </Select>
 

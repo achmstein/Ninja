@@ -2,6 +2,7 @@ import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
 import { type StockItemView } from '@/api/inventory'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { SCAN_ACCEPT } from '@/lib/image'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -72,8 +73,13 @@ function ReceiveForm({
   const lastCosts = useLastCosts()
 
   // The supplier comes from Finance's list, so the delivery lands on their
-  // account; a receipt without one is stock with no creditor
-  const { data: suppliers = [] } = useQuery(suppliersQueryOptions())
+  // account; a receipt without one is stock with no creditor. Without Finance
+  // there is no list and no account: the picker is not offered
+  const finance = useFeatures().finance === true
+  const { data: suppliers = [] } = useQuery({
+    ...suppliersQueryOptions(),
+    enabled: finance,
+  })
   const [supplierId, setSupplierId] = useState<string | null>(null)
   const [invoiceRef, setInvoiceRef] = useState('')
   const [lines, setLines] = useState<Line[]>(() => [
@@ -132,19 +138,21 @@ function ReceiveForm({
   return (
     <form id='receive-form' onSubmit={handleSubmit} className='space-y-4'>
       <FieldGrid>
-        <Field label={t('supplier')}>
-          <Combobox
-            value={supplierId}
-            onChange={setSupplierId}
-            options={suppliers.map((s) => ({
-              value: String(s.id),
-              label: s.name,
-              hint: s.phone ?? undefined,
-            }))}
-            placeholder={t('noSupplier')}
-            clearLabel={t('noSupplier')}
-          />
-        </Field>
+        {finance && (
+          <Field label={t('supplier')}>
+            <Combobox
+              value={supplierId}
+              onChange={setSupplierId}
+              options={suppliers.map((s) => ({
+                value: String(s.id),
+                label: s.name,
+                hint: s.phone ?? undefined,
+              }))}
+              placeholder={t('noSupplier')}
+              clearLabel={t('noSupplier')}
+            />
+          </Field>
+        )}
         <Field label={t('invoiceRef')} htmlFor='invoiceRef'>
           <Input
             id='invoiceRef'

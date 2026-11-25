@@ -22,7 +22,7 @@ class DeliveriesNotifier extends AsyncNotifier<List<DeliveryOrder>> {
   Future<List<DeliveryOrder>> build() async {
     ref.watch(selectedBranchIdProvider);
     _poll?.cancel();
-    if (!ref.watch(featuresProvider.select((f) => f.delivery))) return const [];
+    // Read while delivery is switched off too: deliveries already out still finish
     _poll = Timer.periodic(AppConfig.deliveriesPoll, (_) => refresh());
     ref.onDispose(() => _poll?.cancel());
     return _load();
@@ -31,7 +31,6 @@ class DeliveriesNotifier extends AsyncNotifier<List<DeliveryOrder>> {
   Future<List<DeliveryOrder>> _load() async => boardOrder(await ref.read(deliveryRepositoryProvider).getDeliveries());
 
   Future<void> refresh() async {
-    if (!ref.read(featuresProvider).delivery) return;
     final result = await AsyncValue.guard(_load);
     if (!ref.mounted) return;
     if (result.hasValue) state = result;

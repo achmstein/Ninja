@@ -8,7 +8,6 @@ import {
   getRangeReportOptions,
 } from '@/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
 import {
   useLanguage,
   useLocale,
@@ -17,6 +16,7 @@ import {
   type TranslateParams,
   type TranslationKey,
 } from '@/lib/i18n'
+import { useModules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -197,7 +197,7 @@ export function PaymentsList() {
     })
 
   const tender = TENDERS.find((item) => String(item.value) === search.tender)
-  const features = useFeatures()
+  const modules = useModules()
 
   // The report's own query, already in the cache: how many tab payments
   // the filtered tender also took, since the bar above counts both
@@ -277,11 +277,8 @@ export function PaymentsList() {
           <ToggleGroupItem value='all' className='px-3'>
             {t('allTenders')}
           </ToggleGroupItem>
-          {tendersFor(
-            features.onlinePayments,
-            tender?.name === 'Online',
-            true
-          ).map((item) => (
+          {/* The tenders the business runs, and the one picked (from a link) even if its module is off since */}
+          {tendersFor(modules, tender ? [tender.name] : []).map((item) => (
             <ToggleGroupItem
               key={item.value}
               value={String(item.value)}

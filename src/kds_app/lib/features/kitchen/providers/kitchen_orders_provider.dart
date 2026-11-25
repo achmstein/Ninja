@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/config/app_config.dart';
@@ -22,6 +23,8 @@ class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
     ref.watch(selectedBranchIdProvider);
     ref.watch(selectedStationIdProvider);
     _poll?.cancel();
+    // Not in the plan: the board says so, and nothing is asked for
+    if (!ref.watch(featuresProvider.select((f) => f.kds))) return const [];
     _poll = Timer.periodic(AppConfig.kitchenPoll, (_) => refresh());
     ref.onDispose(() => _poll?.cancel());
     return _fetch();
@@ -33,6 +36,7 @@ class KitchenOrdersNotifier extends AsyncNotifier<List<KitchenOrder>> {
   /// Refetch in place. A failed poll keeps the last good board on screen
   /// rather than blanking it.
   Future<void> refresh() async {
+    if (!ref.read(featuresProvider).kds) return;
     final result = await AsyncValue.guard(_fetch);
     if (!ref.mounted) return;
     if (result.hasValue) state = result;

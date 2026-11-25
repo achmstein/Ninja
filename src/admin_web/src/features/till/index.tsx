@@ -8,6 +8,7 @@ import { useFeatures } from '@/lib/brand'
 import { useNow } from '@/lib/business-clock'
 import { previousWindow } from '@/lib/business-day'
 import { useT, type TranslationKey } from '@/lib/i18n'
+import { useModules, type Modules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -38,16 +39,26 @@ type TillView = 'tickets' | 'payments' | 'refunds' | 'tab-payments'
 // Where a sale came from (the range report's byChannel): the ticket types,
 // with delivery and platform orders apart from the counter they settle at.
 // Each shows what customers paid, before refunds.
-const CHANNELS: { name: string; labelKey: TranslationKey; always: boolean }[] =
-  [
-    ...TICKET_TYPES.map(({ name, labelKey }) => ({
-      name,
-      labelKey,
-      always: true,
-    })),
-    { name: 'Delivery', labelKey: 'channelDelivery', always: false },
-    { name: 'Platform', labelKey: 'channelPlatform', always: false },
-  ]
+// A channel shows when the business runs it (rooms need time billing, rooms
+// and tables need places), or when it took money anyway.
+const CHANNELS: {
+  name: string
+  labelKey: TranslationKey
+  runs: (modules: Modules) => boolean
+}[] = [
+  ...TICKET_TYPES.map(({ name, labelKey }) => ({
+    name,
+    labelKey,
+    runs: (modules: Modules) =>
+      name === 'Room'
+        ? modules.rooms
+        : name === 'Table'
+          ? modules.places
+          : true,
+  })),
+  { name: 'Delivery', labelKey: 'channelDelivery', runs: () => false },
+  { name: 'Platform', labelKey: 'channelPlatform', runs: () => false },
+]
 
 /**
  * Settled sales over a window of business days. Net sales (what customers
@@ -64,6 +75,7 @@ const CHANNELS: { name: string; labelKey: TranslationKey; always: boolean }[] =
 export function TillReport() {
   const t = useT()
   const features = useFeatures()
+  const modules = useModules()
   const search = route.useSearch()
   const navigate = route.useNavigate()
   const { dayWindow, hours, fromIso, toIso } = useTillWindow(search)
@@ -338,7 +350,7 @@ export function TillReport() {
               ) : (
                 <div className='grid gap-3 sm:grid-cols-3 lg:grid-cols-5'>
                   {CHANNELS.filter(
-                    ({ name, always }) => always || channelTotals.has(name)
+                    ({ name, runs }) => runs(modules) || channelTotals.has(name)
                   ).map(({ name, labelKey }) => {
                     const row = channelTotals.get(name)
                     return (
@@ -367,7 +379,7 @@ export function TillReport() {
             </CardContent>
           </Card>
 
-          {view && (
+          {view && (view !== 'tab-payments' || features.tabs) && (
             <section
               ref={drill}
               className='scroll-mt-20 space-y-3 border-t pt-4'
@@ -382,7 +394,7 @@ export function TillReport() {
               {view === 'tickets' && <TicketsList />}
               {view === 'payments' && <PaymentsList />}
               {view === 'refunds' && <RefundsList />}
-              {view === 'tab-payments' && features.tabs && <TabPaymentsList />}
+              {view === 'tab-payments' && <TabPaymentsList />}
             </section>
           )}
         </>

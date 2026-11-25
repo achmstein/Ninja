@@ -6,6 +6,7 @@ import {
   getProfitTrendOptions,
 } from '@/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useBusinessTimeZone } from '@/lib/business-clock'
 import { downloadCsv } from '@/lib/csv'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -80,7 +81,18 @@ export function Profit() {
   const p = profit.data
   // What profit and every percentage on the page is on: net sales ex VAT
   const base = profitBase(p)
-  const statement = profitStatement(p)
+  const features = useFeatures()
+  const statement = profitStatement(p, features)
+  // Goods are inventory's and labour payroll's: each where its module runs, or it carries an amount
+  const months = trend.data ?? []
+  const showGoods =
+    features.inventory === true ||
+    toNumber(p?.goods) !== 0 ||
+    months.some((m) => toNumber(m.goods) !== 0)
+  const showLabour =
+    features.payroll === true ||
+    toNumber(p?.labour) !== 0 ||
+    months.some((m) => toNumber(m.labour) !== 0)
   const partnerShares = p?.partnerShares ?? []
   const sharesTotal = partnerShares.reduce(
     (sum, s) => sum + toNumber(s.percent),
@@ -126,17 +138,17 @@ export function Profit() {
         t('month'),
         t('netSales'),
         t('netSalesExVat'),
-        t('costOfGoods'),
-        t('labourCost'),
+        ...(showGoods ? [t('costOfGoods')] : []),
+        ...(showLabour ? [t('labourCost')] : []),
         t('operatingExpenses'),
         t('profitLabel'),
       ],
-      (trend.data ?? []).map((m) => [
+      months.map((m) => [
         `${m.year}-${String(m.month).padStart(2, '0')}`,
         toNumber(m.netSales),
         profitBase(m),
-        toNumber(m.goods),
-        toNumber(m.labour),
+        ...(showGoods ? [toNumber(m.goods)] : []),
+        ...(showLabour ? [toNumber(m.labour)] : []),
         toNumber(m.expenses),
         toNumber(m.profit),
       ])
@@ -233,24 +245,27 @@ export function Profit() {
                   : undefined
               }
             />
-            <Stat
-              label={
-                <span className='inline-flex items-center gap-1'>
-                  {t('primeCost')}
-                  <InfoTip>{t('primeCostHint')}</InfoTip>
-                </span>
-              }
-              value={
-                p.primeCostRatio != null
-                  ? percent.format(toNumber(p.primeCostRatio))
-                  : '—'
-              }
-              tone={
-                p.primeCostRatio != null && toNumber(p.primeCostRatio) > 0.65
-                  ? 'warning'
-                  : 'default'
-              }
-            />
+            {/* Goods and wages over sales: nothing to say without inventory or payroll */}
+            {(showGoods || showLabour) && (
+              <Stat
+                label={
+                  <span className='inline-flex items-center gap-1'>
+                    {t('primeCost')}
+                    <InfoTip>{t('primeCostHint')}</InfoTip>
+                  </span>
+                }
+                value={
+                  p.primeCostRatio != null
+                    ? percent.format(toNumber(p.primeCostRatio))
+                    : '—'
+                }
+                tone={
+                  p.primeCostRatio != null && toNumber(p.primeCostRatio) > 0.65
+                    ? 'warning'
+                    : 'default'
+                }
+              />
+            )}
           </StatStrip>
 
           {/* Where the money went, before the lines that say it in detail */}
@@ -266,6 +281,8 @@ export function Profit() {
                 labour={toNumber(p.labour)}
                 expenses={toNumber(p.expenses)}
                 profit={toNumber(p.profit)}
+                showGoods={showGoods}
+                showLabour={showLabour}
               />
             </CardContent>
           </Card>
@@ -352,6 +369,8 @@ export function Profit() {
 
       {trend.data && trend.data.length > 1 && (
         <ProfitTrend
+          showGoods={showGoods}
+          showLabour={showLabour}
           months={trend.data}
           selected={monthKey}
           onSelect={(next) =>

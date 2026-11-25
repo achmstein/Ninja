@@ -96,9 +96,7 @@ export function AddStaffDialog({
         role,
         isOwner: makeOwner,
         branchIds:
-          makeOwner || everyBranch
-            ? []
-            : [...branchIds].sort((a, b) => a - b),
+          makeOwner || everyBranch ? [] : [...branchIds].sort((a, b) => a - b),
         allBranches: everyBranch,
       }),
     onSuccess: (userId) => {
@@ -111,8 +109,8 @@ export function AddStaffDialog({
             : role === 'Cashier' || role === 'Kitchen'
               ? 'cashierCreatedSuccess'
               : makeOwner
-              ? 'ownerCreatedSuccess'
-              : 'adminCreatedSuccess'
+                ? 'ownerCreatedSuccess'
+                : 'adminCreatedSuccess'
         )
       )
       reset()
@@ -196,7 +194,10 @@ export function AddStaffDialog({
               <SelectContent>
                 <SelectItem value='Admin'>{t('adminRole')}</SelectItem>
                 <SelectItem value='Cashier'>{t('cashierRole')}</SelectItem>
-                <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
+                {/* The kitchen role signs in to the kitchen screen: only where the business runs it */}
+                {features.kds && (
+                  <SelectItem value='Kitchen'>{t('kitchenRole')}</SelectItem>
+                )}
                 {/* Riders only where the business delivers (an add-on) */}
                 {features.delivery && (
                   <SelectItem value='Rider'>{t('riderRole')}</SelectItem>

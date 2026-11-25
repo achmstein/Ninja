@@ -159,6 +159,8 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
 
   @override
   Widget build(BuildContext context) {
+    // A place is reserved only where the business takes bookings
+    final reservations = ref.watch(featuresProvider.select((f) => f.reservations));
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final rtl = Directionality.of(context) == TextDirection.rtl;
@@ -494,7 +496,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           Row(
             children: [
               // Reserve only where the place takes bookings (its switch in the admin)
-              if (room.canReserve) ...[
+              if (reservations && room.canReserve) ...[
                 Expanded(
                   child: bigButton(l10n.reserve,
                       variant: FButtonVariant.outline,

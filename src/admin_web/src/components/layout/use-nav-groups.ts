@@ -1,18 +1,12 @@
 import { useQuery } from '@tanstack/react-query'
-import { getRealmRoles } from '@/config/oidc-config'
-import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
 import { getOpenReservationsOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import {
-  entitledTo,
-  useBrand,
-  useFeatures,
-  useIsCloudKitchen,
-} from '@/lib/brand'
+import { useFeatures } from '@/lib/brand'
 import { isOpenReservation } from '@/features/places/status'
 import { serviceRequestsService } from '@/features/requests/service'
 import { sidebarData } from './data/sidebar-data'
+import { useNavContext, visibleNav } from './nav-visibility'
 import { type NavGroup, type NavItem } from './types'
 
 /**
@@ -22,11 +16,8 @@ import { type NavGroup, type NavItem } from './types'
  * too. The sidebar and the phone's More both draw from it.
  */
 export function useNavGroups(): NavGroup[] {
-  const auth = useAuth()
-  const isOwner = getRealmRoles(auth.user).includes('Owner')
   const features = useFeatures()
-  const brand = useBrand()
-  const cloudKitchen = useIsCloudKitchen()
+  const nav = useNavContext()
 
   // Pending-order count badge on Live, kept fresh by SignalR
   const { data: pendingOrders = [] } = useQuery({
@@ -63,27 +54,13 @@ export function useNavGroups(): NavGroup[] {
     return count ? { ...item, badge: String(count) } : item
   }
 
-  return sidebarData.navGroups
-    .filter((group) => !group.ownerOnly || isOwner)
-    .filter((group) => !group.feature || features[group.feature])
-    .map((group) => ({
-      ...group,
-      items: group.items
-        .filter((item) => item.items || !item.ownerOnly || isOwner)
-        .filter((item) => item.items || !item.feature || features[item.feature])
-        .filter((item) => item.items || !item.needsPlaces || !cloudKitchen)
-        .filter(
-          (item) =>
-            item.items ||
-            !item.entitled ||
-            (brand != null && entitledTo(brand, item.entitled))
-        )
-        .map((item): NavItem => {
-          if (item.items) {
-            return { ...item, items: item.items.map(withBadge) }
-          }
-          return withBadge(item)
-        }),
-    }))
-    .filter((group) => group.items.length > 0)
+  return visibleNav(sidebarData.navGroups, nav).map((group) => ({
+    ...group,
+    items: group.items.map((item): NavItem => {
+      if (item.items) {
+        return { ...item, items: item.items.map(withBadge) }
+      }
+      return withBadge(item)
+    }),
+  }))
 }

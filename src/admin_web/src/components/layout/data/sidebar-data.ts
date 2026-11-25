@@ -39,7 +39,7 @@ export const sidebarData: SidebarData = {
           title: 'liveNav',
           url: '/orders/live',
           icon: Radio,
-          tabs: [{ title: 'waiterCalls', url: '/requests' }],
+          tabs: [{ title: 'waiterCalls', url: '/requests', needsPlaces: true }],
         },
         { title: 'orders', url: '/orders', icon: ClipboardList },
         // Rooms & Tables is every business's: the tables and their QR codes live there whatever the plan (a cloud kitchen has none)
@@ -179,8 +179,14 @@ export const sidebarData: SidebarData = {
           icon: CreditCard,
           entitled: 'onlinePayments',
         },
-        // Talabat: which branches sell there, and the menu it shows
-        { title: 'talabatNav', url: '/talabat', icon: Bike },
+        // Talabat: which branches sell there, and the menu it shows; once the platform has connected the business
+        {
+          title: 'talabatNav',
+          url: '/talabat',
+          icon: Bike,
+          ownerOnly: true,
+          connection: 'talabat',
+        },
         // The native till and kitchen display: where to get them, how a tablet connects
         { title: 'appsNav', url: '/apps', icon: TabletSmartphone },
         // The owner's assistant: this business's MCP server in their own Claude or ChatGPT, part of Ninja AI

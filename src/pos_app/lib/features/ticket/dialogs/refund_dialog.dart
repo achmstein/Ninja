@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../../core/brand/brand_provider.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
@@ -160,6 +161,8 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
 
   @override
   Widget build(BuildContext context) {
+    // Back to a tab only where the business runs tabs, or a tab paid this bill (it can still be paid back)
+    final offerAccount = ref.watch(featuresProvider.select((f) => f.tabs)) || _holders.isNotEmpty;
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
@@ -282,18 +285,20 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                     ),
                   ),
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: SizedBox(
-                    height: Sizes.control,
-                    child: FButton(
-                      variant: _tender == PaymentTender.account ? null : FButtonVariant.outline,
-                      onPress: _holders.isEmpty ? null : () => setState(() => _tender = PaymentTender.account),
-                      prefix: const Icon(FIcons.user, size: Sizes.icon),
-                      child: tenderName(l10n.account),
+                if (offerAccount) ...[
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: SizedBox(
+                      height: Sizes.control,
+                      child: FButton(
+                        variant: _tender == PaymentTender.account ? null : FButtonVariant.outline,
+                        onPress: _holders.isEmpty ? null : () => setState(() => _tender = PaymentTender.account),
+                        prefix: const Icon(FIcons.user, size: Sizes.icon),
+                        child: tenderName(l10n.account),
+                      ),
                     ),
                   ),
-                ),
+                ],
               ],
             ),
             if (_tender == PaymentTender.account && _holders.length > 1) ...[

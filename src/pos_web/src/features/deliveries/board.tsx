@@ -79,7 +79,7 @@ export function DeliveriesBoard() {
         </Button>
       </div>
 
-      {!delivering ? (
+      {!delivering && !isLoading && deliveries.length === 0 ? (
         <p className='text-muted-foreground m-auto'>{t('deliveriesOff')}</p>
       ) : isLoading ? (
         <Loader2 className='text-muted-foreground m-auto size-6 animate-spin' aria-hidden />

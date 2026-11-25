@@ -1,4 +1,5 @@
 import { PackageCheck, Trash2 } from 'lucide-react'
+import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import type { StockDisposition } from '@/lib/stock-disposition'
 import { cn } from '@/lib/utils'
@@ -20,6 +21,9 @@ export function StockDispositionChoice({
   name?: string
 }) {
   const t = useT()
+  // Without inventory there is no stock to put it back in: nothing to ask
+  const inventory = useFeatures().inventory
+  if (!inventory) return null
   const options = [
     { value: 'Waste' as const, label: t('stockWaste'), hint: t('stockWasteHint'), Icon: Trash2 },
     { value: 'Restock' as const, label: t('stockRestock'), hint: t('stockRestockHint'), Icon: PackageCheck },

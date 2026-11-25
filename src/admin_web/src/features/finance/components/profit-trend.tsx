@@ -32,7 +32,12 @@ export function ProfitTrend({
   months,
   selected,
   onSelect,
+  showGoods = true,
+  showLabour = true,
 }: {
+  /** Inventory's line and payroll's: left out where the module is off and nothing was booked */
+  showGoods?: boolean
+  showLabour?: boolean
   months: Month[]
   selected: string
   onSelect: (monthKey: string) => void
@@ -120,8 +125,8 @@ export function ProfitTrend({
                   <div className='bg-background grid min-w-48 gap-1 rounded-lg border px-3 py-2 text-xs shadow-xl'>
                     <div className='font-medium'>{row.label}</div>
                     {line(t('netSalesExVat'), row.sales)}
-                    {line(t('goodsWasteShrinkage'), row.goods)}
-                    {line(t('labourCost'), row.labour)}
+                    {showGoods && line(t('goodsWasteShrinkage'), row.goods)}
+                    {showLabour && line(t('labourCost'), row.labour)}
                     {line(t('operatingExpenses'), row.expenses)}
                     {line(t('profitLabel'), row.profit, true)}
                   </div>

@@ -175,6 +175,11 @@ class TenantBrand {
   /// many more to a row, for a long menu). Photos when the stack does not say
   final String tillItems;
 
+  /// The plan includes online payments, switched on or not: what guests paid
+  /// stays readable on a bill after the owner switches them off (outside the
+  /// plan the gateway refuses the module's calls)
+  final bool onlinePaymentsInPlan;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -188,6 +193,7 @@ class TenantBrand {
     this.version = 0,
     this.addressSearch = false,
     this.tillItems = 'photos',
+    this.onlinePaymentsInPlan = false,
   });
 
   /// The sale pad shows text tiles instead of photos
@@ -230,8 +236,14 @@ class TenantBrand {
       version: (json['version'] as num?)?.toInt() ?? 0,
       addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
       tillItems: _tillItems(json['tillItems']),
+      onlinePaymentsInPlan: _inPlan(json, 'onlinePayments'),
     );
   }
+
+  /// A module in the plan: entitled to it, or switched on (a stack from before entitlements were sent)
+  static bool _inPlan(Map<String, dynamic> json, String key) =>
+      (json['entitlements'] is Map && (json['entitlements'] as Map)[key] == true) ||
+      (json['features'] is Map && (json['features'] as Map)[key] == true);
 
   /// The cached shape (what [toJson] wrote). A cache from before the locale
   /// was kept whole says only `currency`; it still counts.
@@ -252,6 +264,7 @@ class TenantBrand {
         version: (json['version'] as num?)?.toInt() ?? 0,
         addressSearch: json['addressSearch'] == true,
         tillItems: _tillItems(json['tillItems']),
+        onlinePaymentsInPlan: json['onlinePaymentsInPlan'] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -267,6 +280,7 @@ class TenantBrand {
         'version': version,
         'addressSearch': addressSearch,
         'tillItems': tillItems,
+        'onlinePaymentsInPlan': onlinePaymentsInPlan,
       };
 
   Color? get primaryColor {

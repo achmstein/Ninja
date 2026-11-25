@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -62,6 +63,8 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
     final l10n = AppLocalizations.of(context)!;
     final locale = ref.watch(localeProvider);
     final themeState = ref.watch(themeProvider);
+    // Without the kitchen display in the plan the board says so: no stations or history to offer
+    final kds = ref.watch(featuresProvider.select((f) => f.kds));
     final isDark = themeState.resolveBrightness(context) == Brightness.dark;
 
     final rowStyle = theme.typography.base;
@@ -76,17 +79,20 @@ class _KdsHeaderState extends ConsumerState<KdsHeader> with SingleTickerProvider
       child: Row(
         children: [
           const BranchSwitcher(),
-          const SizedBox(width: 8),
-          const StationSwitcher(),
+          if (kds) ...[
+            const SizedBox(width: 8),
+            const StationSwitcher(),
+          ],
           const Spacer(),
-          SizedBox.square(
-            dimension: Sizes.control,
-            child: FButton.icon(
-              variant: FButtonVariant.ghost,
-              onPress: _openHistory,
-              child: const Icon(FIcons.history, size: Sizes.iconNav),
+          if (kds)
+            SizedBox.square(
+              dimension: Sizes.control,
+              child: FButton.icon(
+                variant: FButtonVariant.ghost,
+                onPress: _openHistory,
+                child: const Icon(FIcons.history, size: Sizes.iconNav),
+              ),
             ),
-          ),
           FPopoverMenu(
             control: FPopoverControl.managed(controller: _menu),
             menuAnchor: AlignmentDirectional.topEnd,

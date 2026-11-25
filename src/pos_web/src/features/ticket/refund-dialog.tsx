@@ -15,6 +15,7 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { API_VERSION } from '@/lib/api-client'
+import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -107,6 +108,8 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
     }
   }
   const holder = holders.find((h) => h.id === holderId) ?? holders[0]
+  // Back to a tab only where the business runs tabs, or a tab paid this bill (it can still be paid back)
+  const offerAccount = useFeatures().tabs || holders.length > 0
 
   const refund = useMutation({
     ...refundTicketMutation(),
@@ -241,7 +244,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
         </div>
 
         {/* Where the money goes back: the drawer, or a tab that paid */}
-        <div className='grid grid-cols-2 gap-2'>
+        <div className={cn('grid gap-2', offerAccount && 'grid-cols-2')}>
           <button
             type='button'
             onClick={() => setTender('Cash')}
@@ -255,6 +258,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
             <Banknote className='size-5' />
             {t('cash')}
           </button>
+          {offerAccount && (
           <button
             type='button'
             disabled={holders.length === 0}
@@ -269,6 +273,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
             <User className='size-5' />
             {t('account')}
           </button>
+          )}
         </div>
         {tender === 'Account' && holders.length > 1 && (
           <div className='flex flex-wrap gap-2'>

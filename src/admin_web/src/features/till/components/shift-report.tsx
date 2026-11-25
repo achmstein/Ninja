@@ -1,4 +1,5 @@
 import { type ShiftView } from '@/api/sales'
+import { useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -44,6 +45,11 @@ export function OverShortBadge({ value }: { value: number }) {
  */
 export function ShiftReport({ shift }: { shift: ShiftView }) {
   const t = useT()
+  // Tabs off: no tab payment line of its own, unless some came in while it was on
+  const showTabs =
+    useFeatures().tabs === true ||
+    toNumber(shift.tabPaymentsTotal) !== 0 ||
+    toNumber(shift.cashTabPayments) !== 0
   const locale = useLocale()
 
   const formatAt = (value: string | null | undefined) =>
@@ -147,28 +153,32 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
         />
         <Stat label={t('netSalesAfterRefunds')} value={formatEgp(net)} />
         <Stat label={t('changeGiven')} value={formatEgp(shift.changeGiven)} />
-        <Stat
-          label={t('tabPayments')}
-          value={formatEgp(shift.tabPaymentsTotal)}
-        />
+        {showTabs && (
+          <Stat
+            label={t('tabPayments')}
+            value={formatEgp(shift.tabPaymentsTotal)}
+          />
+        )}
       </StatStrip>
 
       {/* The drawer, term by term, adding up to what should be in it */}
       <section>
         <h4 className='mb-1 text-sm font-medium'>{t('drawerFormula')}</h4>
         <dl className='text-sm'>
-          {drawer.terms.map((term, index) => (
-            <div
-              key={term.key}
-              className='flex items-center justify-between gap-4 py-1'
-            >
-              <dt className='text-muted-foreground'>{t(term.labelKey)}</dt>
-              <dd className='tabular-nums'>
-                {index === 0 ? '' : term.sign > 0 ? '+ ' : '− '}
-                {formatEgp(term.amount)}
-              </dd>
-            </div>
-          ))}
+          {drawer.terms
+            .filter((term) => term.key !== 'tabs' || showTabs)
+            .map((term, index) => (
+              <div
+                key={term.key}
+                className='flex items-center justify-between gap-4 py-1'
+              >
+                <dt className='text-muted-foreground'>{t(term.labelKey)}</dt>
+                <dd className='tabular-nums'>
+                  {index === 0 ? '' : term.sign > 0 ? '+ ' : '− '}
+                  {formatEgp(term.amount)}
+                </dd>
+              </div>
+            ))}
           <div className='flex items-center justify-between gap-4 border-t pt-2 font-semibold'>
             <dt>{t(closed ? 'expected' : 'expectedInDrawer')}</dt>
             <dd className='tabular-nums'>

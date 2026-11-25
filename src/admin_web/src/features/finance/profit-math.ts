@@ -30,7 +30,18 @@ const cents = (value: number) => Math.round(value * 100) / 100
  *
  * A server that does not yet send the VAT split reads as no VAT taken out.
  */
-export function profitStatement(p: ProfitView | undefined): ProfitLine[] {
+/**
+ * The month as lines. Cost of goods is inventory's and labour payroll's: each
+ * stays on the statement, even at zero, only where the business runs that
+ * module, and shows anyway when it carries an amount.
+ */
+export function profitStatement(
+  p: ProfitView | undefined,
+  modules: { inventory?: boolean; payroll?: boolean } = {
+    inventory: true,
+    payroll: true,
+  }
+): ProfitLine[] {
   const sales = toNumber(p?.sales)
   const refunds = toNumber(p?.refunds)
   const net = toNumber(p?.netSales)
@@ -61,7 +72,7 @@ export function profitStatement(p: ProfitView | undefined): ProfitLine[] {
       labelKey: 'costOfGoods',
       amount: toNumber(p?.goods),
       sign: '−',
-      always: true,
+      always: modules.inventory === true,
     },
     {
       key: 'waste',
@@ -87,7 +98,7 @@ export function profitStatement(p: ProfitView | undefined): ProfitLine[] {
       labelKey: 'labourCost',
       amount: toNumber(p?.labour),
       sign: '−',
-      always: true,
+      always: modules.payroll === true,
     },
     {
       key: 'expenses',

@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'package:ninja_app_core/brand/tenant_brand.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:kds_app/features/kitchen/models/kitchen_order.dart';
@@ -56,7 +58,7 @@ void main() {
 
   setUp(() {
     kitchen = _FakeKitchen();
-    container = ProviderContainer(overrides: [kitchenRepositoryProvider.overrideWithValue(kitchen)]);
+    container = ProviderContainer(overrides: [featuresProvider.overrideWithValue(const TenantFeatures()), kitchenRepositoryProvider.overrideWithValue(kitchen)]);
     // Disposing cancels the poll timer, so the test does not hang on it
     addTearDown(container.dispose);
   });
@@ -75,7 +77,7 @@ void main() {
   });
 
   test('a station display asks for its own board and readies its own part', () async {
-    final grill = ProviderContainer(overrides: [
+    final grill = ProviderContainer(overrides: [featuresProvider.overrideWithValue(const TenantFeatures()), 
       kitchenRepositoryProvider.overrideWithValue(kitchen),
       selectedStationIdProvider.overrideWithValue(12),
     ]);

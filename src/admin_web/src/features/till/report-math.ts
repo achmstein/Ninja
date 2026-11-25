@@ -1,7 +1,12 @@
 import { type RangeReport, type TenderTotal } from '@/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
-import { TENDERS, tendersFor, type TenderName } from './components/tender'
+import {
+  TENDERS,
+  tendersFor,
+  type TenderModules,
+  type TenderName,
+} from './components/tender'
 
 /**
  * One line of the statement under the till report. `sign` says how it
@@ -172,7 +177,7 @@ function rowsOf(totals: TenderTotal[] | undefined) {
  */
 export function tenderSeries(
   report: RangeReport | undefined,
-  onlinePayments: boolean | undefined
+  modules: TenderModules
 ): TenderSeries {
   const bills = rowsOf(report?.tenderTotals)
   const tabs = rowsOf(report?.tabPaymentTenderTotals)
@@ -185,10 +190,14 @@ export function tenderSeries(
     count: toNumber(from.get(tender.name)?.count),
   })
 
+  // Every tender the business runs, empty or not, and any that took money: a
+  // courier's or Talabat's sales always count, whatever else happened that day
   const billRows = tendersFor(
-    onlinePayments,
-    toNumber(bills.get('Online')?.amount) > 0,
-    toNumber(bills.get('Talabat')?.amount) > 0
+    modules,
+    TENDERS.filter((tender) => {
+      const total = bills.get(tender.name)
+      return toNumber(total?.amount) !== 0 || toNumber(total?.count) > 0
+    }).map((tender) => tender.name)
   ).map((tender) => row(tender, bills))
   const tabRows = TENDERS.map((tender) => row(tender, tabs)).filter(
     (r) => r.amount !== 0 || r.count > 0

@@ -439,17 +439,20 @@ export function Floor() {
               <ReceiptText className='size-5' />
             </Button>
             {/* The customer who walked in only to pay their tab: search, then
-                their card — no sale, no list of everyone */}
-            <Button
-              size='lg'
-              variant='outline'
-              className='size-12'
-              aria-label={t('findCustomer')}
-              title={t('findCustomer')}
-              onClick={() => setFindOpen(true)}
-            >
-              <IdCard className='size-5' />
-            </Button>
+                their card — no sale, no list of everyone. Their card holds a
+                tab and points: nothing to find them for without either */}
+            {(features.tabs || features.loyalty) && (
+              <Button
+                size='lg'
+                variant='outline'
+                className='size-12'
+                aria-label={t('findCustomer')}
+                title={t('findCustomer')}
+                onClick={() => setFindOpen(true)}
+              >
+                <IdCard className='size-5' />
+              </Button>
+            )}
             <Button
               size='lg'
               variant='outline'

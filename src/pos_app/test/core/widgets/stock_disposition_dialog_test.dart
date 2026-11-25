@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:ninja_app_core/brand/brand_provider.dart';
+import 'package:ninja_app_core/brand/tenant_brand.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:pos_app/core/widgets/stock_disposition_choice.dart';
 import 'package:pos_app/features/orders/models/stock_disposition.dart';
@@ -10,7 +13,9 @@ import 'package:pos_app/l10n/app_localizations.dart';
 
 /// A delivery that came back: the cancel asks what becomes of the food,
 /// starting where the till put it, and answers with what was confirmed
-Widget _app(StockDisposition initial, void Function(StockDisposition?) answered) => MaterialApp(
+Widget _app(StockDisposition initial, void Function(StockDisposition?) answered, {bool inventory = true}) => ProviderScope(
+      overrides: [featuresProvider.overrideWithValue(TenantFeatures(inventory: inventory))],
+      child: MaterialApp(
       locale: const Locale('en'),
       supportedLocales: AppLocalizations.supportedLocales,
       localizationsDelegates: const [
@@ -36,7 +41,7 @@ Widget _app(StockDisposition initial, void Function(StockDisposition?) answered)
           ),
         ),
       ),
-    );
+    ));
 
 /// The bundled fonts, so widths are the tablet's and not the test font's
 /// (which draws every glyph a full em wide and overflows narrow rows)
@@ -93,5 +98,21 @@ void main() {
     await tester.pumpAndSettle();
 
     expect(answer, isNull);
+  });
+
+  testWidgets('without inventory it only asks to confirm: no stock to put it back in', (tester) async {
+    tester.view.physicalSize = const Size(1280, 800);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+
+    StockDisposition? answer;
+    await tester.pumpWidget(_app(StockDisposition.waste, (a) => answer = a, inventory: false));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Was the food made?'), findsNothing);
+    await tester.tap(find.text('Cancel the order'));
+    await tester.pumpAndSettle();
+    expect(answer, StockDisposition.waste);
   });
 }

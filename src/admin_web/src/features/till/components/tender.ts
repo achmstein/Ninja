@@ -30,21 +30,36 @@ export const TENDERS: {
   { name: 'Courier', value: 6, labelKey: 'tenderCourier' },
 ]
 
+/** The modules a tender belongs to (see useModules); cash, card and InstaPay belong to none */
+export type TenderModules = {
+  onlinePayments?: boolean
+  tabs?: boolean
+  talabat?: boolean
+  couriers?: boolean
+}
+
 /**
- * The tenders worth offering: Online only where the business takes payments at
- * the table, or where some was taken anyway (switched off since); Talabat
- * only where some was taken.
+ * The tenders worth offering: each one whose module the business runs, and
+ * any that was used anyway (a module switched off since keeps its history).
+ * On account is the tabs module, Online is online payments, Talabat and
+ * Courier their connections.
  */
 export function tendersFor(
-  onlinePayments: boolean | undefined,
-  hasOnline = false,
-  hasTalabat = false
+  modules: TenderModules,
+  used: Iterable<TenderName> = []
 ) {
+  const usedNames = new Set(used)
+  const on: Record<TenderName, boolean> = {
+    Cash: true,
+    Card: true,
+    InstaPay: true,
+    Account: modules.tabs === true,
+    Online: modules.onlinePayments === true,
+    Talabat: modules.talabat === true,
+    Courier: modules.couriers === true,
+  }
   return TENDERS.filter(
-    (tender) =>
-      (tender.name !== 'Online' || onlinePayments || hasOnline) &&
-      (tender.name !== 'Talabat' || hasTalabat) &&
-      (tender.name !== 'Courier' || hasTalabat)
+    (tender) => on[tender.name] || usedNames.has(tender.name)
   )
 }
 
