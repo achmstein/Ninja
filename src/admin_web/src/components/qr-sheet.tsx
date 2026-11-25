@@ -3,7 +3,8 @@ import { ArrowLeft, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { createPortal } from 'react-dom'
 import { useBrand, useBrandName, useCustomerOrigin } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
+import { wordmarkFor } from '@/lib/brand-slots'
+import { useLanguage, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 
@@ -24,15 +25,23 @@ type QrSheetProps = {
   emptyText: string
 }
 
-/** The tenant's logo sitting in the middle of every code, when there is one.
- *  Level H correction tolerates ~30% loss, and the mark covers about 4% of
- *  the code's area, so scanning is unaffected. */
-const centerMark = (src: string) => ({
-  src,
-  height: 40,
-  width: 40,
+/** The code's drawn size; everything over it is a share of this, so the code
+ *  and its mark scale together when a phone's column is narrower. */
+const QR_SIZE = 180
+
+/** The hole cut in the middle of the code for the business's logo: a clear
+ *  square a little larger than the logo's tile, so no module touches it. 52
+ *  of 180 is about 8% of the code's area; level H rebuilds up to ~30%. The
+ *  image is a transparent pixel: the hole is all the code needs, and the logo
+ *  is drawn over it as HTML, on its own white rounded tile. */
+const HOLE = 52
+const TILE = 44
+const clearHole = {
+  src: 'data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==',
+  height: HOLE,
+  width: HOLE,
   excavate: true,
-})
+}
 
 /** Print-ready QR cards, one per place.
  *
@@ -51,6 +60,10 @@ export function QrSheet({
   const t = useT()
   const brand = useBrand()
   const brandName = useBrandName()
+  const language = useLanguage((s) => s.language)
+  // Paper is white: the business's light wordmark, else its logo, else its name
+  const wordmark = wordmarkFor(brand, language, 'light')
+  const logo = brand?.logoUrl ?? null
   const customerHost = new URL(useCustomerOrigin()).host
 
   return createPortal(
@@ -90,7 +103,7 @@ export function QrSheet({
 
       <div className='p-6 print:p-0'>
         {isLoading ? (
-          <div className='grid grid-cols-2 gap-4'>
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2'>
             {Array.from({ length: 4 }).map((_, i) => (
               <Skeleton key={i} className='h-80 w-full' />
             ))}
@@ -98,14 +111,26 @@ export function QrSheet({
         ) : cards.length === 0 ? (
           <p className='text-muted-foreground py-12 text-center'>{emptyText}</p>
         ) : (
-          <div className='grid grid-cols-2 gap-4'>
+          // One card a row on a phone (two ran into each other there), two
+          // from sm up and always two on paper
+          <div className='grid grid-cols-1 gap-4 sm:grid-cols-2 print:grid-cols-2'>
             {cards.map((card) => (
               <div
                 key={card.id}
-                className='qr-sheet-card flex break-inside-avoid flex-col items-center gap-4 rounded-2xl border-2 border-black bg-white p-6 text-center text-black'
+                className='qr-sheet-card flex min-w-0 break-inside-avoid flex-col items-center gap-4 rounded-2xl border-2 border-black bg-white p-6 text-center text-black'
               >
-                {brand?.logoUrl ? (
-                  <img src={brand.logoUrl} alt='' className='h-7 w-auto' />
+                {wordmark ? (
+                  <img
+                    src={wordmark.url}
+                    alt=''
+                    className='h-8 w-auto max-w-[70%] object-contain'
+                  />
+                ) : logo ? (
+                  <img
+                    src={logo}
+                    alt=''
+                    className='size-10 rounded-[22%] object-cover'
+                  />
                 ) : (
                   <div className='text-base font-bold tracking-tight'>
                     {brandName}
@@ -125,20 +150,38 @@ export function QrSheet({
                   )}
                 </div>
 
-                <div className='rounded-xl border border-black/15 bg-white p-3'>
-                  <QRCodeSVG
-                    value={card.url}
-                    size={180}
-                    // H (not M): the centre mark eats modules the reader has
-                    // to reconstruct
-                    level='H'
-                    marginSize={1}
-                    bgColor='#ffffff'
-                    fgColor='#000000'
-                    imageSettings={
-                      brand?.logoUrl ? centerMark(brand.logoUrl) : undefined
-                    }
-                  />
+                <div className='w-full max-w-[204px] rounded-xl border border-black/15 bg-white p-3'>
+                  <div className='relative'>
+                    <QRCodeSVG
+                      value={card.url}
+                      size={QR_SIZE}
+                      // H (not M): the centre mark eats modules the reader has
+                      // to reconstruct
+                      level={logo ? 'H' : 'M'}
+                      marginSize={1}
+                      bgColor='#ffffff'
+                      fgColor='#000000'
+                      imageSettings={logo ? clearHole : undefined}
+                      className='block h-auto w-full'
+                    />
+                    {logo && (
+                      // The logo on a white tile with rounded corners, in
+                      // the cleared middle, its own shape kept
+                      <div
+                        className='absolute top-1/2 left-1/2 grid -translate-x-1/2 -translate-y-1/2 place-items-center rounded-[22%] bg-white p-[3%] shadow-[0_0_0_1px_rgb(0_0_0/0.08)]'
+                        style={{
+                          width: `${(TILE / QR_SIZE) * 100}%`,
+                          height: `${(TILE / QR_SIZE) * 100}%`,
+                        }}
+                      >
+                        <img
+                          src={logo}
+                          alt=''
+                          className='size-full rounded-[18%] object-contain'
+                        />
+                      </div>
+                    )}
+                  </div>
                 </div>
 
                 <div className='leading-tight'>
