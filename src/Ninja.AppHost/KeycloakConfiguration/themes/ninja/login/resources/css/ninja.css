@@ -1,8 +1,10 @@
 /*
- * Ninja login theme, one for every realm, in the Ninja style of the customer
- * app: a lifted card at the sheets' corners, filled fields, bold pill buttons,
- * so the Keycloak page reads as one more screen of the app that sent the user
- * here. The business shows in its header (its mark and name from the realm) and in
+ * Ninja login theme, one for every realm, drawn as the app that sent the user
+ * here, to its numbers. The staff's pages (admin, till, kitchen) are a card
+ * as the admin's and the web till's are: 36px outlined fields, 40px buttons,
+ * the controls' small corners and their one hairline elevation. The
+ * customers' pages (body.nj-app, below) are the customer app's screen: 48px
+ * filled fields, 44px pill buttons, its card shadow. The business shows in its header (its mark and name from the realm) and in
  * its colour: the business's API serves a small sheet (/api/tenant/login.css) the
  * frame loads after this one, setting --primary and the ring. The page frame is
  * template.ftl; the form markup is Keycloak's, mapped to these classes in
@@ -32,11 +34,15 @@
   --shadow: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   /* The Ninja style's shapes (client_web/src/styles/theme.css) */
   --radius-pill: 9999px;
-  --radius-card: 1.75rem;
-  --radius-field: 1rem;
-  --field-bg: var(--muted);
-  --card-border: transparent;
-  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
+  /* admin_web/src/styles/theme.css: rounded-xl cards, rounded-md controls */
+  --radius-card: calc(var(--radius) + 4px);
+  --radius-field: calc(var(--radius) - 2px);
+  --field-bg: var(--input-bg);
+  --card-border: var(--border);
+  /* The admin's one elevation (--elev-1), on cards and controls alike */
+  --elev-1: 0 0 0 1px oklch(0.129 0.042 264.695 / 0.06), 0 1px 2px oklch(0.129 0.042 264.695 / 0.04), 0 2px 6px -2px oklch(0.129 0.042 264.695 / 0.04);
+  --press-highlight: inset 0 1px 0 oklch(1 0 0 / 0.14);
+  --surface-shadow: var(--elev-1);
   color-scheme: light;
 }
 
@@ -58,7 +64,9 @@
   --ring: oklch(0.551 0.027 264.364);
   /* Shadows vanish on dark: the card takes a hairline instead */
   --card-border: oklch(1 0 0 / 10%);
-  --surface-shadow: none;
+  --elev-1: 0 0 0 1px oklch(1 0 0 / 0.07), 0 1px 2px oklch(0 0 0 / 0.3);
+  --press-highlight: inset 0 1px 0 oklch(1 0 0 / 0.08);
+  --surface-shadow: var(--elev-1);
   color-scheme: dark;
 }
 
@@ -81,7 +89,9 @@
     --input-bg: oklch(1 0 0 / 5%);
     --ring: oklch(0.551 0.027 264.364);
     --card-border: oklch(1 0 0 / 10%);
-    --surface-shadow: none;
+    --elev-1: 0 0 0 1px oklch(1 0 0 / 0.07), 0 1px 2px oklch(0 0 0 / 0.3);
+    --press-highlight: inset 0 1px 0 oklch(1 0 0 / 0.08);
+    --surface-shadow: var(--elev-1);
     color-scheme: dark;
   }
 }
@@ -195,7 +205,7 @@ body.nj-body {
   display: flex;
   flex-direction: column;
   gap: 1.5rem;
-  padding: 1.75rem 1.5rem;
+  padding: 1.5rem;
   background: var(--card);
   color: var(--foreground);
   border: 1px solid var(--card-border);
@@ -256,21 +266,27 @@ body.nj-body {
 .nj-input {
   display: block;
   width: 100%;
-  height: 3rem;
-  padding: 0 1rem;
-  /* Filled, as the app's fields are; the border only for the ring and an error */
-  border: 1px solid transparent;
+  /* The admin's field: h-9, outlined, its hairline elevation */
+  height: 2.25rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--input);
   border-radius: var(--radius-field);
   background: var(--field-bg);
   color: var(--foreground);
   font: inherit;
-  /* 16px: a phone does not zoom into a field it can read */
+  /* 16px: a phone does not zoom into a field it can read (14px from md up, as the admin's) */
   font-size: 1rem;
-  box-shadow: none;
+  box-shadow: var(--elev-1);
   outline: none;
   transition:
     border-color 0.15s ease,
     box-shadow 0.15s ease;
+}
+
+@media (min-width: 768px) {
+  .nj-input {
+    font-size: 0.875rem;
+  }
 }
 
 .nj-input::placeholder {
@@ -434,13 +450,14 @@ textarea.nj-input {
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
-  height: 3rem;
-  padding: 0 1.25rem;
+  /* The admin's button: h-10, rounded-md, medium weight */
+  height: 2.5rem;
+  padding: 0 1rem;
   border: 1px solid transparent;
-  border-radius: var(--radius-pill);
+  border-radius: var(--radius-field);
   font: inherit;
-  font-size: 0.9375rem;
-  font-weight: 700;
+  font-size: 0.875rem;
+  font-weight: 500;
   line-height: 1.25rem;
   white-space: nowrap;
   text-decoration: none;
@@ -470,6 +487,7 @@ textarea.nj-input {
 .nj-button-primary {
   background: var(--primary);
   color: var(--primary-foreground);
+  box-shadow: var(--press-highlight), var(--elev-1);
 }
 
 .nj-button:active {
@@ -481,13 +499,14 @@ textarea.nj-input {
 }
 
 .nj-button-outline {
-  background: var(--field-bg);
+  background: var(--background);
+  border-color: var(--border);
   color: var(--foreground);
-  font-weight: 600;
+  box-shadow: var(--elev-1);
 }
 
 .nj-button-outline:hover {
-  background: color-mix(in oklch, var(--field-bg) 85%, var(--foreground));
+  background: var(--accent);
 }
 
 .nj-button-link {
@@ -806,7 +825,14 @@ textarea.nj-input {
    type scale (title 28, body 15, labels 14), and the action kept in reach of
    the thumb as a long form scrolls. The staff's pages keep the card above. */
 
+/* client_web: filled fields (h-12, rounded-2xl), pill buttons (h-11, medium
+   weight, shadow-xs), its lifted surfaces */
 body.nj-app {
+  --radius-field: 1rem;
+  --field-bg: var(--muted);
+  --card-border: transparent;
+  --surface-shadow: 0 1px 2px 0 rgb(0 0 0 / 0.04), 0 8px 24px -8px rgb(0 0 0 / 0.16);
+  --shadow-xs: 0 1px 2px 0 rgb(0 0 0 / 0.05);
   display: block;
   padding: 0;
   font-family: var(--font-latin, 'Plus Jakarta Sans'), var(--font-arabic, 'IBM Plex Sans Arabic'), 'Inter', system-ui, sans-serif;
@@ -896,4 +922,29 @@ body.nj-app {
 
 .nj-app .nj-footer {
   padding: 0.5rem 1rem calc(1rem + env(safe-area-inset-bottom));
+}
+
+.nj-app .nj-input {
+  height: 3rem;
+  padding: 0 1rem;
+  border-color: transparent;
+  box-shadow: none;
+  font-size: 1rem;
+}
+
+.nj-app .nj-button {
+  height: 2.75rem;
+  padding: 0 1.5rem;
+  border-radius: var(--radius-pill);
+  font-size: 0.9375rem;
+  font-weight: 500;
+}
+
+.nj-app .nj-button-primary,
+.nj-app .nj-button-outline {
+  box-shadow: var(--shadow-xs);
+}
+
+.nj-app .nj-alert {
+  border-radius: var(--radius-field);
 }
