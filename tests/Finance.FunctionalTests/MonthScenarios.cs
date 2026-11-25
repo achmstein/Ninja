@@ -237,6 +237,30 @@ public sealed class MonthScenarios
     }
 
     [TestMethod]
+    public async Task A_courier_companys_fee_is_a_cost_of_the_month_booked_once_under_courier_fees()
+    {
+        var branch = Suite.NewBranch();
+        var owner = Suite.OwnerAt(branch);
+        var orderId = branch * 1000 + 1;
+        var fee = new CourierFeeChargedIntegrationEvent(orderId, branch, 7, "Fast Couriers", 30m, Noon(2026, 4, 9));
+
+        await TellAsync(fee);
+        await TellAsync(fee);
+        await TellAsync(new CourierFeeChargedIntegrationEvent(orderId + 1, branch, 7, "Fast Couriers", 0m, Noon(2026, 4, 9)));
+
+        await ServiceUnderTest<Program>.EventuallyAsync(async () =>
+        {
+            var april = await owner.GetAsync<ProfitView>(ProfitUrl(2026, 4));
+            return april.Expenses == 30m;
+        }, "the fee is a cost of the month");
+
+        var april = await owner.GetAsync<ProfitView>(ProfitUrl(2026, 4));
+        var line = april.ExpensesByCategory.Single();
+        Assert.AreEqual(CourierFeeChargedIntegrationEventHandler.CategoryName, line.CategoryName.En);
+        Assert.AreEqual(30m, line.Total, "told twice, booked once; a fee of nothing is no expense");
+    }
+
+    [TestMethod]
     public async Task Money_the_till_moved_lands_on_the_account_it_was_for()
     {
         var branch = Suite.NewBranch();

@@ -18,4 +18,11 @@ public enum PaymentTender
     /// never offered at the till.
     /// </summary>
     Talabat = 5,
+
+    /// <summary>
+    /// A delivery a courier company carried: its courier collected at the door and the company owes the
+    /// business the cash, so the bill is settled to the company. Settled by Sales itself when the
+    /// courier's collection is said; never cash in the drawer, never offered at the till.
+    /// </summary>
+    Courier = 6,
 }

@@ -219,6 +219,20 @@ class OrderDelivery {
   /// What the till counted in from the rider for it
   final double? cashCollected;
 
+  /// The courier company that has it instead of a rider; null while a rider has it, or nobody
+  final int? courierProviderId;
+  final String? courierProvider;
+
+  /// Who the company sent, when it said
+  final String? courierName;
+  final String? courierPhone;
+
+  /// What the company charges the business for it
+  final double? courierFee;
+
+  /// What the courier collected, once said: the company owes it, nothing is taken in at the till
+  final double? courierCollected;
+
   /// The branch's named area it was priced by, as it was called when the order was placed
   final LocalizedText? zoneName;
 
@@ -244,9 +258,21 @@ class OrderDelivery {
     this.failureReason,
     this.cashHandedInAt,
     this.cashCollected,
+    this.courierProviderId,
+    this.courierProvider,
+    this.courierName,
+    this.courierPhone,
+    this.courierFee,
+    this.courierCollected,
     this.zoneName,
     this.etaMinutes,
   });
+
+  /// A courier company has it, not one of the branch's riders
+  bool get hasCourier => courierProviderId != null;
+
+  /// Who has it, as the till names them: the rider, or the courier company and who it sent
+  String? get holderName => riderName ?? (courierProvider == null ? null : [courierProvider, ?courierName].join(' · '));
 
   static double _num(Object? v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
   static double? _maybe(Object? v) => v == null ? null : _num(v);
@@ -286,6 +312,12 @@ class OrderDelivery {
       failureReason: _text(json['failureReason']),
       cashHandedInAt: _time(json['cashHandedInAt']),
       cashCollected: _maybe(json['cashCollected']),
+      courierProviderId: _maybe(json['courierProviderId'])?.round(),
+      courierProvider: _text(json['courierProvider']),
+      courierName: _text(json['courierName']),
+      courierPhone: _text(json['courierPhone']),
+      courierFee: _maybe(json['courierFee']),
+      courierCollected: _maybe(json['courierCollected']),
       zoneName: _name(json['zoneName']),
       etaMinutes: _maybe(json['etaMinutes'])?.round(),
     );

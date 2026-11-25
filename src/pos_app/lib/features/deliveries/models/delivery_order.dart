@@ -43,6 +43,9 @@ class DeliveryOrder {
 
   /// Cash to collect at the door, the delivery fee in
   final double total;
+
+  /// What is collected at the door: the total, or nothing when paid online ahead
+  final double toCollect;
   final List<DeliveryLine> items;
   final OrderDelivery delivery;
 
@@ -57,9 +60,10 @@ class DeliveryOrder {
     this.takenByName,
     this.takenAtBranchId,
     required this.total,
+    double? toCollect,
     this.items = const [],
     required this.delivery,
-  });
+  }) : toCollect = toCollect ?? total;
 
   /// Kept in UTC, the server's own; drawn in the till's local time
   static DateTime? _time(Object? value) => value is String ? DateTime.tryParse(value)?.toUtc() : null;
@@ -80,6 +84,7 @@ class DeliveryOrder {
         takenByName: _text(json['takenByName']),
         takenAtBranchId: json['takenAtBranchId'] == null ? null : toInt(json['takenAtBranchId']),
         total: toNumber(json['total']),
+        toCollect: json['toCollect'] == null ? null : toNumber(json['toCollect']),
         items: [
           for (final line in (json['items'] as List<dynamic>? ?? const <dynamic>[]))
             DeliveryLine.fromJson((line as Map).cast<String, dynamic>()),
@@ -90,7 +95,8 @@ class DeliveryOrder {
 
   /// The server's stage is the one authority; the till only adds "settled"
   DeliveryLane get lane {
-    if (delivery.cashHandedInAt != null || paidAt != null) return DeliveryLane.done;
+    // A courier's collection is never taken in at the till: said, it is the courier company's to pay
+    if (delivery.cashHandedInAt != null || paidAt != null || delivery.courierCollected != null) return DeliveryLane.done;
     return switch (delivery.stage) {
       DeliveryStage.waiting => DeliveryLane.waiting,
       DeliveryStage.assigned || DeliveryStage.onTheWay => DeliveryLane.withRider,
@@ -134,6 +140,28 @@ class TillRider {
         onDuty: json['onDuty'] == true,
         out: toInt(json['out']),
         signedIn: json['signedIn'] != false,
+      );
+}
+
+/// A courier company the business lists (`GET /api/orders/couriers`): a
+/// manual courier, told by phone, its steps marked at the till
+class CourierProvider {
+  final int id;
+  final String name;
+  final String? phone;
+
+  /// What it usually charges per delivery; the till may change it for one
+  final double? defaultFee;
+  final bool isActive;
+
+  const CourierProvider({required this.id, required this.name, this.phone, this.defaultFee, this.isActive = true});
+
+  factory CourierProvider.fromJson(Map<String, dynamic> json) => CourierProvider(
+        id: toInt(json['id']),
+        name: (json['name'] as String? ?? '').trim(),
+        phone: (json['phone'] as String?)?.trim(),
+        defaultFee: json['defaultFee'] == null ? null : toNumber(json['defaultFee']),
+        isActive: json['isActive'] != false,
       );
 }
 

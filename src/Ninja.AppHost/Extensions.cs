@@ -207,6 +207,10 @@ internal static class Extensions
             yarp.AddRoute("/api/sales/payments/{*any}", salesCluster)
                 .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
 
+            // What the business and its courier companies owe each other
+            yarp.AddRoute("/api/sales/couriers/{*any}", salesCluster)
+                .WithMatchRouteQueryParameter([new() { Name = "api-version", Values = ["1.0", "1"], Mode = QueryParameterMatchMode.Exact }]);
+
             // Inventory (stock items, levels, receipts, counts, recipes)
             var inventoryCluster = yarp.AddCluster(inventoryApi);
             yarp.AddRoute("/api/inventory/{*any}", inventoryCluster)

@@ -29,6 +29,29 @@ describe('the board', () => {
     expect(lanes.cashDue.map((o) => o.orderNumber)).toEqual([6])
   })
 
+  it('takes a courier delivery off the board once its collection is said: nothing is taken in at the till', () => {
+    const withCourier = (orderNumber: number, stage: string, courierCollected: number | null) => ({
+      orderNumber,
+      paidAt: null,
+      delivery: { stage, riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers', courierCollected },
+    })
+    const lanes = byLane([withCourier(1, 'Assigned', null), withCourier(2, 'Delivered', 115), withCourier(3, 'Delivered', 0)])
+    expect(lanes.withRiders.map((o) => o.orderNumber)).toEqual([1])
+    expect(lanes.cashDue).toEqual([])
+  })
+
+  it('groups a courier company apart from the riders, under its name', () => {
+    const groups = byRider([
+      order(1, 'Assigned', 'ali'),
+      { orderNumber: 2, paidAt: null, delivery: { stage: 'Assigned', riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers' } },
+      { orderNumber: 3, paidAt: null, delivery: { stage: 'OnTheWay', riderUserId: null, riderName: null, courierProviderId: 7, courierProvider: 'Fast Couriers' } },
+    ])
+    expect(groups.map((g) => [g.riderName, g.orders.map((o) => o.orderNumber)])).toEqual([
+      ['ALI', [1]],
+      ['Fast Couriers', [2, 3]],
+    ])
+  })
+
   it('groups a column by rider, each once in the order they first stand, a delivery with no rider in a group of its own', () => {
     const groups = byRider([
       order(1, 'Delivered', 'ali'),

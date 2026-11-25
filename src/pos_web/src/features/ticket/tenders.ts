@@ -43,4 +43,7 @@ export const tenderLabelKey: Record<string, TranslationKey> = {
   // A Talabat order Talabat pays for: settled by the server when it lands,
   // never offered on the till
   Talabat: 'talabatTender',
+  // A courier company's delivery: its courier collected and the company owes
+  // the business; settled by the server, never offered on the till
+  Courier: 'courierTender',
 }

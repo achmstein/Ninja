@@ -4,6 +4,13 @@ export type ClientOptions = {
     baseURL: `${string}://${string}` | (string & {});
 };
 
+export type AssignCourierRequest = {
+    providerId: number | string;
+    courierName?: null | string;
+    courierPhone?: null | string;
+    fee?: null | number | string;
+};
+
 export type AssignOrderCustomerRequest = {
     customerUserId: null | string;
     customerName: string;
@@ -74,6 +81,25 @@ export type ConnectorPairingView = {
     expiresAt: string;
 };
 
+export type CourierDeliveredRequest = {
+    collected: number | string;
+};
+
+export type CourierProviderRequest = {
+    name: string;
+    phone?: null | string;
+    defaultFee?: null | number | string;
+    isActive?: boolean;
+};
+
+export type CourierProviderView = {
+    id: number | string;
+    name: string;
+    phone: null | string;
+    defaultFee: null | number | string;
+    isActive: boolean;
+};
+
 export type CreatedOrder = {
     orderId: null | number | string;
 };
@@ -128,6 +154,14 @@ export type CustomerAddressView = {
     phone: null | string;
 };
 
+export type CustomerOrderSummary = {
+    customerId?: string;
+    orderCount?: number | string;
+    totalSpent?: number | string;
+    firstOrderAt?: string;
+    lastOrderAt?: string;
+};
+
 export type DeliveringBranch = {
     branchId: number | string;
     distanceMeters: number | string;
@@ -158,9 +192,11 @@ export type DeliveryFailedRequest = {
 
 export type DeliveryOrder = {
     orderNumber?: number | string;
+    branchId?: number | string;
     date?: string;
     confirmedAt?: null | string;
     readyAt?: null | string;
+    kitchenMarksReady?: null | boolean;
     paidAt?: null | string;
     customerName?: null | string;
     customerNote?: null | string;
@@ -209,6 +245,11 @@ export type DeliveryStaffView = {
     riderUserId?: null | string;
     failureReason?: null | string;
     cashCollected?: null | number | string;
+    courierProviderId?: null | number | string;
+    courierPhone?: null | string;
+    courierFee?: null | number | string;
+    courierTrackingUrl?: null | string;
+    courierCollected?: null | number | string;
     version?: number | string;
     latitude?: null | number | string;
     longitude?: null | number | string;
@@ -224,6 +265,8 @@ export type DeliveryStaffView = {
     etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
+    courierProvider?: null | string;
+    courierName?: null | string;
     assignedAt?: null | string;
     outAt?: null | string;
     deliveredAt?: null | string;
@@ -244,6 +287,8 @@ export type DeliveryTimelineStep = {
     actorRole?: string;
     cashCollected?: null | number | string;
     reason?: null | string;
+    courierProvider?: null | string;
+    courierName?: null | string;
 };
 
 export type DeliveryView = {
@@ -261,6 +306,8 @@ export type DeliveryView = {
     etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
+    courierProvider?: null | string;
+    courierName?: null | string;
     assignedAt?: null | string;
     outAt?: null | string;
     deliveredAt?: null | string;
@@ -301,6 +348,7 @@ export type KitchenOrder = {
     date?: string;
     confirmedAt?: null | string;
     readyAt?: null | string;
+    cancelledAt?: null | string;
     source?: string;
     platform?: null | PlatformOrderView;
     isDelivery?: boolean;
@@ -1429,6 +1477,38 @@ export type GetGuestsResponses = {
 
 export type GetGuestsResponse = GetGuestsResponses[keyof GetGuestsResponses];
 
+export type GetCustomerOrderSummariesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/customers/summary';
+};
+
+export type GetCustomerOrderSummariesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCustomerOrderSummariesResponses = {
+    /**
+     * OK
+     */
+    200: Array<CustomerOrderSummary>;
+};
+
+export type GetCustomerOrderSummariesResponse = GetCustomerOrderSummariesResponses[keyof GetCustomerOrderSummariesResponses];
+
 export type GetOrderStatsData = {
     body?: never;
     path?: never;
@@ -2254,6 +2334,206 @@ export type SetMyRiderStatusResponses = {
 };
 
 export type SetMyRiderStatusResponse = SetMyRiderStatusResponses[keyof SetMyRiderStatusResponses];
+
+export type GetCourierProvidersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers';
+};
+
+export type GetCourierProvidersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierProvidersResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierProviderView>;
+};
+
+export type GetCourierProvidersResponse = GetCourierProvidersResponses[keyof GetCourierProvidersResponses];
+
+export type AddCourierProviderData = {
+    body: CourierProviderRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers';
+};
+
+export type AddCourierProviderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AddCourierProviderResponses = {
+    /**
+     * OK
+     */
+    200: CourierProviderView;
+};
+
+export type AddCourierProviderResponse = AddCourierProviderResponses[keyof AddCourierProviderResponses];
+
+export type UpdateCourierProviderData = {
+    body: CourierProviderRequest;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}';
+};
+
+export type UpdateCourierProviderErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type UpdateCourierProviderResponses = {
+    /**
+     * OK
+     */
+    200: CourierProviderView;
+};
+
+export type UpdateCourierProviderResponse = UpdateCourierProviderResponses[keyof UpdateCourierProviderResponses];
+
+export type UnassignDeliveryCourierData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/courier';
+};
+
+export type UnassignDeliveryCourierErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type UnassignDeliveryCourierResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type UnassignDeliveryCourierResponse = UnassignDeliveryCourierResponses[keyof UnassignDeliveryCourierResponses];
+
+export type AssignDeliveryCourierData = {
+    body: AssignCourierRequest;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/courier';
+};
+
+export type AssignDeliveryCourierErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AssignDeliveryCourierResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type AssignDeliveryCourierResponse = AssignDeliveryCourierResponses[keyof AssignDeliveryCourierResponses];
+
+export type MarkCourierDeliveredData = {
+    body: CourierDeliveredRequest;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/courier-delivered';
+};
+
+export type MarkCourierDeliveredErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type MarkCourierDeliveredResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type MarkCourierDeliveredResponse = MarkCourierDeliveredResponses[keyof MarkCourierDeliveredResponses];
 
 export type GetMyAddressesData = {
     body?: never;

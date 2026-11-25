@@ -100,10 +100,11 @@ export type DeliveryLane = 'waiting' | 'withRider' | 'failed' | 'returned' | 'ca
 
 export function laneOf(order: {
   paidAt?: string | null
-  delivery?: { stage?: string | null; cashHandedInAt?: string | null } | null
+  delivery?: { stage?: string | null; cashHandedInAt?: string | null; courierCollected?: number | string | null } | null
 }): DeliveryLane {
   const d = order.delivery
-  if (d?.cashHandedInAt || order.paidAt) return 'done'
+  // A courier's collection is never taken in at the till: said, it is the courier company's to pay
+  if (d?.cashHandedInAt || order.paidAt || d?.courierCollected != null) return 'done'
   switch (stageOf(d?.stage)) {
     case 'Delivered':
       return 'cashDue'

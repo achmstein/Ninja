@@ -1709,6 +1709,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get talabatTender => 'Talabat';
 
   @override
+  String get courierTender => 'Courier company';
+
+  @override
   String get onlinePayments => 'Paid online';
 
   @override
@@ -1859,6 +1862,54 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryTakeBack => 'Take it back from the rider';
+
+  @override
+  String get deliveryCouriers => 'Or a courier company';
+
+  @override
+  String deliveryCourierGive(String name) {
+    return 'Give it to $name';
+  }
+
+  @override
+  String get deliveryCourierName => 'Courier\'s name (optional)';
+
+  @override
+  String get deliveryCourierPhone => 'Courier\'s phone (optional)';
+
+  @override
+  String get deliveryCourierFee => 'The company\'s fee for this delivery';
+
+  @override
+  String deliveryCourierFeeLine(String amount) {
+    return 'Fee $amount';
+  }
+
+  @override
+  String deliveryForCourier(String name) {
+    return 'The till marks $name\'s steps:';
+  }
+
+  @override
+  String deliveryTakeBackCourier(String name) {
+    return 'Take it back from $name';
+  }
+
+  @override
+  String get deliveryCourierCollected => 'What the courier collected';
+
+  @override
+  String get deliveryCourierPaidOnline =>
+      'Paid online ahead: the courier collects nothing.';
+
+  @override
+  String deliveryCourierDeliveredTitle(String name) {
+    return 'Delivered by $name?';
+  }
+
+  @override
+  String get deliveryCourierDeliveredHint =>
+      'What the courier collected is owed to the business by the company.';
 
   @override
   String deliveryTakeCash(String amount, String name) {

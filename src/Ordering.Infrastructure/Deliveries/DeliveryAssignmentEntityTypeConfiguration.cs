@@ -16,6 +16,8 @@ class DeliveryAssignmentEntityTypeConfiguration : IEntityTypeConfiguration<Deliv
         builder.Property(a => a.ActorRole).HasMaxLength(20);
         builder.Property(a => a.CashCollected).HasPrecision(18, 2);
         builder.Property(a => a.Reason).HasMaxLength(DeliveryLimits.FailureReason);
+        builder.Property(a => a.CourierProvider).HasMaxLength(DeliveryLimits.CourierProvider);
+        builder.Property(a => a.CourierName).HasMaxLength(DeliveryLimits.RiderName);
 
         // A rider's history, and one order's timeline
         builder.HasIndex(a => new { a.RiderUserId, a.At });

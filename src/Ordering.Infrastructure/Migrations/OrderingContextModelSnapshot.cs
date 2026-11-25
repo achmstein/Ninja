@@ -576,6 +576,38 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("orderstationparts", "ordering");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.CourierCompany", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<decimal?>("DefaultFee")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("boolean");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
+                    b.HasKey("Id");
+
+                    b.ToTable("couriercompanies", "delivery");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.CustomerAddress", b =>
                 {
                     b.Property<int>("Id")
@@ -669,6 +701,17 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<decimal?>("CashCollected")
                         .HasPrecision(18, 2)
                         .HasColumnType("numeric(18,2)");
+
+                    b.Property<string>("CourierName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("CourierProvider")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<int?>("CourierProviderId")
+                        .HasColumnType("integer");
 
                     b.Property<int>("OrderId")
                         .HasColumnType("integer");
@@ -1130,6 +1173,40 @@ namespace Ordering.Infrastructure.Migrations
 
                             b1.Property<DateTime?>("CashHandedInAt")
                                 .HasColumnType("timestamp with time zone");
+
+                            b1.Property<decimal?>("CourierCollected")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<DateTime?>("CourierCollectedAt")
+                                .HasColumnType("timestamp with time zone");
+
+                            b1.Property<decimal?>("CourierFee")
+                                .HasPrecision(18, 2)
+                                .HasColumnType("numeric(18,2)");
+
+                            b1.Property<string>("CourierJobId")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<string>("CourierName")
+                                .HasMaxLength(200)
+                                .HasColumnType("character varying(200)");
+
+                            b1.Property<string>("CourierPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("CourierProvider")
+                                .HasMaxLength(100)
+                                .HasColumnType("character varying(100)");
+
+                            b1.Property<int?>("CourierProviderId")
+                                .HasColumnType("integer");
+
+                            b1.Property<string>("CourierTrackingUrl")
+                                .HasMaxLength(500)
+                                .HasColumnType("character varying(500)");
 
                             b1.Property<DateTime?>("DeliveredAt")
                                 .HasColumnType("timestamp with time zone");

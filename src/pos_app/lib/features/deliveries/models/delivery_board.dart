@@ -43,9 +43,11 @@ List<RiderGroup> byRider(Iterable<DeliveryOrder> orders) {
   final groups = <String, List<DeliveryOrder>>{};
   final names = <String, String?>{};
   for (final order in orders) {
-    final key = order.delivery.riderUserId ?? '';
+    // A courier company's deliveries are a group of their own, under its name
+    final d = order.delivery;
+    final key = d.riderUserId ?? (d.courierProviderId == null ? '' : 'courier:${d.courierProviderId}');
     groups.putIfAbsent(key, () => []).add(order);
-    names.putIfAbsent(key, () => order.delivery.riderName);
+    names.putIfAbsent(key, () => d.riderName ?? d.courierProvider);
   }
   return [
     for (final e in groups.entries)

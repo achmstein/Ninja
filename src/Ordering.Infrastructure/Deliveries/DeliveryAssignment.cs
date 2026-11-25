@@ -62,8 +62,16 @@ public class DeliveryAssignment
     /// <summary>"Rider" or "Till".</summary>
     public string ActorRole { get; set; } = string.Empty;
 
-    /// <summary>What was counted in, for <see cref="DeliveryAction.CashIn"/>.</summary>
+    /// <summary>What was counted in, for <see cref="DeliveryAction.CashIn"/>; what the courier collected, for <see cref="DeliveryAction.Delivered"/> by a courier.</summary>
     public decimal? CashCollected { get; set; }
+
+    /// <summary>The courier company the delivery is with after this step, instead of a rider; null while a rider has it.</summary>
+    public int? CourierProviderId { get; set; }
+
+    public string? CourierProvider { get; set; }
+
+    /// <summary>The courier the company sent, when it said.</summary>
+    public string? CourierName { get; set; }
 
     /// <summary>Why it could not be handed over, for <see cref="DeliveryAction.Failed"/>.</summary>
     public string? Reason { get; set; }

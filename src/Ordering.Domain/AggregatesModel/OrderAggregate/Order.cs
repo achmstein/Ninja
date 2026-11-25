@@ -964,11 +964,39 @@ public class Order
         AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
     }
 
-    /// <summary>Take a delivery back from its rider before it leaves.</summary>
+    /// <summary>
+    /// Give a confirmed delivery to a courier company instead of a rider, or change who the company
+    /// sent, before it leaves. A rider who had it is told it was taken from them.
+    /// </summary>
+    public void AssignCourier(int providerId, string provider, string? courierName, string? courierPhone, decimal? fee, DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        var previous = delivery.AssignCourier(providerId, provider, courierName, courierPhone, fee, at ?? DateTime.UtcNow);
+        AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
+    }
+
+    /// <summary>
+    /// The courier company's courier handed it over, and collected this much at the door: the bill is
+    /// settled to the company, which owes the business the cash. Paid online ahead, nothing was
+    /// collected, whatever is said. A repeat is a no-op.
+    /// </summary>
+    public void MarkCourierDelivered(decimal collected, DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (!delivery.HasCourier)
+            throw new OrderingDomainException("A courier company doesn't have this delivery.", DeliveryErrors.NoCourier);
+        var when = at ?? DateTime.UtcNow;
+        var delivered = delivery.MarkDelivered(when);
+        var reported = delivery.MarkCourierCollected(PaysOnline ? 0 : collected, when);
+        if (delivered || reported)
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, CourierCollected: reported));
+    }
+
+    /// <summary>Take a delivery back from its rider, or its courier company, before it leaves.</summary>
     public void UnassignRider()
     {
         var delivery = EnsureDelivering();
-        if (delivery.RiderUserId is null)
+        if (delivery.RiderUserId is null && !delivery.HasCourier)
             return;
 
         var previous = delivery.Unassign();
@@ -987,6 +1015,9 @@ public class Order
     public void MarkDelivered(DateTime? at = null)
     {
         var delivery = EnsureDelivering();
+        // A courier's delivery is said delivered with what was collected (MarkCourierDelivered), or its bill never settles
+        if (delivery.HasCourier)
+            throw new OrderingDomainException("Say what the courier collected.", DeliveryErrors.CourierAmountRequired);
         if (delivery.MarkDelivered(at ?? DateTime.UtcNow))
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
     }

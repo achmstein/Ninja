@@ -88,6 +88,10 @@ public record DeliveryView
     /// <summary>"Waiting", "Assigned", "OnTheWay", "Delivered", "Failed" or "Returned".</summary>
     public string Stage { get; init; } = string.Empty;
     public string? RiderName { get; init; }
+    /// <summary>The courier company that has it instead of a rider; null while a rider has it, or nobody.</summary>
+    public string? CourierProvider { get; init; }
+    /// <summary>The courier the company sent, when it said.</summary>
+    public string? CourierName { get; init; }
     public DateTime? AssignedAt { get; init; }
     public DateTime? OutAt { get; init; }
     public DateTime? DeliveredAt { get; init; }
@@ -113,7 +117,10 @@ public record DeliveryView
         ZoneName = d.ZoneName,
         EtaMinutes = d.EtaMinutes,
         Stage = d.Stage.ToString(),
-        RiderName = d.RiderName,
+        // The customer is told who is bringing it: a courier's name stands where a rider's would
+        RiderName = d.RiderName ?? d.CourierName,
+        CourierProvider = d.CourierProvider,
+        CourierName = d.CourierName,
         AssignedAt = d.AssignedAt,
         OutAt = d.OutAt,
         DeliveredAt = d.DeliveredAt,
@@ -134,6 +141,13 @@ public record DeliveryStaffView : DeliveryView
     public string? FailureReason { get; init; }
     /// <summary>What the rider handed in, as the till counted it.</summary>
     public decimal? CashCollected { get; init; }
+    public int? CourierProviderId { get; init; }
+    public string? CourierPhone { get; init; }
+    /// <summary>What the courier company charges the business for it.</summary>
+    public decimal? CourierFee { get; init; }
+    public string? CourierTrackingUrl { get; init; }
+    /// <summary>What the courier company said its courier collected; null until it said.</summary>
+    public decimal? CourierCollected { get; init; }
     /// <summary>One more with every step; what the board has, to say it is behind.</summary>
     public int Version { get; init; }
 
@@ -143,9 +157,16 @@ public record DeliveryStaffView : DeliveryView
 
     public static DeliveryStaffView? ForStaff(Delivery? d) => d is null ? null : new DeliveryStaffView(From(d)!)
     {
+        // Staff see the rider as the rider, and the courier on its own fields
+        RiderName = d.RiderName,
         RiderUserId = d.RiderUserId,
         FailureReason = d.FailureReason,
         CashCollected = d.CashCollected,
+        CourierProviderId = d.CourierProviderId,
+        CourierPhone = d.CourierPhone,
+        CourierFee = d.CourierFee,
+        CourierTrackingUrl = d.CourierTrackingUrl,
+        CourierCollected = d.CourierCollected,
         Version = d.Version,
     };
 }

@@ -45,7 +45,12 @@ public class OrderDeliveryChangedDomainEventHandler(
             ActorUserId = actorUserId,
             ActorName = actorName is { Length: > 200 } ? actorName[..200] : actorName,
             ActorRole = byTill ? "Till" : "Rider",
-            CashCollected = action == DeliveryAction.CashIn ? delivery.CashCollected : null,
+            CashCollected = action == DeliveryAction.CashIn ? delivery.CashCollected
+                : step.CourierCollected ? delivery.CourierCollected
+                : null,
+            CourierProviderId = delivery.CourierProviderId,
+            CourierProvider = delivery.CourierProvider,
+            CourierName = delivery.CourierName,
             Reason = action == DeliveryAction.Failed ? delivery.FailureReason : null,
         };
     }
@@ -56,8 +61,8 @@ public class OrderDeliveryChangedDomainEventHandler(
         var delivery = order.Delivery!;
 
         logger.LogInformation(
-            "Order {OrderId} delivery -> {Stage} (version {Version}, cash in {CashIn})",
-            order.Id, domainEvent.Stage, delivery.Version, domainEvent.CashHandedIn);
+            "Order {OrderId} delivery -> {Stage} (version {Version}, cash in {CashIn}, courier {Courier}, courier collected {CourierCollected})",
+            order.Id, domainEvent.Stage, delivery.Version, domainEvent.CashHandedIn, delivery.CourierProviderId, domainEvent.CourierCollected);
 
         // Saved with the order: the step and its history stand or fall together
         context.DeliveryAssignments.Add(HistoryRow(
@@ -80,6 +85,12 @@ public class OrderDeliveryChangedDomainEventHandler(
             order.GetTotal(),
             delivery.Address,
             delivery.Version,
-            delivery.CashCollected));
+            delivery.CashCollected,
+            delivery.CourierProviderId,
+            delivery.CourierProvider,
+            delivery.CourierName,
+            delivery.CourierFee,
+            domainEvent.CourierCollected,
+            delivery.CourierCollected));
     }
 }

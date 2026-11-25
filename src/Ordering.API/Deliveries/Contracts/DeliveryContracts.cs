@@ -149,6 +149,22 @@ public record DeliveryFailedRequest(string? Reason = null);
 /// <param name="Amount">What the rider handed in, as the till counted it.</param>
 public record HandInCashRequest(decimal Amount);
 
+/// <summary>Give a delivery to one of the business's courier companies instead of a rider.</summary>
+/// <param name="ProviderId">One of the courier companies the business lists, switched on.</param>
+/// <param name="CourierName">The courier the company sent, when it said.</param>
+/// <param name="Fee">What it charges for this delivery; the company's usual fee when left out.</param>
+public record AssignCourierRequest(int ProviderId, string? CourierName = null, string? CourierPhone = null, decimal? Fee = null);
+
+/// <param name="Collected">What the courier collected at the door; ignored for an order paid online ahead.</param>
+public record CourierDeliveredRequest(decimal Collected);
+
+/// <summary>A courier company as the owner lists it.</summary>
+/// <param name="DefaultFee">What it usually charges per delivery; the till may change it for one.</param>
+public record CourierProviderRequest(string Name, string? Phone = null, decimal? DefaultFee = null, bool IsActive = true);
+
+/// <summary>A courier company the business hands deliveries to.</summary>
+public record CourierProviderView(int Id, string Name, string? Phone, decimal? DefaultFee, bool IsActive);
+
 /// <summary>The cash a rider hands in for several deliveries at once: each delivery and what the till counted for it.</summary>
 public record HandInRiderCashRequest(IReadOnlyList<HandInCashItem>? Items);
 
@@ -273,6 +289,9 @@ public record DeliveryTimelineStep
     public string ActorRole { get; init; } = string.Empty;
     public decimal? CashCollected { get; init; }
     public string? Reason { get; init; }
+    /// <summary>The courier company it was with after this step, instead of a rider.</summary>
+    public string? CourierProvider { get; init; }
+    public string? CourierName { get; init; }
 }
 
 /// <summary>A window of a rider's deliveries: its figures over the whole window.</summary>

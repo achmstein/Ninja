@@ -781,6 +781,8 @@ public static partial class Templates
         // Online payments; the provider's callback carries no api-version and is never blocked
         yield return ("/api/sales/payments/paymob/callback", "sales", null, none);
         yield return ("/api/sales/payments/{*any}", "sales", v1, none);
+        // What the business and its courier companies owe each other
+        yield return ("/api/sales/couriers/{*any}", "sales", v1, none);
         yield return ("/api/inventory/{*any}", "inventory", v1, none);
         yield return ("/api/payroll/{*any}", "payroll", v1, none);
         yield return ("/api/finance/{*any}", "finance", v1, none);

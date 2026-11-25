@@ -322,6 +322,8 @@ public class RiderOverviewQueries(OrderingContext context, IOptions<DeliveryOpti
             ActorRole = s.ActorRole,
             CashCollected = s.CashCollected,
             Reason = s.Reason,
+            CourierProvider = s.CourierProvider,
+            CourierName = s.CourierName,
         }).ToList();
     }
 }

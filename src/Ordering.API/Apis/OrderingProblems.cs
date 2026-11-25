@@ -24,6 +24,7 @@ public static class OrderingProblems
         [ModuleOff] = StatusCodes.Status402PaymentRequired,
         [AddressErrors.NotFound] = StatusCodes.Status404NotFound,
         ["delivery.not_found"] = StatusCodes.Status404NotFound,
+        ["courier.not_found"] = StatusCodes.Status404NotFound,
         [DeliveryErrors.RiderNotYours] = StatusCodes.Status403Forbidden,
         ["order.guest_waiting"] = StatusCodes.Status409Conflict,
     };

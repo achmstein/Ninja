@@ -17,6 +17,7 @@ import '../../orders/models/stock_disposition.dart';
 import '../delivery_errors.dart';
 import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
+import 'courier_picker.dart';
 import 'delivery_details.dart';
 
 /// One delivery: where it goes and what is in it, who has it, and the cash.
@@ -58,6 +59,12 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
 
   Future<void> _delivered(DeliveryOrder order) async {
     final l10n = AppLocalizations.of(context)!;
+    // A courier's delivery is said with what was collected: that settles the bill to the company
+    if (order.delivery.hasCourier) {
+      final collected = await showCourierDeliveredDialog(context, order: order);
+      if (collected != null && mounted) await _run((a) => a.courierDelivered(order.orderNumber, collected), close: true);
+      return;
+    }
     // Saying it arrived is what lets the cash in: asked once
     final yes = await showConfirmDialog(
       context,
@@ -113,7 +120,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
     final out = order.isOut;
     final choosing = lane == DeliveryLane.waiting || (lane == DeliveryLane.withRider && !out);
     final id = order.orderNumber;
-    final rider = d.riderName ?? '';
+    final rider = d.holderName ?? '';
 
     Widget action(String label, IconData icon, VoidCallback onPress, {bool primary = false, bool destructive = false}) => Padding(
           padding: const EdgeInsets.only(top: 8),
@@ -175,7 +182,15 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
               busy: _busy,
               onPick: (picked) => _run((a) => a.assign(id, picked)),
             ),
-            if (lane == DeliveryLane.withRider) action(l10n.deliveryTakeBack, FIcons.x, () => _run((a) => a.takeBack(id))),
+            CourierPicker(
+              order: order,
+              busy: _busy,
+              onGive: (provider, details) => _run((a) => a.assignCourier(id, provider,
+                  courierName: details.courierName, courierPhone: details.courierPhone, fee: details.fee)),
+            ),
+            if (lane == DeliveryLane.withRider)
+              action(d.hasCourier ? l10n.deliveryTakeBackCourier(d.courierProvider ?? '') : l10n.deliveryTakeBack, FIcons.x,
+                  () => _run((a) => a.takeBack(id))),
           ],
           // For a rider whose phone cannot say it (a flat battery, no app):
           // the till says it left, then that it arrived (or did not)
@@ -183,7 +198,8 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
             const SizedBox(height: 16),
             Container(height: 1, color: theme.colors.border),
             const SizedBox(height: 12),
-            Text(l10n.deliveryForRider(rider), style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+            Text(d.hasCourier ? l10n.deliveryForCourier(rider) : l10n.deliveryForRider(rider),
+                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
             if (out) ...[
               action(l10n.deliveryMarkDelivered, FIcons.check, () => _delivered(order)),
               action(l10n.deliveryMarkFailed, FIcons.undo2, () => _failed(order), destructive: true),
@@ -432,7 +448,7 @@ class _RiderRow extends StatelessWidget {
 /// The delivery a stage stands for, in words, for the board's cards
 String stageText(AppLocalizations l10n, DeliveryOrder order) {
   final d = order.delivery;
-  final rider = d.riderName ?? '';
+  final rider = d.holderName ?? '';
   return switch (order.lane) {
     DeliveryLane.waiting => order.readyAt != null ? l10n.deliveryReadyNoRider : l10n.deliveryNoRider,
     DeliveryLane.cashDue => l10n.deliveryCashWith(rider),

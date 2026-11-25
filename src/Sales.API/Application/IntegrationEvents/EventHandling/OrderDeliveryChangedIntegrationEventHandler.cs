@@ -14,6 +14,7 @@ public class OrderDeliveryChangedIntegrationEventHandler(
     ITicketRepository ticketRepository,
     SalesTransaction transaction,
     DeliveryCashier cashier,
+    CourierCashier courierCashier,
     ILogger<OrderDeliveryChangedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderDeliveryChangedIntegrationEvent>
 {
@@ -22,6 +23,17 @@ public class OrderDeliveryChangedIntegrationEventHandler(
 
     public async Task Handle(OrderDeliveryChangedIntegrationEvent @event)
     {
+        // A courier company's delivery: its courier's collection settles the bill to the company, and a
+        // delivery it could not hand over still owes it the fee
+        if (@event.CourierProviderId is not null)
+        {
+            if (@event.CourierCollectedReported)
+                await transaction.RunAsync(nameof(OrderDeliveryChangedIntegrationEvent), () => courierCashier.CollectedAsync(@event));
+            else if (string.Equals(@event.Stage, "Failed", StringComparison.OrdinalIgnoreCase))
+                await transaction.RunAsync(nameof(OrderDeliveryChangedIntegrationEvent), () => courierCashier.FailedAsync(@event));
+            return;
+        }
+
         if (!@event.CashHandedIn) return;
 
         try

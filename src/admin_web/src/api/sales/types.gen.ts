@@ -124,6 +124,10 @@ export type CashMovementView = {
     categoryId?: null | number | string;
 };
 
+export type ChangePaymentTenderRequest = {
+    tender: string;
+};
+
 export type ChannelTotal = {
     channel: string;
     count: number | string;
@@ -132,6 +136,52 @@ export type ChannelTotal = {
 
 export type CloseShiftRequest = {
     closingCount: number | string;
+};
+
+export type CourierBalanceView = {
+    providerId: number | string;
+    provider: string;
+    deliveries: number | string;
+    collected: number | string;
+    fees: number | string;
+    settled: number | string;
+    balance: number | string;
+    shortDeliveries: number | string;
+    lastDeliveryAt: null | string;
+};
+
+export type CourierJobsPage = {
+    items: Array<CourierJobView>;
+    total: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
+export type CourierJobView = {
+    orderId: number | string;
+    branchId: number | string;
+    collected: number | string;
+    fee: number | string;
+    billTotal: null | number | string;
+    outcome: string;
+    ticketId: null | number | string;
+    at: string;
+};
+
+export type CourierPayoutRequest = {
+    amount: number | string;
+    provider: string;
+    paidOn?: null | string;
+    note?: null | string;
+};
+
+export type CourierPayoutView = {
+    id: number | string;
+    amount: number | string;
+    paidOn: string;
+    note: null | string;
+    recordedBy: string;
+    recordedAt: string;
 };
 
 export type DailyReport = {
@@ -205,7 +255,6 @@ export type NewTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OnlinePaymentView = {
@@ -233,7 +282,6 @@ export type OpenTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OpenTicketResponse = {
@@ -395,12 +443,16 @@ export type PaymentStatusView = {
 export type PaymentTender = number;
 
 export type PaymentView = {
+    id?: number | string;
     tender?: string;
     amount?: number | string;
     customerName?: null | string;
     customerId?: null | string;
     recordedBy?: string;
     recordedAt?: string;
+    tenderChangedFrom?: null | string;
+    tenderChangedBy?: null | string;
+    tenderChangedAt?: null | string;
 };
 
 export type PayOptionsView = {
@@ -1742,6 +1794,48 @@ export type ApplyTicketDiscountResponses = {
     200: unknown;
 };
 
+export type ChangePaymentTenderData = {
+    body: ChangePaymentTenderRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+        paymentId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/payments/{paymentId}/tender';
+};
+
+export type ChangePaymentTenderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ChangePaymentTenderError = ChangePaymentTenderErrors[keyof ChangePaymentTenderErrors];
+
+export type ChangePaymentTenderResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
 export type VoidTicketData = {
     body: VoidTicketRequest;
     headers?: {
@@ -2791,3 +2885,145 @@ export type DismissPaymentAttentionResponses = {
 };
 
 export type DismissPaymentAttentionResponse = DismissPaymentAttentionResponses[keyof DismissPaymentAttentionResponses];
+
+export type GetCourierBalancesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/balances';
+};
+
+export type GetCourierBalancesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierBalancesResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierBalanceView>;
+};
+
+export type GetCourierBalancesResponse = GetCourierBalancesResponses[keyof GetCourierBalancesResponses];
+
+export type GetCourierJobsData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/jobs';
+};
+
+export type GetCourierJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierJobsResponses = {
+    /**
+     * OK
+     */
+    200: CourierJobsPage;
+};
+
+export type GetCourierJobsResponse = GetCourierJobsResponses[keyof GetCourierJobsResponses];
+
+export type GetCourierPayoutsData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/payouts';
+};
+
+export type GetCourierPayoutsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierPayoutsResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierPayoutView>;
+};
+
+export type GetCourierPayoutsResponse = GetCourierPayoutsResponses[keyof GetCourierPayoutsResponses];
+
+export type AddCourierPayoutData = {
+    body: CourierPayoutRequest;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/payouts';
+};
+
+export type AddCourierPayoutErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AddCourierPayoutError = AddCourierPayoutErrors[keyof AddCourierPayoutErrors];
+
+export type AddCourierPayoutResponses = {
+    /**
+     * OK
+     */
+    200: CourierPayoutView;
+};
+
+export type AddCourierPayoutResponse = AddCourierPayoutResponses[keyof AddCourierPayoutResponses];

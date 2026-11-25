@@ -9,6 +9,8 @@ namespace Ninja.Notification.API.IntegrationEvents.Events;
 /// </summary>
 /// <param name="Stage">Ordering's stage name; read through <see cref="Model.DeliveryStage"/>, an unknown one as Unknown.</param>
 /// <param name="Address">The address the rider's push names.</param>
+/// <param name="CourierProviderId">The courier company that has it instead of a rider: no rider's phone rings for it.</param>
+/// <param name="CourierName">The courier the company sent, when it said: what the customer is told where a rider's name would be.</param>
 /// <param name="Version">Ordering's count of the delivery's moves: a later move carries a higher one. 0 from an Ordering older than it.</param>
 public record OrderDeliveryChangedIntegrationEvent(
     int OrderId,
@@ -22,4 +24,6 @@ public record OrderDeliveryChangedIntegrationEvent(
     bool CashHandedIn,
     decimal Total,
     string? Address,
-    int Version = 0) : IntegrationEvent;
+    int Version = 0,
+    int? CourierProviderId = null,
+    string? CourierName = null) : IntegrationEvent;

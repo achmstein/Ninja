@@ -100,6 +100,15 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             d.Property(x => x.RiderUserId).HasMaxLength(DeliveryLimits.RiderUserId);
             d.Property(x => x.RiderName).HasMaxLength(DeliveryLimits.RiderName);
             d.Property(x => x.FailureReason).HasMaxLength(DeliveryLimits.FailureReason);
+            // The courier company that has it instead of a rider
+            d.Property(x => x.CourierProvider).HasMaxLength(DeliveryLimits.CourierProvider);
+            d.Property(x => x.CourierName).HasMaxLength(DeliveryLimits.RiderName);
+            d.Property(x => x.CourierPhone).HasMaxLength(DeliveryLimits.Phone);
+            d.Property(x => x.CourierFee).HasPrecision(18, 2);
+            d.Property(x => x.CourierJobId).HasMaxLength(DeliveryLimits.CourierJobId);
+            d.Property(x => x.CourierTrackingUrl).HasMaxLength(DeliveryLimits.CourierTrackingUrl);
+            d.Property(x => x.CourierCollected).HasPrecision(18, 2);
+            d.Ignore(x => x.HasCourier);
             // Two people moving the same delivery at once: the second is told, not lost
             d.Property(x => x.Version).IsConcurrencyToken();
             d.Ignore(x => x.Stage);

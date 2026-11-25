@@ -3092,6 +3092,12 @@ abstract class AppLocalizations {
   /// **'Talabat'**
   String get talabatTender;
 
+  /// No description provided for @courierTender.
+  ///
+  /// In en, this message translates to:
+  /// **'Courier company'**
+  String get courierTender;
+
   /// No description provided for @onlinePayments.
   ///
   /// In en, this message translates to:
@@ -3349,6 +3355,78 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Take it back from the rider'**
   String get deliveryTakeBack;
+
+  /// No description provided for @deliveryCouriers.
+  ///
+  /// In en, this message translates to:
+  /// **'Or a courier company'**
+  String get deliveryCouriers;
+
+  /// No description provided for @deliveryCourierGive.
+  ///
+  /// In en, this message translates to:
+  /// **'Give it to {name}'**
+  String deliveryCourierGive(String name);
+
+  /// No description provided for @deliveryCourierName.
+  ///
+  /// In en, this message translates to:
+  /// **'Courier\'s name (optional)'**
+  String get deliveryCourierName;
+
+  /// No description provided for @deliveryCourierPhone.
+  ///
+  /// In en, this message translates to:
+  /// **'Courier\'s phone (optional)'**
+  String get deliveryCourierPhone;
+
+  /// No description provided for @deliveryCourierFee.
+  ///
+  /// In en, this message translates to:
+  /// **'The company\'s fee for this delivery'**
+  String get deliveryCourierFee;
+
+  /// No description provided for @deliveryCourierFeeLine.
+  ///
+  /// In en, this message translates to:
+  /// **'Fee {amount}'**
+  String deliveryCourierFeeLine(String amount);
+
+  /// No description provided for @deliveryForCourier.
+  ///
+  /// In en, this message translates to:
+  /// **'The till marks {name}\'s steps:'**
+  String deliveryForCourier(String name);
+
+  /// No description provided for @deliveryTakeBackCourier.
+  ///
+  /// In en, this message translates to:
+  /// **'Take it back from {name}'**
+  String deliveryTakeBackCourier(String name);
+
+  /// No description provided for @deliveryCourierCollected.
+  ///
+  /// In en, this message translates to:
+  /// **'What the courier collected'**
+  String get deliveryCourierCollected;
+
+  /// No description provided for @deliveryCourierPaidOnline.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid online ahead: the courier collects nothing.'**
+  String get deliveryCourierPaidOnline;
+
+  /// No description provided for @deliveryCourierDeliveredTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered by {name}?'**
+  String deliveryCourierDeliveredTitle(String name);
+
+  /// No description provided for @deliveryCourierDeliveredHint.
+  ///
+  /// In en, this message translates to:
+  /// **'What the courier collected is owed to the business by the company.'**
+  String get deliveryCourierDeliveredHint;
 
   /// No description provided for @deliveryTakeCash.
   ///

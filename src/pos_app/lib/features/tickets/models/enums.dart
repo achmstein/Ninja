@@ -32,6 +32,7 @@ enum PaymentTender {
   account(3, 'Account'),
   online(4, 'Online'),
   talabat(5, 'Talabat'),
+  courier(6, 'Courier'),
   other(-1, '');
 
   final int value;

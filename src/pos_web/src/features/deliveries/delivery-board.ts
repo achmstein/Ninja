@@ -47,7 +47,12 @@ export function byLane<T extends Boardable>(orders: readonly T[]): Record<BoardL
 }
 
 type Riding = {
-  delivery?: { riderUserId?: string | null; riderName?: string | null } | null
+  delivery?: {
+    riderUserId?: string | null
+    riderName?: string | null
+    courierProviderId?: number | string | null
+    courierProvider?: string | null
+  } | null
 }
 
 /** One rider's share of a column: their deliveries; null ids for deliveries with no rider named */
@@ -57,16 +62,21 @@ export type RiderGroup<T> = {
   orders: T[]
 }
 
-/** A column by rider: each rider once, in the order their first delivery stands, their deliveries in the column's order */
+/**
+ * A column by rider: each rider once, in the order their first delivery stands, their deliveries in the
+ * column's order. A courier company's deliveries are a group of their own under its name.
+ */
 export function byRider<T extends Riding>(orders: readonly T[]): RiderGroup<T>[] {
   const groups = new Map<string, RiderGroup<T>>()
   for (const order of orders) {
-    const key = order.delivery?.riderUserId ?? ''
+    const d = order.delivery
+    const courier = d?.courierProviderId != null ? `courier:${d.courierProviderId}` : null
+    const key = d?.riderUserId ?? courier ?? ''
     let group = groups.get(key)
     if (!group) {
       group = {
         riderUserId: key || null,
-        riderName: order.delivery?.riderName ?? null,
+        riderName: d?.riderName ?? d?.courierProvider ?? null,
         orders: [],
       }
       groups.set(key, group)

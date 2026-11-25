@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMyAddressData, AddMyAddressErrors, AddMyAddressResponses, AssignDeliveryRiderData, AssignDeliveryRiderErrors, AssignDeliveryRiderResponses, AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, CancelUnpaidOrderData, CancelUnpaidOrderErrors, CancelUnpaidOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ClaimKitchenPrintJobData, ClaimKitchenPrintJobErrors, ClaimKitchenPrintJobResponses, ClaimPrintConnectorJobData, ClaimPrintConnectorJobErrors, ClaimPrintConnectorJobResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateConnectorPairingData, CreateConnectorPairingErrors, CreateConnectorPairingResponses, CreateKitchenStationData, CreateKitchenStationErrors, CreateKitchenStationResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteKitchenStationData, DeleteKitchenStationErrors, DeleteKitchenStationResponses, DeleteMyAddressData, DeleteMyAddressErrors, DeleteMyAddressResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, DeletePrintConnectorData, DeletePrintConnectorErrors, DeletePrintConnectorResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetDeliveriesData, GetDeliveriesErrors, GetDeliveriesResponses, GetDeliveryQuoteData, GetDeliveryQuoteErrors, GetDeliveryQuoteResponses, GetDeliveryTimelineData, GetDeliveryTimelineErrors, GetDeliveryTimelineResponses, GetGuestsData, GetGuestsErrors, GetGuestsResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetKitchenPrintJobsData, GetKitchenPrintJobsErrors, GetKitchenPrintJobsResponses, GetKitchenStationsData, GetKitchenStationsErrors, GetKitchenStationsResponses, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesErrors, GetKnownDeliveryAddressesResponses, GetMyAddressesData, GetMyAddressesErrors, GetMyAddressesResponses, GetMyDeliveriesData, GetMyDeliveriesErrors, GetMyDeliveriesResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, GetPrintConnectorJobsData, GetPrintConnectorJobsResponses, GetPrintConnectorsData, GetPrintConnectorsErrors, GetPrintConnectorsResponses, GetRiderDeliveriesData, GetRiderDeliveriesErrors, GetRiderDeliveriesResponses, GetRidersData, GetRidersErrors, GetRidersOverviewData, GetRidersOverviewErrors, GetRidersOverviewResponses, GetRidersResponses, GetTillDeliveryQuoteData, GetTillDeliveryQuoteErrors, GetTillDeliveryQuoteResponses, HandInDeliveryCashData, HandInDeliveryCashErrors, HandInDeliveryCashResponses, HandInRiderCashData, HandInRiderCashErrors, HandInRiderCashResponses, MarkDeliveryDeliveredData, MarkDeliveryDeliveredErrors, MarkDeliveryDeliveredResponses, MarkDeliveryFailedData, MarkDeliveryFailedErrors, MarkDeliveryFailedResponses, MarkDeliveryOutData, MarkDeliveryOutErrors, MarkDeliveryOutResponses, MarkDeliveryReturnedData, MarkDeliveryReturnedErrors, MarkDeliveryReturnedResponses, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedErrors, MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedErrors, MarkKitchenPrintJobPrintedResponses, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedErrors, MarkPrintConnectorJobFailedResponses, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedErrors, MarkPrintConnectorJobPrintedResponses, PairPrintConnectorData, PairPrintConnectorErrors, PairPrintConnectorResponses, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, ReprintKitchenTicketData, ReprintKitchenTicketErrors, ReprintKitchenTicketResponses, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsErrors, ReprintOrderKitchenTicketsResponses, ResolveDeliveryBranchData, ResolveDeliveryBranchErrors, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffErrors, ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchResponses, SetMyRiderStatusData, SetMyRiderStatusErrors, SetMyRiderStatusResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses, SetOrderStationReadyData, SetOrderStationReadyErrors, SetOrderStationReadyResponses, TestPrintKitchenStationData, TestPrintKitchenStationErrors, TestPrintKitchenStationResponses, UnassignDeliveryRiderData, UnassignDeliveryRiderErrors, UnassignDeliveryRiderResponses, UpdateKitchenStationData, UpdateKitchenStationErrors, UpdateKitchenStationResponses, UpdateMyAddressData, UpdateMyAddressErrors, UpdateMyAddressResponses } from './types.gen';
+import type { AddCourierProviderData, AddCourierProviderErrors, AddCourierProviderResponses, AddMyAddressData, AddMyAddressErrors, AddMyAddressResponses, AssignDeliveryCourierData, AssignDeliveryCourierErrors, AssignDeliveryCourierResponses, AssignDeliveryRiderData, AssignDeliveryRiderErrors, AssignDeliveryRiderResponses, AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, CancelUnpaidOrderData, CancelUnpaidOrderErrors, CancelUnpaidOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ClaimKitchenPrintJobData, ClaimKitchenPrintJobErrors, ClaimKitchenPrintJobResponses, ClaimPrintConnectorJobData, ClaimPrintConnectorJobErrors, ClaimPrintConnectorJobResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateConnectorPairingData, CreateConnectorPairingErrors, CreateConnectorPairingResponses, CreateKitchenStationData, CreateKitchenStationErrors, CreateKitchenStationResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteKitchenStationData, DeleteKitchenStationErrors, DeleteKitchenStationResponses, DeleteMyAddressData, DeleteMyAddressErrors, DeleteMyAddressResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, DeletePrintConnectorData, DeletePrintConnectorErrors, DeletePrintConnectorResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetCourierProvidersData, GetCourierProvidersErrors, GetCourierProvidersResponses, GetCustomerOrderSummariesData, GetCustomerOrderSummariesErrors, GetCustomerOrderSummariesResponses, GetDeliveriesData, GetDeliveriesErrors, GetDeliveriesResponses, GetDeliveryQuoteData, GetDeliveryQuoteErrors, GetDeliveryQuoteResponses, GetDeliveryTimelineData, GetDeliveryTimelineErrors, GetDeliveryTimelineResponses, GetGuestsData, GetGuestsErrors, GetGuestsResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetKitchenPrintJobsData, GetKitchenPrintJobsErrors, GetKitchenPrintJobsResponses, GetKitchenStationsData, GetKitchenStationsErrors, GetKitchenStationsResponses, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesErrors, GetKnownDeliveryAddressesResponses, GetMyAddressesData, GetMyAddressesErrors, GetMyAddressesResponses, GetMyDeliveriesData, GetMyDeliveriesErrors, GetMyDeliveriesResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, GetPrintConnectorJobsData, GetPrintConnectorJobsResponses, GetPrintConnectorsData, GetPrintConnectorsErrors, GetPrintConnectorsResponses, GetRiderDeliveriesData, GetRiderDeliveriesErrors, GetRiderDeliveriesResponses, GetRidersData, GetRidersErrors, GetRidersOverviewData, GetRidersOverviewErrors, GetRidersOverviewResponses, GetRidersResponses, GetTillDeliveryQuoteData, GetTillDeliveryQuoteErrors, GetTillDeliveryQuoteResponses, HandInDeliveryCashData, HandInDeliveryCashErrors, HandInDeliveryCashResponses, HandInRiderCashData, HandInRiderCashErrors, HandInRiderCashResponses, MarkCourierDeliveredData, MarkCourierDeliveredErrors, MarkCourierDeliveredResponses, MarkDeliveryDeliveredData, MarkDeliveryDeliveredErrors, MarkDeliveryDeliveredResponses, MarkDeliveryFailedData, MarkDeliveryFailedErrors, MarkDeliveryFailedResponses, MarkDeliveryOutData, MarkDeliveryOutErrors, MarkDeliveryOutResponses, MarkDeliveryReturnedData, MarkDeliveryReturnedErrors, MarkDeliveryReturnedResponses, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedErrors, MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedErrors, MarkKitchenPrintJobPrintedResponses, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedErrors, MarkPrintConnectorJobFailedResponses, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedErrors, MarkPrintConnectorJobPrintedResponses, PairPrintConnectorData, PairPrintConnectorErrors, PairPrintConnectorResponses, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, ReprintKitchenTicketData, ReprintKitchenTicketErrors, ReprintKitchenTicketResponses, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsErrors, ReprintOrderKitchenTicketsResponses, ResolveDeliveryBranchData, ResolveDeliveryBranchErrors, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffErrors, ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchResponses, SetMyRiderStatusData, SetMyRiderStatusErrors, SetMyRiderStatusResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses, SetOrderStationReadyData, SetOrderStationReadyErrors, SetOrderStationReadyResponses, TestPrintKitchenStationData, TestPrintKitchenStationErrors, TestPrintKitchenStationResponses, UnassignDeliveryCourierData, UnassignDeliveryCourierErrors, UnassignDeliveryCourierResponses, UnassignDeliveryRiderData, UnassignDeliveryRiderErrors, UnassignDeliveryRiderResponses, UpdateCourierProviderData, UpdateCourierProviderErrors, UpdateCourierProviderResponses, UpdateKitchenStationData, UpdateKitchenStationErrors, UpdateKitchenStationResponses, UpdateMyAddressData, UpdateMyAddressErrors, UpdateMyAddressResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -218,6 +218,17 @@ export const getAllOrders = <ThrowOnError extends boolean = false>(options: Opti
 export const getGuests = <ThrowOnError extends boolean = false>(options: Options<GetGuestsData, ThrowOnError>): RequestResult<GetGuestsResponses, GetGuestsErrors, ThrowOnError> => (options.client ?? client).get<GetGuestsResponses, GetGuestsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/guests',
+    ...options
+});
+
+/**
+ * What each customer has ordered, for the customer list (admin)
+ *
+ * One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.
+ */
+export const getCustomerOrderSummaries = <ThrowOnError extends boolean = false>(options: Options<GetCustomerOrderSummariesData, ThrowOnError>): RequestResult<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError> => (options.client ?? client).get<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/customers/summary',
     ...options
 });
 
@@ -458,6 +469,78 @@ export const markDeliveryFailed = <ThrowOnError extends boolean = false>(options
 export const setMyRiderStatus = <ThrowOnError extends boolean = false>(options: Options<SetMyRiderStatusData, ThrowOnError>): RequestResult<SetMyRiderStatusResponses, SetMyRiderStatusErrors, ThrowOnError> => (options.client ?? client).put<SetMyRiderStatusResponses, SetMyRiderStatusErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/riders/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The courier companies the business lists (staff)
+ *
+ * Switched-off ones too, last, for the admin to switch back on; the till offers only those switched on, after the branch's riders.
+ */
+export const getCourierProviders = <ThrowOnError extends boolean = false>(options: Options<GetCourierProvidersData, ThrowOnError>): RequestResult<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError> => (options.client ?? client).get<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers',
+    ...options
+});
+
+/**
+ * List a courier company the business hands deliveries to (admin)
+ */
+export const addCourierProvider = <ThrowOnError extends boolean = false>(options: Options<AddCourierProviderData, ThrowOnError>): RequestResult<AddCourierProviderResponses, AddCourierProviderErrors, ThrowOnError> => (options.client ?? client).post<AddCourierProviderResponses, AddCourierProviderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Change a courier company, or switch it off or on (admin)
+ *
+ * Switched off, it is offered for no new delivery; the deliveries it carried keep it. Never deleted.
+ */
+export const updateCourierProvider = <ThrowOnError extends boolean = false>(options: Options<UpdateCourierProviderData, ThrowOnError>): RequestResult<UpdateCourierProviderResponses, UpdateCourierProviderErrors, ThrowOnError> => (options.client ?? client).put<UpdateCourierProviderResponses, UpdateCourierProviderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Take a delivery back from its courier company before it leaves (staff)
+ */
+export const unassignDeliveryCourier = <ThrowOnError extends boolean = false>(options: Options<UnassignDeliveryCourierData, ThrowOnError>): RequestResult<UnassignDeliveryCourierResponses, UnassignDeliveryCourierErrors, ThrowOnError> => (options.client ?? client).delete<UnassignDeliveryCourierResponses, UnassignDeliveryCourierErrors, ThrowOnError>({ url: '/api/orders/{orderId}/delivery/courier', ...options });
+
+/**
+ * Give a delivery to a courier company instead of a rider, or change who it sent, before it leaves (staff)
+ *
+ * The company must be one the business lists and has switched on (code courier.unknown otherwise). A rider who had it no longer does. The fee is the company's usual one when left out.
+ */
+export const assignDeliveryCourier = <ThrowOnError extends boolean = false>(options: Options<AssignDeliveryCourierData, ThrowOnError>): RequestResult<AssignDeliveryCourierResponses, AssignDeliveryCourierErrors, ThrowOnError> => (options.client ?? client).put<AssignDeliveryCourierResponses, AssignDeliveryCourierErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/delivery/courier',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * A courier handed it over, and collected this much: the bill is settled to the courier company (staff)
+ *
+ * Only after it left. The company keeps the cash and owes it to the business; nothing goes into the drawer. Paid online ahead, nothing was collected, whatever is sent. A courier's delivery is never said delivered without it (code courier.amount_required).
+ */
+export const markCourierDelivered = <ThrowOnError extends boolean = false>(options: Options<MarkCourierDeliveredData, ThrowOnError>): RequestResult<MarkCourierDeliveredResponses, MarkCourierDeliveredErrors, ThrowOnError> => (options.client ?? client).put<MarkCourierDeliveredResponses, MarkCourierDeliveredErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/delivery/courier-delivered',
     ...options,
     headers: {
         'Content-Type': 'application/json',

@@ -92,6 +92,8 @@ public static class Extensions
             .AddSubscription<EmployeeEarningsChangedIntegrationEvent, EmployeeEarningsChangedIntegrationEventHandler>()
             // When each branch's day starts, to date all of the above by
             .AddSubscription<BranchSettingsChangedIntegrationEvent, BranchSettingsChangedIntegrationEventHandler>()
+            // A courier company's fee for a delivery: a cost of the branch's day
+            .AddSubscription<CourierFeeChargedIntegrationEvent, CourierFeeChargedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(FinanceIntegrationEventContext.Default));
     }
@@ -104,6 +106,7 @@ public static class Extensions
 [JsonSerializable(typeof(StockConsumedIntegrationEvent))]
 [JsonSerializable(typeof(EmployeeEarningsChangedIntegrationEvent))]
 [JsonSerializable(typeof(BranchSettingsChangedIntegrationEvent))]
+[JsonSerializable(typeof(CourierFeeChargedIntegrationEvent))]
 public partial class FinanceIntegrationEventContext : JsonSerializerContext
 {
 }

@@ -32,6 +32,25 @@ class DeliveryRepository {
 
   Future<void> unassignRider(int orderId) => _orders.delete('$orderId/delivery/rider');
 
+  /// The courier companies the business lists, switched-off ones last
+  Future<List<CourierProvider>> getCourierProviders() async {
+    final response = await _orders.get('couriers');
+    return [for (final e in _list(response.data)) CourierProvider.fromJson(e)];
+  }
+
+  /// Given to a courier company instead of a rider: who it sent, when it said, and its fee for this one
+  Future<void> assignCourier(int orderId, {required int providerId, String? courierName, String? courierPhone, double? fee}) =>
+      _orders.put('$orderId/delivery/courier', data: {
+        'providerId': providerId,
+        'courierName': courierName,
+        'courierPhone': courierPhone,
+        'fee': fee,
+      });
+
+  /// The courier handed it over and collected this much: the bill settles to the company
+  Future<void> courierDelivered(int orderId, double collected) =>
+      _orders.put('$orderId/delivery/courier-delivered', data: {'collected': collected});
+
   Future<void> markOut(int orderId) => _orders.put('$orderId/delivery/out');
 
   Future<void> markDelivered(int orderId) => _orders.put('$orderId/delivery/delivered');

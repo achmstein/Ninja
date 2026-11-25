@@ -1,13 +1,16 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
+import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
 import {
+  assignDeliveryCourierMutation,
   assignDeliveryRiderMutation,
   cancelOrderMutation,
+  getCourierProvidersOptions,
   getDeliveriesOptions,
   getRidersOptions,
   getTillDeliveryQuoteOptions,
   handInDeliveryCashMutation,
   handInRiderCashMutation,
+  markCourierDeliveredMutation,
   markDeliveryDeliveredMutation,
   markDeliveryFailedMutation,
   markDeliveryOutMutation,
@@ -58,6 +61,19 @@ export function useRiders(enabled: boolean) {
 }
 
 /**
+ * The courier companies the business lists and has switched on, offered after
+ * the branch's riders: a manual courier, told by phone, its steps marked here.
+ */
+export function useCourierProviders(enabled: boolean) {
+  return useQuery({
+    ...getCourierProvidersOptions({ query: { 'api-version': API_VERSION } }),
+    enabled,
+    staleTime: 60_000,
+    select: (providers: CourierProviderView[]) => providers.filter((p) => p.isActive),
+  })
+}
+
+/**
  * The branch's answer for a delivery the till takes over the phone: whether
  * it delivers at all, its fee and minimum, and, for a location the caller
  * shared, the pin read from it and how far that is. `location` is debounced
@@ -99,6 +115,8 @@ export function useDeliveryActions() {
   }
 
   const assign = useMutation({ ...assignDeliveryRiderMutation(), onSuccess: done(), onError: failed })
+  const assignCourier = useMutation({ ...assignDeliveryCourierMutation(), onSuccess: done(), onError: failed })
+  const courierDelivered = useMutation({ ...markCourierDeliveredMutation(), onSuccess: done(), onError: failed })
   const unassign = useMutation({ ...unassignDeliveryRiderMutation(), onSuccess: done(), onError: failed })
   const out = useMutation({ ...markDeliveryOutMutation(), onSuccess: done(), onError: failed })
   const delivered = useMutation({ ...markDeliveryDeliveredMutation(), onSuccess: done(), onError: failed })
@@ -113,6 +131,19 @@ export function useDeliveryActions() {
   return {
     assign: (orderId: number, riderUserId: string) => assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
     unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: q }),
+    assignCourier: (orderId: number, courier: { providerId: number; courierName: string; courierPhone: string; fee: number | null }) =>
+      assignCourier.mutate({
+        path: { orderId },
+        body: {
+          providerId: courier.providerId,
+          courierName: courier.courierName.trim() || null,
+          courierPhone: courier.courierPhone.trim() || null,
+          fee: courier.fee,
+        },
+        query: q,
+      }),
+    courierDelivered: (orderId: number, collected: number) =>
+      courierDelivered.mutate({ path: { orderId }, body: { collected }, query: q }),
     markOut: (orderId: number) => out.mutate({ path: { orderId }, query: q }),
     markDelivered: (orderId: number) => delivered.mutate({ path: { orderId }, query: q }),
     markFailed: (orderId: number, reason: string) =>
@@ -137,6 +168,6 @@ export function useDeliveryActions() {
         headers: { 'x-requestid': crypto.randomUUID() },
         query: q,
       }),
-    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel, cashInMany].some((m) => m.isPending),
+    busy: [assign, unassign, out, delivered, fail, returned, cashIn, cancel, cashInMany, assignCourier, courierDelivered].some((m) => m.isPending),
   }
 }

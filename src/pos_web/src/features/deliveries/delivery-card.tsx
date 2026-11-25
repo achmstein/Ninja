@@ -1,4 +1,4 @@
-import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Store, Undo2, UserRound } from 'lucide-react'
+import { AlertTriangle, Banknote, Bike, CircleDot, Clock, MapPin, Store, Truck, Undo2, UserRound } from 'lucide-react'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -77,6 +77,21 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
           <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.riderName}</bdi>
+          </span>
+        </div>
+      )}
+      {/* A courier company that has it: the company, and its courier when it said who */}
+      {order.delivery.courierProvider && (
+        <div className='flex items-center gap-1.5 text-sm'>
+          <Truck className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
+          <span className='min-w-0 truncate font-medium'>
+            <bdi>{order.delivery.courierProvider}</bdi>
+            {order.delivery.courierName && (
+              <span className='text-muted-foreground font-normal'>
+                {' · '}
+                <bdi>{order.delivery.courierName}</bdi>
+              </span>
+            )}
           </span>
         </div>
       )}

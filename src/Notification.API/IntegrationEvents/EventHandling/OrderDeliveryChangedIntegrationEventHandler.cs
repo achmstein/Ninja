@@ -162,7 +162,7 @@ public class OrderDeliveryChangedIntegrationEventHandler(
 
         var (title, body, type) = stage switch
         {
-            DeliveryStage.OnTheWay => (NotificationMessages.OrderOnTheWayTitle, NotificationMessages.OrderOnTheWayBody(@event.OrderId, @event.RiderName), "order_on_the_way"),
+            DeliveryStage.OnTheWay => (NotificationMessages.OrderOnTheWayTitle, NotificationMessages.OrderOnTheWayBody(@event.OrderId, @event.RiderName ?? @event.CourierName), "order_on_the_way"),
             DeliveryStage.Failed => (NotificationMessages.OrderNotDeliveredTitle, NotificationMessages.OrderNotDeliveredBody(@event.OrderId), "order_not_delivered"),
             _ => (NotificationMessages.OrderDeliveredTitle, NotificationMessages.OrderDeliveredBody(@event.OrderId), "order_delivered"),
         };

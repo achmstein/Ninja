@@ -21,6 +21,7 @@ public static class KnownEvents
         new("CatalogItemAvailabilityChanged", "Catalog", ["Notification"]),
         new("CatalogItemStockChanged", "Inventory", ["Catalog"]),
         new("CatalogOptionStockChanged", "Inventory", ["Catalog"]),
+        new("CourierFeeCharged", "Sales", ["Finance"]),
         new("EmployeeEarningsChanged", "Payroll", ["Finance"]),
         new("KitchenTicketQueued", "Ordering", ["Notification"]),
         new("OrderAwaitingPayment", "Ordering", ["Sales"]),

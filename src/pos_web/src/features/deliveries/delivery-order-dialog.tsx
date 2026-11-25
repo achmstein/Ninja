@@ -11,18 +11,20 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { defaultDisposition, type StockDisposition } from '@/lib/stock-disposition'
 import { cn } from '@/lib/utils'
+import { CourierPicker } from './courier-picker'
 import { DeliveryDetails, DeliveryFeeRow } from './delivery-details'
 import { cashDifference, laneOf } from './delivery-format'
 import { useDeliveryActions, useRiders, type BoardDelivery } from './use-deliveries'
 
 /** A step that settles money or can't be undone asks once more before it goes */
-type Asking = 'delivered' | 'cash' | 'cancel' | 'failed' | null
+type Asking = 'delivered' | 'courierDelivered' | 'cash' | 'cancel' | 'failed' | null
 
 /**
  * One delivery: where it goes and what is in it, who has it, and what the till
- * can do next: give it to a rider or take it back, say it left or arrived for
- * a rider whose phone can't, say it couldn't be delivered and then that it is
- * back (and cancel it), or take the cash in, counted.
+ * can do next: give it to a rider or a courier company or take it back, say it
+ * left or arrived for a rider whose phone can't (and always for a courier, with
+ * what the courier collected), say it couldn't be delivered and then that it is
+ * back (and cancel it), or take a rider's cash in, counted.
  */
 export function DeliveryOrderDialog({ order, onOpenChange }: { order: BoardDelivery | null; onOpenChange: (open: boolean) => void }) {
   return (
@@ -52,7 +54,14 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
   const choosing = lane === 'waiting' || (lane === 'withRider' && !out)
   const riders = useRiders(choosing)
   const id = toNumber(order.orderNumber)
-  const rider = d.riderName ?? ''
+  const courier = d.courierProvider != null
+  // A courier company is named for its steps as a rider is: the company, then who it sent
+  const rider = courier ? [d.courierProvider, d.courierName].filter(Boolean).join(' · ') : (d.riderName ?? '')
+  // What a courier collects: the bill, or nothing when it was paid online ahead
+  const toCollect = toNumber(order.toCollect ?? order.total)
+  const [courierCash, setCourierCash] = useState(String(toCollect))
+  const courierCollected = Number(courierCash.replace(',', '.'))
+  const courierCashOk = courierCash.trim() !== '' && Number.isFinite(courierCollected) && courierCollected >= 0
   const collected = Number(cash.replace(',', '.'))
   const difference = cashDifference(Number.isFinite(collected) ? collected : null, total)
   const go = (act: () => void, closes = false) => {
@@ -112,10 +121,11 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
               />
             ))
           )}
+          <CourierPicker order={order} enabled={choosing} />
           {lane === 'withRider' && (
             <Button variant='outline' className='h-11' disabled={actions.busy} onClick={() => actions.unassign(id)}>
               <X className='size-4' />
-              {t('deliveryTakeBack')}
+              {courier ? t('deliveryTakeBackCourier', { name: d.courierProvider ?? '' }) : t('deliveryTakeBack')}
             </Button>
           )}
         </div>
@@ -125,12 +135,40 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           till says it left, then that it arrived or couldn't be */}
       {lane === 'withRider' && (
         <div className='flex flex-col gap-1.5 border-t pt-3'>
-          <span className='text-muted-foreground text-xs'>{t('deliveryForRider', { name: rider })}</span>
+          <span className='text-muted-foreground text-xs'>
+            {courier ? t('deliveryForCourier', { name: rider }) : t('deliveryForRider', { name: rider })}
+          </span>
           {!out ? (
             <Button variant='outline' className='h-11' disabled={actions.busy} onClick={() => actions.markOut(id)}>
               <Bike className='size-4' />
               {t('deliveryMarkOut')}
             </Button>
+          ) : asking === 'courierDelivered' ? (
+            // A courier's delivery is said with what was collected: that settles the bill to the company
+            <div className='flex flex-col gap-2'>
+              {toCollect === 0 ? (
+                <p className='text-muted-foreground text-sm'>{t('deliveryCourierPaidOnline')}</p>
+              ) : (
+                <>
+                  <Label htmlFor='courier-collected'>{t('deliveryCourierCollected')}</Label>
+                  <Input
+                    id='courier-collected'
+                    value={courierCash}
+                    onChange={(e) => setCourierCash(e.target.value)}
+                    inputMode='decimal'
+                    dir='ltr'
+                    className='h-12 text-lg tabular-nums'
+                    autoComplete='off'
+                  />
+                </>
+              )}
+              <Confirm
+                text={t('deliveryCourierDeliveredConfirm', { name: rider, amount: money(courierCashOk ? courierCollected : 0) })}
+                busy={actions.busy || !courierCashOk}
+                onConfirm={() => go(() => actions.courierDelivered(id, toCollect === 0 ? 0 : courierCollected), true)}
+                onCancel={() => setAsking(null)}
+              />
+            </div>
           ) : asking === 'delivered' ? (
             <Confirm
               text={t('deliveryDeliveredConfirm', { name: rider })}
@@ -154,7 +192,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
             </div>
           ) : (
             <div className='grid grid-cols-2 gap-2'>
-              <Button variant='outline' className='h-11' disabled={actions.busy} onClick={() => setAsking('delivered')}>
+              <Button variant='outline' className='h-11' disabled={actions.busy} onClick={() => setAsking(courier ? 'courierDelivered' : 'delivered')}>
                 <Check className='size-4' />
                 {t('deliveryMarkDelivered')}
               </Button>

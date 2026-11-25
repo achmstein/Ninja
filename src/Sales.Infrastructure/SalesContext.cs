@@ -27,6 +27,10 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Projections.Place> Places { get; set; }
     /// <summary>The riders' cash for deliveries, waiting for its bill or recorded against it.</summary>
     public DbSet<Projections.DeliveryCashIn> DeliveryCashIns { get; set; }
+    /// <summary>The deliveries courier companies carried: what each collected and charges, and its bill.</summary>
+    public DbSet<Projections.CourierJob> CourierJobs { get; set; }
+    /// <summary>Money settled between the business and its courier companies, recorded in admin.</summary>
+    public DbSet<Projections.CourierPayout> CourierPayouts { get; set; }
     /// <summary>Orders paid ahead online, waiting for (or past) the customer's payment, from Ordering's events.</summary>
     public DbSet<Projections.OrderPaymentDue> OrderPaymentsDue { get; set; }
 
@@ -61,6 +65,8 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new DeliveryCashInEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new CourierJobEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new CourierPayoutEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new OrderPaymentDueEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }

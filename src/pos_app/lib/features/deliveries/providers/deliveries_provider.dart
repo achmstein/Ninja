@@ -47,6 +47,12 @@ final tillRidersProvider = FutureProvider.autoDispose<List<TillRider>>((ref) asy
   return ref.read(deliveryRepositoryProvider).getRiders();
 });
 
+/// The courier companies the business lists and has switched on, offered after the riders
+final courierProvidersProvider = FutureProvider.autoDispose<List<CourierProvider>>((ref) async {
+  final providers = await ref.read(deliveryRepositoryProvider).getCourierProviders();
+  return [for (final p in providers) if (p.isActive) p];
+});
+
 /// What a delivery taken over the phone asks, for the sale pad's button:
 /// whether the branch delivers (even while the customers' orders are paused)
 /// and its fee. Not asked where the business does not deliver.
@@ -101,6 +107,14 @@ class DeliveryActions {
   Future<void> assign(int orderId, TillRider rider) => _then(() => _repository.assignRider(orderId, rider));
 
   Future<void> takeBack(int orderId) => _then(() => _repository.unassignRider(orderId));
+
+  Future<void> assignCourier(int orderId, CourierProvider provider, {String? courierName, String? courierPhone, double? fee}) =>
+      _then(() => _repository.assignCourier(orderId,
+          providerId: provider.id, courierName: courierName, courierPhone: courierPhone, fee: fee));
+
+  /// The courier handed it over: the bill settles to the courier company, so the bills are read again too
+  Future<void> courierDelivered(int orderId, double collected) =>
+      _then(() => _repository.courierDelivered(orderId, collected), bills: true);
 
   Future<void> markOut(int orderId) => _then(() => _repository.markOut(orderId));
 

@@ -85,6 +85,7 @@ public static class Extensions
         services.AddScoped<SalesTransaction>();
         // A rider's cash for a delivery, met with its bill whichever comes first
         services.AddScoped<Ninja.Sales.API.Application.Deliveries.DeliveryCashier>();
+        services.AddScoped<Ninja.Sales.API.Application.Deliveries.CourierCashier>();
 
         // The bills already open say which place they are the bill of, once at every start
         services.AddHostedService<Ninja.Sales.API.Application.OpenTicketsAnnouncer>();
@@ -156,6 +157,7 @@ public static class Extensions
 [JsonSerializable(typeof(ShiftClosedIntegrationEvent))]
 [JsonSerializable(typeof(CashPaidOutIntegrationEvent))]
 [JsonSerializable(typeof(CashMovedIntegrationEvent))]
+[JsonSerializable(typeof(CourierFeeChargedIntegrationEvent))]
 public partial class SalesIntegrationEventContext : JsonSerializerContext
 {
 }

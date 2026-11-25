@@ -86,5 +86,5 @@ public static class DeliveryModule
     }
 
     /// <summary>The module's endpoints, under the orders group (/api/orders/...).</summary>
-    public static RouteGroupBuilder MapDeliveryModule(this RouteGroupBuilder orders) => orders.MapDeliveryRoutes();
+    public static RouteGroupBuilder MapDeliveryModule(this RouteGroupBuilder orders) => orders.MapDeliveryRoutes().MapCourierRoutes();
 }

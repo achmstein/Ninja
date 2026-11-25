@@ -12,6 +12,7 @@ export type TenderName =
   | 'Account'
   | 'Online'
   | 'Talabat'
+  | 'Courier'
 
 export const TENDERS: {
   name: TenderName
@@ -24,6 +25,9 @@ export const TENDERS: {
   { name: 'Account', value: 3, labelKey: 'tenderOnAccount' },
   { name: 'Online', value: 4, labelKey: 'tenderOnline' },
   { name: 'Talabat', value: 5, labelKey: 'tenderTalabat' },
+  // A courier company's delivery: its courier collected and the company owes
+  // the business; settled by the server, never cash
+  { name: 'Courier', value: 6, labelKey: 'tenderCourier' },
 ]
 
 /**
@@ -39,7 +43,8 @@ export function tendersFor(
   return TENDERS.filter(
     (tender) =>
       (tender.name !== 'Online' || onlinePayments || hasOnline) &&
-      (tender.name !== 'Talabat' || hasTalabat)
+      (tender.name !== 'Talabat' || hasTalabat) &&
+      (tender.name !== 'Courier' || hasTalabat)
   )
 }
 

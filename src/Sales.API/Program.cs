@@ -24,6 +24,7 @@ app.UseAuthorization();
 app.MapTicketsApi();
 app.MapShiftsApi();
 app.MapPaymentsApi();
+app.MapCouriersApi();
 
 app.UseDefaultOpenApi();
 app.Run();

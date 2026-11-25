@@ -136,6 +136,13 @@ export const sidebarData: SidebarData = {
           icon: Motorbike,
           feature: 'delivery',
         },
+        // The courier companies called when there is no rider, and the money between them
+        {
+          title: 'couriersNav',
+          url: '/couriers',
+          icon: Truck,
+          feature: 'delivery',
+        },
         {
           title: 'staffAccounts',
           url: '/staff',

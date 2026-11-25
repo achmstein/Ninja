@@ -21,6 +21,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
     SalesTransaction transaction,
     IMediator mediator,
     DeliveryCashier cashier,
+    CourierCashier courierCashier,
     Ninja.Sales.API.Payments.PaymentMoves moves,
     ILogger<OrderStatusChangedToConfirmedIntegrationEventHandler> logger)
     : IIntegrationEventHandler<OrderStatusChangedToConfirmedIntegrationEvent>
@@ -132,6 +133,7 @@ public class OrderStatusChangedToConfirmedIntegrationEventHandler(
         if (IsDelivery(@event))
         {
             await cashier.BillLandedAsync(@event.OrderId, ticket);
+            await courierCashier.BillLandedAsync(@event.OrderId, ticket);
         }
 
         return toCharge;

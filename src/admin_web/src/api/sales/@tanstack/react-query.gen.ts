@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCashMovement, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, cancelOnlinePayment, closeShift, discardTicket, dismissPaymentAttention, getBillToPay, getBranchPricing, getBreakdownReport, getClosedShifts, getCurrentShift, getDailyReport, getItemPairsReport, getMyBills, getOnlinePayment, getOpenTickets, getOrderToPay, getPayAheadOptions, getPayments, getPaymentSettings, getPlaceBillToPay, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, listOnlinePayments, listPaymentsNeedingAttention, markPaymentMoveDone, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundOnlinePayment, refundTicket, removeTicketDiscount, retryPaymentMove, savePaymentSettings, setBranchPricing, settleTicket, simulateOnlinePayment, startOnlinePayment, startOrderPayment, voidTicket } from '../sdk.gen';
-import type { AddCashMovementData, AddCashMovementError, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CancelOnlinePaymentData, CancelOnlinePaymentError, CancelOnlinePaymentResponse, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, DismissPaymentAttentionData, DismissPaymentAttentionError, DismissPaymentAttentionResponse, GetBillToPayData, GetBillToPayResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetDailyReportData, GetDailyReportError, GetDailyReportResponse, GetItemPairsReportData, GetItemPairsReportError, GetItemPairsReportResponse, GetMyBillsData, GetMyBillsResponse, GetOnlinePaymentData, GetOnlinePaymentResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetOrderToPayData, GetOrderToPayResponse, GetPayAheadOptionsData, GetPayAheadOptionsResponse, GetPaymentsData, GetPaymentsError, GetPaymentSettingsData, GetPaymentSettingsResponse, GetPaymentsResponse, GetPlaceBillToPayData, GetPlaceBillToPayResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, ListOnlinePaymentsData, ListOnlinePaymentsResponse, ListPaymentsNeedingAttentionData, ListPaymentsNeedingAttentionResponse, MarkPaymentMoveDoneData, MarkPaymentMoveDoneError, MarkPaymentMoveDoneResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundOnlinePaymentData, RefundOnlinePaymentError, RefundOnlinePaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, RetryPaymentMoveData, RetryPaymentMoveError, RetryPaymentMoveResponse, SavePaymentSettingsData, SavePaymentSettingsError, SavePaymentSettingsResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, SimulateOnlinePaymentData, SimulateOnlinePaymentError, SimulateOnlinePaymentResponse, StartOnlinePaymentData, StartOnlinePaymentError, StartOnlinePaymentResponse, StartOrderPaymentData, StartOrderPaymentError, StartOrderPaymentResponse, VoidTicketData, VoidTicketError } from '../types.gen';
+import { addCashMovement, addCourierPayout, addTicketLine, applyTicketDiscount, assignTicketLinesCustomer, cancelOnlinePayment, changePaymentTender, closeShift, discardTicket, dismissPaymentAttention, getBillToPay, getBranchPricing, getBreakdownReport, getClosedShifts, getCourierBalances, getCourierJobs, getCourierPayouts, getCurrentShift, getDailyReport, getItemPairsReport, getMyBills, getOnlinePayment, getOpenTickets, getOrderToPay, getPayAheadOptions, getPayments, getPaymentSettings, getPlaceBillToPay, getRangeReport, getRefunds, getSettledTickets, getShift, getTabPayment, getTabPayments, getTicket, getTicketByOrder, getTicketHistory, getTicketReceipt, listOnlinePayments, listPaymentsNeedingAttention, markPaymentMoveDone, moveTicketLines, openShift, openTicket, type Options, recordTabPayment, refundOnlinePayment, refundTicket, removeTicketDiscount, retryPaymentMove, savePaymentSettings, setBranchPricing, settleTicket, simulateOnlinePayment, startOnlinePayment, startOrderPayment, voidTicket } from '../sdk.gen';
+import type { AddCashMovementData, AddCashMovementError, AddCourierPayoutData, AddCourierPayoutError, AddCourierPayoutResponse, AddTicketLineData, AddTicketLineError, ApplyTicketDiscountData, ApplyTicketDiscountError, AssignTicketLinesCustomerData, AssignTicketLinesCustomerError, AssignTicketLinesCustomerResponse, CancelOnlinePaymentData, CancelOnlinePaymentError, CancelOnlinePaymentResponse, ChangePaymentTenderData, ChangePaymentTenderError, CloseShiftData, CloseShiftError, CloseShiftResponse, DiscardTicketData, DiscardTicketError, DiscardTicketResponse, DismissPaymentAttentionData, DismissPaymentAttentionError, DismissPaymentAttentionResponse, GetBillToPayData, GetBillToPayResponse, GetBranchPricingData, GetBranchPricingResponse, GetBreakdownReportData, GetBreakdownReportError, GetBreakdownReportResponse, GetClosedShiftsData, GetClosedShiftsResponse, GetCourierBalancesData, GetCourierBalancesResponse, GetCourierJobsData, GetCourierJobsResponse, GetCourierPayoutsData, GetCourierPayoutsResponse, GetCurrentShiftData, GetCurrentShiftResponse, GetDailyReportData, GetDailyReportError, GetDailyReportResponse, GetItemPairsReportData, GetItemPairsReportError, GetItemPairsReportResponse, GetMyBillsData, GetMyBillsResponse, GetOnlinePaymentData, GetOnlinePaymentResponse, GetOpenTicketsData, GetOpenTicketsResponse, GetOrderToPayData, GetOrderToPayResponse, GetPayAheadOptionsData, GetPayAheadOptionsResponse, GetPaymentsData, GetPaymentsError, GetPaymentSettingsData, GetPaymentSettingsResponse, GetPaymentsResponse, GetPlaceBillToPayData, GetPlaceBillToPayResponse, GetRangeReportData, GetRangeReportError, GetRangeReportResponse, GetRefundsData, GetRefundsError, GetRefundsResponse, GetSettledTicketsData, GetSettledTicketsResponse, GetShiftData, GetShiftResponse, GetTabPaymentData, GetTabPaymentResponse, GetTabPaymentsData, GetTabPaymentsError, GetTabPaymentsResponse, GetTicketByOrderData, GetTicketByOrderResponse, GetTicketData, GetTicketHistoryData, GetTicketHistoryError, GetTicketHistoryResponse, GetTicketReceiptData, GetTicketReceiptResponse, GetTicketResponse, ListOnlinePaymentsData, ListOnlinePaymentsResponse, ListPaymentsNeedingAttentionData, ListPaymentsNeedingAttentionResponse, MarkPaymentMoveDoneData, MarkPaymentMoveDoneError, MarkPaymentMoveDoneResponse, MoveTicketLinesData, MoveTicketLinesError, MoveTicketLinesResponse, OpenShiftData, OpenShiftError, OpenShiftResponse2, OpenTicketData, OpenTicketError, OpenTicketResponse2, RecordTabPaymentData, RecordTabPaymentError, RecordTabPaymentResponse, RefundOnlinePaymentData, RefundOnlinePaymentError, RefundOnlinePaymentResponse, RefundTicketData, RefundTicketError, RefundTicketResponse, RemoveTicketDiscountData, RemoveTicketDiscountError, RemoveTicketDiscountResponse, RetryPaymentMoveData, RetryPaymentMoveError, RetryPaymentMoveResponse, SavePaymentSettingsData, SavePaymentSettingsError, SavePaymentSettingsResponse, SetBranchPricingData, SetBranchPricingError, SettleTicketData, SettleTicketError, SettleTicketResponse, SimulateOnlinePaymentData, SimulateOnlinePaymentError, SimulateOnlinePaymentResponse, StartOnlinePaymentData, StartOnlinePaymentError, StartOnlinePaymentResponse, StartOrderPaymentData, StartOrderPaymentError, StartOrderPaymentResponse, VoidTicketData, VoidTicketError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -451,6 +451,25 @@ export const applyTicketDiscountMutation = (options?: Partial<Options<ApplyTicke
     const mutationOptions: UseMutationOptions<unknown, AxiosError<ApplyTicketDiscountError>, Options<ApplyTicketDiscountData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await applyTicketDiscount({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Change how a paid bill's payment was taken
+ *
+ * Cash pressed and the customer sent InstaPay, or the other way: moves one payment between Cash, Card and InstaPay while the bill's shift is open. Cash that took change becomes the exact due and the change goes with it. Refused once the shift is closed, on a bill with a refund, and for tab, online or Talabat payments. Keeps what it was, who changed it and when.
+ */
+export const changePaymentTenderMutation = (options?: Partial<Options<ChangePaymentTenderData>>): UseMutationOptions<unknown, AxiosError<ChangePaymentTenderError>, Options<ChangePaymentTenderData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<ChangePaymentTenderError>, Options<ChangePaymentTenderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await changePaymentTender({
                 ...options,
                 ...fnOptions,
                 throwOnError: true
@@ -986,6 +1005,83 @@ export const dismissPaymentAttentionMutation = (options?: Partial<Options<Dismis
     const mutationOptions: UseMutationOptions<DismissPaymentAttentionResponse, AxiosError<DismissPaymentAttentionError>, Options<DismissPaymentAttentionData>> = {
         mutationFn: async (fnOptions) => {
             const { data } = await dismissPaymentAttention({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getCourierBalancesQueryKey = (options: Options<GetCourierBalancesData>) => createQueryKey('getCourierBalances', options);
+
+/**
+ * What each courier company owes the business, or is owed (admin)
+ *
+ * Per company: what its couriers collected, its fees, what was settled either way, and the balance (collected less fees less settled; positive, the company owes the business). With the deliveries whose bills are still open because the courier collected short.
+ */
+export const getCourierBalancesOptions = (options: Options<GetCourierBalancesData>) => queryOptions<GetCourierBalancesResponse, AxiosError<DefaultError>, GetCourierBalancesResponse, ReturnType<typeof getCourierBalancesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierBalances({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierBalancesQueryKey(options)
+});
+
+export const getCourierJobsQueryKey = (options: Options<GetCourierJobsData>) => createQueryKey('getCourierJobs', options);
+
+/**
+ * A courier company's deliveries, newest first, a page at a time (admin)
+ *
+ * Each with its branch, what was collected, the fee and what became of the bill.
+ */
+export const getCourierJobsOptions = (options: Options<GetCourierJobsData>) => queryOptions<GetCourierJobsResponse, AxiosError<DefaultError>, GetCourierJobsResponse, ReturnType<typeof getCourierJobsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierJobs({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierJobsQueryKey(options)
+});
+
+export const getCourierPayoutsQueryKey = (options: Options<GetCourierPayoutsData>) => createQueryKey('getCourierPayouts', options);
+
+/**
+ * Money settled with a courier company, newest first (admin)
+ */
+export const getCourierPayoutsOptions = (options: Options<GetCourierPayoutsData>) => queryOptions<GetCourierPayoutsResponse, AxiosError<DefaultError>, GetCourierPayoutsResponse, ReturnType<typeof getCourierPayoutsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierPayouts({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierPayoutsQueryKey(options)
+});
+
+/**
+ * Record money settled with a courier company (admin)
+ *
+ * Positive: the company paid the business what its couriers collected. Negative: the business paid the company (fees beyond what it collected).
+ */
+export const addCourierPayoutMutation = (options?: Partial<Options<AddCourierPayoutData>>): UseMutationOptions<AddCourierPayoutResponse, AxiosError<AddCourierPayoutError>, Options<AddCourierPayoutData>> => {
+    const mutationOptions: UseMutationOptions<AddCourierPayoutResponse, AxiosError<AddCourierPayoutError>, Options<AddCourierPayoutData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await addCourierPayout({
                 ...options,
                 ...fnOptions,
                 throwOnError: true

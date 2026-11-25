@@ -18,6 +18,9 @@ public static class DeliveryLimits
     public const int RiderUserId = 100;
     public const int RiderName = 200;
     public const int FailureReason = 300;
+    public const int CourierProvider = 100;
+    public const int CourierJobId = 100;
+    public const int CourierTrackingUrl = 500;
 }
 
 /// <summary>
@@ -60,6 +63,15 @@ public static class DeliveryErrors
     public const string SendWithTicket = "delivery.send_with_ticket";
     /// <summary>The branch the till named is not one of the business's, is closed, or does not deliver.</summary>
     public const string SendBranchClosed = "delivery.send_branch_closed";
+    /// <summary>The courier company named is not one the business lists, or is switched off.</summary>
+    public const string CourierUnknown = "courier.unknown";
+    public const string CourierFeeInvalid = "courier.fee_invalid";
+    /// <summary>The step is a courier's, and no courier company has this delivery.</summary>
+    public const string NoCourier = "courier.none";
+    /// <summary>The step is a rider's, and a courier company has this delivery.</summary>
+    public const string CourierHasIt = "courier.has_it";
+    /// <summary>A courier's delivery is said delivered with what the courier collected.</summary>
+    public const string CourierAmountRequired = "courier.amount_required";
     public const string RiderUnknown = "rider.unknown";
     public const string RiderNotYours = "rider.not_yours";
 
@@ -67,5 +79,6 @@ public static class DeliveryErrors
     public static readonly IReadOnlySet<string> StateConflicts = new HashSet<string>
     {
         NotConfirmed, NoRider, AlreadyOut, NotOut, AlreadyDelivered, NotDelivered, NotFailed, AlreadySettled, PaidOnline, Conflict,
+        NoCourier, CourierHasIt, CourierAmountRequired,
     };
 }

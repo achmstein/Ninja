@@ -1,7 +1,29 @@
 # Courier plan: outside couriers for a business, and a courier app Ninja sells
 
-Status: planned 2026-11-25, checked against the code the same day; nothing built. Phase 1 is the
-only phase to start now.
+Status: phase 1 built 2026-11-25 (manual courier). Next: phase 2, the pilot with one courier
+company. The provider interface and the first third-party adapter come with the company chosen and
+its API documentation; the courier app last.
+
+As built (differences from section 4 below):
+- **Courier companies** are kept in Ordering (`couriercompanies`, business-wide, never deleted,
+  switched off instead): `GET/POST /api/orders/couriers`, `PUT /api/orders/couriers/{id}`. The till
+  lists those switched on after the branch's riders; admin manages them on its Couriers page.
+- **Steps:** `PUT /api/orders/{id}/delivery/courier` gives it to a company (who it sent, its fee; the
+  company's usual fee when left out); `DELETE …/delivery/courier` takes it back;
+  `PUT …/delivery/courier-delivered` says it was delivered **and** what was collected, in one step
+  (`Order.MarkCourierDelivered`), rather than a separate "collected" step. Out, failed and returned
+  are the rider's steps, taken by the till.
+- **Sales** keeps a `courierjobs` row per order (collected, fee, how its bill met the collection:
+  Pending, Settled, Short, AlreadySettled, Failed) and `courierpayouts`. Payouts are amounts, signed
+  (positive: the company paid the business), not tied to orders. Balances are business-wide:
+  `/api/sales/couriers/balances`, `…/{providerId}/jobs`, `…/{providerId}/payouts` (Admin).
+- **The fee** reaches Finance as `CourierFeeChargedIntegrationEvent`, sent once per order, on
+  delivered or failed. Finance books it as an expense under "Courier fees" (made the first time),
+  paid from the bank, with the company as vendor.
+- **Customers** see the courier's name where a rider's would be: the customer view's `riderName`
+  falls back to it; staff views keep it on the courier's own fields.
+- **Not built:** the branch setting naming the provider offered first (the till lists every company
+  switched on), and sending to a provider by itself; both wait for a connected provider.
 
 Decided (owner, 2026-11-25):
 - Ninja does not run couriers. It sells a **courier app** to courier companies, and that app

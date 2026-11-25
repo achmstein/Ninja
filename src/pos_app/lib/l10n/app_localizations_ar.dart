@@ -1729,6 +1729,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get talabatTender => 'طلبات';
 
   @override
+  String get courierTender => 'شركة توصيل';
+
+  @override
   String get onlinePayments => 'مدفوع أونلاين';
 
   @override
@@ -1878,6 +1881,54 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deliveryTakeBack => 'استرجعه من المندوب';
+
+  @override
+  String get deliveryCouriers => 'أو شركة توصيل';
+
+  @override
+  String deliveryCourierGive(String name) {
+    return 'سلّمه إلى $name';
+  }
+
+  @override
+  String get deliveryCourierName => 'اسم المندوب (اختياري)';
+
+  @override
+  String get deliveryCourierPhone => 'هاتف المندوب (اختياري)';
+
+  @override
+  String get deliveryCourierFee => 'رسوم الشركة لهذا التوصيل';
+
+  @override
+  String deliveryCourierFeeLine(String amount) {
+    return 'الرسوم $amount';
+  }
+
+  @override
+  String deliveryForCourier(String name) {
+    return 'يسجّل الكاشير خطوات $name:';
+  }
+
+  @override
+  String deliveryTakeBackCourier(String name) {
+    return 'استرجعه من $name';
+  }
+
+  @override
+  String get deliveryCourierCollected => 'ما حصّله المندوب';
+
+  @override
+  String get deliveryCourierPaidOnline =>
+      'مدفوع أونلاين مسبقًا: لا يحصّل المندوب شيئًا.';
+
+  @override
+  String deliveryCourierDeliveredTitle(String name) {
+    return 'هل سلّمه $name؟';
+  }
+
+  @override
+  String get deliveryCourierDeliveredHint =>
+      'ما حصّله المندوب يصبح مستحقًا على الشركة للنشاط.';
 
   @override
   String deliveryTakeCash(String amount, String name) {

@@ -15,8 +15,44 @@ DeliveryOrder _order(int number, {String stage = 'Waiting', String? rider, doubl
       },
     });
 
+DeliveryOrder _withCourier(int number, {String stage = 'Assigned', double? collected, double? toCollect}) => DeliveryOrder.fromJson({
+      'orderNumber': number,
+      'total': 115,
+      'toCollect': toCollect ?? 115,
+      'delivery': {
+        'address': 'Road 9',
+        'phone': '01001234567',
+        'stage': stage,
+        'courierProviderId': 7,
+        'courierProvider': 'Fast Couriers',
+        'courierName': 'Hassan',
+        'courierFee': 30,
+        'courierCollected': collected,
+      },
+    });
+
 void main() {
   group('the board', () {
+    test('reads a courier company that has it, and names it as the till would', () {
+      final d = _withCourier(1).delivery;
+      expect(d.hasCourier, isTrue);
+      expect(d.courierFee, 30);
+      expect(d.holderName, 'Fast Couriers · Hassan');
+      expect(_withCourier(2, toCollect: 0).toCollect, 0, reason: 'paid online ahead: nothing to collect');
+    });
+
+    test('takes a courier delivery off the board once its collection is said: nothing is taken in at the till', () {
+      final lanes = byLane([_withCourier(1), _withCourier(2, stage: 'Delivered', collected: 115), _withCourier(3, stage: 'Delivered', collected: 0)]);
+      expect(lanes[BoardLane.withRiders]!.map((o) => o.orderNumber), [1]);
+      expect(lanes[BoardLane.cashDue], isEmpty);
+    });
+
+    test('groups a courier company apart from the riders, under its name', () {
+      final groups = byRider([_order(1, stage: 'Assigned', rider: 'ali'), _withCourier(2), _withCourier(3, stage: 'OnTheWay')]);
+      expect(groups.map((g) => g.riderName), ['ALI', 'Fast Couriers']);
+      expect(groups[1].orders.map((o) => o.orderNumber), [2, 3]);
+    });
+
     test('puts each delivery in its column, coming back holding both failed and returned, settled ones off it', () {
       final lanes = byLane([
         _order(1),

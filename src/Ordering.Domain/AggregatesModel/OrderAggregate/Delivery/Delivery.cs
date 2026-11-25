@@ -7,7 +7,7 @@ public enum DeliveryStage
     /// <summary>Nobody has been given it yet.</summary>
     Waiting = 0,
 
-    /// <summary>A rider has it, not yet left.</summary>
+    /// <summary>A rider or a courier has it, not yet left.</summary>
     Assigned = 1,
 
     /// <summary>The rider left with it.</summary>
@@ -99,6 +99,40 @@ public class Delivery
     /// <summary>The rider brought it back to the branch.</summary>
     public DateTime? ReturnedAt { get; private set; }
 
+    /// <summary>
+    /// The courier company that has it instead of a rider, as the business lists it; null while a rider
+    /// has it, or nobody. A delivery is with one of the business's riders or one courier, never both.
+    /// </summary>
+    public int? CourierProviderId { get; private set; }
+
+    /// <summary>The courier company's name when it was given the delivery, so a renamed company changes no history.</summary>
+    public string? CourierProvider { get; private set; }
+
+    /// <summary>The courier the company sent, when it said; a manual courier's is typed at the till.</summary>
+    public string? CourierName { get; private set; }
+
+    public string? CourierPhone { get; private set; }
+
+    /// <summary>What the courier company charges the business for this delivery; null when unsaid.</summary>
+    public decimal? CourierFee { get; private set; }
+
+    /// <summary>A connected courier company's own id for the job; null for a manual courier.</summary>
+    public string? CourierJobId { get; private set; }
+
+    /// <summary>A connected courier company's link to follow the courier; null when it gives none.</summary>
+    public string? CourierTrackingUrl { get; private set; }
+
+    /// <summary>
+    /// The courier company said what its courier collected at the door. It keeps the cash and owes it
+    /// to the business, so the bill is settled to the company, never into the drawer.
+    /// </summary>
+    public DateTime? CourierCollectedAt { get; private set; }
+
+    public decimal? CourierCollected { get; private set; }
+
+    /// <summary>A courier company has it, not a rider.</summary>
+    public bool HasCourier => CourierProviderId != null;
+
     /// <summary>The till took the cash from the rider; the bill is settled with it.</summary>
     public DateTime? CashHandedInAt { get; private set; }
 
@@ -113,7 +147,7 @@ public class Delivery
         : FailedAt != null ? DeliveryStage.Failed
         : DeliveredAt != null ? DeliveryStage.Delivered
         : OutAt != null ? DeliveryStage.OnTheWay
-        : RiderUserId != null ? DeliveryStage.Assigned
+        : RiderUserId != null || HasCourier ? DeliveryStage.Assigned
         : DeliveryStage.Waiting;
 
     /// <summary>Nothing more will happen to it: delivered, or brought back.</summary>
@@ -193,9 +227,48 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = Limit(riderUserId, DeliveryLimits.RiderUserId, "rider");
         RiderName = string.IsNullOrWhiteSpace(riderName) ? null : Limit(riderName, DeliveryLimits.RiderName, "rider's name");
+        // One of the business's riders takes it from the courier company that had it
+        ClearCourier();
         AssignedAt = at;
         Version++;
         return previous;
+    }
+
+    /// <summary>
+    /// Give it to a courier company instead of a rider, or change who the company sent, before it
+    /// leaves. A rider who had it no longer does; returns that rider, if any.
+    /// </summary>
+    internal string? AssignCourier(int providerId, string provider, string? courierName, string? courierPhone, decimal? fee, DateTime at)
+    {
+        if (OutAt != null)
+            throw new OrderingDomainException("The order has left; it can't be given to a courier now.", DeliveryErrors.AlreadyOut);
+        if (providerId <= 0 || string.IsNullOrWhiteSpace(provider))
+            throw new OrderingDomainException("Say which courier company takes it.", DeliveryErrors.CourierUnknown);
+        if (fee is < 0)
+            throw new OrderingDomainException("A courier's fee can't be below zero.", DeliveryErrors.CourierFeeInvalid);
+
+        var previous = RiderUserId;
+        RiderUserId = null;
+        RiderName = null;
+        CourierProviderId = providerId;
+        CourierProvider = Limit(provider, DeliveryLimits.CourierProvider, "courier company's name");
+        CourierName = Tidy(courierName, DeliveryLimits.RiderName, "courier's name");
+        CourierPhone = Tidy(courierPhone, DeliveryLimits.Phone, "courier's phone");
+        CourierFee = fee;
+        AssignedAt = at;
+        Version++;
+        return previous;
+    }
+
+    private void ClearCourier()
+    {
+        CourierProviderId = null;
+        CourierProvider = null;
+        CourierName = null;
+        CourierPhone = null;
+        CourierFee = null;
+        CourierJobId = null;
+        CourierTrackingUrl = null;
     }
 
     /// <summary>Take it back from its rider before it leaves.</summary>
@@ -207,6 +280,7 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = null;
         RiderName = null;
+        ClearCourier();
         AssignedAt = null;
         Version++;
         return previous;
@@ -214,8 +288,8 @@ public class Delivery
 
     internal bool MarkOut(DateTime at)
     {
-        if (RiderUserId is null)
-            throw new OrderingDomainException("Give the order to a rider before it leaves.", DeliveryErrors.NoRider);
+        if (RiderUserId is null && !HasCourier)
+            throw new OrderingDomainException("Give the order to a rider or a courier before it leaves.", DeliveryErrors.NoRider);
         if (OutAt != null)
             return false;
         OutAt = at;
@@ -265,9 +339,32 @@ public class Delivery
         return true;
     }
 
+    /// <summary>
+    /// The courier company said what its courier collected for it at the door: the amount it now owes
+    /// the business. Only once delivered; a repeat is a no-op.
+    /// </summary>
+    internal bool MarkCourierCollected(decimal amount, DateTime at)
+    {
+        if (!HasCourier)
+            throw new OrderingDomainException("A courier company doesn't have this delivery.", DeliveryErrors.NoCourier);
+        if (CourierCollectedAt != null)
+            return false;
+        if (DeliveredAt is null)
+            throw new OrderingDomainException("The order hasn't been delivered yet.", DeliveryErrors.NotDelivered);
+        if (amount < 0)
+            throw new OrderingDomainException("What the courier collected can't be below zero.", DeliveryErrors.CashInvalid);
+
+        CourierCollected = amount;
+        CourierCollectedAt = at;
+        Version++;
+        return true;
+    }
+
     /// <summary>The rider handed in what they collected. A repeat is a no-op.</summary>
     internal bool MarkCashHandedIn(decimal amount, DateTime at)
     {
+        if (HasCourier)
+            throw new OrderingDomainException("A courier company has this delivery: its cash is settled with the company, not at the till.", DeliveryErrors.CourierHasIt);
         if (CashHandedInAt != null)
             return false;
         if (DeliveredAt is null)
