@@ -1,28 +1,45 @@
 import { useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { AlertTriangle, Bike, History, Loader2, MapPin, Send, Store } from 'lucide-react'
+import {
+  AlertTriangle,
+  ArrowLeft,
+  Bike,
+  Check,
+  ChevronDown,
+  History,
+  Loader2,
+  MapPin,
+  MapPinned,
+  Pencil,
+  Plus,
+  Send,
+  Store,
+  UserRound,
+} from 'lucide-react'
 import { getKnownDeliveryAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import type { DeliveryAlternative, KnownAddressView } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, KnownAddressView, StaffDeliveryZone } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchName } from '@/features/branch/use-branch-name'
-import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleSendTo } from '@/features/sale/cart'
+import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleRider, type SaleSendTo } from '@/features/sale/cart'
 import {
   DELIVERY_LIMITS,
   keptSendTo,
   MIN_PHONE_DIGITS,
   toSaleZone,
   toSendTo,
-  validatePhoneDelivery,
+  validateDeliveryWhere,
+  validateDeliveryWho,
   zoneIn,
 } from '@/features/sale/sale-delivery'
-import { API_VERSION } from '@/lib/api-client'
+import { apiClient, API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
-import { digitCount, normalizePhone, editablePhone } from '@/lib/phone'
+import { digitCount, editablePhone, normalizePhone, showPhone } from '@/lib/phone'
 import { isModuleOff } from '@/lib/problem'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
@@ -30,7 +47,7 @@ import { useAddressLine, useDistanceText } from './delivery-details'
 import { AddressSearchField } from './address-search-field'
 import { AreaPicker } from './area-picker'
 import { outOfRangeKey } from './delivery-format'
-import { useTillDeliveryQuote } from './use-deliveries'
+import { useRiders, useTillDeliveryQuote } from './use-deliveries'
 
 type PhoneDeliveryFormProps = {
   open: boolean
@@ -41,21 +58,25 @@ type PhoneDeliveryFormProps = {
   customer: SaleCustomer | null
   /** What the items come to, held against the branch's minimum (a warning only) */
   itemsTotal: number
-  onSave: (delivery: SaleDelivery, customerName: string) => void
+  onSave: (delivery: SaleDelivery, customer: SaleCustomer) => void
 }
 
+/** The three steps of a phone call: who is calling, where it goes, then a look over it and send */
+type Step = 'who' | 'where' | 'check'
+
+/** Up to this many named areas are shown as buttons, one tap each; more are searched by name */
+const AREA_BUTTONS = 12
+
 /**
- * Where a sale the till took over the phone goes, in the caller's words: the
- * street, the building, the way to the door and the number to call. A pin
- * only when they shared their location; without one the rider goes by the
- * words. The cashier knows the streets, so being past the radius or under the
- * minimum is said, not refused. A caller who had deliveries before is offered
- * those addresses, by their account or their number. A pin out of this
- * branch's area, or clearly nearer another branch, offers that branch: the
- * order is then sent there, made and delivered by it. Where the branch keeps
- * named areas, the one the caller says is picked by name first (or read from
- * the pin when it falls in one drawn on the map), and its fee and minimum are
- * what hold.
+ * A delivery the till takes over the phone, in the order the call goes.
+ * First the number: a caller who had deliveries before is found by it, with
+ * their name when they have an account, and their earlier address is one tap
+ * to the last step. Then, for a new address, where it goes: the branch's
+ * named area (which sets the fee) and the street, building, floor and flat as
+ * the caller says them, whatever Google knows. A pin on the map is an extra
+ * for the rider, tucked away with the directions, and never changes the area.
+ * Last, everything on one screen: the fee, anything to watch out for, a
+ * nearer branch that could make it, and the rider to give it to.
  */
 export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDeliveryFormProps) {
   const t = useT()
@@ -75,296 +96,820 @@ export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDelivery
   )
 }
 
+// Keycloak user as the identity route returns it (see sale/customer-dialog)
+type IdentityUser = { id: string; username?: string; firstName?: string; lastName?: string; phoneNumber?: string; enabled?: boolean }
+
+/** The customer account that has exactly this number, when there is one: found as the number is typed */
+function useAccountByPhone(phone: string, country: string, enabled: boolean) {
+  const typed = digitCount(phone) >= MIN_PHONE_DIGITS ? phone.trim() : ''
+  const search = useDebounced(typed, 400)
+  const query = useQuery({
+    queryKey: ['identityUserSearch', search, 'deliveryPhone'],
+    queryFn: async () =>
+      (
+        await apiClient.get<IdentityUser[]>('/api/identity/users', {
+          params: { search, excludeRole: 'Admin,Owner,Cashier', merged: false, max: 5 },
+        })
+      ).data,
+    enabled: enabled && search !== '',
+    staleTime: 60_000,
+  })
+  if (!enabled || search === '' || search !== typed) return null
+  const wanted = normalizePhone(phone, country)
+  const user = (query.data ?? []).find(
+    (u) => u.enabled !== false && !!u.phoneNumber && normalizePhone(u.phoneNumber, country) === wanted,
+  )
+  if (!user) return null
+  const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || ''
+  return { id: user.id, name, phone: user.phoneNumber ?? null } satisfies SaleCustomer
+}
+
 function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<PhoneDeliveryFormProps, 'open' | 'onOpenChange'>) {
   const t = useT()
-  const money = useMoney()
-  const localized = useLocalized()
-  const line = useAddressLine()
-  const distance = useDistanceText()
-  const country = useBrand()?.locale.country ?? 'EG'
   const ids = useId()
-  const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: editablePhone(customer?.phone) })
-  const [name, setName] = useState(customer?.name ?? '')
-  const [tried, setTried] = useState(false)
-  const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
-  // The cashier took off the area the pin is in: it is not put back until the pin changes
-  const [areaOff, setAreaOff] = useState(false)
-  const branchName = useBranchName()
+  const localizedName = useLocalized()
+  const moneyText = useMoney()
+  const country = useBrand()?.locale.country ?? 'EG'
   // With a call centre the calls come through the hotline: a branch till keeps what it is rung for
   const callCentre = useFeatures().callCentre === true
+
+  // Changing a delivery already made opens on its last step: everything is there to look over
+  const [step, setStep] = useState<Step>(initial ? 'check' : 'who')
+  const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: editablePhone(customer?.phone) })
+  const [name, setName] = useState(customer?.name ?? '')
+  const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
+  const [rider, setRider] = useState<SaleRider | null>(initial?.rider ?? null)
+  // The cashier took off the area the pin is in: it is not put back until the pin changes
+  const [areaOff, setAreaOff] = useState(false)
+  // A step's mistakes show once its Next was pressed; the phone's once it was left
+  const [triedWho, setTriedWho] = useState(false)
+  const [triedWhere, setTriedWhere] = useState(false)
+  const [phoneLeft, setPhoneLeft] = useState(false)
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
-  // This branch's named areas, as they are now: asked apart from the pin, so the list stays while one is read.
-  // The area picked by name is the one in that list (one the owner removed since is no longer picked)
-  const areas = useTillDeliveryQuote().data
+  // Who: the account the sale is for already, or the one this number belongs to
+  const found = useAccountByPhone(form.phone, country, !customer?.id)
+  const account: SaleCustomer | null = customer?.id ? customer : found
+  const shownName = account && !name.trim() ? account.name : name
+
+  // Where: the branch's named areas, and the terms for the area picked (or the pin when none is)
+  const base = useTillDeliveryQuote()
+  const areas = base.data
   const zones = areas?.zones ?? []
   const named = areas ? zoneIn(zones, form.zone?.id) : (form.zone ?? null)
-  // Asked for the area picked by name: the fee and the minimum answered are then that area's
   const quote = useTillDeliveryQuote(form.location, true, named?.id ?? null)
   const terms = quote.data
   const pasted = form.location.trim()
-  // The pin is the one read from the text now in the field, never an earlier link's
+  // The pin is the one read from the text now in the field, never an earlier one's
   const pinned = pasted !== '' && quote.settled && quote.answeredFor === pasted && terms?.latitude != null && terms.longitude != null
   const reading = pasted !== '' && !quote.settled
-  // The other branches that deliver to this pin, and the one chosen while it is still offered
+  // With an area picked by name the answer names that area back: the pin's own area is asked apart,
+  // so a pin that falls in another area can say so instead of being quietly overruled
+  const pinQuote = useTillDeliveryQuote(form.location, named != null && pasted !== '', null)
+  const pinArea =
+    named && pinQuote.settled && pinQuote.data?.zoneId != null && toNumber(pinQuote.data.zoneId) !== named.id
+      ? zoneIn(zones, pinQuote.data.zoneId)
+      : null
+
   const alternatives = pinned && !callCentre ? (terms?.alternatives ?? []) : []
   const sending = keptSendTo(sendTo, alternatives, pinned)
-  // No area picked by name: the one the pin fell in (drawn on the map), unless it is switched off
-  // for a while or the cashier took it off. An area is its branch's own: none on an order sent on
+  // No area picked by name: the one the pin fell in (drawn on the map), unless switched off or taken off
   const onMap =
     !named && !areaOff && pinned && terms?.zoneId != null && terms.zoneName != null && !terms.zoneOff
       ? toSaleZone({ ...terms, zoneId: terms.zoneId, name: terms.zoneName })
       : null
   const zone = sending ? null : (named ?? onMap)
+  const minimum = sending ? sending.minimumOrder : toNumber(terms?.minimumOrder)
+  const fee = sending ? sending.fee : toNumber(terms?.fee)
 
-  const lookupPhone = useDebounced(digitCount(form.phone) >= MIN_PHONE_DIGITS ? normalizePhone(form.phone, country) : '', 400)
-  const known = useQuery({
-    ...getKnownDeliveryAddressesOptions({
-      query: { 'api-version': API_VERSION, customerUserId: customer?.id ?? undefined, phone: lookupPhone || undefined },
-    }),
-    enabled: !!customer?.id || lookupPhone !== '',
-  })
+  const whoErrors = validateDeliveryWho(form.phone, shownName, !account)
+  const whereErrors = validateDeliveryWhere(form)
 
+  const toWhere = () => {
+    setTriedWho(true)
+    if (Object.keys(whoErrors).length === 0) setStep('where')
+  }
+  const toCheck = () => {
+    setTriedWhere(true)
+    if (Object.keys(whereErrors).length === 0) setStep('check')
+  }
   const pickKnown = (a: KnownAddressView) => {
+    setTriedWho(true)
     // Another address altogether: its own pin says the area again
     setAreaOff(false)
+    setSendTo(null)
     setForm({
+      ...emptyDelivery,
       address: a.address,
       building: a.building ?? '',
       floor: a.floor ?? '',
       apartment: a.apartment ?? '',
       directions: a.directions ?? '',
-      phone: form.phone || a.phone || '',
+      phone: form.phone || editablePhone(a.phone),
       // Its pin as coordinates, which reads back as the same pin
       location: a.latitude != null && a.longitude != null ? `${toNumber(a.latitude)}, ${toNumber(a.longitude)}` : '',
-      latitude: null,
-      longitude: null,
     })
+    if (Object.keys(whoErrors).length === 0) setStep('check')
   }
 
-  const errors = validatePhoneDelivery(form, name, !customer?.id)
-  // What the branch that delivers it asks
-  const minimum = sending ? sending.minimumOrder : toNumber(terms?.minimumOrder)
-  const fee = sending ? sending.fee : toNumber(terms?.fee)
-
   const save = () => {
-    setTried(true)
-    if (Object.keys(errors).length > 0 || reading) return
+    if (reading) return
+    if (Object.keys(whoErrors).length > 0) return setStep('who')
+    if (Object.keys(whereErrors).length > 0) return setStep('where')
+    const phone = normalizePhone(form.phone, country)
     onSave(
       {
         ...form,
         address: form.address.trim(),
-        phone: normalizePhone(form.phone, country),
+        phone,
         latitude: pinned ? toNumber(terms?.latitude) : null,
         longitude: pinned ? toNumber(terms?.longitude) : null,
         sendTo: sending,
         zone,
+        // Another branch's riders are its own: one picked here never follows the order there
+        rider: sending ? null : rider,
       },
-      name.trim(),
+      account ? { ...account, name: shownName.trim() || account.name } : { id: null, name: shownName.trim(), phone },
     )
   }
 
-  if (terms && !terms.delivers) return <p className='text-muted-foreground py-6 text-center'>{t('deliveryNotHere')}</p>
-  if (quote.isError && isModuleOff(quote.error))
+  // The branch's own terms say whether it delivers at all; the ones for the area or pin follow as they change
+  if (areas && !areas.delivers) return <p className='text-muted-foreground py-6 text-center'>{t('deliveryNotHere')}</p>
+  if (base.isError && isModuleOff(base.error))
     return <p className='text-muted-foreground py-6 text-center'>{t('problemModuleOff')}</p>
+  if (!areas && base.isError)
+    return (
+      <div className='flex flex-col items-center gap-3 py-6 text-center'>
+        <p className='text-muted-foreground'>{t('deliveryTermsFailed')}</p>
+        <Button variant='outline' className='h-11' onClick={() => base.refetch()}>
+          {t('retry')}
+        </Button>
+      </div>
+    )
+  if (!areas)
+    return (
+      <div className='flex flex-col gap-3'>
+        <Skeleton className='h-12' />
+        <Skeleton className='h-12' />
+      </div>
+    )
 
   return (
     <div className='flex flex-col gap-4'>
-      {!customer?.id && (
-        <Field id={`${ids}-name`} label={t('deliveryCustomerName')} error={tried && errors.name ? t('deliveryNeedsName') : null}>
-          {(a) => <Input {...a} value={name} onChange={(e) => setName(e.target.value)} className='h-12 text-base' autoComplete='off' />}
-        </Field>
+      <StepDots step={step} />
+
+      {step === 'who' && (
+        <WhoStep
+          ids={ids}
+          phone={form.phone}
+          onPhone={(phone) => set({ phone })}
+          phoneError={(triedWho || phoneLeft) && !!whoErrors.phone}
+          onPhoneLeft={() => setPhoneLeft(digitCount(form.phone) > 0)}
+          name={shownName}
+          onName={setName}
+          nameError={triedWho && !!whoErrors.name}
+          account={account}
+          customerId={customer?.id ?? null}
+          country={country}
+          onKnown={pickKnown}
+          onNext={toWhere}
+        />
       )}
 
-      <Field id={`${ids}-phone`} label={t('deliveryPhoneLabel')} error={tried && errors.phone ? t('deliveryPhoneInvalid') : null}>
+      {step === 'where' && (
+        <>
+          {zones.length > 0 && (
+            <div className='flex flex-col gap-1.5'>
+              <Label htmlFor={`${ids}-area`}>{t('deliveryAreaLabel')}</Label>
+              {zones.length <= AREA_BUTTONS ? (
+                <AreaButtons
+                  zones={zones}
+                  value={zone}
+                  onPick={(picked) => {
+                    setSendTo(null)
+                    setAreaOff(false)
+                    set({ zone: toSaleZone(picked) })
+                  }}
+                />
+              ) : (
+                <AreaPicker
+                  id={`${ids}-area`}
+                  zones={zones}
+                  value={zone}
+                  onPick={(picked) => {
+                    setSendTo(null)
+                    set({ zone: toSaleZone(picked) })
+                  }}
+                  onClear={() => {
+                    setAreaOff(true)
+                    set({ zone: null })
+                  }}
+                />
+              )}
+            </div>
+          )}
+
+          <Field id={`${ids}-street`} label={t('deliveryStreetLabel')} error={triedWhere && whereErrors.address ? t('deliveryNeedsStreet') : null}>
+            {(a) => (
+              <Input
+                {...a}
+                value={form.address}
+                onChange={(e) => set({ address: e.target.value })}
+                maxLength={DELIVERY_LIMITS.address}
+                className='h-12 text-base'
+                autoComplete='off'
+                autoFocus={zones.length === 0}
+              />
+            )}
+          </Field>
+
+          <div className='grid grid-cols-3 gap-2'>
+            {(
+              [
+                ['building', 'deliveryBuildingLabel'],
+                ['floor', 'deliveryFloorLabel'],
+                ['apartment', 'deliveryApartmentLabel'],
+              ] as const
+            ).map(([field, label]) => (
+              <Field key={field} id={`${ids}-${field}`} label={t(label)}>
+                {(a) => (
+                  <Input
+                    {...a}
+                    value={form[field]}
+                    onChange={(e) => set({ [field]: e.target.value })}
+                    maxLength={DELIVERY_LIMITS[field]}
+                    className='h-12 text-base'
+                    autoComplete='off'
+                  />
+                )}
+              </Field>
+            ))}
+          </div>
+
+          <MoreForRider
+            open={form.directions.trim() !== '' || pasted !== ''}
+            directions={
+              <Field id={`${ids}-directions`} label={t('deliveryDirectionsLabel')} error={triedWhere && whereErrors.tooLong ? t('problemTooLong') : null}>
+                {(a) => (
+                  <Input
+                    {...a}
+                    value={form.directions}
+                    onChange={(e) => set({ directions: e.target.value })}
+                    placeholder={t('deliveryDirectionsHint')}
+                    maxLength={DELIVERY_LIMITS.directions}
+                    className='h-12 text-base'
+                    autoComplete='off'
+                  />
+                )}
+              </Field>
+            }
+            map={
+              <>
+                {/* A pin for the rider: it never fills in the area, and the street only when it is empty */}
+                <AddressSearchField
+                  onPick={(place) => {
+                    setAreaOff(false)
+                    set({
+                      location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
+                      address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+                    })
+                  }}
+                />
+                <PinState reading={reading} failed={quote.isError} pinned={pinned} distance={toNumber(terms?.distanceMeters)} onRetry={() => quote.refetch()} />
+                {pinned && (
+                  <Button variant='ghost' size='sm' className='h-9 self-start' onClick={() => set({ location: '' })}>
+                    {t('deliveryPinRemove')}
+                  </Button>
+                )}
+              </>
+            }
+          />
+
+          {pinArea && (
+            <Warning>
+              <span className='flex flex-1 flex-wrap items-center gap-2'>
+                <span className='flex-1'>{t('deliveryPinInOtherArea', { area: localizedName(pinArea.name) })}</span>
+                <Button
+                  variant='outline'
+                  size='sm'
+                  className='h-9'
+                  onClick={() => set({ zone: pinArea })}
+                >
+                  {t('deliveryUseArea', { area: localizedName(pinArea.name) })}
+                </Button>
+              </span>
+            </Warning>
+          )}
+
+          <div className='grid grid-cols-[auto_1fr] gap-2'>
+            <Button variant='outline' size='lg' className='h-14' onClick={() => setStep('who')} aria-label={t('goBack')}>
+              <ArrowLeft className='size-5 rtl:rotate-180' aria-hidden />
+            </Button>
+            <Button size='lg' className='h-14 text-lg' onClick={toCheck}>
+              {t('deliveryNext')}
+            </Button>
+          </div>
+        </>
+      )}
+
+      {step === 'check' && (
+        <CheckStep
+          name={shownName}
+          phone={normalizePhone(form.phone, country)}
+          form={form}
+          zone={zone}
+          zonesListed={zones.length > 0}
+          pinned={pinned}
+          sending={sending}
+          alternatives={reading ? [] : alternatives}
+          onSendTo={(to) => {
+            setSendTo(to)
+            // Areas belong to a branch: the one picked here does not follow the order to another
+            if (to) set({ zone: null })
+          }}
+          warnings={
+            terms && (
+            <>
+              {pinned && !terms.inRange && !sending && <Warning>{t(outOfRangeKey(terms), { km: toNumber(terms.radiusKm) })}</Warning>}
+              {!sending && terms.zoneOff && terms.zoneName && (
+                <Warning>
+                  <span>
+                    <bdi>{localizedName(terms.zoneName)}</bdi> · {t('deliveryAreaOff')}
+                  </span>
+                </Warning>
+              )}
+              {minimum > 0 && itemsTotal < minimum && <Warning>{t('deliveryUnderMinimum', { amount: moneyText(minimum) })}</Warning>}
+            </>
+            )
+          }
+          fee={sending || terms ? fee : null}
+          eta={!sending && terms?.etaMinutes != null ? toNumber(terms.etaMinutes) : null}
+          rider={rider}
+          onRider={setRider}
+          onEditWho={() => setStep('who')}
+          onEditWhere={() => setStep('where')}
+          reading={reading}
+          onSave={save}
+        />
+      )}
+    </div>
+  )
+}
+
+/** Where in the three steps the call is */
+function StepDots({ step }: { step: Step }) {
+  const t = useT()
+  const steps: { key: Step; label: string }[] = [
+    { key: 'who', label: t('deliveryStepWho') },
+    { key: 'where', label: t('deliveryStepWhere') },
+    { key: 'check', label: t('deliveryStepCheck') },
+  ]
+  const at = steps.findIndex((s) => s.key === step)
+  return (
+    <ol className='flex items-center gap-2 text-xs' aria-label={t('deliveryFormTitle')}>
+      {steps.map((s, i) => (
+        <li key={s.key} className='flex flex-1 flex-col gap-1' aria-current={i === at ? 'step' : undefined}>
+          <span className={cn('h-1 rounded-full', i <= at ? 'bg-primary' : 'bg-muted')} />
+          <span className={cn(i === at ? 'text-foreground font-medium' : 'text-muted-foreground')}>{s.label}</span>
+        </li>
+      ))}
+    </ol>
+  )
+}
+
+/** Step one: the number first, as the call starts; a caller who had deliveries before is one tap away */
+function WhoStep({
+  ids,
+  phone,
+  onPhone,
+  phoneError,
+  onPhoneLeft,
+  name,
+  onName,
+  nameError,
+  account,
+  customerId,
+  country,
+  onKnown,
+  onNext,
+}: {
+  ids: string
+  phone: string
+  onPhone: (phone: string) => void
+  phoneError: boolean
+  onPhoneLeft: () => void
+  name: string
+  onName: (name: string) => void
+  nameError: boolean
+  account: SaleCustomer | null
+  customerId: string | null
+  country: string
+  onKnown: (address: KnownAddressView) => void
+  onNext: () => void
+}) {
+  const t = useT()
+  const line = useAddressLine()
+  const lookupPhone = useDebounced(digitCount(phone) >= MIN_PHONE_DIGITS ? normalizePhone(phone, country) : '', 400)
+  const known = useQuery({
+    ...getKnownDeliveryAddressesOptions({
+      query: { 'api-version': API_VERSION, customerUserId: customerId ?? account?.id ?? undefined, phone: lookupPhone || undefined },
+    }),
+    enabled: !!customerId || !!account?.id || lookupPhone !== '',
+  })
+  const addresses = known.data ?? []
+
+  return (
+    <>
+      <Field id={`${ids}-phone`} label={t('deliveryPhoneLabel')} error={phoneError ? t('deliveryPhoneInvalid') : null}>
         {(a) => (
           <Input
             {...a}
-            value={form.phone}
-            onChange={(e) => set({ phone: e.target.value })}
-            className='h-12 text-base'
+            value={phone}
+            onChange={(e) => onPhone(e.target.value)}
+            onBlur={onPhoneLeft}
+            onKeyDown={(e) => e.key === 'Enter' && onNext()}
+            className='h-14 text-xl tabular-nums'
             inputMode='tel'
             dir='ltr'
             autoComplete='off'
+            autoFocus
           />
         )}
       </Field>
 
-      {(known.data ?? []).length > 0 && (
-        <div className='flex flex-col gap-1.5'>
-          <span className='text-muted-foreground flex items-center gap-1.5 text-xs font-medium'>
-            <History className='size-3.5' aria-hidden />
+      <Field id={`${ids}-name`} label={t('deliveryCustomerName')} error={nameError ? t('deliveryNeedsName') : null}>
+        {(a) => (
+          <div className='relative'>
+            <Input
+              {...a}
+              value={name}
+              onChange={(e) => onName(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && onNext()}
+              className={cn('h-12 text-base', account && 'pe-10')}
+              autoComplete='off'
+            />
+            {account && (
+              <UserRound
+                className='text-primary absolute end-3 top-1/2 size-5 -translate-y-1/2'
+                aria-label={t('deliveryKnownCustomer')}
+              />
+            )}
+          </div>
+        )}
+      </Field>
+
+      {known.isFetching && addresses.length === 0 && <Skeleton className='h-16' />}
+
+      {addresses.length > 0 && (
+        <div className='flex flex-col gap-2'>
+          <span className='text-muted-foreground flex items-center gap-1.5 text-sm font-medium'>
+            <History className='size-4' aria-hidden />
             {t('deliveryKnownAddresses')}
           </span>
-          {(known.data ?? []).map((a) => (
+          {addresses.map((a) => (
             <button
               key={[a.address, a.building, a.floor, a.apartment, a.latitude, a.longitude].join('|')}
               type='button'
-              onClick={() => pickKnown(a)}
-              className={cn(
-                'flex items-start gap-2 rounded-lg border p-2.5 text-start text-sm',
-                a.address === form.address && (a.building ?? '') === form.building ? 'border-primary bg-primary/5' : 'bg-background',
-              )}
+              onClick={() => onKnown(a)}
+              className='hover:bg-muted flex min-h-16 items-center gap-3 rounded-lg border p-3 text-start'
             >
-              <MapPin className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
+              <MapPin className='text-muted-foreground size-5 shrink-0' aria-hidden />
               <span className='min-w-0 flex-1'>
-                {a.label && <span className='font-semibold'>{a.label} · </span>}
-                {line(a)}
-                {a.directions && <span className='text-muted-foreground block truncate italic'>"{a.directions}"</span>}
+                <span className='block font-medium'>
+                  {a.label && <>{a.label} · </>}
+                  {line(a)}
+                </span>
+                {a.directions && <span className='text-muted-foreground block truncate text-sm italic'>"{a.directions}"</span>}
+              </span>
+              <span className='text-primary flex shrink-0 items-center gap-1 text-sm font-semibold'>
+                <Check className='size-4' aria-hidden />
+                {t('deliverySameAddress')}
               </span>
             </button>
           ))}
         </div>
       )}
 
-      {/* First the area the caller says, where the branch keeps named areas: picked by name, what
-          delivering there costs is settled. Made here then, not sent to another branch */}
-      {zones.length > 0 && (
-        <Field id={`${ids}-area`} label={t('deliveryAreaLabel')}>
-          {(a) => (
-            <AreaPicker
-              id={a.id}
-              zones={zones}
-              value={zone}
-              onPick={(picked) => {
-                setSendTo(null)
-                set({ zone: toSaleZone(picked) })
-              }}
-              onClear={() => {
-                setAreaOff(true)
-                set({ zone: null })
-              }}
-            />
-          )}
-        </Field>
-      )}
-
-      {/* Then the street or a landmark, when the business has Google Maps:
-          a pick puts its point in the location field, as coordinates, and the street when it is empty.
-          The same order as the call centre's */}
-      <AddressSearchField
-        onPick={(place) => {
-          setAreaOff(false)
-          set({
-            location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
-            address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
-          })
-        }}
-      />
-
-      <Field id={`${ids}-street`} label={t('deliveryStreetLabel')} error={tried && errors.address ? t('deliveryNeedsStreet') : null}>
-        {(a) => (
-          <Input
-            {...a}
-            value={form.address}
-            onChange={(e) => set({ address: e.target.value })}
-            maxLength={DELIVERY_LIMITS.address}
-            className='h-12 text-base'
-            autoComplete='off'
-          />
+      <Button size='lg' variant={addresses.length > 0 ? 'outline' : 'default'} className='h-14 text-lg' onClick={onNext}>
+        {addresses.length > 0 ? (
+          <>
+            <Plus className='size-5' aria-hidden />
+            {t('deliveryNewAddress')}
+          </>
+        ) : (
+          t('deliveryNext')
         )}
-      </Field>
+      </Button>
+    </>
+  )
+}
 
-      <div className='grid grid-cols-3 gap-2'>
-        {(
-          [
-            ['building', 'deliveryBuildingLabel'],
-            ['floor', 'deliveryFloorLabel'],
-            ['apartment', 'deliveryApartmentLabel'],
-          ] as const
-        ).map(([field, label]) => (
-          <Field key={field} id={`${ids}-${field}`} label={t(label)}>
-            {(a) => (
-              <Input
-                {...a}
-                value={form[field]}
-                onChange={(e) => set({ [field]: e.target.value })}
-                maxLength={DELIVERY_LIMITS[field]}
-                className='h-12 text-base'
-                autoComplete='off'
-              />
+/**
+ * The branch's named areas as buttons, each with its fee: the caller says the
+ * area, the cashier taps it. One switched off for a while, or whose branch
+ * paused, says so and takes a second tap.
+ */
+function AreaButtons({
+  zones,
+  value,
+  onPick,
+}: {
+  zones: readonly StaffDeliveryZone[]
+  value: { id: number } | null
+  onPick: (zone: StaffDeliveryZone) => void
+}) {
+  const t = useT()
+  const money = useMoney()
+  const localized = useLocalized()
+  const [armed, setArmed] = useState<number | null>(null)
+  return (
+    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3' role='radiogroup'>
+      {zones.map((z) => {
+        const id = toNumber(z.zoneId)
+        const fee = toNumber(z.fee)
+        const chosen = value?.id === id
+        const held = !z.on || z.branchPaused
+        return (
+          <button
+            key={id}
+            type='button'
+            role='radio'
+            aria-checked={chosen}
+            onClick={() => {
+              if (held && armed !== id) return setArmed(id)
+              setArmed(null)
+              onPick(z)
+            }}
+            className={cn(
+              'flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
+              chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
             )}
-          </Field>
-        ))}
+          >
+            <span className='flex w-full items-center gap-1.5 font-medium'>
+              <bdi className='min-w-0 flex-1 truncate'>{localized(z.name)}</bdi>
+              {chosen && <Check className='text-primary size-4 shrink-0' aria-hidden />}
+            </span>
+            <span className='text-muted-foreground text-xs tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
+            {held && (
+              <span className='text-xs font-medium text-amber-700 dark:text-amber-400'>
+                {armed === id ? t('deliveryAreaOffTapAgain') : !z.on ? t('deliveryAreaOff') : t('deliveryBranchPaused')}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Directions and a pin on the map: for the rider, and folded away until wanted */
+function MoreForRider({ open: startOpen, directions, map }: { open: boolean; directions: ReactNode; map: ReactNode }) {
+  const t = useT()
+  const [open, setOpen] = useState(startOpen)
+  if (!open)
+    return (
+      <Button variant='ghost' className='text-muted-foreground h-11 self-start' onClick={() => setOpen(true)}>
+        <ChevronDown className='size-4' aria-hidden />
+        {t('deliveryMoreForRider')}
+      </Button>
+    )
+  return (
+    <div className='flex flex-col gap-3 rounded-lg border border-dashed p-3'>
+      {directions}
+      <div className='flex flex-col gap-1.5'>
+        <span className='text-muted-foreground flex items-center gap-1.5 text-sm font-medium'>
+          <MapPinned className='size-4' aria-hidden />
+          {t('deliveryPinLabel')}
+        </span>
+        {map}
+      </div>
+    </div>
+  )
+}
+
+function PinState({
+  reading,
+  failed,
+  pinned,
+  distance: meters,
+  onRetry,
+}: {
+  reading: boolean
+  failed: boolean
+  pinned: boolean
+  distance: number
+  onRetry: () => void
+}) {
+  const t = useT()
+  const distance = useDistanceText()
+  if (reading)
+    return (
+      <span className='text-muted-foreground flex items-center gap-1.5 text-sm' aria-live='polite'>
+        <Loader2 className='size-3.5 animate-spin' aria-hidden />
+        {t('deliveryLocationReading')}
+      </span>
+    )
+  if (failed)
+    return (
+      <span className='flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400'>
+        {t('deliveryQuoteFailed')}
+        <Button variant='outline' size='sm' className='h-8' onClick={onRetry}>
+          {t('retry')}
+        </Button>
+      </span>
+    )
+  if (pinned)
+    return (
+      <span className='flex items-center gap-1.5 text-sm' aria-live='polite'>
+        <MapPin className='size-3.5' aria-hidden />
+        {t('deliveryLocationFound', { distance: distance(meters) })}
+      </span>
+    )
+  return <span className='text-muted-foreground text-sm'>{t('deliveryPinOptional')}</span>
+}
+
+/** Step three: all of it on one screen, the rider to give it to, and Send */
+function CheckStep({
+  name,
+  phone,
+  form,
+  zone,
+  zonesListed,
+  pinned,
+  sending,
+  alternatives,
+  onSendTo,
+  warnings,
+  fee,
+  eta,
+  rider,
+  onRider,
+  onEditWho,
+  onEditWhere,
+  reading,
+  onSave,
+}: {
+  name: string
+  phone: string
+  form: SaleDelivery
+  zone: { name: { en: string | null; ar: string | null } } | null
+  zonesListed: boolean
+  pinned: boolean
+  sending: SaleSendTo | null
+  alternatives: DeliveryAlternative[]
+  onSendTo: (to: SaleSendTo | null) => void
+  warnings: ReactNode
+  /** Null while the terms for the area or pin are read */
+  fee: number | null
+  eta: number | null
+  rider: SaleRider | null
+  onRider: (rider: SaleRider | null) => void
+  onEditWho: () => void
+  onEditWhere: () => void
+  reading: boolean
+  onSave: () => void
+}) {
+  const t = useT()
+  const money = useMoney()
+  const localized = useLocalized()
+  const line = useAddressLine()
+  const branchName = useBranchName()
+  const details = line({ building: form.building, floor: form.floor, apartment: form.apartment })
+
+  return (
+    <>
+      <div className='flex flex-col divide-y rounded-lg border'>
+        <SummaryRow onEdit={onEditWho} editLabel={t('deliveryChange')}>
+          <span className='block font-semibold'>{name}</span>
+          <span className='text-muted-foreground text-sm'>{showPhone(phone)}</span>
+        </SummaryRow>
+        <SummaryRow onEdit={onEditWhere} editLabel={t('deliveryChange')}>
+          {zone && (
+            <span className='text-muted-foreground block text-sm font-medium'>
+              <bdi>{localized(zone.name)}</bdi>
+            </span>
+          )}
+          <span className='block font-semibold'>{form.address}</span>
+          {details && <span className='text-muted-foreground block text-sm'>{details}</span>}
+          {form.directions.trim() && <span className='text-muted-foreground block text-sm italic'>"{form.directions.trim()}"</span>}
+          <span className='text-muted-foreground flex items-center gap-1 text-xs'>
+            {pinned ? (
+              <>
+                <MapPin className='size-3' aria-hidden />
+                {t('deliveryPinned')}
+              </>
+            ) : (
+              t('deliveryNoPin')
+            )}
+          </span>
+        </SummaryRow>
       </div>
 
-      <Field id={`${ids}-directions`} label={t('deliveryDirectionsLabel')} error={tried && errors.tooLong ? t('problemTooLong') : null}>
-        {(a) => (
-          <Input
-            {...a}
-            value={form.directions}
-            onChange={(e) => set({ directions: e.target.value })}
-            placeholder={t('deliveryDirectionsHint')}
-            maxLength={DELIVERY_LIMITS.directions}
-            className='h-12 text-base'
-            autoComplete='off'
-          />
-        )}
-      </Field>
-
-      {/* On the map or not: a search pick or an earlier address put it there. Nobody ringing in sends a
-          link, so there is nothing to paste; without a point the rider goes by the address */}
-      {(pasted !== '' || quote.isError) && (
-        <div className='text-muted-foreground text-sm' aria-live='polite'>
-          {reading ? (
-            <span className='flex items-center gap-1.5'>
-              <Loader2 className='size-3.5 animate-spin' aria-hidden />
-              {t('deliveryLocationReading')}
-            </span>
-          ) : quote.isError ? (
-            <span className='flex items-center gap-2 text-amber-700 dark:text-amber-400'>
-              {t('deliveryQuoteFailed')}
-              <Button variant='outline' size='sm' className='h-8' onClick={() => quote.refetch()}>
-                {t('retry')}
+      <div className='flex flex-col gap-1.5'>
+        {zonesListed && !zone && !sending && (
+          <Warning>
+            <span className='flex flex-1 flex-wrap items-center gap-2'>
+              <span className='flex-1'>{t('deliveryNoAreaPicked')}</span>
+              <Button variant='outline' size='sm' className='h-9' onClick={onEditWhere}>
+                {t('deliveryPickArea')}
               </Button>
             </span>
-          ) : pinned ? (
-            <span className='text-foreground flex items-center gap-1.5'>
-              <MapPin className='size-3.5' aria-hidden />
-              {t('deliveryLocationFound', { distance: distance(toNumber(terms?.distanceMeters)) })}
-            </span>
-          ) : null}
+          </Warning>
+        )}
+        {warnings}
+        <div className='flex justify-between text-sm'>
+          <span className='text-muted-foreground'>
+            {t('deliveryFee')}
+            {eta != null && <> · {t('deliveryAboutMinutes', { minutes: eta })}</>}
+          </span>
+          <span className='font-medium tabular-nums'>
+            {fee == null ? <Loader2 className='size-4 animate-spin' aria-hidden /> : fee > 0 ? money(fee) : t('deliveryFree')}
+          </span>
         </div>
-      )}
+      </div>
 
-      {!reading && alternatives.length > 0 && (
-        <NearerBranches
-          alternatives={alternatives}
-          chosen={sending?.branchId ?? null}
-          onChoose={(to) => {
-            setSendTo(to)
-            // Areas belong to a branch: the one picked here does not follow the order to another
-            if (to) set({ zone: null })
-          }}
-        />
-      )}
+      {alternatives.length > 0 && <NearerBranches alternatives={alternatives} chosen={sending?.branchId ?? null} onChoose={onSendTo} />}
 
-      {/* Said, not refused: the cashier knows the streets and the regulars */}
-      {terms && !reading && (
-        <div className='flex flex-col gap-1.5'>
-          {pinned && !terms.inRange && !sending && <Warning>{t(outOfRangeKey(terms), { km: toNumber(terms.radiusKm) })}</Warning>}
-          {!sending && terms.zoneOff && terms.zoneName && (
-            <Warning>
-              <span>
-                <bdi>{localized(terms.zoneName)}</bdi> · {t('deliveryAreaOff')}
-              </span>
-            </Warning>
-          )}
-          {minimum > 0 && itemsTotal < minimum && <Warning>{t('deliveryUnderMinimum', { amount: money(minimum) })}</Warning>}
-          <div className='text-muted-foreground flex justify-between text-sm'>
-            <span>
-              {t('deliveryFee')}
-              {!sending && terms.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(terms.etaMinutes) })}</>}
-            </span>
-            <span className='tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
-          </div>
-        </div>
-      )}
+      {!sending && <RiderChoice value={rider} onChange={onRider} />}
 
-      <Button size='lg' className='h-14 text-lg' onClick={save} disabled={reading}>
+      <Button size='lg' className='h-14 text-lg' onClick={onSave} disabled={reading}>
+        {reading && <Loader2 className='size-5 animate-spin' aria-hidden />}
         {sending ? t('deliverySaveSend', { branch: branchName(sending.branchId) }) : t('deliverySave')}
       </Button>
+    </>
+  )
+}
+
+function SummaryRow({ children, onEdit, editLabel }: { children: ReactNode; onEdit: () => void; editLabel: string }) {
+  return (
+    <div className='flex items-start gap-2 p-3'>
+      <div className='min-w-0 flex-1'>{children}</div>
+      <Button variant='ghost' size='sm' className='h-9 shrink-0 gap-1.5' onClick={onEdit}>
+        <Pencil className='size-3.5' aria-hidden />
+        {editLabel}
+      </Button>
     </div>
+  )
+}
+
+/**
+ * Who takes it, picked while the call is still on: the branch's riders, free
+ * ones first, or Later to give it from Deliveries once it is ready.
+ */
+function RiderChoice({ value, onChange }: { value: SaleRider | null; onChange: (rider: SaleRider | null) => void }) {
+  const t = useT()
+  const riders = useRiders(true)
+  const list = [...(riders.data ?? [])].sort((a, b) => rank(a) - rank(b))
+  if (riders.isLoading) return <Skeleton className='h-14' />
+  if (list.length === 0) return null
+  return (
+    <div className='flex flex-col gap-1.5'>
+      <span className='text-muted-foreground text-sm font-medium'>{t('deliveryGiveTo')}</span>
+      <div className='flex flex-wrap gap-2' role='radiogroup' aria-label={t('deliveryGiveTo')}>
+        <Chip chosen={value == null} onClick={() => onChange(null)} title={t('deliveryRiderLater')} />
+        {list.map((r) => {
+          const out = toNumber(r.out)
+          const status = !r.signedIn ? t('riderNotSignedIn') : !r.onDuty ? t('riderOffDuty') : out > 0 ? t('riderOut', { count: out }) : t('riderFree')
+          return (
+            <Chip
+              key={r.userId}
+              chosen={value?.userId === r.userId}
+              onClick={() => onChange({ userId: r.userId, name: r.name ?? '' })}
+              title={r.name ?? ''}
+              status={status}
+              free={!!r.onDuty && out === 0}
+            />
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+/** Free and on duty first, then on duty and out, then the rest */
+function rank(r: { onDuty?: boolean; signedIn?: boolean; out?: number | string }) {
+  if (!r.onDuty || !r.signedIn) return 2
+  return toNumber(r.out) > 0 ? 1 : 0
+}
+
+function Chip({ chosen, onClick, title, status, free }: { chosen: boolean; onClick: () => void; title: string; status?: string; free?: boolean }) {
+  return (
+    <button
+      type='button'
+      role='radio'
+      aria-checked={chosen}
+      onClick={onClick}
+      className={cn(
+        'flex min-h-12 flex-col items-start justify-center rounded-lg border px-3 py-1.5 text-start',
+        chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
+      )}
+    >
+      <span className='flex items-center gap-1.5 font-medium'>
+        {free != null && <span aria-hidden className={cn('size-2 rounded-full', free ? 'bg-emerald-500' : 'bg-muted-foreground')} />}
+        {title}
+      </span>
+      {status && <span className='text-muted-foreground text-xs'>{status}</span>}
+    </button>
   )
 }
 
@@ -462,9 +1007,9 @@ function NearerBranches({
 
 function Warning({ children }: { children: ReactNode }) {
   return (
-    <p className='flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400'>
+    <div className='flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400'>
       <AlertTriangle className='size-4 shrink-0' aria-hidden />
       {children}
-    </p>
+    </div>
   )
 }

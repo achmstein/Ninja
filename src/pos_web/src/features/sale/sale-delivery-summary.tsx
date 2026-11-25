@@ -1,4 +1,4 @@
-import { AlertTriangle, Bike, Loader2, MapPin, Store, X } from 'lucide-react'
+import { AlertTriangle, Bike, Loader2, MapPin, Store, UserRound, X } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -43,6 +43,12 @@ export function SaleDeliverySummary({
             <span dir='ltr'>{showPhone(delivery.phone)}</span>
             {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
           </span>
+          {!delivery.sendTo && delivery.rider && (
+            <span className='mt-0.5 flex items-center gap-1 text-xs font-medium'>
+              <UserRound className='size-3' aria-hidden />
+              {t('deliveryForRiderName', { name: delivery.rider.name })}
+            </span>
+          )}
           {delivery.sendTo && (
             <span className='text-primary mt-0.5 flex items-center gap-1 text-xs font-medium'>
               <Store className='size-3' aria-hidden />

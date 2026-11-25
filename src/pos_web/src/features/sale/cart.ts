@@ -68,6 +68,14 @@ export type SaleDelivery = {
   sendTo?: SaleSendTo | null
   /** The branch's named area the cashier picked (or the pin fell in); null (or missing) charges the branch's own fee */
   zone?: SaleZone | null
+  /** The rider picked while the call was on, given it as soon as it is placed; null (or missing) to give it later */
+  rider?: SaleRider | null
+}
+
+/** One of the branch's riders, as the delivery form picked them */
+export type SaleRider = {
+  userId: string
+  name: string
 }
 
 /** A branch's named delivery area as the sale keeps it: its name and what holds there when it was picked */
@@ -100,6 +108,7 @@ export const emptyDelivery: SaleDelivery = {
   longitude: null,
   sendTo: null,
   zone: null,
+  rider: null,
 }
 
 /**

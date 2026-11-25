@@ -5,7 +5,7 @@ import { translate } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { isModuleOff } from '@/lib/problem'
 import { toast } from '@/lib/toast'
-import { useSale } from './cart'
+import { useSale, type SaleCustomer } from './cart'
 import { chargedZone, deliveryFeeOf, deliveryReadiness, zoneGone } from './sale-delivery'
 
 /**
@@ -50,8 +50,12 @@ export function useSaleDelivery(addingToTicket: boolean) {
 
   return {
     delivery: onSale,
-    /** The Delivery button: only where the business and this branch deliver */
-    canOffer: !addingToTicket && features.delivery === true && terms.data?.delivers === true,
+    /**
+     * The Delivery button: wherever the business delivers, never hidden while
+     * the branch's terms are read. A branch that doesn't deliver, or terms that
+     * couldn't be read, are said in the form with the way out
+     */
+    canOffer: !addingToTicket && features.delivery === true,
     /** A delivery is on the sale (ready or not): the sale is charged as one or not at all */
     delivering: onSale != null,
     readiness,
@@ -67,10 +71,14 @@ export function useSaleDelivery(addingToTicket: boolean) {
     keepHere: () => {
       if (delivery) setDelivery({ ...delivery, sendTo: null })
     },
-    save: (saved: NonNullable<typeof delivery>, name: string) => {
+    /**
+     * The delivery onto the sale, and who it is for: the account the form found
+     * by the number (or the one already on the sale), else the name the caller
+     * gave. The customer is said once, in the form, never again on the pad
+     */
+    save: (saved: NonNullable<typeof delivery>, who: SaleCustomer) => {
       setDelivery(saved)
-      // A caller off the street is known by the name they gave
-      if (!customer?.id) setCustomer({ id: null, name, phone: saved.phone })
+      if (who.id || !customer?.id) setCustomer(who.id ? who : { id: null, name: who.name, phone: saved.phone })
       setFormOpen(false)
     },
   }

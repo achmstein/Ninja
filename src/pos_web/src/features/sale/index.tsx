@@ -31,6 +31,7 @@ import {
 } from '@/features/customer/selected-customer'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
+import { useDeliveryActions } from '@/features/deliveries/use-deliveries'
 import { useOfflineCharge } from '@/features/offline/offline-charge'
 import { saveCustomerPreferences, startSend } from '@/features/sending/sending'
 import { PriceReviewDialog } from './price-review-dialog'
@@ -310,6 +311,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
   // A walk-in sale can go out with a rider instead (use-sale-delivery)
   const saleDelivery = useSaleDelivery(addingToTicket)
+  const deliveryActions = useDeliveryActions()
   const { delivery, delivering } = saleDelivery
   const deliveryFee = saleDelivery.fee
   // Sent to the branch nearer the caller: its menu is checked first, and the
@@ -646,17 +648,22 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       const orderId = toNumber(data.orderId)
 
       // A delivery is a bill of its own, settled when the rider's cash comes
-      // in: nothing to pay now, and the rider is picked on the floor
+      // in: nothing to pay now. The rider picked in the form is given it at
+      // once; without one it is given from Deliveries on the floor
       if (delivering) {
+        const rider = sendTo == null && orderId !== 0 ? (delivery?.rider ?? null) : null
         clear()
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getDeliveries' }] })
         queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+        if (rider) deliveryActions.assign(orderId, rider.userId)
         toast.success(
           orderId === 0
             ? t('orderAlreadyPlaced')
             : sendTo != null
               ? t('deliverySentTo', { branch: branchName(sendTo), orderId })
-              : t('deliveryPlaced'),
+              : rider
+                ? t('deliveryPlacedRider', { name: rider.name })
+                : t('deliveryPlaced'),
         )
         navigate({ to: '/' })
         return

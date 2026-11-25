@@ -22,7 +22,21 @@ export function validatePhoneDelivery(form: SaleDelivery, name: string, needsNam
   return errors
 }
 
-const orNull = (value: string) => value.trim() || null
+/** The first step of a phone delivery: a number the rider can call, and a name unless the account gives one */
+export function validateDeliveryWho(phone: string, name: string, needsName: boolean): PhoneDeliveryErrors {
+  const errors: PhoneDeliveryErrors = {}
+  if (needsName && !name.trim()) errors.name = true
+  if (digitCount(phone) < MIN_PHONE_DIGITS) errors.phone = true
+  return errors
+}
+
+/** The second step: a street in the caller's words (Google need not know it), nothing longer than the server keeps */
+export function validateDeliveryWhere(form: SaleDelivery): PhoneDeliveryErrors {
+  const { address, tooLong } = validatePhoneDelivery(form, '', false)
+  return { ...(address ? { address } : {}), ...(tooLong ? { tooLong } : {}) }
+}
+
+const orNull =(value: string) => value.trim() || null
 
 /**
  * The delivery as the till's order request carries it: the pin only when the

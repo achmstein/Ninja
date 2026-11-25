@@ -9,6 +9,8 @@ import {
   toPosDeliveryRequest,
   toSaleZone,
   toSendTo,
+  validateDeliveryWhere,
+  validateDeliveryWho,
   validatePhoneDelivery,
   zoneGone,
   zoneIn,
@@ -35,6 +37,25 @@ describe('validatePhoneDelivery', () => {
 
   it('catches a part longer than the server keeps', () => {
     expect(validatePhoneDelivery({ ...filled, directions: 'x'.repeat(501) }, 'Mona', true)).toEqual({ tooLong: true })
+  })
+})
+
+describe('validateDeliveryWho', () => {
+  it('wants a callable number, and a name unless an account gives one', () => {
+    expect(validateDeliveryWho('0100 123 4567', '', true)).toEqual({ name: true })
+    expect(validateDeliveryWho('0100 123 4567', '', false)).toEqual({})
+    expect(validateDeliveryWho('12', 'Mona', true)).toEqual({ phone: true })
+  })
+})
+
+describe('validateDeliveryWhere', () => {
+  it('takes any street in the caller words, with no pin', () => {
+    expect(validateDeliveryWhere({ ...filled, address: 'Haret El Sheikh, behind the bakery', location: '' })).toEqual({})
+  })
+
+  it('wants a street, and nothing longer than the server keeps; never the phone or name', () => {
+    expect(validateDeliveryWhere({ ...filled, address: ' ', phone: '' })).toEqual({ address: true })
+    expect(validateDeliveryWhere({ ...filled, floor: 'x'.repeat(51) })).toEqual({ tooLong: true })
   })
 })
 
