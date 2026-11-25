@@ -1989,13 +1989,8 @@ const webExtras = {
   assistantTryTitle: { en: "Then try asking", ar: "ثم جرّب أن تسأل" },
   assistantAskAbout: { en: "Ask about:", ar: "اسأله عن:" },
   // The apps page: one app at a time
-  appsTabTill: { en: "Till", ar: "الكاشير" },
-  appsTabKitchen: { en: "Kitchen display", ar: "شاشة المطبخ" },
-  appsTabRider: { en: "Riders", ar: "المندوبون" },
-  appsTabPrinter: { en: "Printer", ar: "الطابعة" },
   appsStepInstall: { en: "Install the app", ar: "ثبّت التطبيق" },
   appsScanToConnect: { en: "Open the app and scan this to connect it", ar: "افتح التطبيق وامسح هذا الرمز لربطه" },
-  appsShowQr: { en: "QR code", ar: "رمز QR" },
   appsConnectorShort: { en: "Prints kitchen tickets from a Windows PC", ar: "يطبع تذاكر المطبخ من كمبيوتر بويندوز" },
   appsConnectorInstall: { en: "Install it on the PC next to the printer", ar: "ثبّته على الكمبيوتر المجاور للطابعة" },
   appsConnectorPairStep: { en: "Pair it with the branch's kitchen", ar: "اربطه بمطبخ الفرع" },

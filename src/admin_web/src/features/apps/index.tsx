@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import {
+  ChevronRight,
   Copy,
   Download,
   ExternalLink,
   Link2,
   Printer,
-  QrCode,
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { getAllBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
@@ -15,24 +15,18 @@ import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover'
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { InfoTip } from '@/components/info-tip'
+import { EntitySheet } from '@/components/entity-sheet'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
 
 /**
- * The native till, kitchen display and rider app, and how a device gets them: one
- * generic build of each from the platform's download page, then the
- * connect code, which is nothing more than this business's API host. The
- * web versions stay a link away for iPads and for a browser on anything.
- * One app shows at a time, in two plain steps; each step's QR code is a
- * tap away beside it rather than on the page.
+ * The native till, kitchen display and rider app, and the kitchen's printer
+ * connector: how a device gets each. A plain list, one row an app; a tap
+ * opens the app's two steps in a sheet (from the bottom on a phone), each
+ * with its code in plain view for the device's camera: the download, then
+ * the connect code (this business's API host) the app scans on first open.
+ * The web versions stay a link away for iPads and a browser on anything.
  */
 /** A camera opens only a full URL; the platform's download page may be given relative to this host. */
 function absoluteUrl(url: string): string {
@@ -41,13 +35,13 @@ function absoluteUrl(url: string): string {
 
 type AppKey = 'pos' | 'kds' | 'rider' | 'connector'
 
-/**
- * One app's tab: on a phone the icon over a short label, wrapping to two
- * centred lines when the name is long; from sm up the icon beside the name,
- * the tab as wide as its name with room either side
- */
-const APP_TAB =
-  'h-auto min-w-0 flex-col gap-1 px-2 py-2 text-center text-xs leading-tight whitespace-normal sm:flex-none sm:flex-row sm:gap-2 sm:px-4 sm:py-1.5 sm:text-sm sm:whitespace-nowrap'
+type NativeApp = {
+  key: 'pos' | 'kds' | 'rider'
+  icon: string
+  title: string
+  about: string
+  file: string
+}
 
 export function AppsPage() {
   const t = useT()
@@ -55,7 +49,7 @@ export function AppsPage() {
   const features = useFeatures()
   const apiUrl = brand?.apiUrl ?? defaultApiOrigin()
   const appsUrl = brand?.appsUrl ?? null
-  const [selected, setSelected] = useState<AppKey>('pos')
+  const [open, setOpen] = useState<AppKey | null>(null)
   // The rider app is for a business whose branches deliver with their own riders
   const branchesQuery = useQuery({
     ...getAllBranchesOptions(),
@@ -66,12 +60,11 @@ export function AppsPage() {
     features.delivery &&
     (branchesQuery.data ?? []).some((b) => b.isDeliveryEnabled)
 
-  // Each app's launcher icon (the platform's N mark on its own tile), the one a tablet shows once installed
-  const tablets = [
+  // Each app's launcher icon (the platform's N mark on its own tile), the one a device shows once installed
+  const apps: NativeApp[] = [
     {
       key: 'pos' as const,
       icon: '/apps/pos.svg',
-      tab: t('appsTabTill'),
       title: t('appsPosTitle'),
       about: t('appsPosAbout'),
       file: 'ninja-pos.apk',
@@ -79,7 +72,6 @@ export function AppsPage() {
     {
       key: 'kds' as const,
       icon: '/apps/kds.svg',
-      tab: t('appsTabKitchen'),
       title: t('appsKdsTitle'),
       about: t('appsKdsAbout'),
       file: 'ninja-kds.apk',
@@ -87,79 +79,80 @@ export function AppsPage() {
     {
       key: 'rider' as const,
       icon: '/apps/rider.svg',
-      tab: t('appsTabRider'),
       title: t('appsRiderTitle'),
       about: t('appsRiderAbout'),
       file: 'ninja-rider.apk',
     },
-    // The kitchen display is a module, and the rider app is for delivering branches: no tab for either otherwise
+    // The kitchen display is a module, and the rider app is for delivering branches: no row for either otherwise
   ].filter(
     (app) =>
       (app.key !== 'kds' || features.kds) && (app.key !== 'rider' || delivers)
   )
-
-  // The kitchen's printer on a Windows PC goes with the kitchen display
-  const tabs = tablets.length + (features.kds ? 1 : 0)
+  const picked = apps.find((app) => app.key === open)
 
   return (
     <Main>
       <PageHeader title={t('appsNav')} description={t('appsDescription')} />
 
-      <Tabs
-        value={selected}
-        onValueChange={(v) => setSelected(v as AppKey)}
-        className='gap-4'
-      >
-        {/* On a phone the icon over a short label, so no name runs edge to edge */}
-        {tabs > 1 && (
-          <TabsList
-            className='grid h-auto w-full p-1 sm:inline-flex sm:w-fit'
-            style={{ gridTemplateColumns: `repeat(${tabs}, minmax(0, 1fr))` }}
-          >
-            {/* Each tab as wide as its own name (never an equal share a long
-                one like "Kitchen display" overruns); on a phone a long name
-                wraps, centred, inside its column */}
-            {tablets.map((app) => (
-              <TabsTrigger
-                key={app.key}
-                value={app.key}
-                className={APP_TAB}
-              >
-                <img src={app.icon} alt='' className='size-5 rounded' />
-                {app.tab}
-              </TabsTrigger>
-            ))}
-            {features.kds && (
-              <TabsTrigger value='connector' className={APP_TAB}>
-                <Printer className='size-4' />
-                {t('appsTabPrinter')}
-              </TabsTrigger>
-            )}
-          </TabsList>
-        )}
-
-        {tablets.map((app) => (
-          <TabsContent key={app.key} value={app.key}>
-            <TabletApp
-              icon={app.icon}
-              title={app.title}
-              about={app.about}
-              downloadUrl={appsUrl ? `${appsUrl}/${app.file}` : null}
-              // The rider app has no web version: riders are on Android phones
-              webUrl={app.key === 'rider' ? null : staffOrigin(app.key)}
-              apiUrl={apiUrl}
-            />
-          </TabsContent>
+      <ul className='bg-card divide-y overflow-hidden rounded-xl shadow-sm'>
+        {apps.map((app) => (
+          <AppRow
+            key={app.key}
+            icon={
+              <img
+                src={app.icon}
+                alt=''
+                className='size-11 rounded-xl shadow-xs'
+              />
+            }
+            title={app.title}
+            about={app.about}
+            onOpen={() => setOpen(app.key)}
+          />
         ))}
-
+        {/* The kitchen's printer on a Windows PC goes with the kitchen display */}
         {features.kds && (
-          <TabsContent value='connector'>
-            <PrinterConnector
-              downloadUrl={appsUrl ? `${appsUrl}/${CONNECTOR_FILE}` : null}
-            />
-          </TabsContent>
+          <AppRow
+            icon={
+              <span className='bg-muted grid size-11 shrink-0 place-items-center rounded-xl'>
+                <Printer className='text-muted-foreground size-5' />
+              </span>
+            }
+            title={t('appsConnectorTitle')}
+            about={t('appsConnectorShort')}
+            onOpen={() => setOpen('connector')}
+          />
         )}
-      </Tabs>
+      </ul>
+
+      {picked && (
+        <EntitySheet
+          open={open === picked.key}
+          onOpenChange={(o) => !o && setOpen(null)}
+          title={picked.title}
+          subtitle={picked.about}
+        >
+          <NativeAppSteps
+            downloadUrl={appsUrl ? `${appsUrl}/${picked.file}` : null}
+            // The rider app has no web version: riders are on Android phones
+            webUrl={picked.key === 'rider' ? null : staffOrigin(picked.key)}
+            apiUrl={apiUrl}
+          />
+        </EntitySheet>
+      )}
+
+      {features.kds && (
+        <EntitySheet
+          open={open === 'connector'}
+          onOpenChange={(o) => !o && setOpen(null)}
+          title={t('appsConnectorTitle')}
+          subtitle={t('appsConnectorAbout')}
+        >
+          <ConnectorSteps
+            downloadUrl={appsUrl ? `${appsUrl}/${CONNECTOR_FILE}` : null}
+          />
+        </EntitySheet>
+      )}
     </Main>
   )
 }
@@ -169,43 +162,49 @@ function staffOrigin(app: 'pos' | 'kds') {
   return `${protocol}//${host.replace(/^admin\./, `${app}.`)}`
 }
 
-/** The app's name and its one line, above its steps. */
-function AppHeader({
+/** One app in the list: its icon, its name and line, and the way into it. */
+function AppRow({
   icon,
   title,
   about,
+  onOpen,
 }: {
   icon: React.ReactNode
   title: string
-  about: React.ReactNode
+  about: string
+  onOpen: () => void
 }) {
   return (
-    <div className='flex items-center gap-4 px-5 pt-5'>
-      {icon}
-      <div className='min-w-0 flex-1'>
-        <h2 className='text-lg font-semibold tracking-tight'>{title}</h2>
-        <div className='text-muted-foreground text-sm'>{about}</div>
-      </div>
-    </div>
+    <li>
+      <button
+        type='button'
+        onClick={onOpen}
+        className='hover:bg-muted/50 focus-visible:bg-muted/50 flex w-full items-center gap-3 px-4 py-3 text-start outline-none'
+      >
+        {icon}
+        <span className='min-w-0 flex-1'>
+          <span className='block font-medium'>{title}</span>
+          <span className='text-muted-foreground line-clamp-2 block text-sm'>
+            {about}
+          </span>
+        </span>
+        <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />
+      </button>
+    </li>
   )
 }
 
 /**
- * A tablet app in two steps, install and connect, beside the one code the
- * picked step needs: the download for the tablet's camera, or the connect
- * code the app scans on first open.
+ * An Android app's two steps, each with what does it: the download (its
+ * code for the device's camera, and the button for when this page is open
+ * on the device itself), then the connect code the app scans on first open,
+ * with the address under it to type or copy.
  */
-function TabletApp({
-  icon,
-  title,
-  about,
+function NativeAppSteps({
   downloadUrl,
   webUrl,
   apiUrl,
 }: {
-  icon: string
-  title: string
-  about: string
   downloadUrl: string | null
   webUrl: string | null
   apiUrl: string
@@ -217,77 +216,103 @@ function TabletApp({
   }
 
   return (
-    <section className='bg-card overflow-hidden rounded-xl shadow-sm'>
-      <AppHeader
-        icon={
-          <img src={icon} alt='' className='size-12 rounded-xl shadow-xs' />
-        }
-        title={title}
-        about={about}
-      />
+    <ol className='space-y-6'>
+      <Step n={1} title={t('appsStepInstall')}>
+        {downloadUrl && (
+          <Code
+            value={absoluteUrl(downloadUrl)}
+            caption={t('appsScanToDownload')}
+          />
+        )}
+        {downloadUrl ? (
+          <Button asChild className='w-full'>
+            <a href={downloadUrl}>
+              <Download />
+              {t('appsDownloadAndroid')}
+            </a>
+          </Button>
+        ) : (
+          <Button disabled className='w-full'>
+            <Download />
+            {t('appsDownloadAndroid')}
+          </Button>
+        )}
+        {!downloadUrl && (
+          <p className='text-muted-foreground text-sm'>
+            {t('appsNotPublishedHere')}
+          </p>
+        )}
+        {webUrl && (
+          <>
+            <Button variant='outline' asChild className='w-full'>
+              <a href={webUrl} target='_blank' rel='noreferrer'>
+                <ExternalLink />
+                {t('appsOpenWeb')}
+              </a>
+            </Button>
+            <p className='text-muted-foreground text-sm'>{t('appsIosHint')}</p>
+          </>
+        )}
+      </Step>
 
-      <div className='p-5'>
-        <ol className='space-y-5'>
-          <StepRow n={1} title={t('appsStepInstall')}>
-            <div className='flex flex-wrap items-center gap-2'>
-              {downloadUrl ? (
-                <Button asChild>
-                  <a href={downloadUrl}>
-                    <Download />
-                    {t('appsDownloadAndroid')}
-                  </a>
-                </Button>
-              ) : (
-                <Button disabled title={t('appsNotPublishedHere')}>
-                  <Download />
-                  {t('appsDownloadAndroid')}
-                </Button>
-              )}
-              {downloadUrl && (
-                <QrButton
-                  value={absoluteUrl(downloadUrl)}
-                  caption={t('appsScanToDownload')}
-                />
-              )}
-              {webUrl && (
-                <Button variant='outline' asChild>
-                  <a href={webUrl} target='_blank' rel='noreferrer'>
-                    <ExternalLink />
-                    {t('appsOpenWeb')}
-                  </a>
-                </Button>
-              )}
-              {webUrl && <InfoTip>{t('appsIosHint')}</InfoTip>}
-            </div>
-          </StepRow>
-
-          <StepRow
-            n={2}
-            title={t('appsConnectTitle')}
-            hint={t('appsConnectHint')}
+      <Step n={2} title={t('appsConnectTitle')} hint={t('appsConnectHint')}>
+        <Code value={apiUrl} caption={t('appsScanToConnect')} />
+        <div className='bg-muted/50 flex items-center gap-2 rounded-lg border p-1.5 ps-3'>
+          <code
+            dir='ltr'
+            className='min-w-0 flex-1 truncate text-left font-mono text-sm'
           >
-            <div className='bg-muted/50 flex items-center gap-2 rounded-lg border p-1.5 ps-3'>
-              <code
-                dir='ltr'
-                className='min-w-0 flex-1 text-left font-mono text-sm break-all'
-              >
-                {apiUrl.replace(/^https?:\/\//, '')}
-              </code>
-              <Button variant='outline' size='sm' onClick={copyAddress}>
-                <Copy />
-                {t('copy')}
-              </Button>
-              <QrButton value={apiUrl} caption={t('appsScanToConnect')} small />
-            </div>
-          </StepRow>
-        </ol>
-      </div>
-    </section>
+            {apiUrl.replace(/^https?:\/\//, '')}
+          </code>
+          <Button variant='outline' size='sm' onClick={copyAddress}>
+            <Copy />
+            {t('copy')}
+          </Button>
+        </div>
+      </Step>
+    </ol>
   )
 }
 
-/** A numbered step: its number, what to do, and what does it under it. */
-function StepRow({
+/** The kitchen's printer on a Windows PC: a download here, a pairing link from the branch's kitchen. */
+function ConnectorSteps({ downloadUrl }: { downloadUrl: string | null }) {
+  const t = useT()
+  return (
+    <ol className='space-y-6'>
+      <Step n={1} title={t('appsConnectorInstall')}>
+        {downloadUrl ? (
+          <Button asChild className='w-full'>
+            <a href={downloadUrl}>
+              <Download />
+              {t('appsDownloadWindows')}
+            </a>
+          </Button>
+        ) : (
+          <>
+            <Button disabled className='w-full'>
+              <Download />
+              {t('appsDownloadWindows')}
+            </Button>
+            <p className='text-muted-foreground text-sm'>
+              {t('appsNotPublishedHere')}
+            </p>
+          </>
+        )}
+      </Step>
+      <Step n={2} title={t('appsConnectorPairStep')}>
+        <Button variant='outline' asChild className='w-full'>
+          <Link to='/branches'>
+            <Link2 />
+            {t('appsConnectorPair')}
+          </Link>
+        </Button>
+      </Step>
+    </ol>
+  )
+}
+
+/** A numbered step: its number and what to do, then what does it, full width under it. */
+function Step({
   n,
   title,
   hint,
@@ -299,103 +324,36 @@ function StepRow({
   children: React.ReactNode
 }) {
   return (
-    <li className='flex gap-3'>
-      <span className='bg-foreground text-background grid size-7 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums'>
-        {n}
-      </span>
-      <div className='min-w-0 flex-1 space-y-3 pt-0.5'>
-        <div className='flex items-center gap-1'>
-          <span className='text-sm font-medium'>{title}</span>
-          {hint && <InfoTip>{hint}</InfoTip>}
-        </div>
-        {children}
+    <li className='space-y-3'>
+      <div className='flex items-center gap-2.5'>
+        <span className='bg-foreground text-background grid size-6 shrink-0 place-items-center rounded-full text-xs font-semibold tabular-nums'>
+          {n}
+        </span>
+        <span className='font-medium'>{title}</span>
       </div>
+      {hint && <p className='text-muted-foreground text-sm'>{hint}</p>}
+      {children}
     </li>
   )
 }
 
-/** A QR code a tap away, for the tablet's camera, where its step needs one */
-function QrButton({
-  value,
-  caption,
-  small = false,
-}: {
-  value: string
-  caption: string
-  small?: boolean
-}) {
-  const t = useT()
+/** A code in plain view, for a device's camera, with what scanning it does. */
+function Code({ value, caption }: { value: string; caption: string }) {
   return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <Button variant='outline' size={small ? 'sm' : 'default'}>
-          <QrCode />
-          {t('appsShowQr')}
-        </Button>
-      </PopoverTrigger>
-      <PopoverContent className='flex w-64 flex-col items-center gap-3'>
-        <div className='rounded-xl bg-white p-3 shadow-sm'>
-          <QRCodeSVG
-            value={value}
-            size={180}
-            level='M'
-            marginSize={1}
-            bgColor='#ffffff'
-            fgColor='#000000'
-          />
-        </div>
-        <p className='text-muted-foreground text-center text-sm text-balance'>
-          {caption}
-        </p>
-      </PopoverContent>
-    </Popover>
-  )
-}
-
-/** The kitchen's printer on a Windows PC: a download here, a pairing link from the branch's kitchen. */
-function PrinterConnector({ downloadUrl }: { downloadUrl: string | null }) {
-  const t = useT()
-  return (
-    <section className='bg-card overflow-hidden rounded-xl shadow-sm'>
-      <AppHeader
-        icon={
-          <span className='bg-muted grid size-12 shrink-0 place-items-center rounded-xl'>
-            <Printer className='text-muted-foreground size-6' />
-          </span>
-        }
-        title={t('appsConnectorTitle')}
-        about={
-          <span className='inline-flex items-center gap-1'>
-            {t('appsConnectorShort')}
-            <InfoTip>{t('appsConnectorAbout')}</InfoTip>
-          </span>
-        }
-      />
-      <ol className='space-y-2 p-5'>
-        <StepRow n={1} title={t('appsConnectorInstall')}>
-          {downloadUrl ? (
-            <Button asChild>
-              <a href={downloadUrl}>
-                <Download />
-                {t('appsDownloadWindows')}
-              </a>
-            </Button>
-          ) : (
-            <Button disabled title={t('appsNotPublishedHere')}>
-              <Download />
-              {t('appsDownloadWindows')}
-            </Button>
-          )}
-        </StepRow>
-        <StepRow n={2} title={t('appsConnectorPairStep')}>
-          <Button variant='outline' asChild>
-            <Link to='/branches'>
-              <Link2 />
-              {t('appsConnectorPair')}
-            </Link>
-          </Button>
-        </StepRow>
-      </ol>
-    </section>
+    <figure className='flex flex-col items-center gap-2'>
+      <div className='rounded-xl border bg-white p-3'>
+        <QRCodeSVG
+          value={value}
+          size={176}
+          level='M'
+          marginSize={1}
+          bgColor='#ffffff'
+          fgColor='#000000'
+        />
+      </div>
+      <figcaption className='text-muted-foreground text-center text-sm text-balance'>
+        {caption}
+      </figcaption>
+    </figure>
   )
 }
