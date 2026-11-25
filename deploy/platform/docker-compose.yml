@@ -43,6 +43,12 @@ services:
 
   eventbus:
     image: docker.io/library/rabbitmq:4.2
+    # A fixed name: RabbitMQ keeps its users, vhosts and queues under its node
+    # name (rabbit@<hostname>) in the volume. Docker gives a recreated
+    # container a new random hostname, so every image update or config change
+    # started an empty broker beside the old one and every business lost its
+    # broker account until its next upgrade re-made it.
+    hostname: eventbus
     restart: unless-stopped
     deploy:
       resources:

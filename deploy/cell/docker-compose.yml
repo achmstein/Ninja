@@ -38,6 +38,8 @@ services:
 
   eventbus:
     image: docker.io/library/rabbitmq:4.2
+    # A fixed name, so the broker's data (kept under rabbit@<hostname>) survives a recreate
+    hostname: eventbus
     restart: unless-stopped
     deploy:
       resources:
