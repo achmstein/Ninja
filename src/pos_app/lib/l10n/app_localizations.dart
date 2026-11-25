@@ -3362,6 +3362,12 @@ abstract class AppLocalizations {
   /// **'Or a courier company'**
   String get deliveryCouriers;
 
+  /// No description provided for @deliveryCourierConnected.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent to their system'**
+  String get deliveryCourierConnected;
+
   /// No description provided for @deliveryCourierGive.
   ///
   /// In en, this message translates to:

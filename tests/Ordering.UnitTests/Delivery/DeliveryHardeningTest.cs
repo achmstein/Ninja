@@ -85,7 +85,7 @@ public class DeliveryHardeningTest
     }
 
     private static Task<DeliveryStepResult> AssignAsync(OrderingContext context, IIdentityService identity, int orderId, string riderId, int branch = Branch) =>
-        new AssignDeliveryRiderCommandHandler(new OrderRepository(context), identity, new RiderDirectory(context, Options), NullLogger<AssignDeliveryRiderCommandHandler>.Instance)
+        new AssignDeliveryRiderCommandHandler(new OrderRepository(context), identity, new RiderDirectory(context, Options), NullLogger<AssignDeliveryRiderCommandHandler>.Instance, Substitute.For<ICourierDispatch>())
             .Handle(new AssignDeliveryRiderCommand(orderId, branch, riderId), CancellationToken.None);
 
     [TestMethod]

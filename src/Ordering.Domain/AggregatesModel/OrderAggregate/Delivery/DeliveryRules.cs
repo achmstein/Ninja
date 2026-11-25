@@ -72,6 +72,8 @@ public static class DeliveryErrors
     public const string CourierHasIt = "courier.has_it";
     /// <summary>A courier's delivery is said delivered with what the courier collected.</summary>
     public const string CourierAmountRequired = "courier.amount_required";
+    /// <summary>A connected courier company did not take the job it was sent.</summary>
+    public const string CourierUnreachable = "courier.unreachable";
     public const string RiderUnknown = "rider.unknown";
     public const string RiderNotYours = "rider.not_yours";
 
@@ -79,6 +81,6 @@ public static class DeliveryErrors
     public static readonly IReadOnlySet<string> StateConflicts = new HashSet<string>
     {
         NotConfirmed, NoRider, AlreadyOut, NotOut, AlreadyDelivered, NotDelivered, NotFailed, AlreadySettled, PaidOnline, Conflict,
-        NoCourier, CourierHasIt, CourierAmountRequired,
+        NoCourier, CourierHasIt, CourierAmountRequired, CourierUnreachable,
     };
 }

@@ -22,5 +22,21 @@ public class CourierCompany
     /// <summary>Offered at the till; switched off, it carries no new delivery.</summary>
     public bool IsActive { get; set; } = true;
 
+    /// <summary>
+    /// Where its system takes Ninja's jobs ("https://api.courier.example/ninja"): set, the company is
+    /// connected and a delivery given to it is sent as a job, its steps coming back on their own;
+    /// null, a manual courier told by phone, its steps marked at the till.
+    /// </summary>
+    public string? ApiBaseUrl { get; set; }
+
+    /// <summary>The key the company gave the business for its system, sealed with the stack's key.</summary>
+    public string? SealedApiKey { get; set; }
+
+    /// <summary>The secret its status calls are signed with, made by Ninja and given to the company, sealed.</summary>
+    public string? SealedWebhookSecret { get; set; }
+
+    /// <summary>Connected: a delivery given to it is sent to its system as a job.</summary>
+    public bool IsConnected => !string.IsNullOrWhiteSpace(ApiBaseUrl);
+
     public DateTime CreatedAt { get; set; }
 }

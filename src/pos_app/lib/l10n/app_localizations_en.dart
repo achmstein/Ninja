@@ -1867,6 +1867,9 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryCouriers => 'Or a courier company';
 
   @override
+  String get deliveryCourierConnected => 'Sent to their system';
+
+  @override
   String deliveryCourierGive(String name) {
     return 'Give it to $name';
   }

@@ -49,11 +49,15 @@ public record HandInDeliveryCashCommand(int OrderId, int BranchId, decimal Amoun
 public abstract class DeliveryStepHandler<TCommand>(
     IOrderRepository orderRepository,
     IIdentityService identity,
-    ILogger logger) : IRequestHandler<TCommand, DeliveryStepResult>
+    ILogger logger,
+    ICourierDispatch? couriers = null) : IRequestHandler<TCommand, DeliveryStepResult>
     where TCommand : DeliveryStepCommand
 {
     /// <summary>Only the till takes this step (give, take back, brought back, cash in).</summary>
     protected virtual bool TillOnly => false;
+
+    /// <summary>Connected courier companies, for the steps that give a delivery or take it back.</summary>
+    protected ICourierDispatch? Couriers { get; } = couriers;
 
     public async Task<DeliveryStepResult> Handle(TCommand command, CancellationToken cancellationToken)
     {
@@ -69,6 +73,11 @@ public abstract class DeliveryStepHandler<TCommand>(
             return DeliveryStepResult.NotYours;
         }
 
+        // A connected company's job before the step: cancelled there once the step has taken it away
+        var jobBefore = order.Delivery is { CourierProviderId: { } companyBefore, CourierJobId: { } jobIdBefore }
+            ? (Company: companyBefore, JobId: jobIdBefore)
+            : ((int Company, string JobId)?)null;
+
         await ApplyAsync(order, command);
 
         logger.LogInformation(
@@ -76,6 +85,11 @@ public abstract class DeliveryStepHandler<TCommand>(
             order.Id, typeof(TCommand).Name, identity.GetUserIdentity(), byTill ? "till" : "rider");
 
         await orderRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
+
+        if (Couriers is not null && jobBefore is { } job
+            && (order.Delivery.CourierProviderId != job.Company || order.Delivery.CourierJobId != job.JobId))
+            await Couriers.CancelAsync(job.Company, job.JobId, order.Id, order.Delivery.RiderUserId is null && !order.Delivery.HasCourier ? "taken_back" : "reassigned", CancellationToken.None);
+
         return DeliveryStepResult.Done;
     }
 
@@ -86,7 +100,8 @@ public class AssignDeliveryRiderCommandHandler(
     IOrderRepository orderRepository,
     IIdentityService identity,
     IRiderDirectory riders,
-    ILogger<AssignDeliveryRiderCommandHandler> logger) : DeliveryStepHandler<AssignDeliveryRiderCommand>(orderRepository, identity, logger)
+    ILogger<AssignDeliveryRiderCommandHandler> logger,
+    ICourierDispatch couriers) : DeliveryStepHandler<AssignDeliveryRiderCommand>(orderRepository, identity, logger, couriers)
 {
     protected override bool TillOnly => true;
 
@@ -99,8 +114,8 @@ public class AssignDeliveryRiderCommandHandler(
 }
 
 public class UnassignDeliveryRiderCommandHandler(
-    IOrderRepository orderRepository, IIdentityService identity, ILogger<UnassignDeliveryRiderCommandHandler> logger)
-    : DeliveryStepHandler<UnassignDeliveryRiderCommand>(orderRepository, identity, logger)
+    IOrderRepository orderRepository, IIdentityService identity, ILogger<UnassignDeliveryRiderCommandHandler> logger, ICourierDispatch couriers)
+    : DeliveryStepHandler<UnassignDeliveryRiderCommand>(orderRepository, identity, logger, couriers)
 {
     protected override bool TillOnly => true;
 

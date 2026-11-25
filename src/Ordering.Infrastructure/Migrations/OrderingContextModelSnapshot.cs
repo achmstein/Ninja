@@ -584,6 +584,10 @@ namespace Ordering.Infrastructure.Migrations
 
                     NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
 
+                    b.Property<string>("ApiBaseUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -602,6 +606,14 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<string>("Phone")
                         .HasMaxLength(30)
                         .HasColumnType("character varying(30)");
+
+                    b.Property<string>("SealedApiKey")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
+
+                    b.Property<string>("SealedWebhookSecret")
+                        .HasMaxLength(1000)
+                        .HasColumnType("character varying(1000)");
 
                     b.HasKey("Id");
 
@@ -868,6 +880,14 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<int>("BranchId")
                         .HasColumnType("integer");
 
+                    b.Property<string>("AddressAr")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
+                    b.Property<string>("AddressEn")
+                        .HasMaxLength(500)
+                        .HasColumnType("character varying(500)");
+
                     b.Property<string>("DeliveryArea")
                         .HasColumnType("jsonb");
 
@@ -900,6 +920,18 @@ namespace Ordering.Infrastructure.Migrations
 
                     b.Property<double?>("Longitude")
                         .HasColumnType("double precision");
+
+                    b.Property<string>("NameAr")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("NameEn")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
 
                     b.Property<bool>("RequireSignInForDelivery")
                         .HasColumnType("boolean");
@@ -1202,6 +1234,9 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasColumnType("character varying(100)");
 
                             b1.Property<int?>("CourierProviderId")
+                                .HasColumnType("integer");
+
+                            b1.Property<int>("CourierSequence")
                                 .HasColumnType("integer");
 
                             b1.Property<string>("CourierTrackingUrl")

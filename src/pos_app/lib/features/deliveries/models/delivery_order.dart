@@ -154,7 +154,10 @@ class CourierProvider {
   final double? defaultFee;
   final bool isActive;
 
-  const CourierProvider({required this.id, required this.name, this.phone, this.defaultFee, this.isActive = true});
+  /// Its own system is connected: it says who it sends and its fee, and each step comes back by itself
+  final bool isConnected;
+
+  const CourierProvider({required this.id, required this.name, this.phone, this.defaultFee, this.isActive = true, this.isConnected = false});
 
   factory CourierProvider.fromJson(Map<String, dynamic> json) => CourierProvider(
         id: toInt(json['id']),
@@ -162,6 +165,7 @@ class CourierProvider {
         phone: (json['phone'] as String?)?.trim(),
         defaultFee: json['defaultFee'] == null ? null : toNumber(json['defaultFee']),
         isActive: json['isActive'] != false,
+        isConnected: json['isConnected'] == true,
       );
 }
 

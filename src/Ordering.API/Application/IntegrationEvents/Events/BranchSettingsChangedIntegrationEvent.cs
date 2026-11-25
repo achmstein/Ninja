@@ -19,4 +19,8 @@ public record BranchSettingsChangedIntegrationEvent(
     decimal DeliveryMinimumOrder = 0,
     bool RequireSignInForDelivery = false,
     bool IsActive = true,
-    double[][] DeliveryArea = null) : IntegrationEvent;
+    double[][] DeliveryArea = null,
+    // Where a courier company collects a delivery from
+    LocalizedText Name = null,
+    LocalizedText Address = null,
+    string Phone = null) : IntegrationEvent;

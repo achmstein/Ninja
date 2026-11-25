@@ -1886,6 +1886,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryCouriers => 'أو شركة توصيل';
 
   @override
+  String get deliveryCourierConnected => 'تُرسل إلى نظامهم';
+
+  @override
   String deliveryCourierGive(String name) {
     return 'سلّمه إلى $name';
   }

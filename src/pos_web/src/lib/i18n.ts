@@ -558,6 +558,7 @@ const dictionary = {
   deliveryNoRiders: { en: "No riders yet. Add one from Staff in the admin app, then they sign in to the rider app.", ar: "لا يوجد مندوبون بعد. أضف مندوبًا من «الموظفون» في تطبيق الإدارة، ثم يسجّل دخوله في تطبيق المندوب." },
   deliveryTakeBack: { en: "Take it back from the rider", ar: "استرجعه من المندوب" },
   deliveryCouriers: { en: "Or a courier company", ar: "أو شركة توصيل" },
+  deliveryCourierConnected: { en: "Sent to their system", ar: "تُرسل إلى نظامهم" },
   deliveryCourierGive: { en: "Give it to {name}", ar: "سلّمه إلى {name}" },
   deliveryCourierName: { en: "Courier's name (optional)", ar: "اسم المندوب (اختياري)" },
   deliveryCourierPhone: { en: "Courier's phone (optional)", ar: "هاتف المندوب (اختياري)" },

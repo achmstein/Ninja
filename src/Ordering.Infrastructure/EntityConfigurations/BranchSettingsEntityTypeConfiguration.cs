@@ -18,6 +18,11 @@ class BranchSettingsEntityTypeConfiguration : IEntityTypeConfiguration<BranchSet
         builder.Property(b => b.DeliveryFee).HasPrecision(18, 2);
         builder.Property(b => b.DeliveryMinimumOrder).HasPrecision(18, 2);
         builder.Property(b => b.DeliveryRadiusKm).HasPrecision(9, 2);
+        builder.Property(b => b.NameEn).HasMaxLength(200);
+        builder.Property(b => b.NameAr).HasMaxLength(200);
+        builder.Property(b => b.AddressEn).HasMaxLength(500);
+        builder.Property(b => b.AddressAr).HasMaxLength(500);
+        builder.Property(b => b.Phone).HasMaxLength(30);
 
         // The drawn area: one jsonb document of [lat, lng] pairs, read whole
         builder.Property(b => b.DeliveryArea)

@@ -43,6 +43,18 @@ public class BranchSettingsChangedIntegrationEventHandler(
         row.DeliveryFee = @event.DeliveryFee;
         row.DeliveryMinimumOrder = @event.DeliveryMinimumOrder;
         row.RequireSignInForDelivery = @event.RequireSignInForDelivery;
+        // An event from before Tenant sent them leaves what is known
+        if (@event.Name is { } name && !name.IsEmpty)
+        {
+            row.NameEn = name.En;
+            row.NameAr = name.Ar;
+        }
+        if (@event.Address is { } address)
+        {
+            row.AddressEn = address.En;
+            row.AddressAr = address.Ar;
+        }
+        if (@event.Phone is { } phone) row.Phone = phone;
         row.UpdatedAt = @event.CreationDate;
 
         await context.SaveChangesAsync();

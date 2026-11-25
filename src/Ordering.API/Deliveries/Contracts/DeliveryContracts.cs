@@ -162,8 +162,27 @@ public record CourierDeliveredRequest(decimal Collected);
 /// <param name="DefaultFee">What it usually charges per delivery; the till may change it for one.</param>
 public record CourierProviderRequest(string Name, string? Phone = null, decimal? DefaultFee = null, bool IsActive = true);
 
-/// <summary>A courier company the business hands deliveries to.</summary>
-public record CourierProviderView(int Id, string Name, string? Phone, decimal? DefaultFee, bool IsActive);
+/// <summary>
+/// A courier company the business hands deliveries to. Connected, a delivery given to it is sent to
+/// its system, which says who it sends and each step; the till asks nothing more.
+/// </summary>
+public record CourierProviderView(int Id, string Name, string? Phone, decimal? DefaultFee, bool IsActive, bool IsConnected = false);
+
+/// <summary>
+/// Where a courier company's system takes Ninja's jobs, and the key it gave the business. An empty
+/// address disconnects it (its key and signing secret are forgotten); a key left out keeps the one kept.
+/// </summary>
+public record CourierConnectionRequest(string? ApiBaseUrl, string? ApiKey = null);
+
+/// <summary>
+/// A company's connection as the owner sees it: never the key or the secret, only whether there is
+/// one. StatusUrl is where the company sends its status; CanKeepSecrets is false on a stack with no
+/// key to seal them with.
+/// </summary>
+public record CourierConnectionView(bool Connected, string? ApiBaseUrl, bool HasApiKey, bool HasWebhookSecret, string StatusUrl, bool CanKeepSecrets);
+
+/// <summary>A new signing secret, shown this once: the company signs its status calls with it.</summary>
+public record CourierWebhookSecretView(string Secret, string StatusUrl);
 
 /// <summary>The cash a rider hands in for several deliveries at once: each delivery and what the till counted for it.</summary>
 public record HandInRiderCashRequest(IReadOnlyList<HandInCashItem>? Items);

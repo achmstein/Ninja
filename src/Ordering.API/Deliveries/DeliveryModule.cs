@@ -49,6 +49,13 @@ public static class DeliveryModule
         services.AddScoped<IDeliveryBoardQueries, DeliveryBoardQueries>();
         services.AddScoped<IRiderOverviewQueries, RiderOverviewQueries>();
 
+        // Connected courier companies: their secrets sealed with the stack's key, their jobs sent and their status taken
+        services.Configure<CourierOptions>(builder.Configuration.GetSection(CourierOptions.Section));
+        services.AddSingleton<CourierSecrets>();
+        services.AddScoped<ICourierDispatch, CourierDispatch>();
+        services.AddScoped<CourierStatusReceiver>();
+        services.AddHttpClient(CourierDispatch.HttpClientName, client => client.Timeout = TimeSpan.FromSeconds(15));
+
         // The till reads a caller's shared short map link by following it: https, Google's hosts, a few hops
         services.AddMapLinkClient();
 

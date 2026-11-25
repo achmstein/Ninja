@@ -44,12 +44,18 @@ class CourierPicker extends ConsumerWidget {
               provider: provider,
               current: d.courierProviderId == provider.id,
               detail: [
+                if (provider.isConnected && d.courierProviderId != provider.id) l10n.deliveryCourierConnected,
                 if (d.courierProviderId == provider.id && d.courierName != null) d.courierName!,
                 if ((d.courierProviderId == provider.id ? d.courierFee : null) ?? provider.defaultFee case final fee?)
                   l10n.deliveryCourierFeeLine(money(context, fee)),
               ].join(' · '),
-              disabled: busy,
+              disabled: busy || (provider.isConnected && d.courierProviderId == provider.id),
               onTap: () async {
+                // A connected company's own system says who it sends and its fee: nothing to ask
+                if (provider.isConnected) {
+                  onGive(provider, (courierName: null, courierPhone: null, fee: null));
+                  return;
+                }
                 final current = d.courierProviderId == provider.id;
                 final details = await showPosDialog<CourierDetails>(
                   context,

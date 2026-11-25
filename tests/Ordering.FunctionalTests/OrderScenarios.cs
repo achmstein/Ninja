@@ -17,7 +17,7 @@ public static class Suite
     public static async Task StartAsync(TestContext context)
     {
         await SharedServices.StartAsync();
-        Ordering = new ServiceUnderTest<Program>("orderingdb");
+        Ordering = new OrderingUnderTest();
         _ = Ordering.CreateClient();
     }
 

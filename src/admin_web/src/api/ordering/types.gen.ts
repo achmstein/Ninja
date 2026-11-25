@@ -81,6 +81,20 @@ export type ConnectorPairingView = {
     expiresAt: string;
 };
 
+export type CourierConnectionRequest = {
+    apiBaseUrl: null | string;
+    apiKey?: null | string;
+};
+
+export type CourierConnectionView = {
+    connected: boolean;
+    apiBaseUrl: null | string;
+    hasApiKey: boolean;
+    hasWebhookSecret: boolean;
+    statusUrl: string;
+    canKeepSecrets: boolean;
+};
+
 export type CourierDeliveredRequest = {
     collected: number | string;
 };
@@ -98,6 +112,12 @@ export type CourierProviderView = {
     phone: null | string;
     defaultFee: null | number | string;
     isActive: boolean;
+    isConnected?: boolean;
+};
+
+export type CourierWebhookSecretView = {
+    secret: string;
+    statusUrl: string;
 };
 
 export type CreatedOrder = {
@@ -2500,6 +2520,108 @@ export type AssignDeliveryCourierResponses = {
 };
 
 export type AssignDeliveryCourierResponse = AssignDeliveryCourierResponses[keyof AssignDeliveryCourierResponses];
+
+export type GetCourierConnectionData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}/connection';
+};
+
+export type GetCourierConnectionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierConnectionResponses = {
+    /**
+     * OK
+     */
+    200: CourierConnectionView;
+};
+
+export type GetCourierConnectionResponse = GetCourierConnectionResponses[keyof GetCourierConnectionResponses];
+
+export type SetCourierConnectionData = {
+    body: CourierConnectionRequest;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}/connection';
+};
+
+export type SetCourierConnectionErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SetCourierConnectionResponses = {
+    /**
+     * OK
+     */
+    200: CourierConnectionView;
+};
+
+export type SetCourierConnectionResponse = SetCourierConnectionResponses[keyof SetCourierConnectionResponses];
+
+export type NewCourierWebhookSecretData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/couriers/{providerId}/webhook-secret';
+};
+
+export type NewCourierWebhookSecretErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type NewCourierWebhookSecretResponses = {
+    /**
+     * OK
+     */
+    200: CourierWebhookSecretView;
+};
+
+export type NewCourierWebhookSecretResponse = NewCourierWebhookSecretResponses[keyof NewCourierWebhookSecretResponses];
 
 export type MarkCourierDeliveredData = {
     body: CourierDeliveredRequest;

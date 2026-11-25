@@ -1,8 +1,25 @@
 # Courier plan: outside couriers for a business, and a courier app Ninja sells
 
-Status: phase 1 built 2026-11-25 (manual courier). Next: phase 2, the pilot with one courier
-company. The provider interface and the first third-party adapter come with the company chosen and
-its API documentation; the courier app last.
+Status: phase 1 built 2026-11-25 (manual courier), and Ninja's own courier API the same day:
+any courier company can connect its system to a business (docs/courier-api.md), instead of Ninja
+writing an adapter per company. Next: the pilot with one courier company, connected or manual; an
+adapter only for a large company that will not build to Ninja's API; the courier app last, built on
+the same API.
+
+Courier API, as built:
+- **Connecting** (admin, a company's Connection section): the address of its system and the key it
+  gave the business (sealed with Ordering's own key, `COURIERS_KEY`, which the control plane
+  derives from the stack's payments key), and a signing secret Ninja makes, shown once.
+- **Out:** giving a delivery to a connected company sends `POST {address}/jobs` from the till's
+  own request; not taken, nothing is given (`courier.unreachable`, 409). Taking it back, or giving
+  it to someone else, sends `POST {address}/jobs/{jobId}/cancel` after the save, best effort.
+- **In:** `POST /api/orders/couriers/{id}/status`, signed (HMAC-SHA256 of timestamp and body,
+  five minutes), the job checked against the order, and a per-job sequence so a status sent again
+  or overtaken changes nothing. Each status takes the step the till takes for a manual courier, so
+  Sales and Finance see a connected courier exactly as a manual one.
+- **Tills:** a connected company is given the delivery with one tap; the till asks nothing.
+- Ordering now keeps each branch's name, address and phone (from Tenant's branch event) for the
+  job's pickup.
 
 As built (differences from section 4 below):
 - **Courier companies** are kept in Ordering (`couriercompanies`, business-wide, never deleted,

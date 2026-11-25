@@ -26,4 +26,8 @@ public record BranchSettingsChangedIntegrationEvent(
     // The area drawn on the map, [lat, lng] points round it; null for none. When there is one it, not the radius, says where the branch delivers
     double[][]? DeliveryArea = null,
     // When the branch's day turns over, in the business's local time: Finance dates the day's takings and costs by it
-    TimeOnly? DayStartTime = null) : IntegrationEvent;
+    TimeOnly? DayStartTime = null,
+    // Its name, address and phone: what a courier company is told to collect a delivery from
+    LocalizedText? Name = null,
+    LocalizedText? Address = null,
+    string? Phone = null) : IntegrationEvent;

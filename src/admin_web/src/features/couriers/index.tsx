@@ -1,9 +1,13 @@
 import { useState } from 'react'
+import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { Plus, Truck } from 'lucide-react'
+import { Copy, Plug, Plus, Truck } from 'lucide-react'
 import {
   addCourierProviderMutation,
+  getCourierConnectionOptions,
   getCourierProvidersOptions,
+  newCourierWebhookSecretMutation,
+  setCourierConnectionMutation,
   updateCourierProviderMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { type CourierProviderView } from '@/api/ordering/types.gen'
@@ -28,7 +32,7 @@ import { EmptyState } from '@/components/empty-state'
 import { EntityAvatar } from '@/components/entity-avatar'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { ErrorState } from '@/components/error-state'
-import { SwitchRow } from '@/components/field'
+import { Field, SwitchRow } from '@/components/field'
 import { Main } from '@/components/layout/main'
 import { ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
@@ -37,6 +41,13 @@ import { Section } from '@/components/section'
 import { When } from '@/components/when'
 
 const q = { 'api-version': API_VERSION }
+
+/** The server's own words for a refusal, when it gave some */
+const refusal = (error: unknown) =>
+  error instanceof AxiosError &&
+  typeof error.response?.data?.detail === 'string'
+    ? (error.response.data.detail as string)
+    : null
 
 /** What became of a courier's delivery, in the admin's words */
 const outcomeKey: Record<string, TranslationKey> = {
@@ -121,8 +132,16 @@ export function Couriers() {
                     className={cn(!p.isActive && 'opacity-60')}
                     leading={<EntityAvatar name={p.name ?? ''} />}
                     title={
-                      <span className={cn(!p.isActive && 'line-through')}>
-                        {p.name}
+                      <span className='flex items-center gap-1.5'>
+                        <span className={cn(!p.isActive && 'line-through')}>
+                          {p.name}
+                        </span>
+                        {p.isConnected && (
+                          <Plug
+                            className='text-muted-foreground size-3.5'
+                            aria-label={t('courierConnected')}
+                          />
+                        )}
                       </span>
                     }
                     meta={
@@ -208,6 +227,12 @@ function CourierSheet({
               key={String(provider.id)}
               provider={provider}
               onSaved={() => {}}
+            />
+          </Section>
+          <Section title={t('courierConnectionTitle')}>
+            <CourierConnection
+              key={String(provider.id)}
+              providerId={toNumber(provider.id)}
             />
           </Section>
           <Section title={t('account')}>
@@ -329,6 +354,223 @@ function CourierForm({
         </Button>
       </SheetActions>
     </form>
+  )
+}
+
+/**
+ * The company's own system, connected through Ninja's courier API: a delivery
+ * given to it reaches its system as a job, and its courier's steps come back on
+ * their own. The key it gave the business and the secret it signs with are
+ * never shown again once saved; the secret is shown the once it is made.
+ */
+function CourierConnection({ providerId }: { providerId: number }) {
+  const t = useT()
+  const queryClient = useQueryClient()
+  const path = { providerId }
+  const connection = useQuery(getCourierConnectionOptions({ path, query: q }))
+  const [address, setAddress] = useState<string | null>(null)
+  const [apiKey, setApiKey] = useState('')
+  const [secret, setSecret] = useState<string | null>(null)
+
+  const refresh = () => {
+    queryClient.invalidateQueries({
+      queryKey: [{ _id: 'getCourierConnection' }],
+    })
+    queryClient.invalidateQueries({
+      queryKey: [{ _id: 'getCourierProviders' }],
+    })
+  }
+  const save = useMutation({
+    ...setCourierConnectionMutation(),
+    onSuccess: (view) => {
+      refresh()
+      setApiKey('')
+      setAddress(null)
+      if (!view.connected) setSecret(null)
+      toast.success(
+        t(view.connected ? 'courierConnectionSaved' : 'courierDisconnected')
+      )
+    },
+    onError: (e) => toast.error(refusal(e) ?? t('somethingWentWrong')),
+  })
+  const makeSecret = useMutation({
+    ...newCourierWebhookSecretMutation(),
+    onSuccess: (made) => {
+      refresh()
+      setSecret(made.secret)
+    },
+    onError: (e) => toast.error(refusal(e) ?? t('somethingWentWrong')),
+  })
+
+  if (connection.isError)
+    return <ErrorState error={connection.error} onRetry={connection.refetch} />
+  if (!connection.data) return <Skeleton className='h-24' />
+  const view = connection.data
+  const shownAddress = address ?? view.apiBaseUrl ?? ''
+  const busy = save.isPending || makeSecret.isPending
+
+  const copy = (text: string) => {
+    navigator.clipboard.writeText(text)
+    toast.success(t('courierCopied'))
+  }
+
+  return (
+    <div className='space-y-4'>
+      <p className='text-muted-foreground text-sm'>
+        {t('courierConnectionHint')}
+      </p>
+      {!view.canKeepSecrets && (
+        <p className='text-warning text-sm'>{t('courierCannotKeepSecrets')}</p>
+      )}
+      <form
+        id='courier-connection'
+        className='space-y-4'
+        onSubmit={(e) => {
+          e.preventDefault()
+          save.mutate({
+            path,
+            query: q,
+            body: {
+              apiBaseUrl: shownAddress.trim(),
+              apiKey: apiKey.trim() || null,
+            },
+          })
+        }}
+      >
+        <Field label={t('courierApiAddress')} htmlFor='courier-api-address'>
+          <Input
+            id='courier-api-address'
+            value={shownAddress}
+            onChange={(e) => setAddress(e.target.value)}
+            placeholder='https://'
+            maxLength={500}
+            inputMode='url'
+            dir='ltr'
+            disabled={!view.canKeepSecrets}
+          />
+        </Field>
+        <Field
+          label={t('courierApiKey')}
+          htmlFor='courier-api-key'
+          hint={view.hasApiKey ? t('courierApiKeyKept') : undefined}
+        >
+          <Input
+            id='courier-api-key'
+            type='password'
+            autoComplete='off'
+            value={apiKey}
+            onChange={(e) => setApiKey(e.target.value)}
+            maxLength={500}
+            dir='ltr'
+            disabled={!view.canKeepSecrets}
+          />
+        </Field>
+        <div className='flex flex-wrap gap-2'>
+          <Button
+            type='submit'
+            variant='outline'
+            disabled={
+              busy || !view.canKeepSecrets || shownAddress.trim() === ''
+            }
+          >
+            {save.isPending && <Spinner />}
+            <Plug />
+            {view.connected ? t('save') : t('courierConnect')}
+          </Button>
+          {view.connected && (
+            <Button
+              type='button'
+              variant='ghost'
+              disabled={busy}
+              onClick={() =>
+                save.mutate({ path, query: q, body: { apiBaseUrl: '' } })
+              }
+            >
+              {t('courierDisconnect')}
+            </Button>
+          )}
+        </div>
+      </form>
+
+      {view.connected && (
+        <div className='space-y-4 border-t pt-4'>
+          <Field
+            label={t('courierStatusUrl')}
+            htmlFor='courier-status-url'
+            hint={t('courierStatusUrlHint')}
+          >
+            <div className='flex gap-2'>
+              <Input
+                id='courier-status-url'
+                value={view.statusUrl}
+                readOnly
+                dir='ltr'
+                className='font-mono text-xs'
+                onFocus={(e) => e.target.select()}
+              />
+              <Button
+                type='button'
+                variant='outline'
+                onClick={() => copy(view.statusUrl)}
+              >
+                <Copy />
+                {t('copy')}
+              </Button>
+            </div>
+          </Field>
+          {secret ? (
+            <Field
+              label={t('courierSigningSecret')}
+              htmlFor='courier-secret'
+              hint={t('courierSigningSecretOnce')}
+            >
+              <div className='flex gap-2'>
+                <Input
+                  id='courier-secret'
+                  value={secret}
+                  readOnly
+                  dir='ltr'
+                  className='font-mono text-xs'
+                  onFocus={(e) => e.target.select()}
+                />
+                <Button
+                  type='button'
+                  variant='outline'
+                  onClick={() => copy(secret)}
+                >
+                  <Copy />
+                  {t('copy')}
+                </Button>
+              </div>
+            </Field>
+          ) : (
+            <div className='flex flex-wrap items-center justify-between gap-2'>
+              <span className='text-muted-foreground text-sm'>
+                {t(
+                  view.hasWebhookSecret
+                    ? 'courierSigningSecretKept'
+                    : 'courierSigningSecretNone'
+                )}
+              </span>
+              <Button
+                type='button'
+                variant='outline'
+                size='sm'
+                disabled={busy}
+                onClick={() => makeSecret.mutate({ path, query: q })}
+              >
+                {makeSecret.isPending && <Spinner />}
+                {t(
+                  view.hasWebhookSecret
+                    ? 'courierSigningSecretRenew'
+                    : 'courierSigningSecretMake'
+                )}
+              </Button>
+            </div>
+          )}
+        </div>
+      )}
+    </div>
   )
 }
 

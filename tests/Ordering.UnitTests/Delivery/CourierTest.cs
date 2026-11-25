@@ -203,7 +203,7 @@ public class CourierTest
 
         await using (var context = store.NewContext())
         {
-            var handler = new AssignDeliveryCourierCommandHandler(new OrderRepository(context), Till(), context, NullLogger<AssignDeliveryCourierCommandHandler>.Instance);
+            var handler = new AssignDeliveryCourierCommandHandler(new OrderRepository(context), Till(), context, Substitute.For<ICourierDispatch>(), NullLogger<AssignDeliveryCourierCommandHandler>.Instance);
 
             await Assert.ThrowsExactlyAsync<OrderingDomainException>(() =>
                 handler.Handle(new AssignDeliveryCourierCommand(id, Branch, off, null, null, null), CancellationToken.None));
@@ -260,5 +260,65 @@ public class CourierTest
         Assert.IsNull(staff.RiderName, "the till sees the courier on its own fields, never as a rider");
         Assert.AreEqual("Fast Couriers", customer.CourierProvider);
         Assert.IsNull(typeof(DeliveryView).GetProperty(nameof(DeliveryStaffView.CourierPhone)), "the customer's view has no courier phone");
+    }
+
+    [TestMethod]
+    public void A_connected_companys_job_is_kept_until_another_company_has_the_delivery()
+    {
+        var order = ConfirmedDelivery();
+        order.AssignCourier(7, "Fast Couriers", null, null, 30m);
+        order.RecordCourierJob("job-1", "https://track.test/1", 35m);
+        Assert.AreEqual(35m, order.Delivery!.CourierFee, "the company's own fee for the job");
+
+        // The same company: still its job
+        order.AssignCourier(7, "Fast Couriers", "Karim", null, 35m);
+        Assert.AreEqual("job-1", order.Delivery.CourierJobId);
+
+        order.AssignCourier(8, "Other Couriers", null, null, 25m);
+        Assert.IsNull(order.Delivery.CourierJobId);
+        Assert.IsNull(order.Delivery.CourierTrackingUrl);
+    }
+
+    [TestMethod]
+    public void A_status_count_at_or_below_the_last_is_not_taken_again()
+    {
+        var order = ConfirmedDelivery();
+        order.AssignCourier(7, "Fast Couriers", null, null, 30m);
+        order.RecordCourierJob("job-1", null, null);
+
+        Assert.IsTrue(order.AdvanceCourierSequence(2));
+        Assert.IsFalse(order.AdvanceCourierSequence(2), "sent again");
+        Assert.IsFalse(order.AdvanceCourierSequence(1), "overtaken");
+        Assert.IsTrue(order.AdvanceCourierSequence(3));
+
+        order.UnassignRider();
+        order.AssignCourier(7, "Fast Couriers", null, null, 30m);
+        order.RecordCourierJob("job-2", null, null);
+        Assert.IsTrue(order.AdvanceCourierSequence(1), "a new job counts from the start");
+    }
+
+    [TestMethod]
+    public void Who_the_company_sent_is_told_once_and_only_when_it_changes()
+    {
+        var order = ConfirmedDelivery();
+        order.AssignCourier(7, "Fast Couriers", null, null, 30m);
+        order.ClearDomainEvents();
+
+        order.UpdateCourier("Karim", "01112223334", null);
+        Assert.AreEqual(1, order.DomainEvents!.Count);
+        Assert.AreEqual("Karim", order.Delivery!.CourierName);
+
+        order.ClearDomainEvents();
+        order.UpdateCourier("Karim", null, null);
+        Assert.IsTrue(order.DomainEvents is null || order.DomainEvents.Count == 0, "nothing new to tell");
+        Assert.AreEqual("01112223334", order.Delivery.CourierPhone, "a status that leaves the phone out keeps it");
+    }
+
+    [TestMethod]
+    public void A_job_is_recorded_only_for_a_delivery_a_company_has()
+    {
+        var order = ConfirmedDelivery();
+        AssertRefused(DeliveryErrors.NoCourier, () => order.RecordCourierJob("job-1", null, null));
+        AssertRefused(DeliveryErrors.NoCourier, () => order.UpdateCourier("Karim", null, null));
     }
 }

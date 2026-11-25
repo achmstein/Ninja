@@ -858,6 +858,7 @@
   "deliveryNoRiders": "لا يوجد مندوبون بعد. أضف مندوبًا من «الموظفون» في تطبيق الإدارة، ثم يسجّل دخوله في تطبيق المندوب.",
   "deliveryTakeBack": "استرجعه من المندوب",
   "deliveryCouriers": "أو شركة توصيل",
+  "deliveryCourierConnected": "تُرسل إلى نظامهم",
   "deliveryCourierGive": "سلّمه إلى {name}",
   "deliveryCourierName": "اسم المندوب (اختياري)",
   "deliveryCourierPhone": "هاتف المندوب (اختياري)",

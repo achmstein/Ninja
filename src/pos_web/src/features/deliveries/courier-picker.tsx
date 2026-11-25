@@ -53,8 +53,11 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
           <button
             key={id}
             type='button'
-            disabled={actions.busy}
-            onClick={() => setOpen(id)}
+            disabled={actions.busy || (provider.isConnected && current === id)}
+            // A connected company's own system says who it sends and its fee: nothing to ask
+            onClick={() =>
+              provider.isConnected ? actions.assignCourier(toNumber(order.orderNumber), { providerId: id }) : setOpen(id)
+            }
             aria-pressed={current === id}
             className={cn(
               'flex h-14 items-center gap-3 rounded-lg border px-3 text-start transition-colors',
@@ -66,7 +69,9 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
               <span className='block truncate font-medium'>
                 <bdi>{provider.name}</bdi>
               </span>
-              {(current === id ? d.courierName : null) || fee != null ? (
+              {provider.isConnected && current !== id ? (
+                <span className='text-muted-foreground block text-xs'>{t('deliveryCourierConnected')}</span>
+              ) : (current === id ? d.courierName : null) || fee != null ? (
                 <span className='text-muted-foreground block text-xs'>
                   {current === id && d.courierName ? <bdi>{d.courierName}</bdi> : null}
                   {current === id && d.courierName && fee != null ? ' · ' : null}

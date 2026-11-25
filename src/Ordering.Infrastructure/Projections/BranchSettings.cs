@@ -55,6 +55,13 @@ public class BranchSettings
     /// </summary>
     public double[][]? DeliveryArea { get; set; }
 
+    /// <summary>The branch's name, address and phone: where a courier company collects a delivery from.</summary>
+    public string? NameEn { get; set; }
+    public string? NameAr { get; set; }
+    public string? AddressEn { get; set; }
+    public string? AddressAr { get; set; }
+    public string? Phone { get; set; }
+
     /// <summary>What a delivery adds to the bill.</summary>
     public decimal DeliveryFee { get; set; }
 

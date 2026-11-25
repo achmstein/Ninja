@@ -569,9 +569,12 @@ public static partial class Templates
                     sb.AppendLine("    volumes:");
                     sb.AppendLine($"      - \"{node.FirebaseCredentialsPath}:/app/firebase-credentials.json:ro\"");
                     break;
-                case "ordering" when platform.Talabat.Configured:
+                case "ordering":
+                    // Connected courier companies: the key their secrets are sealed with, and where they send their status
+                    sb.AppendLine("      Couriers__Key: \"${COURIERS_KEY}\"");
+                    sb.AppendLine($"      Couriers__CallbackBaseUrl: \"{hosts.ApiUrl}\"");
                     // Talabat: what the business does with its orders goes back through the platform's relay, which holds Ninja's account
-                    AppendTalabatRelay(sb, slug, node);
+                    if (platform.Talabat.Configured) AppendTalabatRelay(sb, slug, node);
                     break;
                 case "tenant":
                     if (!string.IsNullOrEmpty(tenant.NameEn)) sb.AppendLine($"      Tenant__Name__En: \"{Yaml(tenant.NameEn)}\"");
@@ -651,6 +654,12 @@ public static partial class Templates
         return sb.ToString();
     }
 
+    /// <summary>Ordering's key for courier companies' secrets: the hex HMAC-SHA256 of "couriers" keyed with the business's payments key; empty without one.</summary>
+    internal static string CouriersKey(string? paymentsKey) =>
+        string.IsNullOrWhiteSpace(paymentsKey)
+            ? ""
+            : Convert.ToHexStringLower(System.Security.Cryptography.HMACSHA256.HashData(Encoding.UTF8.GetBytes(paymentsKey), Encoding.UTF8.GetBytes("couriers")));
+
     /// <summary>The stack's .env: its own secrets and nothing of the platform's (the superuser and the shared broker user stay on the control plane).</summary>
     public static string Env(Tenant tenant, PlatformOptions platform, MapsSettings? maps = null)
     {
@@ -664,6 +673,8 @@ public static partial class Templates
             $"IDENTITY_SECRET={tenant.IdentitySecret}",
             $"ASSISTANT_SECRET={tenant.AssistantSecret}",
             $"PAYMENTS_KEY={tenant.PaymentsKey}",
+            // Ordering's own key for connected courier companies' secrets, derived from the payments key so Sales' never leaves Sales
+            $"COURIERS_KEY={CouriersKey(tenant.PaymentsKey)}",
             // The business's key to the Talabat relay, derived from the platform's key; only when the platform has a Talabat account
             $"TALABAT_RELAY_KEY={(platform.Talabat.Configured && !string.IsNullOrWhiteSpace(platform.EncryptionKey) ? TalabatNaming.RelayKey(tenant.Slug, platform.EncryptionKey) : "")}",
             // The business's own key to the platform's AI gateway, only when its plan includes the assistant; no provider's key ever reaches a stack

@@ -2932,6 +2932,172 @@
         ]
       }
     },
+    "/api/orders/couriers/{providerId}/connection": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Whether a courier company's system is connected, and where it sends its status (admin)",
+        "operationId": "GetCourierConnection",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourierConnectionView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      },
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Connect a courier company's system, or disconnect it (admin)",
+        "description": "The address takes Ninja's jobs (POST {address}/jobs, POST {address}/jobs/{jobId}/cancel), with the key as a bearer token. Https only. Empty disconnects it, forgetting its key and signing secret; a key left out keeps the one kept. See docs/courier-api.md.",
+        "operationId": "SetCourierConnection",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CourierConnectionRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourierConnectionView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/couriers/{providerId}/webhook-secret": {
+      "post": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Make a new signing secret for a connected courier company, shown this once (admin)",
+        "description": "The company signs its status calls with it; the one before stops working at once.",
+        "operationId": "NewCourierWebhookSecret",
+        "parameters": [
+          {
+            "name": "providerId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CourierWebhookSecretView"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/{orderId}/delivery/courier-delivered": {
       "put": {
         "tags": [
@@ -4699,6 +4865,60 @@
           }
         }
       },
+      "CourierConnectionRequest": {
+        "required": [
+          "apiBaseUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "apiBaseUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "apiKey": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
+      "CourierConnectionView": {
+        "required": [
+          "connected",
+          "apiBaseUrl",
+          "hasApiKey",
+          "hasWebhookSecret",
+          "statusUrl",
+          "canKeepSecrets"
+        ],
+        "type": "object",
+        "properties": {
+          "connected": {
+            "type": "boolean"
+          },
+          "apiBaseUrl": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "hasApiKey": {
+            "type": "boolean"
+          },
+          "hasWebhookSecret": {
+            "type": "boolean"
+          },
+          "statusUrl": {
+            "type": "string"
+          },
+          "canKeepSecrets": {
+            "type": "boolean"
+          }
+        }
+      },
       "CourierDeliveredRequest": {
         "required": [
           "collected"
@@ -4783,6 +5003,25 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "isConnected": {
+            "type": "boolean",
+            "default": false
+          }
+        }
+      },
+      "CourierWebhookSecretView": {
+        "required": [
+          "secret",
+          "statusUrl"
+        ],
+        "type": "object",
+        "properties": {
+          "secret": {
+            "type": "string"
+          },
+          "statusUrl": {
+            "type": "string"
           }
         }
       },

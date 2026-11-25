@@ -131,14 +131,14 @@ export function useDeliveryActions() {
   return {
     assign: (orderId: number, riderUserId: string) => assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
     unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: q }),
-    assignCourier: (orderId: number, courier: { providerId: number; courierName: string; courierPhone: string; fee: number | null }) =>
+    assignCourier: (orderId: number, courier: { providerId: number; courierName?: string; courierPhone?: string; fee?: number | null }) =>
       assignCourier.mutate({
         path: { orderId },
         body: {
           providerId: courier.providerId,
-          courierName: courier.courierName.trim() || null,
-          courierPhone: courier.courierPhone.trim() || null,
-          fee: courier.fee,
+          courierName: courier.courierName?.trim() || null,
+          courierPhone: courier.courierPhone?.trim() || null,
+          fee: courier.fee ?? null,
         },
         query: q,
       }),

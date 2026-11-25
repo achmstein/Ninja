@@ -143,6 +143,9 @@ var salesApi = builder.AddProject<Projects.Sales_API>("sales-api")
     // Locally, online payments works without a Paymob account: the checkout is pretend
     .WithEnvironment("Payments__Simulated", "true");
 
+// Connected courier companies: their key and signing secret sealed with a key of Ordering's own (a stack derives it from its payments key)
+orderingApi.WithEnvironment("Couriers__Key", "local-couriers-key");
+
 var inventoryApi = builder.AddProject<Projects.Inventory_API>("inventory-api")
     .WithReference(inventoryDb).WaitFor(inventoryDb)
     .WithReference(rabbitMq).WaitFor(rabbitMq)

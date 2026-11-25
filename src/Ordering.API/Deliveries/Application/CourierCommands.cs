@@ -15,7 +15,8 @@ public class AssignDeliveryCourierCommandHandler(
     IOrderRepository orderRepository,
     IIdentityService identity,
     OrderingContext context,
-    ILogger<AssignDeliveryCourierCommandHandler> logger) : DeliveryStepHandler<AssignDeliveryCourierCommand>(orderRepository, identity, logger)
+    ICourierDispatch couriers,
+    ILogger<AssignDeliveryCourierCommandHandler> logger) : DeliveryStepHandler<AssignDeliveryCourierCommand>(orderRepository, identity, logger, couriers)
 {
     protected override bool TillOnly => true;
 
@@ -26,7 +27,15 @@ public class AssignDeliveryCourierCommandHandler(
             .FirstOrDefaultAsync(p => p.Id == command.ProviderId && p.IsActive)
             ?? throw new OrderingDomainException("That isn't one of the business's courier companies.", DeliveryErrors.CourierUnknown);
 
+        var hadJob = order.Delivery is { CourierJobId: not null } d && d.CourierProviderId == provider.Id;
         order.AssignCourier(provider.Id, provider.Name, command.CourierName, command.CourierPhone, command.Fee ?? provider.DefaultFee);
+
+        // Connected: the company's system is sent the job now, and says who it sends; refused, nothing is saved
+        if (provider.IsConnected && !hadJob)
+        {
+            var taken = await Couriers!.RequestAsync(order, provider);
+            order.RecordCourierJob(taken.JobId, taken.TrackingUrl, command.Fee is null ? taken.Fee : null);
+        }
     }
 }
 
@@ -46,7 +55,7 @@ public class MarkCourierDeliveredCommandHandler(
 /// <summary>The courier companies the business lists, as the owner keeps them in admin.</summary>
 public static class CourierProviders
 {
-    public static CourierProviderView View(CourierCompany p) => new(p.Id, p.Name, p.Phone, p.DefaultFee, p.IsActive);
+    public static CourierProviderView View(CourierCompany p) => new(p.Id, p.Name, p.Phone, p.DefaultFee, p.IsActive, p.IsConnected);
 
     /// <summary>The words of a request, tidied and checked against the columns; throws what the API answers 400.</summary>
     public static (string Name, string? Phone, decimal? Fee) Read(CourierProviderRequest request)

@@ -71,5 +71,8 @@ public class BranchSettingsService(
         RequireSignInForDelivery: branch.RequireSignInForDelivery,
         IsActive: branch.IsActive,
         DeliveryArea: branch.DeliveryArea,
-        DayStartTime: branch.DayStartTime);
+        DayStartTime: branch.DayStartTime,
+        Name: branch.Name,
+        Address: branch.Address,
+        Phone: branch.Phone);
 }

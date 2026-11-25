@@ -975,6 +975,24 @@ public class Order
         AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
     }
 
+    /// <summary>A connected courier company took the job it was sent: its id, its link, and its fee when it said one.</summary>
+    public void RecordCourierJob(string jobId, string? trackingUrl, decimal? fee)
+    {
+        var delivery = EnsureDelivering();
+        delivery.RecordCourierJob(jobId, trackingUrl, fee);
+    }
+
+    /// <summary>The connected courier company said who it sent: the till and the customer hear the name.</summary>
+    public void UpdateCourier(string? courierName, string? courierPhone, string? trackingUrl)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.UpdateCourier(courierName, courierPhone, trackingUrl))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>A connected courier company's status count: true when it is newer than any applied, false otherwise.</summary>
+    public bool AdvanceCourierSequence(int sequence) => EnsureDelivering().AdvanceCourierSequence(sequence);
+
     /// <summary>
     /// The courier company's courier handed it over, and collected this much at the door: the bill is
     /// settled to the company, which owes the business the cash. Paid online ahead, nothing was

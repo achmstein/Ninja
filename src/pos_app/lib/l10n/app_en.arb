@@ -918,6 +918,7 @@
   "deliveryNoRiders": "No riders yet. Add one from Staff in the admin app, then they sign in to the rider app.",
   "deliveryTakeBack": "Take it back from the rider",
   "deliveryCouriers": "Or a courier company",
+  "deliveryCourierConnected": "Sent to their system",
   "deliveryCourierGive": "Give it to {name}",
   "@deliveryCourierGive": { "placeholders": { "name": { "type": "String" } } },
   "deliveryCourierName": "Courier's name (optional)",

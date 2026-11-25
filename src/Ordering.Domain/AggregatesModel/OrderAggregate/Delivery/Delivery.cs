@@ -130,8 +130,57 @@ public class Delivery
 
     public decimal? CourierCollected { get; private set; }
 
+    /// <summary>
+    /// The last status a connected courier company sent for the job, by its own count: a status at or
+    /// below it (sent again, or overtaken) changes nothing.
+    /// </summary>
+    public int CourierSequence { get; private set; }
+
     /// <summary>A courier company has it, not a rider.</summary>
     public bool HasCourier => CourierProviderId != null;
+
+    /// <summary>A connected courier company took the job: its id for it, its link, and its fee when it said one.</summary>
+    internal void RecordCourierJob(string jobId, string? trackingUrl, decimal? fee)
+    {
+        if (!HasCourier)
+            throw new OrderingDomainException("A courier company doesn't have this delivery.", DeliveryErrors.NoCourier);
+        CourierJobId = Limit(jobId, DeliveryLimits.CourierJobId, "courier's job id");
+        CourierTrackingUrl = Tidy(trackingUrl, DeliveryLimits.CourierTrackingUrl, "tracking link");
+        if (fee is >= 0) CourierFee = fee;
+        CourierSequence = 0;
+        Version++;
+    }
+
+    /// <summary>The courier company said who it sent, or changed its link. False when nothing changed.</summary>
+    internal bool UpdateCourier(string? courierName, string? courierPhone, string? trackingUrl)
+    {
+        if (!HasCourier)
+            throw new OrderingDomainException("A courier company doesn't have this delivery.", DeliveryErrors.NoCourier);
+        var name = Tidy(courierName, DeliveryLimits.RiderName, "courier's name") ?? CourierName;
+        var phone = Tidy(courierPhone, DeliveryLimits.Phone, "courier's phone") ?? CourierPhone;
+        var link = Tidy(trackingUrl, DeliveryLimits.CourierTrackingUrl, "tracking link") ?? CourierTrackingUrl;
+        if (name == CourierName && phone == CourierPhone && link == CourierTrackingUrl)
+            return false;
+        CourierName = name;
+        CourierPhone = phone;
+        CourierTrackingUrl = link;
+        Version++;
+        return true;
+    }
+
+    /// <summary>
+    /// Takes a connected courier company's status count: true when it is newer than any applied (and
+    /// is now the last), false for one sent again or overtaken.
+    /// </summary>
+    internal bool AdvanceCourierSequence(int sequence)
+    {
+        if (sequence <= CourierSequence)
+            return false;
+        CourierSequence = sequence;
+        // Two statuses crossing: the second to save is refused and the company sends it again
+        Version++;
+        return true;
+    }
 
     /// <summary>The till took the cash from the rider; the bill is settled with it.</summary>
     public DateTime? CashHandedInAt { get; private set; }
@@ -250,6 +299,13 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = null;
         RiderName = null;
+        // Another company: the last one's job, link and count are not this one's
+        if (CourierProviderId != providerId)
+        {
+            CourierJobId = null;
+            CourierTrackingUrl = null;
+            CourierSequence = 0;
+        }
         CourierProviderId = providerId;
         CourierProvider = Limit(provider, DeliveryLimits.CourierProvider, "courier company's name");
         CourierName = Tidy(courierName, DeliveryLimits.RiderName, "courier's name");
@@ -262,6 +318,7 @@ public class Delivery
 
     private void ClearCourier()
     {
+        CourierSequence = 0;
         CourierProviderId = null;
         CourierProvider = null;
         CourierName = null;
