@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
+import '../../places/providers/places_provider.dart';
 import '../models/shift.dart';
 import '../services/shifts_service.dart';
 import '../services/till_picks_service.dart';
@@ -76,7 +77,9 @@ class BranchFlags {
   final bool takingOrders;
   final bool takingReservations;
 
-  /// Whether the business takes reservations at all; without them its switch is not shown and never pauses it
+  /// Whether this branch can be reserved at all: the business has the
+  /// module and the branch has a place that takes reservations. Without
+  /// one, its switch is not shown and never pauses it
   final bool reservations;
 
   const BranchFlags({required this.branchId, required this.known, required this.takingOrders, required this.takingReservations, this.reservations = true});
@@ -93,6 +96,9 @@ final branchFlagsProvider = Provider<BranchFlags>((ref) {
     known: branch != null,
     takingOrders: branch?.isOrderingEnabled ?? true,
     takingReservations: branch?.isReservationsEnabled ?? true,
-    reservations: ref.watch(featuresProvider).reservations,
+    // A branch with no place that can be reserved takes no reservations to
+    // stop: no switch, and the chip is not amber for it
+    reservations: ref.watch(featuresProvider).reservations &&
+        ref.watch(placesProvider.select((s) => s.places.any((p) => p.isActive && p.canReserve))),
   );
 });

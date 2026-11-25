@@ -1,5 +1,4 @@
 import { useBranchFlags } from '@/features/branch/use-branch-flags'
-import { useFeatures } from '@/lib/brand'
 import { Switch } from '@/components/ui/switch'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -51,7 +50,7 @@ function FlagRow({ label, on, disabled, onChange, className }: FlagRowProps) {
 export function TradingSwitches({ className }: { className?: string }) {
   const t = useT()
   const flags = useBranchFlags()
-  const reservations = useFeatures().reservations
+  const reservations = flags.reservations
   const disabled = !flags.branch || flags.isPending
 
   return (

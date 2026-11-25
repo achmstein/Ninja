@@ -21,6 +21,8 @@ import 'package:pos_app/core/widgets/offline_chip.dart';
 import 'package:pos_app/core/widgets/pos_header.dart';
 import 'package:pos_app/core/widgets/pos_shell.dart';
 import 'package:pos_app/features/auth/cashier_roster.dart';
+import 'package:pos_app/features/places/models/place.dart';
+import 'package:pos_app/features/places/providers/places_provider.dart';
 import 'package:pos_app/features/shifts/models/shift.dart';
 import 'package:pos_app/features/shifts/providers/shifts_provider.dart';
 import 'package:pos_app/features/shifts/widgets/shift_chip.dart';
@@ -81,6 +83,14 @@ class _NothingStuck extends StuckKitchenTicketsNotifier {
   List<KitchenTicket> build() => const [];
 }
 
+/// A room that can be reserved: the trading chip has reservations to speak for
+class _Places extends PlacesNotifier {
+  @override
+  PlacesState build() => PlacesState(
+        places: [Place(id: 1, name: const LocalizedText(en: 'Room 1', ar: 'غرفة ١'), status: PlaceStatus.available)],
+      );
+}
+
 class _OneNotSent extends SendingNotifier {
   @override
   List<Sending> build() => [
@@ -98,6 +108,7 @@ Widget _app(Widget home, {Locale locale = const Locale('en'), EdgeInsets padding
         sendingProvider.overrideWith(_OneNotSent.new),
         cashierRosterKeeperProvider.overrideWith((ref) async {}),
         stuckKitchenTicketsProvider.overrideWith(_NothingStuck.new),
+        placesProvider.overrideWith(_Places.new),
       ],
       child: MaterialApp(
         locale: locale,

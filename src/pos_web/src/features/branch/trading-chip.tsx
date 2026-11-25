@@ -9,7 +9,6 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { TradingSwitches } from '@/features/shift/trading-switches'
-import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { useBranchFlags } from './use-branch-flags'
@@ -26,7 +25,7 @@ export function TradingChip() {
   const t = useT()
   const [open, setOpen] = useState(false)
   const flags = useBranchFlags()
-  const reservations = useFeatures().reservations
+  const reservations = flags.reservations
 
   // Nothing to say until the branch is known
   if (!flags.branch) return null

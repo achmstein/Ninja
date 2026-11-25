@@ -3,6 +3,7 @@ import {
   getBranchesOptions,
   updateBranchSettingsMutation,
 } from '@/api/tenant/@tanstack/react-query.gen'
+import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useFeatures } from '@/lib/brand'
 import { useBranchStore } from '@/stores/branch-store'
@@ -31,8 +32,13 @@ export function useBranchFlags() {
   })
 
   const takingOrders = branch?.isOrderingEnabled ?? true
-  // A business without reservations takes none: its switch is not shown, so it never reads as paused
-  const reservations = useFeatures().reservations
+  // A branch takes reservations only when the business has them and the
+  // branch has a place that can be reserved; otherwise its switch is not
+  // shown, so it never reads as paused
+  const hasModule = useFeatures().reservations
+  const { data: places = [] } = useQuery({ ...listPlacesOptions(), enabled: hasModule })
+  const reservations =
+    hasModule && places.some((p) => p.isActive !== false && p.canReserve !== false)
   const takingReservations = branch?.isReservationsEnabled ?? true
 
   // Nothing to flip until a branch is active
@@ -46,6 +52,8 @@ export function useBranchFlags() {
     branch,
     takingOrders,
     takingReservations,
+    /** Whether this branch can be reserved at all (the module, and a place that takes reservations). */
+    reservations,
     /** Either switch is off — the store is not fully trading. */
     paused: !!branch && !(takingOrders && (takingReservations || !reservations)),
     isPending: update.isPending,
