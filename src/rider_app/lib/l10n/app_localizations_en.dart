@@ -274,10 +274,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'This address isn\'t secure (no https). Ask the owner for the business\'s https address.';
 
   @override
-  String get signInInBrowser =>
-      'You\'ll sign in on the business\'s own page, then come back here.';
-
-  @override
   String get listSeparator => ', ';
 
   @override
@@ -436,4 +432,69 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notificationsUnavailable => 'Not set up for this app yet';
+
+  @override
+  String get enterYourPin => 'Enter your PIN';
+
+  @override
+  String get usePassword => 'Use password instead';
+
+  @override
+  String get pinWrong => 'That PIN is wrong.';
+
+  @override
+  String get pinUnavailable =>
+      'No PIN to use right now. Sign in with your password.';
+
+  @override
+  String get pinSignInFailed =>
+      'That didn\'t sign you in. Try again, or use your password.';
+
+  @override
+  String pinDigitsTyped(int count) {
+    return '$count digits typed';
+  }
+
+  @override
+  String get pinOfferTitle => 'Sign in faster with a PIN';
+
+  @override
+  String get pinOfferHint =>
+      '4 to 6 digits. Next time on this phone, you only type your PIN.';
+
+  @override
+  String get setMyPin => 'Set my PIN';
+
+  @override
+  String get setMyPinHint => 'Sign in on this phone with a PIN';
+
+  @override
+  String get newPin => 'PIN';
+
+  @override
+  String get newPinAgain => 'PIN again';
+
+  @override
+  String get pinFormat => 'A PIN is 4 to 6 digits.';
+
+  @override
+  String get pinMismatch => 'The two PINs are not the same.';
+
+  @override
+  String get pinGuessable => 'That one is too easy to guess. Choose another.';
+
+  @override
+  String get pinWrongPassword => 'That password is wrong.';
+
+  @override
+  String get pinSaved => 'PIN saved';
+
+  @override
+  String get pinNotSaved => 'The PIN wasn\'t saved. Try again.';
+
+  @override
+  String get savePin => 'Save PIN';
+
+  @override
+  String get notNow => 'Not now';
 }

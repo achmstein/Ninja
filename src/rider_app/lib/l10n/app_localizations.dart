@@ -584,12 +584,6 @@ abstract class AppLocalizations {
   /// **'This address isn\'t secure (no https). Ask the owner for the business\'s https address.'**
   String get connectInsecure;
 
-  /// No description provided for @signInInBrowser.
-  ///
-  /// In en, this message translates to:
-  /// **'You\'ll sign in on the business\'s own page, then come back here.'**
-  String get signInInBrowser;
-
   /// Between the parts of an address on one line (building, floor, apartment)
   ///
   /// In en, this message translates to:
@@ -877,6 +871,126 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not set up for this app yet'**
   String get notificationsUnavailable;
+
+  /// No description provided for @enterYourPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter your PIN'**
+  String get enterYourPin;
+
+  /// No description provided for @usePassword.
+  ///
+  /// In en, this message translates to:
+  /// **'Use password instead'**
+  String get usePassword;
+
+  /// No description provided for @pinWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That PIN is wrong.'**
+  String get pinWrong;
+
+  /// No description provided for @pinUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'No PIN to use right now. Sign in with your password.'**
+  String get pinUnavailable;
+
+  /// No description provided for @pinSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t sign you in. Try again, or use your password.'**
+  String get pinSignInFailed;
+
+  /// No description provided for @pinDigitsTyped.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} digits typed'**
+  String pinDigitsTyped(int count);
+
+  /// No description provided for @pinOfferTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in faster with a PIN'**
+  String get pinOfferTitle;
+
+  /// No description provided for @pinOfferHint.
+  ///
+  /// In en, this message translates to:
+  /// **'4 to 6 digits. Next time on this phone, you only type your PIN.'**
+  String get pinOfferHint;
+
+  /// No description provided for @setMyPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Set my PIN'**
+  String get setMyPin;
+
+  /// No description provided for @setMyPinHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sign in on this phone with a PIN'**
+  String get setMyPinHint;
+
+  /// No description provided for @newPin.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN'**
+  String get newPin;
+
+  /// No description provided for @newPinAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN again'**
+  String get newPinAgain;
+
+  /// No description provided for @pinFormat.
+  ///
+  /// In en, this message translates to:
+  /// **'A PIN is 4 to 6 digits.'**
+  String get pinFormat;
+
+  /// No description provided for @pinMismatch.
+  ///
+  /// In en, this message translates to:
+  /// **'The two PINs are not the same.'**
+  String get pinMismatch;
+
+  /// No description provided for @pinGuessable.
+  ///
+  /// In en, this message translates to:
+  /// **'That one is too easy to guess. Choose another.'**
+  String get pinGuessable;
+
+  /// No description provided for @pinWrongPassword.
+  ///
+  /// In en, this message translates to:
+  /// **'That password is wrong.'**
+  String get pinWrongPassword;
+
+  /// No description provided for @pinSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'PIN saved'**
+  String get pinSaved;
+
+  /// No description provided for @pinNotSaved.
+  ///
+  /// In en, this message translates to:
+  /// **'The PIN wasn\'t saved. Try again.'**
+  String get pinNotSaved;
+
+  /// No description provided for @savePin.
+  ///
+  /// In en, this message translates to:
+  /// **'Save PIN'**
+  String get savePin;
+
+  /// No description provided for @notNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not now'**
+  String get notNow;
 }
 
 class _AppLocalizationsDelegate

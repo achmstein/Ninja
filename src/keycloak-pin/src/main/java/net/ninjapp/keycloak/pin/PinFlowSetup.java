@@ -10,9 +10,12 @@ import org.keycloak.models.RealmModel;
 import org.keycloak.models.RequiredActionProviderModel;
 
 /**
- * What a realm needs for the till's PIN, put in place once and left alone
- * after: the action in which a cashier chooses their PIN, and a sign-in flow
- * for the till alone.
+ * What a realm needs for the PIN, put in place once and left alone after:
+ * the action in which someone chooses their PIN, the till's browser sign-in
+ * flow, and the direct-grant flow the apps with their own PIN pad share (the
+ * till app and the rider app, Pin.DIRECT_GRANT_CLIENTS). The flows keep
+ * their first aliases ("till browser", "till direct grant"): a realm finds
+ * them by those, and a new alias would build a second flow beside the first.
  *
  * The till's flow is Keycloak's browser flow with one step added: after the
  * session cookie and before the username and password form, the PIN form.
@@ -20,11 +23,11 @@ import org.keycloak.models.RequiredActionProviderModel;
  * and the customers' apps sign in exactly as before. Password sign-in on the
  * till keeps its two-step code.
  */
-final class TillFlowSetup {
-    private TillFlowSetup() {
+final class PinFlowSetup {
+    private PinFlowSetup() {
     }
 
-    private static final Logger LOG = Logger.getLogger(TillFlowSetup.class);
+    private static final Logger LOG = Logger.getLogger(PinFlowSetup.class);
 
     static final String FLOW = "till browser";
     static final String DIRECT_FLOW = "till direct grant";
@@ -53,12 +56,16 @@ final class TillFlowSetup {
                 }
             }
 
-            ClientModel app = realm.getClientByClientId(Pin.TILL_APP_CLIENT);
-            if (app != null) {
+            // The apps with their own PIN pad (the till's and the rider's) share one direct-grant flow
+            for (String clientId : Pin.DIRECT_GRANT_CLIENTS) {
+                ClientModel app = realm.getClientByClientId(clientId);
+                if (app == null) {
+                    continue;
+                }
                 AuthenticationFlowModel direct = realm.getFlowByAlias(DIRECT_FLOW);
                 if (direct == null) {
                     direct = createDirectFlow(realm);
-                    LOG.infof("Till app sign-in flow created in realm %s", realm.getName());
+                    LOG.infof("App PIN sign-in flow created in realm %s", realm.getName());
                 }
                 if (!direct.getId().equals(app.getAuthenticationFlowBindingOverride("direct_grant"))) {
                     app.setAuthenticationFlowBindingOverride("direct_grant", direct.getId());

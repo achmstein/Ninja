@@ -6,7 +6,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 
 import '../../core/auth/auth_service.dart';
-import '../../core/auth/cashier_sign_in.dart';
+import 'package:ninja_app_core/auth/pin_sign_in.dart';
 import '../../core/widgets/pos_dialog.dart';
 import '../../core/widgets/toast_helpers.dart';
 import '../../l10n/app_localizations.dart';
@@ -17,7 +17,7 @@ const int _minDigits = 4;
 
 /// The pad a cashier types their PIN on to take over the till. True once
 /// they are signed in. The PIN is only ever held here, as dots, until it is
-/// sent (core/auth/cashier_sign_in.dart).
+/// sent (package:ninja_app_core/auth/pin_sign_in.dart).
 Future<bool> showPinSignIn(BuildContext context, Cashier cashier) async {
   final signedIn = await showPosDialog<bool>(
     context,

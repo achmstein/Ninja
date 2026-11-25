@@ -42,8 +42,12 @@ final class Pin {
      */
     static final java.util.List<String> TILL_CLIENTS = java.util.List.of("pos-web", "pos-app");
 
-    /** The till app: it signs in on its own screens (PinDirectGrant), with its own PIN pad. */
-    static final String TILL_APP_CLIENT = "pos-app";
+    /**
+     * The apps that sign in on their own screens (PinDirectGrant), each with
+     * its own PIN pad: the till app, and the rider app, whose rider unlocks
+     * their phone with a PIN between shifts.
+     */
+    static final java.util.List<String> DIRECT_GRANT_CLIENTS = java.util.List.of("pos-app", "rider-app");
 
     static final int MIN_DIGITS = 4;
     static final int MAX_DIGITS = 6;

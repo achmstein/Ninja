@@ -32,7 +32,7 @@ import org.keycloak.representations.idm.OAuth2ErrorRepresentation;
  * of it: the PIN is checked against the hash it keeps, wrong tries are
  * counted by its brute-force detection, and the tokens are its ordinary ones.
  *
- * Two steps of the till app's direct-grant flow (TillFlowSetup):
+ * Two steps of the till app's direct-grant flow (PinFlowSetup):
  * {@link Check} takes a PIN in place of the password, and {@link Choose},
  * last, lets someone who has just proved their password set their PIN in the
  * same request.

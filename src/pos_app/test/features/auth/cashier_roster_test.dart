@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:pos_app/core/auth/cashier_sign_in.dart';
+import 'package:ninja_app_core/auth/pin_sign_in.dart';
 import 'package:pos_app/features/auth/cashier_roster.dart';
 
 void main() {

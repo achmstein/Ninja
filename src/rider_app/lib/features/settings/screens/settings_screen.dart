@@ -11,6 +11,7 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
+import '../../auth/pin_widgets.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
@@ -64,6 +65,13 @@ class SettingsScreen extends ConsumerWidget {
                 subtitleColor: pushAvailable && permission != AuthorizationStatus.denied ? AppColors.emerald(theme.colors.brightness) : null,
                 onPress: pushAvailable ? () => ref.read(pushServiceProvider).register() : null,
                 trailing: Icon(FIcons.bell, size: Sizes.icon, color: muted),
+              ),
+              // Signing in on this phone with a PIN instead of the password
+              SettingsRow(
+                title: l10n.setMyPin,
+                subtitle: l10n.setMyPinHint,
+                onPress: () => showChoosePin(context),
+                trailing: Icon(FIcons.keyRound, size: Sizes.icon, color: muted),
               ),
               if (!AppConfig.isPinned && AppConfig.connection != null) const ConnectionRow(),
               const _UpdateRow(),

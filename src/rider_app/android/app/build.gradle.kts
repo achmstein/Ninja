@@ -45,8 +45,6 @@ android {
         versionName = flutter.versionName
         // https only (release, profile); the debug build type allows the dev machine
         manifestPlaceholders["networkSecurityConfig"] = "@xml/network_security"
-        // The browser sign-in (flutter_appauth) comes back on com.ninja.rider://callback (AppConfig.redirectUri)
-        manifestPlaceholders["appAuthRedirectScheme"] = "com.ninja.rider"
     }
 
     signingConfigs {

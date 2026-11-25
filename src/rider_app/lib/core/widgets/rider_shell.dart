@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../auth/auth_service.dart';
+import '../../features/auth/pin_widgets.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'no_branch_screen.dart';
 import 'rider_header.dart';
@@ -23,18 +24,21 @@ class RiderShell extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final blocked = ref.watch(branchProvider.select((s) => s.noBranch)) && !ref.watch(isOwnerProvider);
-    return Scaffold(
-      backgroundColor: theme.colors.background,
-      body: SafeArea(
-        bottom: false,
-        child: Column(
-          children: [
-            const RiderHeader(),
-            Expanded(child: blocked && location != '/settings' ? const NoBranchScreen() : child),
-          ],
+    // The PIN offer a password sign-in leaves opens once the frame is up
+    return PinOfferListener(
+      child: Scaffold(
+        backgroundColor: theme.colors.background,
+        body: SafeArea(
+          bottom: false,
+          child: Column(
+            children: [
+              const RiderHeader(),
+              Expanded(child: blocked && location != '/settings' ? const NoBranchScreen() : child),
+            ],
+          ),
         ),
+        bottomNavigationBar: RiderNavBar(location: location),
       ),
-      bottomNavigationBar: RiderNavBar(location: location),
     );
   }
 }

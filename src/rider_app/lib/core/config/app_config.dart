@@ -12,8 +12,6 @@ import '../services/signalr_service.dart';
 ///
 /// or connect to it like a phone would, at http://localhost:5000.
 class AppConfig {
-  static const bool _isRelease = bool.fromEnvironment('dart.vm.product');
-
   /// A build told its stack at build time never asks for one
   static bool get isPinned => CoreEndpoints.isPinned;
 
@@ -33,23 +31,16 @@ class AppConfig {
   static String get tenantApiUrl => CoreEndpoints.tenantApiUrl;
   static String get identityUrl => CoreEndpoints.identityUrl;
 
-  // OIDC configuration: authorization code with PKCE in the system browser.
-  // offline_access on purpose: a rider signs in once at the start of the
-  // week, not every shift, so the refresh token must outlive the SSO idle timeout.
+  // The rider signs in on the app's own screen: the password the first time
+  // on a phone, then a PIN (Keycloak's direct grant, the PIN let in by
+  // src/keycloak-pin, as the till app's is). offline_access on purpose: a
+  // rider signs in once at the start of the week, not every shift, so the
+  // refresh token must outlive the SSO idle timeout.
   static const String clientId = 'rider-app';
 
-  /// The password form (Resource Owner Password Credentials) instead of the
-  /// browser: a debug build only, asked for with
-  /// `--dart-define=RIDER_SIGN_IN=password`, for a dev realm whose client has
-  /// no browser flow. A release build always signs in in the browser.
-  static const bool passwordSignIn = !_isRelease && String.fromEnvironment('RIDER_SIGN_IN') == 'password';
+  /// The app's own sign-in form, in every build
+  static const bool passwordSignIn = true;
 
-  // The scheme must match the redirect the Android build declares
-  // (appAuthRedirectScheme in android/app/build.gradle.kts).
-  static const String _redirectScheme =
-      String.fromEnvironment('REDIRECT_SCHEME', defaultValue: 'com.ninja.rider');
-  static const String redirectUri = '$_redirectScheme://callback';
-  static const String postLogoutRedirectUri = '$_redirectScheme://';
   static const List<String> scopes = [
     'openid',
     'profile',

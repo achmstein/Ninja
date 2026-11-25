@@ -67,7 +67,7 @@ public class PinFormAuthenticatorFactory implements AuthenticatorFactory {
     }
 
     /**
-     * Every realm with a till gets its sign-in set up (TillFlowSetup): the
+     * Every realm with a till gets its sign-in set up (PinFlowSetup): the
      * ones already there once the server is up, a new one as it is created.
      * No one has to click through the admin console for a new business.
      */
@@ -76,9 +76,9 @@ public class PinFormAuthenticatorFactory implements AuthenticatorFactory {
         factory.register(event -> {
             if (event instanceof PostMigrationEvent) {
                 KeycloakModelUtils.runJobInTransaction(factory, session ->
-                        session.realms().getRealmsStream().toList().forEach(realm -> TillFlowSetup.ensure(session, realm)));
+                        session.realms().getRealmsStream().toList().forEach(realm -> PinFlowSetup.ensure(session, realm)));
             } else if (event instanceof RealmModel.RealmPostCreateEvent created) {
-                TillFlowSetup.ensure(created.getKeycloakSession(), created.getCreatedRealm());
+                PinFlowSetup.ensure(created.getKeycloakSession(), created.getCreatedRealm());
             }
         });
     }

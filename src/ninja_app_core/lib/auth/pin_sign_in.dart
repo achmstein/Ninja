@@ -1,7 +1,7 @@
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
 
-import '../config/app_config.dart';
+import '../config.dart';
 import 'auth_service.dart';
 
 /// How a PIN sign-in ended
@@ -15,7 +15,7 @@ enum PinSignIn {
   /// tries were made and the password is asked for again
   unavailable,
 
-  /// Signed in, but the account may not run the till
+  /// Signed in, but the account may not use this app
   notAuthorized,
 
   /// The server could not be reached, or said something else
@@ -25,12 +25,12 @@ enum PinSignIn {
 /// How choosing a PIN ended
 enum PinChoice { saved, wrongPassword, format, guessable, failed }
 
-/// Taking over the till by name and PIN, on the till's own pad. The PIN goes
-/// where the password goes when the till signs in: straight to Keycloak's
+/// Signing in by name and PIN on an app's own pad (the till's cashiers, the rider). The PIN goes
+/// where the password goes on a password sign-in: straight to Keycloak's
 /// token endpoint, which checks it against the hash it keeps, counts wrong
 /// tries and answers with its ordinary tokens (src/keycloak-pin,
-/// PinDirectGrant). The till keeps nothing of it.
-extension CashierSignIn on AuthService {
+/// PinDirectGrant). The app keeps nothing of it.
+extension PinSignInGrant on AuthService {
   Future<PinSignIn> signInWithPin(String username, String pin) async {
     final answer = await _grant({'username': username, 'pin': pin});
     final tokens = answer.tokens;
@@ -76,7 +76,7 @@ extension CashierSignIn on AuthService {
       try {
         await _http.post<void>(
           AuthService.logoutEndpoint,
-          data: {'client_id': AppConfig.clientId, 'refresh_token': refreshToken},
+          data: {'client_id': NinjaCore.config.clientId, 'refresh_token': refreshToken},
           options: Options(contentType: Headers.formUrlEncodedContentType),
         );
       } catch (_) {
@@ -98,8 +98,8 @@ Future<_Answer> _grant(Map<String, String> fields) async {
       AuthService.tokenEndpoint,
       data: {
         'grant_type': 'password',
-        'client_id': AppConfig.clientId,
-        'scope': AppConfig.scopes.join(' '),
+        'client_id': NinjaCore.config.clientId,
+        'scope': NinjaCore.config.scopes.join(' '),
         ...fields,
       },
       options: Options(contentType: Headers.formUrlEncodedContentType),

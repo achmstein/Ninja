@@ -58,7 +58,6 @@ dependencies:
 
   # Native Splash
   flutter_native_splash: ^2.4.0
-  flutter_appauth: ^12.1.0
   # What the platform's Android apps share (src/ninja_app_core)
   ninja_app_core:
     path: ../ninja_app_core

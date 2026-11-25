@@ -119,7 +119,6 @@
     }
   },
   "connectInsecure": "This address isn't secure (no https). Ask the owner for the business's https address.",
-  "signInInBrowser": "You'll sign in on the business's own page, then come back here.",
   "listSeparator": ", ",
   "@listSeparator": {
     "description": "Between the parts of an address on one line (building, floor, apartment)"
@@ -211,5 +210,32 @@
   "notifications": "Notifications",
   "notificationsOn": "On: a new delivery rings the phone",
   "notificationsOff": "Off: allow notifications for this app in Android settings",
-  "notificationsUnavailable": "Not set up for this app yet"
+  "notificationsUnavailable": "Not set up for this app yet",
+  "enterYourPin": "Enter your PIN",
+  "usePassword": "Use password instead",
+  "pinWrong": "That PIN is wrong.",
+  "pinUnavailable": "No PIN to use right now. Sign in with your password.",
+  "pinSignInFailed": "That didn't sign you in. Try again, or use your password.",
+  "pinDigitsTyped": "{count} digits typed",
+  "@pinDigitsTyped": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "pinOfferTitle": "Sign in faster with a PIN",
+  "pinOfferHint": "4 to 6 digits. Next time on this phone, you only type your PIN.",
+  "setMyPin": "Set my PIN",
+  "setMyPinHint": "Sign in on this phone with a PIN",
+  "newPin": "PIN",
+  "newPinAgain": "PIN again",
+  "pinFormat": "A PIN is 4 to 6 digits.",
+  "pinMismatch": "The two PINs are not the same.",
+  "pinGuessable": "That one is too easy to guess. Choose another.",
+  "pinWrongPassword": "That password is wrong.",
+  "pinSaved": "PIN saved",
+  "pinNotSaved": "The PIN wasn't saved. Try again.",
+  "savePin": "Save PIN",
+  "notNow": "Not now"
 }

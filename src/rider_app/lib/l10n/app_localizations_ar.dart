@@ -271,10 +271,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'العنوان ده مش آمن (مش https). اطلب من صاحب النشاط عنوان https.';
 
   @override
-  String get signInInBrowser =>
-      'هتسجّل دخول من صفحة النشاط نفسه، وبعدين ترجع هنا.';
-
-  @override
   String get listSeparator => '، ';
 
   @override
@@ -430,4 +426,67 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notificationsUnavailable => 'لسه مش متظبطة للتطبيق ده';
+
+  @override
+  String get enterYourPin => 'اكتب الرمز بتاعك';
+
+  @override
+  String get usePassword => 'ادخل بكلمة السر';
+
+  @override
+  String get pinWrong => 'الرمز غلط.';
+
+  @override
+  String get pinUnavailable => 'مينفعش تستخدم الرمز دلوقتي. ادخل بكلمة السر.';
+
+  @override
+  String get pinSignInFailed => 'مدخلتش. جرّب تاني أو ادخل بكلمة السر.';
+
+  @override
+  String pinDigitsTyped(int count) {
+    return 'اتكتب $count أرقام';
+  }
+
+  @override
+  String get pinOfferTitle => 'ادخل أسرع برمز';
+
+  @override
+  String get pinOfferHint =>
+      'من 4 لـ 6 أرقام. المرة الجاية على الموبايل ده هتكتب الرمز بس.';
+
+  @override
+  String get setMyPin => 'اضبط الرمز بتاعي';
+
+  @override
+  String get setMyPinHint => 'ادخل على الموبايل ده برمز';
+
+  @override
+  String get newPin => 'الرمز';
+
+  @override
+  String get newPinAgain => 'الرمز تاني';
+
+  @override
+  String get pinFormat => 'الرمز من 4 لـ 6 أرقام.';
+
+  @override
+  String get pinMismatch => 'الرمزين مش زي بعض.';
+
+  @override
+  String get pinGuessable => 'الرمز ده سهل يتخمّن. اختار غيره.';
+
+  @override
+  String get pinWrongPassword => 'كلمة السر غلط.';
+
+  @override
+  String get pinSaved => 'الرمز اتحفظ';
+
+  @override
+  String get pinNotSaved => 'الرمز ماتحفظش. جرّب تاني.';
+
+  @override
+  String get savePin => 'احفظ الرمز';
+
+  @override
+  String get notNow => 'مش دلوقتي';
 }
