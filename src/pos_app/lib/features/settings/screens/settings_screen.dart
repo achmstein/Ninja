@@ -288,9 +288,8 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   }
 }
 
-/// A setting whose control is a labelled button or two. A tablet has them at
-/// the row's end, beside what they are for. A phone's row is not wide enough
-/// for both, so there the buttons go under the words, still at the end.
+/// The shared row with buttons, stacked by the till's own measure (a tablet
+/// told it is a phone, or the other way round, is taken at its word)
 class _ActionRow extends StatelessWidget {
   final String title;
   final String? hint;
@@ -301,37 +300,14 @@ class _ActionRow extends StatelessWidget {
   const _ActionRow({required this.title, this.hint, this.subtitle, this.subtitleColor, required this.actions});
 
   @override
-  Widget build(BuildContext context) {
-    if (!context.isCompact) {
-      return SettingsRow(
+  Widget build(BuildContext context) => SettingsActionRow(
         title: title,
         hint: hint,
         subtitle: subtitle,
         subtitleColor: subtitleColor,
-        trailing: actions.length == 1
-            ? actions.single
-            : Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  for (final (index, action) in actions.indexed) ...[
-                    if (index > 0) const SizedBox(width: 8),
-                    action,
-                  ],
-                ],
-              ),
+        actions: actions,
+        stacked: context.isCompact,
       );
-    }
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        SettingsRow(title: title, hint: hint, subtitle: subtitle, subtitleColor: subtitleColor),
-        Padding(
-          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 12),
-          child: Wrap(alignment: WrapAlignment.end, spacing: 8, runSpacing: 8, children: actions),
-        ),
-      ],
-    );
-  }
 }
 
 /// The build on this tablet and the newest one on the platform's download page

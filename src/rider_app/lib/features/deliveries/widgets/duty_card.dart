@@ -4,17 +4,16 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
-import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/network/api_errors.dart';
+import '../../../core/widgets/rider_sheet.dart';
 import '../../../core/widgets/rider_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/deliveries_provider.dart';
 
-/// The rider's own switch, first on the deliveries screen. Off duty it is the
-/// obvious thing to press: a card that says so with one big "Go on duty".
-/// On duty it is a calm green card that says the till can give them
-/// deliveries, with a small "Go off duty" that asks first, so a stray tap on
-/// the road does not. While the till has not answered, a spinner.
+/// The rider's own switch, first on the deliveries screen. Off duty it is one
+/// big "Start work". On duty it is a calm green line with a small "End" that
+/// asks first, from the foot of the screen, so a stray tap on the road does
+/// not. While the till has not answered, a spinner.
 class DutyCard extends ConsumerWidget {
   const DutyCard({super.key});
 
@@ -30,12 +29,11 @@ class DutyCard extends ConsumerWidget {
 
   Future<void> _goOff(BuildContext context, WidgetRef ref) async {
     final l10n = AppLocalizations.of(context)!;
-    final yes = await showConfirmDialog(
+    final yes = await showRiderConfirm(
       context,
       title: l10n.goOffDutyConfirm,
-      description: l10n.goOffDutyHint,
-      cancelLabel: l10n.stayOnDuty,
       actionLabel: l10n.goOffDuty,
+      cancelLabel: l10n.stayOnDuty,
     );
     if (yes && context.mounted) await _set(context, ref, false);
   }
@@ -49,87 +47,45 @@ class DutyCard extends ConsumerWidget {
     const spinner = SizedBox.square(dimension: 18, child: FCircularProgress());
 
     if (!duty.onDuty) {
-      return Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: theme.colors.card,
-          borderRadius: BorderRadius.circular(20),
-          border: Border.all(color: theme.colors.border),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                Container(
-                  width: 44,
-                  height: 44,
-                  decoration: BoxDecoration(color: theme.colors.muted, shape: BoxShape.circle),
-                  child: Icon(FIcons.moon, size: Sizes.icon, color: theme.colors.mutedForeground),
-                ),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.offDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700)),
-                      Text(l10n.offDutyHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              height: Sizes.controlLarge,
-              child: FButton(
-                onPress: duty.pending ? null : () => _set(context, ref, true),
-                prefix: duty.pending ? spinner : const Icon(FIcons.power, size: Sizes.icon),
-                child: Text(l10n.goOnDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton),
-              ),
-            ),
-          ],
+      return SizedBox(
+        height: Sizes.controlLarge,
+        child: FButton(
+          onPress: duty.pending ? null : () => _set(context, ref, true),
+          prefix: duty.pending ? spinner : const Icon(FIcons.power, size: Sizes.icon),
+          child: Text(l10n.goOnDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700).forButton),
         ),
       );
     }
 
     return Container(
-      padding: const EdgeInsetsDirectional.fromSTEB(16, 14, 10, 14),
+      padding: const EdgeInsetsDirectional.fromSTEB(16, 8, 8, 8),
       decoration: BoxDecoration(
         color: green.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
         border: Border.all(color: green.withValues(alpha: 0.4)),
       ),
       child: Row(
         children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(color: green.withValues(alpha: 0.16), shape: BoxShape.circle),
-            alignment: Alignment.center,
+          SizedBox.square(
+            dimension: 18,
             child: duty.pending
                 ? spinner
-                : Container(
-                    width: 14,
-                    height: 14,
-                    decoration: BoxDecoration(
-                      color: green,
-                      shape: BoxShape.circle,
-                      boxShadow: [BoxShadow(color: green.withValues(alpha: 0.5), blurRadius: 8)],
+                : Center(
+                    child: Container(
+                      width: 12,
+                      height: 12,
+                      decoration: BoxDecoration(
+                        color: green,
+                        shape: BoxShape.circle,
+                        boxShadow: [BoxShadow(color: green.withValues(alpha: 0.5), blurRadius: 8)],
+                      ),
                     ),
                   ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 10),
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.onDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: green)),
-                Text(l10n.onDutyHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-              ],
-            ),
+            child: Text(l10n.onDuty, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: green)),
           ),
-          const SizedBox(width: 8),
           SizedBox(
             height: Sizes.control,
             child: FButton(

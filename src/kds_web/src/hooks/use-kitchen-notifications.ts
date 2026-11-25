@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
+import { renewSession } from '@/context/session'
 import { translate } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
@@ -44,7 +45,14 @@ export function useKitchenNotifications() {
   useEffect(() => {
     const connection = new HubConnectionBuilder()
       .withUrl('/hub/notifications', {
-        accessTokenFactory: () => getStoredUser()?.access_token ?? '',
+        // Asked on every (re)connection. A token that ran out (the PC slept
+        // through its renewal) is renewed first: the hub would not refuse it
+        // but take the page for a guest, whose group join is turned down, and
+        // nothing would reach it
+        accessTokenFactory: async () => {
+          await renewSession().catch(() => false)
+          return getStoredUser()?.access_token ?? ''
+        },
       })
       .withAutomaticReconnect()
       .build()
@@ -102,10 +110,21 @@ export function useKitchenNotifications() {
         )
 
     let disposed = false
+    // What a dropped connection may have missed, asked again
+    const catchUp = () => {
+      invalidateBoard()
+      invalidateBranches()
+    }
+
+    let connectedBefore = false
     const start = async (attempt = 0) => {
       try {
         await connection.start()
         await joinGroup()
+        // A connection opened afresh after one was lost missed what was sent
+        // in between, just as a reconnected one did
+        if (connectedBefore) catchUp()
+        connectedBefore = true
       } catch (error) {
         console.warn('[signalr] connect failed:', error)
         // Back-off retry (backend still booting, transient network); the
@@ -113,10 +132,11 @@ export function useKitchenNotifications() {
         // fallback poll.
         if (
           !disposed &&
-          attempt < 5 &&
           connection.state === HubConnectionState.Disconnected
         ) {
-          setTimeout(() => start(attempt + 1), 5_000 * (attempt + 1))
+          // Never giving up while the page is open: a till left on all day
+          // must come back by itself when the network does
+          setTimeout(() => start(attempt + 1), Math.min(5_000 * (attempt + 1), 30_000))
         }
       }
     }
@@ -127,8 +147,17 @@ export function useKitchenNotifications() {
       // New connection id: the group must be rejoined, and anything missed
       // while offline refetched.
       joinGroup().catch(() => {})
-      invalidateBoard()
-      invalidateBranches()
+      catchUp()
+    })
+
+    // Automatic reconnect gave up (the network or the PC out for minutes).
+    // The page may stay in front all day, so no tab change will come to
+    // reopen it: try again shortly, and keep trying while it is open
+    connection.onclose(() => {
+      if (disposed) return
+      setTimeout(() => {
+        if (!disposed && connection.state === HubConnectionState.Disconnected) start()
+      }, 30_000)
     })
 
     // Automatic reconnect gives up after long background periods; reconnect

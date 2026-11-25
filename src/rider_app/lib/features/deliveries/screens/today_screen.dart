@@ -12,8 +12,7 @@ import '../providers/deliveries_provider.dart';
 import '../widgets/parts.dart';
 
 /// The rider's day so far: the cash still with them (to hand in at the
-/// till) or that it is all handed in, how many delivered and how much
-/// handed in, then each delivery done, latest first.
+/// till) or that it is all handed in, then each delivery done, latest first.
 class TodayScreen extends ConsumerWidget {
   const TodayScreen({super.key});
 
@@ -48,21 +47,11 @@ class TodayScreen extends ConsumerWidget {
           ),
         ]),
         data: (day) {
-          final delivered = day.delivered.where((o) => o.isDelivered).toList();
-          final handedIn = delivered.where((o) => !o.cashInHand).fold(0.0, (sum, o) => sum + (o.cashCollected ?? o.total));
           return RiderList(
             children: [
               Text(l10n.navToday, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700)),
               const SizedBox(height: 16),
               _CashCard(amount: day.cashInHand, money: money),
-              const SizedBox(height: 12),
-              Row(
-                children: [
-                  Expanded(child: StatTile(icon: FIcons.circleCheck, label: l10n.deliveredToday, value: '${delivered.length}')),
-                  const SizedBox(width: 12),
-                  Expanded(child: StatTile(icon: FIcons.handCoins, label: l10n.handedIn, value: money(handedIn))),
-                ],
-              ),
               const SizedBox(height: 12),
               if (day.delivered.isEmpty)
                 EmptyState(icon: FIcons.receiptText, title: l10n.noneDeliveredToday)
@@ -115,7 +104,7 @@ class _CashCard extends StatelessWidget {
                   owed ? l10n.cashWithYou : l10n.allHandedIn,
                   style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: owed ? theme.colors.mutedForeground : tint),
                 ),
-                if (owed) ...[
+                if (owed)
                   FittedBox(
                     fit: BoxFit.scaleDown,
                     alignment: AlignmentDirectional.centerStart,
@@ -125,8 +114,6 @@ class _CashCard extends StatelessWidget {
                       style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
                     ),
                   ),
-                  Text(l10n.cashInHandHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                ],
               ],
             ),
           ),

@@ -74,17 +74,18 @@ public class RiderOverviewTest
     };
 
     [TestMethod]
-    public void A_rider_is_online_on_duty_here_and_heard_lately_quiet_when_not_heard_and_off_otherwise()
+    public void A_rider_is_online_on_duty_and_heard_lately_quiet_when_not_heard_and_off_otherwise()
     {
         var now = new DateTime(2026, 10, 4, 12, 0, 0, DateTimeKind.Utc);
         var gone = Defaults.RiderGone;
         RiderStatus Heard(bool onDuty, int branch, TimeSpan ago) => new() { UserId = "r", Name = "Ali", OnDuty = onDuty, BranchId = branch, LastSeenAt = now - ago };
 
-        Assert.AreEqual(RiderPresence.Online, RiderPresenceRule.Of(Heard(true, Branch, TimeSpan.FromMinutes(2)), Branch, now, gone));
-        Assert.AreEqual(RiderPresence.Quiet, RiderPresenceRule.Of(Heard(true, Branch, gone + TimeSpan.FromMinutes(1)), Branch, now, gone));
-        Assert.AreEqual(RiderPresence.Off, RiderPresenceRule.Of(Heard(false, Branch, TimeSpan.FromMinutes(1)), Branch, now, gone));
-        Assert.AreEqual(RiderPresence.Off, RiderPresenceRule.Of(Heard(true, OtherBranch, TimeSpan.FromMinutes(1)), Branch, now, gone), "on duty elsewhere is off here");
-        Assert.AreEqual(RiderPresence.Off, RiderPresenceRule.Of(null, Branch, now, gone), "never opened the app");
+        Assert.AreEqual(RiderPresence.Online, RiderPresenceRule.Of(Heard(true, Branch, TimeSpan.FromMinutes(2)), now, gone));
+        Assert.AreEqual(RiderPresence.Quiet, RiderPresenceRule.Of(Heard(true, Branch, gone + TimeSpan.FromMinutes(1)), now, gone));
+        Assert.AreEqual(RiderPresence.Off, RiderPresenceRule.Of(Heard(false, Branch, TimeSpan.FromMinutes(1)), now, gone));
+        Assert.AreEqual(RiderPresence.Online, RiderPresenceRule.Of(Heard(true, OtherBranch, TimeSpan.FromMinutes(1)), now, gone),
+            "a rider given two branches who went on duty from the other is on duty here too");
+        Assert.AreEqual(RiderPresence.Off, RiderPresenceRule.Of(null, now, gone), "never opened the app");
     }
 
     [TestMethod]

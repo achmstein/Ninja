@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
-import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
+import '../../../core/widgets/rider_sheet.dart';
 import '../../../l10n/app_localizations.dart';
 
 /// Why a delivery could not be handed over, as the server keeps it: a stable
@@ -24,52 +23,27 @@ enum FailReason {
       };
 }
 
-/// The rider could not hand it over: one big button per reason, and a way
-/// out. Resolves to the reason, or null when the rider thought better of it.
+/// The rider could not hand it over: one big button per reason, from the
+/// foot of the screen, and a way out. Resolves to the reason, or null when
+/// the rider thought better of it.
 Future<FailReason?> showFailReasonDialog(BuildContext context) {
   final l10n = AppLocalizations.of(context)!;
-  return showFDialog<FailReason>(
-    context: context,
-    useRootNavigator: true,
-    builder: (context, style, animation) => FDialog.raw(
-      style: style,
-      animation: animation,
-      constraints: const BoxConstraints(maxWidth: 448),
-      builder: (context, _) {
-        final theme = context.theme;
-        return Padding(
-          padding: const EdgeInsets.all(24),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Text(l10n.couldNotDeliverTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
-              const SizedBox(height: 6),
-              Text(l10n.couldNotDeliverHint, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-              const SizedBox(height: 16),
-              for (final reason in FailReason.values) ...[
-                SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    onPress: () => Navigator.of(context, rootNavigator: true).pop(reason),
-                    child: Text(reason.label(l10n), style: theme.typography.base.forButton),
-                  ),
-                ),
-                const SizedBox(height: 8),
-              ],
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  variant: FButtonVariant.ghost,
-                  onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
-                ),
-              ),
-            ],
-          ),
-        );
-      },
-    ),
+  return showRiderSheet<FailReason>(
+    context,
+    title: l10n.couldNotDeliverTitle,
+    description: l10n.couldNotDeliverHint,
+    actions: (context) => [
+      for (final reason in FailReason.values)
+        SheetButton(
+          label: reason.label(l10n),
+          variant: FButtonVariant.outline,
+          onPress: () => Navigator.of(context, rootNavigator: true).pop(reason),
+        ),
+      SheetButton(
+        label: l10n.cancel,
+        variant: FButtonVariant.ghost,
+        onPress: () => Navigator.of(context, rootNavigator: true).pop(),
+      ),
+    ],
   );
 }

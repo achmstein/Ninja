@@ -54,64 +54,6 @@ class StatusChip extends StatelessWidget {
   }
 }
 
-/// A figure of the day under its label, on a card: the cash with the rider, how many delivered
-class StatTile extends StatelessWidget {
-  final IconData icon;
-  final String label;
-  final String value;
-
-  /// Tints the tile, for a figure the rider must act on (cash still to hand in)
-  final Color? accent;
-  final VoidCallback? onPress;
-
-  const StatTile({super.key, required this.icon, required this.label, required this.value, this.accent, this.onPress});
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final muted = theme.colors.mutedForeground;
-    final tile = Container(
-      padding: const EdgeInsets.fromLTRB(14, 12, 14, 14),
-      decoration: BoxDecoration(
-        color: accent?.withValues(alpha: 0.08) ?? theme.colors.card,
-        borderRadius: BorderRadius.circular(Sizes.radiusCard),
-        border: Border.all(color: accent?.withValues(alpha: 0.35) ?? theme.colors.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(icon, size: Sizes.iconSmall, color: accent ?? muted),
-              const SizedBox(width: 6),
-              Expanded(
-                child: Text(
-                  label,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.typography.xs.copyWith(fontWeight: FontWeight.w500, color: muted),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 6),
-          // A long amount shrinks rather than wraps or clips
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            alignment: AlignmentDirectional.centerStart,
-            child: Text(
-              value,
-              maxLines: 1,
-              style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular, height: 1.2),
-            ),
-          ),
-        ],
-      ),
-    );
-    return onPress == null ? tile : FTappable(onPress: onPress, child: tile);
-  }
-}
-
 /// A one-line note over the list: offline since when, and the like
 class NoteBanner extends StatelessWidget {
   final IconData icon;

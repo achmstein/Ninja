@@ -142,6 +142,7 @@ public class DeliveryBoardQueries(
         return new DeliveryOrder
         {
             OrderNumber = o.Id,
+            BranchId = o.BranchId,
             Date = o.OrderDate,
             ConfirmedAt = o.ConfirmedAt,
             ReadyAt = o.ReadyAt,

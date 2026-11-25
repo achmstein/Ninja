@@ -1,24 +1,21 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
-import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
 import '../widgets/delivery_card.dart';
 import '../widgets/duty_card.dart';
 import '../widgets/parts.dart';
 
-/// The rider's shift at a glance: their duty switch first, the day in two
-/// figures (the cash with them, how many delivered; a tap opens the day),
-/// then what is still theirs to do, oldest first, each with its one next
-/// step. Every state scrolls, so a pull refreshes it whatever it shows.
+/// The rider's shift: their duty switch first, then what is still theirs to
+/// do, oldest first, each with its one next step. The day so far (the cash
+/// with them, what was delivered) is the Today tab's. Every state scrolls,
+/// so a pull refreshes it whatever it shows.
 class DeliveriesScreen extends ConsumerWidget {
   const DeliveriesScreen({super.key});
 
@@ -65,10 +62,8 @@ class DeliveriesScreen extends ConsumerWidget {
             if (staleSince != null) _StaleNote(since: staleSince),
             const DutyCard(),
             const SizedBox(height: 12),
-            _DayGlance(day: day, money: money),
-            const SizedBox(height: 12),
             if (day.toGo.isEmpty)
-              EmptyState(icon: FIcons.packageOpen, title: l10n.noDeliveries, body: l10n.noDeliveriesHint)
+              EmptyState(icon: FIcons.packageOpen, title: l10n.noDeliveries)
             else ...[
               SectionTitle(l10n.toGo, count: day.toGo.length),
               for (final order in day.toGo)
@@ -84,45 +79,6 @@ class DeliveriesScreen extends ConsumerWidget {
           ],
         ),
       ),
-    );
-  }
-}
-
-/// The day in two figures, each a tap from the day's list: the cash still
-/// with the rider (amber while there is some to hand in), and how many delivered
-class _DayGlance extends StatelessWidget {
-  final RiderDay day;
-  final String Function(double) money;
-
-  const _DayGlance({required this.day, required this.money});
-
-  @override
-  Widget build(BuildContext context) {
-    final l10n = AppLocalizations.of(context)!;
-    final theme = context.theme;
-    final cash = day.cashInHand;
-    final delivered = day.delivered.where((o) => o.isDelivered).length;
-    return Row(
-      children: [
-        Expanded(
-          child: StatTile(
-            icon: FIcons.wallet,
-            label: l10n.cashWithYou,
-            value: money(cash),
-            accent: cash > 0 ? AppColors.amber(theme.colors.brightness) : null,
-            onPress: () => context.go('/today'),
-          ),
-        ),
-        const SizedBox(width: 12),
-        Expanded(
-          child: StatTile(
-            icon: FIcons.circleCheck,
-            label: l10n.deliveredToday,
-            value: '$delivered',
-            onPress: () => context.go('/today'),
-          ),
-        ),
-      ],
     );
   }
 }

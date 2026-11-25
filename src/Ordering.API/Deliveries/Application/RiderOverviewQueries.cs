@@ -20,8 +20,14 @@ public enum RiderPresence
 /// <summary>The rider's presence from their app's last word: one rule for the admin and the tests.</summary>
 public static class RiderPresenceRule
 {
-    public static RiderPresence Of(RiderStatus? status, int branchId, DateTime now, TimeSpan gone) =>
-        status is not { OnDuty: true } || status.BranchId != branchId ? RiderPresence.Off
+    /// <summary>
+    /// Where the rider stands at any branch they were given: on duty is on duty at
+    /// all of them, whichever branch their phone last said it from (a rider shared
+    /// by two branches takes the next bag from either). Who is listed at a branch
+    /// at all is decided before this, from the branches on their account.
+    /// </summary>
+    public static RiderPresence Of(RiderStatus? status, DateTime now, TimeSpan gone) =>
+        status is not { OnDuty: true } ? RiderPresence.Off
         : status.LastSeenAt >= now - gone ? RiderPresence.Online
         : RiderPresence.Quiet;
 
@@ -124,7 +130,7 @@ public class RiderOverviewQueries(OrderingContext context, IOptions<DeliveryOpti
             {
                 statuses.TryGetValue(r.UserId, out var status);
                 var mine = byRider[r.UserId].ToList();
-                var presence = RiderPresenceRule.Of(status, branchId, now, options.Value.RiderGone);
+                var presence = RiderPresenceRule.Of(status, now, options.Value.RiderGone);
                 return new RiderOverview
                 {
                     UserId = r.UserId,

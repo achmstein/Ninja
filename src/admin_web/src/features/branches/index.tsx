@@ -431,9 +431,12 @@ function BranchRow({
           >
             {localized(branch.name)}
           </span>
-          <StatusChip tone={branch.isActive ? 'success' : 'muted'}>
-            {branch.isActive ? t('active') : t('inactive')}
-          </StatusChip>
+          {/* Only what needs noticing: a branch switched off, or not taking QR orders. An open one says nothing */}
+          {!branch.isActive ? (
+            <StatusChip tone='muted'>{t('inactive')}</StatusChip>
+          ) : !branch.isOrderingEnabled ? (
+            <StatusChip tone='warning'>{t('branchOrdersPaused')}</StatusChip>
+          ) : null}
         </div>
         {where && (
           <div className='text-muted-foreground mt-0.5 truncate text-xs'>
@@ -442,11 +445,9 @@ function BranchRow({
         )}
         {branch.isActive && (
           <div className='text-muted-foreground mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs'>
-            <Fact icon={QrCode} muted={!branch.isOrderingEnabled}>
-              {branch.isOrderingEnabled
-                ? t('branchTakingOrders')
-                : t('branchOrdersPaused')}
-            </Fact>
+            {branch.isOrderingEnabled && (
+              <Fact icon={QrCode}>{t('branchTakingOrders')}</Fact>
+            )}
             {features.reservations && branch.isReservationsEnabled && (
               <Fact icon={CalendarCheck}>{t('reservationsEnabled')}</Fact>
             )}

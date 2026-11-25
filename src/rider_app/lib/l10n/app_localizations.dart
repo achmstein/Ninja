@@ -110,12 +110,6 @@ abstract class AppLocalizations {
   /// **'Powered by'**
   String get poweredBy;
 
-  /// No description provided for @branches.
-  ///
-  /// In en, this message translates to:
-  /// **'Branches'**
-  String get branches;
-
   /// No description provided for @signOut.
   ///
   /// In en, this message translates to:
@@ -434,12 +428,6 @@ abstract class AppLocalizations {
   /// **'On duty'**
   String get onDuty;
 
-  /// No description provided for @offDuty.
-  ///
-  /// In en, this message translates to:
-  /// **'Off duty'**
-  String get offDuty;
-
   /// No description provided for @goOnDuty.
   ///
   /// In en, this message translates to:
@@ -458,29 +446,11 @@ abstract class AppLocalizations {
   /// **'Go off duty?'**
   String get goOffDutyConfirm;
 
-  /// No description provided for @goOffDutyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'The till won\'t give you new deliveries until you\'re back on duty.'**
-  String get goOffDutyHint;
-
   /// No description provided for @stayOnDuty.
   ///
   /// In en, this message translates to:
   /// **'Stay on duty'**
   String get stayOnDuty;
-
-  /// No description provided for @onDutyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'While you are on duty the till can give you deliveries.'**
-  String get onDutyHint;
-
-  /// No description provided for @offDutyHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Go on duty so the till can give you deliveries.'**
-  String get offDutyHint;
 
   /// No description provided for @toGo.
   ///
@@ -535,12 +505,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No deliveries for you right now'**
   String get noDeliveries;
-
-  /// No description provided for @noDeliveriesHint.
-  ///
-  /// In en, this message translates to:
-  /// **'When the till gives you one, your phone rings.'**
-  String get noDeliveriesHint;
 
   /// No description provided for @orderNumber.
   ///
@@ -731,7 +695,7 @@ abstract class AppLocalizations {
   /// Under an address the till took over the phone without a shared location
   ///
   /// In en, this message translates to:
-  /// **'No pin: Maps looks for the address. Call if you can\'t find the door.'**
+  /// **'No map pin'**
   String get noPin;
 
   /// No description provided for @call.
@@ -800,12 +764,6 @@ abstract class AppLocalizations {
   /// **'Ready to go'**
   String get readyToGo;
 
-  /// No description provided for @cashInHandHint.
-  ///
-  /// In en, this message translates to:
-  /// **'Hand it in at the till; the cashier takes it in.'**
-  String get cashInHandHint;
-
   /// No description provided for @handedIn.
   ///
   /// In en, this message translates to:
@@ -857,7 +815,7 @@ abstract class AppLocalizations {
   /// No description provided for @notificationsOn.
   ///
   /// In en, this message translates to:
-  /// **'On: a new delivery rings the phone'**
+  /// **'On'**
   String get notificationsOn;
 
   /// No description provided for @notificationsOff.

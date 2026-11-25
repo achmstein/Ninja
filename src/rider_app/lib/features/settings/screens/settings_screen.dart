@@ -15,9 +15,9 @@ import '../../auth/pin_widgets.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
 
-/// The rider's settings: the app's language and look, whether the phone
-/// rings for new deliveries, the business it is connected to, the app's
-/// version, and signing out.
+/// The rider's settings, laid out as the till's are: the business this phone
+/// is connected to first, the app's language and look, whether the phone
+/// rings for new deliveries, the PIN, the app's version last; then signing out.
 class SettingsScreen extends ConsumerWidget {
   const SettingsScreen({super.key});
 
@@ -47,6 +47,7 @@ class SettingsScreen extends ConsumerWidget {
           SettingsSection(
             title: l10n.thisDevice,
             children: [
+              if (!AppConfig.isPinned && AppConfig.connection != null) const ConnectionRow(),
               SettingsRow(
                 title: l10n.language,
                 subtitle: locale.languageCode == 'ar' ? 'العربية' : 'English',
@@ -73,7 +74,6 @@ class SettingsScreen extends ConsumerWidget {
                 onPress: () => showChoosePin(context),
                 trailing: Icon(FIcons.keyRound, size: Sizes.icon, color: muted),
               ),
-              if (!AppConfig.isPinned && AppConfig.connection != null) const ConnectionRow(),
               const _UpdateRow(),
             ],
           ),
@@ -116,21 +116,24 @@ class _UpdateRow extends ConsumerWidget {
     final canInstall = update.phase == UpdatePhase.ready || update.phase == UpdatePhase.needsPermission;
     final busy = update.phase == UpdatePhase.checking || update.phase == UpdatePhase.downloading || update.phase == UpdatePhase.installing;
 
-    return SettingsRow(
+    // The till's row: on a phone the button goes under the version, not squeezed beside it
+    return SettingsActionRow(
       title: l10n.appVersion,
       hint: l10n.appVersionHint,
       subtitle: [if (installed != null) l10n.appVersionInstalled(installed, update.installedBuild ?? 0), status].join(' · '),
       subtitleColor: update.phase == UpdatePhase.failed ? theme.colors.destructive : null,
-      trailing: SizedBox(
-        height: Sizes.control,
-        child: FButton(
-          variant: canInstall ? null : FButtonVariant.outline,
-          mainAxisSize: MainAxisSize.min,
-          onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
-          prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
-          child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+      actions: [
+        SizedBox(
+          height: Sizes.control,
+          child: FButton(
+            variant: canInstall ? null : FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
+            prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
+            child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

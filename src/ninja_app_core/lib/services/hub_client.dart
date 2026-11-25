@@ -57,9 +57,13 @@ class HubClient {
           .withUrl(
             hubUrl,
             options: HttpConnectionOptions(
+              // Asked again on every (re)connection. A token that has run out
+              // must be refreshed first: the hub would not refuse it but let the
+              // app in as a guest, in no account's group, and nothing sent to
+              // the account (a delivery given to a rider) would arrive
               accessTokenFactory: () async {
                 final authService = _ref.read(authServiceProvider.notifier);
-                return await authService.getAccessToken() ?? '';
+                return await authService.getFreshAccessToken() ?? '';
               },
             ),
           )

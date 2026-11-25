@@ -57,6 +57,9 @@ class DeliveryLine {
 class DeliveryOrder {
   /// The order's id, which is also the number the till and the customer see
   final int orderNumber;
+
+  /// The branch it leaves from: where the bag is collected (null from a server that does not say)
+  final int? branchId;
   final DateTime? confirmedAt;
 
   /// The kitchen finished it: it can leave
@@ -96,6 +99,7 @@ class DeliveryOrder {
 
   const DeliveryOrder({
     required this.orderNumber,
+    this.branchId,
     required this.total,
     required this.address,
     required this.phone,
@@ -125,6 +129,7 @@ class DeliveryOrder {
     final zoneName = zone is Map ? LocalizedText.fromJson(zone.cast<String, dynamic>()) : null;
     return DeliveryOrder(
       orderNumber: _num(json['orderNumber']).round(),
+      branchId: _numOrNull(json['branchId'])?.round(),
       confirmedAt: _time(json['confirmedAt']),
       readyAt: _time(json['readyAt']),
       customerName: _text(json['customerName']),

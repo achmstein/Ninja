@@ -90,3 +90,64 @@ class SettingsRow extends StatelessWidget {
     return onPress == null ? row : FTappable(onPress: onPress, child: row);
   }
 }
+
+/// A setting whose control is a labelled button or two (check for updates,
+/// change business). A tablet has them at the row's end, beside what they
+/// are for. A phone's row is not wide enough for both, so there the buttons
+/// go under the words, still at the end.
+class SettingsActionRow extends StatelessWidget {
+  final String title;
+  final String? hint;
+  final String? subtitle;
+  final Color? subtitleColor;
+  final List<Widget> actions;
+
+  /// The buttons under the words; by default when the screen is narrower than [compactWidth]
+  final bool? stacked;
+
+  static const double compactWidth = 640;
+
+  const SettingsActionRow({
+    super.key,
+    required this.title,
+    this.hint,
+    this.subtitle,
+    this.subtitleColor,
+    required this.actions,
+    this.stacked,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final stack = stacked ?? MediaQuery.sizeOf(context).width < compactWidth;
+    if (!stack) {
+      return SettingsRow(
+        title: title,
+        hint: hint,
+        subtitle: subtitle,
+        subtitleColor: subtitleColor,
+        trailing: actions.length == 1
+            ? actions.single
+            : Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  for (final (index, action) in actions.indexed) ...[
+                    if (index > 0) const SizedBox(width: 8),
+                    action,
+                  ],
+                ],
+              ),
+      );
+    }
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SettingsRow(title: title, hint: hint, subtitle: subtitle, subtitleColor: subtitleColor),
+        Padding(
+          padding: const EdgeInsetsDirectional.fromSTEB(16, 0, 16, 12),
+          child: Wrap(alignment: WrapAlignment.end, spacing: 8, runSpacing: 8, children: actions),
+        ),
+      ],
+    );
+  }
+}

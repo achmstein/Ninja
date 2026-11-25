@@ -342,6 +342,26 @@ public class DeliveryHardeningTest
     }
 
     [TestMethod]
+    public async Task A_rider_given_two_branches_is_on_duty_at_both_whichever_their_phone_said_it_from()
+    {
+        var store = new Store();
+        await using var context = store.NewContext();
+        await AddRiderAsync(context, "rider-1", "Ali", Branch, OtherBranch);
+        await AddRiderAsync(context, "rider-2", "Omar", OtherBranch);
+        // Ali went on duty with the other branch picked on his phone
+        context.RiderStatuses.Add(new RiderStatus { UserId = "rider-1", Name = "Ali", BranchId = OtherBranch, OnDuty = true, LastSeenAt = DateTime.UtcNow });
+        await context.SaveChangesAsync();
+
+        var here = await new RiderDirectory(context, Options).ListAsync(Branch);
+        var there = await new RiderDirectory(context, Options).ListAsync(OtherBranch);
+
+        CollectionAssert.AreEqual(new[] { "rider-1" }, here.Select(r => r.UserId).ToArray(), "a rider not given this branch is not listed");
+        Assert.IsTrue(here[0].OnDuty, "on duty at this branch too");
+        Assert.IsTrue(there.Single(r => r.UserId == "rider-1").OnDuty);
+        Assert.IsFalse(there.Single(r => r.UserId == "rider-2").OnDuty);
+    }
+
+    [TestMethod]
     public async Task An_account_that_stops_being_a_rider_goes_and_a_late_event_does_not_bring_it_back()
     {
         var store = new Store();

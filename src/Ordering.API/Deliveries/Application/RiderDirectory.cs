@@ -87,8 +87,9 @@ public class RiderDirectory(OrderingContext context, IOptions<DeliveryOptions> o
             {
                 UserId = r.UserId,
                 Name = r.Name,
-                // On duty here, and heard from lately: on duty at another branch is not on duty here
-                OnDuty = status is { OnDuty: true } && status.BranchId == branchId && status.LastSeenAt >= heardSince,
+                // On duty and heard from lately. On duty is on duty at every branch the rider was
+                // given (only those list them), whichever one their phone last said it from
+                OnDuty = status is { OnDuty: true } && status.LastSeenAt >= heardSince,
                 LastSeenAt = status?.LastSeenAt,
                 SignedIn = status is not null,
                 Out = outCounts.GetValueOrDefault(r.UserId),

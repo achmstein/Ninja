@@ -15,9 +15,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get poweredBy => 'Powered by';
 
   @override
-  String get branches => 'Branches';
-
-  @override
   String get signOut => 'Sign out';
 
   @override
@@ -191,9 +188,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get onDuty => 'On duty';
 
   @override
-  String get offDuty => 'Off duty';
-
-  @override
   String get goOnDuty => 'Go on duty';
 
   @override
@@ -203,18 +197,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get goOffDutyConfirm => 'Go off duty?';
 
   @override
-  String get goOffDutyHint =>
-      'The till won\'t give you new deliveries until you\'re back on duty.';
-
-  @override
   String get stayOnDuty => 'Stay on duty';
-
-  @override
-  String get onDutyHint =>
-      'While you are on duty the till can give you deliveries.';
-
-  @override
-  String get offDutyHint => 'Go on duty so the till can give you deliveries.';
 
   @override
   String get toGo => 'To deliver';
@@ -242,10 +225,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noDeliveries => 'No deliveries for you right now';
-
-  @override
-  String get noDeliveriesHint =>
-      'When the till gives you one, your phone rings.';
 
   @override
   String orderNumber(int number) {
@@ -351,8 +330,7 @@ class AppLocalizationsEn extends AppLocalizations {
       'Delivery isn\'t part of its subscription, or it\'s switched off. Ask the owner.';
 
   @override
-  String get noPin =>
-      'No pin: Maps looks for the address. Call if you can\'t find the door.';
+  String get noPin => 'No map pin';
 
   @override
   String get call => 'Call';
@@ -392,10 +370,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get readyToGo => 'Ready to go';
 
   @override
-  String get cashInHandHint =>
-      'Hand it in at the till; the cashier takes it in.';
-
-  @override
   String get handedIn => 'Handed in';
 
   @override
@@ -424,7 +398,7 @@ class AppLocalizationsEn extends AppLocalizations {
   String get notifications => 'Notifications';
 
   @override
-  String get notificationsOn => 'On: a new delivery rings the phone';
+  String get notificationsOn => 'On';
 
   @override
   String get notificationsOff =>

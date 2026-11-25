@@ -3,10 +3,12 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/launcher.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
-import 'package:ninja_app_core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/rider_sheet.dart';
 import '../../../core/widgets/rider_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_order.dart';
@@ -15,7 +17,8 @@ import 'fail_reason_dialog.dart';
 import 'parts.dart';
 
 /// One delivery still to do, read top to bottom as the rider needs it:
-/// where it stands and whose it is; where it goes (the branch's named area
+/// where it stands, the branch to collect it from (for a rider shared by
+/// branches), and whose it is; where it goes (the branch's named area
 /// when it is in one, the street, the door, the note that finds it); what is in the bag; the cash to collect; then the way
 /// there and the phone a tap away, and the one next step in a button a thumb
 /// cannot miss: on the way, then delivered. On the way, it can also not be
@@ -60,11 +63,11 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
 
     if (order.isOut) {
       // Handing it over is the step that cannot be taken back: the cash with it
-      final yes = await showConfirmDialog(
+      final yes = await showRiderConfirm(
         context,
         title: l10n.deliveredConfirm(order.customerName ?? l10n.guest, widget.money(order.total)),
-        cancelLabel: l10n.notYet,
         actionLabel: l10n.deliveredConfirmAction,
+        cancelLabel: l10n.notYet,
       );
       if (!yes || !mounted) return;
       await _run(() => notifier.markDelivered(order.orderNumber));
@@ -97,6 +100,9 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
       _ => ready ? (l10n.readyToGo, green) : (l10n.stillCooking, amber),
     };
     final area = order.zoneName?.getText(locale);
+    // A rider given one branch knows where the bag is; one shared by branches is told
+    final branches = ref.watch(branchProvider.select((s) => s.branches));
+    final pickup = branches.length > 1 ? branches.where((b) => b.id == order.branchId).firstOrNull?.name.localized(context) : null;
     final details = order.addressDetails(
       building: l10n.building,
       floor: l10n.floor,
@@ -135,6 +141,23 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                     ),
                   ],
                 ),
+                if (pickup != null && pickup.isNotEmpty) ...[
+                  const SizedBox(height: 10),
+                  Row(
+                    children: [
+                      Icon(FIcons.store, size: Sizes.iconSmall, color: muted),
+                      const SizedBox(width: 6),
+                      Expanded(
+                        child: Text(
+                          pickup,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: theme.typography.sm.copyWith(color: muted, fontWeight: FontWeight.w600),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
                 const SizedBox(height: 12),
                 Text(
                   order.customerName == null ? l10n.guest : typed(order.customerName!),

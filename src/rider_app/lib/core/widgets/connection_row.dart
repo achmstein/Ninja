@@ -9,7 +9,7 @@ import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
-import 'package:ninja_app_core/widgets/confirm_dialog.dart';
+import 'rider_sheet.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
 
 /// Which business this phone is connected to, as a settings row, and the way out: a phone that
@@ -27,12 +27,12 @@ class ConnectionRow extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
 
     Future<void> change() async {
-      final ok = await showConfirmDialog(
+      final ok = await showRiderConfirm(
         context,
         title: l10n.changeBusiness,
         description: l10n.changeBusinessConfirm,
-        cancelLabel: l10n.cancel,
         actionLabel: l10n.changeBusiness,
+        cancelLabel: l10n.cancel,
         destructive: true,
       );
       if (!ok) return;
@@ -43,18 +43,21 @@ class ConnectionRow extends ConsumerWidget {
       await TenantConnection.clear();
     }
 
-    return SettingsRow(
+    // On a phone the button goes under the business, as the till lays it out
+    return SettingsActionRow(
       title: connection.businessName.isEmpty ? l10n.connectedTo : connection.businessName,
       subtitle: connection.host,
-      trailing: SizedBox(
-        height: Sizes.control,
-        child: FButton(
-          variant: FButtonVariant.outline,
-          mainAxisSize: MainAxisSize.min,
-          onPress: change,
-          child: Text(l10n.changeBusiness, style: theme.typography.base.forButton),
+      actions: [
+        SizedBox(
+          height: Sizes.control,
+          child: FButton(
+            variant: FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: change,
+            child: Text(l10n.changeBusiness, style: theme.typography.base.forButton),
+          ),
         ),
-      ),
+      ],
     );
   }
 }

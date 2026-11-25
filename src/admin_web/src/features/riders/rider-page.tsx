@@ -2,7 +2,9 @@ import { useEffect, useMemo, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { History, Motorbike, Pencil } from 'lucide-react'
+import { getRealmRoles } from '@/config/oidc-config'
+import { History, Motorbike, Pencil, Store } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
 import { type RiderDeliveryRow } from '@/api/ordering'
 import {
   getRiderDeliveriesOptions,
@@ -29,8 +31,11 @@ import { Main } from '@/components/layout/main'
 import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
+import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
+import { customersService } from '@/features/customers/services/customers-service'
+import { ManageBranchesDialog } from '@/features/staff/components/manage-branches-dialog'
 import {
   useBusinessDayOffset,
   useTillWindow,
@@ -132,6 +137,16 @@ export function RiderPage({ userId }: { userId: string }) {
   })
   const rider = overview.data?.find((r) => r.userId === userId)
   const [renaming, setRenaming] = useState(false)
+  // The branches the rider works for, as on the Staff page: the owner's to give
+  const auth = useAuth()
+  const isOwner = getRealmRoles(auth.user).includes('Owner')
+  const [choosingBranches, setChoosingBranches] = useState(false)
+  // Under the Staff page's key, so saving there or here refreshes both
+  const account = useQuery({
+    queryKey: ['staff', 'account', userId],
+    queryFn: () => customersService.getCustomer(userId),
+    enabled: isOwner,
+  })
 
   // Now: what is still with them, whenever it was given. A window fixed when
   // the page opens, reaching a day ahead, so a delivery given later still
@@ -304,10 +319,22 @@ export function RiderPage({ userId }: { userId: string }) {
         badge={rider && <PresenceChip status={rider.status} />}
         actions={
           rider && (
-            <Button variant='outline' onClick={() => setRenaming(true)}>
-              <Pencil />
-              {t('riderRenameAction')}
-            </Button>
+            <RowActions
+              actions={[
+                {
+                  label: t('riderRenameAction'),
+                  icon: Pencil,
+                  onSelect: () => setRenaming(true),
+                },
+                {
+                  label: t('assignedBranches'),
+                  icon: Store,
+                  hidden: !isOwner,
+                  disabled: !account.data,
+                  onSelect: () => setChoosingBranches(true),
+                },
+              ]}
+            />
           )
         }
       >
@@ -332,6 +359,12 @@ export function RiderPage({ userId }: { userId: string }) {
           name={rider.name ?? ''}
         />
       )}
+      <ManageBranchesDialog
+        user={choosingBranches ? (account.data ?? null) : null}
+        onOpenChange={(open) => {
+          if (!open) setChoosingBranches(false)
+        }}
+      />
 
       {/* What is out with them right now */}
       <Card className='mb-4'>

@@ -159,6 +159,8 @@ public record HandInCashItem(int OrderId, decimal Amount);
 public record DeliveryOrder
 {
     public int OrderNumber { get; init; }
+    /// <summary>The branch it leaves from: where a rider shared by branches collects the bag.</summary>
+    public int BranchId { get; init; }
     public DateTime Date { get; init; }
     public DateTime? ConfirmedAt { get; init; }
     /// <summary>The kitchen finished it: it can leave.</summary>

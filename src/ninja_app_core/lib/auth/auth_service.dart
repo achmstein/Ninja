@@ -272,6 +272,34 @@ class AuthService extends Notifier<AuthState> {
   /// Get current access token
   Future<String?> getAccessToken() async => state.accessToken;
 
+  /// An access token still good for [leeway]: the one held, or a refreshed
+  /// one when it has expired or is about to. For the realtime hub, which
+  /// sees the token once, when it connects, and lets guests in: an expired
+  /// token there is not refused, it is taken as nobody, and the connection
+  /// joins no account's group (the app opens with the token kept from last
+  /// time, minutes or days old, before its first refresh has come back).
+  Future<String?> getFreshAccessToken({Duration leeway = const Duration(seconds: 30)}) async {
+    final token = state.accessToken;
+    if (token == null || isFresh(token, DateTime.now(), leeway)) return token;
+    await refreshToken();
+    return state.accessToken;
+  }
+
+  /// Whether [token] is still good at [now] plus [leeway]; a token whose
+  /// expiry cannot be read is taken as spent
+  static bool isFresh(String token, DateTime now, Duration leeway) {
+    try {
+      final parts = token.split('.');
+      if (parts.length != 3) return false;
+      final claims = json.decode(utf8.decode(base64Url.decode(base64Url.normalize(parts[1]))));
+      final exp = claims is Map ? claims['exp'] : null;
+      if (exp is! num) return false;
+      return now.add(leeway).isBefore(DateTime.fromMillisecondsSinceEpoch(exp.toInt() * 1000));
+    } catch (_) {
+      return false;
+    }
+  }
+
   /// Who is signed in, by the email Keycloak knows them by; for a sign-in an app runs itself to check who came back
   String? get signedInEmail => state.email;
 

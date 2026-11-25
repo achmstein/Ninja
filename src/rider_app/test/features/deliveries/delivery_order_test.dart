@@ -39,6 +39,12 @@ void main() {
       expect(order.zoneName, isNull, reason: 'in no named area');
     });
 
+    test('reads the branch it leaves from, and does without it from a server that does not say', () {
+      expect(DeliveryOrder.fromJson({..._json(), 'branchId': 2}).branchId, 2);
+      expect(DeliveryOrder.fromJson({..._json(), 'branchId': '3'}).branchId, 3);
+      expect(DeliveryOrder.fromJson(_json()).branchId, isNull);
+    });
+
     test('reads the named area the delivery goes to', () {
       final json = _json();
       (json['delivery'] as Map<String, dynamic>)['zoneName'] = {'en': 'Maadi Degla', 'ar': 'دجلة المعادي'};
