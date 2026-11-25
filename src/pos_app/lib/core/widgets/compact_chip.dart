@@ -44,8 +44,11 @@ class CompactChip extends StatelessWidget {
           child: Semantics(
             label: label,
             child: ExcludeSemantics(
+              // Centred: the square hands the row its whole width, and a
+              // row left at the start put a small sign (the shift's dot) off-centre
               child: Row(
                 mainAxisSize: MainAxisSize.min,
+                mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   icon,
                   if (count != null) ...[

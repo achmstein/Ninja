@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
+import '../../../core/layout/breakpoints.dart';
 import '../../../core/widgets/skeleton.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
@@ -84,6 +85,15 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
     // on the sale pad
     final search = _term.text.trim().toLowerCase();
     final activeCategoryId = search.isNotEmpty ? null : (_activeCategory ?? (categories.isNotEmpty ? categories.first.id : null));
+    Widget categoryChip(CatalogCategory category) => ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
+          child: FButton(
+            variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
+            mainAxisSize: MainAxisSize.min,
+            onPress: () => setState(() => _activeCategory = category.id),
+            child: Text(category.name.localized(context), style: theme.typography.base.forButton),
+          ),
+        );
 
     return Align(
       alignment: Alignment.topCenter,
@@ -120,22 +130,27 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
               ),
               if (search.isEmpty) ...[
                 const SizedBox(height: 16),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: [
-                    for (final category in categories)
-                      ConstrainedBox(
-                        constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                        child: FButton(
-                          variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
-                          mainAxisSize: MainAxisSize.min,
-                          onPress: () => setState(() => _activeCategory = category.id),
-                          child: Text(category.name.localized(context), style: theme.typography.base.forButton),
-                        ),
-                      ),
-                  ],
-                ),
+                // A tablet wraps the categories; a phone keeps them on one
+                // line that slides sideways, as the sale pad's do: wrapped,
+                // they took three rows before the first item
+                if (context.isCompact)
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final (index, category) in categories.indexed) ...[
+                          if (index > 0) const SizedBox(width: 8),
+                          categoryChip(category),
+                        ],
+                      ],
+                    ),
+                  )
+                else
+                  Wrap(
+                    spacing: 8,
+                    runSpacing: 8,
+                    children: [for (final category in categories) categoryChip(category)],
+                  ),
               ],
               const SizedBox(height: 16),
               itemsAsync.when(

@@ -705,16 +705,41 @@ class _BillsState extends State<_Bills> {
       _Filter.counter => sorted.where((b) => b.type == TicketType.counter).toList(),
     };
     final q = _search.text.trim().toLowerCase();
+    // A phone's open search hides the filters, so it looks through every
+    // open bill: a filter left on out of sight would hide a match with no
+    // sign why. A tablet's filters stay in view beside it, and still apply
+    final searchesAll = context.isCompact && _searchOpen;
     final shown = q.isEmpty
         ? byType
-        : byType.where((b) {
+        : (searchesAll ? sorted : byType).where((b) {
             final name = (b.locationName?.localized(context) ?? b.label ?? '').toLowerCase();
             return name.contains(q) || '${b.id}'.contains(q);
           }).toList();
 
+    final compact = context.isCompact;
+    final searchField = FTextField(
+      control: FTextFieldControl.managed(controller: _search),
+      hint: l10n.searchBills,
+      autofocus: true,
+      maxLines: 1,
+      prefixBuilder: (context, style, _) => Padding(
+        padding: const EdgeInsetsDirectional.only(start: 12),
+        child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
+      ),
+      suffixBuilder: (context, style, _) => FTappable(
+        onPress: _closeSearch,
+        child: Padding(
+          padding: const EdgeInsetsDirectional.only(end: 12),
+          child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
+        ),
+      ),
+    );
+
     // The filters, and the search after them. A tablet wraps them; a phone
     // keeps them on one line that slides sideways, as pos_web's do: wrapped,
-    // they took two rows of a screen that has few to give
+    // they took two rows of a screen that has few to give. A phone's open
+    // search takes the whole line in place of the filters, as the sale pad's
+    // takes the categories' place, and closing it brings them back
     final filters = <Widget>[
               for (final f in _Filter.values)
                 if ((f == _Filter.all || counts[f]! > 0) && (f != _Filter.room || widget.rooms))
@@ -733,26 +758,7 @@ class _BillsState extends State<_Bills> {
               // the keyboard straight away, right after the filters.
               if (sorted.length > 6)
                 _searchOpen
-                    ? SizedBox(
-                        width: 220,
-                        child: FTextField(
-                          control: FTextFieldControl.managed(controller: _search),
-                          hint: l10n.searchBills,
-                          autofocus: true,
-                          maxLines: 1,
-                          prefixBuilder: (context, style, _) => Padding(
-                            padding: const EdgeInsetsDirectional.only(start: 12),
-                            child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
-                          ),
-                          suffixBuilder: (context, style, _) => FTappable(
-                            onPress: _closeSearch,
-                            child: Padding(
-                              padding: const EdgeInsetsDirectional.only(end: 12),
-                              child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
-                            ),
-                          ),
-                        ),
-                      )
+                    ? SizedBox(width: 220, child: searchField)
                     : SizedBox.square(
                         dimension: Sizes.controlSmall,
                         child: FButton.icon(
@@ -765,7 +771,9 @@ class _BillsState extends State<_Bills> {
 
     return page([
           ...above,
-          if (context.isCompact)
+          if (compact && _searchOpen && sorted.length > 6)
+            searchField
+          else if (compact)
             SingleChildScrollView(
               scrollDirection: Axis.horizontal,
               child: Row(
