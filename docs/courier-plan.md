@@ -1,27 +1,97 @@
 # Courier plan: outside couriers for a business, and a courier app Ninja sells
 
-Status: phase 1 built 2026-11-25 (manual courier), and Ninja's own courier API the same day:
-any courier company can connect its system to a business (docs/courier-api.md), instead of Ninja
-writing an adapter per company. Next: the pilot with one courier company, connected or manual; an
-adapter only for a large company that will not build to Ninja's API; the courier app last, built on
-the same API.
+## Where we are (handover, 2026-11-25)
 
-Courier API, as built:
+Released in `v2026.11.25.6` (images, Deploy Platform with the web apps, till app and kitchen app
+Android builds all done). **Waiting on the owner: the fleet upgrade to `v2026.11.25.6` from the
+control web** (one Ordering migration, `CourierTestKit`; `v2026.11.25.5` brought the other courier
+migrations and each business's `COURIERS_KEY`). Until a business is upgraded, connecting a
+courier company there fails with "can't keep a company's key yet".
+
+Built, phase by phase:
+1. **Manual courier** (phase 1, section 4): the owner lists courier companies in admin
+   (Couriers page); the till gives a delivery to one after the branch's riders, marks its steps,
+   and says it was delivered with what the courier collected. The bill settles to the company,
+   never the drawer; each company's balance is on its page; every fee is a Finance expense.
+2. **Ninja's courier API** instead of one adapter per company: any courier company connects its
+   own system to a business. docs/courier-api.md is what the company builds against.
+3. **Hardening**: a cancel is saved with the step and retried until the company answers (for a
+   day); a voided bill cancels the company's job; status calls are held to 600 a minute a company;
+   the till shows "waiting for them to send a courier", who was sent and a tracking link.
+4. **Test kit**: on a connected company's page, Send a test job (marked test, cancelled at once)
+   and the company's last fifty status calls with the answer each got (a wrong secret or a clock
+   off shows as 401).
+5. Not courier work but released with it: **a switched-off module offers nothing** in admin, the
+   tills or the kitchen app, while what it recorded still shows (`src/admin_web/src/lib/modules.ts`
+   is admin's one source; the sidebar and Go to… share `components/layout/nav-visibility.ts`).
+
+Decided by the owner: the customer is **not** given the courier's tracking link (dropped).
+
+## What is next
+
+In this order:
+1. **Pilot with one courier company** (section 5): operations, not code. Pick a company the
+   businesses already call. Start them manual (no code on their side). If they have developers,
+   give them docs/courier-api.md, connect them on one business, and use Send a test job and the
+   status-call log to get their signing and statuses right before a real delivery.
+2. **Automatic dispatch**, once a business relies on a connected company: a branch setting naming
+   the company to use first, and Ninja sending a delivery to it by itself when it is ready with no
+   rider free, or after a set number of minutes. Not built; needs the setting in Tenant's branch
+   (and its event to Ordering), a background check in Ordering, and the till showing it was sent.
+3. **The courier app** (phase 3, section 6), built on the same API, only when the pilot shows
+   businesses use couriers.
+4. An adapter for one large company that will not build to Ninja's API, only if one insists.
+
+Small things left, none blocking:
+- Admin's merge-customer dialog says "tab, points, … reservations move" whatever is switched on
+  (`features/customers/components/merge-customer-dialog.tsx`, string `lib/i18n.ts`).
+- The Flutter `TenantFeatures` (ninja_app_core) has no `payAhead` or `ai`; no Flutter screen uses
+  them yet. Before the brand loads, online payments counts as on in the web apps and off in Flutter.
+- Kitchen printing (station printers) is deliberately **not** tied to the kitchen screens module:
+  businesses without kitchen screens print.
+
+How to pick it up on another PC:
+- Code: Ordering `src/Ordering.API/Deliveries/` (`Couriers/` holds the API: `CourierConnection.cs`
+  dispatch and secrets, `CourierStatusReceiver.cs` signed statuses, `CourierCancelSender.cs` the
+  retrying cancels; `Endpoints/DeliveryApi.Couriers.cs` the routes), Sales
+  `Application/Deliveries/CourierCashier.cs` and `Apis/CouriersApi.cs`, admin
+  `features/couriers/`, tills `deliveries/courier-picker` and the delivery dialogs.
+- Tests: `tests/Ordering.FunctionalTests/Delivery/CourierApiScenarios.cs` drives a fake courier
+  company (`FakeCourierSystem`); `tests/Sales.FunctionalTests/CourierScenarios.cs` the money;
+  `tests/Ordering.UnitTests/Delivery/CourierTest.cs` the rules. Functional suites are built in
+  place and run as `tests/<Suite>/bin/Debug/net10.0/<Suite>.exe`.
+- Releasing: tag `vYYYY.MM.DD.N` on a commit whose validation passed (the tag builds the images),
+  then `gh workflow run deploy-platform.yml -f image_tag=<tag> -f environment=platform -f web=true`,
+  then `gh workflow run mobile-deploy.yml -f app=<pos_app|kds_app|rider_app> -f platform=android`
+  for the apps that changed; the owner runs the fleet upgrade from the control web.
+
+## Courier API, as built
+
 - **Connecting** (admin, a company's Connection section): the address of its system and the key it
   gave the business (sealed with Ordering's own key, `COURIERS_KEY`, which the control plane
   derives from the stack's payments key), and a signing secret Ninja makes, shown once.
 - **Out:** giving a delivery to a connected company sends `POST {address}/jobs` from the till's
-  own request; not taken, nothing is given (`courier.unreachable`, 409). Taking it back, or giving
-  it to someone else, sends `POST {address}/jobs/{jobId}/cancel` after the save, best effort.
+  own request; not taken, nothing is given (`courier.unreachable`, 409). Taking it back, giving
+  it to someone else, or voiding its bill queues `POST {address}/jobs/{jobId}/cancel` with the
+  step (`couriercancels`), sent by `CourierCancelSender` until the company answers, for a day.
+  The courier HTTP client has no shared retries: the till hears at once when a job is not taken.
 - **In:** `POST /api/orders/couriers/{id}/status`, signed (HMAC-SHA256 of timestamp and body,
   five minutes), the job checked against the order, and a per-job sequence so a status sent again
   or overtaken changes nothing. Each status takes the step the till takes for a manual courier, so
   Sales and Finance see a connected courier exactly as a manual one.
-- **Tills:** a connected company is given the delivery with one tap; the till asks nothing.
+- **Tills:** a connected company is given the delivery with one tap; the till asks nothing. The
+  board says it is waiting for the company to send a courier until it names one; the delivery
+  shows who, their phone, and the company's tracking link.
+- **Test kit:** `POST /api/orders/couriers/{id}/test-job` (a job with `"test": true`, then its
+  cancel; the job id kept as `TestJobId`, so a status for it is answered and moves no order) and
+  `GET /api/orders/couriers/{id}/calls` (`courierstatuscalls`, kept two weeks).
+- **Limits:** status calls are held to 600 a minute a company (429); a voided bill's order answers
+  410 to any later status.
 - Ordering now keeps each branch's name, address and phone (from Tenant's branch event) for the
   job's pickup.
 
-As built (differences from section 4 below):
+## Phase 1, as built (differences from section 4 below)
+
 - **Courier companies** are kept in Ordering (`couriercompanies`, business-wide, never deleted,
   switched off instead): `GET/POST /api/orders/couriers`, `PUT /api/orders/couriers/{id}`. The till
   lists those switched on after the branch's riders; admin manages them on its Couriers page.
