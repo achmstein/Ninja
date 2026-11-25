@@ -16,6 +16,11 @@ class IdentityUser {
   /// password, a "Send app link" away from being theirs
   final bool addedAtCounter;
 
+  /// False for an account the owner switched off: the till still shows the
+  /// person, greyed, so the cashier knows why they cannot be picked. (A
+  /// duplicate merged into another never comes back from the search.)
+  final bool enabled;
+
   const IdentityUser({
     required this.id,
     this.username,
@@ -24,6 +29,7 @@ class IdentityUser {
     this.lastName,
     this.phoneNumber,
     this.addedAtCounter = false,
+    this.enabled = true,
   });
 
   String get displayName {
@@ -43,6 +49,7 @@ class IdentityUser {
         lastName: json['lastName'] as String?,
         phoneNumber: json['phoneNumber'] as String?,
         addedAtCounter: json['addedAtCounter'] as bool? ?? false,
+        enabled: json['enabled'] as bool? ?? true,
       );
 }
 
@@ -57,7 +64,8 @@ class CustomerSearchService {
   Future<List<IdentityUser>> search(String term, {int max = 20}) async {
     final response = await _apiClient.get<List<dynamic>>(
       'users',
-      queryParameters: {'search': term, 'excludeRole': 'Admin,Owner,Cashier', 'max': max},
+      // A duplicate merged into another customer is not a person to show
+      queryParameters: {'search': term, 'excludeRole': 'Admin,Owner,Cashier', 'merged': false, 'max': max},
     );
     return (response.data ?? []).map((e) => IdentityUser.fromJson(e as Map<String, dynamic>)).toList();
   }

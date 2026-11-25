@@ -2602,4 +2602,11 @@ class AppLocalizationsAr extends AppLocalizations {
   String pinDigitsTyped(int count) {
     return 'كُتب $count أرقام';
   }
+
+  @override
+  String get customerDisabled => 'الحساب موقوف · لا يمكن إضافته';
+
+  @override
+  String get customerDisabledNumber =>
+      'هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء.';
 }

@@ -19,6 +19,8 @@ export type IdentityCustomer = {
   phoneNumber?: string | null
   /** Added at the till and not yet claimed: a "Send app link" away from being theirs. */
   addedAtCounter?: boolean
+  /** False for an account the owner switched off: shown, greyed, not to be used */
+  enabled?: boolean
 }
 
 export type CustomerLookup = {

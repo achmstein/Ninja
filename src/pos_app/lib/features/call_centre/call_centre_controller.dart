@@ -109,7 +109,9 @@ class CallCentreController extends Notifier<CallCentreState> {
     }
     IdentityUser? customer;
     try {
-      customer = (await ref.read(counterCustomerServiceProvider).lookup(phone: phone)).match;
+      // An account the owner switched off is not attached to the order
+      final match = (await ref.read(counterCustomerServiceProvider).lookup(phone: phone)).match;
+      customer = match != null && match.enabled ? match : null;
     } catch (_) {
       // Only a convenience: the agent types the name
     }

@@ -2590,4 +2590,11 @@ class AppLocalizationsEn extends AppLocalizations {
   String pinDigitsTyped(int count) {
     return '$count digits typed';
   }
+
+  @override
+  String get customerDisabled => 'Account switched off · can\'t be added';
+
+  @override
+  String get customerDisabledNumber =>
+      'This number belongs to an account the owner switched off. The owner can switch it back on from Customers.';
 }

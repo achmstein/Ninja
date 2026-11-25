@@ -149,13 +149,19 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
               <button
                 key={customer.id}
                 type='button'
+                // Switched off by the owner: shown, greyed, not to be used
+                disabled={customer.enabled === false}
                 onClick={() => onPick(customer)}
-                className='hover:bg-accent flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 text-start'
+                className='hover:bg-accent flex min-h-12 items-center gap-3 rounded-lg border px-3 py-2 text-start disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:bg-transparent'
               >
                 <User className='text-muted-foreground size-4 shrink-0' />
                 <span className='min-w-0 flex-1'>
                   <span className='block truncate font-medium'>{customerName(customer)}</span>
-                  {customer.phoneNumber && (
+                  {customer.enabled === false ? (
+                    <span className='text-muted-foreground block truncate text-sm'>
+                      {t('customerDisabled')}
+                    </span>
+                  ) : customer.phoneNumber && (
                     <span className='text-muted-foreground block truncate text-sm' dir='ltr'>
                       <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
                     </span>
@@ -220,9 +226,14 @@ function ExistingCustomer({ customer, onUse }: { customer: IdentityCustomer; onU
         </div>
         {customer.addedAtCounter && <Badge variant='secondary'>{t('addedAtCounter')}</Badge>}
       </div>
-      <Button type='button' className='h-11' onClick={onUse}>
-        {t('useThisCustomer')}
-      </Button>
+      {/* The number is theirs, but the owner switched the account off: said, and nothing to use */}
+      {customer.enabled === false ? (
+        <p className='text-muted-foreground text-sm'>{t('customerDisabledNumber')}</p>
+      ) : (
+        <Button type='button' className='h-11' onClick={onUse}>
+          {t('useThisCustomer')}
+        </Button>
+      )}
     </div>
   )
 }

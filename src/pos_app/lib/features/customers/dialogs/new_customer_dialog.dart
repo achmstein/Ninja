@@ -201,15 +201,19 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
             const SizedBox(height: 4),
             for (final user in similar)
               FTappable(
-                onPress: () => _use(user),
-                builder: (context, states, child) => Container(
-                  constraints: const BoxConstraints(minHeight: Sizes.control),
-                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                  decoration: BoxDecoration(
-                    color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
-                    borderRadius: BorderRadius.circular(Sizes.radius),
+                // Switched off by the owner: shown, greyed, not to be used
+                onPress: user.enabled ? () => _use(user) : null,
+                builder: (context, states, child) => Opacity(
+                  opacity: user.enabled ? 1 : 0.6,
+                  child: Container(
+                    constraints: const BoxConstraints(minHeight: Sizes.control),
+                    padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+                      borderRadius: BorderRadius.circular(Sizes.radius),
+                    ),
+                    child: child,
                   ),
-                  child: child,
                 ),
                 child: Row(
                   children: [
@@ -221,7 +225,9 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
                         children: [
                           Text(user.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
                               style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                          if (user.contact case final contact?)
+                          if (!user.enabled)
+                            Text(l10n.customerDisabled, style: muted)
+                          else if (user.contact case final contact?)
                             Directionality(textDirection: TextDirection.ltr, child: Text(contact, style: muted)),
                         ],
                       ),
@@ -318,13 +324,18 @@ class _ExistingCard extends ConsumerWidget {
             ],
           ),
           const SizedBox(height: 10),
-          SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              onPress: onUse,
-              child: Text(l10n.useThisCustomer, style: theme.typography.base.forButton),
+          // The number is theirs, but the owner switched the account off:
+          // said, and nothing to use (nor a second account to make for it)
+          if (!user.enabled)
+            Text(l10n.customerDisabledNumber, style: muted)
+          else
+            SizedBox(
+              height: Sizes.control,
+              child: FButton(
+                onPress: onUse,
+                child: Text(l10n.useThisCustomer, style: theme.typography.base.forButton),
+              ),
             ),
-          ),
         ],
       ),
     );

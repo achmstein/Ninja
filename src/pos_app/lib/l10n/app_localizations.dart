@@ -4501,6 +4501,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'{count} digits typed'**
   String pinDigitsTyped(int count);
+
+  /// No description provided for @customerDisabled.
+  ///
+  /// In en, this message translates to:
+  /// **'Account switched off · can\'t be added'**
+  String get customerDisabled;
+
+  /// No description provided for @customerDisabledNumber.
+  ///
+  /// In en, this message translates to:
+  /// **'This number belongs to an account the owner switched off. The owner can switch it back on from Customers.'**
+  String get customerDisabledNumber;
 }
 
 class _AppLocalizationsDelegate

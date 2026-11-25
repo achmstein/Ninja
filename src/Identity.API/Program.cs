@@ -176,23 +176,26 @@ app.MapPost("/api/identity/register-admin", async (RegisterAdminRequest request,
 
 // List users endpoint (admin only)
 // Supports filtering: role=Admin (only admins), excludeRole=Admin (exclude admins, i.e. customers only)
-app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, int? max, string? search, string? role, string? excludeRole, bool? enabled, CancellationToken ct) =>
+app.MapGet("/api/identity/users", async (UserDirectory directory, int? first, int? max, string? search, string? role, string? excludeRole, bool? enabled, bool? merged, CancellationToken ct) =>
 {
     // Either filter takes one role or a comma-separated list; enabled=true
     // leaves out the accounts switched off (a merged-away duplicate, a
-    // banned one), enabled=false lists only those
+    // banned one), enabled=false lists only those; merged=false leaves out
+    // only the merged-away duplicates (the till: a switched-off customer
+    // shows there, greyed, but a duplicate is not a person to show)
     var include = SplitRoles(role);
     var exclude = SplitRoles(excludeRole);
+    bool Wanted(DirectoryUser u) => (enabled is null || u.Enabled == enabled) && (merged is null || u.IsMerged == merged);
 
     var snapshot = await directory.GetAsync(ct);
-    var matches = snapshot.Search(search, include, exclude).Where(u => enabled is null || u.Enabled == enabled).ToList();
+    var matches = snapshot.Search(search, include, exclude).Where(Wanted).ToList();
 
     // Nothing found and the index is not fresh: the person may have signed up
     // on Keycloak's own page a minute ago. Rebuild once and look again.
     if (matches.Count == 0 && !string.IsNullOrWhiteSpace(search))
     {
         snapshot = await directory.RefreshIfStaleAsync(ct);
-        matches = snapshot.Search(search, include, exclude).Where(u => enabled is null || u.Enabled == enabled).ToList();
+        matches = snapshot.Search(search, include, exclude).Where(Wanted).ToList();
     }
 
     var result = matches
@@ -1090,7 +1093,9 @@ record UserDto(
     List<int> Branches,
     bool AddedAtCounter = false,
     // Given every branch (a call centre's account): Branches is then empty
-    bool AllBranches = false
+    bool AllBranches = false,
+    // A merged-away duplicate: the account it went into
+    string? MergedInto = null
 )
 {
     public static UserDto From(DirectoryUser user) => new(
@@ -1105,7 +1110,8 @@ record UserDto(
         user.PhoneNumber,
         user.Branches.ToList(),
         user.AddedAtCounter,
-        user.AllBranches);
+        user.AllBranches,
+        user.IsMerged ? user.MergedInto : null);
 }
 
 // Keycloak user model for deserialization

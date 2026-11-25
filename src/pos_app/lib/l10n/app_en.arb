@@ -1179,5 +1179,7 @@
   "pinSaved": "PIN saved",
   "pinNotSaved": "The PIN wasn't saved. Try again.",
   "pinDigitsTyped": "{count} digits typed",
-  "@pinDigitsTyped": { "placeholders": { "count": { "type": "int" } } }
+  "@pinDigitsTyped": { "placeholders": { "count": { "type": "int" } } },
+  "customerDisabled": "Account switched off · can't be added",
+  "customerDisabledNumber": "This number belongs to an account the owner switched off. The owner can switch it back on from Customers."
 }

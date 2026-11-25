@@ -43,6 +43,8 @@ type IdentityUser = {
   lastName?: string
   phoneNumber?: string
   addedAtCounter?: boolean
+  /** False for an account the owner switched off: shown, greyed, not to be picked */
+  enabled?: boolean
 }
 
 function displayName(user: IdentityUser): string {
@@ -129,7 +131,8 @@ export function CustomerDialog({
     queryFn: async () => {
       const response = await apiClient.get<IdentityUser[]>(
         '/api/identity/users',
-        { params: { search, excludeRole: 'Admin,Owner,Cashier', max: 20 } },
+        // A duplicate merged into another customer is not a person to show
+        { params: { search, excludeRole: 'Admin,Owner,Cashier', merged: false, max: 20 } },
       )
       return response.data
     },
@@ -374,11 +377,12 @@ export function CustomerDialog({
             <div className='flex flex-col'>
               {users.map((user) => {
                 const onBill = busy?.get(user.id)
+                const off = user.enabled === false
                 return (
                   <div key={user.id} className='flex items-center gap-1'>
                     <button
                       type='button'
-                      disabled={!!onBill}
+                      disabled={!!onBill || off}
                       onClick={() => pick(user)}
                       className={cn(
                         'hover:bg-accent flex min-h-14 min-w-0 flex-1 items-center gap-3 rounded-lg px-3 py-2 text-start',
@@ -395,7 +399,11 @@ export function CustomerDialog({
                             ranges={matchRanges(displayName(user), term)}
                           />
                         </span>
-                        {onBill ? (
+                        {off ? (
+                          <span className='text-muted-foreground block truncate text-sm'>
+                            {t('customerDisabled')}
+                          </span>
+                        ) : onBill ? (
                           <span className='text-muted-foreground block truncate text-sm'>
                             {t('alreadyOnBill', { where: onBill })}
                           </span>

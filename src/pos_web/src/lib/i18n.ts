@@ -352,6 +352,8 @@ const dictionary = {
   someoneElse: { en: "Someone else", ar: "شخص آخر" },
   onCustomerTab: { en: "On the customer's tab", ar: "أُضيف إلى حساب العميل" },
   alreadyOnBill: { en: "Already has a bill open · {where}", ar: "لديه فاتورة مفتوحة · {where}" },
+  customerDisabled: { en: "Account switched off · can't be added", ar: "الحساب موقوف · لا يمكن إضافته" },
+  customerDisabledNumber: { en: "This number belongs to an account the owner switched off. The owner can switch it back on from Customers.", ar: "هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء." },
   amount: { en: "Amount", ar: "المبلغ" },
   addPayment: { en: "Add payment", ar: "أضف دفعة" },
   remaining: { en: "Remaining", ar: "المتبقي" },

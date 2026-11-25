@@ -427,15 +427,17 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                     itemBuilder: (context, index) {
                       final user = _users[index];
                       final onBill = widget.busy[user.id];
+                      // Switched off by the owner: shown, greyed, and not to be picked
+                      final locked = onBill != null || !user.enabled;
                       return Row(
                         children: [
                           Expanded(
                             child: FTappable(
-                              onPress: onBill != null
+                              onPress: locked
                                   ? null
                                   : () => _pick(SaleCustomer(id: user.id, name: user.displayName, phone: user.phoneNumber, addedAtCounter: user.addedAtCounter)),
                               builder: (context, states, child) => Opacity(
-                                opacity: onBill == null ? 1 : 0.6,
+                                opacity: locked ? 0.6 : 1,
                                 child: Container(
                                   constraints: const BoxConstraints(minHeight: Sizes.control),
                                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
@@ -462,7 +464,9 @@ class _CustomerDialogState extends ConsumerState<_CustomerDialog> {
                                           overflow: TextOverflow.ellipsis,
                                           style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
                                         ),
-                                        if (onBill != null)
+                                        if (!user.enabled)
+                                          Text(l10n.customerDisabled, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted)
+                                        else if (onBill != null)
                                           Text(l10n.alreadyOnBill(onBill), maxLines: 1, overflow: TextOverflow.ellipsis, style: muted)
                                         else if (user.contact case final contact?)
                                           Text.rich(

@@ -70,7 +70,7 @@ public static class CounterCustomersApi
             }
 
             var similar = NameSearch.Normalize(name).Length >= 2
-                ? snapshot.Search(name, [], StaffRoles).Where(u => u.Id != match?.Id).Take(3).Select(UserDto.From).ToList()
+                ? snapshot.Search(name, [], StaffRoles).Where(u => u.Id != match?.Id && !u.IsMerged).Take(3).Select(UserDto.From).ToList()
                 : [];
 
             return Results.Ok(new CustomerLookupResponse(normalized, valid, match is null ? null : UserDto.From(match), similar));

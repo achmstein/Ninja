@@ -18,8 +18,16 @@ public sealed record DirectoryUser(
     bool AddedAtCounter = false,
     string PhoneNormalized = "",
     bool AllBranches = false,
-    string? PhoneSearch = null)
+    string? PhoneSearch = null,
+    string? MergedInto = null)
 {
+    /// <summary>
+    /// A duplicate folded into another customer (CustomerMergeApi): switched
+    /// off, with the account it went into noted. Switched back on, it is a
+    /// customer again.
+    /// </summary>
+    public bool IsMerged => !Enabled && !string.IsNullOrEmpty(MergedInto);
+
     public string DisplayName => string.Join(' ', new[] { FirstName, LastName }.Where(s => !string.IsNullOrWhiteSpace(s))) is { Length: > 0 } full ? full : Username ?? "";
 
     // Search runs over these, computed once per load
@@ -42,6 +50,26 @@ public sealed class DirectorySnapshot(IReadOnlyList<DirectoryUser> users, DateTi
 
     public IReadOnlyList<DirectoryUser> Users { get; } = users;
     public DateTimeOffset LoadedAt { get; } = loadedAt;
+
+    private readonly Dictionary<string, DirectoryUser> _byId = users.GroupBy(u => u.Id).ToDictionary(g => g.Key, g => g.First());
+
+    public DirectoryUser? ById(string id) => _byId.GetValueOrDefault(id);
+
+    /// <summary>
+    /// The customer to use for this account: itself, or for a merged-away
+    /// duplicate the account it went into (followed through a merge of a
+    /// merge). The duplicate itself when that account is gone.
+    /// </summary>
+    public DirectoryUser Resolve(DirectoryUser user)
+    {
+        var current = user;
+        for (var hops = 0; current.IsMerged && hops < 5; hops++)
+        {
+            if (ById(current.MergedInto!) is not { } next) break;
+            current = next;
+        }
+        return current;
+    }
 
     /// <summary>
     /// The users matching the query and role filters, ranked. Without a
@@ -77,14 +105,18 @@ public sealed class DirectorySnapshot(IReadOnlyList<DirectoryUser> users, DateTi
     /// The one user outside the given roles whose phone, normalized the same
     /// way, is this number: how the till knows a customer is already here.
     /// </summary>
+    /// A merged-away duplicate that still holds the number answers with the
+    /// customer it went into.
     public DirectoryUser? ByPhone(string normalizedPhone, string[] excludeRoles) =>
         string.IsNullOrEmpty(normalizedPhone)
             ? null
             : Users
                 .Where(u => u.PhoneNormalized == normalizedPhone && !u.RealmRoles.Any(excludeRoles.Contains))
-                // A person who signed up themselves before one the counter added
-                .OrderBy(u => u.AddedAtCounter)
+                // A live account before a merged-away one; a person who signed up themselves before one the counter added
+                .OrderBy(u => u.IsMerged)
+                .ThenBy(u => u.AddedAtCounter)
                 .ThenBy(u => u.CreatedTimestamp ?? long.MaxValue)
+                .Select(Resolve)
                 .FirstOrDefault();
 }
 
@@ -343,7 +375,8 @@ public sealed class UserDirectory(KeycloakAdmin keycloak, TenantCountry country,
             CounterCustomer.IsAddedAtCounter(u.Attributes),
             PhoneRules.Normalize(phone, country),
             UserAttributes.HoldsAllBranches(u.Attributes),
-            PhoneRules.SearchDigits(phone, country));
+            PhoneRules.SearchDigits(phone, country),
+            UserAttributes.MergedIntoOf(u.Attributes));
     }
 
     private async Task<List<T>> PageAsync<T>(HttpClient client, string url, CancellationToken ct)
@@ -372,6 +405,12 @@ public static class UserAttributes
     /// <summary>Whether the account was given every branch: its `branches` attribute holds "*" (a call centre's account).</summary>
     public static bool HoldsAllBranches(Dictionary<string, string[]>? attributes) =>
         (attributes?.GetValueOrDefault("branches") ?? []).Any(v => v.Trim() == ClaimsPrincipalExtensions.AllBranchesValue);
+
+    /// <summary>The account a merged-away duplicate went into, from its `mergedInto` attribute (CustomerMergeApi).</summary>
+    public const string MergedInto = "mergedInto";
+
+    public static string? MergedIntoOf(Dictionary<string, string[]>? attributes) =>
+        attributes?.GetValueOrDefault(MergedInto)?.FirstOrDefault() is { Length: > 0 } id ? id : null;
 
     /// <summary>The `branches` attribute as kept: "*" alone for every branch, otherwise the ids.</summary>
     public static string[] BranchValues(IEnumerable<int> branchIds, bool allBranches) =>

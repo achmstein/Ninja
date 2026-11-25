@@ -47,7 +47,11 @@ public static class CustomerMergeApi
             var movePhone = fromPhone is not null && Phone(into) is null;
 
             from["enabled"] = false;
-            if (movePhone && from["attributes"] is JsonObject fromAttributes) fromAttributes.Remove("phoneNumber");
+            // Noted on the duplicate, so the till leaves it out of a search and a lookup of its number finds the kept one
+            var fromAttributes = from["attributes"] as JsonObject ?? [];
+            from["attributes"] = fromAttributes;
+            fromAttributes[UserAttributes.MergedInto] = new JsonArray(intoUserId);
+            if (movePhone) fromAttributes.Remove("phoneNumber");
             var switchedOff = await keycloak.PutUserAsync(client, userId, from);
             if (!switchedOff.IsSuccessStatusCode)
                 return Results.Problem($"The account could not be switched off: {await switchedOff.Content.ReadAsStringAsync()}", statusCode: (int)switchedOff.StatusCode);

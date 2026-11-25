@@ -1056,5 +1056,7 @@
   "pinWrongPassword": "كلمة المرور غير صحيحة.",
   "pinSaved": "تم حفظ الرمز",
   "pinNotSaved": "لم يُحفظ الرمز. أعد المحاولة.",
-  "pinDigitsTyped": "كُتب {count} أرقام"
+  "pinDigitsTyped": "كُتب {count} أرقام",
+  "customerDisabled": "الحساب موقوف · لا يمكن إضافته",
+  "customerDisabledNumber": "هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء."
 }
