@@ -5,6 +5,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @layer base {
+  /* A phone number or an amount keeps its digits left to right, but sits on
+     the right of its box in Arabic, where every other box starts */
+  [dir='rtl'] input[dir='ltr'] {
+    text-align: right;
+  }
+
   * {
     @apply border-border outline-ring/50;
     scrollbar-width: thin;
