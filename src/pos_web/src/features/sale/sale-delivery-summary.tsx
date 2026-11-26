@@ -1,4 +1,5 @@
-import { AlertTriangle, Bike, Loader2, MapPin, Store, UserRound, X } from 'lucide-react'
+import { AlertTriangle, Bike, Loader2, Store, UserRound, X } from 'lucide-react'
+import { PinQualityLabel } from '@/features/deliveries/pin-quality'
 import { Button } from '@/components/ui/button'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -39,10 +40,9 @@ export function SaleDeliverySummary({
         <button type='button' onClick={onEdit} className='min-w-0 flex-1 text-start' aria-label={t('deliveryChange')}>
           <span className='block truncate font-medium'>{[area, delivery.address, delivery.building].filter(Boolean).join(' · ')}</span>
           <span className='text-muted-foreground flex items-center gap-1 text-xs'>
-            {delivery.latitude != null && <MapPin className='size-3' aria-hidden />}
             <span dir='ltr'>{showPhone(delivery.phone)}</span>
-            {delivery.latitude == null && <span>· {t('deliveryNoPin')}</span>}
           </span>
+          <PinQualityLabel source={delivery.pinSource} pinned={delivery.latitude != null} className='mt-1' />
           {!delivery.sendTo && delivery.rider && (
             <span className='mt-0.5 flex items-center gap-1 text-xs font-medium'>
               <UserRound className='size-3' aria-hidden />

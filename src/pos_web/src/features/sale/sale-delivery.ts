@@ -55,7 +55,15 @@ export function toPosDeliveryRequest(delivery: SaleDelivery): PosDeliveryRequest
     apartment: orNull(delivery.apartment),
     directions: orNull(delivery.directions),
     zoneId: delivery.sendTo ? null : (delivery.zone?.id ?? null),
+    // Where the pin came from, only with one; and the link, so a location shared later lands on the order
+    pinSource: pinned ? toPinSource(delivery.pinSource) : null,
+    locationShareToken: delivery.locationShareToken || null,
   }
+}
+
+/** A pin's source as the order request takes it: None is no pin at all, so a pin without one was searched */
+function toPinSource(source: SaleDelivery['pinSource']): Exclude<SaleDelivery['pinSource'], 'None' | null | undefined> {
+  return source && source !== 'None' ? source : 'Search'
 }
 
 /** A named area the server listed, as the sale keeps it */

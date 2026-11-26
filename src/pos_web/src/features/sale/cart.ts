@@ -70,7 +70,17 @@ export type SaleDelivery = {
   zone?: SaleZone | null
   /** The rider picked while the call was on, given it as soon as it is placed; null (or missing) to give it later */
   rider?: SaleRider | null
+  /**
+   * Where the pin came from: Search (found on the map here), Customer or Rider (an earlier address of
+   * theirs), Shared (the caller shared it through the link); missing with a pin is Search
+   */
+  pinSource?: PinSource | null
+  /** The location link sent to the caller: a location they share after the order is placed still lands on it */
+  locationShareToken?: string | null
 }
+
+/** Where a delivery's pin came from, which says how far a rider can trust it */
+export type PinSource = 'Customer' | 'Shared' | 'Rider' | 'Search' | 'None'
 
 /** One of the branch's riders, as the delivery form picked them */
 export type SaleRider = {

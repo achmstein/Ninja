@@ -40,6 +40,20 @@ describe('validatePhoneDelivery', () => {
   })
 })
 
+describe('the pin source an order says', () => {
+  it('is said only with a pin, and a pin with none said was searched', () => {
+    expect(toPosDeliveryRequest({ ...filled, pinSource: 'Search' }).pinSource).toBeNull()
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31 }).pinSource).toBe('Search')
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31, pinSource: 'None' }).pinSource).toBe('Search')
+    expect(toPosDeliveryRequest({ ...filled, latitude: 30, longitude: 31, pinSource: 'Shared' }).pinSource).toBe('Shared')
+  })
+
+  it('carries the location link, so a location shared later lands on the order', () => {
+    expect(toPosDeliveryRequest({ ...filled, locationShareToken: 'abc' }).locationShareToken).toBe('abc')
+    expect(toPosDeliveryRequest(filled).locationShareToken).toBeNull()
+  })
+})
+
 describe('validateDeliveryWho', () => {
   it('wants a callable number, and a name unless an account gives one', () => {
     expect(validateDeliveryWho('0100 123 4567', '', true)).toEqual({ name: true })

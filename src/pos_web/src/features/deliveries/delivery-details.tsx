@@ -6,6 +6,7 @@ import { toNumber, useMoney } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'
 import { directionsUrl, distanceParts, formatAddressLine, telHref, type AddressParts } from './delivery-format'
+import { PinQualityLabel } from './pin-quality'
 
 /** The address on one line in the till's language, the street first */
 export function useAddressLine() {
@@ -66,13 +67,14 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
           {delivery.directions && (
             <div className='text-muted-foreground mt-1 text-sm italic'>"{delivery.directions}"</div>
           )}
-          {!pinned && <div className='text-muted-foreground mt-1 text-xs'>{t('deliveryNoPin')}</div>}
+          <PinQualityLabel source={delivery.pinSource} pinned={pinned} className='mt-2' />
         </div>
       </div>
 
       <div className='grid grid-cols-2 gap-2'>
         {tel ? (
-          <Button asChild variant='outline' className='h-11 justify-center gap-2'>
+          // No pin: the rider calls before leaving, so the call is the first thing to do
+          <Button asChild variant={pinned ? 'outline' : 'default'} className='h-11 justify-center gap-2'>
             <a href={tel}>
               <Phone className='size-4 shrink-0' />
               {/* Only the digits run left to right; the icon stays at the start */}

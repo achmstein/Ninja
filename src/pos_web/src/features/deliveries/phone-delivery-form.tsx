@@ -1,4 +1,4 @@
-import { useId, useState, type ReactNode } from 'react'
+import { useCallback, useId, useState, type ReactNode } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
@@ -24,7 +24,7 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useBranchName } from '@/features/branch/use-branch-name'
-import { emptyDelivery, type SaleCustomer, type SaleDelivery, type SaleRider, type SaleSendTo } from '@/features/sale/cart'
+import { emptyDelivery, type PinSource, type SaleCustomer, type SaleDelivery, type SaleRider, type SaleSendTo } from '@/features/sale/cart'
 import {
   DELIVERY_LIMITS,
   keptSendTo,
@@ -47,6 +47,8 @@ import { useAddressLine, useDistanceText } from './delivery-details'
 import { AddressSearchField } from './address-search-field'
 import { AreaPicker } from './area-picker'
 import { outOfRangeKey } from './delivery-format'
+import { LocationLink } from './location-link'
+import { PinQualityLabel } from './pin-quality'
 import { useRiders, useTillDeliveryQuote } from './use-deliveries'
 
 type PhoneDeliveryFormProps = {
@@ -182,6 +184,14 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const minimum = sending ? sending.minimumOrder : toNumber(terms?.minimumOrder)
   const fee = sending ? sending.fee : toNumber(terms?.fee)
 
+  // The caller shared where they are: that is the pin now, the area read from it again
+  const onShared = useCallback((latitude: number, longitude: number) => {
+    setAreaOff(false)
+    setForm((f) => ({ ...f, location: `${latitude.toFixed(6)}, ${longitude.toFixed(6)}`, pinSource: 'Shared' }))
+  }, [])
+  // How far the pin can be trusted, as the order will say it
+  const pinSource: PinSource = pinned ? (form.pinSource && form.pinSource !== 'None' ? form.pinSource : 'Search') : 'None'
+
   const whoErrors = validateDeliveryWho(form.phone, shownName, !account)
   const whereErrors = validateDeliveryWhere(form)
 
@@ -206,8 +216,10 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
       apartment: a.apartment ?? '',
       directions: a.directions ?? '',
       phone: form.phone || editablePhone(a.phone),
-      // Its pin as coordinates, which reads back as the same pin
+      // Its pin as coordinates, which reads back as the same pin, and where it came from
       location: a.latitude != null && a.longitude != null ? `${toNumber(a.latitude)}, ${toNumber(a.longitude)}` : '',
+      pinSource: (a.pinSource as PinSource | undefined) ?? null,
+      locationShareToken: form.locationShareToken ?? null,
     })
     if (Object.keys(whoErrors).length === 0) setStep('check')
   }
@@ -224,6 +236,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
         phone,
         latitude: pinned ? toNumber(terms?.latitude) : null,
         longitude: pinned ? toNumber(terms?.longitude) : null,
+        pinSource,
         sendTo: sending,
         zone,
         // Another branch's riders are its own: one picked here never follows the order there
@@ -309,6 +322,16 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
             </div>
           )}
 
+          {/* The caller's own location, the way to the very door: asked for on WhatsApp while they are on the phone */}
+          {(form.pinSource !== 'Customer' && form.pinSource !== 'Rider') || !pasted ? (
+            <LocationLink
+              phone={form.phone}
+              token={form.locationShareToken ?? null}
+              onToken={(token) => set({ locationShareToken: token })}
+              onShared={onShared}
+            />
+          ) : null}
+
           <Field id={`${ids}-street`} label={t('deliveryStreetLabel')} error={triedWhere && whereErrors.address ? t('deliveryNeedsStreet') : null}>
             {(a) => (
               <Input
@@ -372,6 +395,8 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
                     set({
                       location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
                       address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+                      // Found on the map: near the door, not the door
+                      pinSource: 'Search',
                     })
                   }}
                 />
@@ -420,6 +445,7 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
           zone={zone}
           zonesListed={zones.length > 0}
           pinned={pinned}
+          pinSource={pinSource}
           sending={sending}
           alternatives={reading ? [] : alternatives}
           onSendTo={(to) => {
@@ -736,6 +762,7 @@ function CheckStep({
   zone,
   zonesListed,
   pinned,
+  pinSource,
   sending,
   alternatives,
   onSendTo,
@@ -755,6 +782,7 @@ function CheckStep({
   zone: { name: { en: string | null; ar: string | null } } | null
   zonesListed: boolean
   pinned: boolean
+  pinSource: PinSource
   sending: SaleSendTo | null
   alternatives: DeliveryAlternative[]
   onSendTo: (to: SaleSendTo | null) => void
@@ -792,16 +820,7 @@ function CheckStep({
           <span className='block font-semibold'>{form.address}</span>
           {details && <span className='text-muted-foreground block text-sm'>{details}</span>}
           {form.directions.trim() && <span className='text-muted-foreground block text-sm italic'>"{form.directions.trim()}"</span>}
-          <span className='text-muted-foreground flex items-center gap-1 text-xs'>
-            {pinned ? (
-              <>
-                <MapPin className='size-3' aria-hidden />
-                {t('deliveryPinned')}
-              </>
-            ) : (
-              t('deliveryNoPin')
-            )}
-          </span>
+          <PinQualityLabel source={pinSource} pinned={pinned} className='mt-1.5' />
         </SummaryRow>
       </div>
 
