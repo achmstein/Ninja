@@ -478,9 +478,10 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
 }
 
 /**
- * Where in the three steps the call is, seen at a glance: numbered circles
- * joined by a line, the one now filled, the ones behind ticked with what was
- * said there (the caller, the street) and a tap away to change it.
+ * Where in the three steps the call is, seen at a glance: "Step 1 of 3", then
+ * a bar per step with its icon and name, the current one glowing, the ones
+ * behind ticked with what was said there (the caller, the street) and a tap
+ * away to change it.
  */
 function Stepper({
   step,
@@ -499,54 +500,62 @@ function Stepper({
     { key: 'check', label: t('deliveryStepCheck') },
   ]
   const at = steps.findIndex((s) => s.key === step)
+  const icons = { who: UserRound, where: MapPin, check: Send } as const
   return (
-    <nav aria-label={t('deliveryStepOf', { at: at + 1, count: steps.length })} className='bg-muted/40 -mx-1 rounded-xl px-2 py-3'>
-      <ol className='flex items-start'>
+    <nav aria-label={t('deliveryStepOf', { at: at + 1, count: steps.length })} className='flex flex-col gap-2'>
+      {/* Said in words first, so a glance knows there is more to come */}
+      <span className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+        {t('deliveryStepOf', { at: at + 1, count: steps.length })}
+      </span>
+      <ol className='grid grid-cols-3 gap-2'>
         {steps.map((s, i) => {
           const past = i < at
           const now = i === at
+          const Icon = past ? Check : icons[s.key]
           const body = (
             <>
+              {/* The step's bar: filled behind and now, the current one with a soft glow */}
               <span
+                aria-hidden
                 className={cn(
-                  'flex size-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums transition-colors',
-                  past && 'border-primary bg-primary text-primary-foreground',
-                  now && 'border-primary bg-background text-primary ring-primary/20 ring-4',
-                  !past && !now && 'border-muted-foreground/30 bg-background text-muted-foreground',
+                  'h-1.5 w-full rounded-full transition-colors duration-300',
+                  past && 'bg-primary',
+                  now && 'bg-primary shadow-primary/40 shadow-[0_0_0_3px]',
+                  !past && !now && 'bg-muted',
                 )}
-              >
-                {past ? <Check className='size-4' aria-hidden /> : i + 1}
-              </span>
-              <span className='flex min-w-0 flex-col items-center gap-0.5 px-1 text-center'>
-                <span className={cn('text-sm', now ? 'text-foreground font-semibold' : past ? 'text-foreground font-medium' : 'text-muted-foreground')}>
+              />
+              <span className='flex w-full min-w-0 items-center gap-1.5'>
+                <Icon
+                  className={cn('size-4 shrink-0', past || now ? 'text-primary' : 'text-muted-foreground/60')}
+                  strokeWidth={past ? 3 : 2}
+                  aria-hidden
+                />
+                <span
+                  className={cn(
+                    'truncate text-sm',
+                    now ? 'text-foreground font-semibold' : past ? 'text-foreground font-medium' : 'text-muted-foreground',
+                  )}
+                >
                   {s.label}
                 </span>
-                {past && done[s.key] && (
-                  <bdi className='text-muted-foreground block max-w-full truncate text-xs'>{done[s.key]}</bdi>
-                )}
               </span>
+              {past && done[s.key] ? (
+                <bdi className='text-muted-foreground -mt-1 block w-full truncate ps-5.5 text-start text-xs'>{done[s.key]}</bdi>
+              ) : null}
             </>
           )
           return (
-            <li key={s.key} className='relative flex min-w-0 flex-1 flex-col items-center' aria-current={now ? 'step' : undefined}>
-              {/* The line to the step before, filled once that step is behind */}
-              {i > 0 && (
-                <span
-                  aria-hidden
-                  className={cn('absolute top-[1.125rem] h-0.5 -translate-y-1/2', i <= at ? 'bg-primary' : 'bg-muted-foreground/20')}
-                  style={{ insetInlineStart: 'calc(-50% + 1.375rem)', insetInlineEnd: 'calc(50% + 1.375rem)' }}
-                />
-              )}
+            <li key={s.key} className='min-w-0' aria-current={now ? 'step' : undefined}>
               {past ? (
                 <button
                   type='button'
                   onClick={() => onGo(s.key)}
-                  className='hover:bg-muted flex w-full min-w-0 flex-col items-center gap-1.5 rounded-lg py-1'
+                  className='hover:bg-muted/60 -m-1 flex w-[calc(100%+0.5rem)] min-w-0 flex-col items-start gap-2 rounded-md p-1 text-start'
                 >
                   {body}
                 </button>
               ) : (
-                <div className='flex w-full min-w-0 flex-col items-center gap-1.5 py-1'>{body}</div>
+                <div className='flex min-w-0 flex-col items-start gap-2'>{body}</div>
               )}
             </li>
           )
@@ -607,7 +616,7 @@ function WhoStep({
             onChange={(e) => onPhone(e.target.value)}
             onBlur={onPhoneLeft}
             onKeyDown={(e) => e.key === 'Enter' && onNext()}
-            className='h-14 text-xl tabular-nums'
+            className='h-12 text-base tabular-nums'
             inputMode='tel'
             dir='ltr'
             autoComplete='off'
