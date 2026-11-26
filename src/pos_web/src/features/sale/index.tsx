@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRightLeft, Loader2, Plus, UserPlus } from 'lucide-react'
+import { ArrowRightLeft, Loader2, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CustomerSearch } from '@/features/customer/customer-search'
@@ -106,7 +106,7 @@ export function SalePad({
   const [paying, setPaying] = useState(false)
   // Sent lines being picked, to split off, move to another bill or name: null when they are not
   const [picked, setPicked] = useState<ReadonlySet<number> | null>(null)
-  const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
+  const [moving, setMoving] = useState(false)
   const [naming, setNaming] = useState(false)
   // A new sale can go out with a rider instead (use-sale-delivery)
   const saleDelivery = useSaleDelivery(onBill)
@@ -174,7 +174,7 @@ export function SalePad({
   const movable = sent.filter((line) => line.source !== 'SessionTime')
   const stopPicking = () => {
     setPicked(null)
-    setMoveMode(null)
+    setMoving(false)
     setNaming(false)
   }
   /** The picked lines go to another bill; the till follows them there */
@@ -305,18 +305,15 @@ export function SalePad({
                 {t('cancel')}
               </Button>
             </div>
-            <div className='grid grid-cols-3 gap-2'>
-              <Button variant='outline' className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
-                <UserPlus className='size-5' />
-                <span>{t('assignCustomer')}</span>
+            {/* Two things can be done with them: say whose they are, or move them (one list of every place they can go) */}
+            <div className='grid grid-cols-2 gap-2'>
+              <Button variant='outline' className='h-14 min-w-0 gap-2 text-base' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
+                <UserPlus className='size-5 shrink-0' />
+                {t('assignCustomer')}
               </Button>
-              <Button variant='outline' className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('move')}>
-                <ArrowRightLeft className='size-5' />
-                <span>{t('moveToBill')}</span>
-              </Button>
-              <Button className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('new')}>
-                <Plus className='size-5' />
-                <span>{t('newBill')}</span>
+              <Button className='h-14 min-w-0 gap-2 text-base' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoving(true)}>
+                <ArrowRightLeft className='size-5 shrink-0' />
+                {t('moveItems')}
               </Button>
             </div>
           </div>
@@ -391,9 +388,8 @@ export function SalePad({
       {/* What is done with the lines picked on the bill */}
       {bill.ticket && (
         <MoveTargetDialog
-          open={moveMode !== null}
-          mode={moveMode ?? 'move'}
-          onOpenChange={(open) => !open && setMoveMode(null)}
+          open={moving}
+          onOpenChange={setMoving}
           ticket={bill.ticket}
           count={pickedIds.length}
           allSelected={pickedIds.length >= movable.length}

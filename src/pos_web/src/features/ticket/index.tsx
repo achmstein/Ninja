@@ -13,7 +13,6 @@ import {
   Ellipsis,
   ListChecks,
   Loader2,
-  Plus,
   Printer,
   ShoppingCart,
   Trash2,
@@ -117,7 +116,7 @@ export function TicketScreen({
   const takenByText = useTakenByText()
 
   const [discardOpen, setDiscardOpen] = useState(false)
-  const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
+  const [moving, setMoving] = useState(false)
   const [refundOpen, setRefundOpen] = useState(false)
   // The paid bill's payment whose method is being put right
   const [tenderFix, setTenderFix] = useState<TenderFix | null>(null)
@@ -254,7 +253,7 @@ export function TicketScreen({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       toast.success(t('linesMoved'))
-      setMoveMode(null)
+      setMoving(false)
       setSelecting(false)
       setSelectedIds(new Set())
       navigate({
@@ -1083,27 +1082,17 @@ export function TicketScreen({
               {t('assignCustomer')}
             </Button>
             <Button
-              variant='outline'
-              size='lg'
-              className={actionClass()}
-              disabled={noneChosen || moveLines.isPending}
-              onClick={() => setMoveMode('move')}
-            >
-              <ArrowRightLeft className='size-5' />
-              {t('moveToBill')}
-            </Button>
-            <Button
               size='lg'
               className={actionClass(true)}
               disabled={noneChosen || moveLines.isPending}
-              onClick={() => setMoveMode('new')}
+              onClick={() => setMoving(true)}
             >
               {moveLines.isPending ? (
                 <Loader2 className='size-5 animate-spin' />
               ) : (
-                <Plus className='size-5' />
+                <ArrowRightLeft className='size-5' />
               )}
-              {t('newBill')}
+              {t('moveItems')}
             </Button>
           </div>
         ) : (
@@ -1142,9 +1131,8 @@ export function TicketScreen({
         onOpenChange={setDiscardOpen}
       />
       <MoveTargetDialog
-        open={moveMode !== null}
-        mode={moveMode ?? 'move'}
-        onOpenChange={(o) => !o && setMoveMode(null)}
+        open={moving}
+        onOpenChange={setMoving}
         ticket={ticket}
         count={selectedIds.size}
         allSelected={selectedIds.size >= movableCount}
