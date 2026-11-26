@@ -740,6 +740,7 @@ const dictionary = {
   deliveryCalledBefore: { en: "Ordered delivery before", ar: "طلب توصيل من قبل" },
   deliveryNewCaller: { en: "New caller: added to customers when the order is sent", ar: "متصل جديد: يضاف إلى العملاء عند إرسال الطلب" },
   billDetails: { en: "Bill details", ar: "تفاصيل الفاتورة" },
+  splitOrMove: { en: "Split or move items", ar: "تقسيم أو نقل أصناف" },
   onTheBill: { en: "On the bill", ar: "على الفاتورة" },
   newItems: { en: "New", ar: "جديد" },
   sendNewItems: { en: "Send {count} new", ar: "إرسال {count} جديد" },

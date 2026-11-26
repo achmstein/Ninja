@@ -4,7 +4,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
-  Ellipsis,
   Loader2,
   Minus,
   Plus,
@@ -44,6 +43,7 @@ import { OrderTypeSwitch } from './order-type-switch'
 import { useBranchPriceCheck, type PriceReview } from './use-branch-price-check'
 import { useSaleDelivery } from './use-sale-delivery'
 import { useOpenBill } from './use-open-bill'
+import { BillMenu } from './bill-menu'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { StayStrip } from '@/features/places/stay-strip'
 import { stayRoster } from '@/features/places/status'
@@ -970,12 +970,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           )}
         </SaleHeading>
         {/* The rest a bill can do (discount, split, print, void) lives on its own page */}
-        {addingToTicket && (
-          <Button asChild variant='ghost' size='icon' className='size-12' aria-label={t('billDetails')}>
-            <Link to='/ticket/$ticketId' params={{ ticketId: String(ticketId) }}>
-              <Ellipsis className='size-5' />
-            </Link>
-          </Button>
+        {addingToTicket && bill.ticket && (
+          <BillMenu ticket={bill.ticket} runningStay={bill.runningStay} sending={bill.mySends.length > 0} />
         )}
         {(!addingToTicket || lines.length > 0) && (
           <Button
