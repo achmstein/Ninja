@@ -2566,7 +2566,17 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryStepWhere => 'العنوان';
 
   @override
-  String get deliveryStepCheck => 'راجع وأرسل';
+  String get deliveryStepCheck => 'التأكيد';
+
+  @override
+  String deliveryStepOf(int at, int count) {
+    return 'الخطوة $at من $count';
+  }
+
+  @override
+  String deliveryNextTo(String step) {
+    return 'التالي: $step';
+  }
 
   @override
   String get deliveryNext => 'التالي';

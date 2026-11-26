@@ -89,30 +89,41 @@ class _AreaButtonsState extends State<AreaButtons> {
                       },
                       builder: (context, states, child) {
                         final chosen = widget.picked?.zoneId == z.zoneId;
-                        return Container(
-                          constraints: const BoxConstraints(minHeight: 56),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: chosen ? theme.colors.primary.withValues(alpha: 0.06) : null,
-                            border: Border.all(color: chosen ? theme.colors.primary : theme.colors.border, width: chosen ? 1.5 : 1),
-                            borderRadius: BorderRadius.circular(Sizes.radius),
-                          ),
-                          child: child,
+                        return Stack(
+                          clipBehavior: Clip.none,
+                          children: [
+                            Container(
+                              width: double.infinity,
+                              constraints: const BoxConstraints(minHeight: 56),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                              decoration: BoxDecoration(
+                                color: chosen ? theme.colors.primary.withValues(alpha: 0.06) : null,
+                                border: Border.all(color: chosen ? theme.colors.primary : theme.colors.border, width: chosen ? 1.5 : 1),
+                                borderRadius: BorderRadius.circular(Sizes.radius),
+                              ),
+                              child: child,
+                            ),
+                            // The tick sits on the corner, never in the name's way: a long name wraps whole
+                            if (chosen)
+                              PositionedDirectional(
+                                top: -6,
+                                end: -6,
+                                child: Container(
+                                  width: 20,
+                                  height: 20,
+                                  decoration: BoxDecoration(color: theme.colors.primary, shape: BoxShape.circle),
+                                  child: Icon(FIcons.check, size: 12, color: theme.colors.primaryForeground),
+                                ),
+                              ),
+                          ],
                         );
                       },
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(z.name.localized(context),
-                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
-                              ),
-                              if (widget.picked?.zoneId == z.zoneId) Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
-                            ],
-                          ),
+                          Text(z.name.localized(context),
+                              maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
                           Text(
                             [
                               if (branchName != null) branchName(z.branchId),

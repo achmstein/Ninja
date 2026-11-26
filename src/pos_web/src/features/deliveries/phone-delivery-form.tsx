@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle,
   ArrowLeft,
+  ArrowRight,
   Bike,
   Check,
   ChevronDown,
@@ -266,7 +267,14 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
 
   return (
     <div className='flex flex-col gap-4'>
-      <StepDots step={step} />
+      <Stepper
+        step={step}
+        done={{
+          who: shownName.trim() || showPhone(normalizePhone(form.phone, country)),
+          where: [zone ? localizedName(zone.name) : null, form.address.trim() || null].filter(Boolean).join(' · '),
+        }}
+        onGo={setStep}
+      />
 
       {step === 'who' && (
         <WhoStep
@@ -417,7 +425,8 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
               <ArrowLeft className='size-5 rtl:rotate-180' aria-hidden />
             </Button>
             <Button size='lg' className='h-14 text-lg' onClick={toCheck}>
-              {t('deliveryNext')}
+              {t('deliveryNextTo', { step: t('deliveryStepCheck') })}
+              <ArrowRight className='size-5 rtl:rotate-180' aria-hidden />
             </Button>
           </div>
         </>
@@ -468,8 +477,21 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   )
 }
 
-/** Where in the three steps the call is */
-function StepDots({ step }: { step: Step }) {
+/**
+ * Where in the three steps the call is, seen at a glance: numbered circles
+ * joined by a line, the one now filled, the ones behind ticked with what was
+ * said there (the caller, the street) and a tap away to change it.
+ */
+function Stepper({
+  step,
+  done,
+  onGo,
+}: {
+  step: Step
+  /** What each step behind holds, said under its name */
+  done: Partial<Record<Step, string>>
+  onGo: (step: Step) => void
+}) {
   const t = useT()
   const steps: { key: Step; label: string }[] = [
     { key: 'who', label: t('deliveryStepWho') },
@@ -478,14 +500,59 @@ function StepDots({ step }: { step: Step }) {
   ]
   const at = steps.findIndex((s) => s.key === step)
   return (
-    <ol className='flex items-center gap-2 text-xs' aria-label={t('deliveryFormTitle')}>
-      {steps.map((s, i) => (
-        <li key={s.key} className='flex flex-1 flex-col gap-1' aria-current={i === at ? 'step' : undefined}>
-          <span className={cn('h-1 rounded-full', i <= at ? 'bg-primary' : 'bg-muted')} />
-          <span className={cn(i === at ? 'text-foreground font-medium' : 'text-muted-foreground')}>{s.label}</span>
-        </li>
-      ))}
-    </ol>
+    <nav aria-label={t('deliveryStepOf', { at: at + 1, count: steps.length })} className='bg-muted/40 -mx-1 rounded-xl px-2 py-3'>
+      <ol className='flex items-start'>
+        {steps.map((s, i) => {
+          const past = i < at
+          const now = i === at
+          const body = (
+            <>
+              <span
+                className={cn(
+                  'flex size-9 shrink-0 items-center justify-center rounded-full border-2 text-sm font-semibold tabular-nums transition-colors',
+                  past && 'border-primary bg-primary text-primary-foreground',
+                  now && 'border-primary bg-background text-primary ring-primary/20 ring-4',
+                  !past && !now && 'border-muted-foreground/30 bg-background text-muted-foreground',
+                )}
+              >
+                {past ? <Check className='size-4' aria-hidden /> : i + 1}
+              </span>
+              <span className='flex min-w-0 flex-col items-center gap-0.5 px-1 text-center'>
+                <span className={cn('text-sm', now ? 'text-foreground font-semibold' : past ? 'text-foreground font-medium' : 'text-muted-foreground')}>
+                  {s.label}
+                </span>
+                {past && done[s.key] && (
+                  <bdi className='text-muted-foreground block max-w-full truncate text-xs'>{done[s.key]}</bdi>
+                )}
+              </span>
+            </>
+          )
+          return (
+            <li key={s.key} className='relative flex min-w-0 flex-1 flex-col items-center' aria-current={now ? 'step' : undefined}>
+              {/* The line to the step before, filled once that step is behind */}
+              {i > 0 && (
+                <span
+                  aria-hidden
+                  className={cn('absolute top-[1.125rem] h-0.5 -translate-y-1/2', i <= at ? 'bg-primary' : 'bg-muted-foreground/20')}
+                  style={{ insetInlineStart: 'calc(-50% + 1.375rem)', insetInlineEnd: 'calc(50% + 1.375rem)' }}
+                />
+              )}
+              {past ? (
+                <button
+                  type='button'
+                  onClick={() => onGo(s.key)}
+                  className='hover:bg-muted flex w-full min-w-0 flex-col items-center gap-1.5 rounded-lg py-1'
+                >
+                  {body}
+                </button>
+              ) : (
+                <div className='flex w-full min-w-0 flex-col items-center gap-1.5 py-1'>{body}</div>
+              )}
+            </li>
+          )
+        })}
+      </ol>
+    </nav>
   )
 }
 
@@ -609,7 +676,10 @@ function WhoStep({
             {t('deliveryNewAddress')}
           </>
         ) : (
-          t('deliveryNext')
+          <>
+            {t('deliveryNextTo', { step: t('deliveryStepWhere') })}
+            <ArrowRight className='size-5 rtl:rotate-180' aria-hidden />
+          </>
         )}
       </Button>
     </>

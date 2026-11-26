@@ -4397,20 +4397,32 @@ abstract class AppLocalizations {
   /// No description provided for @deliveryStepWho.
   ///
   /// In en, this message translates to:
-  /// **'Who'**
+  /// **'Customer'**
   String get deliveryStepWho;
 
   /// No description provided for @deliveryStepWhere.
   ///
   /// In en, this message translates to:
-  /// **'Where'**
+  /// **'Address'**
   String get deliveryStepWhere;
 
   /// No description provided for @deliveryStepCheck.
   ///
   /// In en, this message translates to:
-  /// **'Check and send'**
+  /// **'Confirm'**
   String get deliveryStepCheck;
+
+  /// No description provided for @deliveryStepOf.
+  ///
+  /// In en, this message translates to:
+  /// **'Step {at} of {count}'**
+  String deliveryStepOf(int at, int count);
+
+  /// No description provided for @deliveryNextTo.
+  ///
+  /// In en, this message translates to:
+  /// **'Next: {step}'**
+  String deliveryNextTo(String step);
 
   /// No description provided for @deliveryNext.
   ///

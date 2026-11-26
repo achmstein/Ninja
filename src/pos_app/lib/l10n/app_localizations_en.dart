@@ -2546,13 +2546,23 @@ class AppLocalizationsEn extends AppLocalizations {
       'This branch doesn\'t deliver. Turn delivery on for it in the admin app.';
 
   @override
-  String get deliveryStepWho => 'Who';
+  String get deliveryStepWho => 'Customer';
 
   @override
-  String get deliveryStepWhere => 'Where';
+  String get deliveryStepWhere => 'Address';
 
   @override
-  String get deliveryStepCheck => 'Check and send';
+  String get deliveryStepCheck => 'Confirm';
+
+  @override
+  String deliveryStepOf(int at, int count) {
+    return 'Step $at of $count';
+  }
+
+  @override
+  String deliveryNextTo(String step) {
+    return 'Next: $step';
+  }
 
   @override
   String get deliveryNext => 'Next';

@@ -76,14 +76,17 @@ export function AreaButtons({
               onPick(z)
             }}
             className={cn(
-              'flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
+              'relative flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
               chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
             )}
           >
-            <span className='flex w-full items-center gap-1.5 font-medium'>
-              <bdi className='min-w-0 flex-1 truncate'>{localized(z.name)}</bdi>
-              {chosen && <Check className='text-primary size-4 shrink-0' aria-hidden />}
-            </span>
+            {/* The tick sits on the corner, never in the name's way: a long name wraps whole */}
+            {chosen && (
+              <span className='bg-primary text-primary-foreground absolute -end-1.5 -top-1.5 flex size-5 items-center justify-center rounded-full shadow-sm'>
+                <Check className='size-3' strokeWidth={3} aria-hidden />
+              </span>
+            )}
+            <bdi className='line-clamp-2 w-full font-medium leading-snug break-words'>{localized(z.name)}</bdi>
             <span className='text-muted-foreground w-full truncate text-xs tabular-nums'>
               {severalBranches && (
                 <>

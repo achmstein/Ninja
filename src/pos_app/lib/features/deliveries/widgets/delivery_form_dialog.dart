@@ -286,7 +286,17 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             ],
           ),
           const SizedBox(height: 12),
-          _StepBar(step: _step),
+          _StepBar(
+            step: _step,
+            done: {
+              _Step.who: _name.text.trim().isNotEmpty ? _name.text.trim() : showPhone(_phone.text.trim()),
+              _Step.where: [
+                if (form.zone != null) form.zone!.name.localized(context),
+                if (_street.text.trim().isNotEmpty) _street.text.trim(),
+              ].join(l10n.listSeparator),
+            },
+            onGo: (step) => setState(() => _step = step),
+          ),
           const SizedBox(height: 16),
           body,
         ],
@@ -317,12 +327,13 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         ],
       );
 
-  Widget _bigButton(String text, VoidCallback? onPress, {bool outline = false, Widget? prefix}) => SizedBox(
+  Widget _bigButton(String text, VoidCallback? onPress, {bool outline = false, Widget? prefix, Widget? suffix}) => SizedBox(
         height: Sizes.controlLarge,
         child: FButton(
           variant: outline ? FButtonVariant.outline : null,
           onPress: onPress,
           prefix: prefix,
+          suffix: suffix,
           // A long branch name is wider than a phone's dialog: the words shorten instead of running over
           child: Flexible(
             child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.theme.typography.lg.forButton),
@@ -421,7 +432,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         const SizedBox(height: 16),
         form.known.isNotEmpty
             ? _bigButton(l10n.deliveryNewAddress, () => _toWhere(form), outline: true, prefix: const Icon(FIcons.plus))
-            : _bigButton(l10n.deliveryNext, () => _toWhere(form)),
+            : _bigButton(l10n.deliveryNextTo(l10n.deliveryStepWhere), () => _toWhere(form), suffix: Icon(_forwardIcon(context))),
       ],
     );
   }
@@ -572,7 +583,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               ),
             ),
             const SizedBox(width: 8),
-            Expanded(child: _bigButton(l10n.deliveryNext, _toCheck)),
+            Expanded(child: _bigButton(l10n.deliveryNextTo(l10n.deliveryStepCheck), _toCheck, suffix: Icon(_forwardIcon(context)))),
           ],
         ),
       ],
@@ -790,45 +801,124 @@ String _addressLine(AppLocalizations l10n, String street, String? building, Stri
       if ((apartment ?? '').isNotEmpty) '${l10n.deliveryApartment} $apartment',
     ].join(l10n.listSeparator);
 
-/// Where in the three steps the call is
+/// The arrow that points on to the next step, whichever way the language reads
+IconData _forwardIcon(BuildContext context) => Directionality.of(context) == TextDirection.rtl ? FIcons.arrowLeft : FIcons.arrowRight;
+
+/// Where in the three steps the call is, seen at a glance: numbered circles
+/// joined by a line, the one now filled, the ones behind ticked with what was
+/// said there (the caller, the street) and a tap away to change it.
 class _StepBar extends StatelessWidget {
   final _Step step;
 
-  const _StepBar({required this.step});
+  /// What each step behind holds, said under its name
+  final Map<_Step, String> done;
+  final void Function(_Step step) onGo;
+
+  const _StepBar({required this.step, required this.done, required this.onGo});
+
+  static const _circle = 36.0;
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final labels = [l10n.deliveryStepWho, l10n.deliveryStepWhere, l10n.deliveryStepCheck];
-    return Row(
-      children: [
-        for (var i = 0; i < labels.length; i++) ...[
-          if (i > 0) const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+    final at = step.index;
+    final faint = theme.colors.mutedForeground.withValues(alpha: 0.3);
+
+    Widget circle(int i) {
+      final past = i < at;
+      final now = i == at;
+      return Container(
+        width: _circle,
+        height: _circle,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          shape: BoxShape.circle,
+          color: past ? theme.colors.primary : theme.colors.background,
+          border: Border.all(color: past || now ? theme.colors.primary : faint, width: 2),
+          boxShadow: now ? [BoxShadow(color: theme.colors.primary.withValues(alpha: 0.2), spreadRadius: 4)] : null,
+        ),
+        child: past
+            ? Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primaryForeground)
+            : Text('${i + 1}',
+                style: theme.typography.sm.copyWith(
+                  fontWeight: FontWeight.w700,
+                  color: now ? theme.colors.primary : theme.colors.mutedForeground,
+                )),
+      );
+    }
+
+    // Half a line either side of a circle: the halves of neighbours meet between them
+    Widget line(bool shown, bool filled) => Expanded(
+          child: Container(height: 2, color: !shown ? null : (filled ? theme.colors.primary : faint)),
+        );
+
+    return Semantics(
+      label: l10n.deliveryStepOf(at + 1, labels.length),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
+        decoration: BoxDecoration(color: theme.colors.muted.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(Sizes.radius * 1.5)),
+        child: Column(
+          children: [
+            // The circles and the lines between them
+            Row(
               children: [
-                Container(
-                  height: 4,
-                  decoration: BoxDecoration(
-                    color: i <= step.index ? theme.colors.primary : theme.colors.muted,
-                    borderRadius: BorderRadius.circular(2),
+                for (var i = 0; i < labels.length; i++)
+                  Expanded(
+                    child: Row(
+                      children: [
+                        line(i > 0, i <= at),
+                        i < at
+                            ? Semantics(
+                                button: true,
+                                label: labels[i],
+                                child: FTappable(onPress: () => onGo(_Step.values[i]), child: circle(i)),
+                              )
+                            : circle(i),
+                        line(i < labels.length - 1, i < at),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  labels[i],
-                  style: theme.typography.xs.copyWith(
-                    color: i == step.index ? theme.colors.foreground : theme.colors.mutedForeground,
-                    fontWeight: i == step.index ? FontWeight.w600 : null,
-                  ),
-                ),
               ],
             ),
-          ),
-        ],
-      ],
+            const SizedBox(height: 6),
+            // Each step's name under its circle, and what a step behind holds
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                for (var i = 0; i < labels.length; i++)
+                  Expanded(
+                    child: GestureDetector(
+                      behavior: HitTestBehavior.opaque,
+                      onTap: i < at ? () => onGo(_Step.values[i]) : null,
+                      child: Column(
+                        children: [
+                          Text(
+                            labels[i],
+                            textAlign: TextAlign.center,
+                            style: theme.typography.sm.copyWith(
+                              color: i <= at ? theme.colors.foreground : theme.colors.mutedForeground,
+                              fontWeight: i == at ? FontWeight.w700 : (i < at ? FontWeight.w500 : null),
+                            ),
+                          ),
+                          if (i < at && (done[_Step.values[i]] ?? '').isNotEmpty)
+                            Text(
+                              done[_Step.values[i]]!,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              textAlign: TextAlign.center,
+                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            ),
+          ],
+        ),
+      ),
     );
   }
 }
