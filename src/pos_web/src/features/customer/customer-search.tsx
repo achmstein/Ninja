@@ -18,10 +18,6 @@ import { readRecentCustomers, rememberRecentCustomer } from './recent-customers'
 
 /** How many customers the list holds before a name has to be typed */
 const LIST_MAX = 200
-const LETTERS = {
-  en: 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'.split(''),
-  ar: 'أ ب ت ث ج ح خ د ذ ر ز س ش ص ض ط ظ ع غ ف ق ك ل م ن ه و ي'.split(' '),
-}
 
 /** The letter a name is filed under: its first, an Arabic alef read as one letter however it is written */
 function filedUnder(name: string): string {
@@ -117,6 +113,15 @@ function SearchBody({
 
   const listed = (users: IdentityCustomer[] | undefined) => (users ?? []).filter((u) => !exclude.includes(u.id))
   const byName = (a: IdentityCustomer, b: IdentityCustomer) => customerName(a).localeCompare(customerName(b), language)
+  // The letters names here really start with, each alphabet in its own order: a till in
+  // Arabic still has its customers written in English, and the other way round
+  const letters = [...new Set(listed(everyone.data).map((u) => filedUnder(customerName(u))))]
+    .filter((ch) => /\p{L}/u.test(ch))
+    .sort((a, b) => a.localeCompare(b, /[\u0600-\u06FF]/.test(a) ? 'ar' : 'en'))
+  // The till's own alphabet first
+  const arabicFirst = language === 'ar'
+  const isArabic = (ch: string) => /[\u0600-\u06FF]/.test(ch)
+  const strip = [...letters.filter((ch) => isArabic(ch) === arabicFirst), ...letters.filter((ch) => isArabic(ch) !== arabicFirst)]
 
   if (adding) {
     return (
@@ -255,9 +260,9 @@ function SearchBody({
           )}
         </div>
       </TopRow>
-      {/* A name's first letter, without the keyboard */}
-      <div className='no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2' role='toolbar' aria-label={t('customerSearchLetters')}>
-        {LETTERS[language === 'ar' ? 'ar' : 'en'].map((ch) => (
+      {/* A name's first letter, without the keyboard: only letters somebody is filed under */}
+      <div className={cn('no-scrollbar flex shrink-0 gap-1 overflow-x-auto border-b px-3 py-2', strip.length === 0 && 'hidden')} role='toolbar' aria-label={t('customerSearchLetters')}>
+        {strip.map((ch) => (
           <button
             key={ch}
             type='button'

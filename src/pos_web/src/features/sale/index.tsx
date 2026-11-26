@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { Loader2 } from 'lucide-react'
+import { ArrowRightLeft, Loader2, Plus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CustomerSearch } from '@/features/customer/customer-search'
@@ -10,21 +10,33 @@ import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { stayRoster } from '@/features/places/status'
 import { useStayActions } from '@/features/places/use-places'
 import { totalWith } from '@/features/sending/bill'
+import { MoveTargetDialog, type MoveTarget } from '@/features/ticket/move-target-dialog'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useTillItems } from '@/lib/brand'
+import { handleServerError } from '@/lib/handle-server-error'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
+import { BillPayment } from './bill-payment'
 import { billPeople } from './bill-people'
 import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
 import { CustomizeDialog } from './customize-dialog'
 import { ItemPad } from './item-pad'
 import { OrderPanel, type PrimaryAction } from './order-panel'
+import { PayWhoSheet, payersOf, type Payer } from './pay-who-sheet'
 import { PriceReviewDialog } from './price-review-dialog'
 import { SendSheet } from './send-sheet'
+import { useBillLines } from './use-bill-lines'
 import { useMenu } from './use-menu'
 import { useOpenBill } from './use-open-bill'
 import { usePlaceOrder } from './use-place-order'
 import { useSaleDelivery } from './use-sale-delivery'
+
+/** The one customer every given line is for, by name: none when a line is nobody's or there are two */
+function oneName(lines: { customerId?: string | null; customerName?: string | null }[]): string | null {
+  const names = new Set(lines.map((line) => (line.customerId ? `id:${line.customerId}` : (line.customerName ?? ''))))
+  return names.size === 1 && lines[0]?.customerName ? lines[0].customerName : null
+}
 
 /** The customer a tab was opened for (the new-tab dialog): read once, then forgotten */
 function takePendingCustomer(ticketId: number): SaleCustomer | null {
@@ -54,7 +66,17 @@ function takePendingCustomer(ticketId: number): SaleCustomer | null {
  * the order (`OrderPanel`), the bill it is rung onto (`useOpenBill`) and the
  * ways an order is sent (`usePlaceOrder`).
  */
-export function SalePad({ ticketId }: { ticketId?: number }) {
+export function SalePad({
+  ticketId,
+  payOnArrival = false,
+  backTo,
+}: {
+  ticketId?: number
+  /** Opened to be paid at once: a part of a bill, split off for one person */
+  payOnArrival?: boolean
+  /** The bill this one was split from: where the till goes once it is paid */
+  backTo?: number
+}) {
   const onBill = ticketId !== undefined
   const t = useT()
   const localized = useLocalized()
@@ -78,7 +100,13 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const [orderOpen, setOrderOpen] = useState(false)
   const [findingCustomer, setFindingCustomer] = useState(false)
   const [sendOpen, setSendOpen] = useState(false)
-
+  // Taking the money: asked who pays when the bill is more than one person's, then the payment itself
+  const [askingWho, setAskingWho] = useState(false)
+  const [paying, setPaying] = useState(false)
+  // Sent lines being picked, to split off, move to another bill or name: null when they are not
+  const [picked, setPicked] = useState<ReadonlySet<number> | null>(null)
+  const [moveMode, setMoveMode] = useState<'new' | 'move' | null>(null)
+  const [naming, setNaming] = useState(false)
   // A new sale can go out with a rider instead (use-sale-delivery)
   const saleDelivery = useSaleDelivery(onBill)
   const order = usePlaceOrder({ ticketId, saleDelivery, onBeforeCharge: () => setOrderOpen(false) })
@@ -90,9 +118,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // voided: nothing more is rung onto it, its own page says the rest
   useEffect(() => {
     if (bill.gone) navigate({ to: '/' })
-    else if (bill.closed && ticketId !== undefined)
+    else if (bill.closed && ticketId !== undefined && !paying)
       navigate({ to: '/ticket/$ticketId', params: { ticketId: String(ticketId) }, replace: true })
-  }, [bill.gone, bill.closed, ticketId, navigate])
+  }, [bill.gone, bill.closed, ticketId, navigate, paying])
 
   // The sale's rows by line, so the one just rung up can be scrolled to, and
   // how many times each was rung up here, so its tint starts again on every tap
@@ -118,6 +146,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     const opened = ticketId === undefined ? null : takePendingCustomer(ticketId)
     setNamed(opened ? [opened] : [])
     setSendOpen(false)
+    setPicked(null)
+    setAskingWho(false)
+    setPaying(false)
   }, [ticketId])
   const roster = stayRoster(bill.stay)
   const people = billPeople(roster, sent, named)
@@ -135,6 +166,49 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }
     if (part.length === lines.length) setSendOpen(false)
   }
+
+  // What is done to lines already on the bill: moved to another bill, or told whose they are
+  const billLines = useBillLines(bill.ticket)
+  const pickedIds = [...(picked ?? [])]
+  const movable = sent.filter((line) => line.source !== 'SessionTime')
+  const stopPicking = () => {
+    setPicked(null)
+    setMoveMode(null)
+    setNaming(false)
+  }
+  /** The picked lines go to another bill; the till follows them there */
+  const movePicked = async (target: MoveTarget) => {
+    try {
+      const to = await billLines.move(pickedIds, target)
+      toast.success(t('linesMoved'))
+      stopPicking()
+      navigate({ to: '/order/$ticketId', params: { ticketId: String(to) } })
+    } catch (error) {
+      handleServerError(error)
+    }
+  }
+
+  // Who could pay their own part. Asked only when there is more than one,
+  // and never under a running clock, whose time is not on the bill yet
+  const payers = payersOf(sent)
+  const pay = () => (payers.length > 1 && !bill.runningStay ? setAskingWho(true) : setPaying(true))
+  /** One person's part becomes a bill of its own, opened to be paid at once; the rest stays here */
+  const payFor = async (payer: Payer) => {
+    try {
+      const part = await billLines.move(payer.lineIds, { kind: 'counter', label: payer.name ?? title })
+      setAskingWho(false)
+      navigate({ to: '/order/$ticketId', params: { ticketId: String(part) }, search: { pay: true, back: ticketId } })
+    } catch (error) {
+      handleServerError(error)
+    }
+  }
+  // Split off to be paid: the payment opens as soon as the bill is read. Once
+  const paidOnArrival = useRef(false)
+  useEffect(() => {
+    if (!payOnArrival || paidOnArrival.current || !bill.ticket || bill.closed) return
+    paidOnArrival.current = true
+    setPaying(true)
+  }, [payOnArrival, bill.ticket, bill.closed])
 
   const count = saleCount(lines)
   const itemsTotal = saleTotal(lines)
@@ -168,8 +242,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           busy: bill.onTheirWay.length > 0,
           // Never against a bill the server has not got all of
           disabled: sent.length === 0 || bill.mySends.length > 0,
-          onClick: () =>
-            navigate({ to: '/ticket/$ticketId', params: { ticketId: String(ticketId) }, search: { settle: true } }),
+          onClick: pay,
         }
 
   // A phone shows the menu first; a bill with something on it opens on the
@@ -180,6 +253,14 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     openedFor.current = ticketId
     if ((bill.ticket.lines ?? []).length > 0) setOrderOpen(true)
   }, [isMobile, ticketId, bill.ticket])
+
+  const togglePicked = (lineId: number) =>
+    setPicked((now) => {
+      const next = new Set(now ?? [])
+      if (next.has(lineId)) next.delete(lineId)
+      else next.add(lineId)
+      return next
+    })
 
   const orderPanel = (
     <OrderPanel
@@ -204,6 +285,35 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       deliveryFee={saleDelivery.fee}
       primary={primary}
       onClear={clear}
+      selection={picked ? { chosen: picked, onToggle: togglePicked } : undefined}
+      onSelectLines={() => setPicked(new Set())}
+      footer={
+        picked && (
+          // The lines ticked, and what is done with them
+          <div className='flex flex-col gap-2'>
+            <div className='flex items-center justify-between'>
+              <span className='text-sm font-medium'>{t('selectedLinesCount', { count: picked.size })}</span>
+              <Button variant='ghost' className='h-10' onClick={stopPicking}>
+                {t('cancel')}
+              </Button>
+            </div>
+            <div className='grid grid-cols-3 gap-2'>
+              <Button variant='outline' className='h-14 min-w-0 flex-col gap-0.5 px-1 text-xs' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
+                <UserPlus className='size-5' />
+                <span className='truncate'>{t('assignCustomer')}</span>
+              </Button>
+              <Button variant='outline' className='h-14 min-w-0 flex-col gap-0.5 px-1 text-xs' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('move')}>
+                <ArrowRightLeft className='size-5' />
+                <span className='truncate'>{t('moveToBill')}</span>
+              </Button>
+              <Button className='h-14 min-w-0 flex-col gap-0.5 px-1 text-xs' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('new')}>
+                <Plus className='size-5' />
+                <span className='truncate'>{t('newBill')}</span>
+              </Button>
+            </div>
+          </div>
+        )
+      }
     />
   )
 
@@ -270,6 +380,65 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       />
       {order.offlineElement}
 
+      {/* What is done with the lines picked on the bill */}
+      {bill.ticket && (
+        <MoveTargetDialog
+          open={moveMode !== null}
+          mode={moveMode ?? 'move'}
+          onOpenChange={(open) => !open && setMoveMode(null)}
+          ticket={bill.ticket}
+          count={pickedIds.length}
+          allSelected={pickedIds.length >= movable.length}
+          suggestedName={oneName(sent.filter((line) => picked?.has(toNumber(line.id))))}
+          isPending={billLines.moving}
+          onPick={movePicked}
+        />
+      )}
+      <CustomerSearch
+        open={naming}
+        onOpenChange={setNaming}
+        onPick={(who) => {
+          void billLines.assign(pickedIds, who).then((done) => {
+            if (!done) return
+            // Somebody with an account named on a room's lines is in the room
+            if (bill.stay && who.id && !roster.some((member) => member.id === who.id)) {
+              stayActions.addMember(toNumber(bill.stay.id), who.id, who.name)
+            }
+            stopPicking()
+          })
+        }}
+      />
+
+      {/* Taking the money, over the order */}
+      {bill.ticket && (
+        <>
+          <PayWhoSheet
+            open={askingWho}
+            onOpenChange={setAskingWho}
+            title={title}
+            total={toNumber(bill.ticket.total)}
+            payers={payers}
+            busy={billLines.moving}
+            onEverything={() => {
+              setAskingWho(false)
+              setPaying(true)
+            }}
+            onPayer={payFor}
+          />
+          <BillPayment
+            ticket={bill.ticket}
+            title={title}
+            stay={bill.stay}
+            runningStay={bill.runningStay}
+            open={paying}
+            onOpenChange={setPaying}
+            // A part split off for one person: back to the bill it came from, for the rest
+            onPaid={() =>
+              backTo ? navigate({ to: '/order/$ticketId', params: { ticketId: String(backTo) } }) : navigate({ to: '/' })
+            }
+          />
+        </>
+      )}
       {/* Blocking wait for a delivery or a call-centre order, which has no
           bill on this till to show itself on: nothing else may be touched
           until the server has it */}

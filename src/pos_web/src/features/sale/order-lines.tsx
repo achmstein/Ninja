@@ -1,12 +1,11 @@
 import type { ReactNode } from 'react'
-import { Minus, Plus, Trash2 } from 'lucide-react'
+import { Check, Minus, Plus, Trash2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Button } from '@/components/ui/button'
 import { mergeIdenticalLines } from '@/features/ticket/bill-lines'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
-import { firstName } from './bill-people'
 import { lineKey, type SaleLine } from './cart'
 
 /** A quiet heading over a part of the order: what is new, what was sent */
@@ -77,47 +76,90 @@ export function NewLineRow({
 const whoKey = (line: TicketLineView) =>
   line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : ''
 
+/** The lines being picked, to move to another bill or to name: which, and the tap that picks one */
+export type LineSelection = { chosen: ReadonlySet<number>; onToggle: (lineId: number) => void }
+
 /**
  * What an open bill already holds, as one quiet list. The same item ordered
  * twice for the same person reads as one line; a line that was for somebody
- * ends with their first name, which is all that says whose is whose.
+ * says so under it, by their whole name, which is all that tells whose is
+ * whose. While lines are being picked each round stands on its own with a
+ * box to tick; the room's time is the room's and is never picked.
  */
-export function SentLines({ lines, landed }: { lines: TicketLineView[]; landed: readonly number[] }) {
+export function SentLines({
+  lines,
+  landed,
+  selection,
+}: {
+  lines: TicketLineView[]
+  landed: readonly number[]
+  selection?: LineSelection
+}) {
+  const t = useT()
   const localized = useLocalized()
   const money = useMoney()
 
   // Merged person by person, so one person's two coffees add up without taking another's with them
   const keys = [...new Set(lines.map(whoKey))]
-  const merged = keys.flatMap((key) => mergeIdenticalLines(lines.filter((line) => whoKey(line) === key)))
+  const shown = selection ? lines : keys.flatMap((key) => mergeIdenticalLines(lines.filter((line) => whoKey(line) === key)))
 
   return (
     <div className='flex flex-col divide-y'>
-      {merged.map((line) => {
+      {shown.map((line) => {
+        const id = toNumber(line.id)
         const negative = toNumber(line.total) < 0
-        return (
-          <div
-            key={String(line.id)}
-            className={cn(
-              'text-muted-foreground flex min-h-11 items-center gap-2 px-3 py-2 text-sm',
-              // Just in from the server: a soft tint behind it fades out
-              landed.includes(toNumber(line.orderId)) && 'animate-landed',
+        const pickable = !!selection && line.source !== 'SessionTime'
+        const picked = pickable && selection.chosen.has(id)
+        const body = (
+          <>
+            {selection && (
+              <span
+                aria-hidden
+                className={cn(
+                  'flex size-6 shrink-0 items-center justify-center rounded-md border',
+                  !pickable && 'invisible',
+                  picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50',
+                )}
+              >
+                {picked && <Check className='size-4' />}
+              </span>
             )}
-          >
             <span className='w-7 shrink-0 font-medium tabular-nums'>{toNumber(line.qty)}×</span>
             <span className='min-w-0 flex-1'>
               <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
                 {localized(line.description)}
               </span>
               {localized(line.details) && <span className='block truncate text-xs'>{localized(line.details)}</span>}
+              {line.customerName && (
+                <bdi className='text-foreground/70 block truncate text-xs font-medium'>{line.customerName}</bdi>
+              )}
             </span>
-            {line.customerName && (
-              <bdi className='bg-muted max-w-[30%] shrink-0 truncate rounded-full px-2 py-0.5 text-xs'>
-                {firstName(line.customerName)}
-              </bdi>
-            )}
             <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>
               {money(line.total)}
             </span>
+          </>
+        )
+        const row = cn(
+          'text-muted-foreground flex min-h-11 w-full items-center gap-2 px-3 py-2 text-start text-sm',
+          // Just in from the server: a soft tint behind it fades out
+          landed.includes(toNumber(line.orderId)) && 'animate-landed',
+          picked && 'bg-accent',
+        )
+        return pickable ? (
+          <button
+            key={String(line.id)}
+            type='button'
+            role='checkbox'
+            aria-checked={picked}
+            aria-label={t('selectLines')}
+            onClick={() => selection.onToggle(id)}
+            className={cn(row, 'hover:bg-accent/60')}
+          >
+            {body}
+          </button>
+        ) : (
+          <div key={String(line.id)} className={row}>
+            {body}
           </div>
         )
       })}

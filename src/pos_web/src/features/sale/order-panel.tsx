@@ -1,4 +1,4 @@
-import type { ElementType, RefObject } from 'react'
+import type { ElementType, ReactNode, RefObject } from 'react'
 import { Loader2, Plus, Trash2, UserPlus } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { Button } from '@/components/ui/button'
@@ -11,7 +11,7 @@ import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { BillMenu } from './bill-menu'
 import { lineKey, type SaleCustomer, type SaleLine } from './cart'
-import { NewLineRow, SectionLabel, SentLines } from './order-lines'
+import { NewLineRow, SectionLabel, SentLines, type LineSelection } from './order-lines'
 import { OrderTypeSwitch } from './order-type-switch'
 import { SaleDeliverySummary } from './sale-delivery-summary'
 import type { useOpenBill } from './use-open-bill'
@@ -59,6 +59,9 @@ export function OrderPanel({
   deliveryFee,
   primary,
   onClear,
+  selection,
+  onSelectLines,
+  footer,
 }: {
   /** `h2` beside the menu; the sheet's own title on a phone */
   Heading: ElementType
@@ -85,6 +88,11 @@ export function OrderPanel({
   deliveryFee: number
   primary: PrimaryAction
   onClear: () => void
+  /** Sent lines are being picked (to split off, move or name) */
+  selection?: LineSelection
+  onSelectLines: () => void
+  /** What stands in the button's place while lines are picked */
+  footer?: ReactNode
 }) {
   const t = useT()
   const money = useMoney()
@@ -109,8 +117,13 @@ export function OrderPanel({
           )}
         </Heading>
         {/* The rest a bill can do (discount, print, void) opens here, over the order */}
-        {onBill && bill.ticket && (
-          <BillMenu ticket={bill.ticket} runningStay={bill.runningStay} sending={bill.mySends.length > 0} />
+        {onBill && bill.ticket && !bill.closed && (
+          <BillMenu
+            ticket={bill.ticket}
+            runningStay={bill.runningStay}
+            sending={bill.mySends.length > 0}
+            onSelectLines={onSelectLines}
+          />
         )}
         {(!onBill || lines.length > 0) && (
           <Button
@@ -185,7 +198,7 @@ export function OrderPanel({
             {lines.length > 0 && <SectionLabel>{t('sentItems')}</SectionLabel>}
             {/* Charged a moment ago and on their way: they breathe until the server has them */}
             <SendingLines sends={bill.mySends} />
-            <SentLines lines={sent} landed={bill.landed} />
+            <SentLines lines={sent} landed={bill.landed} selection={selection} />
           </>
         )}
         {onBill && !hasSent && lines.length === 0 && bill.ticket && (
@@ -229,6 +242,7 @@ export function OrderPanel({
             autoComplete='off'
           />
         )}
+        {footer ?? (
         <Button
           size='lg'
           className={cn('h-14 w-full px-5 text-lg', primary.amount != null && 'justify-between')}
@@ -241,6 +255,7 @@ export function OrderPanel({
           </span>
           {primary.amount != null && <span className='tabular-nums'>{money(primary.amount)}</span>}
         </Button>
+        )}
       </div>
     </>
   )

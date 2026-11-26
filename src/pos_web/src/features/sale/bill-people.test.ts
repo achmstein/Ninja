@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { billPeople, firstName } from './bill-people'
+import { billPeople } from './bill-people'
 
 describe('billPeople', () => {
   it('lists the room first, then whoever earlier rounds were for, each once', () => {
@@ -34,13 +34,5 @@ describe('billPeople', () => {
       { customerId: null, customerName: 'Mona' },
     ])
     expect(people).toHaveLength(2)
-  })
-})
-
-describe('firstName', () => {
-  it('is the first word of the name', () => {
-    expect(firstName('  Mona Ali ')).toBe('Mona')
-    expect(firstName('منى علي')).toBe('منى')
-    expect(firstName('')).toBe('')
   })
 })

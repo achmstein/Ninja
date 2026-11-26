@@ -1,5 +1,4 @@
 import { useState } from 'react'
-import { useNavigate } from '@tanstack/react-router'
 import { useAuth } from 'react-oidc-context'
 import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2 } from 'lucide-react'
 import type { TicketDetail } from '@/api/sales/types.gen'
@@ -28,22 +27,24 @@ import { orderIdsOn } from '@/lib/stock-disposition'
  * The rest a bill can do, from the sale screen it is rung up on: a discount,
  * the bill on paper, the kitchen's tickets again, and taking it off the floor
  * (discarded while empty, voided by an owner once something is on it). Each
- * opens here, over the sale; only splitting or moving lines, which is done by
- * picking them, goes to the bill's own list.
+ * opens here, over the sale; splitting or moving lines turns the order's own
+ * list into boxes to tick.
  */
 export function BillMenu({
   ticket,
   runningStay,
   sending,
+  onSelectLines,
 }: {
   ticket: TicketDetail
   runningStay: StayViewModel | undefined
   /** Lines charged here are still on their way: nothing empties the bill under them */
   sending: boolean
+  /** Picking lines to split off, move to another bill or name: done on the order itself */
+  onSelectLines: () => void
 }) {
   const t = useT()
   const money = useMoney()
-  const navigate = useNavigate()
   const auth = useAuth()
   const stayActions = useStayActions()
   const [discountOpen, setDiscountOpen] = useState(false)
@@ -91,11 +92,11 @@ export function BillMenu({
               {t('kitchenTickets')}
             </DropdownMenuItem>
           )}
-          {/* Picking lines to split, move or name is done on the bill's own list */}
+          {/* Picking lines to split, move or name: the order's own list turns into boxes to tick */}
           {lines.length > 0 && (
             <DropdownMenuItem
               className={item}
-              onSelect={() => navigate({ to: '/ticket/$ticketId', params: { ticketId: String(ticketId) } })}
+              onSelect={onSelectLines}
             >
               <ListChecks className='size-5' />
               {t('splitOrMove')}

@@ -24,8 +24,3 @@ export function billPeople(
   for (const person of extra) add(person)
   return people
 }
-
-/** How a person is said in a tight spot: their first name */
-export function firstName(name: string): string {
-  return name.trim().split(/\s+/)[0] ?? ''
-}
