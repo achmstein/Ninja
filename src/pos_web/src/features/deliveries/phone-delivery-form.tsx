@@ -544,9 +544,7 @@ function Stepper({
                 aria-hidden
                 className={cn(
                   'h-1.5 w-full rounded-full transition-colors duration-300',
-                  past && 'bg-primary',
-                  now && 'bg-primary shadow-primary/40 shadow-[0_0_0_3px]',
-                  !past && !now && 'bg-muted',
+                  past || now ? 'bg-primary' : 'bg-muted',
                 )}
               />
               <span className='flex w-full min-w-0 items-center gap-1.5'>
