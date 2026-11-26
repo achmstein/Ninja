@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, X } from 'lucide-react'
@@ -72,6 +72,8 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   // walk-in's name from the picker
   const [customer, setCustomer] = useState<SaleCustomer | null>(null)
   const [pickerOpen, setPickerOpen] = useState(false)
+  // Who the bill being opened right now is for: read when the server answers
+  const openingFor = useRef<SaleCustomer | null>(null)
 
   useEffect(() => {
     if (!open) {
@@ -111,11 +113,12 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       // Client-side link: the tab has no customer field, so remember the
       // picked account for the sale pad to pre-select when items are added.
-      if (customer?.id) {
+      const who = openingFor.current
+      if (who?.id) {
         try {
           localStorage.setItem(
             pendingTicketCustomerKey(result.ticketId),
-            JSON.stringify(customer),
+            JSON.stringify(who),
           )
         } catch {
           // A browser refusing storage just loses the pre-selection
@@ -127,15 +130,18 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     },
   })
 
-  const openCounter = () =>
+  /** Opens the tab: for the customer given, else the one picked, else under the name typed */
+  const openCounter = (who: SaleCustomer | null = customer) => {
+    openingFor.current = who
     openTicket.mutate({
       headers: { 'x-requestid': crypto.randomUUID() },
       query: { 'api-version': API_VERSION },
       body: {
         type: TICKET_TYPE_COUNTER,
-        label: customer?.name ?? (label.trim() || null),
+        label: who?.name ?? (label.trim() || null),
       },
     })
+  }
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -199,7 +205,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
             size='lg'
             className='h-12 px-6'
             disabled={openTicket.isPending}
-            onClick={openCounter}
+            onClick={() => openCounter()}
           >
             {openTicket.isPending ? (
               <Loader2 className='size-5 animate-spin' />
@@ -213,7 +219,11 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
       <CustomerSearch
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        onPick={setCustomer}
+        // Picking who it is for opens their bill at once: there is nothing left to say
+        onPick={(picked) => {
+          setCustomer(picked)
+          openCounter(picked)
+        }}
         busy={busy}
       />
     </Dialog>
