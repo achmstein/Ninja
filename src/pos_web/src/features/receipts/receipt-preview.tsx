@@ -95,13 +95,13 @@ export function ReceiptPreview({
     <>
       <div className='min-h-0 flex-1 overflow-y-auto p-4'>
         <div className='pe-10'>
-          <h2 className='text-xl font-bold tabular-nums'>
+          <h2 className='type-title tabular-nums'>
             {ticket.receiptNumber != null
               ? t('receiptNumber', { number: toNumber(ticket.receiptNumber) })
               : t('ticketNumber', { id: toNumber(ticket.id) })}
           </h2>
-          <div className='text-base font-medium'>{title}</div>
-          <p className='text-muted-foreground text-sm'>
+          <div className='type-body font-medium'>{title}</div>
+          <p className='text-muted-foreground type-detail'>
             {ticket.settledAt &&
               new Intl.DateTimeFormat(locale, {
                 dateStyle: 'medium',
@@ -109,7 +109,7 @@ export function ReceiptPreview({
               }).format(new Date(ticket.settledAt))}
             {ticket.settledBy && ` · ${t('closedBy')} ${ticket.settledBy}`}
           </p>
-          {takenBy && <p className='text-muted-foreground text-sm'>{takenBy}</p>}
+          {takenBy && <p className='text-muted-foreground type-detail'>{takenBy}</p>}
         </div>
 
         <ul className='mt-4 divide-y border-y'>
@@ -119,26 +119,26 @@ export function ReceiptPreview({
                 {toNumber(line.qty)}×
               </span>
               <span className='min-w-0 flex-1'>
-                <span className='block font-medium'>{localized(line.description)}</span>
+                <span className='type-body block font-medium'>{localized(line.description)}</span>
                 {localized(line.details) && (
-                  <span className='text-muted-foreground block text-sm'>
+                  <span className='text-muted-foreground type-detail block'>
                     {localized(line.details)}
                   </span>
                 )}
                 {toNumber(line.discount) > 0 && (
-                  <span className='text-muted-foreground block text-sm'>
+                  <span className='text-muted-foreground type-detail block'>
                     {t('discount')} −{money(line.discount)}
                   </span>
                 )}
               </span>
-              <span className='shrink-0 font-medium tabular-nums'>{money(line.total)}</span>
+              <span className='type-body shrink-0 font-medium tabular-nums'>{money(line.total)}</span>
             </li>
           ))}
         </ul>
 
         <dl className='mt-3 space-y-1 tabular-nums'>
           {hasBreakdown && (
-            <div className='text-muted-foreground space-y-1 text-sm'>
+            <div className='text-muted-foreground space-y-1 type-detail'>
               <Row label={t('subtotal')} value={money(subtotal)} />
               {discount > 0 && <Row label={t('discount')} value={`−${money(discount)}`} />}
               {service > 0 && (
@@ -157,7 +157,7 @@ export function ReceiptPreview({
             <dd>{money(total)}</dd>
           </div>
           {vat > 0 && ticket.vatIncluded && (
-            <div className='text-muted-foreground text-sm'>
+            <div className='text-muted-foreground type-detail'>
               <Row
                 label={t('vatIncluded', { rate: percent(ticket.vatRate) })}
                 value={money(vat)}
@@ -192,11 +192,11 @@ export function ReceiptPreview({
                   value={`−${money(refund.amount)}`}
                 />
                 {refund.reason && (
-                  <p className='text-muted-foreground text-sm'>{refund.reason}</p>
+                  <p className='text-muted-foreground type-detail'>{refund.reason}</p>
                 )}
               </div>
             ))}
-            <div className='flex justify-between gap-4 font-semibold'>
+            <div className='flex justify-between gap-4 type-heading'>
               <dt>{t('refundedSoFar')}</dt>
               <dd>−{money(ticket.refundedTotal)}</dd>
             </div>

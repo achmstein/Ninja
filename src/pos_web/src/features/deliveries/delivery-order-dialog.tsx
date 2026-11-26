@@ -73,21 +73,21 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
   return (
     <>
       <DialogHeader>
-        <DialogTitle className='text-xl'>{t('orderNumber', { id })}</DialogTitle>
-        <DialogDescription className='text-base'>
+        <DialogTitle className='type-title'>{t('orderNumber', { id })}</DialogTitle>
+        <DialogDescription className='type-body'>
           {order.customerName || t('guest')} · {money(order.total)}
         </DialogDescription>
       </DialogHeader>
       <DeliveryDetails delivery={d} />
       {d.failureReason && (
-        <p className='flex items-start gap-1.5 text-sm text-amber-700 dark:text-amber-400'>
+        <p className='flex items-start gap-1.5 type-detail text-amber-700 dark:text-amber-400'>
           <AlertTriangle className='mt-0.5 size-4 shrink-0' aria-hidden />
           {d.failureReason}
         </p>
       )}
       {/* A connected company: its system has the job, who it sent, and where to follow the courier */}
       {courier && d.courierJobId && (
-        <div className='bg-muted/50 flex flex-col gap-1.5 rounded-lg px-3 py-2 text-sm'>
+        <div className='bg-muted/50 flex flex-col gap-1.5 rounded-lg px-3 py-2 type-detail'>
           <span className='flex items-start gap-1.5'>
             <Truck className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
             <span>
@@ -104,7 +104,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
               ) : !out ? (
                 t('deliveryCourierWaiting')
               ) : null}
-              <span className='text-muted-foreground block text-xs'>
+              <span className='text-muted-foreground block type-caption'>
                 {t('deliveryCourierSystemHas', { name: d.courierProvider ?? '' })}
               </span>
             </span>
@@ -122,7 +122,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           )}
         </div>
       )}
-      <ul className='flex flex-col gap-1 text-sm'>
+      <ul className='flex flex-col gap-1 type-detail'>
         {/* The count and the name apart, so an English item name in Arabic still reads count first */}
         {(order.items ?? []).map((item, i) => (
           <li key={`${localized(item.productName)}-${i}`} className='flex gap-1.5'>
@@ -142,11 +142,11 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
 
       {choosing && (
         <div className='flex flex-col gap-2'>
-          <span className='text-muted-foreground text-sm font-medium'>{t('deliveryGiveTo')}</span>
+          <span className='text-muted-foreground type-detail font-medium'>{t('deliveryGiveTo')}</span>
           {riders.isLoading ? (
             <Skeleton className='h-14' />
           ) : (riders.data ?? []).length === 0 ? (
-            <p className='text-muted-foreground text-sm'>{t('deliveryNoRiders')}</p>
+            <p className='text-muted-foreground type-detail'>{t('deliveryNoRiders')}</p>
           ) : (
             (riders.data ?? []).map((r) => (
               <RiderRow
@@ -172,7 +172,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
           till says it left, then that it arrived or couldn't be */}
       {lane === 'withRider' && (
         <div className='flex flex-col gap-1.5 border-t pt-3'>
-          <span className='text-muted-foreground text-xs'>
+          <span className='text-muted-foreground type-caption'>
             {courier ? t('deliveryForCourier', { name: rider }) : t('deliveryForRider', { name: rider })}
           </span>
           {!out ? (
@@ -184,7 +184,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
             // A courier's delivery is said with what was collected: that settles the bill to the company
             <div className='flex flex-col gap-2'>
               {toCollect === 0 ? (
-                <p className='text-muted-foreground text-sm'>{t('deliveryCourierPaidOnline')}</p>
+                <p className='text-muted-foreground type-detail'>{t('deliveryCourierPaidOnline')}</p>
               ) : (
                 <>
                   <Label htmlFor='courier-collected'>{t('deliveryCourierCollected')}</Label>
@@ -284,7 +284,7 @@ function DeliveryOrderBody({ order, close }: { order: BoardDelivery; close: () =
             aria-describedby='cash-difference'
             autoComplete='off'
           />
-          <p id='cash-difference' className='text-sm' aria-live='polite'>
+          <p id='cash-difference' className='type-detail' aria-live='polite'>
             {difference != null && difference !== 0 && (
               <span className='text-amber-700 dark:text-amber-400'>
                 {difference < 0
@@ -333,7 +333,7 @@ function Confirm({
   const t = useT()
   return (
     <div className='flex flex-col gap-2' role='group'>
-      {text && <p className='text-sm font-medium'>{text}</p>}
+      {text && <p className='type-detail font-medium'>{text}</p>}
       <div className='grid grid-cols-2 gap-2'>
         <Button variant='outline' className='h-11' disabled={busy} onClick={onCancel}>
           {t('goBack')}
@@ -390,7 +390,7 @@ function RiderRow({
       <span className='min-w-0 flex-1'>
         <span className='block truncate font-medium'>{rider.name}</span>
         {/* Off duty or not signed in is said in words, not only by a dot or a fade */}
-        <span className={cn('block text-xs', rider.onDuty ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>
+        <span className={cn('block type-caption', rider.onDuty ? 'text-muted-foreground' : 'text-amber-700 dark:text-amber-400')}>
           {status}
         </span>
       </span>

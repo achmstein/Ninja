@@ -33,7 +33,7 @@ export function DeliveriesSummary() {
       className='hover:bg-muted/50 flex w-full items-center gap-3 rounded-xl border px-3.5 py-2.5 text-start transition-colors'
     >
       <Bike className='text-primary size-5 shrink-0' aria-hidden />
-      <span className='shrink-0 text-lg font-semibold'>{t('deliveries')}</span>
+      <span className='shrink-0 type-heading'>{t('deliveries')}</span>
       {/* The lanes scroll sideways on a narrow till rather than wrap the row */}
       <span className='flex min-w-0 flex-1 gap-2 overflow-x-auto'>
         {BOARD_LANES.map((lane) => {
@@ -44,7 +44,7 @@ export function DeliveriesSummary() {
             <span
               key={lane}
               className={cn(
-                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 text-sm font-semibold tabular-nums',
+                'inline-flex h-9 shrink-0 items-center gap-1.5 rounded-full px-3 type-detail font-semibold tabular-nums',
                 count > 0 && meta.tint ? meta.tint : 'bg-secondary',
                 count === 0 && 'text-muted-foreground',
               )}

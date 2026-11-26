@@ -109,23 +109,23 @@ export function OrderDetailDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>
+          <DialogTitle className='type-title'>
             {t('orderNumber', { id: orderNumber ?? 0 })}
           </DialogTitle>
           {(place || who) && (
-            <DialogDescription className='text-base'>
+            <DialogDescription className='type-body'>
               {[place, who].filter(Boolean).join(' · ')}
             </DialogDescription>
           )}
           {platform ? (
-            <div className='flex flex-col gap-1 text-sm'>
+            <div className='flex flex-col gap-1 type-detail'>
               <PlatformBadge platform={platform} />
               <PlatformHandover platform={platform} className='text-muted-foreground' />
             </div>
           ) : summary && (
             <p
               className={cn(
-                'flex items-center gap-1.5 text-sm',
+                'flex items-center gap-1.5 type-detail',
                 ordersBefore === 0
                   ? 'text-amber-600 dark:text-amber-500'
                   : 'text-muted-foreground',
@@ -138,7 +138,7 @@ export function OrderDetailDialog({
         </DialogHeader>
 
         {failed ? (
-          <div className='bg-muted flex items-center gap-2 rounded-lg p-3 text-sm'>
+          <div className='bg-muted flex items-center gap-2 rounded-lg p-3 type-detail'>
             <CircleAlert className='text-muted-foreground size-5 shrink-0' />
             <span className='flex-1'>{t('orderDetailsFailed')}</span>
             <Button variant='outline' size='sm' onClick={() => refetch()}>
@@ -158,7 +158,7 @@ export function OrderDetailDialog({
               {(order.orderItems ?? []).map((item, index) => (
                 <div key={index}>
                   <div className='flex items-baseline justify-between gap-3'>
-                    <span className='text-base font-medium'>
+                    <span className='type-body font-medium'>
                       {toNumber(item.units)}× {localized(item.productName)}
                     </span>
                     <span className='text-muted-foreground shrink-0 tabular-nums'>
@@ -166,12 +166,12 @@ export function OrderDetailDialog({
                     </span>
                   </div>
                   {localized(item.customizationsDescription) && (
-                    <div className='text-muted-foreground text-sm'>
+                    <div className='text-muted-foreground type-detail'>
                       {localized(item.customizationsDescription)}
                     </div>
                   )}
                   {item.specialInstructions && (
-                    <div className='text-muted-foreground text-sm italic'>
+                    <div className='text-muted-foreground type-detail italic'>
                       "{item.specialInstructions}"
                     </div>
                   )}
@@ -182,7 +182,7 @@ export function OrderDetailDialog({
             {order.delivery && <DeliveryDetails delivery={order.delivery} />}
 
             {order.customerNote && (
-              <div className='bg-muted flex items-start gap-2 rounded-lg p-3 text-sm'>
+              <div className='bg-muted flex items-start gap-2 rounded-lg p-3 type-detail'>
                 <MessageSquare className='text-muted-foreground mt-0.5 size-4 shrink-0' />
                 <span>{order.customerNote}</span>
               </div>
@@ -194,14 +194,14 @@ export function OrderDetailDialog({
               {/* The fee is part of the bill: shown with it, so the total adds up */}
               {order.delivery && <DeliveryFeeRow delivery={order.delivery} />}
               {loyaltyDiscount > 0 && (
-                <div className='text-muted-foreground flex justify-between text-sm'>
+                <div className='text-muted-foreground flex justify-between type-detail'>
                   <span>{t('loyaltyDiscount')}</span>
                   <span className='tabular-nums'>
                     −{money(loyaltyDiscount)}
                   </span>
                 </div>
               )}
-              <div className='flex justify-between text-lg font-semibold'>
+              <div className='flex justify-between type-heading'>
                 <span>{t('total')}</span>
                 <span className='tabular-nums'>{money(order.total)}</span>
               </div>
@@ -211,13 +211,13 @@ export function OrderDetailDialog({
 
         {cancelling ? (
           <>
-            <p className='text-destructive text-base'>
+            <p className='text-destructive type-body'>
               {t('cancelOrderConfirm')}
             </p>
             {/* The platform tells its customer why; one tap picks it */}
             {platform && (
               <div className='flex flex-col gap-2'>
-                <span className='text-muted-foreground text-sm'>
+                <span className='text-muted-foreground type-detail'>
                   {t('platformRejectReason')}
                 </span>
                 <div className='flex flex-wrap gap-2'>

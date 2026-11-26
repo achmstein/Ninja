@@ -85,18 +85,18 @@ export function LineRow({
       <div className='min-w-0 flex-1'>
         <div
           className={cn(
-            'truncate text-base font-medium',
+            'truncate type-body font-medium',
             isNegative && 'text-emerald-600 dark:text-emerald-400',
           )}
         >
           {localized(line.description)}
         </div>
         {localized(line.details) && (
-          <div className='text-muted-foreground truncate text-sm'>
+          <div className='text-muted-foreground truncate type-detail'>
             {localized(line.details)}
           </div>
         )}
-        <div className='text-muted-foreground text-sm tabular-nums'>
+        <div className='text-muted-foreground type-detail tabular-nums'>
           {toNumber(line.qty)} × {money(line.unitPrice)}
           {discount > 0 && (
             <span>
@@ -108,7 +108,7 @@ export function LineRow({
       </div>
       <div
         className={cn(
-          'shrink-0 text-lg font-semibold tabular-nums',
+          'shrink-0 type-body font-semibold tabular-nums',
           isNegative && 'text-emerald-600 dark:text-emerald-400',
         )}
       >

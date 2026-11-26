@@ -83,7 +83,7 @@ export function ShiftChip() {
             !shift ? 'bg-muted-foreground/40' : 'bg-emerald-500'
           )}
         />
-        <span className='text-sm font-medium tabular-nums max-sm:sr-only'>
+        <span className='type-detail font-medium tabular-nums max-sm:sr-only'>
           {shift ? `${t('shiftTitle')} ${openedAt}` : t('noShiftChip')}
         </span>
       </Button>

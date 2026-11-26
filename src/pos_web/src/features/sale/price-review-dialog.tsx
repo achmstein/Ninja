@@ -48,7 +48,7 @@ export function PriceReviewDialog({
           </DialogTitle>
           {drops && !nothingLeft && <DialogDescription>{t('priceReviewDropped')}</DialogDescription>}
         </DialogHeader>
-        <ul className='flex flex-col gap-1.5 text-sm'>
+        <ul className='flex flex-col gap-1.5 type-detail'>
           {review?.items.map((item) => (
             <li key={item.key} className='flex items-start gap-2 rounded-md bg-muted px-2.5 py-2'>
               {item.kind !== 'changed' && <AlertTriangle className='mt-0.5 size-4 shrink-0 text-amber-700 dark:text-amber-400' aria-hidden />}
@@ -63,7 +63,7 @@ export function PriceReviewDialog({
           ))}
         </ul>
         {nothingLeft && (
-          <p role='alert' className='text-sm text-amber-700 dark:text-amber-400'>
+          <p role='alert' className='type-detail text-amber-700 dark:text-amber-400'>
             {t('priceReviewNothingLeft', { branch })}
           </p>
         )}

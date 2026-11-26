@@ -41,7 +41,7 @@ export function PinQualityLabel({
   return (
     <span
       className={cn(
-        'inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-xs font-medium',
+        'inline-flex items-center gap-1.5 rounded-md px-2 py-1 type-caption font-medium',
         quality === 'exact' && 'bg-emerald-500/10 text-emerald-700 dark:text-emerald-400',
         quality === 'approximate' && 'bg-amber-500/10 text-amber-700 dark:text-amber-400',
         quality === 'none' && 'bg-destructive/10 text-destructive',

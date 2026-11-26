@@ -148,9 +148,9 @@ function SearchBody({
         className='hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 type-body text-start disabled:cursor-not-allowed disabled:opacity-50'
       >
         <span className='min-w-0 flex-1'>
-          <bdi className='block truncate font-semibold'>
-            {mark ? <Highlight text={name} ranges={matchRanges(name, typed)} /> : name}
-          </bdi>
+          <span className='block truncate font-semibold'>
+            <bdi>{mark ? <Highlight text={name} ranges={matchRanges(name, typed)} /> : name}</bdi>
+          </span>
           {off && <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>}
         </span>
         {user.phoneNumber && (

@@ -29,7 +29,7 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
 
   return (
     <div className='flex flex-col gap-2'>
-      <span className='text-muted-foreground text-sm font-medium'>{t('deliveryCouriers')}</span>
+      <span className='text-muted-foreground type-detail font-medium'>{t('deliveryCouriers')}</span>
       {list.map((provider) => {
         const id = toNumber(provider.id)
         const fee = provider.defaultFee == null ? null : toNumber(provider.defaultFee)
@@ -70,9 +70,9 @@ export function CourierPicker({ order, enabled }: { order: BoardDelivery; enable
                 <bdi>{provider.name}</bdi>
               </span>
               {provider.isConnected && current !== id ? (
-                <span className='text-muted-foreground block text-xs'>{t('deliveryCourierConnected')}</span>
+                <span className='text-muted-foreground block type-caption'>{t('deliveryCourierConnected')}</span>
               ) : (current === id ? d.courierName : null) || fee != null ? (
-                <span className='text-muted-foreground block text-xs'>
+                <span className='text-muted-foreground block type-caption'>
                   {current === id && d.courierName ? <bdi>{d.courierName}</bdi> : null}
                   {current === id && d.courierName && fee != null ? ' · ' : null}
                   {fee != null ? t('deliveryCourierFeeLine', { amount: money(current === id && d.courierFee != null ? d.courierFee : fee) }) : null}

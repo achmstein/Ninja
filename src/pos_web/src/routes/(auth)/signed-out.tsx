@@ -54,7 +54,7 @@ function SignedOut() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='text-xl tracking-tight'>
+            <CardTitle className='type-title'>
               {t('signedOutTitle')}
             </CardTitle>
           </CardHeader>
@@ -76,7 +76,7 @@ function SignedOut() {
     <div className='grid min-h-svh place-items-center p-4'>
       <Card className='w-full max-w-md gap-4'>
         <CardHeader className='text-center'>
-          <CardTitle className='text-xl tracking-tight'>
+          <CardTitle className='type-title'>
             {roster.length > 0 ? t('whoIsSelling') : t('signedOutTitle')}
           </CardTitle>
         </CardHeader>

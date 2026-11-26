@@ -59,8 +59,8 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
 
   const stat = (label: string, value: string) => (
     <div className='bg-card rounded-xl border p-3'>
-      <div className='text-muted-foreground text-sm'>{label}</div>
-      <div className='text-lg font-semibold tabular-nums'>{value}</div>
+      <div className='text-muted-foreground type-detail'>{label}</div>
+      <div className='type-body font-semibold tabular-nums'>{value}</div>
     </div>
   )
 
@@ -71,19 +71,19 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       {closed ? (
         <div className='bg-accent grid grid-cols-3 gap-2 rounded-xl p-4 text-center'>
           <div>
-            <div className='text-muted-foreground text-sm'>{t('expected')}</div>
+            <div className='text-muted-foreground type-detail'>{t('expected')}</div>
             <div className='text-xl font-bold tabular-nums'>
               {money(shift.expectedCash ?? shift.expectedInDrawer)}
             </div>
           </div>
           <div>
-            <div className='text-muted-foreground text-sm'>{t('counted')}</div>
+            <div className='text-muted-foreground type-detail'>{t('counted')}</div>
             <div className='text-xl font-bold tabular-nums'>
               {money(shift.closingCount)}
             </div>
           </div>
           <div>
-            <div className='text-muted-foreground text-sm'>{t('overShort')}</div>
+            <div className='text-muted-foreground type-detail'>{t('overShort')}</div>
             <div
               className={cn(
                 'text-xl font-bold tabular-nums',
@@ -100,17 +100,17 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
         </div>
       ) : (
         <div className='bg-accent rounded-xl p-4 text-center'>
-          <div className='text-muted-foreground text-sm'>
+          <div className='text-muted-foreground type-detail'>
             {t('expectedInDrawer')}
           </div>
-          <div className='text-4xl font-bold tabular-nums'>
+          <div className='type-figure'>
             {money(shift.expectedInDrawer)}
           </div>
         </div>
       )}
 
       {/* Opened / closed meta */}
-      <div className='text-sm'>
+      <div className='type-detail'>
         <div className='flex items-center justify-between gap-4 py-1'>
           <span className='text-muted-foreground'>{t('openedAt')}</span>
           <span className='text-end'>
@@ -148,7 +148,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
 
       {/* The drawer, term by term, adding up to Expected */}
       <div>
-        <h2 className='mb-1 text-sm font-semibold'>{t('drawerFormula')}</h2>
+        <h2 className='mb-1 type-heading'>{t('drawerFormula')}</h2>
         <div className='divide-y rounded-xl border'>
           {drawer.terms.map((term) => (
             <div
@@ -186,7 +186,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       {/* Tender split: bills only, cash net of the change handed back */}
       {tenders.length > 0 && (
         <div>
-          <h2 className='mb-1 text-sm font-semibold'>{t('billsByTender')}</h2>
+          <h2 className='mb-1 type-heading'>{t('billsByTender')}</h2>
           <div className='divide-y rounded-xl border'>
             {tenders.map((total) => (
               <div
@@ -197,7 +197,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   {tenderLabelKey[total.tender]
                     ? t(tenderLabelKey[total.tender])
                     : total.tender}
-                  <span className='text-muted-foreground text-sm tabular-nums'>
+                  <span className='text-muted-foreground type-detail tabular-nums'>
                     {' '}× {toNumber(total.count)}
                   </span>
                 </span>
@@ -213,7 +213,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
       {/* Money taken against tabs: beside the sales, never inside them */}
       {tabPayments.length > 0 && (
         <div>
-          <h2 className='mb-1 text-sm font-semibold'>{t('tabPayments')}</h2>
+          <h2 className='mb-1 type-heading'>{t('tabPayments')}</h2>
           <div className='divide-y rounded-xl border'>
             {tabPayments.map((total) => (
               <div
@@ -224,7 +224,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                   {tenderLabelKey[total.tender]
                     ? t(tenderLabelKey[total.tender])
                     : total.tender}
-                  <span className='text-muted-foreground text-sm tabular-nums'>
+                  <span className='text-muted-foreground type-detail tabular-nums'>
                     {' '}× {toNumber(total.count)}
                   </span>
                 </span>
@@ -239,9 +239,9 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
 
       {/* Pay-ins / pay-outs with their reasons */}
       <div>
-        <h2 className='mb-1 text-sm font-semibold'>{t('drawerMovements')}</h2>
+        <h2 className='mb-1 type-heading'>{t('drawerMovements')}</h2>
         {movements.length === 0 ? (
-          <p className='text-muted-foreground py-2 text-sm'>
+          <p className='text-muted-foreground py-2 type-detail'>
             {t('noMovements')}
           </p>
         ) : (
@@ -255,7 +255,7 @@ export function ShiftReport({ shift }: { shift: ShiftView }) {
                 >
                   <div className='min-w-0'>
                     <div className='truncate'>{movement.reason}</div>
-                    <div className='text-muted-foreground truncate text-sm'>
+                    <div className='text-muted-foreground truncate type-detail'>
                       {/* A Latin name next to an Arabic time confuses the bidi
                           algorithm ("م" drifting to the line's end); each
                           piece is isolated */}

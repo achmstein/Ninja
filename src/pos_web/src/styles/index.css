@@ -29,11 +29,11 @@
 }
 /* The smallest text there is: a hint, a count, a time. Never smaller */
 @utility type-caption {
-  @apply text-xs leading-4 font-normal;
+  @apply text-xs leading-5 font-normal;
 }
 /* A quiet name over a group of things, in capitals */
 @utility type-label {
-  @apply text-xs leading-4 font-semibold tracking-wide uppercase;
+  @apply text-xs leading-5 font-semibold tracking-wide uppercase;
 }
 /* The one figure a surface is about: a total, a clock */
 @utility type-figure {

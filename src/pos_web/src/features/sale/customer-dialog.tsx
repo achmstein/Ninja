@@ -219,7 +219,7 @@ export function CustomerDialog({
                 >
                   <ArrowLeft className='size-6 rtl:rotate-180' />
                 </Button>
-                <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+                <SheetTitle className='min-w-0 flex-1 truncate type-title'>
                   {t('newCustomer')}
                 </SheetTitle>
               </div>
@@ -238,7 +238,7 @@ export function CustomerDialog({
               ) : (
                 // A header row like every screen's: the title, and the way out
                 <div className='flex h-16 shrink-0 items-center gap-2 border-b ps-4 pe-2'>
-                  <SheetTitle className='min-w-0 flex-1 truncate text-xl font-semibold'>
+                  <SheetTitle className='min-w-0 flex-1 truncate type-title'>
                     {t(titleKey)}
                   </SheetTitle>
                   <SheetClose asChild>
@@ -262,7 +262,7 @@ export function CustomerDialog({
               >
                 {!searching && hasPicks && (
                   <div className='flex flex-col gap-2'>
-                    <p className='text-muted-foreground text-sm'>
+                    <p className='text-muted-foreground type-label'>
                       {t('inTheRoom')}
                     </p>
                     <div className='flex flex-wrap gap-2'>
@@ -329,10 +329,10 @@ export function CustomerDialog({
               >
                 <Pencil className='text-muted-foreground size-5 shrink-0' />
                 <span className='min-w-0'>
-                  <span className='block truncate text-base font-medium'>
+                  <span className='type-heading block truncate'>
                     {t('useNameAction', { name: typedName })}
                   </span>
-                  <span className='text-muted-foreground block truncate text-sm'>
+                  <span className='text-muted-foreground type-detail block truncate'>
                     {t('noAccountNeeded')}
                   </span>
                 </span>
@@ -344,7 +344,7 @@ export function CustomerDialog({
               className='hover:bg-accent flex min-h-14 items-center gap-3 rounded-lg px-3 py-2 text-start'
             >
               <UserPlus className='text-muted-foreground size-5 shrink-0' />
-              <span className='block truncate text-base font-medium'>
+              <span className='type-heading block truncate'>
                 {t('newCustomer')}
               </span>
             </button>
@@ -366,11 +366,11 @@ export function CustomerDialog({
               ))}
             </div>
           ) : isError ? (
-            <p className='text-muted-foreground py-8 text-center text-sm'>
+            <p className='text-muted-foreground py-8 text-center type-detail'>
               {t('somethingWentWrong')}
             </p>
           ) : users.length === 0 ? (
-            <p className='text-muted-foreground py-6 text-center text-sm'>
+            <p className='text-muted-foreground py-6 text-center type-detail'>
               {t('noCustomersFound')}
             </p>
           ) : (
@@ -393,22 +393,22 @@ export function CustomerDialog({
                       <span className='min-w-0'>
                         {/* The letters that matched, marked, so the eye lands on
                         the right Ahmed without reading every row */}
-                        <span className='block truncate text-base font-medium'>
+                        <span className='type-heading block truncate'>
                           <Highlight
                             text={displayName(user)}
                             ranges={matchRanges(displayName(user), term)}
                           />
                         </span>
                         {off ? (
-                          <span className='text-muted-foreground block truncate text-sm'>
+                          <span className='text-muted-foreground type-detail block truncate'>
                             {t('customerDisabled')}
                           </span>
                         ) : onBill ? (
-                          <span className='text-muted-foreground block truncate text-sm'>
+                          <span className='text-muted-foreground type-detail block truncate'>
                             {t('alreadyOnBill', { where: onBill })}
                           </span>
                         ) : user.phoneNumber ? (
-                          <span className='text-muted-foreground block truncate text-sm'>
+                          <span className='text-muted-foreground type-detail block truncate'>
                             {/* A number reads left to right whatever the till's language:
                                 without this its groups swap places in Arabic */}
                             <bdi dir='ltr'>
@@ -419,7 +419,7 @@ export function CustomerDialog({
                             </bdi>
                           </span>
                         ) : user.email ? (
-                          <span className='text-muted-foreground block truncate text-sm'>
+                          <span className='text-muted-foreground type-detail block truncate'>
                             <Highlight
                               text={user.email}
                               ranges={matchRanges(user.email, term)}

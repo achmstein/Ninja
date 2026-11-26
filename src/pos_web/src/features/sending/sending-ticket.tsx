@@ -152,9 +152,9 @@ export function SendingTicket({ requestId }: { requestId: string }) {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 text-xl font-bold'>
+        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 type-title'>
           <span className='truncate'>{send.customer?.name || t('counter')}</span>
-          <span className='text-muted-foreground shrink-0 text-base font-medium'>
+          <span className='text-muted-foreground shrink-0 type-detail font-medium'>
             {t('newTicket')}
           </span>
         </h1>
@@ -167,8 +167,8 @@ export function SendingTicket({ requestId }: { requestId: string }) {
       <div className='bg-background/95 fixed inset-x-0 bottom-0 z-30 border-t p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur'>
         <div className='mx-auto flex max-w-3xl flex-wrap items-center gap-x-4 gap-y-2'>
           <div className='min-w-0'>
-            <div className='text-muted-foreground text-sm'>{t('total')}</div>
-            <div className='text-2xl font-bold tabular-nums'>{money(bill.total)}</div>
+            <div className='text-muted-foreground type-detail'>{t('total')}</div>
+            <div className='type-figure'>{money(bill.total)}</div>
           </div>
           <div className='ms-auto flex gap-2 max-sm:w-full'>
             {failed ? (

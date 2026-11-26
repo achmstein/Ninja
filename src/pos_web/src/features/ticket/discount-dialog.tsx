@@ -101,7 +101,7 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-sm'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('discount')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('discount')}</DialogTitle>
         </DialogHeader>
 
         <div className='flex gap-2'>

@@ -65,21 +65,21 @@ export function SendingLines({
                     className='flex min-h-12 items-start gap-3 px-3 py-2'
                   >
                     <div className='min-w-0 flex-1'>
-                      <div className='truncate text-base font-medium'>
+                      <div className='type-body truncate font-medium'>
                         {name}
                       </div>
                       {options && (
-                        <div className='text-muted-foreground truncate text-sm'>
+                        <div className='text-muted-foreground type-detail truncate'>
                           {options}
                         </div>
                       )}
-                      <div className='text-muted-foreground text-sm tabular-nums'>
+                      <div className='text-muted-foreground type-detail tabular-nums'>
                         {line.quantity} × {money(line.price)}
                       </div>
                     </div>
                     <div
                       className={cn(
-                        'shrink-0 text-lg font-semibold tabular-nums',
+                        'shrink-0 type-heading tabular-nums',
                         failed && 'text-muted-foreground line-through',
                       )}
                     >
@@ -93,11 +93,11 @@ export function SendingLines({
               <div className='flex flex-wrap items-center gap-2 border-t px-3 py-2'>
                 <AlertTriangle className='text-destructive size-5 shrink-0' />
                 <div className='min-w-0 flex-1'>
-                  <div className='text-destructive font-semibold'>
+                  <div className='text-destructive type-heading'>
                     {t('notSent')}
                   </div>
                   {send.error && (
-                    <div className='text-muted-foreground text-sm'>
+                    <div className='text-muted-foreground type-detail'>
                       {send.error}
                     </div>
                   )}

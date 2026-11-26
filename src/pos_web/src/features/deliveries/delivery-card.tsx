@@ -40,7 +40,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
           Arabic sentence */}
       <div className='flex items-center gap-2'>
         <StagePill order={order} />
-        <span className='text-muted-foreground ms-auto shrink-0 text-xs whitespace-nowrap'>
+        <span className='text-muted-foreground ms-auto shrink-0 type-caption whitespace-nowrap'>
           {relativeTime(order.confirmedAt ?? order.date, nowMs, t, locale)}
         </span>
       </div>
@@ -48,13 +48,13 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         {/* The name and its number share the room up to the amount; a long name is cut there.
             Each is isolated: a Latin name and "#81" would otherwise run together the wrong way in Arabic */}
         <span className='min-w-0 flex-1 truncate'>
-          <bdi className='text-base font-semibold'>{order.customerName || t('guest')}</bdi>
+          <bdi className='type-heading'>{order.customerName || t('guest')}</bdi>
           {/* In the till's direction, not forced left-to-right: Arabic reads the sign before the number */}
-          <span className='text-muted-foreground ms-2 text-sm tabular-nums'>{'#\u200F'}{toNumber(order.orderNumber)}</span>
+          <span className='text-muted-foreground ms-2 type-detail tabular-nums'>{'#\u200F'}{toNumber(order.orderNumber)}</span>
         </span>
-        <span className='shrink-0 text-base font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
+        <span className='shrink-0 type-body font-semibold whitespace-nowrap tabular-nums'>{money(order.total)}</span>
       </div>
-      <div className='text-muted-foreground flex items-center gap-1.5 text-sm'>
+      <div className='text-muted-foreground flex items-center gap-1.5 type-detail'>
         <MapPin className='size-3.5 shrink-0' aria-hidden />
         <span className='min-w-0 truncate'>
           {area && (
@@ -67,13 +67,13 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
         </span>
       </div>
       {order.takenAtBranchId != null && (
-        <div className='text-primary flex items-center gap-1.5 text-sm font-medium'>
+        <div className='text-primary flex items-center gap-1.5 type-detail font-medium'>
           <Store className='size-3.5 shrink-0' aria-hidden />
           <span className='truncate'>{sentFrom(order)}</span>
         </div>
       )}
       {order.delivery.riderName && (
-        <div className='flex items-center gap-1.5 text-sm'>
+        <div className='flex items-center gap-1.5 type-detail'>
           <UserRound className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.riderName}</bdi>
@@ -82,7 +82,7 @@ export function DeliveryCard({ order, onOpen }: { order: BoardDelivery; onOpen: 
       )}
       {/* A courier company that has it: the company, and its courier when it said who */}
       {order.delivery.courierProvider && (
-        <div className='flex items-center gap-1.5 text-sm'>
+        <div className='flex items-center gap-1.5 type-detail'>
           <Truck className='text-muted-foreground size-3.5 shrink-0' aria-hidden />
           <span className='min-w-0 truncate font-medium'>
             <bdi>{order.delivery.courierProvider}</bdi>
@@ -140,7 +140,7 @@ function StagePill({ order }: { order: BoardDelivery }) {
     }
   })()
   return (
-    <span className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-semibold', tone)}>
+    <span className={cn('inline-flex min-w-0 items-center gap-1.5 rounded-full px-2.5 py-1 type-caption font-semibold', tone)}>
       <Icon className='size-3.5 shrink-0' aria-hidden />
       <span className='truncate'>{text}</span>
     </span>

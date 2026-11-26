@@ -63,14 +63,14 @@ export function StayBar({
           it), the rate, the people; then the way to end it */}
       <div className='flex flex-col gap-6'>
         <div className={cn('min-w-0', !clock && used.length <= 1 && 'hidden')}>
-          <div className={cn('text-3xl leading-[1.4] font-bold tabular-nums', !clock && 'hidden')}>
+          <div className={cn('type-figure', !clock && 'hidden')}>
             {formatClock(elapsedSeconds(stay, now))}
           </div>
-          <div className={cn('text-muted-foreground truncate text-base tabular-nums', !clock && 'hidden')}>
+          <div className={cn('text-muted-foreground type-body truncate tabular-nums', !clock && 'hidden')}>
             ≈ {money(estimate.amount)} · {hoursLabel}
           </div>
           {used.length > 1 && (
-            <div className='text-muted-foreground truncate text-sm tabular-nums'>
+            <div className='text-muted-foreground type-detail truncate tabular-nums'>
               {used
                 .map(
                   (o) =>
@@ -97,7 +97,7 @@ export function StayBar({
         )}
 
         <div className='flex flex-col gap-2'>
-          <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+          <h2 className='text-muted-foreground type-label'>
             {t('inTheRoom')}
           </h2>
           <StayMembers stay={stay} />

@@ -63,7 +63,7 @@ export function TradingChip() {
         </span>
         <span
           className={cn(
-            'text-sm font-medium max-lg:sr-only',
+            'type-detail font-medium max-lg:sr-only',
             flags.paused && 'text-amber-600 dark:text-amber-400'
           )}
         >
@@ -73,11 +73,11 @@ export function TradingChip() {
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className='gap-4 sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-xl'>
+            <DialogTitle className='flex items-center gap-2 type-title'>
               <Store className='size-5' />
               {reservations ? t('ordersAndReservations') : t('customerOrders')}
             </DialogTitle>
-            <DialogDescription className='text-base'>
+            <DialogDescription className='type-body'>
               {t('tradingHint')}
             </DialogDescription>
           </DialogHeader>

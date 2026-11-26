@@ -119,7 +119,7 @@ function AuthenticatedRoute() {
   if (!ALLOWED_ROLES.some((role) => roles.includes(role))) {
     return (
       <div className='flex h-svh flex-col items-center justify-center gap-4'>
-        <h1 className='text-2xl font-bold'>{t('accessDeniedTitle')}</h1>
+        <h1 className='type-title'>{t('accessDeniedTitle')}</h1>
         <p className='text-muted-foreground'>{t('accessDeniedDescription')}</p>
         <Button
           variant='outline'

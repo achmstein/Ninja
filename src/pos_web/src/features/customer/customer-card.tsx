@@ -72,7 +72,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
 
   const block = (icon: React.ReactNode, title: string, body: React.ReactNode) => (
     <div className='rounded-xl border p-3'>
-      <div className='text-muted-foreground mb-1 flex items-center gap-2 text-sm'>
+      <div className='text-muted-foreground mb-1 flex items-center gap-2 type-detail'>
         {icon}
         {title}
       </div>
@@ -82,7 +82,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
 
   const failed = (retry: () => void) => (
     <div className='flex items-center justify-between gap-2'>
-      <span className='text-muted-foreground text-sm'>{t('somethingWentWrong')}</span>
+      <span className='text-muted-foreground type-detail'>{t('somethingWentWrong')}</span>
       <Button variant='outline' size='sm' onClick={retry}>
         {t('retry')}
       </Button>
@@ -94,7 +94,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
       <Dialog open={open && !payOpen && !linkOpen} onOpenChange={onOpenChange}>
         <DialogContent className='flex flex-col gap-4 sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-xl'>
+            <DialogTitle className='flex items-center gap-2 type-title'>
               <User className='size-5 shrink-0' />
               <span className='truncate'>{customer?.name || t('guest')}</span>
               {addedAtCounter && (
@@ -104,7 +104,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               )}
             </DialogTitle>
             {customer?.phone && (
-              <p className='text-muted-foreground flex items-center gap-1.5 text-sm' dir='ltr'>
+              <p className='text-muted-foreground flex items-center gap-1.5 type-detail' dir='ltr'>
                 <Phone className='size-3.5' />
                 <span dir='ltr'>{showPhone(customer.phone)}</span>
                 {/* The customer on WhatsApp, from the cashier's own phone or this browser */}
@@ -131,16 +131,16 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
                 failed(() => loyalty.refetch())
               ) : loyalty.notEnrolled ? (
                 <div>
-                  <div className='font-medium'>{t('notEnrolled')}</div>
-                  <div className='text-muted-foreground text-sm'>{t('joinsFromApp')}</div>
+                  <div className='type-body font-medium'>{t('notEnrolled')}</div>
+                  <div className='text-muted-foreground type-detail'>{t('joinsFromApp')}</div>
                 </div>
               ) : (
                 <div className='flex items-baseline justify-between gap-3'>
                   <span>
-                    <span className='text-2xl font-bold tabular-nums'>
+                    <span className='type-figure'>
                       {t('pointsBalance', { points })}
                     </span>
-                    <span className='text-muted-foreground ms-2 text-sm tabular-nums'>
+                    <span className='text-muted-foreground ms-2 type-detail tabular-nums'>
                       {t('pointsWorth', { amount: money(points / POINTS_PER_EGP) })}
                     </span>
                   </span>
@@ -165,7 +165,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
                 <div className='flex items-center justify-between gap-3'>
                   <span
                     className={cn(
-                      'text-2xl font-bold tabular-nums',
+                      'type-figure',
                       tab.noTab ? 'font-medium' : owed > 0 ? 'text-destructive' : 'text-emerald-600'
                     )}
                   >

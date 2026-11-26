@@ -34,23 +34,23 @@ export function SaleDeliverySummary({
   // An area is its branch's own: none on a delivery another branch makes
   const area = delivery.sendTo ? '' : localized(delivery.zone?.name)
   return (
-    <div className='bg-muted mt-2 flex flex-col gap-2 rounded-lg p-2.5 text-sm'>
+    <div className='bg-muted mt-2 flex flex-col gap-2 rounded-lg p-2.5 type-detail'>
       <div className='flex items-start gap-2'>
         <Bike className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
         <button type='button' onClick={onEdit} className='min-w-0 flex-1 text-start' aria-label={t('deliveryChange')}>
           <span className='block truncate font-medium'>{[area, delivery.address, delivery.building].filter(Boolean).join(' · ')}</span>
-          <span className='text-muted-foreground flex items-center gap-1 text-xs'>
+          <span className='text-muted-foreground flex items-center gap-1 type-caption'>
             <span dir='ltr'>{showPhone(delivery.phone)}</span>
           </span>
           <PinQualityLabel source={delivery.pinSource} pinned={delivery.latitude != null} className='mt-1' />
           {!delivery.sendTo && delivery.rider && (
-            <span className='mt-0.5 flex items-center gap-1 text-xs font-medium'>
+            <span className='mt-0.5 flex items-center gap-1 type-caption font-medium'>
               <UserRound className='size-3' aria-hidden />
               {t('deliveryForRiderName', { name: delivery.rider.name })}
             </span>
           )}
           {delivery.sendTo && (
-            <span className='text-primary mt-0.5 flex items-center gap-1 text-xs font-medium'>
+            <span className='text-primary mt-0.5 flex items-center gap-1 type-caption font-medium'>
               <Store className='size-3' aria-hidden />
               {t('deliveryWillSend', { branch: branchName(delivery.sendTo.branchId) })}
             </span>

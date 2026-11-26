@@ -30,7 +30,7 @@ export function StockDispositionChoice({
   ]
   return (
     <fieldset className='flex flex-col gap-2' disabled={disabled}>
-      <legend className='mb-2 text-sm font-medium'>{t('stockWasMade')}</legend>
+      <legend className='mb-2 type-detail font-medium'>{t('stockWasMade')}</legend>
       <div className='grid grid-cols-2 gap-2'>
         {options.map(({ value: option, label, hint, Icon }) => (
           <label
@@ -41,7 +41,7 @@ export function StockDispositionChoice({
               value === option ? 'border-primary bg-primary/5' : 'hover:bg-muted',
             )}
           >
-            <span className='flex items-center gap-2 font-medium'>
+            <span className='flex items-center gap-2 type-body font-medium'>
               <input
                 type='radio'
                 name={name}
@@ -53,7 +53,7 @@ export function StockDispositionChoice({
               <Icon className='size-4 shrink-0' aria-hidden />
               {label}
             </span>
-            <span className='text-muted-foreground text-xs'>{hint}</span>
+            <span className='text-muted-foreground type-caption'>{hint}</span>
           </label>
         ))}
       </div>

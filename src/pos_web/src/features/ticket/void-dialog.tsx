@@ -97,7 +97,7 @@ export function VoidTicketDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('voidTicket')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('voidTicket')}</DialogTitle>
         </DialogHeader>
 
         <div className='grid gap-1.5'>

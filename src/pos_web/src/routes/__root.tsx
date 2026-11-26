@@ -34,7 +34,7 @@ function NotFound() {
   const t = useT()
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-4'>
-      <h1 className='text-2xl font-bold'>404</h1>
+      <h1 className='type-title'>404</h1>
       <p className='text-muted-foreground'>{t('contentNotFound')}</p>
       <Button asChild size='lg'>
         <Link to='/'>{t('backToFloor')}</Link>
@@ -62,14 +62,14 @@ function GeneralError({ error }: { error: unknown }) {
   }, [stale])
   return (
     <div className='flex h-svh flex-col items-center justify-center gap-4'>
-      <h1 className='text-2xl font-bold'>{t('somethingWentWrong')}</h1>
+      <h1 className='type-title'>{t('somethingWentWrong')}</h1>
       <Button size='lg' onClick={() => window.location.assign('/')}>
         {t('backToFloor')}
       </Button>
       {/* What went wrong, in the browser's own words: the one thing whoever
           looks into it needs, and a till has no console to read it from */}
       {detail && (
-        <p dir='ltr' className='text-muted-foreground max-w-full px-6 text-center text-xs break-words select-text'>
+        <p dir='ltr' className='text-muted-foreground max-w-full px-6 text-center type-caption break-words select-text'>
           {detail}
         </p>
       )}

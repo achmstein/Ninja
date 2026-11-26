@@ -77,7 +77,7 @@ export function LocationLink({
 
   if (shared)
     return (
-      <div className='flex items-center gap-2 rounded-lg bg-emerald-500/10 p-3 text-sm font-medium text-emerald-700 dark:text-emerald-400' role='status'>
+      <div className='flex items-center gap-2 rounded-lg bg-emerald-500/10 p-3 type-detail font-medium text-emerald-700 dark:text-emerald-400' role='status'>
         <Check className='size-4 shrink-0' aria-hidden />
         {t('locationLinkReceived')}
       </div>
@@ -85,7 +85,7 @@ export function LocationLink({
 
   if (token)
     return (
-      <div className='flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 text-sm' role='status'>
+      <div className='flex flex-wrap items-center gap-2 rounded-lg border border-dashed p-3 type-detail' role='status'>
         <Loader2 className='text-muted-foreground size-4 shrink-0 animate-spin' aria-hidden />
         <span className='text-muted-foreground flex-1'>{share.data?.expired ? t('locationLinkExpired') : t('locationLinkWaiting')}</span>
         <Button variant='outline' size='sm' className='h-9' onClick={() => send(share.data?.expired ? null : token)}>
@@ -100,7 +100,7 @@ export function LocationLink({
       {create.isPending ? <Loader2 className='size-5 shrink-0 animate-spin' aria-hidden /> : <MapPinned className='size-5 shrink-0' aria-hidden />}
       <span className='flex flex-col'>
         <span className='font-semibold'>{t('locationLinkAsk')}</span>
-        <span className='text-muted-foreground text-xs font-normal whitespace-normal'>{t('locationLinkAskHint')}</span>
+        <span className='text-muted-foreground type-caption whitespace-normal'>{t('locationLinkAskHint')}</span>
       </span>
     </Button>
   )

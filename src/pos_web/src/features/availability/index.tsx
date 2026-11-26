@@ -113,7 +113,7 @@ export function Availability() {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='text-xl font-bold'>{t('availability')}</h1>
+        <h1 className='type-title'>{t('availability')}</h1>
       </div>
 
       <div className='relative'>
@@ -178,20 +178,20 @@ export function Availability() {
                 <span className='min-w-0 flex-1'>
                   <span
                     className={cn(
-                      'block truncate text-base font-medium',
+                      'type-heading block truncate',
                       !available && 'text-muted-foreground line-through'
                     )}
                   >
                     {localized(item.name)}
                   </span>
-                  <span className='text-muted-foreground block truncate text-sm tabular-nums'>
+                  <span className='text-muted-foreground type-detail block truncate tabular-nums'>
                     {money(item.effectivePrice ?? item.price)}
                   </span>
                 </span>
                 <span className='flex shrink-0 flex-col items-end'>
                   <span
                     className={cn(
-                      'text-sm font-medium',
+                      'type-detail font-medium',
                       available
                         ? 'text-emerald-600 dark:text-emerald-400'
                         : 'text-destructive'
@@ -201,7 +201,7 @@ export function Availability() {
                   </span>
                   {/* Inventory pulled it, not a person: flipping the switch on overrides the stock-out */}
                   {!available && item.isOutOfStock && (
-                    <span className='text-muted-foreground text-xs'>
+                    <span className='text-muted-foreground type-caption'>
                       {t('outOfStock')}
                     </span>
                   )}

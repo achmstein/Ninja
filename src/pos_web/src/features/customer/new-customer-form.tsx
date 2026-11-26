@@ -122,7 +122,7 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
           autoFocus={!(phone && !name)}
           aria-invalid={!!phoneError}
         />
-        {phoneError && <p className='text-destructive text-sm'>{phoneError}</p>}
+        {phoneError && <p className='text-destructive type-detail'>{phoneError}</p>}
         {/* Right under the number: the customer it already belongs to */}
         {match && <ExistingCustomer customer={match} onUse={() => onPick(match)} />}
       </div>
@@ -141,10 +141,10 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
           autoFocus={phone.length > 0 && name.length === 0}
           aria-invalid={!!nameError}
         />
-        {nameError && <p className='text-destructive text-sm'>{nameError}</p>}
+        {nameError && <p className='text-destructive type-detail'>{nameError}</p>}
         {similar.length > 0 && (
           <div className='flex flex-col gap-1'>
-            <p className='text-muted-foreground text-sm'>{t('didYouMean')}</p>
+            <p className='text-muted-foreground type-detail'>{t('didYouMean')}</p>
             {similar.map((customer) => (
               <button
                 key={customer.id}
@@ -156,13 +156,13 @@ export function NewCustomerForm({ initialText = '', onPick, onCancel }: NewCusto
               >
                 <User className='text-muted-foreground size-4 shrink-0' />
                 <span className='min-w-0 flex-1'>
-                  <span className='block truncate font-medium'>{customerName(customer)}</span>
+                  <span className='type-heading block truncate'>{customerName(customer)}</span>
                   {customer.enabled === false ? (
-                    <span className='text-muted-foreground block truncate text-sm'>
+                    <span className='text-muted-foreground type-detail block truncate'>
                       {t('customerDisabled')}
                     </span>
                   ) : customer.phoneNumber && (
-                    <span className='text-muted-foreground block truncate text-sm' dir='ltr'>
+                    <span className='text-muted-foreground type-detail block truncate' dir='ltr'>
                       <span dir='ltr'>{showPhone(customer.phoneNumber)}</span>
                     </span>
                   )}
@@ -207,9 +207,9 @@ function ExistingCustomer({ customer, onUse }: { customer: IdentityCustomer; onU
       <div className='flex items-start gap-3'>
         <User className='text-primary mt-0.5 size-5 shrink-0' />
         <div className='min-w-0 flex-1'>
-          <p className='text-muted-foreground text-xs font-medium'>{t('alreadyACustomer')}</p>
-          <p className='truncate font-semibold'>{customerName(customer)}</p>
-          <p className='text-muted-foreground flex flex-wrap items-center gap-x-3 text-sm'>
+          <p className='text-muted-foreground type-caption font-medium'>{t('alreadyACustomer')}</p>
+          <p className='type-heading truncate'>{customerName(customer)}</p>
+          <p className='text-muted-foreground flex flex-wrap items-center gap-x-3 type-detail'>
             {customer.phoneNumber && (
               <span className='flex items-center gap-1' dir='ltr'>
                 <Phone className='size-3.5' />
@@ -228,7 +228,7 @@ function ExistingCustomer({ customer, onUse }: { customer: IdentityCustomer; onU
       </div>
       {/* The number is theirs, but the owner switched the account off: said, and nothing to use */}
       {customer.enabled === false ? (
-        <p className='text-muted-foreground text-sm'>{t('customerDisabledNumber')}</p>
+        <p className='text-muted-foreground type-detail'>{t('customerDisabledNumber')}</p>
       ) : (
         <Button type='button' className='h-11' onClick={onUse}>
           {t('useThisCustomer')}

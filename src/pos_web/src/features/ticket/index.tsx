@@ -356,7 +356,7 @@ export function TicketScreen({
   if (!ticket) {
     return (
       <div className='flex flex-col items-center gap-4 py-24'>
-        <p className='text-muted-foreground text-lg'>{t('ticketNotFound')}</p>
+        <p className='text-muted-foreground type-body'>{t('ticketNotFound')}</p>
         <Button asChild size='lg'>
           <Link to={backTo}>
             {backTo === '/' ? t('backToFloor') : t('goBack')}
@@ -552,7 +552,7 @@ export function TicketScreen({
     <div className='flex flex-col gap-6'>
       <EndedTime stay={endedStay} />
       <div className='flex flex-col gap-2'>
-        <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+        <h2 className='text-muted-foreground type-label'>
           {t('inTheRoom')}
         </h2>
         <StayMembers stay={endedStay} />
@@ -598,9 +598,9 @@ export function TicketScreen({
             place name in Arabic the bidi algorithm lays the whole line out
             left-to-right and an inline start margin ends up on the outer
             edge, not between the two */}
-        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 text-xl font-bold'>
+        <h1 className='flex min-w-0 flex-1 items-baseline gap-2 type-title'>
           <BillTitle title={title} className='truncate' />
-          <span className='text-muted-foreground shrink-0 text-base font-medium tabular-nums'>
+          <span className='text-muted-foreground shrink-0 type-detail font-medium tabular-nums'>
             #{toNumber(ticket.id)}
           </span>
         </h1>
@@ -733,7 +733,7 @@ export function TicketScreen({
               here): why a bill nobody here rang up is on the floor, and whom
               to ask. Taken here, everyone on shift knows */}
           {takenBy && ticket.takenAtBranchId != null && (
-            <p className='text-muted-foreground mb-3 text-sm'>{takenBy}</p>
+            <p className='text-muted-foreground mb-3 type-detail'>{takenBy}</p>
           )}
 
           {/* Confirmed here, they land on this bill — which is why the guard
@@ -786,7 +786,7 @@ export function TicketScreen({
                       /* An account holder: tap the name for their card */
                       <button
                         type='button'
-                        className='flex min-w-0 items-center gap-2 font-semibold underline-offset-4 hover:underline'
+                        className='flex min-w-0 items-center gap-2 type-heading underline-offset-4 hover:underline'
                         onClick={() =>
                           setCardFor({
                             id: String(group.lines[0].customerId),
@@ -800,7 +800,7 @@ export function TicketScreen({
                         </span>
                       </button>
                     ) : (
-                      <span className='flex min-w-0 items-center gap-2 font-semibold'>
+                      <span className='flex min-w-0 items-center gap-2 type-heading'>
                         <User className='size-4 shrink-0' />
                         <span className='truncate'>
                           {group.name ?? (group.key ? t('guest') : location)}
@@ -844,7 +844,7 @@ export function TicketScreen({
           {/* A voided ticket keeps its lines for the record but loses every
               action — what remains is the audit trail */}
           {isVoided && (
-            <div className='mt-4 divide-y rounded-lg border text-base'>
+            <div className='mt-4 divide-y rounded-lg border type-body'>
               <div className='text-destructive flex items-center gap-2 px-3 py-2 font-semibold'>
                 <Ban className='size-5' />
                 {t('voidedBadge')}
@@ -879,7 +879,7 @@ export function TicketScreen({
               put right while the shift is open (Cash pressed, InstaPay sent) */}
           {ticket.settledAt && (ticket.payments?.length ?? 0) > 0 && (
             <div className='mt-4 flex flex-col gap-2'>
-              <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+              <h2 className='text-muted-foreground type-label'>
                 {t('paymentsTitle')}
               </h2>
               <div className='divide-y rounded-lg border'>
@@ -921,7 +921,7 @@ export function TicketScreen({
                       </div>
                     </div>
                     {payment.tenderChangedFrom && (
-                      <p className='text-muted-foreground text-xs tabular-nums'>
+                      <p className='text-muted-foreground type-caption tabular-nums'>
                         {t('tenderChangedFrom', {
                           from: t(tenderLabelKey[payment.tenderChangedFrom] ?? 'cash'),
                           name: payment.tenderChangedBy ?? '',
@@ -943,7 +943,7 @@ export function TicketScreen({
           {/* Credit notes: money that went back, each with its reason */}
           {(ticket.refunds?.length ?? 0) > 0 && (
             <div className='mt-4 flex flex-col gap-2'>
-              <h2 className='text-muted-foreground text-sm font-semibold tracking-wide uppercase'>
+              <h2 className='text-muted-foreground type-label'>
                 {t('refundsTitle')}
               </h2>
               <div className='divide-y rounded-lg border'>
@@ -960,8 +960,8 @@ export function TicketScreen({
                         −{money(refund.amount)}
                       </span>
                     </div>
-                    <p className='text-sm'>{refund.reason}</p>
-                    <p className='text-muted-foreground text-xs tabular-nums'>
+                    <p className='type-detail'>{refund.reason}</p>
+                    <p className='text-muted-foreground type-caption tabular-nums'>
                       {[
                         refund.tender === 'Account' ? t('account') : t('cash'),
                         refund.customerName,
@@ -991,7 +991,7 @@ export function TicketScreen({
         <div className='min-w-0 flex-1'>
           <div className='flex h-10 items-center gap-1'>
             {/* While lines are picked, how many, where the actions for them are */}
-            <span className='text-muted-foreground truncate text-sm'>
+            <span className='text-muted-foreground truncate type-detail'>
               {choosing
                 ? t('selectedLinesCount', { count: selectedIds.size })
                 : t('total')}
@@ -1006,11 +1006,11 @@ export function TicketScreen({
               </Button>
             )}
           </div>
-          <div className='truncate text-3xl leading-[1.4] font-bold tabular-nums'>
+          <div className='truncate type-figure'>
             {money(total)}
           </div>
           {discount > 0 && (
-            <div className='truncate text-xs font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
+            <div className='truncate type-caption font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>
               {t('discount')} −{money(ticket.discount)}
               {ticket.discountRate != null &&
                 ` (${percent(ticket.discountRate)}%)`}
@@ -1019,7 +1019,7 @@ export function TicketScreen({
           {/* Guests paid part (or all) of it from their phones: what the
               till still takes is the rest */}
           {isOpen && onlinePaid.paid > 0 && (
-            <div className='truncate text-sm font-medium tabular-nums'>
+            <div className='truncate type-detail font-medium tabular-nums'>
               {onlinePaid.covered
                 ? t('paidOnlineClosing')
                 : t('remainingAfterOnline', {
@@ -1028,13 +1028,13 @@ export function TicketScreen({
             </div>
           )}
           {isOpen && onlinePaid.pending && (
-            <div className='flex items-center gap-1 text-xs text-amber-600 dark:text-amber-500'>
+            <div className='flex items-center gap-1 type-caption text-amber-600 dark:text-amber-500'>
               <Loader2 className='size-3 animate-spin' />
               {t('guestPayingOnline')}
             </div>
           )}
           {runningStay && (
-            <div className='text-muted-foreground truncate text-xs tabular-nums'>
+            <div className='text-muted-foreground truncate type-caption tabular-nums'>
               + {t('timeSoFar')} ≈ <TimeSoFar stay={runningStay} />
             </div>
           )}

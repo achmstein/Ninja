@@ -104,15 +104,15 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
         <DialogContent className='gap-5 sm:max-w-md'>
           <div className='flex flex-col items-center gap-3 py-4 text-center'>
             <CheckCircle2 className='size-14 text-emerald-500' />
-            <DialogTitle className='text-2xl'>{t('tabPaymentRecorded')}</DialogTitle>
+            <DialogTitle className='type-title'>{t('tabPaymentRecorded')}</DialogTitle>
             {slip.number > 0 && (
-              <div className='text-xl font-semibold tabular-nums'>
+              <div className='type-heading tabular-nums'>
                 {t('tabPaymentNumber', { number: slip.number })}
               </div>
             )}
             <div className='bg-accent w-full rounded-xl p-4'>
-              <div className='text-muted-foreground text-sm'>{t('newBalance')}</div>
-              <div className='text-4xl font-bold tabular-nums'>
+              <div className='text-muted-foreground type-detail'>{t('newBalance')}</div>
+              <div className='type-figure'>
                 {slip.balanceAfter < 0
                   ? t('creditAmount', { amount: money(-slip.balanceAfter) })
                   : money(slip.balanceAfter)}
@@ -145,9 +145,9 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
       <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-md'>
         {/* The name on its own line: a long one must not squeeze the amount */}
         <DialogHeader className='border-b px-5 py-3 pe-14'>
-          <DialogTitle className='flex items-baseline justify-between gap-4 text-lg'>
+          <DialogTitle className='flex items-baseline justify-between gap-4 type-title'>
             <span>{balance > 0 ? t('payTab') : t('topUp')}</span>
-            <span className='shrink-0 text-xl font-bold tabular-nums'>
+            <span className='shrink-0 type-title tabular-nums'>
               {balance > 0
                 ? t('owesAmount', { amount: money(balance) })
                 : balance < 0
@@ -155,7 +155,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
                   : t('settledUp')}
             </span>
           </DialogTitle>
-          <p className='text-muted-foreground truncate text-sm'>
+          <p className='text-muted-foreground type-detail truncate'>
             {customer.name || t('guest')}
           </p>
         </DialogHeader>
@@ -176,7 +176,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
 
           <div
             dir='ltr'
-            className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
+            className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 type-figure'
           >
             {amountStr || '0'}
           </div>

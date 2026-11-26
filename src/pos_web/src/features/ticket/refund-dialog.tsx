@@ -166,10 +166,10 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>
+          <DialogTitle className='type-title'>
             {t('refundTitle', { number: toNumber(ticket.receiptNumber ?? 0) })}
           </DialogTitle>
-          <DialogDescription className='text-base'>
+          <DialogDescription className='type-body'>
             {t('refundHint', { amount: money(remainder) })}
           </DialogDescription>
         </DialogHeader>
@@ -189,7 +189,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
                   <div className='truncate font-medium'>
                     {localized(entry.line.description)}
                   </div>
-                  <div className='text-muted-foreground text-sm tabular-nums'>
+                  <div className='text-muted-foreground type-detail tabular-nums'>
                     {t('leftToRefund', { count: entry.left })} ·{' '}
                     {money(entry.line.unitPrice)}
                   </div>
@@ -205,7 +205,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
                   >
                     <Minus className='size-4' />
                   </Button>
-                  <span className='w-8 text-center text-lg font-semibold tabular-nums'>
+                  <span className='w-8 text-center type-body font-semibold tabular-nums'>
                     {entry.picked}
                   </span>
                   <Button

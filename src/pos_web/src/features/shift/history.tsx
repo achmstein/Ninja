@@ -42,7 +42,7 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
           {formatAt(shift.openedAt)} → {formatAt(shift.closedAt)}
         </div>
         {shift.openedBy && (
-          <div className='text-muted-foreground flex items-center gap-1 truncate text-sm'>
+          <div className='text-muted-foreground flex items-center gap-1 truncate type-detail'>
             <User className='size-4 shrink-0' />
             <span className='truncate'>{shift.openedBy}</span>
           </div>
@@ -50,10 +50,10 @@ function ShiftRow({ shift }: { shift: ShiftView }) {
       </div>
       {/* Net of the refunds issued in the shift, as the report labels it */}
       <span className='flex shrink-0 flex-col items-end'>
-        <span className='text-lg font-semibold tabular-nums'>
+        <span className='type-body font-semibold tabular-nums'>
           {money(shift.netSales ?? shift.salesTotal)}
         </span>
-        <span className='text-muted-foreground text-xs'>{t('netSales')}</span>
+        <span className='text-muted-foreground type-caption'>{t('netSales')}</span>
       </span>
       <OverShortBadge value={toNumber(shift.overShort)} />
     </button>
@@ -88,7 +88,7 @@ export function ShiftHistory() {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='text-xl font-bold'>{t('shiftHistory')}</h1>
+        <h1 className='type-title'>{t('shiftHistory')}</h1>
       </div>
 
       {isLoading ? (
@@ -98,7 +98,7 @@ export function ShiftHistory() {
           ))}
         </div>
       ) : !shifts?.length ? (
-        <p className='text-muted-foreground py-24 text-center text-lg'>
+        <p className='text-muted-foreground py-24 text-center type-body'>
           {t('noClosedShifts')}
         </p>
       ) : (

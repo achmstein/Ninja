@@ -50,9 +50,9 @@ export function ConfirmDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{title}</DialogTitle>
+          <DialogTitle className='type-title'>{title}</DialogTitle>
           {description && (
-            <DialogDescription className='text-base'>
+            <DialogDescription className='type-body'>
               {description}
             </DialogDescription>
           )}

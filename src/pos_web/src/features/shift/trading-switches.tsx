@@ -20,7 +20,7 @@ function FlagRow({ label, on, disabled, onChange, className }: FlagRowProps) {
         className
       )}
     >
-      <span className='flex items-center gap-2 text-base font-medium'>
+      <span className='flex items-center gap-2 type-body font-medium'>
         <span
           aria-hidden
           className={cn(
@@ -30,7 +30,7 @@ function FlagRow({ label, on, disabled, onChange, className }: FlagRowProps) {
         />
         {label}
         {!on && (
-          <span className='text-muted-foreground text-xs font-normal'>
+          <span className='text-muted-foreground type-caption'>
             {t('paused')}
           </span>
         )}

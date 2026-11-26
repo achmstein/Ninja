@@ -18,7 +18,7 @@ function CustomerPointsLine({ userId }: { userId: string }) {
   const { account, notEnrolled } = useLoyalty(userId)
   if (!account && !notEnrolled) return null
   return (
-    <span className='text-muted-foreground block truncate text-xs tabular-nums'>
+    <span className='text-muted-foreground type-caption block truncate tabular-nums'>
       {notEnrolled
         ? t('notEnrolled')
         : t('pointsBalance', { points: toNumber(account?.pointsBalance) })}
@@ -89,13 +89,13 @@ export function SelectedCustomer({
           }
         >
           <span className='min-w-0'>
-            <span className='block truncate font-medium'>{customer.name}</span>
+            <span className='type-heading block truncate'>{customer.name}</span>
             {features.loyalty && <CustomerPointsLine userId={customer.id} />}
           </span>
         </button>
       ) : (
         <span className='flex min-w-0 items-center gap-2'>
-          <span className='truncate font-medium'>{customer.name}</span>
+          <span className='type-heading truncate'>{customer.name}</span>
         </span>
       )}
       <Button

@@ -67,7 +67,7 @@ export function DiscardTicketDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('discardTicketTitle')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('discardTicketTitle')}</DialogTitle>
         </DialogHeader>
 
         <DialogFooter className='gap-2'>

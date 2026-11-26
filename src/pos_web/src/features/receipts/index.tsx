@@ -141,7 +141,7 @@ export function Receipts() {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='text-xl font-bold'>{t('receipts')}</h1>
+        <h1 className='type-title'>{t('receipts')}</h1>
       </div>
 
       <div className='relative'>
@@ -193,13 +193,13 @@ export function Receipts() {
                   id === shownId && 'bg-accent hover:bg-accent'
                 )}
               >
-                <span className='w-14 shrink-0 font-semibold tabular-nums'>
+                <span className='w-14 shrink-0 type-heading tabular-nums'>
                   #{toNumber(bill.receiptNumber)}
                 </span>
                 <Icon className='text-muted-foreground size-5 shrink-0' />
                 <span className='min-w-0 flex-1'>
-                  <BillTitle title={title} className='block truncate text-base font-medium' />
-                  <span className='text-muted-foreground block truncate text-sm'>
+                  <BillTitle title={title} className='type-heading block truncate' />
+                  <span className='text-muted-foreground type-detail block truncate'>
                     {bill.settledAt &&
                       new Intl.DateTimeFormat(locale, {
                         dateStyle: 'medium',
@@ -208,7 +208,7 @@ export function Receipts() {
                     {refunded > 0 && ` · ${t('refundedSoFar')} −${money(refunded)}`}
                   </span>
                 </span>
-                <span className='shrink-0 text-lg font-semibold tabular-nums'>
+                <span className='shrink-0 type-heading tabular-nums'>
                   {money(bill.total)}
                 </span>
                 <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />

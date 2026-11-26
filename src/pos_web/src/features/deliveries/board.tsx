@@ -62,7 +62,7 @@ export function DeliveriesBoard() {
         <Button variant='ghost' size='icon' className='size-12' onClick={() => navigate({ to: '/' })} aria-label={t('goBack')}>
           <BackIcon className='size-6' />
         </Button>
-        <h1 className='text-xl font-bold'>{t('deliveries')}</h1>
+        <h1 className='type-title'>{t('deliveries')}</h1>
         <Badge className='h-6 tabular-nums'>{total}</Badge>
         <Button
           variant='outline'
@@ -154,10 +154,10 @@ function Column({
       {header && (
         <div className='flex items-center gap-2 px-3.5 pt-3.5 pb-2.5'>
           <Icon className={cn('size-[18px] shrink-0', meta.ink)} aria-hidden />
-          <h2 className='min-w-0 flex-1 truncate font-semibold'>{t(meta.label)}</h2>
+          <h2 className='min-w-0 flex-1 truncate type-heading'>{t(meta.label)}</h2>
           <span
             className={cn(
-              'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 text-sm font-semibold tabular-nums',
+              'inline-flex h-6 min-w-6 items-center justify-center rounded-full px-2 type-detail font-semibold tabular-nums',
               orders.length > 0 && meta.tint ? meta.tint : 'bg-background',
             )}
           >
@@ -166,7 +166,7 @@ function Column({
         </div>
       )}
       {orders.length === 0 ? (
-        <p className='text-muted-foreground m-auto p-6 text-sm'>{t('laneEmpty')}</p>
+        <p className='text-muted-foreground m-auto p-6 type-detail'>{t('laneEmpty')}</p>
       ) : (
         <div className={cn('flex min-h-0 flex-1 flex-col gap-2 overflow-y-auto px-2.5 pb-2.5', !header && 'pt-2.5')}>
           {!grouped
@@ -179,15 +179,15 @@ function Column({
                   // and a rule between riders
                   <div key={group.riderUserId ?? ''} className={cn('flex flex-col gap-2', i > 0 && 'border-t pt-3')}>
                     <div className='flex items-center gap-2.5 px-0.5'>
-                      <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full border text-sm font-bold' aria-hidden>
+                      <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full border type-detail font-semibold' aria-hidden>
                         {[...name][0]?.toUpperCase()}
                       </span>
                       {/* The name in an isolate inside a line of the page's direction: it starts where the line does */}
                       <span className='min-w-0 flex-1'>
-                        <span className='block truncate font-semibold'>
+                        <span className='block truncate type-heading'>
                           <bdi>{name}</bdi>
                         </span>
-                        <span className='text-muted-foreground block text-sm tabular-nums'>
+                        <span className='text-muted-foreground block type-detail tabular-nums'>
                           {t('riderOrders', { count: group.orders.length })}
                           {lane === 'cashDue' && <> · {money(owed)}</>}
                         </span>

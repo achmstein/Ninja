@@ -62,7 +62,7 @@ type MoveTargetDialogProps = {
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className='text-muted-foreground mt-1 text-xs font-semibold tracking-wide uppercase'>
+    <h3 className='text-muted-foreground mt-1 type-label'>
       {children}
     </h3>
   )
@@ -164,10 +164,10 @@ export function MoveTargetDialog({
         )}
       >
         <DialogHeader>
-          <DialogTitle className='text-xl'>
+          <DialogTitle className='type-title'>
             {mode === 'new' ? t('newBill') : t('moveToBill')}
           </DialogTitle>
-          <DialogDescription className='text-base'>
+          <DialogDescription className='type-body'>
             {t('moveLinesAction', { count })}
           </DialogDescription>
         </DialogHeader>
@@ -195,7 +195,7 @@ export function MoveTargetDialog({
               )}
             </div>
             {visibleOthers.length === 0 ? (
-              <p className='text-muted-foreground py-8 text-center text-sm'>
+              <p className='text-muted-foreground py-8 text-center type-detail'>
                 {t('noBillsToMoveTo')}
               </p>
             ) : (
@@ -239,7 +239,7 @@ export function MoveTargetDialog({
                                 </span>
                               </span>
                               <span className='flex items-baseline justify-between gap-2'>
-                                <span className='text-muted-foreground text-xs'>
+                                <span className='text-muted-foreground type-caption'>
                                   #{toNumber(target.id)}
                                 </span>
                                 <span className='font-semibold tabular-nums'>

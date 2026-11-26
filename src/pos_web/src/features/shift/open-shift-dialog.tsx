@@ -70,7 +70,7 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('openShiftTitle')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('openShiftTitle')}</DialogTitle>
         </DialogHeader>
 
         <div className='grid gap-1.5'>

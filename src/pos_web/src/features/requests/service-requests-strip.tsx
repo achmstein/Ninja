@@ -57,7 +57,7 @@ export function ServiceRequestsStrip() {
     <section className='flex flex-col gap-2'>
       <div className='flex items-center gap-2'>
         <Bell className='size-5 text-amber-600 dark:text-amber-500' />
-        <h2 className='text-lg font-semibold'>{t('serviceRequests')}</h2>
+        <h2 className='type-heading'>{t('serviceRequests')}</h2>
         <Badge className='h-6 tabular-nums'>{requests.length}</Badge>
       </div>
 
@@ -91,11 +91,11 @@ export function ServiceRequestsStrip() {
                   <Icon className='size-5 text-amber-600 dark:text-amber-500' />
                 </div>
                 <div className='min-w-0 flex-1'>
-                  <div className='flex items-center gap-1 text-base font-semibold'>
+                  <div className='flex items-center gap-1 type-heading'>
                     <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
                     <span className='truncate'>{room}</span>
                   </div>
-                  <div className='text-muted-foreground truncate text-sm'>
+                  <div className='text-muted-foreground type-detail truncate'>
                     {requestText} ·{' '}
                     {relativeTime(request.createdAt, nowMs, t, locale)}
                   </div>

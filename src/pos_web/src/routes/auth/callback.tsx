@@ -64,7 +64,7 @@ function AuthCallback() {
   if (auth.error && showError) {
     return (
       <div className='flex h-svh flex-col items-center justify-center gap-4 p-4 text-center'>
-        <h1 className='text-2xl font-bold'>{t('signInFailed')}</h1>
+        <h1 className='type-title'>{t('signInFailed')}</h1>
         <p className='text-muted-foreground'>{auth.error.message}</p>
         <Button size='lg' onClick={() => void signInAgain()}>
           {t('retry')}

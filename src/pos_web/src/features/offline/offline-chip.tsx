@@ -80,8 +80,8 @@ function OfflineSalesDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[90svh] gap-4 overflow-y-auto sm:max-w-lg'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('offlineSales')}</DialogTitle>
-          <DialogDescription className='text-base'>
+          <DialogTitle className='type-title'>{t('offlineSales')}</DialogTitle>
+          <DialogDescription className='type-body'>
             {online ? t('offlineSalesOnlineHint') : t('offlineSalesOfflineHint')}
           </DialogDescription>
         </DialogHeader>
@@ -159,10 +159,10 @@ function OfflineSaleRow({
     <div className='flex items-center gap-3 p-3'>
       <div className='min-w-0 flex-1'>
         <div className='flex items-baseline gap-2'>
-          <span className='font-semibold tabular-nums'>
+          <span className='type-heading tabular-nums'>
             {sale.provisionalReceiptNumber}
           </span>
-          <span className='text-muted-foreground text-sm'>
+          <span className='text-muted-foreground type-detail'>
             {new Intl.DateTimeFormat(locale, { timeStyle: 'short' }).format(
               new Date(sale.placedAt),
             )}
@@ -170,14 +170,14 @@ function OfflineSaleRow({
         </div>
         <div
           className={cn(
-            'text-sm',
+            'type-detail',
             failed ? 'text-destructive' : 'text-muted-foreground',
           )}
         >
           {failed ? sale.error || t('somethingWentWrong') : t('offlineQueued')}
         </div>
       </div>
-      <span className='font-semibold tabular-nums'>{money(sale.total)}</span>
+      <span className='type-heading tabular-nums'>{money(sale.total)}</span>
       {failed && (
         <>
           <Button

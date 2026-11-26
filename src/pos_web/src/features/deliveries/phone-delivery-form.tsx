@@ -529,7 +529,7 @@ function Stepper({
   return (
     <nav aria-label={t('deliveryStepOf', { at: at + 1, count: steps.length })} className='flex flex-col gap-2'>
       {/* Said in words first, so a glance knows there is more to come */}
-      <span className='text-muted-foreground text-xs font-medium tracking-wide uppercase'>
+      <span className='text-muted-foreground type-label'>
         {t('deliveryStepOf', { at: at + 1, count: steps.length })}
       </span>
       <ol className='grid grid-cols-3 gap-2'>
@@ -555,7 +555,7 @@ function Stepper({
                 />
                 <span
                   className={cn(
-                    'truncate text-sm',
+                    'truncate type-detail',
                     now ? 'text-foreground font-semibold' : past ? 'text-foreground font-medium' : 'text-muted-foreground',
                   )}
                 >
@@ -563,7 +563,7 @@ function Stepper({
                 </span>
               </span>
               {past && done[s.key] ? (
-                <bdi className='text-muted-foreground -mt-1 block w-full truncate ps-5.5 text-start text-xs'>{done[s.key]}</bdi>
+                <bdi className='text-muted-foreground -mt-1 block w-full truncate ps-5.5 text-start type-caption'>{done[s.key]}</bdi>
               ) : null}
             </>
           )
@@ -660,7 +660,7 @@ function WhoStep({
 
       <div aria-live='polite' className='-mt-2 flex flex-col gap-2 empty:hidden'>
         {account ? (
-          <p className='flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400'>
+          <p className='flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 type-detail font-medium text-emerald-700 dark:text-emerald-400'>
             <UserRound className='size-4 shrink-0' aria-hidden />
             <span className='min-w-0 truncate'>
               <bdi>{account.name}</bdi> · {t('deliveryKnownCustomer')}
@@ -677,19 +677,19 @@ function WhoStep({
               >
                 <UserRound className='text-muted-foreground size-4 shrink-0' aria-hidden />
                 <bdi className='min-w-0 flex-1 truncate font-medium'>{c.name}</bdi>
-                <span dir='ltr' className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                <span dir='ltr' className='text-muted-foreground shrink-0 type-detail tabular-nums'>
                   {showPhone(c.phone ?? '')}
                 </span>
               </button>
             ))}
           </div>
         ) : settled && addresses.length > 0 ? (
-          <p className='bg-muted flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium'>
+          <p className='bg-muted flex items-center gap-2 rounded-lg px-3 py-2 type-detail font-medium'>
             <History className='size-4 shrink-0' aria-hidden />
             {t('deliveryCalledBefore')}
           </p>
         ) : settled ? (
-          <p className='bg-muted text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm'>
+          <p className='bg-muted text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2 type-detail'>
             <Plus className='size-4 shrink-0' aria-hidden />
             {t('deliveryNewCaller')}
           </p>
@@ -721,7 +721,7 @@ function WhoStep({
 
       {addresses.length > 0 && (
         <div className='flex flex-col gap-2'>
-          <span className='text-muted-foreground flex items-center gap-1.5 text-sm font-medium'>
+          <span className='text-muted-foreground flex items-center gap-1.5 type-detail font-medium'>
             <History className='size-4' aria-hidden />
             {t('deliveryKnownAddresses')}
           </span>
@@ -738,9 +738,9 @@ function WhoStep({
                   {a.label && <>{a.label} · </>}
                   {line(a)}
                 </span>
-                {a.directions && <span className='text-muted-foreground block truncate text-sm italic'>"{a.directions}"</span>}
+                {a.directions && <span className='text-muted-foreground block truncate type-detail italic'>"{a.directions}"</span>}
               </span>
-              <span className='text-primary flex shrink-0 items-center gap-1 text-sm font-semibold'>
+              <span className='text-primary flex shrink-0 items-center gap-1 type-detail font-semibold'>
                 <Check className='size-4' aria-hidden />
                 {t('deliverySameAddress')}
               </span>
@@ -781,7 +781,7 @@ function MoreForRider({ open: startOpen, directions, map }: { open: boolean; dir
     <div className='flex flex-col gap-3 rounded-lg border border-dashed p-3'>
       {directions}
       <div className='flex flex-col gap-1.5'>
-        <span className='text-muted-foreground flex items-center gap-1.5 text-sm font-medium'>
+        <span className='text-muted-foreground flex items-center gap-1.5 type-detail font-medium'>
           <MapPinned className='size-4' aria-hidden />
           {t('deliveryPinLabel')}
         </span>
@@ -808,14 +808,14 @@ function PinState({
   const distance = useDistanceText()
   if (reading)
     return (
-      <span className='text-muted-foreground flex items-center gap-1.5 text-sm' aria-live='polite'>
+      <span className='text-muted-foreground flex items-center gap-1.5 type-detail' aria-live='polite'>
         <Loader2 className='size-3.5 animate-spin' aria-hidden />
         {t('deliveryLocationReading')}
       </span>
     )
   if (failed)
     return (
-      <span className='flex items-center gap-2 text-sm text-amber-700 dark:text-amber-400'>
+      <span className='flex items-center gap-2 type-detail text-amber-700 dark:text-amber-400'>
         {t('deliveryQuoteFailed')}
         <Button variant='outline' size='sm' className='h-8' onClick={onRetry}>
           {t('retry')}
@@ -824,12 +824,12 @@ function PinState({
     )
   if (pinned)
     return (
-      <span className='flex items-center gap-1.5 text-sm' aria-live='polite'>
+      <span className='flex items-center gap-1.5 type-detail' aria-live='polite'>
         <MapPin className='size-3.5' aria-hidden />
         {t('deliveryLocationFound', { distance: distance(meters) })}
       </span>
     )
-  return <span className='text-muted-foreground text-sm'>{t('deliveryPinOptional')}</span>
+  return <span className='text-muted-foreground type-detail'>{t('deliveryPinOptional')}</span>
 }
 
 /** Step three: all of it on one screen, the rider to give it to, and Send */
@@ -886,18 +886,18 @@ function CheckStep({
     <>
       <div className='flex flex-col divide-y rounded-lg border'>
         <SummaryRow onEdit={onEditWho} editLabel={t('deliveryChange')}>
-          <span className='block font-semibold'>{name}</span>
-          <span className='text-muted-foreground text-sm'>{showPhone(phone)}</span>
+          <span className='block type-heading'>{name}</span>
+          <span className='text-muted-foreground type-detail'>{showPhone(phone)}</span>
         </SummaryRow>
         <SummaryRow onEdit={onEditWhere} editLabel={t('deliveryChange')}>
           {zone && (
-            <span className='text-muted-foreground block text-sm font-medium'>
+            <span className='text-muted-foreground block type-detail font-medium'>
               <bdi>{localized(zone.name)}</bdi>
             </span>
           )}
-          <span className='block font-semibold'>{form.address}</span>
-          {details && <span className='text-muted-foreground block text-sm'>{details}</span>}
-          {form.directions.trim() && <span className='text-muted-foreground block text-sm italic'>"{form.directions.trim()}"</span>}
+          <span className='block type-heading'>{form.address}</span>
+          {details && <span className='text-muted-foreground block type-detail'>{details}</span>}
+          {form.directions.trim() && <span className='text-muted-foreground block type-detail italic'>"{form.directions.trim()}"</span>}
           <PinQualityLabel source={pinSource} pinned={pinned} className='mt-1.5' />
         </SummaryRow>
       </div>
@@ -914,7 +914,7 @@ function CheckStep({
           </Warning>
         )}
         {warnings}
-        <div className='flex justify-between text-sm'>
+        <div className='flex justify-between type-detail'>
           <span className='text-muted-foreground'>
             {t('deliveryFee')}
             {eta != null && <> · {t('deliveryAboutMinutes', { minutes: eta })}</>}
@@ -961,7 +961,7 @@ function RiderChoice({ value, onChange }: { value: SaleRider | null; onChange: (
   if (list.length === 0) return null
   return (
     <div className='flex flex-col gap-1.5'>
-      <span className='text-muted-foreground text-sm font-medium'>{t('deliveryGiveTo')}</span>
+      <span className='text-muted-foreground type-detail font-medium'>{t('deliveryGiveTo')}</span>
       <div className='flex flex-wrap gap-2' role='radiogroup' aria-label={t('deliveryGiveTo')}>
         <Chip chosen={value == null} onClick={() => onChange(null)} title={t('deliveryRiderLater')} />
         {list.map((r) => {
@@ -1005,7 +1005,7 @@ function Chip({ chosen, onClick, title, status, free }: { chosen: boolean; onCli
         {free != null && <span aria-hidden className={cn('size-2 rounded-full', free ? 'bg-emerald-500' : 'bg-muted-foreground')} />}
         {title}
       </span>
-      {status && <span className='text-muted-foreground text-xs'>{status}</span>}
+      {status && <span className='text-muted-foreground type-caption'>{status}</span>}
     </button>
   )
 }
@@ -1027,7 +1027,7 @@ function Field({
       <Label htmlFor={id}>{label}</Label>
       {children({ id, ...(error ? { 'aria-invalid': true, 'aria-describedby': `${id}-error` } : {}) })}
       {error && (
-        <p id={`${id}-error`} className='text-destructive text-sm' role='alert'>
+        <p id={`${id}-error`} className='text-destructive type-detail' role='alert'>
           {error}
         </p>
       )}
@@ -1063,7 +1063,7 @@ function NearerBranches({
         const isChosen = chosen === id
         if (chosen != null && !isChosen) return null
         return (
-          <div key={id} className={cn('flex flex-col gap-2 rounded-lg border p-3 text-sm', isChosen ? 'border-primary bg-primary/5' : 'bg-background')}>
+          <div key={id} className={cn('flex flex-col gap-2 rounded-lg border p-3 type-detail', isChosen ? 'border-primary bg-primary/5' : 'bg-background')}>
             <p className='flex items-start gap-2'>
               <Store className='text-muted-foreground mt-0.5 size-4 shrink-0' aria-hidden />
               <span className='min-w-0 flex-1'>
@@ -1104,7 +1104,7 @@ function NearerBranches({
 
 function Warning({ children }: { children: ReactNode }) {
   return (
-    <div className='flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 text-sm text-amber-700 dark:text-amber-400'>
+    <div className='flex items-center gap-1.5 rounded-md bg-amber-500/10 px-2.5 py-1.5 type-detail text-amber-700 dark:text-amber-400'>
       <AlertTriangle className='size-4 shrink-0' aria-hidden />
       {children}
     </div>

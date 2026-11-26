@@ -51,7 +51,7 @@ function NoBranch() {
   return (
     <div className='flex flex-1 flex-col items-center justify-center gap-4 p-6 py-24 text-center'>
       <Store className='text-muted-foreground size-12' />
-      <h1 className='text-2xl font-bold'>{t('noBranchTitle')}</h1>
+      <h1 className='type-title'>{t('noBranchTitle')}</h1>
       <p className='text-muted-foreground max-w-md'>{t('noBranchDescription')}</p>
       <Button variant='outline' size='lg' onClick={() => auth.signoutRedirect()}>
         {t('signOut')}

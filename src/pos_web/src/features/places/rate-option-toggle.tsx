@@ -63,7 +63,7 @@ export function RateOptionToggle({
               {rates?.[code] && (
                 <span
                   className={cn(
-                    'shrink-0 text-sm font-normal tabular-nums',
+                    'shrink-0 type-detail tabular-nums',
                     selected
                       ? 'text-primary-foreground/80'
                       : 'text-muted-foreground',
@@ -110,7 +110,7 @@ export function RateOptionToggle({
             {rates?.[code] && (
               <span
                 className={cn(
-                  'text-sm tabular-nums',
+                  'type-detail tabular-nums',
                   selected
                     ? 'text-primary-foreground/80'
                     : 'text-muted-foreground',

@@ -57,10 +57,10 @@ export function BranchSwitcher() {
   const brand = (
     <>
       <BrandMark className='size-8 shrink-0 text-base' />
-      <div className='grid min-w-0 flex-1 text-start text-sm leading-tight'>
+      <div className='grid min-w-0 flex-1 text-start type-detail'>
         <span className='truncate font-semibold'>{business || label}</span>
         {/* One branch: the business is the place, and its branch says nothing more */}
-        {business && (branches.length > 1 || callCentre.on) && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
+        {business && (branches.length > 1 || callCentre.on) && <span className='text-muted-foreground type-caption truncate'>{label}</span>}
       </div>
     </>
   )

@@ -51,7 +51,7 @@ export function ShiftScreen() {
     return (
       <div className='flex flex-col items-center gap-4 py-24 text-center'>
         <CloudOff className='text-muted-foreground size-12' />
-        <p className='text-lg font-medium'>{t('needsInternet')}</p>
+        <p className='type-heading'>{t('needsInternet')}</p>
       </div>
     )
   }
@@ -71,7 +71,7 @@ export function ShiftScreen() {
       <div className='flex flex-col items-center gap-4 py-24 text-center'>
         <Banknote className='text-muted-foreground size-12' />
         <div>
-          <p className='text-lg font-medium'>{t('noShiftOpen')}</p>
+          <p className='type-heading'>{t('noShiftOpen')}</p>
         </div>
         <Button
           size='lg'
@@ -99,7 +99,7 @@ export function ShiftScreen() {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='min-w-0 flex-1 truncate text-xl font-bold'>
+        <h1 className='min-w-0 flex-1 truncate type-title'>
           {t('shiftNumber', { id: toNumber(shift.id) })}
         </h1>
         <Badge className='h-8 border-transparent bg-emerald-500/15 px-3 text-sm text-emerald-700 dark:text-emerald-400'>

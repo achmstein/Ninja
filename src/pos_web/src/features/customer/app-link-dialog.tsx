@@ -80,7 +80,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
     <Dialog open={customer !== null} onOpenChange={onOpenChange}>
       <DialogContent className='flex flex-col items-center gap-4 sm:max-w-sm'>
         <DialogHeader className='w-full'>
-          <DialogTitle className='text-xl'>
+          <DialogTitle className='type-title'>
             {t('appLinkTitle', { name: customer?.name ?? '' })}
           </DialogTitle>
           <DialogDescription>{t('appLinkHint')}</DialogDescription>
@@ -88,7 +88,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
 
         {failure ? (
           <div className='flex w-full flex-col items-center gap-3 py-6 text-center'>
-            <p className='text-muted-foreground text-sm'>{failure}</p>
+            <p className='text-muted-foreground type-detail'>{failure}</p>
             {customerId && (
               <Button variant='outline' onClick={() => mutate(customerId)}>
                 {t('retry')}
@@ -103,7 +103,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
             <div className='rounded-xl bg-white p-4'>
               <QRCodeSVG value={link.url} size={224} level='M' marginSize={0} />
             </div>
-            <p className='text-muted-foreground text-sm'>
+            <p className='text-muted-foreground type-detail'>
               {t('appLinkUntil', {
                 time: link.expiresAt.toLocaleTimeString(locale, {
                   hour: 'numeric',

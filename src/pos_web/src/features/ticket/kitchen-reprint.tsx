@@ -95,10 +95,10 @@ export function KitchenReprintDialog({
           {orders.map(([orderId, orderLines]) => (
             <li key={orderId} className='flex items-center gap-3 py-2.5'>
               <div className='min-w-0 flex-1'>
-                <p className='font-semibold tabular-nums'>
+                <p className='type-heading tabular-nums'>
                   {t('orderNumber', { id: orderId })}
                 </p>
-                <p className='text-muted-foreground truncate text-sm'>
+                <p className='text-muted-foreground truncate type-detail'>
                   {orderLines
                     .map(
                       (line) =>

@@ -92,21 +92,21 @@ function PendingOrderCard({
       >
         <div className='flex items-center gap-2'>
           <PlaceIcon className='text-muted-foreground size-4 shrink-0' />
-          <span className='truncate text-base font-semibold'>{title}</span>
+          <span className='truncate type-heading'>{title}</span>
         </div>
         {order.platform ? (
           <>
-            <div className='text-muted-foreground mt-0.5 flex items-center gap-2 text-sm'>
+            <div className='text-muted-foreground mt-0.5 flex items-center gap-2 type-detail'>
               <span>{'#\u200F'}{toNumber(order.orderNumber)}</span>
               <PlatformBadge platform={order.platform} />
             </div>
             <PlatformHandover
               platform={order.platform}
-              className='text-muted-foreground mt-0.5 text-sm'
+              className='text-muted-foreground mt-0.5 type-detail'
             />
           </>
         ) : (
-          <div className='text-muted-foreground mt-0.5 truncate text-sm'>
+          <div className='text-muted-foreground mt-0.5 truncate type-detail'>
             #{toNumber(order.orderNumber)}
             {subtitle && ` · ${subtitle}`}
           </div>
@@ -116,7 +116,7 @@ function PendingOrderCard({
         {history && (
           <div
             className={cn(
-              'mt-0.5 flex items-center gap-1 text-sm',
+              'mt-0.5 flex items-center gap-1 type-detail',
               ordersBefore === 0
                 ? 'text-amber-600 dark:text-amber-500'
                 : 'text-muted-foreground',
@@ -128,7 +128,7 @@ function PendingOrderCard({
         )}
         <div
           className={cn(
-            'mt-0.5 text-sm tabular-nums',
+            'mt-0.5 type-detail tabular-nums',
             urgencyTextClass(urgency),
           )}
         >
@@ -227,7 +227,7 @@ export function PendingOrdersStrip() {
     <section className='flex flex-col gap-2'>
       <div className='flex items-center gap-2'>
         <Clock className='size-5 text-amber-600 dark:text-amber-500' />
-        <h2 className='text-lg font-semibold'>{t('pendingOrders')}</h2>
+        <h2 className='type-heading'>{t('pendingOrders')}</h2>
         <Badge className='h-6 tabular-nums'>{pending.length}</Badge>
       </div>
       <PendingOrders orders={pending} horizontal />

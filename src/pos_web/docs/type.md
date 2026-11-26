@@ -38,9 +38,18 @@ The roles are utilities in `src/styles/index.css`.
 - No `text-lg` / `text-xl` / `font-bold` chosen to "make it stand out": pick
   the role that says what the text is.
 - No text under 12px.
+- No line shorter than 20px on text that is cut short (`truncate`): Arabic letters reach higher and lower than Latin
+  ones and a tighter line clips them. The roles already keep to this; do not tighten them with `leading-*`.
 
 ## Where it is applied
 
-The order screen (`features/sale`), the customer search and the room strip
-follow it. Other screens are moved over as they are worked on; a size or a
-weight set by hand there is a leftover, not a pattern to copy.
+Every screen of the web till. What is still set by hand is listed here, each for a reason:
+
+- Controls (buttons, inputs, the keypad's keys): their size goes with their height, as above.
+- Amount entry boxes (rider cash, opening and closing a shift, a cash movement): a large number being typed.
+- The shift report's three closing figures, and the receipt preview's total row.
+- Printed paper (`features/printing`, `features/receipt`): paper has its own sizes.
+- The brand mark.
+
+The class merger (`cn` in `src/lib/utils.ts`) knows the roles: a role given to a shared component (a dialog's
+title, a badge) replaces the size and weight that component set for itself.

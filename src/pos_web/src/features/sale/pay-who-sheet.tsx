@@ -78,7 +78,9 @@ export function PayWhoSheet({
           {payers.map((payer) => (
             <button key={payer.key} type='button' className={row} disabled={busy} onClick={() => onPayer(payer)}>
               <span className='min-w-0 flex-1'>
-                <bdi className='type-heading block truncate'>{payer.name ?? title}</bdi>
+                <span className='type-heading block truncate'>
+                  <bdi>{payer.name ?? title}</bdi>
+                </span>
                 <span className='text-muted-foreground type-detail block truncate'>
                   {payer.summary.map((line) => `${toNumber(line.qty)}× ${localized(line.description)}`).join(' · ')}
                 </span>

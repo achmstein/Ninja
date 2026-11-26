@@ -75,7 +75,7 @@ const typeIcon: Record<string, LucideIcon> = {
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h2 className='text-muted-foreground text-xs font-semibold tracking-wide uppercase'>
+    <h2 className='text-muted-foreground type-label'>
       {children}
     </h2>
   )
@@ -129,7 +129,7 @@ function BillCard({
             English name in an Arabic till is cut at its end, not its start */}
         <BillTitle
           title={title}
-          className='line-clamp-2 min-w-0 flex-1 text-base font-semibold ltr:text-left rtl:text-right'
+          className='line-clamp-2 min-w-0 flex-1 type-heading ltr:text-left rtl:text-right'
         />
         {waiting && (
           <span
@@ -140,12 +140,12 @@ function BillCard({
       </div>
 
       {active && (
-        <span className='text-muted-foreground font-mono text-sm tabular-nums'>
+        <span className='text-muted-foreground font-mono type-detail tabular-nums'>
           {formatClock(elapsedSeconds(stay, nowMs))}
         </span>
       )}
 
-      <span className='mt-auto text-lg font-semibold tabular-nums'>
+      <span className='mt-auto type-heading tabular-nums'>
         {money(ticket.total)}
       </span>
     </button>
@@ -411,7 +411,7 @@ export function Floor() {
                 )}
               </Button>
             )}
-            <h1 className='text-xl font-bold'>{t('openBills')}</h1>
+            <h1 className='type-title'>{t('openBills')}</h1>
           </div>
           <div className='flex flex-wrap gap-2 max-sm:w-full'>
             <Button
@@ -519,10 +519,10 @@ export function Floor() {
                       )}
                     </div>
                     <span className='min-w-0 flex-1'>
-                      <span className='block truncate text-base font-semibold'>
+                      <span className='type-heading block truncate'>
                         {localized(place?.name ?? reservation.placeName)}
                       </span>
-                      <span className='text-muted-foreground block truncate text-sm'>
+                      <span className='text-muted-foreground type-detail block truncate'>
                         {reservation.customerName || t('statusReserved')}
                         {reservation.partySize
                           ? ` · ${t('partyOf', { count: reservation.partySize })}`
@@ -530,11 +530,11 @@ export function Floor() {
                       </span>
                     </span>
                     {expiresIn != null ? (
-                      <span className='font-mono text-sm text-amber-600 tabular-nums shrink-0 dark:text-amber-500'>
+                      <span className='font-mono type-detail text-amber-600 tabular-nums shrink-0 dark:text-amber-500'>
                         {formatClock(expiresIn).slice(3)}
                       </span>
                     ) : reservation.for && !holding ? (
-                      <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                      <span className='text-muted-foreground shrink-0 type-detail tabular-nums'>
                         {timeOf(reservation.for)}
                       </span>
                     ) : null}
@@ -564,7 +564,7 @@ export function Floor() {
           </div>
         ) : bills.length === 0 ? (
           <div className='text-muted-foreground flex flex-col items-center gap-1 py-20 text-center'>
-            <p className='text-lg font-medium'>{t('noOpenBills')}</p>
+            <p className='type-body font-medium'>{t('noOpenBills')}</p>
           </div>
         ) : (
           <div className='flex flex-col gap-3'>

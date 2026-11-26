@@ -69,9 +69,9 @@ export function BreakdownDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-sm'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('breakdown')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('breakdown')}</DialogTitle>
         </DialogHeader>
-        <div className='divide-y rounded-lg border text-base'>
+        <div className='divide-y rounded-lg border type-body'>
           {rows.map((row) => (
             <div
               key={row.label}

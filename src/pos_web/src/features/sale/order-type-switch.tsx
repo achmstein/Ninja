@@ -62,7 +62,7 @@ export function OrderTypeSwitch({
         )}
       </div>
       {armed && (
-        <p className='text-center text-sm font-medium text-amber-700 dark:text-amber-400' role='status'>
+        <p className='text-center type-detail font-medium text-amber-700 dark:text-amber-400' role='status'>
           {t('orderTypeCounterConfirm')}
         </p>
       )}

@@ -44,7 +44,7 @@ export function ShiftDetail({ shiftId }: { shiftId: number }) {
   if (!shift) {
     return (
       <div className='flex flex-col items-center gap-4 py-24'>
-        <p className='text-muted-foreground text-lg'>{t('shiftNotFound')}</p>
+        <p className='text-muted-foreground type-body'>{t('shiftNotFound')}</p>
         <Button asChild size='lg'>
           <Link to='/shifts'>{t('shiftHistory')}</Link>
         </Button>
@@ -62,7 +62,7 @@ export function ShiftDetail({ shiftId }: { shiftId: number }) {
             <BackIcon className='size-6' />
           </Link>
         </Button>
-        <h1 className='min-w-0 flex-1 truncate text-xl font-bold'>
+        <h1 className='min-w-0 flex-1 truncate type-title'>
           {t('shiftNumber', { id: toNumber(shift.id) })}
         </h1>
         <Badge className='h-8 px-3 text-sm' variant='secondary'>

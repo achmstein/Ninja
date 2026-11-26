@@ -131,7 +131,9 @@ export function SentLines({
               </span>
               {localized(line.details) && <span className='type-caption block truncate'>{localized(line.details)}</span>}
               {line.customerName && (
-                <bdi className='text-foreground/70 type-caption block truncate font-medium'>{line.customerName}</bdi>
+                <span className='text-foreground/70 type-caption block truncate font-medium'>
+                  <bdi>{line.customerName}</bdi>
+                </span>
               )}
             </span>
             <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>

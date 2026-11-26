@@ -28,14 +28,14 @@ export function EndedTime({ stay }: { stay: StayViewModel }) {
 
   return (
     <div className='min-w-0'>
-      <div className='text-3xl leading-[1.4] font-bold tabular-nums'>
+      <div className='type-figure'>
         {formatClock(elapsedSeconds(stay, end))}
       </div>
-      <div className='text-muted-foreground truncate text-base tabular-nums'>
+      <div className='text-muted-foreground type-body truncate tabular-nums'>
         {endedAt ? `${t('sessionEnded')} · ${endedAt}` : t('sessionEnded')}
       </div>
       {used.length > 1 && (
-        <div className='text-muted-foreground truncate text-sm tabular-nums'>
+        <div className='text-muted-foreground type-detail truncate tabular-nums'>
           {used
             .map(
               (o) =>

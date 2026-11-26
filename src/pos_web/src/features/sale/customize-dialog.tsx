@@ -236,7 +236,7 @@ function CustomizeForm({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className='flex items-center gap-2 text-xl'>
+        <DialogTitle className='flex items-center gap-2 type-title'>
           {localized(item.name)}
           {prefApplied && (
             <span
@@ -260,11 +260,11 @@ function CustomizeForm({
           return (
             <div key={String(customization.id)} className='flex flex-col gap-2'>
               <div className='flex items-baseline gap-2'>
-                <span className='text-sm font-semibold'>
+                <span className='type-heading'>
                   {localized(customization.name)}
                 </span>
                 {customization.isRequired && (
-                  <span className='text-destructive text-xs'>
+                  <span className='text-destructive type-caption'>
                     {t('required')}
                   </span>
                 )}
@@ -291,12 +291,12 @@ function CustomizeForm({
                       >
                         {localized(option.name)}
                         {outOfStock ? (
-                          <span className='text-muted-foreground text-xs'>
+                          <span className='text-muted-foreground type-caption'>
                             {t('outOfStock')}
                           </span>
                         ) : (
                           adjustment > 0 && (
-                            <span className='text-xs opacity-70'>
+                            <span className='type-caption opacity-70'>
                               +{adjustment}
                             </span>
                           )
@@ -310,7 +310,7 @@ function CustomizeForm({
         })}
 
       <div className='flex items-center justify-between'>
-        <span className='text-sm font-semibold'>{t('quantity')}</span>
+        <span className='type-heading'>{t('quantity')}</span>
         <div className='flex items-center gap-3'>
           <Button
             variant='outline'
@@ -321,7 +321,7 @@ function CustomizeForm({
           >
             <Minus className='size-5' />
           </Button>
-          <span className='w-8 text-center text-lg font-semibold tabular-nums'>
+          <span className='w-8 text-center type-heading tabular-nums'>
             {quantity}
           </span>
           <Button

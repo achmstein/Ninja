@@ -91,12 +91,12 @@ export function StartStayDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-4 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='flex items-center gap-2 text-xl'>
+          <DialogTitle className='flex items-center gap-2 type-title'>
             <Play className='size-5 rtl:rotate-180' />
             {reservation ? t('startSession') : t('startWalkInSession')}
           </DialogTitle>
           {reservation && (
-            <DialogDescription className='text-base'>
+            <DialogDescription className='type-body'>
               {[localized(place?.name), reservation.customerName]
                 .filter(Boolean)
                 .join(' · ')}
@@ -107,10 +107,10 @@ export function StartStayDialog({
         {/* The card prices the option picked below; the toggle carries every
             rate so the others stay in view */}
         <div className='bg-muted rounded-xl p-4 text-center'>
-          <div className='text-lg font-semibold'>{localized(place?.name)}</div>
-          <div className='text-primary flex items-baseline justify-center gap-1 text-2xl font-bold tabular-nums'>
+          <div className='type-heading'>{localized(place?.name)}</div>
+          <div className='text-primary flex items-baseline justify-center gap-1 type-figure'>
             <span>{money(chosen?.hourlyRate)}</span>
-            <span className='text-muted-foreground text-sm font-normal'>
+            <span className='text-muted-foreground type-detail'>
               {t('perHour')}
             </span>
           </div>

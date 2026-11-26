@@ -101,7 +101,7 @@ export function CloseShiftDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-lg'>
           <DialogHeader>
-            <DialogTitle className='text-xl'>{t('shiftClosed')}</DialogTitle>
+            <DialogTitle className='type-title'>{t('shiftClosed')}</DialogTitle>
           </DialogHeader>
 
           <ShiftReport shift={result} />
@@ -136,14 +136,14 @@ export function CloseShiftDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('closeShiftTitle')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('closeShiftTitle')}</DialogTitle>
         </DialogHeader>
 
         <div className='bg-accent flex items-center justify-between rounded-lg px-4 py-3'>
-          <span className='text-muted-foreground text-sm'>
+          <span className='text-muted-foreground type-detail'>
             {t('expectedInDrawer')}
           </span>
-          <span className='text-lg font-bold tabular-nums'>
+          <span className='type-body font-semibold tabular-nums'>
             {money(shift.expectedInDrawer)}
           </span>
         </div>
@@ -164,7 +164,7 @@ export function CloseShiftDialog({
         <NumericKeypad value={amountStr} onChange={setAmountStr} />
 
         {waiting > 0 && (
-          <p className='bg-destructive/10 text-destructive rounded-lg px-3 py-2 text-sm'>
+          <p className='bg-destructive/10 text-destructive rounded-lg px-3 py-2 type-detail'>
             {t('offlineSalesBlockClose', { count: waiting })}
           </p>
         )}

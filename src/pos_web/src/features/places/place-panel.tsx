@@ -157,7 +157,7 @@ export function PlacePanel({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
           <DialogHeader>
-            <DialogTitle className='flex items-center gap-2 text-xl'>
+            <DialogTitle className='flex items-center gap-2 type-title'>
               <span
                 className={cn(
                   'size-3 shrink-0 rounded-full',
@@ -166,7 +166,7 @@ export function PlacePanel({
               />
               {localized(place?.name)}
             </DialogTitle>
-            <DialogDescription className='text-base tabular-nums'>
+            <DialogDescription className='type-body tabular-nums'>
               {timed
                 ? `${tariffLine(place?.tariff, money, localized)} ${t('perHour')}`
                 : localized(place?.description) || t('table')}
@@ -175,11 +175,11 @@ export function PlacePanel({
 
           {running ? (
             <div className='flex flex-col items-center gap-4'>
-              <span className='font-mono text-5xl font-light tracking-widest tabular-nums'>
+              <span className='font-mono type-figure tracking-widest'>
                 {formatClock(elapsed)}
               </span>
               {used.length > 0 && hasOptions(stay.tariff) && (
-                <div className='text-muted-foreground flex gap-4 font-mono text-sm'>
+                <div className='text-muted-foreground flex gap-4 font-mono type-detail'>
                   {used.map((o) => (
                     <span key={o.code}>
                       {localized(o.name)}{' '}
@@ -206,7 +206,7 @@ export function PlacePanel({
               {/* Billed hours in rounding steps; hidden until the first step
                   lands, like the admin panel */}
               {billed > 0 && (
-                <div className='w-full rounded-xl border p-3 text-sm'>
+                <div className='w-full rounded-xl border p-3 type-detail'>
                   {(stay.costs ?? [])
                     .filter((c) => Number(c.hours ?? 0) > 0)
                     .map((c) => (
@@ -271,7 +271,7 @@ export function PlacePanel({
               <div className='flex size-16 items-center justify-center rounded-full bg-sky-500/10'>
                 <Users className='size-7 text-sky-500' />
               </div>
-              <p className='text-lg font-medium'>{t('partySeated')}</p>
+              <p className='type-heading'>{t('partySeated')}</p>
               <p className='text-muted-foreground flex items-center gap-1'>
                 <User className='size-4' />
                 {seated.customerName || t('table')}
@@ -280,7 +280,7 @@ export function PlacePanel({
                   : ''}
               </p>
               {seated.seatedAt && (
-                <p className='text-muted-foreground text-sm tabular-nums'>
+                <p className='text-muted-foreground type-detail tabular-nums'>
                   {t('seatedSince', { time: timeOf(seated.seatedAt) })}
                 </p>
               )}
@@ -319,7 +319,7 @@ export function PlacePanel({
               <div className='flex size-16 items-center justify-center rounded-full bg-amber-500/10'>
                 <Clock className='size-7 text-amber-500' />
               </div>
-              <p className='text-lg font-medium'>
+              <p className='type-heading'>
                 {timed ? t('readyToStart') : t('statusReserved')}
               </p>
               {reservation.customerName ? (
@@ -342,7 +342,7 @@ export function PlacePanel({
                 </Button>
               )}
               {expiresIn != null && (
-                <p className='font-mono text-sm text-amber-600 tabular-nums dark:text-amber-500'>
+                <p className='font-mono type-detail text-amber-600 tabular-nums dark:text-amber-500'>
                   {t('expiresIn', {
                     countdown: formatClock(expiresIn).slice(3),
                   })}
@@ -352,7 +352,7 @@ export function PlacePanel({
                   counter confirms the reservation, at the rate they picked:
                   one tap does both */}
               {reservation.startOnConfirm && (
-                <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
+                <p className='text-muted-foreground flex items-center gap-1.5 type-detail'>
                   <TimerReset className='size-4' />
                   {t('startsOnConfirm')}
                   {reservation.requestedOptionName && (
@@ -427,7 +427,7 @@ export function PlacePanel({
               <div className='bg-muted flex size-16 items-center justify-center rounded-full'>
                 <Wrench className='text-muted-foreground size-7' />
               </div>
-              <p className='text-muted-foreground text-lg font-medium'>
+              <p className='text-muted-foreground type-heading'>
                 {t('underMaintenance')}
               </p>
             </div>
@@ -436,9 +436,9 @@ export function PlacePanel({
               <div className='flex size-16 items-center justify-center rounded-full bg-green-500/10'>
                 <CheckCircle2 className='size-7 text-green-500' />
               </div>
-              <p className='text-lg font-medium'>{t('statusAvailable')}</p>
+              <p className='type-heading'>{t('statusAvailable')}</p>
               {localized(place?.description) && (
-                <p className='text-muted-foreground max-w-sm text-center text-sm'>
+                <p className='text-muted-foreground max-w-sm text-center type-detail'>
                   {localized(place?.description)}
                 </p>
               )}

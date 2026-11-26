@@ -91,8 +91,8 @@ function Body({
   return (
     <>
       <DialogHeader>
-        <DialogTitle className='text-xl'>{t('riderCashTitle', { name })}</DialogTitle>
-        <DialogDescription className='text-base tabular-nums'>
+        <DialogTitle className='type-title'>{t('riderCashTitle', { name })}</DialogTitle>
+        <DialogDescription className='type-body tabular-nums'>
           {t('riderOrders', { count: chosen.length })} · {t('riderCashExpected', { amount: money(expected) })}
         </DialogDescription>
       </DialogHeader>
@@ -115,17 +115,17 @@ function Body({
                 )}
               >
                 <Box className={cn('size-5 shrink-0', !on && 'text-muted-foreground')} aria-hidden />
-                <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>{'#\u200F'}{b.orderNumber}</span>
+                <span className='text-muted-foreground shrink-0 type-detail tabular-nums'>{'#\u200F'}{b.orderNumber}</span>
                 <span className='min-w-0 flex-1 truncate font-medium'>{b.order.customerName || t('guest')}</span>
                 <span className='shrink-0 font-semibold tabular-nums'>{money(b.total)}</span>
               </button>
             )
           })}
-          {chosen.length === 0 && <p className='text-destructive mt-1 text-sm'>{t('riderCashNoneTicked')}</p>}
+          {chosen.length === 0 && <p className='text-destructive mt-1 type-detail'>{t('riderCashNoneTicked')}</p>}
           {/* Off by something: which bill carries it */}
           {difference != null && difference !== 0 && chosen.length > 1 && (
             <div className='mt-2 flex flex-col gap-1.5'>
-              <span className='text-muted-foreground text-sm'>{t('riderCashDifferenceOn')}</span>
+              <span className='text-muted-foreground type-detail'>{t('riderCashDifferenceOn')}</span>
               <div className='flex flex-wrap gap-1.5' role='radiogroup'>
                 {chosen.map((b) => (
                   <Button
@@ -161,7 +161,7 @@ function Body({
           </div>
           <NumericKeypad value={counted} onChange={setTyped} />
           {/* Said in words, never colour alone */}
-          <p id='rider-cash-difference' className='min-h-5 text-sm font-semibold' aria-live='polite'>
+          <p id='rider-cash-difference' className='min-h-5 type-detail font-semibold' aria-live='polite'>
             {difference == null ? null : difference === 0 ? (
               <span className='text-emerald-700 dark:text-emerald-400'>{t('riderCashExact')}</span>
             ) : (

@@ -77,7 +77,7 @@ export function OnlinePaymentsPanel({
 
   return (
     <div className='mt-4 flex flex-col gap-2'>
-      <h2 className='text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wide uppercase'>
+      <h2 className='text-muted-foreground flex items-center gap-2 type-label'>
         <Smartphone className='size-4' />
         {t('paidOnlineTitle')}
       </h2>
@@ -117,7 +117,7 @@ export function OnlinePaymentsPanel({
                         : t('onlineRefundedBadge')}
                   </Badge>
                 </div>
-                <div className='text-muted-foreground text-xs tabular-nums'>
+                <div className='text-muted-foreground type-caption tabular-nums'>
                   {[
                     time(payment.refundedAt ?? payment.paidAt ?? payment.createdAt),
                     payment.transactionId && `⁨#${payment.transactionId}⁩`,
@@ -172,11 +172,11 @@ export function OnlinePaymentsPanel({
           <span className='font-semibold tabular-nums'>{money(summary.paid)}</span>
         </div>
         {billOpen && (
-          <div className='flex items-center justify-between gap-4 px-3 py-2 text-lg'>
+          <div className='flex items-center justify-between gap-4 px-3 py-2 type-body'>
             <span className='text-muted-foreground'>{t('remaining')}</span>
             <span
               className={cn(
-                'font-bold tabular-nums',
+                'font-semibold tabular-nums',
                 summary.remaining > 0
                   ? 'text-destructive'
                   : 'text-emerald-600 dark:text-emerald-400'

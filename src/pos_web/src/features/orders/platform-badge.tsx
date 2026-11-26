@@ -41,13 +41,13 @@ export function PlatformBadge({
       {logo ? (
         <img src={logo} alt={platform.name} className='h-4 w-auto' />
       ) : (
-        <span className='text-sm font-semibold'>{platform.name}</span>
+        <span className='type-detail font-semibold'>{platform.name}</span>
       )}
-      <span className='font-mono text-sm font-semibold tabular-nums' dir='ltr'>
+      <span className='font-mono type-detail font-semibold tabular-nums' dir='ltr'>
         {platform.shortCode ?? platform.code}
       </span>
       {platform.cancelledAt && (
-        <span className='text-destructive flex items-center gap-1 text-sm'>
+        <span className='text-destructive flex items-center gap-1 type-detail'>
           <TriangleAlert className='size-3.5' />
           {t('platformCancelled')}
         </span>

@@ -224,7 +224,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
         <DialogHeader className='border-b px-5 py-3 pe-14'>
-          <DialogTitle className='text-lg'>{title}</DialogTitle>
+          <DialogTitle className='type-title'>{title}</DialogTitle>
         </DialogHeader>
 
         <div className='grid gap-4 p-4 sm:grid-cols-2'>
@@ -250,7 +250,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
               <div className='grid gap-1.5'>
                 <Label>{t(options.title)}</Label>
                 {options.list && options.list.length === 0 ? (
-                  <p className='text-muted-foreground text-sm'>{t(options.empty)}</p>
+                  <p className='text-muted-foreground type-detail'>{t(options.empty)}</p>
                 ) : (
                   <div className='grid max-h-52 gap-1.5 overflow-y-auto'>
                     {(options.list ?? []).map((item) => {
@@ -268,7 +268,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
                           {balance !== 0 && (
                             <span
                               className={cn(
-                                'shrink-0 text-xs font-normal tabular-nums',
+                                'shrink-0 type-caption tabular-nums',
                                 isPicked
                                   ? 'text-primary-foreground/80'
                                   : balance < 0

@@ -74,7 +74,7 @@ export function StayMembers({ stay }: { stay: StayViewModel }) {
           )
         })}
         {(stay.members?.length ?? 0) === 0 && stay.customerName && (
-          <span className='text-muted-foreground flex items-center gap-1 text-sm'>
+          <span className='text-muted-foreground flex items-center gap-1 type-detail'>
             <User className='size-4' />
             {stay.customerName}
           </span>
@@ -83,7 +83,7 @@ export function StayMembers({ stay }: { stay: StayViewModel }) {
           type='button'
           disabled={actions.isBusy}
           onClick={() => setPickerOpen(true)}
-          className='text-muted-foreground hover:text-foreground hover:border-foreground/40 inline-flex h-9 items-center gap-1.5 rounded-md border border-dashed px-3 text-sm font-medium transition-colors disabled:opacity-50'
+          className='text-muted-foreground hover:text-foreground hover:border-foreground/40 inline-flex h-9 items-center gap-1.5 rounded-md border border-dashed px-3 type-detail font-medium transition-colors disabled:opacity-50'
         >
           <UserPlus className='size-4' />
           {t('addCustomer')}

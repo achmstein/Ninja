@@ -165,7 +165,7 @@ export function CallCentre() {
 
   return (
     <div className='mx-auto flex w-full max-w-2xl flex-col gap-5 p-4'>
-      <h1 className='flex items-center gap-2 text-2xl font-bold'>
+      <h1 className='flex items-center gap-2 type-title'>
         <Headset className='size-6' aria-hidden />
         {t('callCentreNextCaller')}
       </h1>
@@ -190,7 +190,7 @@ export function CallCentre() {
 
       {(known.data ?? []).length > 0 && (
         <div className='flex flex-col gap-1.5'>
-          <span className='text-muted-foreground flex items-center gap-1.5 text-xs font-medium'>
+          <span className='text-muted-foreground flex items-center gap-1.5 type-caption font-medium'>
             <History className='size-3.5' aria-hidden />
             {t('deliveryKnownAddresses')}
           </span>
@@ -200,7 +200,7 @@ export function CallCentre() {
               type='button'
               onClick={() => pickKnown(a)}
               className={cn(
-                'flex items-start gap-2 rounded-lg border p-2.5 text-start text-sm',
+                'flex items-start gap-2 rounded-lg border p-2.5 text-start type-detail',
                 a.address === form.address && (a.building ?? '') === form.building ? 'border-primary bg-primary/5' : 'bg-background',
               )}
             >
@@ -215,7 +215,7 @@ export function CallCentre() {
       )}
 
       <section className='flex flex-col gap-3 rounded-xl border p-4'>
-        <h2 className='flex items-center gap-2 font-semibold'>
+        <h2 className='flex items-center gap-2 type-heading'>
           <Bike className='size-5' aria-hidden />
           {t('callCentreDelivery')}
         </h2>
@@ -298,7 +298,7 @@ export function CallCentre() {
         {location === '' ? (
           <PinQualityLabel source='None' pinned={false} className='self-start' />
         ) : (
-          <p className='flex items-center gap-1.5 text-sm'>
+          <p className='flex items-center gap-1.5 type-detail'>
             <PinQualityLabel source={form.pinSource} pinned />
             <button
               type='button'
@@ -317,7 +317,7 @@ export function CallCentre() {
         )}
 
         {/* Which branch makes it: the picked area's, the nearest whose area takes the point in, or the agent's own pick */}
-        <div className='flex flex-col gap-2 text-sm' aria-live='polite'>
+        <div className='flex flex-col gap-2 type-detail' aria-live='polite'>
           {area && (
             <p className='border-primary bg-primary/5 flex min-h-12 items-center gap-2 rounded-lg border p-3'>
               <Store className='text-muted-foreground size-4 shrink-0' aria-hidden />
@@ -415,7 +415,7 @@ export function CallCentre() {
       </section>
 
       <section className='flex flex-col gap-3 rounded-xl border p-4'>
-        <h2 className='flex items-center gap-2 font-semibold'>
+        <h2 className='flex items-center gap-2 type-heading'>
           <ShoppingBag className='size-5' aria-hidden />
           {t('callCentrePickupAt')}
         </h2>
@@ -438,7 +438,7 @@ function Labelled({ id, label, error, children }: { id: string; label: string; e
       <Label htmlFor={id}>{label}</Label>
       {children}
       {error && (
-        <p className='text-destructive text-sm' role='alert'>
+        <p className='text-destructive type-detail' role='alert'>
           {error}
         </p>
       )}

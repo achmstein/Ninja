@@ -101,7 +101,7 @@ function SignIn() {
       <div className='grid h-svh place-items-center p-4'>
         <Card className='w-full max-w-sm gap-4'>
           <CardHeader className='text-center'>
-            <CardTitle className='text-xl tracking-tight'>
+            <CardTitle className='type-title'>
               {t('signInFailed')}
             </CardTitle>
             <CardDescription>{signInError.message}</CardDescription>
@@ -122,7 +122,7 @@ function SignIn() {
       <div className='flex flex-col items-center gap-3'>
         <BrandMark className='size-14 text-2xl' />
         <div className='flex flex-col items-center gap-1'>
-          <span className='text-2xl font-semibold tracking-tight'>
+          <span className='type-title tracking-tight'>
             {business || t('posName')}
           </span>
           {business && (
@@ -130,7 +130,7 @@ function SignIn() {
           )}
         </div>
       </div>
-      <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+      <div className='text-muted-foreground flex items-center gap-2 type-detail'>
         <Loader2 className='h-4 w-4 animate-spin' />
         {t('redirectingToSignIn')}
       </div>

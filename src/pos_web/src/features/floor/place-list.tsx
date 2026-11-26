@@ -79,7 +79,7 @@ export function PlaceSearch({
 
 function Heading({ children }: { children: React.ReactNode }) {
   return (
-    <h3 className='text-muted-foreground mt-2 text-xs font-semibold tracking-wide uppercase'>
+    <h3 className='text-muted-foreground mt-2 type-label'>
       {children}
     </h3>
   )
@@ -166,7 +166,7 @@ export function PlaceList({
       {!needle && (
         <button type='button' onClick={onNewTab} className={rowClass}>
           <Plus className='text-muted-foreground size-5' />
-          <span className='flex-1 font-medium'>{t('newTab')}</span>
+          <span className='type-body flex-1 font-medium'>{t('newTab')}</span>
           <ShoppingBag className='text-muted-foreground size-4' />
         </button>
       )}
@@ -225,11 +225,11 @@ export function PlaceList({
                           : 'bg-green-500',
                       )}
                     />
-                    <span className='min-w-0 flex-1 truncate font-medium'>
+                    <span className='type-body min-w-0 flex-1 truncate font-medium'>
                       {localized(place.name)}
                     </span>
                     {detail && (
-                      <span className='text-muted-foreground truncate text-sm'>
+                      <span className='text-muted-foreground type-detail truncate'>
                         {detail}
                       </span>
                     )}
@@ -242,7 +242,7 @@ export function PlaceList({
       )}
 
       {free.length === 0 && !loading && (
-        <p className='text-muted-foreground py-6 text-center text-sm'>
+        <p className='text-muted-foreground py-6 text-center type-detail'>
           {needle ? t('noPlaceMatches') : t('everyPlaceHasABill')}
         </p>
       )}

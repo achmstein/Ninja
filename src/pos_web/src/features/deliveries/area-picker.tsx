@@ -87,7 +87,7 @@ export function AreaButtons({
               </span>
             )}
             <bdi className='line-clamp-2 w-full font-medium leading-snug break-words'>{localized(z.name)}</bdi>
-            <span className='text-muted-foreground w-full truncate text-xs tabular-nums'>
+            <span className='text-muted-foreground w-full truncate type-caption tabular-nums'>
               {severalBranches && (
                 <>
                   <bdi>{branchName(toNumber(z.branchId))}</bdi>
@@ -97,7 +97,7 @@ export function AreaButtons({
               {fee > 0 ? money(fee) : t('deliveryFree')}
             </span>
             {held && (
-              <span className='text-xs font-medium text-amber-700 dark:text-amber-400'>
+              <span className='type-caption font-medium text-amber-700 dark:text-amber-400'>
                 {armed === id ? t('deliveryAreaOffTapAgain') : !z.on ? t('deliveryAreaOff') : t('deliveryBranchPaused')}
               </span>
             )}
@@ -228,7 +228,7 @@ export function AreaPicker({
       />
       {open &&
         (found.length === 0 ? (
-          <p className='text-muted-foreground px-1 text-sm' role='status'>
+          <p className='text-muted-foreground px-1 type-detail' role='status'>
             {t('deliveryAreaNone')}
           </p>
         ) : (
@@ -254,7 +254,7 @@ export function AreaPicker({
                     <MapPinned className='text-muted-foreground size-4 shrink-0' aria-hidden />
                     <span className='min-w-0 flex-1'>
                       <bdi className='font-medium'>{localized(zone.name)}</bdi>
-                      <span className='text-muted-foreground text-sm'>
+                      <span className='text-muted-foreground type-detail'>
                         {severalBranches && (
                           <>
                             {' · '}
@@ -266,12 +266,12 @@ export function AreaPicker({
                         {zone.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(zone.etaMinutes) })}</>}
                       </span>
                       {off && (
-                        <span className='ms-1.5 text-sm font-medium text-amber-700 dark:text-amber-400'>
+                        <span className='ms-1.5 type-detail font-medium text-amber-700 dark:text-amber-400'>
                           · {armed === zoneId ? t('deliveryAreaOffTapAgain') : t('deliveryAreaOff')}
                         </span>
                       )}
                       {zone.branchPaused && (
-                        <span className='ms-1.5 text-sm font-medium text-amber-700 dark:text-amber-400'>
+                        <span className='ms-1.5 type-detail font-medium text-amber-700 dark:text-amber-400'>
                           · {armed === zoneId && !off ? t('callCentreTapAgainPaused') : t('deliveryBranchPaused')}
                         </span>
                       )}

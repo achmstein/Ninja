@@ -60,7 +60,7 @@ export function AddressSearchField({ onPick }: { onPick: (place: PickedPlace) =>
                 )}
                 <span className='flex min-w-0 flex-col'>
                   <span className='truncate font-medium'>{s.primaryText}</span>
-                  {s.secondaryText && <span className='text-muted-foreground truncate text-sm'>{s.secondaryText}</span>}
+                  {s.secondaryText && <span className='text-muted-foreground truncate type-detail'>{s.secondaryText}</span>}
                 </span>
               </button>
             </li>

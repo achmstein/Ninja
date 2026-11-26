@@ -44,11 +44,11 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
 
   return (
     <section className={cn('flex flex-col gap-3 rounded-lg border p-3', className)} aria-label={t('deliverTo')}>
-      <div className='text-muted-foreground flex items-center gap-2 text-sm'>
+      <div className='text-muted-foreground flex items-center gap-2 type-detail'>
         <Bike className='size-4 shrink-0' />
         <span className='font-medium'>{t('deliverTo')}</span>
         {delivery.distanceMeters != null && (
-          <span className='bg-muted ms-auto rounded-full px-2 py-0.5 text-xs tabular-nums'>
+          <span className='bg-muted ms-auto rounded-full px-2 py-0.5 type-caption tabular-nums'>
             {distance(toNumber(delivery.distanceMeters))}
           </span>
         )}
@@ -58,14 +58,14 @@ export function DeliveryDetails({ delivery, className }: { delivery: DeliveryVie
         <MapPin className='text-muted-foreground mt-1 size-4 shrink-0' />
         <div className='min-w-0 flex-1'>
           {area && (
-            <div className='text-muted-foreground text-sm font-medium'>
+            <div className='text-muted-foreground type-detail font-medium'>
               <bdi>{area}</bdi>
             </div>
           )}
-          <div className='text-base font-semibold'>{delivery.address}</div>
-          {details && <div className='text-muted-foreground text-sm'>{details}</div>}
+          <div className='type-heading'>{delivery.address}</div>
+          {details && <div className='text-muted-foreground type-detail'>{details}</div>}
           {delivery.directions && (
-            <div className='text-muted-foreground mt-1 text-sm italic'>"{delivery.directions}"</div>
+            <div className='text-muted-foreground mt-1 type-detail italic'>"{delivery.directions}"</div>
           )}
           <PinQualityLabel source={delivery.pinSource} pinned={pinned} className='mt-2' />
         </div>
@@ -101,7 +101,7 @@ export function DeliveryFeeRow({ delivery, className }: { delivery: DeliveryView
   const money = useMoney()
   const fee = toNumber(delivery.fee)
   return (
-    <div className={cn('text-muted-foreground flex justify-between text-sm', className)}>
+    <div className={cn('text-muted-foreground flex justify-between type-detail', className)}>
       <span>
         {t('deliveryFee')}
         {delivery.etaMinutes != null && <> · {t('deliveryAboutMinutes', { minutes: toNumber(delivery.etaMinutes) })}</>}

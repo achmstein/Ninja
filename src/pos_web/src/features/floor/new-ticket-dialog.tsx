@@ -141,7 +141,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className='gap-5 sm:max-w-md'>
         <DialogHeader>
-          <DialogTitle className='text-xl'>{t('newTab')}</DialogTitle>
+          <DialogTitle className='type-title'>{t('newTab')}</DialogTitle>
         </DialogHeader>
 
         {customer ? (

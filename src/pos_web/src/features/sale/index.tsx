@@ -298,17 +298,17 @@ export function SalePad({
               </Button>
             </div>
             <div className='grid grid-cols-3 gap-2'>
-              <Button variant='outline' className='h-14 min-w-0 type-caption flex-col gap-0.5 px-1' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
+              <Button variant='outline' className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.assigning} onClick={() => setNaming(true)}>
                 <UserPlus className='size-5' />
-                <span className='truncate'>{t('assignCustomer')}</span>
+                <span>{t('assignCustomer')}</span>
               </Button>
-              <Button variant='outline' className='h-14 min-w-0 type-caption flex-col gap-0.5 px-1' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('move')}>
+              <Button variant='outline' className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('move')}>
                 <ArrowRightLeft className='size-5' />
-                <span className='truncate'>{t('moveToBill')}</span>
+                <span>{t('moveToBill')}</span>
               </Button>
-              <Button className='h-14 min-w-0 type-caption flex-col gap-0.5 px-1' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('new')}>
+              <Button className='h-16 min-w-0 type-caption flex-col gap-0 px-1 font-medium whitespace-normal' disabled={picked.size === 0 || billLines.moving} onClick={() => setMoveMode('new')}>
                 <Plus className='size-5' />
-                <span className='truncate'>{t('newBill')}</span>
+                <span>{t('newBill')}</span>
               </Button>
             </div>
           </div>

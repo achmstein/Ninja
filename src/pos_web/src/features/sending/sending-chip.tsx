@@ -79,12 +79,12 @@ export function SendingChip() {
                     }
                   }}
                 >
-                  <span className='font-semibold underline-offset-4 hover:underline'>
+                  <span className='type-heading underline-offset-4 hover:underline'>
                     {send.ticketId != null ? `⁨#${send.ticketId}⁩` : t('newTicket')}
                   </span>
-                  <span className='font-semibold tabular-nums'>{money(saleTotal(send.lines))}</span>
+                  <span className='type-heading tabular-nums'>{money(saleTotal(send.lines))}</span>
                 </button>
-                {send.error && <p className='text-muted-foreground text-sm'>{send.error}</p>}
+                {send.error && <p className='text-muted-foreground type-detail'>{send.error}</p>}
                 <div className='flex justify-end gap-2'>
                   <Button
                     variant='outline'
