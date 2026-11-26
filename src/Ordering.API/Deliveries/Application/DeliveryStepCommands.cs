@@ -28,7 +28,9 @@ public record UnassignDeliveryRiderCommand(int OrderId, int BranchId) : Delivery
 public record MarkDeliveryOutCommand(int OrderId, int BranchId) : DeliveryStepCommand(OrderId, BranchId);
 
 /// <summary>The customer has it: said by the rider, or by the till for them.</summary>
-public record MarkDeliveryDeliveredCommand(int OrderId, int BranchId) : DeliveryStepCommand(OrderId, BranchId);
+/// <param name="Latitude">With <paramref name="Longitude"/>, where the rider's phone said they were; kept only from the rider's own phone.</param>
+public record MarkDeliveryDeliveredCommand(int OrderId, int BranchId, double? Latitude = null, double? Longitude = null, double? AccuracyMeters = null)
+    : DeliveryStepCommand(OrderId, BranchId);
 
 /// <summary>It could not be handed over, and why: said by the rider, or by the till for them.</summary>
 public record MarkDeliveryFailedCommand(int OrderId, int BranchId, string? Reason) : DeliveryStepCommand(OrderId, BranchId);
@@ -58,6 +60,9 @@ public abstract class DeliveryStepHandler<TCommand>(
 
     /// <summary>Connected courier companies, for the steps that give a delivery or take it back.</summary>
     protected ICourierDispatch? Couriers { get; } = couriers;
+
+    /// <summary>Who is taking the step: the rider, or the till for them.</summary>
+    protected IIdentityService Identity => identity;
 
     public async Task<DeliveryStepResult> Handle(TCommand command, CancellationToken cancellationToken)
     {
@@ -142,9 +147,18 @@ public class MarkDeliveryDeliveredCommandHandler(
     IOrderRepository orderRepository, IIdentityService identity, ILogger<MarkDeliveryDeliveredCommandHandler> logger)
     : DeliveryStepHandler<MarkDeliveryDeliveredCommand>(orderRepository, identity, logger)
 {
+    /// <summary>A fix further out than this says nothing about which door: not kept.</summary>
+    public const double MaxAccuracyMeters = 100;
+
     protected override Task ApplyAsync(Order order, MarkDeliveryDeliveredCommand command)
     {
-        order.MarkDelivered();
+        // Only the rider's own phone says where the door is: the till marking it for them was not there
+        var spot = command.Latitude is { } lat && command.Longitude is { } lng
+            && command.AccuracyMeters is not > MaxAccuracyMeters
+            && order.Delivery?.RiderUserId is { } rider && rider == Identity.GetUserIdentity()
+                ? (lat, lng)
+                : ((double, double)?)null;
+        order.MarkDelivered(latitude: spot?.Item1, longitude: spot?.Item2);
         return Task.CompletedTask;
     }
 }

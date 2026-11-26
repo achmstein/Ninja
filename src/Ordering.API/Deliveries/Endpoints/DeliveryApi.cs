@@ -167,6 +167,9 @@ public static partial class DeliveryApi
             .WithDescription("Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to. Kept only for a rider's own account.")
             .RequireAuthorization("Rider");
 
+        // A caller on the phone shares their location through a link the till sends
+        orders.MapLocationShareRoutes();
+
         return orders;
     }
 

@@ -20,8 +20,9 @@ public static partial class DeliveryApi
         StepAsync(new MarkDeliveryOutCommand(orderId, httpContext.GetRequiredBranchId()), mediator);
 
     public static Task<Results<NoContent, ProblemHttpResult>> MarkDeliveredAsync(
-        int orderId, HttpContext httpContext, IMediator mediator) =>
-        StepAsync(new MarkDeliveryDeliveredCommand(orderId, httpContext.GetRequiredBranchId()), mediator);
+        int orderId, DeliveredRequest? request, HttpContext httpContext, IMediator mediator) =>
+        StepAsync(new MarkDeliveryDeliveredCommand(
+            orderId, httpContext.GetRequiredBranchId(), request?.Latitude, request?.Longitude, request?.AccuracyMeters), mediator);
 
     public static Task<Results<NoContent, ProblemHttpResult>> MarkFailedAsync(
         int orderId, DeliveryFailedRequest? request, HttpContext httpContext, IMediator mediator) =>

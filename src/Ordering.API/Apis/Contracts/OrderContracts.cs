@@ -124,7 +124,12 @@ public record PosDeliveryRequest(
     string? Apartment = null,
     string? Directions = null,
     // The branch's named delivery area the cashier picked by name; left out, the pin decides when there is one
-    int? ZoneId = null);
+    int? ZoneId = null,
+    // Where the pin came from: Search (found on the map at the till), Customer or Rider (an earlier
+    // address of theirs), Shared (the location link); left out with a pin, Search
+    DeliveryPinSource? PinSource = null,
+    // The location link the till sent the caller: shared before, its pin is used; shared later, it lands on the order
+    string? LocationShareToken = null);
 
 /// <summary>
 /// The created order's id — what the POS uses to find the ticket the order

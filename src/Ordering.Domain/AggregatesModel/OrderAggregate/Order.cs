@@ -1029,16 +1029,25 @@ public class Order
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
     }
 
-    /// <summary>The customer has it. A repeat is a no-op.</summary>
-    public void MarkDelivered(DateTime? at = null)
+    /// <summary>The customer has it, with where the rider was when they said so when their phone told. A repeat is a no-op.</summary>
+    public void MarkDelivered(DateTime? at = null, double? latitude = null, double? longitude = null)
     {
         var delivery = EnsureDelivering();
         // A courier's delivery is said delivered with what was collected (MarkCourierDelivered), or its bill never settles
         if (delivery.HasCourier)
             throw new OrderingDomainException("Say what the courier collected.", DeliveryErrors.CourierAmountRequired);
-        if (delivery.MarkDelivered(at ?? DateTime.UtcNow))
+        if (delivery.MarkDelivered(at ?? DateTime.UtcNow, latitude, longitude))
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
     }
+
+    /// <summary>
+    /// The caller shared their location through the till's link after the order was placed: it is the
+    /// pin now. Not a step of the delivery: no history row, nothing said to the customer; the board and
+    /// the rider read it on their next look. False when nothing changed.
+    /// </summary>
+    public bool ShareDeliveryPin(double latitude, double longitude, int? distanceMeters) =>
+        // Still being checked by the menu counts too: the caller may share before it is confirmed
+        Delivery is { } delivery && VoidedAt is null && delivery.SharePin(latitude, longitude, distanceMeters);
 
     /// <summary>It could not be handed over (nobody answered, refused). A repeat is a no-op.</summary>
     public void MarkDeliveryFailed(string reason, DateTime? at = null)

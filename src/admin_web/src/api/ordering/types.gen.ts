@@ -201,6 +201,12 @@ export type CustomerOrderSummary = {
     lastOrderAt?: string;
 };
 
+export type DeliveredRequest = {
+    latitude?: null | number | string;
+    longitude?: null | number | string;
+    accuracyMeters?: null | number | string;
+};
+
 export type DeliveringBranch = {
     branchId: number | string;
     distanceMeters: number | string;
@@ -249,6 +255,8 @@ export type DeliveryOrder = {
     delivery?: DeliveryStaffView;
 };
 
+export type DeliveryPinSource = number;
+
 export type DeliveryQuote = {
     delivers: boolean;
     inRange: boolean;
@@ -293,6 +301,7 @@ export type DeliveryStaffView = {
     version?: number | string;
     latitude?: null | number | string;
     longitude?: null | number | string;
+    pinSource?: string;
     address?: string;
     building?: null | string;
     floor?: null | string;
@@ -334,6 +343,7 @@ export type DeliveryTimelineStep = {
 export type DeliveryView = {
     latitude?: null | number | string;
     longitude?: null | number | string;
+    pinSource?: string;
     address?: string;
     building?: null | string;
     floor?: null | string;
@@ -478,11 +488,31 @@ export type KnownAddressView = {
     directions: null | string;
     phone: null | string;
     lastDeliveredAt: null | string;
+    pinSource?: string;
 };
 
 export type LocalizedText = {
     en?: null | string;
     ar?: null | string;
+};
+
+export type LocationShareCreated = {
+    token: string;
+    expiresAt: string;
+};
+
+export type LocationShareState = {
+    open: boolean;
+    shared: boolean;
+};
+
+export type LocationShareView = {
+    token: string;
+    latitude: null | number | string;
+    longitude: null | number | string;
+    accuracyMeters: null | number | string;
+    sharedAt: null | string;
+    expired: boolean;
 };
 
 export type Order = {
@@ -660,6 +690,8 @@ export type PosDeliveryRequest = {
     apartment?: null | string;
     directions?: null | string;
     zoneId?: null | number | string;
+    pinSource?: null | DeliveryPinSource;
+    locationShareToken?: null | string;
 };
 
 export type PosOrderRequest = {
@@ -767,6 +799,12 @@ export type RiderView = {
 
 export type SetOrderReadyRequest = {
     ready: boolean;
+};
+
+export type ShareLocationRequest = {
+    latitude: number | string;
+    longitude: number | string;
+    accuracyMeters?: null | number | string;
 };
 
 export type StaffDeliveringBranch = {
@@ -2276,7 +2314,7 @@ export type MarkDeliveryOutResponses = {
 export type MarkDeliveryOutResponse = MarkDeliveryOutResponses[keyof MarkDeliveryOutResponses];
 
 export type MarkDeliveryDeliveredData = {
-    body?: never;
+    body?: null | DeliveredRequest;
     path: {
         orderId: number;
     };
@@ -2374,6 +2412,116 @@ export type SetMyRiderStatusResponses = {
 };
 
 export type SetMyRiderStatusResponse = SetMyRiderStatusResponses[keyof SetMyRiderStatusResponses];
+
+export type GetLocationShareData = {
+    body?: never;
+    path: {
+        token: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/location-shares/{token}';
+};
+
+export type GetLocationShareErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetLocationShareResponses = {
+    /**
+     * OK
+     */
+    200: LocationShareView;
+};
+
+export type GetLocationShareResponse = GetLocationShareResponses[keyof GetLocationShareResponses];
+
+export type ShareLocationData = {
+    body: ShareLocationRequest;
+    path: {
+        token: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/location-shares/{token}';
+};
+
+export type ShareLocationErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type ShareLocationResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type ShareLocationResponse = ShareLocationResponses[keyof ShareLocationResponses];
+
+export type GetLocationShareStateData = {
+    body?: never;
+    path: {
+        token: string;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/location-shares/{token}/state';
+};
+
+export type GetLocationShareStateErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetLocationShareStateResponses = {
+    /**
+     * OK
+     */
+    200: LocationShareState;
+};
+
+export type GetLocationShareStateResponse = GetLocationShareStateResponses[keyof GetLocationShareStateResponses];
 
 export type GetCourierProvidersData = {
     body?: never;
@@ -2980,6 +3128,38 @@ export type GetKnownDeliveryAddressesResponses = {
 };
 
 export type GetKnownDeliveryAddressesResponse = GetKnownDeliveryAddressesResponses[keyof GetKnownDeliveryAddressesResponses];
+
+export type CreateLocationShareData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/delivery/location-shares';
+};
+
+export type CreateLocationShareErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CreateLocationShareResponses = {
+    /**
+     * OK
+     */
+    200: LocationShareCreated;
+};
+
+export type CreateLocationShareResponse = CreateLocationShareResponses[keyof CreateLocationShareResponses];
 
 export type GetKitchenStationsData = {
     body?: never;

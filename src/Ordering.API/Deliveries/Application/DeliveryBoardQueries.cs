@@ -100,7 +100,7 @@ public class DeliveryBoardQueries(
                 .AsNoTracking()
                 .Where(a => a.UserId == userId)
                 .OrderByDescending(a => a.LastUsedAt)
-                .Select(a => new KnownAddressView(a.Label, a.Latitude, a.Longitude, a.Address, a.Building, a.Floor, a.Apartment, a.Directions, a.Phone, null))
+                .Select(a => new KnownAddressView(a.Label, a.Latitude, a.Longitude, a.Address, a.Building, a.Floor, a.Apartment, a.Directions, a.Phone, null, nameof(DeliveryPinSource.Customer)))
                 .ToListAsync();
 
         // Two queries, each on its own index, rather than one OR that reads the whole table
@@ -123,17 +123,40 @@ public class DeliveryBoardQueries(
             .ToList();
     }
 
-    private Task<List<KnownAddressView>> DeliveredTo(System.Linq.Expressions.Expression<Func<DomainOrder, bool>> whose, int? branchId) =>
-        context.Orders
+    /// <summary>
+    /// Where earlier deliveries went. One a rider handed over brings where the rider was when they said
+    /// so: the door as found, better than any pin the order had (a searched street, or none at all), so a
+    /// regular who rings again is sent to the right door.
+    /// </summary>
+    private async Task<List<KnownAddressView>> DeliveredTo(System.Linq.Expressions.Expression<Func<DomainOrder, bool>> whose, int? branchId)
+    {
+        var rows = await context.Orders
             .AsNoTracking()
             .Where(o => o.Delivery != null && (branchId == null || o.BranchId == branchId))
             .Where(whose)
             .OrderByDescending(o => o.OrderDate)
             .Take(Options.KnownAddressLookback)
-            .Select(o => new KnownAddressView(
-                null, o.Delivery!.Latitude, o.Delivery.Longitude, o.Delivery.Address, o.Delivery.Building,
-                o.Delivery.Floor, o.Delivery.Apartment, o.Delivery.Directions, o.Delivery.Phone, o.OrderDate))
+            .Select(o => new
+            {
+                o.Delivery!.Latitude, o.Delivery.Longitude, o.Delivery.PinSource,
+                o.Delivery.DeliveredLatitude, o.Delivery.DeliveredLongitude,
+                o.Delivery.Address, o.Delivery.Building, o.Delivery.Floor, o.Delivery.Apartment,
+                o.Delivery.Directions, o.Delivery.Phone, o.OrderDate,
+            })
             .ToListAsync();
+
+        return rows.Select(r => FoundDoor(r.DeliveredLatitude, r.DeliveredLongitude, r.PinSource) is { } door
+                ? new KnownAddressView(null, door.Latitude, door.Longitude, r.Address, r.Building, r.Floor, r.Apartment, r.Directions, r.Phone, r.OrderDate, nameof(DeliveryPinSource.Rider))
+                : new KnownAddressView(null, r.Latitude, r.Longitude, r.Address, r.Building, r.Floor, r.Apartment, r.Directions, r.Phone, r.OrderDate,
+                    (r.Latitude is null ? DeliveryPinSource.None : r.PinSource).ToString()))
+            .ToList();
+    }
+
+    /// <summary>The rider's spot stands for the door, except over the customer's own pin, which is their door already.</summary>
+    public static (double Latitude, double Longitude)? FoundDoor(double? deliveredLatitude, double? deliveredLongitude, DeliveryPinSource pinSource) =>
+        deliveredLatitude is { } lat && deliveredLongitude is { } lng && pinSource != DeliveryPinSource.Customer
+            ? (lat, lng)
+            : null;
 
     /// <summary>A delivery order as a card: the aggregate's own stage and total, the cash against it.</summary>
     public static DeliveryOrder ToView(DomainOrder o)

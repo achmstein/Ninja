@@ -8,6 +8,8 @@ namespace Ninja.Ordering.API.Deliveries;
 /// </summary>
 /// <param name="Phone">The number the rider calls; the guest's checkout phone when left out.</param>
 /// <param name="ZoneId">The branch's named area the till picked by name; a customer's is read from their pin, never sent.</param>
+/// <param name="PinSource">Where the till's pin came from; a customer's is always their own.</param>
+/// <param name="LocationShareToken">The location link the till sent the caller: its pin when there is none, and later.</param>
 public record DeliveryDraft(
     double? Latitude,
     double? Longitude,
@@ -17,7 +19,9 @@ public record DeliveryDraft(
     string? Apartment = null,
     string? Directions = null,
     string? Phone = null,
-    int? ZoneId = null);
+    int? ZoneId = null,
+    DeliveryPinSource? PinSource = null,
+    string? LocationShareToken = null);
 
 /// <summary>Who is taking the delivery: a customer ordering, or the till over the phone.</summary>
 public enum DeliveryTaker
@@ -49,8 +53,25 @@ public interface IDeliveryPolicy
         bool isGuest = false);
 }
 
-public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry country) : IDeliveryPolicy
+public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry country, OrderingContext? context = null) : IDeliveryPolicy
 {
+    /// <summary>
+    /// The till's draft with the caller's shared location as its pin, when the link it sent was answered
+    /// before the order was placed and the cashier has no pin of their own (or only a searched one).
+    /// </summary>
+    private async Task<DeliveryDraft> WithSharedPinAsync(DeliveryDraft draft, int branchId)
+    {
+        if (context is null || string.IsNullOrWhiteSpace(draft.LocationShareToken)
+            || (draft.Latitude is not null && draft.PinSource is not (null or DeliveryPinSource.Search)))
+            return draft;
+        var token = draft.LocationShareToken.Trim();
+        var shared = await context.LocationShares.AsNoTracking()
+            .FirstOrDefaultAsync(s => s.Token == token && s.BranchId == branchId && s.SharedAt != null);
+        return shared is { Latitude: { } lat, Longitude: { } lng }
+            ? draft with { Latitude = lat, Longitude = lng, PinSource = DeliveryPinSource.Shared }
+            : draft;
+    }
+
     public async Task<Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Delivery> BuildAsync(
         DeliveryDraft draft,
         int branchId,
@@ -61,6 +82,11 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
     {
         var terms = await branchSettings.GetDeliveryTermsAsync(branchId, evenWhilePaused: taker == DeliveryTaker.Till)
             ?? throw new OrderingDomainException("This branch isn't delivering right now.", DeliveryErrors.NotDelivering);
+
+        // A customer's pin is their own door, whatever else is sent; the till's says where it came from
+        draft = taker == DeliveryTaker.Customer
+            ? draft with { PinSource = DeliveryPinSource.Customer, LocationShareToken = null }
+            : await WithSharedPinAsync(draft, branchId);
 
         // The branch brings orders to the door of signed-in customers only; the till's phone orders are its own
         if (taker == DeliveryTaker.Customer && isGuest && terms.SignInRequired)
@@ -123,7 +149,9 @@ public class DeliveryPolicy(IBranchSettingsQueries branchSettings, TenantCountry
         return new Ninja.Ordering.Domain.AggregatesModel.OrderAggregate.Delivery(
             draft.Latitude, draft.Longitude, draft.Address, draft.Building, draft.Floor,
             draft.Apartment, draft.Directions, phone!, terms.FeeIn(zone), distance,
-            zone?.Id, zone?.Name, zone?.EtaMinutes, minimum);
+            zone?.Id, zone?.Name, zone?.EtaMinutes, minimum,
+            // A till pin that does not say where it came from was found on the map: near, not the door
+            draft.PinSource ?? DeliveryPinSource.Search, draft.LocationShareToken);
     }
 
     private static bool IsOnTheMap(double latitude, double longitude) =>

@@ -125,6 +125,7 @@ public record CustomerAddressView(
 
 /// <summary>An address a caller had before: one they saved (with its label), or one an earlier delivery here went to (with when).</summary>
 /// <param name="Latitude">With <paramref name="Longitude"/>, the pin; null for one the till took over the phone without one.</param>
+/// <param name="PinSource">Where the pin came from: Customer (their own, saved in the app), Rider (where a rider handed an earlier delivery over), Shared, Search, or None.</param>
 public record KnownAddressView(
     string? Label,
     double? Latitude,
@@ -135,7 +136,24 @@ public record KnownAddressView(
     string? Apartment,
     string? Directions,
     string? Phone,
-    DateTime? LastDeliveredAt);
+    DateTime? LastDeliveredAt,
+    string PinSource = nameof(DeliveryPinSource.None));
+
+/// <summary>The rider handed it over, and where their phone said they were when they said so (both or neither).</summary>
+/// <param name="AccuracyMeters">How close the phone said it was; a fix further out than 100 m is not kept.</param>
+public record DeliveredRequest(double? Latitude = null, double? Longitude = null, double? AccuracyMeters = null);
+
+/// <summary>A location link made for a caller: the token goes in the link the till sends.</summary>
+public record LocationShareCreated(string Token, DateTime ExpiresAt);
+
+/// <summary>What the till reads of its location link: the caller's pin once they shared it.</summary>
+public record LocationShareView(string Token, double? Latitude, double? Longitude, double? AccuracyMeters, DateTime? SharedAt, bool Expired);
+
+/// <summary>What the caller's page reads of the link: whether it still takes a location, and whether one came.</summary>
+public record LocationShareState(bool Open, bool Shared);
+
+/// <summary>Where the caller's phone says they are.</summary>
+public record ShareLocationRequest(double Latitude, double Longitude, double? AccuracyMeters = null);
 
 /// <summary>Give a delivery to one of the branch's riders. The name is the rider's own, as Ordering knows them.</summary>
 /// <param name="RiderName">Ignored: read for one release from tills that still send it.</param>

@@ -24,6 +24,28 @@ public enum DeliveryStage
 }
 
 /// <summary>
+/// Where a delivery's pin came from, which says how far a rider can trust it.
+/// Stored by name.
+/// </summary>
+public enum DeliveryPinSource
+{
+    /// <summary>No pin: the rider goes by the words and calls.</summary>
+    None = 0,
+
+    /// <summary>The customer put it on their own door in the app, with their phone's GPS.</summary>
+    Customer = 1,
+
+    /// <summary>The till found the street or a landmark on the map: near, not the door.</summary>
+    Search = 2,
+
+    /// <summary>The caller shared their phone's location through a link the till sent.</summary>
+    Shared = 3,
+
+    /// <summary>Where a rider handed an earlier delivery over at this address.</summary>
+    Rider = 4,
+}
+
+/// <summary>
 /// The business's own delivery of an order: where it goes, as the customer
 /// pinned and described it, what it adds to the bill, and the rider who
 /// takes it. Snapshotted at order time — a saved address edited later never
@@ -38,6 +60,20 @@ public class Delivery
     public double? Latitude { get; private set; }
 
     public double? Longitude { get; private set; }
+
+    /// <summary>Where the pin came from: how far it can be trusted. None without one.</summary>
+    public DeliveryPinSource PinSource { get; private set; }
+
+    /// <summary>
+    /// The link the till sent the caller to share their location, when it sent one: a location shared
+    /// after the order was placed still lands on it.
+    /// </summary>
+    public string? LocationShareToken { get; private set; }
+
+    /// <summary>Where the rider was when they said it was delivered: the door, as found. Null when their phone did not say.</summary>
+    public double? DeliveredLatitude { get; private set; }
+
+    public double? DeliveredLongitude { get; private set; }
 
     /// <summary>The area and street, in the customer's words.</summary>
     public string Address { get; private set; } = string.Empty;
@@ -220,7 +256,9 @@ public class Delivery
         int? zoneId = null,
         LocalizedText? zoneName = null,
         int? etaMinutes = null,
-        decimal? minimumOrder = null)
+        decimal? minimumOrder = null,
+        DeliveryPinSource pinSource = DeliveryPinSource.Customer,
+        string? locationShareToken = null)
     {
         if (latitude.HasValue != longitude.HasValue
             || latitude is < -90 or > 90 || longitude is < -180 or > 180
@@ -229,6 +267,10 @@ public class Delivery
 
         Latitude = latitude;
         Longitude = longitude;
+        PinSource = latitude is null ? DeliveryPinSource.None
+            : pinSource == DeliveryPinSource.None ? DeliveryPinSource.Search
+            : pinSource;
+        LocationShareToken = Tidy(locationShareToken, DeliveryLimits.LocationShareToken, "location link");
         Address = !string.IsNullOrWhiteSpace(address)
             ? Limit(address, DeliveryLimits.Address, "area and street")
             : throw new OrderingDomainException("A delivery needs the area and street.", DeliveryErrors.AddressRequired);
@@ -354,13 +396,40 @@ public class Delivery
         return true;
     }
 
-    internal bool MarkDelivered(DateTime at)
+    /// <param name="latitude">With <paramref name="longitude"/>, where the rider was when they said so; both or neither, else ignored.</param>
+    internal bool MarkDelivered(DateTime at, double? latitude = null, double? longitude = null)
     {
         if (DeliveredAt != null)
             return false;
         if (OutAt is null || FailedAt != null || ReturnedAt != null)
             throw new OrderingDomainException("The order isn't on its way.", DeliveryErrors.NotOut);
         DeliveredAt = at;
+        if (latitude is >= -90 and <= 90 && longitude is >= -180 and <= 180)
+        {
+            DeliveredLatitude = latitude;
+            DeliveredLongitude = longitude;
+        }
+        Version++;
+        return true;
+    }
+
+    /// <summary>
+    /// The caller shared their phone's location through the till's link after the order was placed: it
+    /// becomes the pin, in place of none or a searched one. Not once it has been handed over or brought
+    /// back, and never over a pin the customer put on their own door. False when nothing changed.
+    /// </summary>
+    internal bool SharePin(double latitude, double longitude, int? distanceMeters)
+    {
+        if (DeliveredAt != null || ReturnedAt != null || PinSource == DeliveryPinSource.Customer)
+            return false;
+        if (latitude is < -90 or > 90 || longitude is < -180 or > 180 || double.IsNaN(latitude) || double.IsNaN(longitude))
+            throw new OrderingDomainException("A delivery needs a point on the map.", DeliveryErrors.PinInvalid);
+        if (Latitude == latitude && Longitude == longitude && PinSource == DeliveryPinSource.Shared)
+            return false;
+        Latitude = latitude;
+        Longitude = longitude;
+        PinSource = DeliveryPinSource.Shared;
+        DistanceMeters = distanceMeters is null ? null : Math.Max(0, distanceMeters.Value);
         Version++;
         return true;
     }

@@ -36,6 +36,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<CourierCompany> CourierProviders { get; set; }
     public DbSet<CourierCancel> CourierCancels { get; set; }
     public DbSet<CourierStatusCall> CourierStatusCalls { get; set; }
+    public DbSet<LocationShare> LocationShares { get; set; }
 
     private readonly IMediator? _mediator;
     private IDbContextTransaction? _currentTransaction;
@@ -81,6 +82,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new CourierCompanyEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CourierCancelEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CourierStatusCallEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new LocationShareEntityTypeConfiguration());
         modelBuilder.UseIntegrationEventLogs();
     }
 

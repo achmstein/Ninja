@@ -4,8 +4,8 @@ import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOption
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addCourierProvider, addMyAddress, assignDeliveryCourier, assignDeliveryRider, assignOrderCustomer, cancelOrder, cancelUnpaidOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getCourierCalls, getCourierConnection, getCourierProviders, getCustomerOrderSummaries, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markCourierDelivered, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, newCourierWebhookSecret, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, resolveDeliveryBranch, resolveDeliveryBranchForStaff, sendCourierTestJob, setCourierConnection, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryCourier, unassignDeliveryRider, updateCourierProvider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
-import type { AddCourierProviderData, AddCourierProviderResponse, AddMyAddressData, AddMyAddressResponse, AssignDeliveryCourierData, AssignDeliveryCourierResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, CancelUnpaidOrderData, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetCourierCallsData, GetCourierCallsResponse, GetCourierConnectionData, GetCourierConnectionResponse, GetCourierProvidersData, GetCourierProvidersResponse, GetCustomerOrderSummariesData, GetCustomerOrderSummariesResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkCourierDeliveredData, MarkCourierDeliveredResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, NewCourierWebhookSecretData, NewCourierWebhookSecretResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, ResolveDeliveryBranchData, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffResponse, ResolveDeliveryBranchResponse, SendCourierTestJobData, SendCourierTestJobResponse, SetCourierConnectionData, SetCourierConnectionResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryCourierData, UnassignDeliveryCourierResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateCourierProviderData, UpdateCourierProviderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
+import { addCourierProvider, addMyAddress, assignDeliveryCourier, assignDeliveryRider, assignOrderCustomer, cancelOrder, cancelUnpaidOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createLocationShare, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getCourierCalls, getCourierConnection, getCourierProviders, getCustomerOrderSummaries, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getLocationShare, getLocationShareState, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markCourierDelivered, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, newCourierWebhookSecret, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, resolveDeliveryBranch, resolveDeliveryBranchForStaff, sendCourierTestJob, setCourierConnection, setMyRiderStatus, setOrderReady, setOrderStationReady, shareLocation, testPrintKitchenStation, unassignDeliveryCourier, unassignDeliveryRider, updateCourierProvider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
+import type { AddCourierProviderData, AddCourierProviderResponse, AddMyAddressData, AddMyAddressResponse, AssignDeliveryCourierData, AssignDeliveryCourierResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, CancelUnpaidOrderData, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateLocationShareData, CreateLocationShareResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetCourierCallsData, GetCourierCallsResponse, GetCourierConnectionData, GetCourierConnectionResponse, GetCourierProvidersData, GetCourierProvidersResponse, GetCustomerOrderSummariesData, GetCustomerOrderSummariesResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetLocationShareData, GetLocationShareResponse, GetLocationShareStateData, GetLocationShareStateResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkCourierDeliveredData, MarkCourierDeliveredResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, NewCourierWebhookSecretData, NewCourierWebhookSecretResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, ResolveDeliveryBranchData, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffResponse, ResolveDeliveryBranchResponse, SendCourierTestJobData, SendCourierTestJobResponse, SetCourierConnectionData, SetCourierConnectionResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, ShareLocationData, ShareLocationResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryCourierData, UnassignDeliveryCourierResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateCourierProviderData, UpdateCourierProviderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -899,6 +899,65 @@ export const setMyRiderStatusMutation = (options?: Partial<Options<SetMyRiderSta
     return mutationOptions;
 };
 
+export const getLocationShareQueryKey = (options: Options<GetLocationShareData>) => createQueryKey('getLocationShare', options);
+
+/**
+ * The caller's location, once they shared it through the link (staff)
+ *
+ * Only the branch that made the link reads it; another's is not found.
+ */
+export const getLocationShareOptions = (options: Options<GetLocationShareData>) => queryOptions<GetLocationShareResponse, AxiosError<DefaultError>, GetLocationShareResponse, ReturnType<typeof getLocationShareQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLocationShare({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLocationShareQueryKey(options)
+});
+
+/**
+ * The caller shares where their phone says they are (the caller's page)
+ *
+ * Within a day of the link being made; sent again, the later one stands. An order already placed with the link takes it as its pin unless it was handed over, brought back, or pinned by the customer in the app. Rate limited.
+ */
+export const shareLocationMutation = (options?: Partial<Options<ShareLocationData>>): UseMutationOptions<ShareLocationResponse, AxiosError<DefaultError>, Options<ShareLocationData>> => {
+    const mutationOptions: UseMutationOptions<ShareLocationResponse, AxiosError<DefaultError>, Options<ShareLocationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await shareLocation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getLocationShareStateQueryKey = (options: Options<GetLocationShareStateData>) => createQueryKey('getLocationShareState', options);
+
+/**
+ * Whether a location link still takes a location (the caller's page)
+ *
+ * Nothing else of it: no business, no order, no number. Rate limited.
+ */
+export const getLocationShareStateOptions = (options: Options<GetLocationShareStateData>) => queryOptions<GetLocationShareStateResponse, AxiosError<DefaultError>, GetLocationShareStateResponse, ReturnType<typeof getLocationShareStateQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLocationShareState({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLocationShareStateQueryKey(options)
+});
+
 export const getCourierProvidersQueryKey = (options: Options<GetCourierProvidersData>) => createQueryKey('getCourierProviders', options);
 
 /**
@@ -1233,6 +1292,25 @@ export const getKnownDeliveryAddressesOptions = (options: Options<GetKnownDelive
     },
     queryKey: getKnownDeliveryAddressesQueryKey(options)
 });
+
+/**
+ * Make a link a caller opens to share their location (staff)
+ *
+ * For the branch in X-Branch-Id; it takes a location for a day. The till puts the token in the link it sends, and in the order it places.
+ */
+export const createLocationShareMutation = (options?: Partial<Options<CreateLocationShareData>>): UseMutationOptions<CreateLocationShareResponse, AxiosError<DefaultError>, Options<CreateLocationShareData>> => {
+    const mutationOptions: UseMutationOptions<CreateLocationShareResponse, AxiosError<DefaultError>, Options<CreateLocationShareData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createLocationShare({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getKitchenStationsQueryKey = (options: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
 

@@ -13,6 +13,9 @@ public static class DeliveryLimits
     public const int Apartment = 50;
     public const int Directions = 500;
     public const int Phone = 30;
+
+    /// <summary>A location link's token: 32 hex characters, with room.</summary>
+    public const int LocationShareToken = 40;
     public const int Label = 50;
     public const int ZoneName = 80;
     public const int RiderUserId = 100;

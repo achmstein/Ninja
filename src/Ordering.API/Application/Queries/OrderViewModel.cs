@@ -72,6 +72,12 @@ public record DeliveryView
     /// <summary>The pin; null for an address the till took over the phone, found by its words.</summary>
     public double? Latitude { get; init; }
     public double? Longitude { get; init; }
+    /// <summary>
+    /// Where the pin came from, which says how far to trust it: "Customer" (their own GPS in the app),
+    /// "Shared" (the caller shared it through the till's link), "Rider" (where a rider found this door
+    /// before), "Search" (found on the map at the till: near, not the door) or "None" (no pin).
+    /// </summary>
+    public string PinSource { get; init; } = nameof(DeliveryPinSource.None);
     public string Address { get; init; } = string.Empty;
     public string? Building { get; init; }
     public string? Floor { get; init; }
@@ -106,6 +112,7 @@ public record DeliveryView
     {
         Latitude = d.Latitude,
         Longitude = d.Longitude,
+        PinSource = (d.Latitude is null ? DeliveryPinSource.None : d.PinSource).ToString(),
         Address = d.Address,
         Building = d.Building,
         Floor = d.Floor,

@@ -852,6 +852,48 @@ namespace Ordering.Infrastructure.Migrations
                     b.ToTable("deliveryassignments", "delivery");
                 });
 
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.LocationShare", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseIdentityByDefaultColumn(b.Property<int>("Id"));
+
+                    b.Property<double?>("AccuracyMeters")
+                        .HasColumnType("double precision");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<DateTime>("ExpiresAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double?>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double?>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<DateTime?>("SharedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("Token")
+                        .IsRequired()
+                        .HasMaxLength(40)
+                        .HasColumnType("character varying(40)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Token")
+                        .IsUnique();
+
+                    b.ToTable("locationshares", "delivery");
+                });
+
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.RiderAccount", b =>
                 {
                     b.Property<string>("UserId")
@@ -1343,6 +1385,12 @@ namespace Ordering.Infrastructure.Migrations
                             b1.Property<DateTime?>("DeliveredAt")
                                 .HasColumnType("timestamp with time zone");
 
+                            b1.Property<double?>("DeliveredLatitude")
+                                .HasColumnType("double precision");
+
+                            b1.Property<double?>("DeliveredLongitude")
+                                .HasColumnType("double precision");
+
                             b1.Property<string>("Directions")
                                 .HasMaxLength(500)
                                 .HasColumnType("character varying(500)");
@@ -1371,6 +1419,10 @@ namespace Ordering.Infrastructure.Migrations
                             b1.Property<double?>("Latitude")
                                 .HasColumnType("double precision");
 
+                            b1.Property<string>("LocationShareToken")
+                                .HasMaxLength(40)
+                                .HasColumnType("character varying(40)");
+
                             b1.Property<double?>("Longitude")
                                 .HasColumnType("double precision");
 
@@ -1385,6 +1437,11 @@ namespace Ordering.Infrastructure.Migrations
                                 .IsRequired()
                                 .HasMaxLength(30)
                                 .HasColumnType("character varying(30)");
+
+                            b1.Property<string>("PinSource")
+                                .IsRequired()
+                                .HasMaxLength(16)
+                                .HasColumnType("character varying(16)");
 
                             b1.Property<DateTime?>("ReturnedAt")
                                 .HasColumnType("timestamp with time zone");
@@ -1413,6 +1470,8 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasColumnType("character varying(80)");
 
                             b1.HasKey("OrderId");
+
+                            b1.HasIndex("LocationShareToken");
 
                             b1.HasIndex("Phone");
 

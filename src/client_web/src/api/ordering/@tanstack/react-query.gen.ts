@@ -4,8 +4,8 @@ import { type DefaultError, type InfiniteData, infiniteQueryOptions, queryOption
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { addMyAddress, assignDeliveryRider, assignOrderCustomer, cancelOrder, cancelUnpaidOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, resolveDeliveryBranch, resolveDeliveryBranchForStaff, setMyRiderStatus, setOrderReady, setOrderStationReady, testPrintKitchenStation, unassignDeliveryRider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
-import type { AddMyAddressData, AddMyAddressResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, CancelUnpaidOrderData, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, ResolveDeliveryBranchData, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffResponse, ResolveDeliveryBranchResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
+import { addCourierProvider, addMyAddress, assignDeliveryCourier, assignDeliveryRider, assignOrderCustomer, cancelOrder, cancelUnpaidOrder, claimGuestOrders, claimKitchenPrintJob, claimPrintConnectorJob, confirmOrder, createConnectorPairing, createKitchenStation, createLocationShare, createOrder, createOrderDraft, createPosOrder, deleteKitchenStation, deleteMyAddress, deleteOrder, deletePrintConnector, getAllOrders, getCourierCalls, getCourierConnection, getCourierProviders, getCustomerOrderSummaries, getDeliveries, getDeliveryQuote, getDeliveryTimeline, getGuests, getKitchenOrders, getKitchenPrintJobs, getKitchenStations, getKnownDeliveryAddresses, getLocationShare, getLocationShareState, getMyAddresses, getMyDeliveries, getOpenOrdersAtPlace, getOrder, getOrdersByUser, getOrdersByUserId, getOrderStats, getPendingOrders, getPrintConnectorJobs, getPrintConnectors, getRiderDeliveries, getRiders, getRidersOverview, getTillDeliveryQuote, handInDeliveryCash, handInRiderCash, markCourierDelivered, markDeliveryDelivered, markDeliveryFailed, markDeliveryOut, markDeliveryReturned, markKitchenPrintJobFailed, markKitchenPrintJobPrinted, markPrintConnectorJobFailed, markPrintConnectorJobPrinted, newCourierWebhookSecret, type Options, pairPrintConnector, printConnectorHeartbeat, rateOrder, rejectGuestOrder, reprintKitchenTicket, reprintOrderKitchenTickets, resolveDeliveryBranch, resolveDeliveryBranchForStaff, sendCourierTestJob, setCourierConnection, setMyRiderStatus, setOrderReady, setOrderStationReady, shareLocation, testPrintKitchenStation, unassignDeliveryCourier, unassignDeliveryRider, updateCourierProvider, updateKitchenStation, updateMyAddress } from '../sdk.gen';
+import type { AddCourierProviderData, AddCourierProviderResponse, AddMyAddressData, AddMyAddressResponse, AssignDeliveryCourierData, AssignDeliveryCourierResponse, AssignDeliveryRiderData, AssignDeliveryRiderResponse, AssignOrderCustomerData, AssignOrderCustomerError, AssignOrderCustomerResponse, CancelOrderData, CancelOrderError, CancelUnpaidOrderData, ClaimGuestOrdersData, ClaimGuestOrdersError, ClaimGuestOrdersResponse2, ClaimKitchenPrintJobData, ClaimKitchenPrintJobError, ClaimKitchenPrintJobResponse, ClaimPrintConnectorJobData, ClaimPrintConnectorJobResponse, ConfirmOrderData, ConfirmOrderError, CreateConnectorPairingData, CreateConnectorPairingResponse, CreateKitchenStationData, CreateKitchenStationError, CreateKitchenStationResponse, CreateLocationShareData, CreateLocationShareResponse, CreateOrderData, CreateOrderDraftData, CreateOrderDraftResponse, CreateOrderResponse, CreatePosOrderData, CreatePosOrderResponse, DeleteKitchenStationData, DeleteKitchenStationError, DeleteKitchenStationResponse, DeleteMyAddressData, DeleteMyAddressResponse, DeleteOrderData, DeleteOrderResponse, DeletePrintConnectorData, DeletePrintConnectorError, DeletePrintConnectorResponse, GetAllOrdersData, GetAllOrdersResponse, GetCourierCallsData, GetCourierCallsResponse, GetCourierConnectionData, GetCourierConnectionResponse, GetCourierProvidersData, GetCourierProvidersResponse, GetCustomerOrderSummariesData, GetCustomerOrderSummariesResponse, GetDeliveriesData, GetDeliveriesResponse, GetDeliveryQuoteData, GetDeliveryQuoteResponse, GetDeliveryTimelineData, GetDeliveryTimelineResponse, GetGuestsData, GetGuestsResponse, GetKitchenOrdersData, GetKitchenOrdersResponse, GetKitchenPrintJobsData, GetKitchenPrintJobsResponse, GetKitchenStationsData, GetKitchenStationsResponse, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesResponse, GetLocationShareData, GetLocationShareResponse, GetLocationShareStateData, GetLocationShareStateResponse, GetMyAddressesData, GetMyAddressesResponse, GetMyDeliveriesData, GetMyDeliveriesResponse, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceResponse, GetOrderData, GetOrderResponse, GetOrdersByUserData, GetOrdersByUserIdData, GetOrdersByUserIdResponse, GetOrdersByUserResponse, GetOrderStatsData, GetOrderStatsResponse, GetPendingOrdersData, GetPendingOrdersResponse, GetPrintConnectorJobsData, GetPrintConnectorJobsResponse, GetPrintConnectorsData, GetPrintConnectorsResponse, GetRiderDeliveriesData, GetRiderDeliveriesResponse, GetRidersData, GetRidersOverviewData, GetRidersOverviewResponse, GetRidersResponse, GetTillDeliveryQuoteData, GetTillDeliveryQuoteResponse, HandInDeliveryCashData, HandInDeliveryCashResponse, HandInRiderCashData, HandInRiderCashResponse, MarkCourierDeliveredData, MarkCourierDeliveredResponse, MarkDeliveryDeliveredData, MarkDeliveryDeliveredResponse, MarkDeliveryFailedData, MarkDeliveryFailedResponse, MarkDeliveryOutData, MarkDeliveryOutResponse, MarkDeliveryReturnedData, MarkDeliveryReturnedResponse, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedError, MarkKitchenPrintJobFailedResponse, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedError, MarkKitchenPrintJobPrintedResponse, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedResponse, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedResponse, NewCourierWebhookSecretData, NewCourierWebhookSecretResponse, PairPrintConnectorData, PairPrintConnectorError, PairPrintConnectorResponse, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponse, RateOrderData, RateOrderError, RejectGuestOrderData, RejectGuestOrderError, RejectGuestOrderResponse, ReprintKitchenTicketData, ReprintKitchenTicketError, ReprintKitchenTicketResponse, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsError, ReprintOrderKitchenTicketsResponse, ResolveDeliveryBranchData, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffResponse, ResolveDeliveryBranchResponse, SendCourierTestJobData, SendCourierTestJobResponse, SetCourierConnectionData, SetCourierConnectionResponse, SetMyRiderStatusData, SetMyRiderStatusResponse, SetOrderReadyData, SetOrderReadyError, SetOrderReadyResponse, SetOrderStationReadyData, SetOrderStationReadyError, SetOrderStationReadyResponse, ShareLocationData, ShareLocationResponse, TestPrintKitchenStationData, TestPrintKitchenStationError, TestPrintKitchenStationResponse, UnassignDeliveryCourierData, UnassignDeliveryCourierResponse, UnassignDeliveryRiderData, UnassignDeliveryRiderResponse, UpdateCourierProviderData, UpdateCourierProviderResponse, UpdateKitchenStationData, UpdateKitchenStationError, UpdateKitchenStationResponse, UpdateMyAddressData, UpdateMyAddressResponse } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -377,6 +377,26 @@ export const getGuestsOptions = (options: Options<GetGuestsData>) => queryOption
         return data;
     },
     queryKey: getGuestsQueryKey(options)
+});
+
+export const getCustomerOrderSummariesQueryKey = (options: Options<GetCustomerOrderSummariesData>) => createQueryKey('getCustomerOrderSummaries', options);
+
+/**
+ * What each customer has ordered, for the customer list (admin)
+ *
+ * One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.
+ */
+export const getCustomerOrderSummariesOptions = (options: Options<GetCustomerOrderSummariesData>) => queryOptions<GetCustomerOrderSummariesResponse, AxiosError<DefaultError>, GetCustomerOrderSummariesResponse, ReturnType<typeof getCustomerOrderSummariesQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCustomerOrderSummaries({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCustomerOrderSummariesQueryKey(options)
 });
 
 export const getOrderStatsQueryKey = (options: Options<GetOrderStatsData>) => createQueryKey('getOrderStats', options);
@@ -879,6 +899,271 @@ export const setMyRiderStatusMutation = (options?: Partial<Options<SetMyRiderSta
     return mutationOptions;
 };
 
+export const getLocationShareQueryKey = (options: Options<GetLocationShareData>) => createQueryKey('getLocationShare', options);
+
+/**
+ * The caller's location, once they shared it through the link (staff)
+ *
+ * Only the branch that made the link reads it; another's is not found.
+ */
+export const getLocationShareOptions = (options: Options<GetLocationShareData>) => queryOptions<GetLocationShareResponse, AxiosError<DefaultError>, GetLocationShareResponse, ReturnType<typeof getLocationShareQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLocationShare({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLocationShareQueryKey(options)
+});
+
+/**
+ * The caller shares where their phone says they are (the caller's page)
+ *
+ * Within a day of the link being made; sent again, the later one stands. An order already placed with the link takes it as its pin unless it was handed over, brought back, or pinned by the customer in the app. Rate limited.
+ */
+export const shareLocationMutation = (options?: Partial<Options<ShareLocationData>>): UseMutationOptions<ShareLocationResponse, AxiosError<DefaultError>, Options<ShareLocationData>> => {
+    const mutationOptions: UseMutationOptions<ShareLocationResponse, AxiosError<DefaultError>, Options<ShareLocationData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await shareLocation({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getLocationShareStateQueryKey = (options: Options<GetLocationShareStateData>) => createQueryKey('getLocationShareState', options);
+
+/**
+ * Whether a location link still takes a location (the caller's page)
+ *
+ * Nothing else of it: no business, no order, no number. Rate limited.
+ */
+export const getLocationShareStateOptions = (options: Options<GetLocationShareStateData>) => queryOptions<GetLocationShareStateResponse, AxiosError<DefaultError>, GetLocationShareStateResponse, ReturnType<typeof getLocationShareStateQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getLocationShareState({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getLocationShareStateQueryKey(options)
+});
+
+export const getCourierProvidersQueryKey = (options: Options<GetCourierProvidersData>) => createQueryKey('getCourierProviders', options);
+
+/**
+ * The courier companies the business lists (staff)
+ *
+ * Switched-off ones too, last, for the admin to switch back on; the till offers only those switched on, after the branch's riders.
+ */
+export const getCourierProvidersOptions = (options: Options<GetCourierProvidersData>) => queryOptions<GetCourierProvidersResponse, AxiosError<DefaultError>, GetCourierProvidersResponse, ReturnType<typeof getCourierProvidersQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierProviders({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierProvidersQueryKey(options)
+});
+
+/**
+ * List a courier company the business hands deliveries to (admin)
+ */
+export const addCourierProviderMutation = (options?: Partial<Options<AddCourierProviderData>>): UseMutationOptions<AddCourierProviderResponse, AxiosError<DefaultError>, Options<AddCourierProviderData>> => {
+    const mutationOptions: UseMutationOptions<AddCourierProviderResponse, AxiosError<DefaultError>, Options<AddCourierProviderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await addCourierProvider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Change a courier company, or switch it off or on (admin)
+ *
+ * Switched off, it is offered for no new delivery; the deliveries it carried keep it. Never deleted.
+ */
+export const updateCourierProviderMutation = (options?: Partial<Options<UpdateCourierProviderData>>): UseMutationOptions<UpdateCourierProviderResponse, AxiosError<DefaultError>, Options<UpdateCourierProviderData>> => {
+    const mutationOptions: UseMutationOptions<UpdateCourierProviderResponse, AxiosError<DefaultError>, Options<UpdateCourierProviderData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await updateCourierProvider({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Take a delivery back from its courier company before it leaves (staff)
+ */
+export const unassignDeliveryCourierMutation = (options?: Partial<Options<UnassignDeliveryCourierData>>): UseMutationOptions<UnassignDeliveryCourierResponse, AxiosError<DefaultError>, Options<UnassignDeliveryCourierData>> => {
+    const mutationOptions: UseMutationOptions<UnassignDeliveryCourierResponse, AxiosError<DefaultError>, Options<UnassignDeliveryCourierData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await unassignDeliveryCourier({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Give a delivery to a courier company instead of a rider, or change who it sent, before it leaves (staff)
+ *
+ * The company must be one the business lists and has switched on (code courier.unknown otherwise). A rider who had it no longer does. The fee is the company's usual one when left out.
+ */
+export const assignDeliveryCourierMutation = (options?: Partial<Options<AssignDeliveryCourierData>>): UseMutationOptions<AssignDeliveryCourierResponse, AxiosError<DefaultError>, Options<AssignDeliveryCourierData>> => {
+    const mutationOptions: UseMutationOptions<AssignDeliveryCourierResponse, AxiosError<DefaultError>, Options<AssignDeliveryCourierData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await assignDeliveryCourier({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getCourierConnectionQueryKey = (options: Options<GetCourierConnectionData>) => createQueryKey('getCourierConnection', options);
+
+/**
+ * Whether a courier company's system is connected, and where it sends its status (admin)
+ */
+export const getCourierConnectionOptions = (options: Options<GetCourierConnectionData>) => queryOptions<GetCourierConnectionResponse, AxiosError<DefaultError>, GetCourierConnectionResponse, ReturnType<typeof getCourierConnectionQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierConnection({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierConnectionQueryKey(options)
+});
+
+/**
+ * Connect a courier company's system, or disconnect it (admin)
+ *
+ * The address takes Ninja's jobs (POST {address}/jobs, POST {address}/jobs/{jobId}/cancel), with the key as a bearer token. Https only. Empty disconnects it, forgetting its key and signing secret; a key left out keeps the one kept. See docs/courier-api.md.
+ */
+export const setCourierConnectionMutation = (options?: Partial<Options<SetCourierConnectionData>>): UseMutationOptions<SetCourierConnectionResponse, AxiosError<DefaultError>, Options<SetCourierConnectionData>> => {
+    const mutationOptions: UseMutationOptions<SetCourierConnectionResponse, AxiosError<DefaultError>, Options<SetCourierConnectionData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await setCourierConnection({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Make a new signing secret for a connected courier company, shown this once (admin)
+ *
+ * The company signs its status calls with it; the one before stops working at once.
+ */
+export const newCourierWebhookSecretMutation = (options?: Partial<Options<NewCourierWebhookSecretData>>): UseMutationOptions<NewCourierWebhookSecretResponse, AxiosError<DefaultError>, Options<NewCourierWebhookSecretData>> => {
+    const mutationOptions: UseMutationOptions<NewCourierWebhookSecretResponse, AxiosError<DefaultError>, Options<NewCourierWebhookSecretData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await newCourierWebhookSecret({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+/**
+ * Send a connected courier company a test job, then cancel it, and say what its system answered (admin)
+ *
+ * Marked test, with nothing to deliver and nothing to collect. The job id it gives is kept, so a status the company sends for it is checked and answered without touching an order.
+ */
+export const sendCourierTestJobMutation = (options?: Partial<Options<SendCourierTestJobData>>): UseMutationOptions<SendCourierTestJobResponse, AxiosError<DefaultError>, Options<SendCourierTestJobData>> => {
+    const mutationOptions: UseMutationOptions<SendCourierTestJobResponse, AxiosError<DefaultError>, Options<SendCourierTestJobData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await sendCourierTestJob({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
+export const getCourierCallsQueryKey = (options: Options<GetCourierCallsData>) => createQueryKey('getCourierCalls', options);
+
+/**
+ * A connected courier company's recent status calls and how each was answered (admin)
+ *
+ * Newest first, the last fifty, kept two weeks: what to read when its steps do not arrive (401 a wrong secret or clock, 410 a job it no longer has).
+ */
+export const getCourierCallsOptions = (options: Options<GetCourierCallsData>) => queryOptions<GetCourierCallsResponse, AxiosError<DefaultError>, GetCourierCallsResponse, ReturnType<typeof getCourierCallsQueryKey>>({
+    queryFn: async ({ queryKey, signal }) => {
+        const { data } = await getCourierCalls({
+            ...options,
+            ...queryKey[0],
+            signal,
+            throwOnError: true
+        });
+        return data;
+    },
+    queryKey: getCourierCallsQueryKey(options)
+});
+
+/**
+ * A courier handed it over, and collected this much: the bill is settled to the courier company (staff)
+ *
+ * Only after it left. The company keeps the cash and owes it to the business; nothing goes into the drawer. Paid online ahead, nothing was collected, whatever is sent. A courier's delivery is never said delivered without it (code courier.amount_required).
+ */
+export const markCourierDeliveredMutation = (options?: Partial<Options<MarkCourierDeliveredData>>): UseMutationOptions<MarkCourierDeliveredResponse, AxiosError<DefaultError>, Options<MarkCourierDeliveredData>> => {
+    const mutationOptions: UseMutationOptions<MarkCourierDeliveredResponse, AxiosError<DefaultError>, Options<MarkCourierDeliveredData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await markCourierDelivered({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const getMyAddressesQueryKey = (options: Options<GetMyAddressesData>) => createQueryKey('getMyAddresses', options);
 
 /**
@@ -1007,6 +1292,25 @@ export const getKnownDeliveryAddressesOptions = (options: Options<GetKnownDelive
     },
     queryKey: getKnownDeliveryAddressesQueryKey(options)
 });
+
+/**
+ * Make a link a caller opens to share their location (staff)
+ *
+ * For the branch in X-Branch-Id; it takes a location for a day. The till puts the token in the link it sends, and in the order it places.
+ */
+export const createLocationShareMutation = (options?: Partial<Options<CreateLocationShareData>>): UseMutationOptions<CreateLocationShareResponse, AxiosError<DefaultError>, Options<CreateLocationShareData>> => {
+    const mutationOptions: UseMutationOptions<CreateLocationShareResponse, AxiosError<DefaultError>, Options<CreateLocationShareData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await createLocationShare({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
 
 export const getKitchenStationsQueryKey = (options: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
 

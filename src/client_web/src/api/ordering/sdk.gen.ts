@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddMyAddressData, AddMyAddressErrors, AddMyAddressResponses, AssignDeliveryRiderData, AssignDeliveryRiderErrors, AssignDeliveryRiderResponses, AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, CancelUnpaidOrderData, CancelUnpaidOrderErrors, CancelUnpaidOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ClaimKitchenPrintJobData, ClaimKitchenPrintJobErrors, ClaimKitchenPrintJobResponses, ClaimPrintConnectorJobData, ClaimPrintConnectorJobErrors, ClaimPrintConnectorJobResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateConnectorPairingData, CreateConnectorPairingErrors, CreateConnectorPairingResponses, CreateKitchenStationData, CreateKitchenStationErrors, CreateKitchenStationResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteKitchenStationData, DeleteKitchenStationErrors, DeleteKitchenStationResponses, DeleteMyAddressData, DeleteMyAddressErrors, DeleteMyAddressResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, DeletePrintConnectorData, DeletePrintConnectorErrors, DeletePrintConnectorResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetDeliveriesData, GetDeliveriesErrors, GetDeliveriesResponses, GetDeliveryQuoteData, GetDeliveryQuoteErrors, GetDeliveryQuoteResponses, GetDeliveryTimelineData, GetDeliveryTimelineErrors, GetDeliveryTimelineResponses, GetGuestsData, GetGuestsErrors, GetGuestsResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetKitchenPrintJobsData, GetKitchenPrintJobsErrors, GetKitchenPrintJobsResponses, GetKitchenStationsData, GetKitchenStationsErrors, GetKitchenStationsResponses, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesErrors, GetKnownDeliveryAddressesResponses, GetMyAddressesData, GetMyAddressesErrors, GetMyAddressesResponses, GetMyDeliveriesData, GetMyDeliveriesErrors, GetMyDeliveriesResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, GetPrintConnectorJobsData, GetPrintConnectorJobsResponses, GetPrintConnectorsData, GetPrintConnectorsErrors, GetPrintConnectorsResponses, GetRiderDeliveriesData, GetRiderDeliveriesErrors, GetRiderDeliveriesResponses, GetRidersData, GetRidersErrors, GetRidersOverviewData, GetRidersOverviewErrors, GetRidersOverviewResponses, GetRidersResponses, GetTillDeliveryQuoteData, GetTillDeliveryQuoteErrors, GetTillDeliveryQuoteResponses, HandInDeliveryCashData, HandInDeliveryCashErrors, HandInDeliveryCashResponses, HandInRiderCashData, HandInRiderCashErrors, HandInRiderCashResponses, MarkDeliveryDeliveredData, MarkDeliveryDeliveredErrors, MarkDeliveryDeliveredResponses, MarkDeliveryFailedData, MarkDeliveryFailedErrors, MarkDeliveryFailedResponses, MarkDeliveryOutData, MarkDeliveryOutErrors, MarkDeliveryOutResponses, MarkDeliveryReturnedData, MarkDeliveryReturnedErrors, MarkDeliveryReturnedResponses, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedErrors, MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedErrors, MarkKitchenPrintJobPrintedResponses, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedErrors, MarkPrintConnectorJobFailedResponses, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedErrors, MarkPrintConnectorJobPrintedResponses, PairPrintConnectorData, PairPrintConnectorErrors, PairPrintConnectorResponses, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, ReprintKitchenTicketData, ReprintKitchenTicketErrors, ReprintKitchenTicketResponses, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsErrors, ReprintOrderKitchenTicketsResponses, ResolveDeliveryBranchData, ResolveDeliveryBranchErrors, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffErrors, ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchResponses, SetMyRiderStatusData, SetMyRiderStatusErrors, SetMyRiderStatusResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses, SetOrderStationReadyData, SetOrderStationReadyErrors, SetOrderStationReadyResponses, TestPrintKitchenStationData, TestPrintKitchenStationErrors, TestPrintKitchenStationResponses, UnassignDeliveryRiderData, UnassignDeliveryRiderErrors, UnassignDeliveryRiderResponses, UpdateKitchenStationData, UpdateKitchenStationErrors, UpdateKitchenStationResponses, UpdateMyAddressData, UpdateMyAddressErrors, UpdateMyAddressResponses } from './types.gen';
+import type { AddCourierProviderData, AddCourierProviderErrors, AddCourierProviderResponses, AddMyAddressData, AddMyAddressErrors, AddMyAddressResponses, AssignDeliveryCourierData, AssignDeliveryCourierErrors, AssignDeliveryCourierResponses, AssignDeliveryRiderData, AssignDeliveryRiderErrors, AssignDeliveryRiderResponses, AssignOrderCustomerData, AssignOrderCustomerErrors, AssignOrderCustomerResponses, CancelOrderData, CancelOrderErrors, CancelOrderResponses, CancelUnpaidOrderData, CancelUnpaidOrderErrors, CancelUnpaidOrderResponses, ClaimGuestOrdersData, ClaimGuestOrdersErrors, ClaimGuestOrdersResponses, ClaimKitchenPrintJobData, ClaimKitchenPrintJobErrors, ClaimKitchenPrintJobResponses, ClaimPrintConnectorJobData, ClaimPrintConnectorJobErrors, ClaimPrintConnectorJobResponses, ConfirmOrderData, ConfirmOrderErrors, ConfirmOrderResponses, CreateConnectorPairingData, CreateConnectorPairingErrors, CreateConnectorPairingResponses, CreateKitchenStationData, CreateKitchenStationErrors, CreateKitchenStationResponses, CreateLocationShareData, CreateLocationShareErrors, CreateLocationShareResponses, CreateOrderData, CreateOrderDraftData, CreateOrderDraftErrors, CreateOrderDraftResponses, CreateOrderErrors, CreateOrderResponses, CreatePosOrderData, CreatePosOrderErrors, CreatePosOrderResponses, DeleteKitchenStationData, DeleteKitchenStationErrors, DeleteKitchenStationResponses, DeleteMyAddressData, DeleteMyAddressErrors, DeleteMyAddressResponses, DeleteOrderData, DeleteOrderErrors, DeleteOrderResponses, DeletePrintConnectorData, DeletePrintConnectorErrors, DeletePrintConnectorResponses, GetAllOrdersData, GetAllOrdersErrors, GetAllOrdersResponses, GetCourierCallsData, GetCourierCallsErrors, GetCourierCallsResponses, GetCourierConnectionData, GetCourierConnectionErrors, GetCourierConnectionResponses, GetCourierProvidersData, GetCourierProvidersErrors, GetCourierProvidersResponses, GetCustomerOrderSummariesData, GetCustomerOrderSummariesErrors, GetCustomerOrderSummariesResponses, GetDeliveriesData, GetDeliveriesErrors, GetDeliveriesResponses, GetDeliveryQuoteData, GetDeliveryQuoteErrors, GetDeliveryQuoteResponses, GetDeliveryTimelineData, GetDeliveryTimelineErrors, GetDeliveryTimelineResponses, GetGuestsData, GetGuestsErrors, GetGuestsResponses, GetKitchenOrdersData, GetKitchenOrdersErrors, GetKitchenOrdersResponses, GetKitchenPrintJobsData, GetKitchenPrintJobsErrors, GetKitchenPrintJobsResponses, GetKitchenStationsData, GetKitchenStationsErrors, GetKitchenStationsResponses, GetKnownDeliveryAddressesData, GetKnownDeliveryAddressesErrors, GetKnownDeliveryAddressesResponses, GetLocationShareData, GetLocationShareErrors, GetLocationShareResponses, GetLocationShareStateData, GetLocationShareStateErrors, GetLocationShareStateResponses, GetMyAddressesData, GetMyAddressesErrors, GetMyAddressesResponses, GetMyDeliveriesData, GetMyDeliveriesErrors, GetMyDeliveriesResponses, GetOpenOrdersAtPlaceData, GetOpenOrdersAtPlaceErrors, GetOpenOrdersAtPlaceResponses, GetOrderData, GetOrderErrors, GetOrderResponses, GetOrdersByUserData, GetOrdersByUserErrors, GetOrdersByUserIdData, GetOrdersByUserIdErrors, GetOrdersByUserIdResponses, GetOrdersByUserResponses, GetOrderStatsData, GetOrderStatsErrors, GetOrderStatsResponses, GetPendingOrdersData, GetPendingOrdersErrors, GetPendingOrdersResponses, GetPrintConnectorJobsData, GetPrintConnectorJobsResponses, GetPrintConnectorsData, GetPrintConnectorsErrors, GetPrintConnectorsResponses, GetRiderDeliveriesData, GetRiderDeliveriesErrors, GetRiderDeliveriesResponses, GetRidersData, GetRidersErrors, GetRidersOverviewData, GetRidersOverviewErrors, GetRidersOverviewResponses, GetRidersResponses, GetTillDeliveryQuoteData, GetTillDeliveryQuoteErrors, GetTillDeliveryQuoteResponses, HandInDeliveryCashData, HandInDeliveryCashErrors, HandInDeliveryCashResponses, HandInRiderCashData, HandInRiderCashErrors, HandInRiderCashResponses, MarkCourierDeliveredData, MarkCourierDeliveredErrors, MarkCourierDeliveredResponses, MarkDeliveryDeliveredData, MarkDeliveryDeliveredErrors, MarkDeliveryDeliveredResponses, MarkDeliveryFailedData, MarkDeliveryFailedErrors, MarkDeliveryFailedResponses, MarkDeliveryOutData, MarkDeliveryOutErrors, MarkDeliveryOutResponses, MarkDeliveryReturnedData, MarkDeliveryReturnedErrors, MarkDeliveryReturnedResponses, MarkKitchenPrintJobFailedData, MarkKitchenPrintJobFailedErrors, MarkKitchenPrintJobFailedResponses, MarkKitchenPrintJobPrintedData, MarkKitchenPrintJobPrintedErrors, MarkKitchenPrintJobPrintedResponses, MarkPrintConnectorJobFailedData, MarkPrintConnectorJobFailedErrors, MarkPrintConnectorJobFailedResponses, MarkPrintConnectorJobPrintedData, MarkPrintConnectorJobPrintedErrors, MarkPrintConnectorJobPrintedResponses, NewCourierWebhookSecretData, NewCourierWebhookSecretErrors, NewCourierWebhookSecretResponses, PairPrintConnectorData, PairPrintConnectorErrors, PairPrintConnectorResponses, PrintConnectorHeartbeatData, PrintConnectorHeartbeatResponses, RateOrderData, RateOrderErrors, RateOrderResponses, RejectGuestOrderData, RejectGuestOrderErrors, RejectGuestOrderResponses, ReprintKitchenTicketData, ReprintKitchenTicketErrors, ReprintKitchenTicketResponses, ReprintOrderKitchenTicketsData, ReprintOrderKitchenTicketsErrors, ReprintOrderKitchenTicketsResponses, ResolveDeliveryBranchData, ResolveDeliveryBranchErrors, ResolveDeliveryBranchForStaffData, ResolveDeliveryBranchForStaffErrors, ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchResponses, SendCourierTestJobData, SendCourierTestJobErrors, SendCourierTestJobResponses, SetCourierConnectionData, SetCourierConnectionErrors, SetCourierConnectionResponses, SetMyRiderStatusData, SetMyRiderStatusErrors, SetMyRiderStatusResponses, SetOrderReadyData, SetOrderReadyErrors, SetOrderReadyResponses, SetOrderStationReadyData, SetOrderStationReadyErrors, SetOrderStationReadyResponses, ShareLocationData, ShareLocationErrors, ShareLocationResponses, TestPrintKitchenStationData, TestPrintKitchenStationErrors, TestPrintKitchenStationResponses, UnassignDeliveryCourierData, UnassignDeliveryCourierErrors, UnassignDeliveryCourierResponses, UnassignDeliveryRiderData, UnassignDeliveryRiderErrors, UnassignDeliveryRiderResponses, UpdateCourierProviderData, UpdateCourierProviderErrors, UpdateCourierProviderResponses, UpdateKitchenStationData, UpdateKitchenStationErrors, UpdateKitchenStationResponses, UpdateMyAddressData, UpdateMyAddressErrors, UpdateMyAddressResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -222,6 +222,17 @@ export const getGuests = <ThrowOnError extends boolean = false>(options: Options
 });
 
 /**
+ * What each customer has ordered, for the customer list (admin)
+ *
+ * One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.
+ */
+export const getCustomerOrderSummaries = <ThrowOnError extends boolean = false>(options: Options<GetCustomerOrderSummariesData, ThrowOnError>): RequestResult<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError> => (options.client ?? client).get<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/customers/summary',
+    ...options
+});
+
+/**
  * Get aggregated order statistics (admin)
  *
  * Per-day order counts/revenue and top items over [fromDate, toDate) of the orders the business took on: confirmed and not voided at the till; those still awaiting validation or payment, and cancelled ones, are left out. Revenue is net of discounts, loyalty, promo and what credit notes gave back. Days are business days in the IANA zone tz starting at dayStart (HH:mm) when tz is given, otherwise calendar days at tzOffsetMinutes (JS getTimezoneOffset). Top items are ranked by revenue; top caps them (10 by default, 0 for every item, which is what adding branches up needs). These are orders, not the till's sales: for money use Sales' reports.
@@ -434,7 +445,14 @@ export const markDeliveryOut = <ThrowOnError extends boolean = false>(options: O
  *
  * Said by the rider, for a delivery given to them; or by the till for its rider, when their phone cannot.
  */
-export const markDeliveryDelivered = <ThrowOnError extends boolean = false>(options: Options<MarkDeliveryDeliveredData, ThrowOnError>): RequestResult<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError> => (options.client ?? client).put<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError>({ url: '/api/orders/{orderId}/delivery/delivered', ...options });
+export const markDeliveryDelivered = <ThrowOnError extends boolean = false>(options: Options<MarkDeliveryDeliveredData, ThrowOnError>): RequestResult<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError> => (options.client ?? client).put<MarkDeliveryDeliveredResponses, MarkDeliveryDeliveredErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/delivery/delivered',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
 
 /**
  * It could not be handed over, and why
@@ -458,6 +476,171 @@ export const markDeliveryFailed = <ThrowOnError extends boolean = false>(options
 export const setMyRiderStatus = <ThrowOnError extends boolean = false>(options: Options<SetMyRiderStatusData, ThrowOnError>): RequestResult<SetMyRiderStatusResponses, SetMyRiderStatusErrors, ThrowOnError> => (options.client ?? client).put<SetMyRiderStatusResponses, SetMyRiderStatusErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/riders/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The caller's location, once they shared it through the link (staff)
+ *
+ * Only the branch that made the link reads it; another's is not found.
+ */
+export const getLocationShare = <ThrowOnError extends boolean = false>(options: Options<GetLocationShareData, ThrowOnError>): RequestResult<GetLocationShareResponses, GetLocationShareErrors, ThrowOnError> => (options.client ?? client).get<GetLocationShareResponses, GetLocationShareErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/delivery/location-shares/{token}',
+    ...options
+});
+
+/**
+ * The caller shares where their phone says they are (the caller's page)
+ *
+ * Within a day of the link being made; sent again, the later one stands. An order already placed with the link takes it as its pin unless it was handed over, brought back, or pinned by the customer in the app. Rate limited.
+ */
+export const shareLocation = <ThrowOnError extends boolean = false>(options: Options<ShareLocationData, ThrowOnError>): RequestResult<ShareLocationResponses, ShareLocationErrors, ThrowOnError> => (options.client ?? client).put<ShareLocationResponses, ShareLocationErrors, ThrowOnError>({
+    url: '/api/orders/delivery/location-shares/{token}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Whether a location link still takes a location (the caller's page)
+ *
+ * Nothing else of it: no business, no order, no number. Rate limited.
+ */
+export const getLocationShareState = <ThrowOnError extends boolean = false>(options: Options<GetLocationShareStateData, ThrowOnError>): RequestResult<GetLocationShareStateResponses, GetLocationShareStateErrors, ThrowOnError> => (options.client ?? client).get<GetLocationShareStateResponses, GetLocationShareStateErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/delivery/location-shares/{token}/state',
+    ...options
+});
+
+/**
+ * The courier companies the business lists (staff)
+ *
+ * Switched-off ones too, last, for the admin to switch back on; the till offers only those switched on, after the branch's riders.
+ */
+export const getCourierProviders = <ThrowOnError extends boolean = false>(options: Options<GetCourierProvidersData, ThrowOnError>): RequestResult<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError> => (options.client ?? client).get<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers',
+    ...options
+});
+
+/**
+ * List a courier company the business hands deliveries to (admin)
+ */
+export const addCourierProvider = <ThrowOnError extends boolean = false>(options: Options<AddCourierProviderData, ThrowOnError>): RequestResult<AddCourierProviderResponses, AddCourierProviderErrors, ThrowOnError> => (options.client ?? client).post<AddCourierProviderResponses, AddCourierProviderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Change a courier company, or switch it off or on (admin)
+ *
+ * Switched off, it is offered for no new delivery; the deliveries it carried keep it. Never deleted.
+ */
+export const updateCourierProvider = <ThrowOnError extends boolean = false>(options: Options<UpdateCourierProviderData, ThrowOnError>): RequestResult<UpdateCourierProviderResponses, UpdateCourierProviderErrors, ThrowOnError> => (options.client ?? client).put<UpdateCourierProviderResponses, UpdateCourierProviderErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Take a delivery back from its courier company before it leaves (staff)
+ */
+export const unassignDeliveryCourier = <ThrowOnError extends boolean = false>(options: Options<UnassignDeliveryCourierData, ThrowOnError>): RequestResult<UnassignDeliveryCourierResponses, UnassignDeliveryCourierErrors, ThrowOnError> => (options.client ?? client).delete<UnassignDeliveryCourierResponses, UnassignDeliveryCourierErrors, ThrowOnError>({ url: '/api/orders/{orderId}/delivery/courier', ...options });
+
+/**
+ * Give a delivery to a courier company instead of a rider, or change who it sent, before it leaves (staff)
+ *
+ * The company must be one the business lists and has switched on (code courier.unknown otherwise). A rider who had it no longer does. The fee is the company's usual one when left out.
+ */
+export const assignDeliveryCourier = <ThrowOnError extends boolean = false>(options: Options<AssignDeliveryCourierData, ThrowOnError>): RequestResult<AssignDeliveryCourierResponses, AssignDeliveryCourierErrors, ThrowOnError> => (options.client ?? client).put<AssignDeliveryCourierResponses, AssignDeliveryCourierErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/delivery/courier',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Whether a courier company's system is connected, and where it sends its status (admin)
+ */
+export const getCourierConnection = <ThrowOnError extends boolean = false>(options: Options<GetCourierConnectionData, ThrowOnError>): RequestResult<GetCourierConnectionResponses, GetCourierConnectionErrors, ThrowOnError> => (options.client ?? client).get<GetCourierConnectionResponses, GetCourierConnectionErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}/connection',
+    ...options
+});
+
+/**
+ * Connect a courier company's system, or disconnect it (admin)
+ *
+ * The address takes Ninja's jobs (POST {address}/jobs, POST {address}/jobs/{jobId}/cancel), with the key as a bearer token. Https only. Empty disconnects it, forgetting its key and signing secret; a key left out keeps the one kept. See docs/courier-api.md.
+ */
+export const setCourierConnection = <ThrowOnError extends boolean = false>(options: Options<SetCourierConnectionData, ThrowOnError>): RequestResult<SetCourierConnectionResponses, SetCourierConnectionErrors, ThrowOnError> => (options.client ?? client).put<SetCourierConnectionResponses, SetCourierConnectionErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}/connection',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Make a new signing secret for a connected courier company, shown this once (admin)
+ *
+ * The company signs its status calls with it; the one before stops working at once.
+ */
+export const newCourierWebhookSecret = <ThrowOnError extends boolean = false>(options: Options<NewCourierWebhookSecretData, ThrowOnError>): RequestResult<NewCourierWebhookSecretResponses, NewCourierWebhookSecretErrors, ThrowOnError> => (options.client ?? client).post<NewCourierWebhookSecretResponses, NewCourierWebhookSecretErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}/webhook-secret',
+    ...options
+});
+
+/**
+ * Send a connected courier company a test job, then cancel it, and say what its system answered (admin)
+ *
+ * Marked test, with nothing to deliver and nothing to collect. The job id it gives is kept, so a status the company sends for it is checked and answered without touching an order.
+ */
+export const sendCourierTestJob = <ThrowOnError extends boolean = false>(options: Options<SendCourierTestJobData, ThrowOnError>): RequestResult<SendCourierTestJobResponses, SendCourierTestJobErrors, ThrowOnError> => (options.client ?? client).post<SendCourierTestJobResponses, SendCourierTestJobErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}/test-job',
+    ...options
+});
+
+/**
+ * A connected courier company's recent status calls and how each was answered (admin)
+ *
+ * Newest first, the last fifty, kept two weeks: what to read when its steps do not arrive (401 a wrong secret or clock, 410 a job it no longer has).
+ */
+export const getCourierCalls = <ThrowOnError extends boolean = false>(options: Options<GetCourierCallsData, ThrowOnError>): RequestResult<GetCourierCallsResponses, GetCourierCallsErrors, ThrowOnError> => (options.client ?? client).get<GetCourierCallsResponses, GetCourierCallsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/couriers/{providerId}/calls',
+    ...options
+});
+
+/**
+ * A courier handed it over, and collected this much: the bill is settled to the courier company (staff)
+ *
+ * Only after it left. The company keeps the cash and owes it to the business; nothing goes into the drawer. Paid online ahead, nothing was collected, whatever is sent. A courier's delivery is never said delivered without it (code courier.amount_required).
+ */
+export const markCourierDelivered = <ThrowOnError extends boolean = false>(options: Options<MarkCourierDeliveredData, ThrowOnError>): RequestResult<MarkCourierDeliveredResponses, MarkCourierDeliveredErrors, ThrowOnError> => (options.client ?? client).put<MarkCourierDeliveredResponses, MarkCourierDeliveredErrors, ThrowOnError>({
+    url: '/api/orders/{orderId}/delivery/courier-delivered',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -535,6 +718,17 @@ export const resolveDeliveryBranchForStaff = <ThrowOnError extends boolean = fal
 export const getKnownDeliveryAddresses = <ThrowOnError extends boolean = false>(options: Options<GetKnownDeliveryAddressesData, ThrowOnError>): RequestResult<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError> => (options.client ?? client).get<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/delivery/known-addresses',
+    ...options
+});
+
+/**
+ * Make a link a caller opens to share their location (staff)
+ *
+ * For the branch in X-Branch-Id; it takes a location for a day. The till puts the token in the link it sends, and in the order it places.
+ */
+export const createLocationShare = <ThrowOnError extends boolean = false>(options: Options<CreateLocationShareData, ThrowOnError>): RequestResult<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError> => (options.client ?? client).post<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/orders/delivery/location-shares',
     ...options
 });
 

@@ -90,6 +90,11 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             d.Property(x => x.Apartment).HasMaxLength(DeliveryLimits.Apartment);
             d.Property(x => x.Directions).HasMaxLength(DeliveryLimits.Directions);
             d.Property(x => x.Phone).HasMaxLength(DeliveryLimits.Phone).IsRequired();
+            // How far the pin can be trusted, by name; orders from before it are the customer's own pin, or none
+            d.Property(x => x.PinSource).HasConversion<string>().HasMaxLength(16);
+            d.Property(x => x.LocationShareToken).HasMaxLength(DeliveryLimits.LocationShareToken);
+            // A location shared after the order was placed finds it by its link
+            d.HasIndex(x => x.LocationShareToken);
             d.Property(x => x.Fee).HasPrecision(18, 2);
             // The named area it went to, as it was when the order was placed
             d.Property(x => x.ZoneNameEn).HasMaxLength(DeliveryLimits.ZoneName);
