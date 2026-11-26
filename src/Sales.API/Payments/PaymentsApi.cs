@@ -488,6 +488,7 @@ public static class PaymentsApi
 public sealed class PayReader(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ITenantFeaturesQueries features,
     PaymentProviders providers,
     TimeProvider clock)
@@ -498,6 +499,7 @@ public sealed class PayReader(
         var list = await payments.ListForTicketAsync(ticket.Id);
         var settings = await payments.GetSettingsAsync();
         var userId = http.User.GetUserId();
-        return PayViews.Build(ticket, bill, list, settings, await features.OnlinePaymentsAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime, providers.IsSimulated(settings));
+        return PayViews.Build(ticket, bill, list, settings, await features.OnlinePaymentsAsync(), userId, userId is null ? http.GetGuestId() : null, clock.GetUtcNow().UtcDateTime, providers.IsSimulated(settings),
+            Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPaid.Of(await partPayments.ListActiveForTicketAsync(ticket.Id)));
     }
 }

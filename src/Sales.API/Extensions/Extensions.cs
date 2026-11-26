@@ -94,6 +94,7 @@ public static class Extensions
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository, ShiftRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.ITabPaymentRepository, TabPaymentRepository>();
         services.AddScoped<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.IOnlinePaymentRepository, OnlinePaymentRepository>();
+        services.AddScoped<Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository, PartPaymentRepository>();
         services.AddScoped<IRequestManager, RequestManager>();
         services.AddScoped<ITicketQueries, TicketQueries>();
         services.AddScoped<IShiftQueries, ShiftQueries>();

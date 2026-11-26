@@ -33,5 +33,8 @@ class PaymentEntityTypeConfiguration : IEntityTypeConfiguration<Payment>
             .HasConversion<string>()
             .HasMaxLength(20);
         builder.Property(p => p.TenderChangedBy).HasMaxLength(64);
+
+        // Money taken earlier as a part payment: the drawer sums leave these out
+        builder.HasIndex(p => p.PartPaymentId);
     }
 }

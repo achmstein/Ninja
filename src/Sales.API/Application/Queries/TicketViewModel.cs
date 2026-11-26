@@ -75,6 +75,14 @@ public record TicketDetail
     public string? VoidReason { get; init; }
     public List<TicketLineView> Lines { get; init; } = [];
     public List<PaymentView> Payments { get; init; } = [];
+    /// <summary>
+    /// What the till took for part of this bill while it is open, not given
+    /// back, oldest first. Empty once the bill closes: each is then one of
+    /// <see cref="Payments"/>, with its PartPaymentId.
+    /// </summary>
+    public List<PartPaymentView> PartPayments { get; init; } = [];
+    /// <summary>Their sum: off <see cref="Total"/>, it is what the till still has to take.</summary>
+    public decimal PartPaid { get; init; }
     public decimal Total { get; init; }
     /// <summary>Set once settled.</summary>
     public int? ReceiptNumber { get; init; }
@@ -244,7 +252,14 @@ public record TicketLineView
     /// groups one guest's lines together. Never a tab to charge.
     /// </summary>
     public string? GuestId { get; init; }
+
+    /// <summary>Paid for by a part payment while the bill is open: not to be paid again, nor moved.</summary>
+    public bool Paid { get; init; }
 }
+
+/// <summary>Money the till took for part of an open bill.</summary>
+/// <param name="LineIds">The lines it paid for; empty for an amount on account of the bill.</param>
+public record PartPaymentView(int Id, string Tender, decimal Amount, string? PayerName, List<int> LineIds, string RecordedBy, DateTime RecordedAt);
 
 public record PaymentView
 {
@@ -264,6 +279,9 @@ public record PaymentView
     public string? TenderChangedFrom { get; init; }
     public string? TenderChangedBy { get; init; }
     public DateTime? TenderChangedAt { get; init; }
+
+    /// <summary>Set when this was taken earlier as a part payment, before the bill closed; its method cannot be changed.</summary>
+    public int? PartPaymentId { get; init; }
 }
 
 /// <summary>One page of a back-office listing, with the count behind it.</summary>

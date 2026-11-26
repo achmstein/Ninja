@@ -23,6 +23,7 @@ public record MoveTicketLinesCommand(
 public class MoveTicketLinesCommandHandler(
     ITicketRepository ticketRepository,
     IPlaceNames placeNames,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ILogger<MoveTicketLinesCommandHandler> logger) : IRequestHandler<MoveTicketLinesCommand, int>
 {
     public async Task<int> Handle(MoveTicketLinesCommand command, CancellationToken cancellationToken)
@@ -30,10 +31,16 @@ public class MoveTicketLinesCommandHandler(
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
 
+        // What was paid for stays where it was paid: the money is on this bill
+        var paid = Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPaid.Of(await partPayments.ListActiveForTicketAsync(ticket.Id));
+        if (command.LineIds.Any(paid.LineIds.Contains))
+            throw new SalesDomainException("An item that was already paid for stays on its bill.");
+
         if (command.TargetTicketId is null && command.NewTicket is null)
         {
             var fresh = ticket.MoveLines(command.LineIds);
             ticketRepository.Add(fresh);
+            await EnsureStillCoversAsync(ticket, paid.Amount);
 
             await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 
@@ -49,6 +56,12 @@ public class MoveTicketLinesCommandHandler(
             : await OpenAsync(ticket, command.NewTicket!);
 
         ticket.MoveLinesTo(target, command.LineIds);
+
+        // Neither bill may end up worth less than the money already taken on
+        // it (the one the lines land on can, when a money-off line comes with them)
+        await EnsureStillCoversAsync(ticket, paid.Amount);
+        if (target.Id > 0)
+            await EnsureStillCoversAsync(target, Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPaid.Of(await partPayments.ListActiveForTicketAsync(target.Id)).Amount);
 
         // Emptied, a table or counter bill has nothing left to be: its lines
         // live on with their order ids on the target, so it goes the way an
@@ -67,6 +80,15 @@ public class MoveTicketLinesCommandHandler(
             command.LineIds.Count, ticket.Id, target.Type, target.Id, emptied ? " (source discarded)" : "");
 
         return target.Id;
+    }
+
+    private async Task EnsureStillCoversAsync(Ticket ticket, decimal partPaid)
+    {
+        if (partPaid <= 0) return;
+
+        var total = ticket.GetBill(await ticketRepository.GetPricingRulesAsync(ticket.BranchId)).Total;
+        if (total < partPaid)
+            throw new SalesDomainException($"That would leave a bill below what was already paid on it ({partPaid:0.00}).");
     }
 
     private async Task<Ticket> ExistingAsync(Ticket source, int targetId)

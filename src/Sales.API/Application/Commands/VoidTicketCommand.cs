@@ -16,12 +16,17 @@ public static class StockDispositions
 
 public class VoidTicketCommandHandler(
     ITicketRepository ticketRepository,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ILogger<VoidTicketCommandHandler> logger) : IRequestHandler<VoidTicketCommand, bool>
 {
     public async Task<bool> Handle(VoidTicketCommand command, CancellationToken cancellationToken)
     {
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
+
+        // Money was taken on it: a void says nothing is owed, so it goes back first
+        if (ticket.Status == TicketStatus.Open && (await partPayments.ListActiveForTicketAsync(ticket.Id)).Count > 0)
+            throw new SalesDomainException(PartPaymentRules.GiveBackFirst);
 
         // Frozen under the rules as they stand, so the history shows what the
         // void cancelled even after the rates change

@@ -12,12 +12,17 @@ public record DiscardTicketCommand(int TicketId, string DiscardedBy) : IRequest<
 
 public class DiscardTicketCommandHandler(
     ITicketRepository ticketRepository,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ILogger<DiscardTicketCommandHandler> logger) : IRequestHandler<DiscardTicketCommand, bool>
 {
     public async Task<bool> Handle(DiscardTicketCommand command, CancellationToken cancellationToken)
     {
         var ticket = await ticketRepository.GetAsync(command.TicketId)
             ?? throw new SalesDomainException($"Ticket {command.TicketId} does not exist.");
+
+        // A bill money was taken on is never thrown away with the money still on it
+        if ((await partPayments.ListActiveForTicketAsync(ticket.Id)).Count > 0)
+            throw new SalesDomainException(PartPaymentRules.GiveBackFirst);
 
         ticket.Discard();
         ticketRepository.Remove(ticket);

@@ -330,6 +330,34 @@ export type PagedResultOfTicketHistoryRow = {
     pageSize: number | string;
 };
 
+export type PartPaymentLine = {
+    tender: PaymentTender;
+    amount: number | string;
+};
+
+export type PartPaymentRequest = {
+    payments: Array<PartPaymentLine>;
+    payerName?: null | string;
+    lineIds?: null | Array<number | string>;
+    shiftId?: null | number | string;
+};
+
+export type PartPaymentResult = {
+    partPaymentIds: Array<number | string>;
+    paid: number | string;
+    remaining: number | string;
+};
+
+export type PartPaymentView = {
+    id: number | string;
+    tender: string;
+    amount: number | string;
+    payerName: null | string;
+    lineIds: Array<number | string>;
+    recordedBy: string;
+    recordedAt: string;
+};
+
 export type PayAheadOptionsView = {
     available: boolean;
     currency: string;
@@ -453,6 +481,7 @@ export type PaymentView = {
     tenderChangedFrom?: null | string;
     tenderChangedBy?: null | string;
     tenderChangedAt?: null | string;
+    partPaymentId?: null | number | string;
 };
 
 export type PayOptionsView = {
@@ -654,6 +683,10 @@ export type RefundView = {
     lines: Array<RefundLineView>;
 };
 
+export type ReturnPartPaymentRequest = {
+    shiftId?: null | number | string;
+};
+
 export type SettledTicketSummary = {
     id: number | string;
     receiptNumber: number | string;
@@ -721,6 +754,11 @@ export type ShiftView = {
     cashTabPayments?: number | string;
     tabPaymentTenderTotals?: Array<TenderTotal>;
     tabPayments?: Array<TabPaymentView>;
+    partPaymentsTotal?: number | string;
+    cashPartPayments?: number | string;
+    partPaymentsReturned?: number | string;
+    cashPartPaymentsReturned?: number | string;
+    partPaymentTenderTotals?: Array<TenderTotal>;
     expectedInDrawer?: number | string;
     lateCash?: number | string;
     adjustedOverShort?: null | number | string;
@@ -818,6 +856,8 @@ export type TicketDetail = {
     voidReason?: null | string;
     lines?: Array<TicketLineView>;
     payments?: Array<PaymentView>;
+    partPayments?: Array<PartPaymentView>;
+    partPaid?: number | string;
     total?: number | string;
     receiptNumber?: null | number | string;
     provisionalReceiptNumber?: null | string;
@@ -862,6 +902,7 @@ export type TicketLineView = {
     customerName?: null | string;
     customerId?: null | string;
     guestId?: null | string;
+    paid?: boolean;
 };
 
 export type TicketStatus = number;
@@ -1626,6 +1667,93 @@ export type SettleTicketResponses = {
 };
 
 export type SettleTicketResponse = SettleTicketResponses[keyof SettleTicketResponses];
+
+export type TakePartPaymentData = {
+    body: PartPaymentRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/part-payments';
+};
+
+export type TakePartPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TakePartPaymentError = TakePartPaymentErrors[keyof TakePartPaymentErrors];
+
+export type TakePartPaymentResponses = {
+    /**
+     * OK
+     */
+    200: PartPaymentResult;
+};
+
+export type TakePartPaymentResponse = TakePartPaymentResponses[keyof TakePartPaymentResponses];
+
+export type ReturnPartPaymentData = {
+    body?: null | ReturnPartPaymentRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+        partPaymentId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/part-payments/{partPaymentId}/return';
+};
+
+export type ReturnPartPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ReturnPartPaymentError = ReturnPartPaymentErrors[keyof ReturnPartPaymentErrors];
+
+export type ReturnPartPaymentResponses = {
+    /**
+     * OK
+     */
+    200: PartPaymentResult;
+};
+
+export type ReturnPartPaymentResponse = ReturnPartPaymentResponses[keyof ReturnPartPaymentResponses];
 
 export type MoveTicketLinesData = {
     body: MoveLinesRequest;

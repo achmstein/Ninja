@@ -1,5 +1,6 @@
 #nullable enable
 using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
+using Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate;
 
 namespace Ninja.Sales.API.Payments;
 
@@ -33,6 +34,7 @@ public sealed record PayOptionsView(
 /// what is left, and how the business lets them split it. The phone polls it
 /// while the sheet is open, so every guest sees the others' shares land.
 /// </summary>
+/// <param name="Paid">What is paid for good: online, and what the till took in part payments.</param>
 /// <param name="CanPay">Whether a payment can start now; <paramref name="Why"/> says why not.</param>
 /// <param name="People">Who sat at the table, where the bill knows (a room's party); a start for dividing equally.</param>
 public sealed record PayView(
@@ -117,10 +119,12 @@ public static class PayViews
         s.AllowItems, s.AllowEqual, s.AllowCustom,
         s.CardIntegrationId is not null || simulated, s.WalletIntegrationId is not null, s.ApplePayIntegrationId is not null, simulated);
 
-    public static PayView Build(Ticket ticket, Bill bill, IReadOnlyList<OnlinePayment> payments, PaymentSettings settings, bool enabled, string? userId, string? guestId, DateTime now, bool simulated = false)
+    public static PayView Build(Ticket ticket, Bill bill, IReadOnlyList<OnlinePayment> payments, PaymentSettings settings, bool enabled, string? userId, string? guestId, DateTime now, bool simulated = false, PartPaid? partPaid = null)
     {
-        var claimed = OnlineShares.ClaimedLines(payments, now);
-        var paid = OnlineShares.Paid(payments);
+        // What the till took at the counter is paid like a guest's share: off what is left, its items not to be picked
+        partPaid ??= PartPaid.None;
+        var claimed = OnlineShares.ClaimedLines(payments, now, partPaid);
+        var paid = OnlineShares.Paid(payments) + partPaid.Amount;
         var held = payments.Where(p => p.Status == OnlinePaymentStatus.Pending && p.Holds(now)).Sum(p => p.Amount);
         bool Mine(string? payerId) => payerId is not null && (payerId == userId || payerId == guestId);
 
@@ -132,7 +136,7 @@ public static class PayViews
         else if (ticket.Status != TicketStatus.Open) why = "closed";
         else if (ticket.HasSession && ticket.SessionEndedAt is null) why = "clock-running";
         else if (ticket.Lines.Count == 0) why = "empty";
-        else if (OnlineShares.Remaining(bill.Total, payments, now) <= 0) why = held > 0 ? "being-paid" : "paid";
+        else if (OnlineShares.Remaining(bill.Total, payments, now, partPaid) <= 0) why = held > 0 ? "being-paid" : "paid";
 
         return new PayView(
             ticket.Id,
@@ -146,7 +150,7 @@ public static class PayViews
                     (userId is not null && l.CustomerId == userId) || (guestId is not null && l.GuestId == guestId)))
                 .ToList(),
             bill.Subtotal, bill.Discount, bill.ServiceCharge, bill.Vat, bill.Total,
-            paid, held, OnlineShares.Remaining(bill.Total, payments, now),
+            paid, held, OnlineShares.Remaining(bill.Total, payments, now, partPaid),
             payments
                 .Where(p => p.Holds(now))
                 .Select(p => new PayShareView(p.PayerName, p.Amount, p.Status.ToString(), p.PaidAt, Mine(p.PayerId), Mine(p.PayerId) ? p.Key : null))

@@ -22,6 +22,7 @@ public class SettleTicketCommandHandler(
     ITicketRepository ticketRepository,
     Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.IShiftRepository shiftRepository,
     Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.IOnlinePaymentRepository onlinePayments,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ISalesIntegrationEventService integrationEvents,
     ILogger<SettleTicketCommandHandler> logger) : IRequestHandler<SettleTicketCommand, SettleResult>
 {
@@ -50,6 +51,15 @@ public class SettleTicketCommandHandler(
                 .Select(p => new Payment(PaymentTender.Online, p.Amount, p.PayerName ?? "online")))
             .ToList();
 
+        // What the till took earlier for part of this bill is on the receipt
+        // too, each as the payment it was, when it was taken: the till brings
+        // only the rest. Marked with its part payment, so this shift's drawer
+        // does not count cash that went into the drawer that took it.
+        var parts = ticket.Status == TicketStatus.Open
+            ? await partPayments.ListActiveForTicketAsync(ticket.Id)
+            : [];
+        payments.AddRange(parts.Select(p => new Payment(p.Tender, p.Amount, p.RecordedBy, recordedAt: p.RecordedAt, partPaymentId: p.Id)));
+
         // Attribute the settle to the branch's open drawer, if one is open —
         // a missing shift never blocks a sale, it just goes unattributed. A
         // sale replayed from a till that was offline names the shift it was
@@ -60,6 +70,19 @@ public class SettleTicketCommandHandler(
         // The branch's rules as they stand now, frozen onto the ticket by the
         // settle: this is the last moment they can change the bill
         var rules = await ticketRepository.GetPricingRulesAsync(ticket.BranchId);
+
+        // Change is only ever out of cash handed over now. Cash taken earlier
+        // is long in its drawer, so here it counts as exact money, like a
+        // card: with it, the exact tenders may not go past the total, or the
+        // "change" would be money nobody is holding out.
+        if (parts.Count > 0)
+        {
+            var total = ticket.GetBill(rules).Total;
+            if (parts.Sum(p => p.Amount) > total)
+                throw new SalesDomainException("More was taken in part payments than the bill now comes to. Give one back first.");
+            if (payments.Where(p => p.Tender != PaymentTender.Cash || p.PartPaymentId is not null).Sum(p => p.Amount) > total)
+                throw new SalesDomainException("Only cash payments can exceed the total (change).");
+        }
 
         var change = ticket.Settle(payments, command.SettledBy, shiftId, rules, command.SettledAt, command.ProvisionalReceiptNumber);
 

@@ -52,7 +52,12 @@ public record ShiftView
     /// handed over is each row's Tendered, and <see cref="CashTendered"/>.
     /// </summary>
     public List<TenderTotal> TenderTotals { get; init; } = [];
-    /// <summary>Cash handed over at settle, before the change went back: the drawer's side of the cash.</summary>
+    /// <summary>
+    /// Cash handed over at settle, before the change went back: the drawer's
+    /// side of the cash. Without the cash taken earlier as part payments of
+    /// those bills, which is the drawer's of the shift that took it
+    /// (<see cref="CashPartPayments"/>); the Cash row of <see cref="TenderTotals"/> has it in.
+    /// </summary>
     public decimal CashTendered { get; init; }
     public decimal ChangeGiven { get; init; }
     /// <summary>Credit notes issued during the shift, all tenders.</summary>
@@ -73,8 +78,24 @@ public record ShiftView
     /// <summary>The slips themselves, newest first.</summary>
     public List<TabPaymentView> TabPayments { get; init; } = [];
     /// <summary>
+    /// Money this shift took for part of bills still open at the time, all
+    /// tenders, whether or not it was given back later. Not sales yet: a
+    /// sale is counted when its bill closes, in the shift that closes it, so
+    /// this sits beside <see cref="SalesTotal"/>, never inside it.
+    /// </summary>
+    public decimal PartPaymentsTotal { get; init; }
+    /// <summary>The part of those that went into this drawer as cash.</summary>
+    public decimal CashPartPayments { get; init; }
+    /// <summary>Part payments given back during this shift, all tenders, whichever shift took them.</summary>
+    public decimal PartPaymentsReturned { get; init; }
+    /// <summary>The part of those that left this drawer as cash.</summary>
+    public decimal CashPartPaymentsReturned { get; init; }
+    /// <summary>What the shift took in part payments, by tender.</summary>
+    public List<TenderTotal> PartPaymentTenderTotals { get; init; } = [];
+    /// <summary>
     /// The drawer expectation worked out from the shift's rows now:
     /// float + cash tendered − change − cash refunds + cash tab payments +
+    /// cash part payments − cash part payments given back +
     /// pay-ins − pay-outs. Once closed it equals <see cref="ExpectedCash"/>,
     /// unless a sale rung up offline during the shift reached it after the
     /// close (<see cref="LateCash"/>).

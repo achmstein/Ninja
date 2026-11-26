@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate;
 using Ninja.Sales.Domain.AggregatesModel.ShiftAggregate;
 using Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate;
 using Ninja.Sales.Infrastructure;
@@ -6,9 +7,39 @@ using Ninja.Sales.Infrastructure;
 namespace Ninja.Sales.API.Application.Queries;
 
 /// <summary>
-/// The cash figures a shift's tickets contributed to the drawer.
+/// The cash figures a shift's tickets contributed to the drawer, and the part
+/// payments it took and gave back.
 /// </summary>
-public record ShiftCashTotals(decimal CashPayments, decimal ChangeGiven, decimal CashRefunds, decimal CashTabPayments);
+/// <param name="CashPayments">Cash handed over at settle, without what was taken earlier as part payments.</param>
+/// <param name="PartPaymentsTotal">Part payments this shift took, all tenders.</param>
+/// <param name="CashPartPayments">The cash among them: into this drawer.</param>
+/// <param name="PartPaymentsReturned">Part payments given back during this shift, all tenders.</param>
+/// <param name="CashPartPaymentsReturned">The cash among them: out of this drawer.</param>
+public record ShiftCashTotals(
+    decimal CashPayments,
+    decimal ChangeGiven,
+    decimal CashRefunds,
+    decimal CashTabPayments,
+    decimal PartPaymentsTotal = 0,
+    decimal CashPartPayments = 0,
+    decimal PartPaymentsReturned = 0,
+    decimal CashPartPaymentsReturned = 0,
+    List<TenderTotal>? PartPaymentTenderTotals = null);
+
+/// <summary>A shift's part payments: what it took, and what it gave back (of its own or an earlier shift's).</summary>
+public sealed record ShiftPartPayments(List<PartPayment> Taken, List<PartPayment> Returned)
+{
+    public decimal TakenTotal => Taken.Sum(p => p.Amount);
+    public decimal CashTaken => Taken.Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+    public decimal ReturnedTotal => Returned.Sum(p => p.Amount);
+    public decimal CashReturned => Returned.Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+
+    public List<TenderTotal> TenderTotals => Taken
+        .GroupBy(p => p.Tender)
+        .Select(g => new TenderTotal(g.Key.ToString(), g.Sum(p => p.Amount), g.Count(), g.Sum(p => p.Amount)))
+        .OrderBy(t => t.Tender)
+        .ToList();
+}
 
 public interface IShiftQueries
 {
@@ -82,11 +113,38 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             .Where(p => p.ShiftId == shiftId && p.Tender == PaymentTender.Cash)
             .SumAsync(p => p.Amount);
 
+        var parts = await PartPaymentsOfAsync(shiftId);
+
+        // Cash that was a part payment went into the drawer of the shift that
+        // took it: here it is counted from the part payments, not from the
+        // bills this shift settled
         return new ShiftCashTotals(
-            tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount),
+            TicketQueries.CashTenderedOf(tickets),
             tickets.Sum(t => t.ChangeGiven),
             cashRefunds,
-            cashTabPayments);
+            cashTabPayments,
+            parts.TakenTotal,
+            parts.CashTaken,
+            parts.ReturnedTotal,
+            parts.CashReturned,
+            parts.TenderTotals);
+    }
+
+    /// <summary>
+    /// The part payments this shift took (given back since or not), and the
+    /// ones given back during it. One taken and given back in the same shift
+    /// is in both, and so comes to nothing in its drawer.
+    /// </summary>
+    private async Task<ShiftPartPayments> PartPaymentsOfAsync(int shiftId)
+    {
+        var rows = await context.PartPayments
+            .AsNoTracking()
+            .Where(p => p.ShiftId == shiftId || p.ReturnedShiftId == shiftId)
+            .ToListAsync();
+
+        return new ShiftPartPayments(
+            rows.Where(p => p.ShiftId == shiftId).ToList(),
+            rows.Where(p => p.ReturnedShiftId == shiftId).ToList());
     }
 
     private async Task<ShiftView> BuildViewAsync(Shift shift)
@@ -124,7 +182,10 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
         // Live for an open shift; for a closed one the frozen ExpectedCash is
         // the verdict, and anything this has above it is cash from sales rung
         // up offline during the shift that reached it after the close
-        var expectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments + payIns - payOuts;
+        var parts = await PartPaymentsOfAsync(shift.Id);
+
+        var expectedInDrawer = shift.OpeningFloat + cashPayments - changeGiven - cashRefunds + cashTabPayments
+            + parts.CashTaken - parts.CashReturned + payIns - payOuts;
         var lateCash = shift.Status == ShiftStatus.Closed && shift.ExpectedCash is { } frozen ? expectedInDrawer - frozen : 0m;
 
         return new ShiftView
@@ -166,6 +227,11 @@ public class ShiftQueries(SalesContext context) : IShiftQueries
             CashTabPayments = cashTabPayments,
             TabPaymentTenderTotals = TenderTotals(tabPayments),
             TabPayments = tabPayments.Select(ToView).ToList(),
+            PartPaymentsTotal = parts.TakenTotal,
+            CashPartPayments = parts.CashTaken,
+            PartPaymentsReturned = parts.ReturnedTotal,
+            CashPartPaymentsReturned = parts.CashReturned,
+            PartPaymentTenderTotals = parts.TenderTotals,
             ExpectedInDrawer = expectedInDrawer,
             LateCash = lateCash,
             AdjustedOverShort = shift.ClosingCount is { } counted && shift.Status == ShiftStatus.Closed ? counted - expectedInDrawer : null,

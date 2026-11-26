@@ -1,4 +1,5 @@
 #nullable enable
+using Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate;
 using Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 namespace Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
@@ -10,7 +11,8 @@ public sealed record OnlineShare(SplitMode Mode, decimal Amount, IReadOnlyList<i
 /// What a guest may pay of a bill right now, however they split it. The
 /// bill's total is what the ticket would settle for; every share already
 /// paid or still in checkout is taken off it first, so a share never goes
-/// past what is left and a line is never paid twice.
+/// past what is left and a line is never paid twice. What the till took in
+/// part payments (<see cref="PartPaid"/>) comes off the same way.
 /// </summary>
 public static class OnlineShares
 {
@@ -27,13 +29,17 @@ public static class OnlineShares
     public static decimal Paid(IEnumerable<OnlinePayment> payments)
         => payments.Where(p => p.Status == OnlinePaymentStatus.Paid).Sum(p => p.Amount);
 
-    /// <summary>What is left to pay online: the total less every share paid or held.</summary>
-    public static decimal Remaining(decimal total, IEnumerable<OnlinePayment> payments, DateTime now)
-        => Math.Max(0m, Money(total - Taken(payments, now)));
+    /// <summary>What is left to pay online: the total less every share paid or held, and less what the till took in part payments.</summary>
+    public static decimal Remaining(decimal total, IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
+        => Math.Max(0m, Money(total - Taken(payments, now) - (partPaid?.Amount ?? 0m)));
 
-    /// <summary>The lines some share already pays for, or holds while its checkout is open.</summary>
-    public static IReadOnlySet<int> ClaimedLines(IEnumerable<OnlinePayment> payments, DateTime now)
-        => payments.Where(p => p.Holds(now) && p.Mode == SplitMode.Items).SelectMany(p => p.LineIds).ToHashSet();
+    /// <summary>The lines some share already pays for, or holds while its checkout is open, and the ones a part payment at the till paid for.</summary>
+    public static IReadOnlySet<int> ClaimedLines(IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
+    {
+        var claimed = payments.Where(p => p.Holds(now) && p.Mode == SplitMode.Items).SelectMany(p => p.LineIds).ToHashSet();
+        if (partPaid is not null) claimed.UnionWith(partPaid.LineIds);
+        return claimed;
+    }
 
     /// <summary>
     /// A line's part of the total: its own money, taken through the same
@@ -43,14 +49,14 @@ public static class OnlineShares
     public static decimal LineShare(TicketLine line, Bill bill)
         => bill.Subtotal <= 0 ? 0m : Money(line.Total * bill.Total / bill.Subtotal);
 
-    public static OnlineShare Full(Bill bill, IEnumerable<OnlinePayment> payments, DateTime now)
+    public static OnlineShare Full(Bill bill, IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
     {
-        var remaining = Remaining(bill.Total, payments, now);
+        var remaining = Remaining(bill.Total, payments, now, partPaid);
         if (remaining <= 0) throw new SalesDomainException("This bill is already paid.");
         return new(SplitMode.Full, remaining, []);
     }
 
-    public static OnlineShare Items(Ticket ticket, Bill bill, IReadOnlyCollection<int> lineIds, IEnumerable<OnlinePayment> payments, DateTime now)
+    public static OnlineShare Items(Ticket ticket, Bill bill, IReadOnlyCollection<int> lineIds, IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
     {
         var list = payments.ToList();
         var wanted = lineIds.Distinct().ToList();
@@ -59,11 +65,11 @@ public static class OnlineShares
         var lines = ticket.Lines.Where(l => wanted.Contains(l.Id)).ToList();
         if (lines.Count != wanted.Count) throw new SalesDomainException("Some of those items are not on this bill.");
 
-        var claimed = ClaimedLines(list, now);
+        var claimed = ClaimedLines(list, now, partPaid);
         if (wanted.Any(claimed.Contains))
             throw new SalesDomainException("Some of those items are already paid for, or being paid by someone else.");
 
-        var remaining = Remaining(bill.Total, list, now);
+        var remaining = Remaining(bill.Total, list, now, partPaid);
         var amount = Math.Min(Money(lines.Sum(l => LineShare(l, bill))), remaining);
         if (amount <= 0) throw new SalesDomainException("There is nothing left to pay for those items.");
         // What is left after the last unpaid items is a few piasters of rounding: it goes with them
@@ -72,11 +78,11 @@ public static class OnlineShares
         return new(SplitMode.Items, amount, wanted);
     }
 
-    public static OnlineShare Equal(Bill bill, int parts, int of, IEnumerable<OnlinePayment> payments, DateTime now)
+    public static OnlineShare Equal(Bill bill, int parts, int of, IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
     {
         if (of < 2 || of > MaxParts) throw new SalesDomainException($"Split between 2 and {MaxParts} people.");
         if (parts < 1 || parts > of) throw new SalesDomainException("Pay for at least one person, and no more than are splitting.");
-        var remaining = Remaining(bill.Total, payments, now);
+        var remaining = Remaining(bill.Total, payments, now, partPaid);
         if (remaining <= 0) throw new SalesDomainException("This bill is already paid.");
         // Rounding leaves a piaster or two on the last share; whoever pays it pays it
         var amount = Money(bill.Total * parts / of);
@@ -84,11 +90,11 @@ public static class OnlineShares
         return new(SplitMode.Equal, Math.Min(amount, remaining), [], parts, of);
     }
 
-    public static OnlineShare Custom(Bill bill, decimal amount, IEnumerable<OnlinePayment> payments, DateTime now)
+    public static OnlineShare Custom(Bill bill, decimal amount, IEnumerable<OnlinePayment> payments, DateTime now, PartPaid? partPaid = null)
     {
         amount = Money(amount);
         if (amount <= 0) throw new SalesDomainException("Enter an amount to pay.");
-        var remaining = Remaining(bill.Total, payments, now);
+        var remaining = Remaining(bill.Total, payments, now, partPaid);
         if (amount > remaining) throw new SalesDomainException($"That is more than is left to pay ({remaining:0.00}).");
         return new(SplitMode.Custom, amount, []);
     }

@@ -30,6 +30,9 @@ namespace Sales.Infrastructure.Migrations
             modelBuilder.HasSequence("onlinepaymentseq", "sales")
                 .IncrementsBy(10);
 
+            modelBuilder.HasSequence("partpaymentseq", "sales")
+                .IncrementsBy(10);
+
             modelBuilder.HasSequence("paymentseq", "sales")
                 .IncrementsBy(10);
 
@@ -329,6 +332,75 @@ namespace Sales.Infrastructure.Migrations
                     b.ToTable("payment_settings", "sales");
                 });
 
+            modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPayment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("integer");
+
+                    NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "partpaymentseq", "sales");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("numeric(18,2)");
+
+                    b.Property<int>("BranchId")
+                        .HasColumnType("integer");
+
+                    b.PrimitiveCollection<List<int>>("LineIds")
+                        .IsRequired()
+                        .HasColumnType("integer[]");
+
+                    b.Property<string>("PayerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("character varying(200)");
+
+                    b.Property<DateTime>("RecordedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("RecordedBy")
+                        .IsRequired()
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<DateTime?>("ReturnedAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<string>("ReturnedBy")
+                        .HasMaxLength(64)
+                        .HasColumnType("character varying(64)");
+
+                    b.Property<int?>("ReturnedShiftId")
+                        .HasColumnType("integer");
+
+                    b.Property<int?>("ShiftId")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("Tender")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("integer");
+
+                    b.Property<uint>("xmin")
+                        .IsConcurrencyToken()
+                        .ValueGeneratedOnAddOrUpdate()
+                        .HasColumnType("xid")
+                        .HasColumnName("xmin");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReturnedShiftId");
+
+                    b.HasIndex("ShiftId");
+
+                    b.HasIndex("TicketId");
+
+                    b.ToTable("part_payments", "sales");
+                });
+
             modelBuilder.Entity("Ninja.Sales.Domain.AggregatesModel.ShiftAggregate.CashMovement", b =>
                 {
                     b.Property<int>("Id")
@@ -580,6 +652,9 @@ namespace Sales.Infrastructure.Migrations
                         .HasMaxLength(128)
                         .HasColumnType("character varying(128)");
 
+                    b.Property<int?>("PartPaymentId")
+                        .HasColumnType("integer");
+
                     b.Property<DateTime>("RecordedAt")
                         .HasColumnType("timestamp with time zone");
 
@@ -608,6 +683,8 @@ namespace Sales.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     b.HasKey("Id");
+
+                    b.HasIndex("PartPaymentId");
 
                     b.HasIndex("TicketId");
 

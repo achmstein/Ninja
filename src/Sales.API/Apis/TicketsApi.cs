@@ -121,6 +121,17 @@ public static class TicketsApi
             .WithSummary("Settle an open ticket")
             .WithDescription("Payments must cover the total; on cash, the excess is returned as change. Issues the receipt number.");
 
+        api.MapPost("/{id:int}/part-payments", TakePartPayment)
+            .WithName("TakePartPayment")
+            .WithSummary("Take a payment for part of an open bill")
+            .WithDescription("One of a group pays for what they had (lineIds), or an amount on account of the bill. Cash, card or InstaPay, always less than what is left: an amount that pays the bill in full is a settle. The bill stays open with less left to pay, and settling it later brings only the rest. The money is the open shift's. Returns the part payments made, everything part-paid so far and what remains.");
+
+        api.MapPost("/{id:int}/part-payments/{partPaymentId:int}/return", ReturnPartPayment)
+            .WithName("ReturnPartPayment")
+            .WithSummary("Give a part payment back while the bill is open (owner only)")
+            .WithDescription("Taken by mistake, or before the bill is voided. The bill owes the money again; cash leaves the drawer of the shift open now, whichever shift took it.")
+            .RequireAuthorization("Owner");
+
         api.MapPost("/{id:int}/move-lines", MoveLines)
             .WithName("MoveTicketLines")
             .WithSummary("Move lines to another ticket")
@@ -554,6 +565,55 @@ public static class TicketsApi
         }
     }
 
+    public static async Task<Results<Ok<PartPaymentResult>, BadRequest<string>>> TakePartPayment(
+        int id,
+        PartPaymentRequest request,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            var result = await mediator.SendIdentified<TakePartPaymentCommand, PartPaymentResult>(requestId, new TakePartPaymentCommand(
+                id,
+                (request.Payments ?? []).Select(p => new PartPaymentDto(p.Tender, p.Amount)).ToList(),
+                request.PayerName,
+                request.LineIds,
+                httpContext.GetActor(),
+                request.ShiftId));
+
+            return TypedResults.Ok(result);
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
+    public static async Task<Results<Ok<PartPaymentResult>, BadRequest<string>>> ReturnPartPayment(
+        int id,
+        int partPaymentId,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator,
+        ReturnPartPaymentRequest? request = null)
+    {
+        try
+        {
+            var result = await mediator.SendIdentified<ReturnPartPaymentCommand, PartPaymentResult>(requestId, new ReturnPartPaymentCommand(
+                id,
+                partPaymentId,
+                httpContext.GetActor(),
+                request?.ShiftId));
+
+            return TypedResults.Ok(result);
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Results<Ok, BadRequest<string>>> ApplyDiscount(
         int id,
         DiscountRequest request,
@@ -772,6 +832,15 @@ public record AddLineRequest(LocalizedText Description, decimal Qty, decimal Uni
 public record SettleRequest(List<SettlePayment> Payments, DateTime? SettledAt = null, string? ProvisionalReceiptNumber = null, int? ShiftId = null);
 
 public record SettlePayment(PaymentTender Tender, decimal Amount, string? CustomerId = null, string? CustomerName = null);
+
+/// <summary>Money for part of an open bill: the tenders, who paid, and the lines it is for (none for an amount on account).</summary>
+public record PartPaymentRequest(List<PartPaymentLine> Payments, string? PayerName = null, List<int>? LineIds = null, int? ShiftId = null);
+
+/// <param name="Tender">Cash, Card or InstaPay.</param>
+public record PartPaymentLine(PaymentTender Tender, decimal Amount);
+
+/// <param name="ShiftId">The till's open shift, when it knows it.</param>
+public record ReturnPartPaymentRequest(int? ShiftId = null);
 
 public record MoveLinesRequest(List<int> LineIds, int? TargetTicketId = null, NewTicketRequest? NewTicket = null);
 

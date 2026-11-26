@@ -317,19 +317,25 @@ public class TicketQueries(SalesContext context) : ITicketQueries
     private Task<IReadOnlyDictionary<int, (decimal Vat, decimal Total)>> RefundedSalesAsync(IEnumerable<Refund> refunds)
         => RefundedSalesAsync(context, refunds);
 
-    /// <summary>Cash handed over at settle, before the change went back.</summary>
+    /// <summary>
+    /// Cash handed over at settle, before the change went back. Cash taken
+    /// earlier as a part payment is left out: it went into the drawer of the
+    /// shift that took it, which counts it from the part payment itself.
+    /// </summary>
     internal static decimal CashTenderedOf(IEnumerable<Ticket> tickets)
-        => tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash).Sum(p => p.Amount);
+        => tickets.SelectMany(t => t.Payments).Where(p => p.Tender == PaymentTender.Cash && p.PartPaymentId == null).Sum(p => p.Amount);
 
     /// <summary>
     /// What one payment kept towards its bill: the change came back out of
     /// the cash, taken from the last cash payment first, so a bill's payments
-    /// add up to its total. Any other tender keeps what it paid.
+    /// add up to its total. Any other tender keeps what it paid, and so does
+    /// cash taken earlier as a part payment: change is only ever out of the
+    /// cash handed over at the settle.
     /// </summary>
     internal static decimal KeptOf(Ticket ticket, int paymentId, decimal amount)
     {
         var change = ticket.ChangeGiven;
-        foreach (var cash in ticket.Payments.Where(p => p.Tender == PaymentTender.Cash).OrderByDescending(p => p.Id))
+        foreach (var cash in ticket.Payments.Where(p => p.Tender == PaymentTender.Cash && p.PartPaymentId == null).OrderByDescending(p => p.Id))
         {
             var back = Math.Min(change, cash.Amount);
             if (cash.Id == paymentId)
@@ -452,6 +458,18 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .OrderBy(r => r.Number)
             .ToListAsync();
 
+        // What the till took for part of the bill while it is open; once it
+        // closes they are among its payments
+        var partPayments = ticket.Status == TicketStatus.Open
+            ? await context.PartPayments
+                .AsNoTracking()
+                .Where(p => p.TicketId == ticketId && p.ReturnedAt == null)
+                .OrderBy(p => p.RecordedAt)
+                .ThenBy(p => p.Id)
+                .ToListAsync()
+            : [];
+        var paidLines = partPayments.SelectMany(p => p.LineIds).ToHashSet();
+
         return new TicketDetail
         {
             Id = ticket.Id,
@@ -491,7 +509,12 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 CustomerName = l.CustomerName,
                 CustomerId = l.CustomerId,
                 GuestId = l.GuestId,
+                Paid = paidLines.Contains(l.Id),
             }).ToList(),
+            PartPayments = partPayments
+                .Select(p => new PartPaymentView(p.Id, p.Tender.ToString(), p.Amount, p.PayerName, p.LineIds, p.RecordedBy, p.RecordedAt))
+                .ToList(),
+            PartPaid = partPayments.Sum(p => p.Amount),
             Payments = ticket.Payments.Select(p => new PaymentView
             {
                 Id = p.Id,
@@ -504,6 +527,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 TenderChangedFrom = p.TenderChangedFrom?.ToString(),
                 TenderChangedBy = p.TenderChangedBy,
                 TenderChangedAt = p.TenderChangedAt,
+                PartPaymentId = p.PartPaymentId,
             }).ToList(),
             Total = bill.Total,
             Subtotal = bill.Subtotal,

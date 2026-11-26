@@ -14,8 +14,8 @@ public class CloseShiftCommandHandler(
 {
     public async Task<ShiftView> Handle(CloseShiftCommand command, CancellationToken cancellationToken)
     {
-        // The shift is held before it is summed: a settle, refund or tab
-        // payment putting itself on the shift right now is waited for and
+        // The shift is held before it is summed: a settle, refund, tab or
+        // part payment putting itself on the shift right now is waited for and
         // counted, and one arriving during the close finds it closed. Without
         // the hold one could commit between the sums and the close and be on
         // the shift but not in its expected cash.
@@ -28,7 +28,8 @@ public class CloseShiftCommandHandler(
         // aggregate turns them into the expectation and the verdict
         var cash = await shiftQueries.GetShiftCashAsync(shift.Id);
 
-        shift.Close(command.ClosingCount, cash.CashPayments, cash.ChangeGiven, command.ClosedBy, cash.CashRefunds, cash.CashTabPayments);
+        shift.Close(command.ClosingCount, cash.CashPayments, cash.ChangeGiven, command.ClosedBy, cash.CashRefunds, cash.CashTabPayments,
+            cash.CashPartPayments, cash.CashPartPaymentsReturned);
 
         await shiftRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

@@ -5,6 +5,7 @@ using Ninja.Sales.API.Application.Commands;
 using Ninja.Sales.API.Application.IntegrationEvents.Events;
 using Ninja.Sales.API.Application.Queries;
 using Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate;
+using Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate;
 
 namespace Ninja.Sales.API.Payments;
 
@@ -25,6 +26,7 @@ public sealed record StartOnlinePaymentCommand(int TicketId, ShareRequest Share,
 public class StartOnlinePaymentCommandHandler(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,
+    IPartPaymentRepository partPayments,
     ITenantFeaturesQueries features,
     PaymentProviders providers,
     SecretSealer sealer,
@@ -51,13 +53,16 @@ public class StartOnlinePaymentCommandHandler(
         var others = await payments.ListForTicketAsync(ticket.Id);
         foreach (var stale in others) stale.Expire(now);
 
+        // What the till already took on the bill is off what is left, and its items are spoken for
+        var partPaid = PartPaid.Of(await partPayments.ListActiveForTicketAsync(ticket.Id));
+
         var bill = ticket.GetBill(await tickets.GetPricingRulesAsync(ticket.BranchId));
         var share = command.Share.Mode switch
         {
-            SplitMode.Full => OnlineShares.Full(bill, others, now),
-            SplitMode.Items => OnlineShares.Items(ticket, bill, command.Share.LineIds ?? [], others, now),
-            SplitMode.Equal => OnlineShares.Equal(bill, command.Share.Parts ?? 0, command.Share.Of ?? 0, others, now),
-            SplitMode.Custom => OnlineShares.Custom(bill, command.Share.Amount ?? 0, others, now),
+            SplitMode.Full => OnlineShares.Full(bill, others, now, partPaid),
+            SplitMode.Items => OnlineShares.Items(ticket, bill, command.Share.LineIds ?? [], others, now, partPaid),
+            SplitMode.Equal => OnlineShares.Equal(bill, command.Share.Parts ?? 0, command.Share.Of ?? 0, others, now, partPaid),
+            SplitMode.Custom => OnlineShares.Custom(bill, command.Share.Amount ?? 0, others, now, partPaid),
             _ => throw new SalesDomainException("Choose how to pay."),
         };
 
@@ -203,6 +208,7 @@ public sealed record SettlePaidOnlineCommand(int TicketId) : IRequest<bool>;
 public class SettlePaidOnlineCommandHandler(
     ITicketRepository tickets,
     IOnlinePaymentRepository payments,
+    IPartPaymentRepository partPayments,
     IMediator mediator,
     TimeProvider clock) : IRequestHandler<SettlePaidOnlineCommand, bool>
 {
@@ -219,7 +225,9 @@ public class SettlePaidOnlineCommandHandler(
         if (online.Any(p => p.Status == OnlinePaymentStatus.Pending && p.Holds(now))) return false;
 
         var bill = ticket.GetBill(await tickets.GetPricingRulesAsync(ticket.BranchId));
-        if (OnlineShares.Paid(online) < bill.Total) return false;
+        // What the till took in part payments is paid too: the settle folds both in
+        var partPaid = PartPaid.Of(await partPayments.ListActiveForTicketAsync(ticket.Id)).Amount;
+        if (OnlineShares.Paid(online) + partPaid < bill.Total) return false;
 
         await mediator.Send(new SettleTicketCommand(ticket.Id, [], SettledBy), ct);
         return true;

@@ -19,6 +19,8 @@ public class SalesContext : DbContext, IUnitOfWork
     public DbSet<Refund> Refunds { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.TabPaymentAggregate.TabPayment> TabPayments { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.OnlinePayment> OnlinePayments { get; set; }
+    /// <summary>Money the till took for part of a bill still open.</summary>
+    public DbSet<Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPayment> PartPayments { get; set; }
     public DbSet<Ninja.Sales.Domain.AggregatesModel.OnlinePaymentAggregate.PaymentSettings> PaymentSettings { get; set; }
     /// <summary>The business's switches Sales owns a part of (online payments), from Tenant.API's events.</summary>
     public DbSet<Projections.TenantFeatures> TenantFeatures { get; set; }
@@ -61,6 +63,7 @@ public class SalesContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new RefundLineEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TabPaymentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new OnlinePaymentEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new PartPaymentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PaymentSettingsEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new PlaceEntityTypeConfiguration());

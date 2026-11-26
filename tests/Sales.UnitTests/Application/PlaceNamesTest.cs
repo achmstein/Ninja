@@ -115,7 +115,7 @@ public class PlaceNamesTest
         int targetId;
         await using (var context = new SalesContext(store))
         {
-            targetId = await new MoveTicketLinesCommandHandler(new TicketRepository(context), new PlaceNames(context), NullLogger<MoveTicketLinesCommandHandler>.Instance)
+            targetId = await new MoveTicketLinesCommandHandler(new TicketRepository(context), new PlaceNames(context), new PartPaymentRepository(context), NullLogger<MoveTicketLinesCommandHandler>.Instance)
                 .Handle(new MoveTicketLinesCommand(sourceId, [lineId], NewTicket: new NewTicketTarget(TicketType.Table, null, TableTwo)), default);
         }
 

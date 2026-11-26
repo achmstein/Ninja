@@ -36,6 +36,15 @@ public class Payment : Entity
 
     public DateTime? TenderChangedAt { get; private set; }
 
+    /// <summary>
+    /// Set when this money was taken earlier, as a part payment while the bill
+    /// was still open (PartPayment): it is on the settled bill so the receipt,
+    /// the tender totals and the reports see it, but its cash went into the
+    /// drawer of the shift that took it, never the settling shift's again, and
+    /// no change was ever handed back out of it.
+    /// </summary>
+    public int? PartPaymentId { get; private set; }
+
     /// <summary>The tenders a payment may be moved between: money that went nowhere else than the drawer or the terminal.</summary>
     public static bool IsCorrectable(PaymentTender tender) => tender is PaymentTender.Cash or PaymentTender.Card or PaymentTender.InstaPay;
 
@@ -76,7 +85,8 @@ public class Payment : Entity
         string recordedBy,
         string? customerId = null,
         string? customerName = null,
-        DateTime? recordedAt = null)
+        DateTime? recordedAt = null,
+        int? partPaymentId = null)
     {
         if (amount <= 0)
             throw new SalesDomainException("A payment must be a positive amount");
@@ -94,5 +104,6 @@ public class Payment : Entity
         // A sale replayed from a till that was offline was paid when it was
         // rung up, not when the replay reached the server
         RecordedAt = recordedAt ?? DateTime.UtcNow;
+        PartPaymentId = partPaymentId;
     }
 }

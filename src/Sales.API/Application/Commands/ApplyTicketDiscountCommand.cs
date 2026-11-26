@@ -18,6 +18,7 @@ public record ApplyTicketDiscountCommand(
 
 public class ApplyTicketDiscountCommandHandler(
     ITicketRepository ticketRepository,
+    Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.IPartPaymentRepository partPayments,
     ILogger<ApplyTicketDiscountCommandHandler> logger) : IRequestHandler<ApplyTicketDiscountCommand, bool>
 {
     public async Task<bool> Handle(ApplyTicketDiscountCommand command, CancellationToken cancellationToken)
@@ -33,6 +34,12 @@ public class ApplyTicketDiscountCommandHandler(
               ?? BranchPricing.DefaultMaxCashierDiscountRate;
 
         ticket.ApplyDiscount(command.Rate, command.Amount, command.Reason, command.By, cap);
+
+        // Money already taken on the bill is a floor under it: a discount
+        // that goes below it would have the till owing the customer
+        var partPaid = Ninja.Sales.Domain.AggregatesModel.PartPaymentAggregate.PartPaid.Of(await partPayments.ListActiveForTicketAsync(ticket.Id)).Amount;
+        if (partPaid > 0 && ticket.GetBill(await ticketRepository.GetPricingRulesAsync(ticket.BranchId)).Total < partPaid)
+            throw new SalesDomainException($"That discount takes the bill below what was already paid on it ({partPaid:0.00}).");
 
         await ticketRepository.UnitOfWork.SaveEntitiesAsync(cancellationToken);
 

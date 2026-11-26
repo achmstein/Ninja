@@ -179,6 +179,9 @@ public class Ticket : Entity, IAggregateRoot
 
         var payment = _payments.FirstOrDefault(p => p.Id == paymentId)
             ?? throw new SalesDomainException("That payment is not on this bill.");
+        // Its drawer was the one that took it, perhaps a shift long closed
+        if (payment.PartPaymentId is not null)
+            throw new SalesDomainException("That payment was taken earlier as a part payment and can't be changed here.");
         if (!Payment.IsCorrectable(payment.Tender))
             throw new SalesDomainException($"A {payment.Tender} payment can't be changed: it already went to {(payment.Tender == PaymentTender.Account ? "the customer's tab" : "the payment provider")}.");
         if (!Payment.IsCorrectable(tender))
@@ -973,6 +976,18 @@ public class Ticket : Entity, IAggregateRoot
 
         Touch();
         target.Touch();
+    }
+
+    /// <summary>
+    /// A part payment was taken on this open bill, or given back. The bill's
+    /// own rows do not change; it is touched so that the tills refetch it, and
+    /// so that a settle, void or move reading it at the same moment is told to
+    /// reload rather than close a bill whose money just changed.
+    /// </summary>
+    public void NotePartPayment()
+    {
+        EnsureOpen();
+        Touch();
     }
 
     private void EnsureOpen()
