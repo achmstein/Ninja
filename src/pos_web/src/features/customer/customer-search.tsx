@@ -127,7 +127,7 @@ function SearchBody({
     return (
       <Frame>
         <TopRow onBack={() => setAdding(false)}>
-          <DialogPrimitive.Title className='min-w-0 flex-1 truncate text-xl font-semibold'>{t('newCustomer')}</DialogPrimitive.Title>
+          <DialogPrimitive.Title className='min-w-0 flex-1 type-title truncate'>{t('newCustomer')}</DialogPrimitive.Title>
         </TopRow>
         <div className='min-h-0 flex-1 overflow-y-auto p-4'>
           <NewCustomerForm initialText={typed} onPick={(added) => onPick(toCustomer(added))} onCancel={() => setAdding(false)} />
@@ -145,16 +145,16 @@ function SearchBody({
         type='button'
         disabled={off}
         onClick={() => onPick(toCustomer(user))}
-        className='hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start text-base disabled:cursor-not-allowed disabled:opacity-50'
+        className='hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 type-body text-start disabled:cursor-not-allowed disabled:opacity-50'
       >
         <span className='min-w-0 flex-1'>
           <bdi className='block truncate font-semibold'>
             {mark ? <Highlight text={name} ranges={matchRanges(name, typed)} /> : name}
           </bdi>
-          {off && <span className='text-muted-foreground block truncate text-sm'>{t('customerDisabled')}</span>}
+          {off && <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>}
         </span>
         {user.phoneNumber && (
-          <bdi dir='ltr' className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+          <bdi dir='ltr' className='text-muted-foreground type-detail shrink-0 tabular-nums'>
             {editablePhone(user.phoneNumber)}
           </bdi>
         )}
@@ -180,8 +180,8 @@ function SearchBody({
             >
               <Pencil className='text-muted-foreground size-5 shrink-0' aria-hidden />
               <span className='min-w-0'>
-                <span className='block truncate text-base font-semibold'>{t('useNameAction', { name: typed })}</span>
-                <span className='text-muted-foreground block truncate text-sm'>{t('noAccountNeeded')}</span>
+                <span className='type-heading block truncate'>{t('useNameAction', { name: typed })}</span>
+                <span className='text-muted-foreground type-detail block truncate'>{t('noAccountNeeded')}</span>
               </span>
             </button>
           </>
@@ -193,8 +193,8 @@ function SearchBody({
         >
           <UserPlus className='text-muted-foreground size-5 shrink-0' aria-hidden />
           <span className='min-w-0'>
-            <span className='block truncate text-base font-semibold'>{t('newCustomer')}</span>
-            <span className='text-muted-foreground block truncate text-sm'>{t('customerSearchAddHint')}</span>
+            <span className='type-heading block truncate'>{t('newCustomer')}</span>
+            <span className='text-muted-foreground type-detail block truncate'>{t('customerSearchAddHint')}</span>
           </span>
         </button>
       </>
@@ -241,7 +241,7 @@ function SearchBody({
               setLetter(null)
             }}
             placeholder={t('customerSearchPlaceholder')}
-            className='h-12 pe-12 text-lg'
+            className='h-12 pe-12 text-base'
             autoComplete='off'
             enterKeyHint='search'
           />
@@ -303,11 +303,11 @@ function TopRow({ onBack, children }: { onBack: () => void; children: React.Reac
 }
 
 function Caption({ children }: { children: React.ReactNode }) {
-  return <div className='text-muted-foreground px-4 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase'>{children}</div>
+  return <div className='text-muted-foreground px-4 pt-3 pb-1 type-label'>{children}</div>
 }
 
 function Nothing({ children }: { children: React.ReactNode }) {
-  return <p className='text-muted-foreground px-4 py-6 text-center text-sm'>{children}</p>
+  return <p className='text-muted-foreground px-4 py-6 type-detail text-center'>{children}</p>
 }
 
 function RowSkeletons() {

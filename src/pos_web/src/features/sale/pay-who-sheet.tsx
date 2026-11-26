@@ -72,22 +72,22 @@ export function PayWhoSheet({
         </DialogHeader>
         <div className='flex flex-col overflow-hidden rounded-lg border'>
           <button type='button' className={row} disabled={busy} onClick={onEverything}>
-            <span className='min-w-0 flex-1 text-base font-semibold'>{t('payEverything')}</span>
-            <span className='shrink-0 text-base font-semibold tabular-nums'>{money(total)}</span>
+            <span className='type-heading min-w-0 flex-1'>{t('payEverything')}</span>
+            <span className='type-heading shrink-0 tabular-nums'>{money(total)}</span>
           </button>
           {payers.map((payer) => (
             <button key={payer.key} type='button' className={row} disabled={busy} onClick={() => onPayer(payer)}>
               <span className='min-w-0 flex-1'>
-                <bdi className='block truncate text-base font-semibold'>{payer.name ?? title}</bdi>
-                <span className='text-muted-foreground block truncate text-sm'>
+                <bdi className='type-heading block truncate'>{payer.name ?? title}</bdi>
+                <span className='text-muted-foreground type-detail block truncate'>
                   {payer.summary.map((line) => `${toNumber(line.qty)}× ${localized(line.description)}`).join(' · ')}
                 </span>
               </span>
-              <span className='shrink-0 text-base tabular-nums'>{money(payer.subtotal)}</span>
+              <span className='type-body shrink-0 tabular-nums'>{money(payer.subtotal)}</span>
             </button>
           ))}
         </div>
-        <p className='text-muted-foreground text-sm'>{t('payWhoHint')}</p>
+        <p className='text-muted-foreground type-detail'>{t('payWhoHint')}</p>
       </DialogContent>
     </Dialog>
   )

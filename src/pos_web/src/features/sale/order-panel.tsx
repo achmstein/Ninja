@@ -106,14 +106,14 @@ export function OrderPanel({
     <>
       {/* Built like the item pad's search row (py-2, a size-12 button), so the two rules under them meet in one line */}
       <div className='flex shrink-0 items-center gap-2 border-b px-3 py-2 max-md:pe-14'>
-        <Heading className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
+        <Heading className='flex min-w-0 flex-1 items-baseline type-title gap-2'>
           <span className='truncate'>{title}</span>
           {onBill ? (
-            <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums' dir='ltr'>
+            <span className='text-muted-foreground type-detail shrink-0 font-medium tabular-nums' dir='ltr'>
               #{ticketId}
             </span>
           ) : (
-            count > 0 && <span className='text-muted-foreground shrink-0 text-sm font-medium'>{t('linesCount', { count })}</span>
+            count > 0 && <span className='text-muted-foreground type-detail shrink-0 font-medium'>{t('linesCount', { count })}</span>
           )}
         </Heading>
         {/* The rest a bill can do (discount, print, void) opens here, over the order */}
@@ -209,7 +209,7 @@ export function OrderPanel({
       {/* What the item rung up last goes well with: one tap to offer it */}
       {suggestions.length > 0 && (
         <div className='border-t px-3 pt-2 pb-1'>
-          <div className='text-muted-foreground mb-1.5 text-xs font-medium'>{t('goesWellWith')}</div>
+          <div className='text-muted-foreground type-caption mb-1.5 font-medium'>{t('goesWellWith')}</div>
           <div className='no-scrollbar flex gap-2 overflow-x-auto pb-1'>
             {suggestions.map((item) => (
               <Button key={String(item.id)} variant='outline' className='h-10 shrink-0 gap-1.5 px-3' onClick={() => onSuggestion(item)}>
@@ -224,14 +224,14 @@ export function OrderPanel({
 
       <div className='flex flex-col gap-3 border-t p-3'>
         {delivering && (
-          <div className='text-muted-foreground flex justify-between text-sm'>
+          <div className='text-muted-foreground type-detail flex justify-between'>
             <span>{t('deliveryFee')}</span>
             <span className='tabular-nums'>{deliveryFee > 0 ? money(deliveryFee) : t('deliveryFree')}</span>
           </div>
         )}
         <div className='flex items-baseline justify-between'>
-          <span className='text-muted-foreground text-sm'>{t('total')}</span>
-          <span className='text-2xl font-bold tabular-nums'>{money(total)}</span>
+          <span className='text-muted-foreground type-detail'>{t('total')}</span>
+          <span className='type-figure'>{money(total)}</span>
         </div>
         {lines.length > 0 && (
           <Input

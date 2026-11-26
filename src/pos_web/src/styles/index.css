@@ -4,6 +4,42 @@
 
 @custom-variant dark (&:is(.dark *));
 
+/*
+ * The till's type: seven roles, and nothing set by hand beside them. A screen
+ * says what a piece of text IS (a title, a label, a total) and takes its
+ * size, weight and line from here, so every screen reads the same. How each
+ * is used is in docs/type.md. Colour is not part of a role: muted text adds
+ * `text-muted-foreground` itself.
+ */
+/* A screen's or a dialog's name: one per surface */
+@utility type-title {
+  @apply text-xl leading-7 font-bold;
+}
+/* A part's heading inside a surface, and the name that leads a row */
+@utility type-heading {
+  @apply text-base leading-6 font-semibold;
+}
+/* What is read and typed: rows, fields, sentences */
+@utility type-body {
+  @apply text-base leading-6 font-normal;
+}
+/* A row's second line, a dense list, what stands beside the main thing */
+@utility type-detail {
+  @apply text-sm leading-5 font-normal;
+}
+/* The smallest text there is: a hint, a count, a time. Never smaller */
+@utility type-caption {
+  @apply text-xs leading-4 font-normal;
+}
+/* A quiet name over a group of things, in capitals */
+@utility type-label {
+  @apply text-xs leading-4 font-semibold tracking-wide uppercase;
+}
+/* The one figure a surface is about: a total, a clock */
+@utility type-figure {
+  @apply text-2xl leading-8 font-bold tabular-nums;
+}
+
 @layer base {
   /* A phone number or an amount keeps its digits left to right, but sits on
      the right of its box in Arabic, where every other box starts */

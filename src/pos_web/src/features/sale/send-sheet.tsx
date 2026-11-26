@@ -110,14 +110,14 @@ export function SendSheet({
               )
             })}
           </div>
-          {splittable && <p className='text-muted-foreground -mt-1 text-sm'>{t('sendWhoSplitHint')}</p>}
+          {splittable && <p className='text-muted-foreground type-detail -mt-1'>{t('sendWhoSplitHint')}</p>}
 
           <div className='grid grid-cols-2 gap-2 sm:grid-cols-3'>
             {people.map((person) => (
               <Button
                 key={person.id ?? `name:${person.name}`}
                 variant='outline'
-                className='h-14 min-w-0 px-3 text-base font-semibold'
+                className='h-14 min-w-0 type-heading px-3'
                 disabled={none}
                 onClick={() => send(person)}
               >

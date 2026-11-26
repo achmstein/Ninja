@@ -30,9 +30,9 @@ export function StayStrip({ stay }: { stay: StayViewModel }) {
         className='flex min-h-12 w-full items-center gap-2 px-3 py-2 text-start'
       >
         <Timer className='text-primary size-5 shrink-0' aria-hidden />
-        <span className='text-lg font-bold tabular-nums'>{formatClock(elapsedSeconds(stay, now))}</span>
-        <span className='text-muted-foreground min-w-0 flex-1 truncate text-sm tabular-nums'>≈ {money(estimate.amount)}</span>
-        <span className='text-muted-foreground max-w-[45%] shrink-0 truncate text-xs'>{t('roomMore')}</span>
+        <span className='type-title tabular-nums'>{formatClock(elapsedSeconds(stay, now))}</span>
+        <span className='text-muted-foreground min-w-0 flex-1 type-detail truncate tabular-nums'>≈ {money(estimate.amount)}</span>
+        <span className='text-muted-foreground max-w-[45%] shrink-0 type-caption truncate'>{t('roomMore')}</span>
         <ChevronDown className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')} aria-hidden />
       </button>
       {open && (

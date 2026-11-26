@@ -10,7 +10,7 @@ import { lineKey, type SaleLine } from './cart'
 
 /** A quiet heading over a part of the order: what is new, what was sent */
 export function SectionLabel({ children }: { children: ReactNode }) {
-  return <div className='text-muted-foreground px-3 pt-3 pb-1 text-xs font-semibold tracking-wide uppercase'>{children}</div>
+  return <div className='text-muted-foreground px-3 pt-3 pb-1 type-label'>{children}</div>
 }
 
 /**
@@ -40,10 +40,10 @@ export function NewLineRow({
   return (
     <div className={cn('flex items-start gap-2 px-3 py-2', marked && 'border-primary bg-primary/5 border-s-[3px] ps-[calc(0.75rem-3px)]')}>
       <div className='min-w-0 flex-1'>
-        <div className='truncate text-sm font-medium'>{name}</div>
-        {options && <div className='text-muted-foreground truncate text-xs'>{options}</div>}
+        <div className='type-detail truncate font-medium'>{name}</div>
+        {options && <div className='text-muted-foreground type-caption truncate'>{options}</div>}
         {line.specialInstructions && (
-          <div className='text-muted-foreground truncate text-xs italic'>"{line.specialInstructions}"</div>
+          <div className='text-muted-foreground type-caption truncate italic'>"{line.specialInstructions}"</div>
         )}
         <div className='mt-1.5 flex items-center gap-2'>
           <Button
@@ -55,7 +55,7 @@ export function NewLineRow({
           >
             {line.quantity === 1 ? <Trash2 className='text-destructive size-4' /> : <Minus className='size-4' />}
           </Button>
-          <span className='w-6 text-center text-sm font-semibold tabular-nums'>{line.quantity}</span>
+          <span className='type-detail w-6 text-center font-semibold tabular-nums'>{line.quantity}</span>
           <Button
             variant='outline'
             size='icon'
@@ -67,7 +67,7 @@ export function NewLineRow({
           </Button>
         </div>
       </div>
-      <span className='shrink-0 text-sm font-semibold tabular-nums'>{money(line.price * line.quantity)}</span>
+      <span className='type-detail shrink-0 font-semibold tabular-nums'>{money(line.price * line.quantity)}</span>
     </div>
   )
 }
@@ -129,9 +129,9 @@ export function SentLines({
               <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
                 {localized(line.description)}
               </span>
-              {localized(line.details) && <span className='block truncate text-xs'>{localized(line.details)}</span>}
+              {localized(line.details) && <span className='type-caption block truncate'>{localized(line.details)}</span>}
               {line.customerName && (
-                <bdi className='text-foreground/70 block truncate text-xs font-medium'>{line.customerName}</bdi>
+                <bdi className='text-foreground/70 type-caption block truncate font-medium'>{line.customerName}</bdi>
               )}
             </span>
             <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>
@@ -140,7 +140,7 @@ export function SentLines({
           </>
         )
         const row = cn(
-          'text-muted-foreground flex min-h-11 w-full items-center gap-2 px-3 py-2 text-start text-sm',
+          'text-muted-foreground flex min-h-11 w-full items-center gap-2 px-3 py-2 type-detail text-start',
           // Just in from the server: a soft tint behind it fades out
           landed.includes(toNumber(line.orderId)) && 'animate-landed',
           picked && 'bg-accent',
