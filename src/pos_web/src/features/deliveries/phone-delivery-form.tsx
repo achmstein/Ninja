@@ -156,6 +156,9 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   )
   const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: editablePhone(customer?.phone) })
   const [name, setName] = useState(customer?.name ?? '')
+  // Opened past the first step, for a customer the sale already had
+  const [cameWithCustomer] = useState(step === 'where')
+  const theirAddresses = useKnownAddresses(cameWithCustomer ? (customer?.id ?? null) : null, cameWithCustomer ? (customer?.phone ?? '') : '', country)
   const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
   const [rider, setRider] = useState<SaleRider | null>(initial?.rider ?? null)
   // The cashier took off the area the pin is in: it is not put back until the pin changes
@@ -321,6 +324,8 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
 
       {step === 'where' && (
         <>
+          {/* The sale already said who it is for, so the first step was passed over: their addresses are offered here */}
+          {cameWithCustomer && <KnownAddressList addresses={theirAddresses.addresses} onPick={pickKnown} />}
           {zones.length > 0 && (
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor={`${ids}-area`}>{t('deliveryAreaLabel')}</Label>
@@ -588,6 +593,57 @@ function Stepper({
   )
 }
 
+/**
+ * Where this customer had deliveries before, and the addresses they saved in
+ * the app: by their account when they have one, and by their number.
+ */
+function useKnownAddresses(customerId: string | null, phone: string, country: string) {
+  const lookupPhone = useDebounced(digitCount(phone) >= MIN_PHONE_DIGITS ? normalizePhone(phone, country) : '', 400)
+  const known = useQuery({
+    ...getKnownDeliveryAddressesOptions({
+      query: { 'api-version': API_VERSION, customerUserId: customerId ?? undefined, phone: lookupPhone || undefined },
+    }),
+    enabled: !!customerId || lookupPhone !== '',
+  })
+  return { known, addresses: known.data ?? [], lookupPhone }
+}
+
+/** A customer's earlier addresses, one tap each: the same address again is the commonest delivery there is */
+function KnownAddressList({ addresses, onPick }: { addresses: KnownAddressView[]; onPick: (address: KnownAddressView) => void }) {
+  const t = useT()
+  const line = useAddressLine()
+  if (addresses.length === 0) return null
+  return (
+    <div className='flex flex-col gap-2'>
+      <span className='text-muted-foreground type-detail flex items-center gap-1.5 font-medium'>
+        <History className='size-4' aria-hidden />
+        {t('deliveryKnownAddresses')}
+      </span>
+      {addresses.map((a) => (
+        <button
+          key={[a.address, a.building, a.floor, a.apartment, a.latitude, a.longitude].join('|')}
+          type='button'
+          onClick={() => onPick(a)}
+          className='hover:bg-muted flex min-h-16 items-center gap-3 rounded-lg border p-3 text-start'
+        >
+          <MapPin className='text-muted-foreground size-5 shrink-0' aria-hidden />
+          <span className='min-w-0 flex-1'>
+            <span className='block font-medium'>
+              {a.label && <>{a.label} · </>}
+              {line(a)}
+            </span>
+            {a.directions && <span className='text-muted-foreground type-detail block truncate italic'>"{a.directions}"</span>}
+          </span>
+          <span className='text-primary type-detail flex shrink-0 items-center gap-1 font-semibold'>
+            <Check className='size-4' aria-hidden />
+            {t('deliverySameAddress')}
+          </span>
+        </button>
+      ))}
+    </div>
+  )
+}
+
 /** Step one: the number first, as the call starts; a caller who had deliveries before is one tap away */
 function WhoStep({
   ids,
@@ -626,15 +682,7 @@ function WhoStep({
   onNext: () => void
 }) {
   const t = useT()
-  const line = useAddressLine()
-  const lookupPhone = useDebounced(digitCount(phone) >= MIN_PHONE_DIGITS ? normalizePhone(phone, country) : '', 400)
-  const known = useQuery({
-    ...getKnownDeliveryAddressesOptions({
-      query: { 'api-version': API_VERSION, customerUserId: customerId ?? account?.id ?? undefined, phone: lookupPhone || undefined },
-    }),
-    enabled: !!customerId || !!account?.id || lookupPhone !== '',
-  })
-  const addresses = known.data ?? []
+  const { known, addresses, lookupPhone } = useKnownAddresses(customerId ?? account?.id ?? null, phone, country)
   const whole = digitCount(phone) >= MIN_PHONE_DIGITS
   // Who the number is, said under it: a customer, someone delivered to before, or a new caller
   const settled = whole && !searching && !known.isFetching && lookupPhone !== ''
@@ -719,35 +767,7 @@ function WhoStep({
 
       {known.isFetching && addresses.length === 0 && <Skeleton className='h-16' />}
 
-      {addresses.length > 0 && (
-        <div className='flex flex-col gap-2'>
-          <span className='text-muted-foreground flex items-center gap-1.5 type-detail font-medium'>
-            <History className='size-4' aria-hidden />
-            {t('deliveryKnownAddresses')}
-          </span>
-          {addresses.map((a) => (
-            <button
-              key={[a.address, a.building, a.floor, a.apartment, a.latitude, a.longitude].join('|')}
-              type='button'
-              onClick={() => onKnown(a)}
-              className='hover:bg-muted flex min-h-16 items-center gap-3 rounded-lg border p-3 text-start'
-            >
-              <MapPin className='text-muted-foreground size-5 shrink-0' aria-hidden />
-              <span className='min-w-0 flex-1'>
-                <span className='block font-medium'>
-                  {a.label && <>{a.label} · </>}
-                  {line(a)}
-                </span>
-                {a.directions && <span className='text-muted-foreground block truncate type-detail italic'>"{a.directions}"</span>}
-              </span>
-              <span className='text-primary flex shrink-0 items-center gap-1 type-detail font-semibold'>
-                <Check className='size-4' aria-hidden />
-                {t('deliverySameAddress')}
-              </span>
-            </button>
-          ))}
-        </div>
-      )}
+      <KnownAddressList addresses={addresses} onPick={onKnown} />
 
       <Button size='lg' variant={addresses.length > 0 ? 'outline' : 'default'} className='h-14 text-lg' onClick={onNext}>
         {addresses.length > 0 ? (
