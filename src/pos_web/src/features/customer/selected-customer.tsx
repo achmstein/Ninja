@@ -6,7 +6,6 @@ import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { CustomerCard, type CardCustomer } from './customer-card'
-import { InitialsBadge } from './initials-badge'
 import { useLoyalty } from './use-customer-card'
 
 /**
@@ -89,7 +88,6 @@ export function SelectedCustomer({
             })
           }
         >
-          <InitialsBadge name={customer.name} />
           <span className='min-w-0'>
             <span className='block truncate font-medium'>{customer.name}</span>
             {features.loyalty && <CustomerPointsLine userId={customer.id} />}
@@ -97,7 +95,6 @@ export function SelectedCustomer({
         </button>
       ) : (
         <span className='flex min-w-0 items-center gap-2'>
-          <InitialsBadge name={customer.name} />
           <span className='truncate font-medium'>{customer.name}</span>
         </span>
       )}

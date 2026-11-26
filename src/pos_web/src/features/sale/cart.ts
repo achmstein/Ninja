@@ -33,12 +33,6 @@ export type SaleLine = {
    * key: added again by hand it is the same line, and keeps saying so.
    */
   suggestion?: 'Till'
-  /**
-   * Who this line is for, on an open bill: a round is rung up person by
-   * person, each line under whoever was picked when it was tapped. Missing
-   * on a new sale, which is one customer's whole.
-   */
-  for?: SaleCustomer | null
 }
 
 /**
@@ -164,55 +158,21 @@ export function tillSuggestions(
     )
 }
 
-/** One person, however the till knows them: by their account, else by the name it was told; '' for nobody */
-export function personKey(person: SaleCustomer | null | undefined): string {
-  if (!person) return ''
-  return person.id ? `id:${person.id}` : `name:${person.name.trim()}`
+/** The same person: by their account when they have one, else by the name the till was told */
+export function samePerson(a: SaleCustomer | null | undefined, b: SaleCustomer | null | undefined): boolean {
+  if (!a || !b) return false
+  return a.id || b.id ? a.id === b.id : a.name.trim() === b.name.trim()
 }
 
 export function lineKey(
-  line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions' | 'for'>
+  line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions'>
 ): string {
   const options = line.customizations
     .map((c) => c.optionId)
     .sort((a, b) => a - b)
     .join(',')
-  // The same item for two people is two lines; nobody's keeps the key it always had
-  const who = personKey(line.for)
-  return `${line.productId}:${options}:${line.specialInstructions ?? ''}${who ? `@${who}` : ''}`
+  return `${line.productId}:${options}:${line.specialInstructions ?? ''}`
 }
-
-/** Lines that became the same line (same item, same person) are one again */
-function merged(lines: SaleLine[]): SaleLine[] {
-  const out: SaleLine[] = []
-  for (const line of lines) {
-    const at = out.findIndex((l) => lineKey(l) === lineKey(line))
-    if (at < 0) out.push(line)
-    else out[at] = { ...out[at], quantity: out[at].quantity + line.quantity }
-  }
-  return out
-}
-
-/**
- * A round's lines by who they are for, in the order each person first
- * appears: one order is placed per person, so each gets their points and
- * their history. When no line names anybody the round is `fallback`'s whole.
- */
-export function linesByPerson(
-  lines: SaleLine[],
-  fallback: SaleCustomer | null,
-): { who: SaleCustomer | null; lines: SaleLine[] }[] {
-  if (!lines.some((l) => l.for)) return [{ who: fallback, lines }]
-  const groups: { who: SaleCustomer | null; lines: SaleLine[] }[] = []
-  for (const line of lines) {
-    const key = personKey(line.for)
-    const group = groups.find((g) => personKey(g.who) === key)
-    if (group) group.lines.push(line)
-    else groups.push({ who: line.for ?? null, lines: [line] })
-  }
-  return groups
-}
-
 type SaleState = {
   lines: SaleLine[]
   note: string
@@ -229,10 +189,8 @@ type SaleState = {
   setTarget: (target: number | null) => void
   add: (line: SaleLine) => void
   setQuantity: (key: string, quantity: number) => void
-  /** Moves one line to another person (or to nobody) */
-  assignLine: (key: string, person: SaleCustomer | null) => void
-  /** Lines rung up before anybody was picked become this person's */
-  adoptUnassigned: (person: SaleCustomer) => void
+  /** Takes these lines off: the part of a round that was just sent, the rest staying to be sent */
+  removeLines: (keys: readonly string[]) => void
   setNote: (note: string) => void
   setCustomer: (customer: SaleCustomer | null) => void
   setDelivery: (delivery: SaleDelivery | null) => void
@@ -277,14 +235,12 @@ export const useSale = create<SaleState>()(
                   lineKey(l) === key ? { ...l, quantity } : l
                 ),
         })),
-      assignLine: (key, person) =>
-        set((state) => ({
-          lines: merged(state.lines.map((l) => (lineKey(l) === key ? { ...l, for: person } : l))),
-        })),
-      adoptUnassigned: (person) =>
-        set((state) => ({
-          lines: merged(state.lines.map((l) => (l.for ? l : { ...l, for: person }))),
-        })),
+      removeLines: (keys) =>
+        set((state) => {
+          const lines = state.lines.filter((l) => !keys.includes(lineKey(l)))
+          // The note was the round's: with nothing left of it, it is said
+          return lines.length === 0 ? { lines, note: '' } : { lines }
+        }),
       setNote: (note) => set({ note }),
       setCustomer: (customer) => set({ customer }),
       setDelivery: (delivery) => set({ delivery }),

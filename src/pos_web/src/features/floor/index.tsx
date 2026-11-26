@@ -32,6 +32,7 @@ import { PendingOrdersStrip } from '@/features/orders/pending-orders'
 import { BillTitle } from '@/features/deliveries/bill-title'
 import { DeliveriesSummary } from '@/features/deliveries/deliveries-summary'
 import { billLabel, deliveryOrderOfLabel } from '@/features/deliveries/delivery-format'
+import { useSale } from '@/features/sale/cart'
 import { useDeliveries } from '@/features/deliveries/use-deliveries'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { PlacePanel } from '@/features/places/place-panel'
@@ -229,7 +230,7 @@ export function Floor() {
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       // A new bill has nothing on it yet: straight to the pad, pointed at it
-      navigate({ to: '/sale', search: { ticket: Number(result.ticketId) } })
+      navigate({ to: '/order/$ticketId', params: { ticketId: String(result.ticketId) } })
     },
   })
 
@@ -242,7 +243,7 @@ export function Floor() {
           to: '/ticket/$ticketId',
           params: { ticketId: String(toNumber(ticket.id)) },
         })
-      : navigate({ to: '/sale', search: { ticket: toNumber(ticket.id) } })
+      : navigate({ to: '/order/$ticketId', params: { ticketId: String(toNumber(ticket.id)) } })
 
   useEffect(() => {
     if (startedPlaceId == null) return
@@ -416,7 +417,11 @@ export function Floor() {
             <Button
               size='lg'
               className='h-12 gap-2 px-5 text-base max-sm:flex-1'
-              onClick={() => navigate({ to: '/sale' })}
+              onClick={() => {
+                // A new sale starts empty: nothing and nobody carried over from one left unfinished
+                useSale.getState().clear()
+                navigate({ to: '/sale' })
+              }}
             >
               <ShoppingCart className='size-5' />
               {t('newSale')}

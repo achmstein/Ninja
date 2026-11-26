@@ -238,7 +238,7 @@ export function PlacePanel({
                     onClick={() => {
                       close()
                       // The bill opens as the sale screen, its lines beside the menu
-                      navigate({ to: '/sale', search: { ticket: toNumber(ticket.id) } })
+                      navigate({ to: '/order/$ticketId', params: { ticketId: String(toNumber(ticket.id)) } })
                     }}
                   >
                     <Receipt className='size-5' />

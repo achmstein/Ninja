@@ -622,7 +622,7 @@ export function TicketScreen({
               className='h-12 shrink-0 gap-2 px-3'
               aria-label={t('addItems')}
               onClick={() =>
-                navigate({ to: '/sale', search: { ticket: ticketId } })
+                navigate({ to: '/order/$ticketId', params: { ticketId: String(ticketId) } })
               }
             >
               <ShoppingCart className='size-5' />

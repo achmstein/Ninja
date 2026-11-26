@@ -19,6 +19,7 @@ import { Route as AuthenticatedReceiptsRouteImport } from './routes/_authenticat
 import { Route as AuthenticatedSaleRouteImport } from './routes/_authenticated/sale'
 import { Route as AuthenticatedShiftRouteImport } from './routes/_authenticated/shift'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
+import { Route as AuthenticatedOrderTicketIdRouteImport } from './routes/_authenticated/order.$ticketId'
 import { Route as AuthenticatedShiftsIndexRouteImport } from './routes/_authenticated/shifts.index'
 import { Route as AuthenticatedShiftsShiftIdRouteImport } from './routes/_authenticated/shifts.$shiftId'
 import { Route as AuthenticatedTicketTicketIdRouteImport } from './routes/_authenticated/ticket.$ticketId'
@@ -74,6 +75,12 @@ const AuthCallbackRoute = AuthCallbackRouteImport.update({
   path: '/auth/callback',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AuthenticatedOrderTicketIdRoute =
+  AuthenticatedOrderTicketIdRouteImport.update({
+    id: '/order/$ticketId',
+    path: '/order/$ticketId',
+    getParentRoute: () => AuthenticatedRouteRoute,
+  } as any)
 const AuthenticatedShiftsIndexRoute =
   AuthenticatedShiftsIndexRouteImport.update({
     id: '/shifts/',
@@ -109,6 +116,7 @@ export interface FileRoutesByFullPath {
   '/sale': typeof AuthenticatedSaleRoute
   '/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
+  '/order/$ticketId': typeof AuthenticatedOrderTicketIdRoute
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/shifts/': typeof AuthenticatedShiftsIndexRoute
@@ -124,6 +132,7 @@ export interface FileRoutesByTo {
   '/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/': typeof AuthenticatedIndexRoute
+  '/order/$ticketId': typeof AuthenticatedOrderTicketIdRoute
   '/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/shifts': typeof AuthenticatedShiftsIndexRoute
@@ -141,6 +150,7 @@ export interface FileRoutesById {
   '/_authenticated/shift': typeof AuthenticatedShiftRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/_authenticated/': typeof AuthenticatedIndexRoute
+  '/_authenticated/order/$ticketId': typeof AuthenticatedOrderTicketIdRoute
   '/_authenticated/shifts/$shiftId': typeof AuthenticatedShiftsShiftIdRoute
   '/_authenticated/ticket/$ticketId': typeof AuthenticatedTicketTicketIdRoute
   '/_authenticated/shifts/': typeof AuthenticatedShiftsIndexRoute
@@ -158,6 +168,7 @@ export interface FileRouteTypes {
     | '/sale'
     | '/shift'
     | '/auth/callback'
+    | '/order/$ticketId'
     | '/shifts/$shiftId'
     | '/ticket/$ticketId'
     | '/shifts/'
@@ -173,6 +184,7 @@ export interface FileRouteTypes {
     | '/shift'
     | '/auth/callback'
     | '/'
+    | '/order/$ticketId'
     | '/shifts/$shiftId'
     | '/ticket/$ticketId'
     | '/shifts'
@@ -189,6 +201,7 @@ export interface FileRouteTypes {
     | '/_authenticated/shift'
     | '/auth/callback'
     | '/_authenticated/'
+    | '/_authenticated/order/$ticketId'
     | '/_authenticated/shifts/$shiftId'
     | '/_authenticated/ticket/$ticketId'
     | '/_authenticated/shifts/'
@@ -274,6 +287,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthCallbackRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/_authenticated/order/$ticketId': {
+      id: '/_authenticated/order/$ticketId'
+      path: '/order/$ticketId'
+      fullPath: '/order/$ticketId'
+      preLoaderRoute: typeof AuthenticatedOrderTicketIdRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/_authenticated/shifts/': {
       id: '/_authenticated/shifts/'
       path: '/shifts'
@@ -312,6 +332,7 @@ interface AuthenticatedRouteRouteChildren {
   AuthenticatedSaleRoute: typeof AuthenticatedSaleRoute
   AuthenticatedShiftRoute: typeof AuthenticatedShiftRoute
   AuthenticatedIndexRoute: typeof AuthenticatedIndexRoute
+  AuthenticatedOrderTicketIdRoute: typeof AuthenticatedOrderTicketIdRoute
   AuthenticatedShiftsShiftIdRoute: typeof AuthenticatedShiftsShiftIdRoute
   AuthenticatedTicketTicketIdRoute: typeof AuthenticatedTicketTicketIdRoute
   AuthenticatedShiftsIndexRoute: typeof AuthenticatedShiftsIndexRoute
@@ -325,6 +346,7 @@ const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
   AuthenticatedSaleRoute: AuthenticatedSaleRoute,
   AuthenticatedShiftRoute: AuthenticatedShiftRoute,
   AuthenticatedIndexRoute: AuthenticatedIndexRoute,
+  AuthenticatedOrderTicketIdRoute: AuthenticatedOrderTicketIdRoute,
   AuthenticatedShiftsShiftIdRoute: AuthenticatedShiftsShiftIdRoute,
   AuthenticatedTicketTicketIdRoute: AuthenticatedTicketTicketIdRoute,
   AuthenticatedShiftsIndexRoute: AuthenticatedShiftsIndexRoute,

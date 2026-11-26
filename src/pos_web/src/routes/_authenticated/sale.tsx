@@ -1,24 +1,20 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, redirect } from '@tanstack/react-router'
 import { SalePad } from '@/features/sale'
 
 type SaleSearch = {
-  /**
-   * Add the picked items to this open ticket instead of ringing up a
-   * walk-in: same pad, same cart, but the bill stays open and payment
-   * happens later on the ticket screen.
-   */
+  /** How an open bill was once addressed here; it has its own address now (`/order/$ticketId`) */
   ticket?: number
 }
 
+/** A new sale: rung up at the counter and paid on the spot, or sent out as a delivery */
 export const Route = createFileRoute('/_authenticated/sale')({
   validateSearch: (search: Record<string, unknown>): SaleSearch => {
     const ticket = Number(search.ticket)
     return Number.isInteger(ticket) && ticket > 0 ? { ticket } : {}
   },
-  component: SaleRoute,
+  // A link kept from before goes on to the bill it meant
+  beforeLoad: ({ search }) => {
+    if (search.ticket) throw redirect({ to: '/order/$ticketId', params: { ticketId: String(search.ticket) } })
+  },
+  component: SalePad,
 })
-
-function SaleRoute() {
-  const { ticket } = Route.useSearch()
-  return <SalePad ticketId={ticket} />
-}
