@@ -61,6 +61,10 @@ class SaleDelivery {
   /// is what the delivery adds. Never with [sendTo]: an area is one branch's own.
   final SaleDeliveryZone? zone;
 
+  /// The rider picked while the call was on, given it as soon as it is placed;
+  /// null to give it from Deliveries later. Never with [sendTo]: that branch has its own riders.
+  final SaleDeliveryRider? rider;
+
   const SaleDelivery({
     required this.address,
     required this.phone,
@@ -73,6 +77,7 @@ class SaleDelivery {
     this.longitude,
     this.sendTo,
     this.zone,
+    this.rider,
   });
 
   bool get hasPin => latitude != null && longitude != null;
@@ -98,6 +103,7 @@ class SaleDelivery {
         longitude: longitude,
         sendTo: clearSendTo ? null : sendTo ?? this.sendTo,
         zone: clearZone ? null : zone ?? this.zone,
+        rider: rider,
       );
 
   /// The same delivery, made here after all
@@ -138,6 +144,7 @@ class SaleDelivery {
         'longitude': longitude,
         'sendTo': sendTo?.toJson(),
         if (zone != null) 'zone': zone!.toJson(),
+        if (rider != null) 'rider': rider!.toJson(),
       };
 
   factory SaleDelivery.fromJson(Map<String, dynamic> json) => SaleDelivery(
@@ -152,7 +159,25 @@ class SaleDelivery {
         longitude: (json['longitude'] as num?)?.toDouble(),
         sendTo: json['sendTo'] is Map ? DeliveryAlternative.fromJson((json['sendTo'] as Map).cast<String, dynamic>()) : null,
         zone: json['zone'] is Map ? SaleDeliveryZone.fromJson((json['zone'] as Map).cast<String, dynamic>()) : null,
+        rider: json['rider'] is Map ? SaleDeliveryRider.fromJson((json['rider'] as Map).cast<String, dynamic>()) : null,
       );
+}
+
+/// One of the branch's riders, as the delivery form picked them
+class SaleDeliveryRider {
+  final String userId;
+  final String name;
+
+  const SaleDeliveryRider({required this.userId, required this.name});
+
+  factory SaleDeliveryRider.of(TillRider rider) => SaleDeliveryRider(userId: rider.userId, name: rider.name);
+
+  TillRider get asTillRider => TillRider(userId: userId, name: name);
+
+  Map<String, dynamic> toJson() => {'userId': userId, 'name': name};
+
+  factory SaleDeliveryRider.fromJson(Map<String, dynamic> json) =>
+      SaleDeliveryRider(userId: json['userId'] as String? ?? '', name: json['name'] as String? ?? '');
 }
 
 /// The branch the delivery goes to, as the quote for the pin now in the form

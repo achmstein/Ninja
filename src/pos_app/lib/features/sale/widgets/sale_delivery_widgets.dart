@@ -67,6 +67,21 @@ class DeliverySummary extends StatelessWidget {
                           ),
                       ],
                     ),
+                    if (sendToName == null && delivery.rider != null)
+                      Row(
+                        children: [
+                          Icon(FIcons.userRound, size: Sizes.iconSmall, color: theme.colors.foreground),
+                          const SizedBox(width: 4),
+                          Flexible(
+                            child: Text(
+                              l10n.deliveryForRiderName(delivery.rider!.name),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.typography.xs.copyWith(fontWeight: FontWeight.w500),
+                            ),
+                          ),
+                        ],
+                      ),
                     if (sendToName != null)
                       Row(
                         children: [

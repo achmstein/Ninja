@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../call_centre/call_centre_mode.dart';
+import '../../customers/services/customer_search_service.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
 
@@ -28,6 +29,13 @@ class DeliveryFormState {
   /// The named area the cashier picked by name, as the branch's list has it
   final DeliveryZone? picked;
 
+  /// With an area picked by name, the other area the pin itself falls in:
+  /// said to the cashier with a way to use it, never taken over quietly
+  final DeliveryZone? pinZone;
+
+  /// The customer account that has the number typed, when there is one
+  final IdentityUser? account;
+
   const DeliveryFormState({
     this.quote,
     this.quoteFor,
@@ -35,6 +43,8 @@ class DeliveryFormState {
     this.quoteFailed = false,
     this.known = const [],
     this.picked,
+    this.pinZone,
+    this.account,
   });
 
   /// The area the delivery goes to: the one picked by name, else the one the
@@ -54,6 +64,10 @@ class DeliveryFormState {
     bool clearQuote = false,
     DeliveryZone? picked,
     bool clearPicked = false,
+    DeliveryZone? pinZone,
+    bool clearPinZone = false,
+    IdentityUser? account,
+    bool clearAccount = false,
   }) =>
       DeliveryFormState(
         quote: clearQuote ? null : quote ?? this.quote,
@@ -62,6 +76,8 @@ class DeliveryFormState {
         quoteFailed: quoteFailed ?? this.quoteFailed,
         known: known ?? this.known,
         picked: clearPicked ? null : picked ?? this.picked,
+        pinZone: clearPinZone ? null : pinZone ?? this.pinZone,
+        account: clearAccount ? null : account ?? this.account,
       );
 
   /// The pin for what is in the field now: only when the branch answered
@@ -127,6 +143,7 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
       // The area picked, as the list has it now; taken off the list, the pick goes with it
       final picked = state.picked == null ? null : zoneById(quote.zones, state.picked!.zoneId);
       state = state.copyWith(quote: quote, quoteFor: asked, reading: false, quoteFailed: false, picked: picked, clearPicked: picked == null);
+      await _readPinZone(asked, ask);
     } catch (_) {
       if (!ref.mounted || ask != _asks) return;
       // Nothing known about this text: a pin from an earlier text must not stand in for it
@@ -134,10 +151,50 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
     }
   }
 
-  /// The phone field changed: the caller's earlier addresses, once the number is long enough
+  /// With an area picked by name the branch answers for that area: the pin's
+  /// own area is asked apart, so one that disagrees is said, not overruled
+  Future<void> _readPinZone(String asked, int ask) async {
+    final picked = state.picked;
+    if (picked == null || asked.isEmpty) {
+      if (state.pinZone != null) state = state.copyWith(clearPinZone: true);
+      return;
+    }
+    try {
+      final own = (await ref.read(deliveryRepositoryProvider).tillQuote(location: asked)).zone;
+      if (!ref.mounted || ask != _asks) return;
+      state = own != null && own.zoneId != picked.zoneId ? state.copyWith(pinZone: own) : state.copyWith(clearPinZone: true);
+    } catch (_) {
+      // Only a hint: without it the area picked stands
+    }
+  }
+
+  /// The phone field changed: the caller's earlier addresses and their
+  /// account, once the number is long enough
   void phoneChanged({required String? customerUserId, required String normalizedPhone}) {
     _phoneDebounce?.cancel();
-    _phoneDebounce = Timer(AppConfig.deliveryLookupDebounce, () => lookUpKnown(customerUserId: customerUserId, normalizedPhone: normalizedPhone));
+    _phoneDebounce = Timer(AppConfig.deliveryLookupDebounce, () {
+      unawaited(lookUpKnown(customerUserId: customerUserId, normalizedPhone: normalizedPhone));
+      if ((customerUserId ?? '').isEmpty) unawaited(lookUpAccount(normalizedPhone));
+    });
+  }
+
+  String _accountPhone = '';
+
+  /// The one customer account with this number, switched on: their name comes with it
+  Future<void> lookUpAccount(String normalizedPhone) async {
+    if (normalizedPhone == _accountPhone) return;
+    _accountPhone = normalizedPhone;
+    if (normalizedPhone.isEmpty) {
+      if (state.account != null) state = state.copyWith(clearAccount: true);
+      return;
+    }
+    try {
+      final match = (await ref.read(counterCustomerServiceProvider).lookup(phone: normalizedPhone)).match;
+      if (!ref.mounted || _accountPhone != normalizedPhone) return;
+      state = match != null && match.enabled ? state.copyWith(account: match) : state.copyWith(clearAccount: true);
+    } catch (_) {
+      // Only a convenience: the cashier types the name
+    }
   }
 
   Future<void> lookUpKnown({required String? customerUserId, required String normalizedPhone}) async {

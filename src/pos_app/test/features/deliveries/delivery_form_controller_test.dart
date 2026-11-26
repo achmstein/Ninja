@@ -127,6 +127,28 @@ void main() {
       expect(state.quote?.fee, 20);
     });
 
+    test('picked by name, a pin in another area is said beside it, never taken over', () async {
+      final (container, fake) = _container();
+      const inGarden = TillDeliveryQuote(delivers: true, fee: 15, latitude: 30.03, longitude: 31.23, zoneId: 12, zones: [degla, garden]);
+      fake.answers[a] = inGarden;
+      fake.zoneAnswers[11] = inDegla;
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      controller.pickZone(degla);
+      await pumpEventQueue();
+      await controller.readLocation(a);
+      var state = container.read(deliveryFormControllerProvider);
+      expect(state.zone?.zoneId, 11, reason: 'the area picked by name stands');
+      expect(state.pinZone?.zoneId, 12);
+
+      // The pin in the area picked: nothing to say
+      controller.pickZone(garden);
+      fake.zoneAnswers[12] = inGarden;
+      await pumpEventQueue();
+      await controller.readLocation(a);
+      state = container.read(deliveryFormControllerProvider);
+      expect(state.pinZone, isNull);
+    });
+
     test('a pin that falls in a drawn area pre-selects it, with no pick', () async {
       final (container, fake) = _container();
       fake.answers[a] = const TillDeliveryQuote(

@@ -309,8 +309,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
   /// Whether this sale goes out with a rider
   bool _delivering(SaleState sale) => _deliveryCharge(sale) == DeliveryCharge.ready;
 
-  /// The delivery form: the caller's address, number and name. A caller off
-  /// the street is known on the sale by the name they gave.
+  /// The delivery form: the caller's number, name and address. Who it is for
+  /// is said once, there: the account the number belongs to (or the one on
+  /// the sale already), else a caller off the street by the name they gave.
   Future<void> _openDeliveryForm() async {
     final sale = ref.read(saleProvider);
     final result = await showDeliveryFormDialog(
@@ -322,9 +323,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     if (result == null || !mounted) return;
     final notifier = ref.read(saleProvider.notifier);
     notifier.setDelivery(result.delivery);
-    if ((sale.customer?.id ?? '').isEmpty) {
-      notifier.setCustomer(SaleCustomer(name: result.name, phone: result.delivery.phone));
-    }
+    if ((result.customer.id ?? '').isNotEmpty || (sale.customer?.id ?? '').isEmpty) notifier.setCustomer(result.customer);
   }
 
   Future<void> _charge() async {
@@ -462,7 +461,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       // the caller collects, and the call centre goes on to the next caller
       ref.read(saleProvider.notifier).clear();
       _note.clear();
-      unawaited(ref.read(deliveriesProvider.notifier).refresh());
+      // The rider picked in the form is given it at once; without one it is given from Deliveries
+      final rider = !callCentre && sendTo == null && orderId != 0 ? delivery?.rider : null;
+      if (rider != null) {
+        final words = l10n;
+        unawaited(ref.read(deliveryActionsProvider).assign(orderId, rider.asTillRider).catchError((Object e) {
+          if (mounted) showPosToast(context, PosToastType.error, describeDeliveryError(e, words));
+        }));
+      } else {
+        unawaited(ref.read(deliveriesProvider.notifier).refresh());
+      }
       ref.read(openTicketsProvider.notifier).refresh();
       showPosToast(
         context,
@@ -473,6 +481,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                 ? l10n.callCentrePlaced(orderId, ref.read(branchProvider).selectedBranch?.name.localized(context) ?? '')
                 : sendTo != null
                 ? l10n.deliverySentTo(sendToName, orderId)
+                : rider != null
+                ? l10n.deliveryPlacedRider(rider.name)
                 : l10n.deliveryPlaced,
       );
       context.go('/');
@@ -648,7 +658,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     // the branch deliver; a round on an open bill never does
     final features = ref.watch(featuresProvider);
     final terms = !_addingToTicket && features.delivery ? ref.watch(tillDeliveryTermsProvider).value : null;
-    final canDeliver = terms?.delivers ?? false;
+    // The Delivery button wherever the business delivers, never hidden while the
+    // branch's terms are read: the form says when the branch doesn't deliver
+    final canDeliver = !_addingToTicket && features.delivery;
     final charge = synced ? _deliveryCharge(sale, watch: true, via: ref) : DeliveryCharge.none;
     final delivery = charge == DeliveryCharge.ready ? sale.delivery : null;
     // The fee of the branch that delivers it: this one, or the one it is sent to

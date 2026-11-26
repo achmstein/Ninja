@@ -4388,6 +4388,132 @@ abstract class AppLocalizations {
   /// **'Couldn\'t check delivery. Retry, or make it a counter sale.'**
   String get deliveryTermsUnknown;
 
+  /// No description provided for @deliveryNotHere.
+  ///
+  /// In en, this message translates to:
+  /// **'This branch doesn\'t deliver. Turn delivery on for it in the admin app.'**
+  String get deliveryNotHere;
+
+  /// No description provided for @deliveryStepWho.
+  ///
+  /// In en, this message translates to:
+  /// **'Who'**
+  String get deliveryStepWho;
+
+  /// No description provided for @deliveryStepWhere.
+  ///
+  /// In en, this message translates to:
+  /// **'Where'**
+  String get deliveryStepWhere;
+
+  /// No description provided for @deliveryStepCheck.
+  ///
+  /// In en, this message translates to:
+  /// **'Check and send'**
+  String get deliveryStepCheck;
+
+  /// No description provided for @deliveryNext.
+  ///
+  /// In en, this message translates to:
+  /// **'Next'**
+  String get deliveryNext;
+
+  /// No description provided for @deliverySameAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'Same address'**
+  String get deliverySameAddress;
+
+  /// No description provided for @deliveryNewAddress.
+  ///
+  /// In en, this message translates to:
+  /// **'New address'**
+  String get deliveryNewAddress;
+
+  /// No description provided for @deliveryKnownCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'A customer with an account'**
+  String get deliveryKnownCustomer;
+
+  /// No description provided for @deliveryMoreForRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Directions or a pin on the map (optional)'**
+  String get deliveryMoreForRider;
+
+  /// No description provided for @deliveryPinLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Pin on the map, for the rider'**
+  String get deliveryPinLabel;
+
+  /// No description provided for @deliveryPinOptional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional: the rider can go by the address alone.'**
+  String get deliveryPinOptional;
+
+  /// No description provided for @deliveryPinRemove.
+  ///
+  /// In en, this message translates to:
+  /// **'Remove the pin'**
+  String get deliveryPinRemove;
+
+  /// No description provided for @deliveryPinned.
+  ///
+  /// In en, this message translates to:
+  /// **'Pinned on the map'**
+  String get deliveryPinned;
+
+  /// No description provided for @deliveryPinInOtherArea.
+  ///
+  /// In en, this message translates to:
+  /// **'The map pin is in {area}, not the area picked.'**
+  String deliveryPinInOtherArea(String area);
+
+  /// No description provided for @deliveryUseArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Use {area}'**
+  String deliveryUseArea(String area);
+
+  /// No description provided for @deliveryNoAreaPicked.
+  ///
+  /// In en, this message translates to:
+  /// **'No area picked: the branch\'s usual fee applies.'**
+  String get deliveryNoAreaPicked;
+
+  /// No description provided for @deliveryPickArea.
+  ///
+  /// In en, this message translates to:
+  /// **'Pick the area'**
+  String get deliveryPickArea;
+
+  /// No description provided for @deliveryRiderLater.
+  ///
+  /// In en, this message translates to:
+  /// **'Later'**
+  String get deliveryRiderLater;
+
+  /// No description provided for @deliveryEdit.
+  ///
+  /// In en, this message translates to:
+  /// **'Change'**
+  String get deliveryEdit;
+
+  /// No description provided for @deliveryForRiderName.
+  ///
+  /// In en, this message translates to:
+  /// **'For {name}'**
+  String deliveryForRiderName(String name);
+
+  /// No description provided for @deliveryPlacedRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivery placed and given to {name}.'**
+  String deliveryPlacedRider(String name);
+
   /// No description provided for @deliveryNotOfferedNow.
   ///
   /// In en, this message translates to:

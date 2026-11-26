@@ -2556,6 +2556,79 @@ class AppLocalizationsAr extends AppLocalizations {
       'تعذّر التحقق من التوصيل. أعد المحاولة، أو اجعله بيعًا عاديًا.';
 
   @override
+  String get deliveryNotHere =>
+      'هذا الفرع لا يوفّر التوصيل. فعّل التوصيل له من تطبيق الإدارة.';
+
+  @override
+  String get deliveryStepWho => 'العميل';
+
+  @override
+  String get deliveryStepWhere => 'العنوان';
+
+  @override
+  String get deliveryStepCheck => 'راجع وأرسل';
+
+  @override
+  String get deliveryNext => 'التالي';
+
+  @override
+  String get deliverySameAddress => 'نفس العنوان';
+
+  @override
+  String get deliveryNewAddress => 'عنوان جديد';
+
+  @override
+  String get deliveryKnownCustomer => 'عميل له حساب';
+
+  @override
+  String get deliveryMoreForRider => 'وصف أو موقع على الخريطة (اختياري)';
+
+  @override
+  String get deliveryPinLabel => 'موقع على الخريطة للمندوب';
+
+  @override
+  String get deliveryPinOptional => 'اختياري: يكفي المندوب العنوان وحده.';
+
+  @override
+  String get deliveryPinRemove => 'إزالة الموقع';
+
+  @override
+  String get deliveryPinned => 'محدد على الخريطة';
+
+  @override
+  String deliveryPinInOtherArea(String area) {
+    return 'الموقع على الخريطة في $area، لا في المنطقة المختارة.';
+  }
+
+  @override
+  String deliveryUseArea(String area) {
+    return 'اعتمد $area';
+  }
+
+  @override
+  String get deliveryNoAreaPicked =>
+      'لم تُختر منطقة: تُطبّق رسوم الفرع المعتادة.';
+
+  @override
+  String get deliveryPickArea => 'اختر المنطقة';
+
+  @override
+  String get deliveryRiderLater => 'لاحقًا';
+
+  @override
+  String get deliveryEdit => 'غيّر';
+
+  @override
+  String deliveryForRiderName(String name) {
+    return 'مع $name';
+  }
+
+  @override
+  String deliveryPlacedRider(String name) {
+    return 'سُجّل طلب التوصيل وسُلّم إلى $name.';
+  }
+
+  @override
   String get deliveryNotOfferedNow =>
       'هذا الفرع لا يوفّر التوصيل الآن. أزل التوصيل لإتمام التحصيل.';
 

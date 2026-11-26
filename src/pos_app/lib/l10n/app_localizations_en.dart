@@ -2542,6 +2542,81 @@ class AppLocalizationsEn extends AppLocalizations {
       'Couldn\'t check delivery. Retry, or make it a counter sale.';
 
   @override
+  String get deliveryNotHere =>
+      'This branch doesn\'t deliver. Turn delivery on for it in the admin app.';
+
+  @override
+  String get deliveryStepWho => 'Who';
+
+  @override
+  String get deliveryStepWhere => 'Where';
+
+  @override
+  String get deliveryStepCheck => 'Check and send';
+
+  @override
+  String get deliveryNext => 'Next';
+
+  @override
+  String get deliverySameAddress => 'Same address';
+
+  @override
+  String get deliveryNewAddress => 'New address';
+
+  @override
+  String get deliveryKnownCustomer => 'A customer with an account';
+
+  @override
+  String get deliveryMoreForRider =>
+      'Directions or a pin on the map (optional)';
+
+  @override
+  String get deliveryPinLabel => 'Pin on the map, for the rider';
+
+  @override
+  String get deliveryPinOptional =>
+      'Optional: the rider can go by the address alone.';
+
+  @override
+  String get deliveryPinRemove => 'Remove the pin';
+
+  @override
+  String get deliveryPinned => 'Pinned on the map';
+
+  @override
+  String deliveryPinInOtherArea(String area) {
+    return 'The map pin is in $area, not the area picked.';
+  }
+
+  @override
+  String deliveryUseArea(String area) {
+    return 'Use $area';
+  }
+
+  @override
+  String get deliveryNoAreaPicked =>
+      'No area picked: the branch\'s usual fee applies.';
+
+  @override
+  String get deliveryPickArea => 'Pick the area';
+
+  @override
+  String get deliveryRiderLater => 'Later';
+
+  @override
+  String get deliveryEdit => 'Change';
+
+  @override
+  String deliveryForRiderName(String name) {
+    return 'For $name';
+  }
+
+  @override
+  String deliveryPlacedRider(String name) {
+    return 'Delivery placed and given to $name.';
+  }
+
+  @override
   String get deliveryNotOfferedNow =>
       'This branch doesn\'t deliver now. Remove the delivery to charge.';
 
