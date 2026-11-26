@@ -20,6 +20,7 @@ import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as StaysRouteImport } from './routes/stays'
 import { Route as AuthCallbackRouteImport } from './routes/auth/callback'
 import { Route as ItemItemIdRouteImport } from './routes/item/$itemId'
+import { Route as LTokenRouteImport } from './routes/l/$token'
 import { Route as PPlaceIdRouteImport } from './routes/p/$placeId'
 import { Route as PayKeyRouteImport } from './routes/pay/$key'
 import { Route as ReceiptsTicketIdRouteImport } from './routes/receipts/$ticketId'
@@ -80,6 +81,11 @@ const ItemItemIdRoute = ItemItemIdRouteImport.update({
   path: '/item/$itemId',
   getParentRoute: () => rootRouteImport,
 } as any)
+const LTokenRoute = LTokenRouteImport.update({
+  id: '/l/$token',
+  path: '/l/$token',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const PPlaceIdRoute = PPlaceIdRouteImport.update({
   id: '/p/$placeId',
   path: '/p/$placeId',
@@ -113,6 +119,7 @@ export interface FileRoutesByFullPath {
   '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/l/$token': typeof LTokenRoute
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
@@ -130,6 +137,7 @@ export interface FileRoutesByTo {
   '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/l/$token': typeof LTokenRoute
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
@@ -148,6 +156,7 @@ export interface FileRoutesById {
   '/stays': typeof StaysRoute
   '/auth/callback': typeof AuthCallbackRoute
   '/item/$itemId': typeof ItemItemIdRoute
+  '/l/$token': typeof LTokenRoute
   '/p/$placeId': typeof PPlaceIdRoute
   '/pay/$key': typeof PayKeyRoute
   '/receipts/$ticketId': typeof ReceiptsTicketIdRoute
@@ -167,6 +176,7 @@ export interface FileRouteTypes {
     | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/l/$token'
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
@@ -184,6 +194,7 @@ export interface FileRouteTypes {
     | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/l/$token'
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
@@ -201,6 +212,7 @@ export interface FileRouteTypes {
     | '/stays'
     | '/auth/callback'
     | '/item/$itemId'
+    | '/l/$token'
     | '/p/$placeId'
     | '/pay/$key'
     | '/receipts/$ticketId'
@@ -219,6 +231,7 @@ export interface RootRouteChildren {
   StaysRoute: typeof StaysRoute
   AuthCallbackRoute: typeof AuthCallbackRoute
   ItemItemIdRoute: typeof ItemItemIdRoute
+  LTokenRoute: typeof LTokenRoute
   PPlaceIdRoute: typeof PPlaceIdRoute
   PayKeyRoute: typeof PayKeyRoute
   ReceiptsTicketIdRoute: typeof ReceiptsTicketIdRoute
@@ -304,6 +317,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ItemItemIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/l/$token': {
+      id: '/l/$token'
+      path: '/l/$token'
+      fullPath: '/l/$token'
+      preLoaderRoute: typeof LTokenRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/p/$placeId': {
       id: '/p/$placeId'
       path: '/p/$placeId'
@@ -347,6 +367,7 @@ const rootRouteChildren: RootRouteChildren = {
   StaysRoute: StaysRoute,
   AuthCallbackRoute: AuthCallbackRoute,
   ItemItemIdRoute: ItemItemIdRoute,
+  LTokenRoute: LTokenRoute,
   PPlaceIdRoute: PPlaceIdRoute,
   PayKeyRoute: PayKeyRoute,
   ReceiptsTicketIdRoute: ReceiptsTicketIdRoute,
