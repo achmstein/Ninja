@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
+  Ellipsis,
   Loader2,
   Minus,
   Plus,
@@ -19,7 +20,6 @@ import {
 } from '@/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
@@ -40,8 +40,14 @@ import { SaleDeliverySummary } from './sale-delivery-summary'
 import { OrderTypeSwitch } from './order-type-switch'
 import { useBranchPriceCheck, type PriceReview } from './use-branch-price-check'
 import { useSaleDelivery } from './use-sale-delivery'
+import { useOpenBill } from './use-open-bill'
+import { billLabel } from '@/features/deliveries/delivery-format'
+import { StayStrip } from '@/features/places/stay-strip'
 import { stayRoster } from '@/features/places/status'
-import { useStay, useStayActions } from '@/features/places/use-places'
+import { useStayActions } from '@/features/places/use-places'
+import { totalWith } from '@/features/sending/bill'
+import { SendingLines } from '@/features/sending/sending-lines'
+import { LineRow, mergeIdenticalLines } from '@/features/ticket/bill-lines'
 import { useCallCentre } from '@/hooks/use-call-centre'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { getActiveBranchId } from '@/stores/branch-store'
@@ -185,6 +191,20 @@ function RailCategory({
         {count}
       </span>
     </button>
+  )
+}
+
+/** A quiet heading over a part of the bill: what is on it already, what is new */
+function SectionLabel({ children, accent = false }: { children: ReactNode; accent?: boolean }) {
+  return (
+    <div
+      className={cn(
+        'px-3 pt-2 pb-1 text-xs font-semibold tracking-wide uppercase',
+        accent ? 'text-primary' : 'text-muted-foreground',
+      )}
+    >
+      {children}
+    </div>
   )
 }
 
@@ -353,17 +373,19 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // for whose round this is, and somebody picked from the search who is not
   // in the room yet joins the roster right here — the cashier is telling us
   // they are there, and their share of the time will need a tab at settle
-  const ticketQuery = useQuery({
-    ...getTicketOptions({
-      path: { id: ticketId ?? 0 },
-      query: { 'api-version': API_VERSION },
-    }),
-    enabled: addingToTicket,
-  })
-  const roomSession = useStay(
-    ticketQuery.data?.sessionId,
-    ticketQuery.data?.sessionId != null,
-  )
+  // The bill itself is on this screen: what is on it already, what was just
+  // charged and is on its way, and the room's clock (use-open-bill)
+  const bill = useOpenBill(ticketId)
+  const ticketQuery = bill.query
+  const roomSession = bill.stay
+  const billLines = bill.ticket?.lines ?? []
+  // The bill went (discarded under the screen): back to the floor. Paid or
+  // voided: nothing more is rung onto it, its own page says the rest
+  useEffect(() => {
+    if (bill.gone) navigate({ to: '/' })
+    else if (bill.closed && ticketId !== undefined)
+      navigate({ to: '/ticket/$ticketId', params: { ticketId: String(ticketId) }, replace: true })
+  }, [bill.gone, bill.closed, ticketId, navigate])
   const roster = stayRoster(roomSession)
   const ownerId = (roomSession?.members ?? []).find(
     (m) => m.role === 'Owner',
@@ -532,6 +554,25 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const itemsTotal = saleTotal(lines)
   const total = itemsTotal + deliveryFee
   const count = saleCount(lines)
+  // An open bill's name (the table, the room, the tab) and what it comes to
+  // with the lines on their way and the ones being rung up now
+  const billTitle = bill.ticket
+    ? localized(bill.ticket.locationName) ||
+      billLabel(bill.ticket.label).text ||
+      t(bill.ticket.type === 'Room' ? 'room' : bill.ticket.type === 'Table' ? 'table' : 'counter')
+    : ''
+  const billTotal = bill.ticket
+    ? totalWith(bill.ticket, bill.onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0) + itemsTotal)
+    : null
+
+  // A phone shows the menu first; a bill with something on it opens on the
+  // bill instead, as its own page did. Once per bill
+  const openedFor = useRef<number | null>(null)
+  useEffect(() => {
+    if (!isMobile || ticketId === undefined || !bill.ticket || openedFor.current === ticketId) return
+    openedFor.current = ticketId
+    if ((bill.ticket.lines ?? []).length > 0) setOrderOpen(true)
+  }, [isMobile, ticketId, bill.ticket])
 
   // The sale's rows by line, so the one just rung up can be scrolled to
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
@@ -761,7 +802,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       requestIdRef.current = null
       clear()
       if (target != null) {
-        navigate({ to: '/ticket/$ticketId', params: { ticketId: String(target) } })
+        // The bill is this screen: the lines just charged show on it, faded
+        // until the server has them, and the next round can be rung up at once.
+        // The customer stays: the next round is most likely theirs too
+        if (customer) setCustomer(customer)
       } else {
         navigate({ to: '/ticket/sending/$requestId', params: { requestId } })
       }
@@ -831,26 +875,54 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           the two rules under them meet in one line */}
       <div className='flex shrink-0 items-center gap-2 border-b px-3 py-2 max-md:pe-14'>
         <SaleHeading className='flex min-w-0 flex-1 items-baseline gap-2 text-lg font-bold'>
-          <span className='truncate'>{t('currentSale')}</span>
-          {count > 0 && (
-            <span className='text-muted-foreground shrink-0 text-sm font-medium'>
-              {t('linesCount', { count })}
+          {/* An open bill is named for where it is: the table, the room, the tab */}
+          <span className='truncate'>{addingToTicket ? billTitle : t('currentSale')}</span>
+          {addingToTicket ? (
+            <span className='text-muted-foreground shrink-0 text-sm font-medium tabular-nums' dir='ltr'>
+              #{ticketId}
             </span>
+          ) : (
+            count > 0 && (
+              <span className='text-muted-foreground shrink-0 text-sm font-medium'>
+                {t('linesCount', { count })}
+              </span>
+            )
           )}
         </SaleHeading>
-        <Button
-          variant='ghost'
-          size='icon'
-          className='size-12'
-          aria-label={t('clearSale')}
-          disabled={lines.length === 0 && !customer && !note && !delivery}
-          onClick={clear}
-        >
-          <Trash2 className='size-5' />
-        </Button>
+        {/* The rest a bill can do (discount, split, print, void) lives on its own page */}
+        {addingToTicket && (
+          <Button asChild variant='ghost' size='icon' className='size-12' aria-label={t('billDetails')}>
+            <Link to='/ticket/$ticketId' params={{ ticketId: String(ticketId) }}>
+              <Ellipsis className='size-5' />
+            </Link>
+          </Button>
+        )}
+        {(!addingToTicket || lines.length > 0) && (
+          <Button
+            variant='ghost'
+            size='icon'
+            className='size-12'
+            aria-label={t('clearSale')}
+            disabled={lines.length === 0 && (addingToTicket || (!customer && !note && !delivery))}
+            onClick={() => {
+              // On a bill only what was not sent yet goes: who it is for stays
+              const who = addingToTicket ? customer : null
+              clear()
+              if (who) setCustomer(who)
+            }}
+          >
+            <Trash2 className='size-5' />
+          </Button>
+        )}
       </div>
 
-      <div className='border-b px-3 py-2'>
+      <div className='border-b px-3 py-2 empty:hidden'>
+        {/* The room's clock, one line: always in sight, the rest a tap away */}
+        {bill.runningStay && (
+          <div className='mb-2'>
+            <StayStrip stay={bill.runningStay} />
+          </div>
+        )}
         {/* What kind of order: decided first, and always in sight */}
         {saleDelivery.canOffer && (
           <div className='mb-2'>
@@ -922,6 +994,26 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       </div>
 
       <div className='min-h-0 flex-1 overflow-y-auto'>
+        {/* What is on the bill already, quieter than what is being rung up now */}
+        {addingToTicket && (billLines.length > 0 || bill.mySends.length > 0) && (
+          <div className='pb-1'>
+            <SectionLabel>{t('onTheBill')}</SectionLabel>
+            <div className='flex flex-col divide-y opacity-80'>
+              {mergeIdenticalLines(billLines).map((line) => (
+                <LineRow
+                  key={String(line.id)}
+                  line={line}
+                  selecting={false}
+                  selected={false}
+                  onToggle={() => {}}
+                  landed={bill.landed.includes(toNumber(line.orderId))}
+                />
+              ))}
+            </div>
+            <SendingLines sends={bill.mySends} />
+          </div>
+        )}
+        {addingToTicket && lines.length > 0 && <SectionLabel accent>{t('newItems')}</SectionLabel>}
         {lines.length === 0 ? null : (
           <div className='flex flex-col divide-y'>
             {lines.map((line) => (
@@ -980,33 +1072,68 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </span>
           </div>
         )}
-        <Input
-          value={note}
-          onChange={(e) => setNote(e.target.value)}
-          placeholder={t('orderNoteOptional')}
-          className='h-12 text-base'
-          autoComplete='off'
-        />
-        <Button
-          size='lg'
-          className='h-14 w-full justify-between px-5 text-lg'
-          disabled={
-            lines.length === 0 ||
-            placeOrder.isPending ||
-            // A delivery waits for its terms rather than going out as a counter sale
-            (delivering && saleDelivery.readiness !== 'ready')
-          }
-          onClick={charge}
-        >
-          <span>
-            {addingToTicket
-              ? t('addToTicket')
-              : delivering
-                ? t('deliverySend')
-                : t('chargeAction')}
-          </span>
-          <span className='tabular-nums'>{money(total)}</span>
-        </Button>
+        {/* What the whole bill comes to, with what is being rung up now */}
+        {addingToTicket && billTotal != null && (
+          <div className='flex items-baseline justify-between'>
+            <span className='text-muted-foreground text-sm'>{t('total')}</span>
+            <span className='text-2xl font-bold tabular-nums'>{money(billTotal)}</span>
+          </div>
+        )}
+        {(!addingToTicket || lines.length > 0) && (
+          <Input
+            value={note}
+            onChange={(e) => setNote(e.target.value)}
+            placeholder={t('orderNoteOptional')}
+            className='h-12 text-base'
+            autoComplete='off'
+          />
+        )}
+        {addingToTicket && lines.length === 0 ? (
+          // Nothing new to send: the bill's next step is its payment (its
+          // page takes it, with its guards: a running clock, orders waiting)
+          <Button
+            size='lg'
+            className='h-14 w-full text-lg'
+            disabled={billLines.length === 0 || bill.mySends.length > 0}
+            onClick={() =>
+              navigate({
+                to: '/ticket/$ticketId',
+                params: { ticketId: String(ticketId) },
+                search: { settle: true },
+              })
+            }
+          >
+            {bill.onTheirWay.length > 0 ? (
+              <>
+                <Loader2 className='size-5 animate-spin' />
+                {t('confirming')}
+              </>
+            ) : (
+              t('settleAction')
+            )}
+          </Button>
+        ) : (
+          <Button
+            size='lg'
+            className='h-14 w-full justify-between px-5 text-lg'
+            disabled={
+              lines.length === 0 ||
+              placeOrder.isPending ||
+              // A delivery waits for its terms rather than going out as a counter sale
+              (delivering && saleDelivery.readiness !== 'ready')
+            }
+            onClick={charge}
+          >
+            <span>
+              {addingToTicket
+                ? t('sendNewItems', { count })
+                : delivering
+                  ? t('deliverySend')
+                  : t('chargeAction')}
+            </span>
+            <span className='tabular-nums'>{money(total)}</span>
+          </Button>
+        )}
       </div>
     </>
   )
@@ -1022,19 +1149,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             size='icon'
             className='size-12 shrink-0'
           >
-            {addingToTicket ? (
-              <Link
-                to='/ticket/$ticketId'
-                params={{ ticketId: String(ticketId) }}
-                aria-label={t('backToTicket')}
-              >
-                <BackIcon className='size-6' />
-              </Link>
-            ) : (
-              <Link to='/' aria-label={t('backToFloor')}>
-                <BackIcon className='size-6' />
-              </Link>
-            )}
+            {/* The bill is this screen now, so Back is always the floor */}
+            <Link to='/' aria-label={t('backToFloor')}>
+              <BackIcon className='size-6' />
+            </Link>
           </Button>
           {searchOpen || rail ? (
             <div className='relative min-w-0 flex-1'>

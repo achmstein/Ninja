@@ -237,10 +237,8 @@ export function PlacePanel({
                     className='h-12'
                     onClick={() => {
                       close()
-                      navigate({
-                        to: '/ticket/$ticketId',
-                        params: { ticketId: String(toNumber(ticket.id)) },
-                      })
+                      // The bill opens as the sale screen, its lines beside the menu
+                      navigate({ to: '/sale', search: { ticket: toNumber(ticket.id) } })
                     }}
                   >
                     <Receipt className='size-5' />

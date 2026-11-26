@@ -233,11 +233,16 @@ export function Floor() {
     },
   })
 
+  // An open bill opens as the sale screen, its lines beside the menu: the
+  // next round is one tap, and Settle is at its foot. A delivery's bill is
+  // never added to, so it opens on its own page
   const toTicket = (ticket: TicketSummary) =>
-    navigate({
-      to: '/ticket/$ticketId',
-      params: { ticketId: String(toNumber(ticket.id)) },
-    })
+    billLabel(ticket.label).delivery
+      ? navigate({
+          to: '/ticket/$ticketId',
+          params: { ticketId: String(toNumber(ticket.id)) },
+        })
+      : navigate({ to: '/sale', search: { ticket: toNumber(ticket.id) } })
 
   useEffect(() => {
     if (startedPlaceId == null) return

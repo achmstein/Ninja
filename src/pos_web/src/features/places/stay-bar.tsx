@@ -5,6 +5,7 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 import { RateOptionToggle } from './rate-option-toggle'
 import { StayMembers } from './stay-members'
 import {
@@ -28,7 +29,14 @@ import { useSecondsClock, useStayActions } from './use-places'
  * are listed and added right here, and the clock stops from here. On the
  * bill itself, customers go on lines with the ticket's own Assign customer.
  */
-export function StayBar({ stay }: { stay: StayViewModel }) {
+export function StayBar({
+  stay,
+  clock = true,
+}: {
+  stay: StayViewModel
+  /** False where the clock is already said above it (the order's one-line strip) */
+  clock?: boolean
+}) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
@@ -54,11 +62,11 @@ export function StayBar({ stay }: { stay: StayViewModel }) {
           the time (the clock leads, the money answers on one line under
           it), the rate, the people; then the way to end it */}
       <div className='flex flex-col gap-6'>
-        <div className='min-w-0'>
-          <div className='text-3xl leading-[1.4] font-bold tabular-nums'>
+        <div className={cn('min-w-0', !clock && used.length <= 1 && 'hidden')}>
+          <div className={cn('text-3xl leading-[1.4] font-bold tabular-nums', !clock && 'hidden')}>
             {formatClock(elapsedSeconds(stay, now))}
           </div>
-          <div className='text-muted-foreground truncate text-base tabular-nums'>
+          <div className={cn('text-muted-foreground truncate text-base tabular-nums', !clock && 'hidden')}>
             ≈ {money(estimate.amount)} · {hoursLabel}
           </div>
           {used.length > 1 && (
