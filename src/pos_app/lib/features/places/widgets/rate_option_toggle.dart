@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../models/place.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Segmented picker over a tariff's rate options — the Single/Multi toggle
 /// the tills always had, now one button per option, sized for a thumb.
@@ -58,7 +58,7 @@ class RateOptionToggle extends StatelessWidget {
                   children: [
                     if (rates?[option.code] case final rate?)
                       Text(rate,
-                          style: theme.typography.label.copyWith(
+                          style: theme.type.detail.copyWith(
                             color: value == option.code
                                 ? theme.colors.primaryForeground.withValues(alpha: 0.8)
                                 : theme.colors.mutedForeground,
@@ -73,7 +73,7 @@ class RateOptionToggle extends StatelessWidget {
                 child: Text(option.name.localized(context),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.body.forButton
+                    style: theme.type.button
                         .copyWith(fontWeight: value == option.code ? FontWeight.w600 : FontWeight.w400)),
               ),
             ),
@@ -96,12 +96,12 @@ class RateOptionToggle extends StatelessWidget {
                 child: Text.rich(
                   TextSpan(
                     text: option.name.localized(context),
-                    style: theme.typography.base.forButton,
+                    style: theme.type.button,
                     children: [
                       if (rates?[option.code] case final rate?)
                         TextSpan(
                           text: ' · $rate',
-                          style: theme.typography.sm.copyWith(
+                          style: theme.type.detail.copyWith(
                             color: value == option.code
                                 ? theme.colors.primaryForeground.withValues(alpha: 0.8)
                                 : theme.colors.mutedForeground,

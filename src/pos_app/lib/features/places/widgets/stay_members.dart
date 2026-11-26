@@ -4,11 +4,11 @@ import 'package:forui/forui.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../models/place.dart';
 import '../stay_actions.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Who is in the room: the owner starred, members removable, and a dashed
 /// chip to add the next one. Members' phone orders land on the bill and
@@ -47,7 +47,7 @@ class _StayMembersState extends ConsumerState<StayMembers> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final session = widget.session;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
 
     return Wrap(
       crossAxisAlignment: WrapCrossAlignment.center,
@@ -67,7 +67,7 @@ class _StayMembersState extends ConsumerState<StayMembers> {
                 const SizedBox(width: 6),
                 FTappable(
                   onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
-                  child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                  child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.type.detail),
                 ),
                 if (!member.isOwner) ...[
                   const SizedBox(width: 4),
@@ -99,7 +99,7 @@ class _StayMembersState extends ConsumerState<StayMembers> {
             mainAxisSize: MainAxisSize.min,
             onPress: _busy ? null : _addMember,
             prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-            child: Text(l10n.addCustomer, style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
+            child: Text(l10n.addCustomer, style: theme.type.buttonSmall.copyWith(color: theme.colors.mutedForeground)),
           ),
         ),
       ],

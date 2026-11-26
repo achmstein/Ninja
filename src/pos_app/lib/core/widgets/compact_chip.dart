@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
+import '../theme/type_roles.dart';
 
 /// A header chip on a phone: its sign alone in a 48 dp square, as pos_web's
 /// chips are below `sm`, because four labelled chips are wider than the
@@ -55,7 +56,7 @@ class CompactChip extends StatelessWidget {
                     const SizedBox(width: 6),
                     Text(
                       '$count',
-                      style: theme.typography.sm.copyWith(
+                      style: theme.type.detail.copyWith(
                         fontWeight: FontWeight.w600,
                         color: countColor ?? theme.colors.foreground,
                         fontFeatures: const [FontFeature.tabularFigures()],

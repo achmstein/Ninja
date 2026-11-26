@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -15,6 +14,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../tenders.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// A settled bill's payment recorded under the wrong tender — Cash typed
 /// in when the customer paid by InstaPay — put right: the other two of
@@ -84,10 +84,10 @@ class _ChangeTenderDialogState extends ConsumerState<_ChangeTenderDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.changeTenderTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.changeTenderTitle, style: theme.type.title),
           const SizedBox(height: 4),
           Text(l10n.changeTenderHint(money(context, payment.amount), tenderLabel(l10n, payment.tender)),
-              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -102,7 +102,7 @@ class _ChangeTenderDialogState extends ConsumerState<_ChangeTenderDialog> {
                       prefix: _pending == tender
                           ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2))
                           : Icon(tenderIcon(tender), size: Sizes.icon),
-                      child: Text(tenderLabel(l10n, tender), style: theme.typography.base.forButton),
+                      child: Text(tenderLabel(l10n, tender), style: theme.type.button),
                     ),
                   ),
                 ),
@@ -119,7 +119,7 @@ class _ChangeTenderDialogState extends ConsumerState<_ChangeTenderDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending != null ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
             ],

@@ -5,12 +5,12 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/status.dart';
 import '../models/service_request.dart';
 import '../providers/service_requests_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Live room requests waiting on staff — call a waiter, change a
 /// controller, bring the bill, switch player mode. A strip on the floor,
@@ -69,7 +69,7 @@ class _ServiceRequestsStripState extends ConsumerState<ServiceRequestsStrip> {
           children: [
             Icon(FIcons.bell, size: Sizes.icon, color: amber),
             const SizedBox(width: 8),
-            Text(l10n.serviceRequests, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.serviceRequests, style: theme.type.heading),
             const SizedBox(width: 8),
             FBadge(child: Text('${requests.length}', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]))),
           ],
@@ -170,14 +170,14 @@ class _RequestCard extends StatelessWidget {
                           child: Text(room,
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                              style: theme.type.heading),
                         ),
                       ],
                     ),
                     Text('$label · ${relativeTime(context, l10n, request.createdAt, now)}',
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                   ],
                 ),
               ),
@@ -200,7 +200,7 @@ class _RequestCard extends StatelessWidget {
                         l10n.acknowledgeRequest,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.typography.sm.forButton,
+                        style: theme.type.buttonSmall,
                       ),
                     ),
                   ),
@@ -213,7 +213,7 @@ class _RequestCard extends StatelessWidget {
                   height: Sizes.control,
                   child: FButton(
                     onPress: acting ? null : onDone,
-                    child: Text(l10n.done, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.forButton),
+                    child: Text(l10n.done, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.buttonSmall),
                   ),
                 ),
               ),

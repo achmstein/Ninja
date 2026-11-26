@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/numeric_keypad.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// A labelled read-only amount box over the keypad — the only way to type
 /// money on the till (no OS keyboard). Shared by the open-shift,
@@ -19,7 +20,7 @@ class AmountEntry extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+        Text(label, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         Container(
           // Sized to the figure: a taller box looked like an empty field around it

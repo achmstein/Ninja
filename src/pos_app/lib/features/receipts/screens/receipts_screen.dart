@@ -16,6 +16,7 @@ import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel
 import '../../receipt/receipt_preview_dialog.dart';
 import '../../tickets/models/settled_ticket_summary.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 const _pageSize = 50;
 const _searchDebounce = Duration(milliseconds: 250);
@@ -161,7 +162,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Text(l10n.receipts, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                    Text(l10n.receipts, style: theme.type.title),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -197,7 +198,7 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 64),
                     child: Text(_failed ? l10n.somethingWentWrong : l10n.noReceipts,
                         textAlign: TextAlign.center,
-                        style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                        style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                   )
                 else
                   Container(
@@ -265,7 +266,7 @@ class _ReceiptRow extends StatelessWidget {
           SizedBox(
             width: 56,
             child: Text(hashNumber(bill.receiptNumber),
-                style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                style: theme.type.heading.copyWith(fontFeatures: tabular)),
           ),
           Icon(ticketTypeIcon(bill.type), size: Sizes.icon, color: theme.colors.mutedForeground),
           const SizedBox(width: 12),
@@ -277,17 +278,17 @@ class _ReceiptRow extends StatelessWidget {
                 Text(title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                    style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                 Text(meta,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                    style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
               ],
             ),
           ),
           const SizedBox(width: 12),
           Text(money(context, bill.total),
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+              style: theme.type.heading.copyWith(fontFeatures: tabular)),
           const SizedBox(width: 8),
           Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),
         ],

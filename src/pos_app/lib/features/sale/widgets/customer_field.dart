@@ -4,11 +4,11 @@ import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../customers/providers/customer_providers.dart';
 import '../models/sale_line.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// "Choose customer (optional)": the way into the customer picker wherever
 /// a sale or a bill can be for someone — the sale pad and the new-bill
@@ -33,12 +33,12 @@ class ChooseCustomerButton extends StatelessWidget {
         child: Text.rich(
           TextSpan(
             text: l10n.chooseCustomer,
-            style: theme.typography.base.forButton,
+            style: theme.type.button,
             children: [
               if (showOptional)
                 TextSpan(
                   text: ' (${l10n.optional})',
-                  style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground),
+                  style: theme.type.button.copyWith(color: theme.colors.mutedForeground),
                 ),
             ],
           ),
@@ -63,7 +63,7 @@ class SelectedCustomerChip extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final name = Text(customer.name,
-        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500));
+        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(fontWeight: FontWeight.w500));
     return Container(
       padding: const EdgeInsetsDirectional.fromSTEB(12, 4, 4, 4),
       decoration: BoxDecoration(
@@ -125,6 +125,6 @@ class _CustomerPointsLine extends ConsumerWidget {
     return Text(text,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]));
+        style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]));
   }
 }

@@ -4,10 +4,10 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/money.dart';
 import 'sending.dart';
+import '../theme/type_roles.dart';
 
 /// Lines the cashier has charged that the server has not confirmed yet,
 /// laid out as the bill's own rows. On their way they read a little faded,
@@ -92,9 +92,9 @@ class _SendBlock extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(l10n.notSent,
-                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+                          style: theme.type.heading.copyWith(color: theme.colors.destructive)),
                       if ((send.error ?? '').isNotEmpty)
-                        Text(send.error!, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        Text(send.error!, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                     ],
                   ),
                 ),
@@ -106,7 +106,7 @@ class _SendBlock extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => notifier.drop(send.requestId),
                     prefix: const Icon(FIcons.trash2, size: Sizes.iconSmall),
-                    child: Text(l10n.remove, style: theme.typography.sm.forButton),
+                    child: Text(l10n.remove, style: theme.type.buttonSmall),
                   ),
                 ),
                 const SizedBox(width: 8),
@@ -116,7 +116,7 @@ class _SendBlock extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => notifier.send(send.requestId),
                     prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
-                    child: Text(l10n.retrySync, style: theme.typography.sm.forButton),
+                    child: Text(l10n.retrySync, style: theme.type.buttonSmall),
                   ),
                 ),
               ],
@@ -173,7 +173,7 @@ class _SendRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
     final options = details?.localized(context) ?? '';
     return Container(
@@ -187,7 +187,7 @@ class _SendRow extends StatelessWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name.localized(context),
-                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                 if (options.isNotEmpty) Text(options, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
                 // On its way it breathes (no mark); a reader is told in words
                 Semantics(
@@ -200,8 +200,7 @@ class _SendRow extends StatelessWidget {
           const SizedBox(width: 12),
           Text(
             money(context, price * quantity),
-            style: theme.typography.lg.copyWith(
-              fontWeight: FontWeight.w600,
+            style: theme.type.heading.copyWith(
               color: failed ? theme.colors.mutedForeground : null,
               decoration: failed ? TextDecoration.lineThrough : null,
               fontFeatures: tabular,

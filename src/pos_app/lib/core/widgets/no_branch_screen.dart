@@ -5,7 +5,7 @@ import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
+import '../theme/type_roles.dart';
 
 /// Shown instead of the screens when the signed-in account is assigned to no
 /// branch: membership travels in the token (the `branches` claim), and an
@@ -29,9 +29,9 @@ class NoBranchScreen extends ConsumerWidget {
             children: [
               Icon(FIcons.store, size: Sizes.iconHero, color: muted),
               const SizedBox(height: 16),
-              Text(l10n.noBranchTitle, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700), textAlign: TextAlign.center),
+              Text(l10n.noBranchTitle, style: theme.type.title, textAlign: TextAlign.center),
               const SizedBox(height: 8),
-              Text(l10n.noBranchDescription, style: theme.typography.base.copyWith(color: muted), textAlign: TextAlign.center),
+              Text(l10n.noBranchDescription, style: theme.type.body.copyWith(color: muted), textAlign: TextAlign.center),
               const SizedBox(height: 24),
               Row(
                 mainAxisSize: MainAxisSize.min,
@@ -47,7 +47,7 @@ class NoBranchScreen extends ConsumerWidget {
                         await ref.read(branchProvider.notifier).refresh();
                       },
                       prefix: const Icon(FIcons.refreshCw, size: Sizes.icon),
-                      child: Text(l10n.retry, style: theme.typography.base.forButton),
+                      child: Text(l10n.retry, style: theme.type.button),
                     ),
                   ),
                   const SizedBox(width: 12),
@@ -58,7 +58,7 @@ class NoBranchScreen extends ConsumerWidget {
                       mainAxisSize: MainAxisSize.min,
                       onPress: ref.read(authServiceProvider.notifier).signOut,
                       prefix: const Icon(FIcons.logOut, size: Sizes.icon),
-                      child: Text(l10n.signOut, style: theme.typography.base.forButton),
+                      child: Text(l10n.signOut, style: theme.type.button),
                     ),
                   ),
                 ],

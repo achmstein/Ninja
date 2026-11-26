@@ -19,7 +19,6 @@ import '../../../core/offline/offline_sale.dart';
 import '../../../core/sending/sending.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/services/branch_names.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
@@ -70,6 +69,7 @@ import '../widgets/part_payment_sheet.dart';
 import '../widgets/pay_who_sheet.dart';
 import '../widgets/sale_order_panel.dart';
 import '../widgets/send_sheet.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The attached customer's usuals, shown as a category of their own
 const _usualsCategory = -1;
@@ -769,7 +769,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
   /// through the same two the phone's order sheet does
   Future<void> _openSendSheet() => showPosDialog<void>(
         context,
-        maxWidth: 560,
+        size: DialogSize.lg,
         builder: (_) => ListenableBuilder(
           listenable: _padChanged,
           builder: (context, _) => Consumer(
@@ -853,7 +853,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
               child: Flexible(
                 child: FittedBox(
                   fit: BoxFit.scaleDown,
-                  child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+                  child: Text(label, maxLines: 1, style: theme.type.button),
                 ),
               ),
             ),
@@ -868,7 +868,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
           children: [
             Expanded(
               child: Text(l10n.selectedLinesCount(count),
-                  style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+                  style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
             ),
             SizedBox(
               height: Sizes.control,
@@ -876,7 +876,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                 variant: FButtonVariant.ghost,
                 mainAxisSize: MainAxisSize.min,
                 onPress: _stopPicking,
-                child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                child: Text(l10n.cancel, style: theme.type.button),
               ),
             ),
           ],
@@ -1314,7 +1314,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
             prefix: usual ? const Icon(FIcons.sparkles, size: Sizes.iconSmall) : null,
-            child: Text(label, style: theme.typography.base.forButton),
+            child: Text(label, style: theme.type.button),
           ),
         );
     final chips = [
@@ -1486,7 +1486,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                 crossAxisCount: columns,
                                 mainAxisSpacing: gap,
                                 crossAxisSpacing: gap,
-                                mainAxisExtent: tileWidth + 62,
+                                mainAxisExtent: tileWidth + 78,
                               ),
                               itemCount: columns * 3,
                               itemBuilder: (_, _) => DecoratedBox(
@@ -1527,7 +1527,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                           );
                         },
                       ),
-                      error: (_, _) => Center(child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground))),
+                      error: (_, _) => Center(child: Text(l10n.somethingWentWrong, style: theme.type.body.copyWith(color: theme.colors.mutedForeground))),
                       data: (items) {
                         final visible = needle.isNotEmpty
                             // A search runs across every category, in either language
@@ -1543,7 +1543,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                         if (visible.isEmpty) {
                           return Center(
                             child: Text(needle.isNotEmpty ? l10n.noItemsMatch : l10n.noItemsInCategory,
-                                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                                style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                           );
                         }
                         return LayoutBuilder(
@@ -1572,8 +1572,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                 crossAxisCount: columns < 1 ? 1 : columns,
                                 mainAxisSpacing: gap,
                                 crossAxisSpacing: gap,
-                                // Square picture plus two text lines
-                                mainAxisExtent: tileWidth + 62,
+                                // Square picture, then the name's two lines and the price's one (20 each), the padding and the gap
+                                mainAxisExtent: tileWidth + 78,
                               ),
                               itemCount: visible.length,
                               itemBuilder: (context, index) => ItemTile(item: visible[index], onTap: () => _tapItem(visible[index])),
@@ -1598,7 +1598,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                           onPress: _openOrderSheet,
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           suffix: Text(money(context, order.total),
-                              style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                              style: theme.type.mainAction.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
                           child: Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
@@ -1613,16 +1613,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                   ),
                                   child: Text(
                                     '${saleCount(lines)}',
-                                    style: theme.typography.sm.copyWith(
+                                    style: theme.type.detail.copyWith(
                                       color: theme.colors.primary,
-                                      fontWeight: FontWeight.w700,
+                                      fontWeight: FontWeight.w600,
                                       fontFeatures: const [FontFeature.tabularFigures()],
                                     ),
                                   ),
                                 ),
                                 const SizedBox(width: 8),
                               ],
-                              Text(l10n.viewOrder, style: theme.typography.base.forButton.copyWith(fontWeight: FontWeight.w600)),
+                              Text(l10n.viewOrder, style: theme.type.button.copyWith(fontWeight: FontWeight.w600)),
                             ],
                           ),
                         ),
@@ -1654,7 +1654,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                   children: [
                     const SizedBox.square(dimension: 40, child: CircularProgressIndicator(strokeWidth: 3)),
                     const SizedBox(height: 12),
-                    Text(l10n.sendingToKitchen, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                    Text(l10n.sendingToKitchen, style: theme.type.heading),
                   ],
                 ),
               ),
@@ -1743,13 +1743,13 @@ class _RailCategory extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 textDirection: textDirectionFor(entry.name),
                 textAlign: textAlignFor(context),
-                style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: ink),
+                style: theme.type.detail.copyWith(fontWeight: FontWeight.w500, color: ink),
               ),
             ),
             const SizedBox(width: 8),
             Text(
               '${entry.count}',
-              style: theme.typography.xs.copyWith(
+              style: theme.type.caption.copyWith(
                 color: active ? theme.colors.primaryForeground.withValues(alpha: 0.8) : theme.colors.mutedForeground,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),

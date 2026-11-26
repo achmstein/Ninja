@@ -4,6 +4,7 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// How good a delivery's pin is, in the till's words: the door itself (the
 /// customer's, or where a rider found it before), near it (a map search), or
@@ -48,7 +49,7 @@ class PinQualityLabel extends StatelessWidget {
         ),
         const SizedBox(width: 6),
         Flexible(
-          child: Text(pinQualityText(l10n, quality), style: theme.typography.sm.copyWith(color: color, fontWeight: FontWeight.w600)),
+          child: Text(pinQualityText(l10n, quality), style: theme.type.detail.copyWith(color: color, fontWeight: FontWeight.w600)),
         ),
       ],
     );

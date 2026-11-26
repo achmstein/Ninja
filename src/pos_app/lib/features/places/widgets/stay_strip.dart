@@ -7,6 +7,7 @@ import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../status.dart';
 import 'stay_bar.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The room's running clock as one line at the top of the order: how long
 /// and about how much, always in sight while items are rung up. A tap opens
@@ -70,19 +71,19 @@ class _StayStripState extends State<StayStrip> {
                     Icon(FIcons.timer, size: Sizes.icon, color: theme.colors.primary),
                     const SizedBox(width: 8),
                     Text(formatClock(session.elapsedSeconds(now)),
-                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                        style: theme.type.heading.copyWith(fontFeatures: tabular)),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text('≈ ${money(context, session.estimate(now).amount)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.typography.sm.copyWith(color: muted, fontFeatures: tabular)),
+                          style: theme.type.detail.copyWith(color: muted, fontFeatures: tabular)),
                     ),
                     const SizedBox(width: 8),
                     // What the tap opens, said in a few words; the clock and the money never give way to it
                     Flexible(
                       child: Text(l10n.roomMore,
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.xs.copyWith(color: muted)),
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.caption.copyWith(color: muted)),
                     ),
                     const SizedBox(width: 4),
                     Icon(_open ? FIcons.chevronUp : FIcons.chevronDown, size: Sizes.iconSmall, color: muted),

@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
 import '../tenders.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The tender buttons, three to a row (two when Account joins). Shared by
 /// the settle dialog and the tab-payment dialog.
@@ -38,7 +38,7 @@ class TenderGrid extends StatelessWidget {
                     child: FButton(
                       variant: tender == selected ? null : FButtonVariant.outline,
                       onPress: () => onSelect(tender),
-                      child: Text(tenderLabel(l10n, tender), style: theme.typography.base.forButton),
+                      child: Text(tenderLabel(l10n, tender), style: theme.type.button),
                     ),
                   ),
                 ),

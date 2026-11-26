@@ -5,13 +5,13 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/shifts_provider.dart';
 import '../services/shifts_service.dart';
 import '../widgets/amount_entry.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Opens the branch's drawer shift with the counted opening float. A float
 /// of exactly 0 is legitimate, so the cashier must type something — even a
@@ -23,7 +23,6 @@ Future<bool> showOpenShiftDialog(BuildContext context) async {
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => const _OpenShiftDialog(),
     ),
   );
@@ -77,12 +76,11 @@ class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.openShiftTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.openShiftTitle, style: theme.type.title),
           const SizedBox(height: 16),
           AmountEntry(label: l10n.openingFloat, value: _amount, onChange: (v) => setState(() => _amount = v)),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          DialogActions(
             children: [
               SizedBox(
                 height: Sizes.control,
@@ -90,10 +88,9 @@ class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
-              const SizedBox(width: 8),
               SizedBox(
                 height: Sizes.control,
                 child: FButton(
@@ -101,7 +98,7 @@ class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
                   onPress: canOpen ? _open : null,
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 8),
-                    child: Text(l10n.openShiftAction, style: theme.typography.base.forButton),
+                    child: Text(l10n.openShiftAction, style: theme.type.button),
                   ),
                 ),
               ),

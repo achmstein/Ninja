@@ -12,6 +12,7 @@ import '../../orders/status.dart';
 import '../models/delivery_order.dart';
 import 'delivery_details.dart';
 import 'delivery_dialog.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The board's clock: "since" times redraw on it while the board is on screen
 /// (autoDispose: it stops ticking when nothing watches it)
@@ -76,10 +77,10 @@ class DeliveryCard extends StatelessWidget {
                     Expanded(
                       child: Text.rich(
                         TextSpan(children: [
-                          TextSpan(text: name, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                          TextSpan(text: name, style: theme.type.heading),
                           TextSpan(
                             text: '  ${hashNumber(order.orderNumber)}',
-                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
                           ),
                         ]),
                         maxLines: 1,
@@ -88,7 +89,7 @@ class DeliveryCard extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Text(money(context, order.total),
-                        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                        style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
                   ],
                 ),
                 const SizedBox(height: 4),
@@ -98,7 +99,7 @@ class DeliveryCard extends StatelessWidget {
                     const SizedBox(width: 6),
                     Expanded(
                       child: Text(areaAddressLine(context, l10n, order.delivery),
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                     ),
                   ],
                 ),
@@ -115,10 +116,10 @@ class DeliveryCard extends StatelessWidget {
                   children: [
                     Padding(padding: const EdgeInsets.only(top: 2), child: Icon(icon, size: Sizes.iconSmall, color: color)),
                     const SizedBox(width: 4),
-                    Expanded(child: Text(stage, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: color))),
+                    Expanded(child: Text(stage, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500, color: color))),
                     if (since != null) ...[
                       const SizedBox(width: 8),
-                      Text(relativeTime(context, l10n, since, now), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                      Text(relativeTime(context, l10n, since, now), style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                     ],
                   ],
                 ),
@@ -153,7 +154,7 @@ class SentFromLine extends ConsumerWidget {
             taker == null ? l10n.deliverySentFromNoName(branch) : l10n.deliverySentFrom(branch, taker),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.sm.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
+            style: theme.type.detail.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
           ),
         ),
       ],

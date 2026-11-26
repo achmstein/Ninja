@@ -3,6 +3,7 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/core/models/money.dart';
+import 'package:pos_app/core/theme/type_roles.dart';
 import 'package:pos_app/core/utils/bidi.dart';
 import 'package:pos_app/features/tables/models/dining_table.dart';
 import 'package:pos_app/features/tables/services/tables_service.dart';
@@ -97,7 +98,7 @@ void main() {
       expect(FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<FTextField>(), isNull);
 
       // The parts, in their order
-      final captions = [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable];
+      final captions = [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable].map(labelCase).toList();
       final tops = [for (final caption in captions) tester.getRect(find.text(caption)).top];
       expect(tops, [...tops]..sort());
       expect(tester.getRect(search).bottom, lessThanOrEqualTo(tops.first));
@@ -142,10 +143,10 @@ void main() {
       // The bill on Garden 2 and the free Garden 1; nothing else
       expect(find.text('${l10n.table} · ${hashNumber(1045)}'), findsOneWidget);
       expect(find.text(_roomName.getText(locale)), findsNothing);
-      expect(find.text(l10n.moveNewBill), findsNothing);
+      expect(find.text(labelCase(l10n.moveNewBill)), findsNothing);
       expect(find.text(l10n.moveTabWithName), findsNothing);
       expect(find.text(l10n.moveSecondBillHint), findsNothing);
-      expect(find.text(l10n.moveFreeTable), findsOneWidget);
+      expect(find.text(labelCase(l10n.moveFreeTable)), findsOneWidget);
       final free = const LocalizedText(en: 'Garden 1', ar: 'الحديقة ١').getText(locale);
       expect(find.text(free), findsOneWidget);
 
@@ -153,12 +154,12 @@ void main() {
       await tester.enterText(find.byType(FTextField), '1044');
       await tester.pumpAndSettle();
       expect(find.text('Mohamed Abdelrahman'), findsOneWidget);
-      expect(find.text(l10n.moveFreeTable), findsNothing);
+      expect(find.text(labelCase(l10n.moveFreeTable)), findsNothing);
 
       await tester.enterText(find.byType(FTextField), 'zzzz');
       await tester.pumpAndSettle();
       expect(find.text(l10n.moveNothing), findsOneWidget);
-      expect(find.text(l10n.moveOpenBills), findsNothing);
+      expect(find.text(labelCase(l10n.moveOpenBills)), findsNothing);
 
       // Back to a free table: one tap moves there
       await tester.enterText(find.byType(FTextField), garden);

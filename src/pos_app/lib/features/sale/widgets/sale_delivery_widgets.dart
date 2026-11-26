@@ -3,13 +3,13 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/sale_delivery.dart';
 import '../../deliveries/widgets/pin_quality.dart';
 import '../../orders/models/order.dart';
 
 import '../../../core/utils/phone.dart';
+import '../../../core/theme/type_roles.dart';
 /// The delivery on the sale: where it goes and the number the rider calls
 /// (its digits alone left to right), whether it has a pin; a tap changes
 /// it, the cross makes it a counter sale again. One sent to the branch nearer
@@ -28,7 +28,7 @@ class DeliverySummary extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.caption.copyWith(color: theme.colors.mutedForeground);
     return Container(
       padding: const EdgeInsetsDirectional.only(start: 10, top: 4, bottom: 4, end: 0),
       decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
@@ -54,7 +54,7 @@ class DeliverySummary extends StatelessWidget {
                       ].join(' · '),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                      style: theme.type.detail.copyWith(fontWeight: FontWeight.w500),
                     ),
                     Text(showPhone(delivery.phone), textDirection: TextDirection.ltr, style: muted),
                     // How far the rider can go by the pin: the door, near it, or none (call first)
@@ -75,7 +75,7 @@ class DeliverySummary extends StatelessWidget {
                               l10n.deliveryForRiderName(delivery.rider!.name),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.typography.xs.copyWith(fontWeight: FontWeight.w500),
+                              style: theme.type.caption.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),
                         ],
@@ -90,7 +90,7 @@ class DeliverySummary extends StatelessWidget {
                               l10n.deliveryWillSend(sendToName!),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.typography.xs.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
+                              style: theme.type.caption.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w500),
                             ),
                           ),
                         ],
@@ -148,7 +148,7 @@ class DeliveryBlockedNote extends StatelessWidget {
             children: [
               Padding(padding: const EdgeInsets.only(top: 2), child: Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber)),
               const SizedBox(width: 6),
-              Expanded(child: Text(text, style: theme.typography.sm.copyWith(color: amber, fontWeight: FontWeight.w500))),
+              Expanded(child: Text(text, style: theme.type.detail.copyWith(color: amber, fontWeight: FontWeight.w500))),
             ],
           ),
           const SizedBox(height: 8),
@@ -161,7 +161,7 @@ class DeliveryBlockedNote extends StatelessWidget {
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: onRetry,
-                      child: Text(l10n.retry, style: theme.typography.base.forButton),
+                      child: Text(l10n.retry, style: theme.type.button),
                     ),
                   ),
                 ),
@@ -173,7 +173,7 @@ class DeliveryBlockedNote extends StatelessWidget {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: onRemove,
-                    child: Text(l10n.deliveryNotADelivery, style: theme.typography.base.forButton),
+                    child: Text(l10n.deliveryNotADelivery, style: theme.type.button),
                   ),
                 ),
               ),

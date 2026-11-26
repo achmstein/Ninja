@@ -5,7 +5,6 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../widgets/bill_card.dart';
@@ -20,6 +19,7 @@ import '../../tickets/models/enums.dart';
 import '../../tickets/models/open_ticket.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Opens a counter tab: a bill with no place, for whoever it is for. The
 /// customer is chosen exactly as on the sale pad — the same picker (search
@@ -124,7 +124,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.newTab, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.newTab, style: theme.type.title),
           const SizedBox(height: 20),
           if (customer != null)
             SelectedCustomerChip(customer: customer, onRemove: () => setState(() => _customer = null))
@@ -161,8 +161,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
             ),
           ],
           const SizedBox(height: 20),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          DialogActions(
             children: [
               SizedBox(
                 height: Sizes.control,
@@ -170,10 +169,9 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
-              const SizedBox(width: 8),
               SizedBox(
                 height: Sizes.control,
                 child: FButton(
@@ -184,7 +182,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                       : const Icon(FIcons.shoppingBag, size: Sizes.icon),
                   child: Padding(
                     padding: const EdgeInsets.symmetric(horizontal: 4),
-                    child: Text(l10n.openTicketAction, style: theme.typography.base.forButton),
+                    child: Text(l10n.openTicketAction, style: theme.type.button),
                   ),
                 ),
               ),

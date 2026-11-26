@@ -11,6 +11,7 @@ import '../../core/widgets/pos_dialog.dart';
 import '../../core/widgets/toast_helpers.dart';
 import '../../l10n/app_localizations.dart';
 import 'cashier_roster.dart';
+import '../../core/theme/type_roles.dart';
 
 const int _maxDigits = 6;
 const int _minDigits = 4;
@@ -21,7 +22,7 @@ const int _minDigits = 4;
 Future<bool> showPinSignIn(BuildContext context, Cashier cashier) async {
   final signedIn = await showPosDialog<bool>(
     context,
-    maxWidth: 360,
+    size: DialogSize.sm,
     builder: (context) => _PinSignIn(cashier: cashier),
   );
   return signedIn == true;
@@ -111,7 +112,7 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
         children: [
           Text(
             widget.cashier.name,
-            style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700),
+            style: theme.type.title,
             textAlign: TextAlign.center,
             maxLines: 2,
             overflow: TextOverflow.ellipsis,
@@ -119,7 +120,7 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
           const SizedBox(height: 4),
           Text(
             l10n.enterYourPin,
-            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
             textAlign: TextAlign.center,
           ),
           const SizedBox(height: 16),
@@ -146,14 +147,15 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
               ),
             ),
           ),
+          // Two lines of detail (20 each): a tighter box clips Arabic
           SizedBox(
-            height: 36,
+            height: 40,
             child: Center(
               child: _error == null
                   ? null
                   : Text(
                       _error!,
-                      style: theme.typography.sm.copyWith(color: theme.colors.destructive, fontWeight: FontWeight.w500),
+                      style: theme.type.detail.copyWith(color: theme.colors.destructive, fontWeight: FontWeight.w500),
                       textAlign: TextAlign.center,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
@@ -190,7 +192,7 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
                       width: 20,
                       child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.primaryForeground),
                     )
-                  : Text(l10n.signIn, style: theme.typography.base.forButton),
+                  : Text(l10n.signIn, style: theme.type.button),
             ),
           ),
           const SizedBox(height: 8),
@@ -199,7 +201,7 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
             child: FButton(
               variant: FButtonVariant.ghost,
               onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
-              child: Text(l10n.cancel, style: theme.typography.base.forButton),
+              child: Text(l10n.cancel, style: theme.type.button),
             ),
           ),
         ],
@@ -213,7 +215,7 @@ class _PinSignInState extends ConsumerState<_PinSignIn> {
 /// ones); the till only says how it went.
 Future<void> showChoosePin(BuildContext context) => showPosDialog<void>(
       context,
-      maxWidth: 400,
+      size: DialogSize.sm,
       builder: (context) => const _ChoosePin(),
     );
 
@@ -286,9 +288,9 @@ class _ChoosePinState extends ConsumerState<_ChoosePin> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.setMyPin, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.setMyPin, style: theme.type.title),
           const SizedBox(height: 4),
-          Text(l10n.pinHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.pinHint, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           FTextField.password(
             control: FTextFieldControl.managed(controller: _password),
@@ -318,7 +320,7 @@ class _ChoosePinState extends ConsumerState<_ChoosePin> {
             const SizedBox(height: 12),
             Text(
               _error!,
-              style: theme.typography.sm.copyWith(color: theme.colors.destructive, fontWeight: FontWeight.w500),
+              style: theme.type.detail.copyWith(color: theme.colors.destructive, fontWeight: FontWeight.w500),
             ),
           ],
           const SizedBox(height: 20),

@@ -6,6 +6,7 @@ import '../brand/brand_provider.dart';
 import '../printing/kitchen_printing.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
+import '../theme/type_roles.dart';
 
 /// A strip under the header while kitchen tickets wait past a minute for
 /// their printer: which station, and what the printer said. A till that
@@ -43,11 +44,11 @@ class KitchenPrinterBanner extends ConsumerWidget {
               children: [
                 Text(
                   l10n.kitchenPrinterStuck(stations),
-                  style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: amber),
+                  style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, color: amber),
                 ),
                 Text(
                   printsHere ? (reason ?? l10n.kitchenPrinterStuckHint) : l10n.kitchenPrintingOffHere,
-                  style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+                  style: theme.type.caption.copyWith(color: theme.colors.mutedForeground),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),

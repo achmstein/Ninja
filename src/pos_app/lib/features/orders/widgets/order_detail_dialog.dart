@@ -7,13 +7,13 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 import 'platform_badge.dart';
 
 import '../../../core/utils/phone.dart';
+import '../../../core/theme/type_roles.dart';
 enum OrderDetailAction { confirm, cancel, rejectGuest }
 
 /// The pick, and, for a delivery platform's order being turned down, why
@@ -34,7 +34,6 @@ Future<OrderDetailPick?> showOrderDetailDialog(BuildContext context, int orderId
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _OrderDetailDialog(orderId: orderId, summary: summary),
     ),
   );
@@ -65,7 +64,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
     // cancelled, as it can from the card, since neither needs the details
     final failed = order == null && details.hasError;
     final canAct = order != null || failed;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
     final place = order?.placeName?.localized(context) ?? '';
     final who = order?.guestName ?? '';
@@ -101,10 +100,10 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.orderNumber(widget.orderId), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.orderNumber(widget.orderId), style: theme.type.title),
             if (subtitle.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(subtitle, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              Text(subtitle, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
             ],
             if (platform != null) ...[
               const SizedBox(height: 8),
@@ -117,7 +116,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 children: [
                   Icon(FIcons.idCard, size: Sizes.iconSmall, color: identityColor),
                   const SizedBox(width: 6),
-                  Expanded(child: Text(identity, style: theme.typography.sm.copyWith(color: identityColor))),
+                  Expanded(child: Text(identity, style: theme.type.detail.copyWith(color: identityColor))),
                 ],
               ),
             ],
@@ -130,7 +129,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   children: [
                     Icon(FIcons.circleAlert, size: Sizes.icon, color: theme.colors.mutedForeground),
                     const SizedBox(width: 8),
-                    Expanded(child: Text(l10n.orderDetailsFailed, style: theme.typography.sm)),
+                    Expanded(child: Text(l10n.orderDetailsFailed, style: theme.type.detail)),
                     const SizedBox(width: 8),
                     ConstrainedBox(
                       constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
@@ -139,7 +138,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => ref.invalidate(orderDetailsProvider(widget.orderId)),
                         prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
-                        child: Text(l10n.retry, style: theme.typography.sm.forButton),
+                        child: Text(l10n.retry, style: theme.type.buttonSmall),
                       ),
                     ),
                   ],
@@ -171,7 +170,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                   children: [
                     Expanded(
                       child: Text('${item.units}× ${item.productName.localized(context)}',
-                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                          style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                     ),
                     const SizedBox(width: 12),
                     Text(money(context, item.unitPrice * item.units), style: muted.copyWith(fontFeatures: tabular)),
@@ -207,7 +206,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                                   separator: l10n.listSeparator,
                                 ),
                               ].join(' · '),
-                              style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                              style: theme.type.detail.copyWith(fontWeight: FontWeight.w500),
                             ),
                           ),
                         ],
@@ -244,7 +243,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                     children: [
                       Icon(FIcons.messageSquare, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                       const SizedBox(width: 8),
-                      Expanded(child: Text(order.customerNote!, style: theme.typography.sm)),
+                      Expanded(child: Text(order.customerNote!, style: theme.type.detail)),
                     ],
                   ),
                 ),
@@ -260,16 +259,16 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                 ),
               Row(
                 children: [
-                  Text(l10n.total, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                  Text(l10n.total, style: theme.type.heading),
                   const Spacer(),
                   Text(money(context, order.total),
-                      style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                      style: theme.type.heading.copyWith(fontFeatures: tabular)),
                 ],
               ),
             ],
             const SizedBox(height: 16),
             if (_cancelling) ...[
-              Text(l10n.cancelOrderConfirm, style: theme.typography.base.copyWith(color: theme.colors.destructive)),
+              Text(l10n.cancelOrderConfirm, style: theme.type.body.copyWith(color: theme.colors.destructive)),
               // The platform tells its customer why; one tap picks it
               if (platform != null) ...[
                 const SizedBox(height: 12),
@@ -287,7 +286,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                           variant: _reason == reason ? null : FButtonVariant.outline,
                           mainAxisSize: MainAxisSize.min,
                           onPress: () => setState(() => _reason = reason),
-                          child: Text(platformRejectReasonLabel(l10n, reason), style: theme.typography.sm.forButton),
+                          child: Text(platformRejectReasonLabel(l10n, reason), style: theme.type.buttonSmall),
                         ),
                       ),
                   ],
@@ -302,7 +301,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       variant: FButtonVariant.outline,
                       mainAxisSize: MainAxisSize.min,
                       onPress: () => setState(() => _cancelling = false),
-                      child: Text(l10n.keepOrder, style: theme.typography.base.forButton),
+                      child: Text(l10n.keepOrder, style: theme.type.button),
                     ),
                   ),
                   SizedBox(
@@ -312,7 +311,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       mainAxisSize: MainAxisSize.min,
                       onPress: () => pick(OrderDetailAction.cancel),
                       prefix: const Icon(FIcons.x, size: Sizes.icon),
-                      child: Text(l10n.cancelOrder, style: theme.typography.base.forButton),
+                      child: Text(l10n.cancelOrder, style: theme.type.button),
                     ),
                   ),
                 ],
@@ -328,7 +327,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                     onPress: () => pick(OrderDetailAction.rejectGuest),
                     prefix: Icon(FIcons.userX, size: Sizes.icon, color: theme.colors.destructive),
                     child: Text(l10n.nobodyAtTheTable,
-                        style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                        style: theme.type.button.copyWith(color: theme.colors.destructive)),
                   ),
                 ),
               ],
@@ -343,7 +342,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       onPress: canAct ? () => setState(() => _cancelling = true) : null,
                       prefix: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.destructive),
                       child: Text(l10n.cancelOrder,
-                          style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                          style: theme.type.button.copyWith(color: theme.colors.destructive)),
                     ),
                   ),
                   SizedBox(
@@ -354,7 +353,7 @@ class _OrderDetailDialogState extends ConsumerState<_OrderDetailDialog> {
                       prefix: const Icon(FIcons.check, size: Sizes.icon),
                       child: Padding(
                         padding: const EdgeInsets.symmetric(horizontal: 8),
-                        child: Text(l10n.confirmOrder, style: theme.typography.base.forButton),
+                        child: Text(l10n.confirmOrder, style: theme.type.button),
                       ),
                     ),
                   ),

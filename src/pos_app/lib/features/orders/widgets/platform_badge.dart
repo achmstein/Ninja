@@ -4,6 +4,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/models/money.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The delivery platforms whose own mark we show; anything else falls back to its name
 const _platformLogos = {'Talabat': 'assets/images/talabat.png'};
@@ -49,12 +50,12 @@ class PlatformBadge extends StatelessWidget {
         if (logo != null)
           Image.asset(logo, height: logoHeight, semanticLabel: platform.name)
         else
-          Text(platform.name, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          Text(platform.name, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
         Directionality(
           textDirection: TextDirection.ltr,
           child: Text(
             platform.displayCode,
-            style: theme.typography.sm.copyWith(
+            style: theme.type.detail.copyWith(
               fontWeight: FontWeight.w600,
               fontFamily: 'monospace',
               fontFeatures: const [FontFeature.tabularFigures()],
@@ -67,7 +68,7 @@ class PlatformBadge extends StatelessWidget {
             children: [
               Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
               const SizedBox(width: 4),
-              Text(l10n.platformCancelled, style: theme.typography.sm.copyWith(color: theme.colors.destructive)),
+              Text(l10n.platformCancelled, style: theme.type.detail.copyWith(color: theme.colors.destructive)),
             ],
           ),
       ],
@@ -86,7 +87,7 @@ class PlatformHandover extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     String? time(DateTime? value) => value == null ? null : MaterialLocalizations.of(context).formatTimeOfDay(TimeOfDay.fromDateTime(value));
 
     final (icon, text) = switch (platform.expedition) {

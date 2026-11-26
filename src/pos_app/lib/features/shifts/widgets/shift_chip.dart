@@ -5,11 +5,11 @@ import 'package:go_router/go_router.dart';
 import '../../../core/models/dates.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../dialogs/open_shift_dialog.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Header status chip: one plain outline button that reads the day — a
 /// status dot plus the shift's open time, muted "No shift" when none, and
@@ -57,7 +57,7 @@ class ShiftChip extends ConsumerWidget {
           shift == null
               ? l10n.noShiftChip
               : '${l10n.shiftTitle} ${openedAt == null ? '' : formatTime(context, openedAt)}',
-          style: theme.typography.sm.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
+          style: theme.type.buttonSmall.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
         ),
       ),
     );

@@ -9,10 +9,10 @@ import '../config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
+import '../theme/type_roles.dart';
 
 /// Which business this tablet is connected to, as a settings row, and the way out: a tablet that
 /// moves to another business (or was pointed at the wrong one) is signed out,
@@ -63,7 +63,7 @@ class ConnectionRow extends ConsumerWidget {
           variant: FButtonVariant.outline,
           mainAxisSize: MainAxisSize.min,
           onPress: change,
-          child: Text(l10n.changeBusiness, style: theme.typography.base.forButton),
+          child: Text(l10n.changeBusiness, style: theme.type.button),
         ),
       ),
     );

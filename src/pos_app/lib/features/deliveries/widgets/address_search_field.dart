@@ -6,6 +6,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/address_search.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Google's suggestions for the street typed, from the business's own server;
 /// a pick hands [onPick] its point. One session token per search, closed by the
@@ -98,7 +99,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     return Padding(
       padding: const EdgeInsets.only(top: 8),
       child: Column(
@@ -132,7 +133,7 @@ class _AddressSearchFieldState extends ConsumerState<AddressSearchField> {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(s.primaryText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                          Text(s.primaryText, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                           if (s.secondaryText != null) Text(s.secondaryText!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
                         ],
                       ),

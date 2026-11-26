@@ -2,11 +2,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/orders/models/stock_disposition.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
 import 'pos_dialog.dart';
+import '../theme/type_roles.dart';
 
 /// "Was the food made?" when the till cancels or voids an order that took its
 /// ingredients: waste it, or back to stock. Two cards side by side (mirrored
@@ -31,7 +31,7 @@ class StockDispositionChoice extends ConsumerWidget {
       children: [
         Semantics(
           header: true,
-          child: Text(l10n.stockWasMade, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          child: Text(l10n.stockWasMade, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
         ),
         const SizedBox(height: 8),
         IntrinsicHeight(
@@ -113,11 +113,11 @@ class _Option extends StatelessWidget {
                           const SizedBox(width: 8),
                           Icon(icon, size: Sizes.icon, color: colors.foreground),
                           const SizedBox(width: 6),
-                          Expanded(child: Text(label, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600))),
+                          Expanded(child: Text(label, style: theme.type.heading)),
                         ],
                       ),
                       const SizedBox(height: 4),
-                      Text(hint, style: theme.typography.xs.copyWith(color: colors.mutedForeground)),
+                      Text(hint, style: theme.type.caption.copyWith(color: colors.mutedForeground)),
                     ],
                   ),
                 ),
@@ -167,12 +167,11 @@ class _StockDispositionDialogState extends State<_StockDispositionDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(widget.title, style: theme.type.title),
           const SizedBox(height: 16),
           StockDispositionChoice(value: _value, onChanged: (v) => setState(() => _value = v)),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          DialogActions(
             children: [
               SizedBox(
                 height: Sizes.control,
@@ -180,17 +179,16 @@ class _StockDispositionDialogState extends State<_StockDispositionDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
-              const SizedBox(width: 8),
               SizedBox(
                 height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => Navigator.of(context, rootNavigator: true).pop(_value),
-                  child: Text(widget.actionLabel, style: theme.typography.base.forButton),
+                  child: Text(widget.actionLabel, style: theme.type.button),
                 ),
               ),
             ],

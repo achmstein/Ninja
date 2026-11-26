@@ -6,7 +6,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -19,6 +18,7 @@ import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
 import 'courier_picker.dart';
 import 'delivery_details.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// One delivery: where it goes and what is in it, who has it, and the cash.
 /// Reads the board live, so a rider's step lands while it is open.
@@ -113,7 +113,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
         .firstOrNull;
     // Settled (or gone from the board) while open: nothing left to do here
     if (order == null) {
-      return DialogScroll(child: Center(child: Text(l10n.orderNumber(widget.orderNumber), style: theme.typography.lg)));
+      return DialogScroll(child: Center(child: Text(l10n.orderNumber(widget.orderNumber), style: theme.type.body)));
     }
     final lane = order.lane;
     final d = order.delivery;
@@ -137,7 +137,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
                 child: Text(label,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.forButton.copyWith(color: destructive ? theme.colors.destructive : null)),
+                    style: theme.type.button.copyWith(color: destructive ? theme.colors.destructive : null)),
               ),
             ),
           ),
@@ -148,10 +148,10 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.orderNumber(id), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.orderNumber(id), style: theme.type.title),
           const SizedBox(height: 2),
           Text('${_name(l10n, order)} · ${money(context, order.total)}',
-              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           DeliveryDetails(delivery: d),
           if (d.hasCourier && d.courierJobId != null) ...[
@@ -166,12 +166,12 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('${item.units}×', style: theme.typography.sm.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                  Text('${item.units}×', style: theme.type.detail.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(
                       [item.name.localized(context), if (item.options != null) item.options!.localized(context)].join(' · '),
-                      style: theme.typography.sm,
+                      style: theme.type.detail,
                     ),
                   ),
                 ],
@@ -179,7 +179,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
             ),
           if (choosing) ...[
             const SizedBox(height: 16),
-            Text(l10n.deliveryGiveTo, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+            Text(l10n.deliveryGiveTo, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
             const SizedBox(height: 8),
             RiderPicker(
               currentRiderId: d.riderUserId,
@@ -203,7 +203,7 @@ class _DeliveryDialogState extends ConsumerState<DeliveryDialog> {
             Container(height: 1, color: theme.colors.border),
             const SizedBox(height: 12),
             Text(d.hasCourier ? l10n.deliveryForCourier(rider) : l10n.deliveryForRider(rider),
-                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
             if (out) ...[
               action(l10n.deliveryMarkDelivered, FIcons.check, () => _delivered(order)),
               action(l10n.deliveryMarkFailed, FIcons.undo2, () => _failed(order), destructive: true),
@@ -236,7 +236,7 @@ Future<String?> showFailReasonPicker(BuildContext context) {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.deliveryFailReasonTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.deliveryFailReasonTitle, style: theme.type.title),
             const SizedBox(height: 12),
             for (final code in failReasonCodes)
               Padding(
@@ -246,7 +246,7 @@ Future<String?> showFailReasonPicker(BuildContext context) {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: () => Navigator.of(dialogContext, rootNavigator: true).pop(code),
-                    child: Text(failReasonLabel(l10n, code), style: theme.typography.base.forButton),
+                    child: Text(failReasonLabel(l10n, code), style: theme.type.button),
                   ),
                 ),
               ),
@@ -301,10 +301,10 @@ class _CashInDialogState extends State<CashInDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.deliveryCashCountTitle(rider), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.deliveryCashCountTitle(rider), style: theme.type.title),
           const SizedBox(height: 4),
           Text(l10n.deliveryCashBill(money(context, widget.order.total)),
-              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           FTextField(
             control: FTextFieldControl.managed(controller: _amount, onChange: (_) => setState(() {})),
@@ -314,14 +314,14 @@ class _CashInDialogState extends State<CashInDialog> {
           ),
           const SizedBox(height: 8),
           // Said in words, never colour alone
-          Text(note, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: color)),
+          Text(note, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, color: color)),
           const SizedBox(height: 16),
           SizedBox(
             height: Sizes.controlLarge,
             child: FButton(
               onPress: counted == null || counted < 0 ? null : () => Navigator.of(context, rootNavigator: true).pop(counted),
               prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-              child: Text(l10n.deliveryCashTakeAction, style: theme.typography.base.forButton),
+              child: Text(l10n.deliveryCashTakeAction, style: theme.type.button),
             ),
           ),
         ],
@@ -346,10 +346,10 @@ class RiderPicker extends ConsumerWidget {
     final riders = ref.watch(tillRidersProvider);
     return riders.when(
       loading: () => const SizedBox(height: 56, child: Center(child: FCircularProgress())),
-      error: (e, _) => Text(describeDeliveryError(e, l10n), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+      error: (e, _) => Text(describeDeliveryError(e, l10n), style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
       data: (riders) {
         if (riders.isEmpty) {
-          return Text(l10n.deliveryNoRiders, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground));
+          return Text(l10n.deliveryNoRiders, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground));
         }
         return Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -435,8 +435,8 @@ class _RiderRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(rider.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                    Text(status, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                    Text(rider.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
+                    Text(status, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                   ],
                 ),
               ),
@@ -499,11 +499,11 @@ class ConnectedCourierBox extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     if (d.courierName != null)
-                      Text([d.courierName!, ?d.courierPhone].join(' · '), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500))
+                      Text([d.courierName!, ?d.courierPhone].join(' · '), style: theme.type.detail.copyWith(fontWeight: FontWeight.w500))
                     else if (!out)
-                      Text(l10n.deliveryCourierWaitingFor(d.courierProvider ?? ''), style: theme.typography.sm),
+                      Text(l10n.deliveryCourierWaitingFor(d.courierProvider ?? ''), style: theme.type.detail),
                     Text(l10n.deliveryCourierSystemHas(d.courierProvider ?? ''),
-                        style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                        style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                   ],
                 ),
               ),

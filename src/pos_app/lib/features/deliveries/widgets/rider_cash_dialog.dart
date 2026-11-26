@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../core/layout/breakpoints.dart';
@@ -11,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../shifts/widgets/amount_entry.dart';
 import '../models/delivery_board.dart';
 import '../models/delivery_order.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// A rider back at the till with the cash for their deliveries: every one
 /// still owing is listed and ticked, the cashier counts the cash on the
@@ -19,7 +19,7 @@ import '../models/delivery_order.dart';
 /// count is off, the difference is said and put on the delivery the cashier
 /// picks. Resolves to each ticked delivery's amount, or null.
 Future<Map<int, double>?> showRiderCashDialog(BuildContext context, {required RiderGroup rider}) =>
-    showPosDialog<Map<int, double>>(context, maxWidth: 760, builder: (_) => RiderCashDialog(rider: rider));
+    showPosDialog<Map<int, double>>(context, size: DialogSize.xl, builder: (_) => RiderCashDialog(rider: rider));
 
 class RiderCashDialog extends StatefulWidget {
   final RiderGroup rider;
@@ -86,12 +86,12 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
         if (ticked.isEmpty)
           Padding(
             padding: const EdgeInsets.only(top: 8),
-            child: Text(l10n.riderCashNoneTicked, style: theme.typography.sm.copyWith(color: theme.colors.destructive)),
+            child: Text(l10n.riderCashNoneTicked, style: theme.type.detail.copyWith(color: theme.colors.destructive)),
           ),
         // Off by something: which bill carries it (a short one stays open at the till)
         if (off && ticked.length > 1) ...[
           const SizedBox(height: 12),
-          Text(l10n.riderCashDifferenceOn, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.riderCashDifferenceOn, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 6),
           Wrap(
             spacing: 6,
@@ -104,7 +104,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
                     variant: order.orderNumber == differenceOn ? null : FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: () => setState(() => _differenceOn = order.orderNumber),
-                    child: Text(hashNumber(order.orderNumber), style: theme.typography.sm.forButton),
+                    child: Text(hashNumber(order.orderNumber), style: theme.type.buttonSmall),
                   ),
                 ),
             ],
@@ -126,7 +126,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
         ),
         const SizedBox(height: 8),
         // Said in words, never colour alone
-        Text(note, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: noteColor)),
+        Text(note, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, color: noteColor)),
       ],
     );
 
@@ -135,7 +135,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
       child: FButton(
         variant: FButtonVariant.outline,
         onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-        child: Text(l10n.cancel, style: theme.typography.base.forButton),
+        child: Text(l10n.cancel, style: theme.type.button),
       ),
     );
     final take = SizedBox(
@@ -145,7 +145,7 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
             ? null
             : () => Navigator.of(context, rootNavigator: true).pop(splitCounted(ticked, counted, differenceOn: differenceOn)),
         prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-        child: Text(l10n.riderCashTakeIn(money(context, counted ?? 0)), style: theme.typography.base.forButton),
+        child: Text(l10n.riderCashTakeIn(money(context, counted ?? 0)), style: theme.type.button),
       ),
     );
 
@@ -154,11 +154,11 @@ class _RiderCashDialogState extends State<RiderCashDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.deliveryCashCountTitle(name), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+          Text(l10n.deliveryCashCountTitle(name), style: theme.type.title),
           const SizedBox(height: 4),
           Text(
             '${l10n.riderOrders(ticked.length)} · ${l10n.riderCashExpected(money(context, expected))}',
-            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
+            style: theme.type.body.copyWith(color: theme.colors.mutedForeground),
           ),
           const SizedBox(height: 16),
           // The list beside the keypad where the dialog is wide; under it on a narrow screen
@@ -227,15 +227,15 @@ class _OrderRow extends StatelessWidget {
             children: [
               Icon(ticked ? FIcons.squareCheck : FIcons.square, size: Sizes.icon, color: ticked ? theme.colors.foreground : theme.colors.mutedForeground),
               const SizedBox(width: 12),
-              Text(hashNumber(order.orderNumber), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+              Text(hashNumber(order.orderNumber), style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
               ),
               const SizedBox(width: 8),
               Text(
                 money(context, order.total),
-                style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()]),
+                style: theme.type.heading.copyWith(fontFeatures: const [FontFeature.tabularFigures()]),
               ),
             ],
           ),

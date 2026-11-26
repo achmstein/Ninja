@@ -15,7 +15,6 @@ import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -30,8 +29,8 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../tenders.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
 import '../widgets/tender_grid.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Someone on this bill with an account, and what their share comes to.
 class _AccountHolder {
@@ -467,12 +466,12 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
             child: Text.rich(
               TextSpan(
                 text: l10n.settleTitle,
-                style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700),
+                style: theme.type.title,
                 children: [
                   if ((widget.title ?? '').isNotEmpty)
                     TextSpan(
                       text: ' · ${widget.title}',
-                      style: theme.typography.heading.copyWith(fontWeight: FontWeight.w400, color: theme.colors.mutedForeground),
+                      style: theme.type.body.copyWith(color: theme.colors.mutedForeground),
                     ),
                 ],
               ),
@@ -482,7 +481,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
           ),
           const SizedBox(width: Sizes.gap),
           Text(money(context, _total),
-              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+              style: theme.type.title.copyWith(fontFeatures: tabular)),
         ],
       ),
     );
@@ -538,7 +537,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       // choose: a charge must never land on a tab nobody saw.
       if (_tender == PaymentTender.account && _holders.isNotEmpty) ...[
         const SizedBox(height: Sizes.gap),
-        Text(l10n.whoseAccount, style: theme.typography.label.copyWith(color: theme.colors.mutedForeground)),
+        Text(l10n.whoseAccount, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
         const SizedBox(height: Sizes.gapSm),
         for (final holder in _holders) ...[
           _HolderButton(
@@ -566,7 +565,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
             child: Text(
               _amountStr.isEmpty ? '0' : _amountStr,
               maxLines: 1,
-              style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
             ),
           ),
         ),
@@ -580,7 +579,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
           variant: FButtonVariant.secondary,
           onPress: _entered > 0 && !_settling ? _addPayment : null,
           prefix: const Icon(FIcons.plus, size: Sizes.icon),
-          child: Text(l10n.addPayment, style: theme.typography.body.forButton),
+          child: Text(l10n.addPayment, style: theme.type.button),
         ),
       ),
     ];
@@ -593,7 +592,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.label.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final lines = widget.ticket.lines;
     return [
       if (withLines && lines.isNotEmpty) ...[
@@ -607,21 +606,21 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                 SizedBox(
                   width: 40,
                   child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
-                      style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                      style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
                 ),
                 Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(line.description?.localized(context) ?? '',
-                          maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.body),
+                          maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.type.body),
                       if ((line.customerName ?? '').isNotEmpty)
                         Text(line.customerName!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
                     ],
                   ),
                 ),
                 const SizedBox(width: Sizes.gap),
-                Text(money(context, line.total), style: theme.typography.body.copyWith(fontFeatures: tabular)),
+                Text(money(context, line.total), style: theme.type.body.copyWith(fontFeatures: tabular)),
               ],
             ),
           ),
@@ -641,13 +640,13 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
             children: [
               Row(
                 children: [
-                  Expanded(child: Text(l10n.paidOnline, style: theme.typography.body)),
+                  Expanded(child: Text(l10n.paidOnline, style: theme.type.body)),
                   Text('−${money(context, widget.onlinePaid)}',
-                      style: theme.typography.body
+                      style: theme.type.body
                           .copyWith(fontWeight: FontWeight.w600, color: AppColors.emerald(brightness), fontFeatures: tabular)),
                 ],
               ),
-              Text(l10n.settleRemainingOnly, style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+              Text(l10n.settleRemainingOnly, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
             ],
           ),
         ),
@@ -673,7 +672,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                   '${line.description?.localized(context) ?? ''} · ${money(context, line.total)}',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.typography.label,
+                  style: theme.type.detail,
                 ),
                 const SizedBox(height: Sizes.gapXs),
                 Wrap(
@@ -687,7 +686,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                           variant: FButtonVariant.outline,
                           mainAxisSize: MainAxisSize.min,
                           onPress: _naming ? null : () => _nameLine(line, holder),
-                          child: Text(holder.name.isEmpty ? l10n.guest : holder.name, style: theme.typography.label.forButton),
+                          child: Text(holder.name.isEmpty ? l10n.guest : holder.name, style: theme.type.buttonSmall),
                         ),
                       ),
                   ],
@@ -698,7 +697,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
         ),
         const SizedBox(height: Sizes.gapLg),
       ],
-      Heading(l10n.payments),
+      TypeLabel(l10n.payments),
       const SizedBox(height: Sizes.gapSm),
       if (_payments.isEmpty)
         Padding(
@@ -746,7 +745,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                               : tenderLabel(l10n, payment.tender),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.typography.body,
+                          style: theme.type.body,
                         ),
                       ),
                       const SizedBox(width: Sizes.gapSm),
@@ -754,7 +753,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                         money(context, payment.amount),
                         maxLines: 1,
                         softWrap: false,
-                        style: theme.typography.body.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
+                        style: theme.type.heading.copyWith(fontFeatures: tabular),
                       ),
                       const SizedBox(width: 4),
                       SizedBox.square(
@@ -826,7 +825,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       color: theme.colors.primary,
       onColor: theme.colors.primaryForeground,
       successColor: AppColors.emerald(brightness),
-      labelStyle: theme.typography.title.forButton,
+      labelStyle: theme.type.mainAction,
       semanticsLabel: l10n.confirmSettle,
       label: Row(
         mainAxisSize: MainAxisSize.min,
@@ -844,7 +843,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
         mainAxisSize: MainAxisSize.min,
         onPress: _exactCash,
         prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-        child: Text(l10n.exactCash, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+        child: Text(l10n.exactCash, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.button),
       ),
     );
 
@@ -923,7 +922,7 @@ class _HolderButton extends ConsumerWidget {
       error: (_, _) => null,
       data: (account) => account == null ? l10n.noTab : l10n.owesAmount(money(context, owed > 0 ? owed : 0)),
     );
-    final small = theme.typography.sm.forButton.copyWith(fontFeatures: tabular);
+    final small = theme.type.buttonSmall.copyWith(fontFeatures: tabular);
 
     return ConstrainedBox(
       constraints: const BoxConstraints(minHeight: Sizes.control),
@@ -947,7 +946,7 @@ class _HolderButton extends ConsumerWidget {
             holder.name.isNotEmpty ? holder.name : l10n.guest,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.base.forButton,
+            style: theme.type.button,
           ),
         ),
       ),
@@ -970,7 +969,7 @@ class _TotalsRow extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 2),
       child: Row(
         children: [
-          Text(label, style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
+          Text(label, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const Spacer(),
           // Rolls as tenders come and go; the colour eases red to green
           TweenAnimationBuilder<Color?>(
@@ -979,7 +978,7 @@ class _TotalsRow extends StatelessWidget {
             builder: (context, ink, _) => RollingNumber(
               value,
               value: amount,
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: ink),
+              style: theme.type.heading.copyWith(color: ink),
             ),
           ),
         ],
@@ -999,7 +998,6 @@ class _SettledView extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    const tabular = [FontFeature.tabularFigures()];
     final accountAmount = result.payments.where((p) => p.tender == PaymentTender.account).fold<double>(0, (sum, p) => sum + p.amount);
 
     Widget box(String label, String value, TextStyle valueStyle) => Container(
@@ -1008,7 +1006,7 @@ class _SettledView extends StatelessWidget {
       decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
       child: Column(
         children: [
-          Text(label, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(label, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           Text(value, style: valueStyle),
         ],
       ),
@@ -1027,7 +1025,7 @@ class _SettledView extends StatelessWidget {
             Text(
               l10n.ticketSettled,
               textAlign: TextAlign.center,
-              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600),
+              style: theme.type.title,
             ),
             const SizedBox(height: 12),
             Text(
@@ -1035,7 +1033,7 @@ class _SettledView extends StatelessWidget {
                   ? l10n.provisionalReceipt(result.provisionalReceiptNumber!)
                   : l10n.receiptNumber(result.receiptNumber),
               textAlign: TextAlign.center,
-              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+              style: theme.type.figure,
             ),
             if (result.provisionalReceiptNumber != null) ...[
               const SizedBox(height: 12),
@@ -1048,7 +1046,7 @@ class _SettledView extends StatelessWidget {
                 ),
                 child: Column(
                   children: [
-                    Text(l10n.savedOffline, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    Text(l10n.savedOffline, style: theme.type.heading),
                   ],
                 ),
               ),
@@ -1058,7 +1056,7 @@ class _SettledView extends StatelessWidget {
               box(
                 l10n.changeDue,
                 money(context, result.change),
-                theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                theme.type.figure,
               ),
             ],
             if (accountAmount > 0) ...[
@@ -1066,7 +1064,7 @@ class _SettledView extends StatelessWidget {
               box(
                 l10n.onCustomerTab,
                 money(context, accountAmount),
-                theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                theme.type.figure,
               ),
             ],
             const SizedBox(height: 20),
@@ -1078,7 +1076,7 @@ class _SettledView extends StatelessWidget {
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: onDone,
-                      child: Text(l10n.done, style: theme.typography.base.forButton),
+                      child: Text(l10n.done, style: theme.type.button),
                     ),
                   ),
                 ),
@@ -1089,7 +1087,7 @@ class _SettledView extends StatelessWidget {
                     child: FButton(
                       onPress: onPrint,
                       prefix: const Icon(FIcons.printer, size: Sizes.icon),
-                      child: Text(l10n.print, style: theme.typography.base.forButton),
+                      child: Text(l10n.print, style: theme.type.button),
                     ),
                   ),
                 ),

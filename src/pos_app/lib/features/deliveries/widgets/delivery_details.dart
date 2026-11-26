@@ -4,7 +4,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:url_launcher/url_launcher.dart';
 import '../../../core/models/money.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
@@ -12,6 +11,7 @@ import '../models/delivery_order.dart';
 import 'pin_quality.dart';
 
 import '../../../core/utils/phone.dart';
+import '../../../core/theme/type_roles.dart';
 /// "800 m", "2.4 km" in the app's language
 String distanceLabel(AppLocalizations l10n, int meters) =>
     distanceText(meters, metres: l10n.distanceMeters, kilometres: l10n.distanceKilometres);
@@ -64,7 +64,7 @@ class DeliveryDetails extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     // Nothing on the map to go by: the rider calls before leaving, so the call is the first thing offered
     final callFirst = delivery.pinQuality == PinSource.none && delivery.phone.isNotEmpty;
 
@@ -86,7 +86,7 @@ class DeliveryDetails extends StatelessWidget {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(areaAddressLine(context, l10n, delivery), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+                    Text(areaAddressLine(context, l10n, delivery), style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
                     if ((delivery.directions ?? '').isNotEmpty)
                       Text('"${delivery.directions}"', style: muted.copyWith(fontStyle: FontStyle.italic)),
                     const SizedBox(height: 4),
@@ -102,7 +102,7 @@ class DeliveryDetails extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => openOrSay(context, delivery.directionsUri, l10n.couldNotOpenMaps),
                   prefix: const Icon(FIcons.navigation, size: Sizes.iconSmall),
-                  child: Text(l10n.deliveryMap, style: theme.typography.sm.forButton),
+                  child: Text(l10n.deliveryMap, style: theme.type.buttonSmall),
                 ),
               ),
             ],
@@ -110,7 +110,7 @@ class DeliveryDetails extends StatelessWidget {
           if (delivery.stage == DeliveryStage.failed || delivery.stage == DeliveryStage.returned) ...[
             const SizedBox(height: 8),
             Text(l10n.deliveryFailedBecause(failReasonLabel(l10n, delivery.failureReason)),
-                style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
           ],
           if (callFirst) ...[
             const SizedBox(height: 8),
@@ -127,7 +127,7 @@ class DeliveryDetails extends StatelessWidget {
                     ]),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.forButton,
+                    style: theme.type.button,
                   ),
                 ),
               ),
@@ -156,7 +156,7 @@ class DeliveryDetails extends StatelessWidget {
                           Icon(FIcons.phone, size: Sizes.iconSmall, color: theme.colors.foreground),
                           const SizedBox(width: 6),
                           Text(showPhone(delivery.phone),
-                              textDirection: TextDirection.ltr, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+                              textDirection: TextDirection.ltr, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
                         ],
                       ),
                     ),

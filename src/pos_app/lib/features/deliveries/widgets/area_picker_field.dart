@@ -8,6 +8,7 @@ import '../../../core/utils/bidi.dart';
 import '../../../core/utils/name_match.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_order.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The most areas offered for what was typed
 const maxAreaMatches = 8;
@@ -64,7 +65,7 @@ class _AreaButtonsState extends State<AreaButtons> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(l10n.deliveryAreaLabel, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+        Text(l10n.deliveryAreaLabel, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         LayoutBuilder(
           builder: (context, box) {
@@ -123,7 +124,7 @@ class _AreaButtonsState extends State<AreaButtons> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           Text(z.name.localized(context),
-                              maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                              maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                           Text(
                             [
                               if (branchName != null) branchName(z.branchId),
@@ -131,12 +132,12 @@ class _AreaButtonsState extends State<AreaButtons> {
                             ].join(' · '),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+                            style: theme.type.caption.copyWith(color: theme.colors.mutedForeground),
                           ),
                           if (!z.on || z.branchPaused)
                             Text(
                               _armed == z.zoneId ? l10n.deliveryAreaOffTapAgain : (!z.on ? l10n.deliveryAreaOff : l10n.deliveryBranchPaused),
-                              style: theme.typography.xs.copyWith(color: amber, fontWeight: FontWeight.w600),
+                              style: theme.type.caption.copyWith(color: amber, fontWeight: FontWeight.w600),
                             ),
                         ],
                       ),
@@ -222,7 +223,7 @@ class _AreaPickerFieldState extends State<AreaPickerField> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final amber = AppColors.amber(theme.colors.brightness);
     final warn = TextStyle(color: amber, fontWeight: FontWeight.w600);
     final branchName = widget.zones.map((z) => z.branchId).toSet().length > 1 ? widget.branchName : null;
@@ -253,7 +254,7 @@ class _AreaPickerFieldState extends State<AreaPickerField> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(l10n.deliveryAreaLabel, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+          Text(l10n.deliveryAreaLabel, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 6),
           Container(
             padding: const EdgeInsetsDirectional.only(start: 12, top: 4, bottom: 4),
@@ -271,7 +272,7 @@ class _AreaPickerFieldState extends State<AreaPickerField> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(picked.name.localized(context),
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                       Text.rich(about(picked), maxLines: 2, overflow: TextOverflow.ellipsis, style: muted),
                     ],
                   ),
@@ -328,7 +329,7 @@ class _AreaPickerFieldState extends State<AreaPickerField> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(zone.name.localized(context),
-                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                         Text.rich(about(zone, armed: _confirming == zone.zoneId), maxLines: 2, overflow: TextOverflow.ellipsis, style: muted),
                       ],
                     ),

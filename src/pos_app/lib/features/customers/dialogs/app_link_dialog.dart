@@ -7,12 +7,12 @@ import 'package:qr_flutter/qr_flutter.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/models/dates.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/toast_helpers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/customer_search_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Where customers open the menu: the brand's customer host, else the
 /// business's API host when provisioning has not said (the till has no page
@@ -62,7 +62,7 @@ class _AppLinkDialog extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final brand = ref.watch(brandProvider);
     final business = brand.displayName(Localizations.localeOf(context));
     final message = l10n.appLinkMessage(name, business, url);
@@ -72,7 +72,7 @@ class _AppLinkDialog extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.appLinkTitle(name), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.appLinkTitle(name), style: theme.type.title),
           const SizedBox(height: 4),
           Text(l10n.appLinkHint, style: muted),
           const SizedBox(height: 16),
@@ -93,7 +93,7 @@ class _AppLinkDialog extends ConsumerWidget {
               child: FButton(
                 onPress: () => openWhatsApp(number, country: brand.locale.country, text: message),
                 prefix: const Icon(FIcons.messageCircle, size: Sizes.icon),
-                child: Text(l10n.sendOnWhatsApp, style: theme.typography.base.forButton),
+                child: Text(l10n.sendOnWhatsApp, style: theme.type.button),
               ),
             ),
             const SizedBox(height: 8),
@@ -107,7 +107,7 @@ class _AppLinkDialog extends ConsumerWidget {
                 if (context.mounted) showSuccessToast(context, l10n.linkCopied);
               },
               prefix: const Icon(FIcons.copy, size: Sizes.icon),
-              child: Text(l10n.copyLink, style: theme.typography.base.forButton),
+              child: Text(l10n.copyLink, style: theme.type.button),
             ),
           ),
           const SizedBox(height: 8),
@@ -116,7 +116,7 @@ class _AppLinkDialog extends ConsumerWidget {
             child: FButton(
               variant: FButtonVariant.ghost,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-              child: Text(l10n.done, style: theme.typography.base.forButton),
+              child: Text(l10n.done, style: theme.type.button),
             ),
           ),
         ],

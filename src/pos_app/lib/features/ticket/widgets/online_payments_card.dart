@@ -9,6 +9,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/online_payment.dart';
 import '../../tickets/models/ticket_detail.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Online payments on the till: what guests paid (or are paying) for this bill
 /// from their phones. Each payment with its payer, its share of the bill and
@@ -41,9 +42,9 @@ class OnlinePaymentsCard extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
           child: Row(
             children: [
-              Expanded(child: Text(label, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground))),
+              Expanded(child: Text(label, style: theme.type.body.copyWith(color: theme.colors.mutedForeground))),
               Text(value,
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w700, color: color, fontFeatures: tabular)),
+                  style: theme.type.heading.copyWith(color: color, fontFeatures: tabular)),
             ],
           ),
         );
@@ -55,7 +56,7 @@ class OnlinePaymentsCard extends StatelessWidget {
           children: [
             Icon(FIcons.smartphone, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
             const SizedBox(width: 8),
-            Text(l10n.onlinePayments, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+            Text(l10n.onlinePayments, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           ],
         ),
       ),
@@ -78,7 +79,7 @@ class OnlinePaymentsCard extends StatelessWidget {
             children: [
               Icon(FIcons.clock, size: Sizes.iconSmall, color: AppColors.amber(brightness)),
               const SizedBox(width: 8),
-              Expanded(child: Text(l10n.guestPayingOnline, style: theme.typography.sm)),
+              Expanded(child: Text(l10n.guestPayingOnline, style: theme.type.detail)),
             ],
           ),
         ),
@@ -139,7 +140,7 @@ class _OnlinePaymentRow extends StatelessWidget {
                       child: Text(name,
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                          style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                     ),
                     const SizedBox(width: 8),
                     FBadge(variant: variant, child: Text(label)),
@@ -149,15 +150,14 @@ class _OnlinePaymentRow extends StatelessWidget {
                   Text(meta,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
               ],
             ),
           ),
           const SizedBox(width: 12),
           Text(
             money(context, payment.amount),
-            style: theme.typography.lg.copyWith(
-              fontWeight: FontWeight.w600,
+            style: theme.type.heading.copyWith(
               fontFeatures: tabular,
               decoration: payment.isRefunded ? TextDecoration.lineThrough : null,
               color: payment.isRefunded || payment.isPending ? theme.colors.mutedForeground : null,
@@ -173,7 +173,7 @@ class _OnlinePaymentRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 onPress: onRelease,
                 prefix: const Icon(FIcons.lockOpen, size: Sizes.iconSmall),
-                child: Text(l10n.releaseOnline, style: theme.typography.sm),
+                child: Text(l10n.releaseOnline, style: theme.type.detail),
               ),
             ),
           ],
@@ -187,7 +187,7 @@ class _OnlinePaymentRow extends StatelessWidget {
                 mainAxisSize: MainAxisSize.min,
                 onPress: onRefund,
                 prefix: Icon(FIcons.undo2, size: Sizes.iconSmall, color: theme.colors.destructive),
-                child: Text(l10n.refundOnline, style: theme.typography.sm.copyWith(color: theme.colors.destructive)),
+                child: Text(l10n.refundOnline, style: theme.type.detail.copyWith(color: theme.colors.destructive)),
               ),
             ),
           ],

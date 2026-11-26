@@ -5,13 +5,13 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Money off the whole bill: a percent or an amount, with a reason. The
 /// server holds a cashier to the branch's cap and lets an owner past it;
@@ -110,7 +110,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
             variant: _kind == k ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
             onPress: () => setState(() => _kind = k),
-            child: Text(label, style: theme.typography.base.forButton),
+            child: Text(label, style: theme.type.button),
           ),
         );
 
@@ -119,7 +119,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.discount, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.discount, style: theme.type.title),
           const SizedBox(height: 16),
           Row(
             children: [
@@ -157,27 +157,30 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
                     mainAxisSize: MainAxisSize.min,
                     onPress: _pending ? null : _remove,
                     child: Text(l10n.remove,
-                        style: theme.typography.base.forButton.copyWith(color: theme.colors.destructive)),
+                        style: theme.type.button.copyWith(color: theme.colors.destructive)),
                   ),
                 ),
               const Spacer(),
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  variant: FButtonVariant.outline,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
-                ),
-              ),
-              const SizedBox(width: 8),
-              SizedBox(
-                height: Sizes.control,
-                child: FButton(
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: _canApply ? _apply : null,
-                  child: Text(l10n.apply, style: theme.typography.base.forButton),
-                ),
+              EqualButtons(
+                children: [
+                  SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      variant: FButtonVariant.outline,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
+                      child: Text(l10n.cancel, style: theme.type.button),
+                    ),
+                  ),
+                  SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: _canApply ? _apply : null,
+                      child: Text(l10n.apply, style: theme.type.button),
+                    ),
+                  ),
+                ],
               ),
             ],
           ),

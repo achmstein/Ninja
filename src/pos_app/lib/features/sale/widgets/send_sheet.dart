@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/sale_line.dart';
 import 'customer_dialog.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The lines of a round that go for the next name: everything new, less
 /// what was unticked to stay for somebody else
@@ -92,14 +92,14 @@ class _SendSheetState extends State<SendSheet> {
               ),
               const SizedBox(width: 12),
             ],
-            Text('${line.quantity}×', style: theme.typography.base.copyWith(color: ink, fontFeatures: tabular)),
+            Text('${line.quantity}×', style: theme.type.body.copyWith(color: ink, fontFeatures: tabular)),
             const SizedBox(width: 6),
             Expanded(
               child: Text(line.name.localized(context),
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(color: ink)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(color: ink)),
             ),
             const SizedBox(width: 12),
-            Text(money(context, line.total), style: theme.typography.base.copyWith(color: ink, fontFeatures: tabular)),
+            Text(money(context, line.total), style: theme.type.body.copyWith(color: ink, fontFeatures: tabular)),
           ],
         ),
       );
@@ -129,7 +129,7 @@ class _SendSheetState extends State<SendSheet> {
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
                 textDirection: textDirectionFor(name),
-                style: theme.typography.lg.forButton.copyWith(fontWeight: FontWeight.w600)),
+                style: theme.type.mainAction),
           ),
         ),
       );
@@ -144,7 +144,7 @@ class _SendSheetState extends State<SendSheet> {
             child: ConstrainedBox(
               constraints: BoxConstraints(maxWidth: room - Sizes.icon - 12),
               child: Text(people.isNotEmpty ? l10n.sendWhoAnother : l10n.chooseCustomer,
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.button),
             ),
           ),
         );
@@ -155,7 +155,7 @@ class _SendSheetState extends State<SendSheet> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.sendWhoTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.sendWhoTitle, style: theme.type.title),
           const SizedBox(height: 16),
           Flexible(
             child: Container(
@@ -179,7 +179,7 @@ class _SendSheetState extends State<SendSheet> {
           ),
           if (splittable) ...[
             const SizedBox(height: 8),
-            Text(l10n.sendWhoSplitHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+            Text(l10n.sendWhoSplitHint, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           ],
           const SizedBox(height: 16),
           // Two to a row, each the same width, so a long name is cut and never pushes its neighbour
@@ -204,7 +204,7 @@ class _SendSheetState extends State<SendSheet> {
             child: FButton(
               variant: FButtonVariant.secondary,
               onPress: none ? null : () => _send(null),
-              child: Text(l10n.sendWhoNobody, style: theme.typography.base.forButton),
+              child: Text(l10n.sendWhoNobody, style: theme.type.button),
             ),
           ),
         ],

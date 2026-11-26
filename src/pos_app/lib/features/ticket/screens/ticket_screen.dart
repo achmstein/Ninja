@@ -17,9 +17,7 @@ import '../../../core/printing/print_service.dart';
 import '../../../core/sending/sending.dart';
 import '../../../core/sending/sending_lines.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeLabel;
@@ -53,6 +51,7 @@ import '../dialogs/kitchen_reprint_dialog.dart';
 import '../dialogs/breakdown_dialog.dart';
 import '../lines.dart';
 import '../../../core/utils/bidi.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// One bill: what is on it, who it was for, and the way to take the money.
 /// Arriving from the sale pad with `autoSettle`, the walk-in is standing at
@@ -431,7 +430,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       if (endedSession != null) ...[
         _EndedTime(session: endedSession),
         const SizedBox(height: Sizes.gapXl),
-        Heading(l10n.inTheRoom),
+        TypeLabel(l10n.inTheRoom),
         const SizedBox(height: Sizes.gapSm),
         StayMembers(session: endedSession),
       ],
@@ -446,7 +445,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           padding: const EdgeInsets.only(bottom: Sizes.gap),
           child: Text(
             l10n.takenByAt(ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context)),
-            style: theme.typography.label.copyWith(color: theme.colors.mutedForeground),
+            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
           ),
         ),
       // Confirmed here, they land on this bill — which is why the guard
@@ -468,7 +467,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
                   const SizedBox(width: Sizes.gapSm),
                   Expanded(
                     child: Text(l10n.ticketPendingOrders(waiting.length),
-                        style: theme.typography.body.copyWith(fontWeight: FontWeight.w600)),
+                        style: theme.type.heading),
                   ),
                 ],
               ),
@@ -486,7 +485,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 64),
             child: Text(l10n.emptyTicket,
-                textAlign: TextAlign.center, style: theme.typography.body.copyWith(color: theme.colors.mutedForeground)),
+                textAlign: TextAlign.center, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           )
         else
           const SizedBox.shrink()
@@ -534,7 +533,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       // under the wrong one can be put right, until a refund leans on it
       if (ticket.isSettled && ticket.payments.isNotEmpty) ...[
         const SizedBox(height: Sizes.gapLg),
-        Heading(l10n.payments),
+        TypeLabel(l10n.payments),
         for (final payment in ticket.payments) ...[
           const SizedBox(height: Sizes.gapSm),
           _PaymentCard(
@@ -547,7 +546,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       ],
       if (ticket.refunds.isNotEmpty) ...[
         const SizedBox(height: Sizes.gapLg),
-        Heading(l10n.refundsTitle),
+        TypeLabel(l10n.refundsTitle),
         for (final refund in ticket.refunds) ...[
           const SizedBox(height: Sizes.gapSm),
           _RefundCard(refund: refund),
@@ -683,7 +682,7 @@ class _HeaderState extends ConsumerState<TicketHeader> with SingleTickerProvider
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final ticket = widget.ticket;
-    final rowStyle = theme.typography.body;
+    final rowStyle = theme.type.body;
     final destructiveStyle = rowStyle.copyWith(color: theme.colors.destructive);
     final reprint = canReprintKitchen(ref, ticket);
 
@@ -744,7 +743,7 @@ class _HeaderState extends ConsumerState<TicketHeader> with SingleTickerProvider
               mainAxisSize: MainAxisSize.min,
               onPress: onPress,
               prefix: Icon(icon, size: Sizes.icon),
-              child: Text(label, style: theme.typography.body.forButton),
+              child: Text(label, style: theme.type.button),
             ),
           );
 
@@ -763,11 +762,11 @@ class _HeaderState extends ConsumerState<TicketHeader> with SingleTickerProvider
           child: Text.rich(
             TextSpan(
               text: widget.title,
-              style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700),
+              style: theme.type.title,
               children: [
                 TextSpan(
                   text: '  ${hashNumber(ticket.id)}',
-                  style: theme.typography.body.copyWith(
+                  style: theme.type.body.copyWith(
                     fontWeight: FontWeight.w500,
                     color: theme.colors.mutedForeground,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -842,7 +841,7 @@ class _GroupHeading extends StatelessWidget {
     final label = Text(name,
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600));
+        style: theme.type.heading);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
@@ -860,7 +859,7 @@ class _GroupHeading extends StatelessWidget {
           ),
           const SizedBox(width: 8),
           Text(money(context, total),
-              style: theme.typography.base.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+              style: theme.type.body.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
         ],
       ),
     );
@@ -919,7 +918,7 @@ class _LineRow extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final negative = line.total < 0;
     final emerald = AppColors.emerald(theme.colors.brightness);
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final details = line.details?.localized(context);
 
     final content = Row(
@@ -947,7 +946,7 @@ class _LineRow extends StatelessWidget {
                 line.description?.localized(context) ?? '',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.base.copyWith(
+                style: theme.type.body.copyWith(
                   fontWeight: FontWeight.w500,
                   color: negative ? emerald : null,
                 ),
@@ -973,8 +972,7 @@ class _LineRow extends StatelessWidget {
         const SizedBox(width: 12),
         Text(
           money(context, line.total),
-          style: theme.typography.lg.copyWith(
-            fontWeight: FontWeight.w600,
+          style: theme.type.heading.copyWith(
             color: negative ? emerald : null,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
@@ -1036,7 +1034,7 @@ class _VoidTombstone extends StatelessWidget {
           Icon(FIcons.ban, size: Sizes.icon, color: theme.colors.destructive),
           const SizedBox(width: 8),
           Text(l10n.voidedBadge,
-              style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+              style: theme.type.heading.copyWith(color: theme.colors.destructive)),
         ],
       ),
       rows: [
@@ -1068,12 +1066,12 @@ class _Rows extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(label, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              Text(label, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
               const SizedBox(width: 16),
               Expanded(
                 child: Text(value,
                     textAlign: TextAlign.end,
-                    style: theme.typography.base.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                    style: theme.type.body.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ),
             ],
           ),
@@ -1111,7 +1109,7 @@ class _PaymentCard extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
+    final muted = theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
     final from = payment.tenderChangedFrom;
     final changedAt = payment.tenderChangedAt;
     String when(DateTime at) {
@@ -1143,7 +1141,7 @@ class _PaymentCard extends StatelessWidget {
                   ].join(' · '),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w500),
+                  style: theme.type.body.copyWith(fontWeight: FontWeight.w500),
                 ),
               ),
               if (onChangeTender != null) ...[
@@ -1154,13 +1152,13 @@ class _PaymentCard extends StatelessWidget {
                     mainAxisSize: MainAxisSize.min,
                     onPress: onChangeTender,
                     child: Text(l10n.changeTenderAction,
-                        style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
+                        style: theme.type.buttonSmall.copyWith(color: theme.colors.mutedForeground)),
                   ),
                 ),
                 const SizedBox(width: 8),
               ],
               Text(money(context, payment.amount),
-                  style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                  style: theme.type.heading.copyWith(fontFeatures: tabular)),
             ],
           ),
           if (from != null) ...[
@@ -1213,10 +1211,10 @@ class _RefundCard extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(l10n.creditNote(refund.number),
-                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                    style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
               ),
               Text('−${money(context, refund.amount)}',
-                  style: theme.typography.base.copyWith(
+                  style: theme.type.body.copyWith(
                     fontWeight: FontWeight.w600,
                     color: theme.colors.destructive,
                     fontFeatures: const [FontFeature.tabularFigures()],
@@ -1224,10 +1222,10 @@ class _RefundCard extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 2),
-          Text(refund.reason, style: theme.typography.sm),
+          Text(refund.reason, style: theme.type.detail),
           const SizedBox(height: 2),
           Text(meta,
-              style: theme.typography.xs.copyWith(
+              style: theme.type.caption.copyWith(
                 color: theme.colors.mutedForeground,
                 fontFeatures: const [FontFeature.tabularFigures()],
               )),
@@ -1288,7 +1286,7 @@ class TicketActionBar extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.label.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
 
     // The bill's parts (menu money, discount, service, VAT, what went back)
     // are one tap away; the panel carries the total
@@ -1321,7 +1319,7 @@ class TicketActionBar extends StatelessWidget {
             child: Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(label, maxLines: 1, style: theme.typography.body.forButton.copyWith(color: color)),
+                child: Text(label, maxLines: 1, style: theme.type.button.copyWith(color: color)),
               ),
             ),
           ),
@@ -1342,7 +1340,7 @@ class TicketActionBar extends StatelessWidget {
           child: Text(label,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: (main ? theme.typography.title : theme.typography.body).forButton.copyWith(color: color)),
+              style: (main ? theme.type.mainAction : theme.type.button).copyWith(color: color)),
         ),
       );
     }
@@ -1410,7 +1408,7 @@ class TicketActionBar extends StatelessWidget {
             alignment: AlignmentDirectional.centerStart,
             child: Text(money(context, total),
                 maxLines: 1,
-                style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                style: theme.type.figure),
           ),
           if (ticket.discount > 0)
             Text(
@@ -1418,7 +1416,7 @@ class TicketActionBar extends StatelessWidget {
               '${ticket.discountRate != null ? ' (${rateText(ticket.discountRate)}%)' : ''}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.typography.caption
+              style: theme.type.caption
                   .copyWith(color: AppColors.successColor, fontWeight: FontWeight.w500, fontFeatures: tabular),
             ),
           if (paidOnline > 0 && ticket.isOpen)
@@ -1426,7 +1424,7 @@ class TicketActionBar extends StatelessWidget {
               '${l10n.remaining} ${money(context, (ticket.total - paidOnline) < 0 ? 0 : ticket.total - paidOnline)}',
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.typography.caption.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
+              style: theme.type.caption.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular),
             ),
           if (activeSession != null)
             Row(
@@ -1435,11 +1433,11 @@ class TicketActionBar extends StatelessWidget {
                   child: Text('+ ${l10n.timeSoFar} ≈ ',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                 ),
                 TimeSoFar(
                   session: activeSession!,
-                  style: theme.typography.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
+                  style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
                 ),
               ],
             ),
@@ -1508,12 +1506,12 @@ class _EndedTime extends StatelessWidget {
     final end = session.endedAt ?? DateTime.now();
     final used = session.usedOptions(end);
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
+    final muted = theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Text(formatClock(session.elapsedSeconds(end)),
-            style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+            style: theme.type.figure),
         Text(
           session.endedAt == null ? l10n.sessionEnded : '${l10n.sessionEnded} · ${formatTime(context, session.endedAt!)}',
           maxLines: 1,
@@ -1525,7 +1523,7 @@ class _EndedTime extends StatelessWidget {
             used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, end))}').join(' · '),
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
-            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
+            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular),
           ),
       ],
     );
@@ -1601,14 +1599,14 @@ class _NotFound extends StatelessWidget {
       padding: const EdgeInsets.symmetric(vertical: 96),
       child: Column(
         children: [
-          Text(l10n.ticketNotFound, style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.ticketNotFound, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           SizedBox(
             height: Sizes.control,
             child: FButton(
               mainAxisSize: MainAxisSize.min,
               onPress: () => context.go(backTo),
-              child: Text(backTo == '/' ? l10n.backToFloor : l10n.goBack, style: theme.typography.base.forButton),
+              child: Text(backTo == '/' ? l10n.backToFloor : l10n.goBack, style: theme.type.button),
             ),
           ),
         ],

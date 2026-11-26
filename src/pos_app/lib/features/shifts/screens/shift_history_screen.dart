@@ -7,11 +7,11 @@ import 'package:shimmer/shimmer.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/dates.dart';
 import '../../../core/models/money.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
 import '../widgets/shift_report.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The Z-report history: closed shifts newest first, paged. A page shorter
 /// than the page size is the last one (the endpoint returns a bare array —
@@ -54,7 +54,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(l10n.shiftHistory, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                  Text(l10n.shiftHistory, style: theme.type.title),
                 ],
               ),
               const SizedBox(height: 12),
@@ -78,7 +78,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 96),
                   child: Text(l10n.noClosedShifts,
                       textAlign: TextAlign.center,
-                      style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
+                      style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                 )
               else
                 Container(
@@ -106,7 +106,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
                         onPress: _page == 0 ? null : () => setState(() => _page--),
-                        child: Text(l10n.previousPage, style: theme.typography.base.forButton),
+                        child: Text(l10n.previousPage, style: theme.type.button),
                       ),
                     ),
                     const Spacer(),
@@ -116,7 +116,7 @@ class _ShiftHistoryScreenState extends ConsumerState<ShiftHistoryScreen> {
                         variant: FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
                         onPress: lastPage ? null : () => setState(() => _page++),
-                        child: Text(l10n.nextPage, style: theme.typography.base.forButton),
+                        child: Text(l10n.nextPage, style: theme.type.button),
                       ),
                     ),
                   ],
@@ -142,7 +142,7 @@ class _ShiftRow extends StatelessWidget {
     const tabular = [FontFeature.tabularFigures()];
     String at(DateTime? value) => value == null ? '' : formatDateTimeShort(context, value);
     final sales = Text(money(context, shift.salesTotal),
-        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular));
+        style: theme.type.heading.copyWith(fontFeatures: tabular));
     final verdict = OverShortPill(value: shift.overShort ?? 0);
     return FTappable(
       onPress: onTap,
@@ -161,7 +161,7 @@ class _ShiftRow extends StatelessWidget {
                 Text('${at(shift.openedAt)} → ${at(shift.closedAt)}',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500, fontFeatures: tabular)),
+                    style: theme.type.body.copyWith(fontWeight: FontWeight.w500, fontFeatures: tabular)),
                 if (shift.openedBy != null && shift.openedBy!.isNotEmpty)
                   Row(
                     children: [
@@ -171,7 +171,7 @@ class _ShiftRow extends StatelessWidget {
                         child: Text(shift.openedBy!,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                       ),
                     ],
                   ),

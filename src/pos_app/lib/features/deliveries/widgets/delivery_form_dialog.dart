@@ -8,7 +8,6 @@ import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/phone.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -25,6 +24,7 @@ import 'address_search_field.dart';
 import 'area_picker_field.dart';
 import 'delivery_details.dart';
 import 'pin_quality.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The delivery a cashier took down, and who it is for: the account found
 /// (or already on the sale), else the name the caller gave
@@ -52,7 +52,7 @@ Future<DeliveryFormResult?> showDeliveryFormDialog(
 }) =>
     showPosDialog<DeliveryFormResult>(
       context,
-      maxWidth: 520,
+      size: DialogSize.lg,
       builder: (_) => _DeliveryForm(initial: initial, customer: customer, itemsTotal: itemsTotal),
     );
 
@@ -319,7 +319,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             children: [
               const Icon(FIcons.bike, size: Sizes.icon),
               const SizedBox(width: 8),
-              Expanded(child: Text(l10n.deliveryFormTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600))),
+              Expanded(child: Text(l10n.deliveryFormTitle, style: theme.type.title)),
             ],
           ),
           const SizedBox(height: 12),
@@ -359,7 +359,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           if (error != null)
             Padding(
               padding: const EdgeInsets.only(top: 4),
-              child: Text(error, style: context.theme.typography.sm.copyWith(color: context.theme.colors.destructive)),
+              child: Text(error, style: context.theme.type.detail.copyWith(color: context.theme.colors.destructive)),
             ),
         ],
       );
@@ -373,7 +373,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           suffix: suffix,
           // A long branch name is wider than a phone's dialog: the words shorten instead of running over
           child: Flexible(
-            child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.theme.typography.lg.forButton),
+            child: Text(text, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.theme.type.mainAction),
           ),
         ),
       );
@@ -398,7 +398,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               Icon(icon, size: Sizes.iconSmall, color: color ?? theme.colors.mutedForeground),
               const SizedBox(width: 8),
               Expanded(
-                child: Text(text, style: theme.typography.sm.copyWith(color: color ?? theme.colors.mutedForeground, fontWeight: weight)),
+                child: Text(text, style: theme.type.detail.copyWith(color: color ?? theme.colors.mutedForeground, fontWeight: weight)),
               ),
             ],
           ),
@@ -440,13 +440,13 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                       const SizedBox(width: 8),
                       Expanded(
                         child: Text(c.displayName,
-                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                       ),
                       const SizedBox(width: 8),
                       Text(
                         plainPhone(c.phoneNumber),
                         textDirection: TextDirection.ltr,
-                        style: theme.typography.sm
+                        style: theme.type.detail
                             .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
                       ),
                     ],
@@ -469,7 +469,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   Widget _knownAddresses(BuildContext context, DeliveryFormState form) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -510,7 +510,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                             if ((a.label ?? '').isNotEmpty) a.label!,
                             _addressLine(l10n, a.address, a.building, a.floor, a.apartment),
                           ].join(' · '),
-                          style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
+                          style: theme.type.detail.copyWith(fontWeight: FontWeight.w600),
                         ),
                         if ((a.directions ?? '').isNotEmpty)
                           Text('"${a.directions}"',
@@ -522,7 +522,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                   Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
                   const SizedBox(width: 4),
                   Text(l10n.deliverySameAddress,
-                      style: theme.typography.sm.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w600)),
+                      style: theme.type.detail.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w600)),
                 ],
               ),
             ),
@@ -566,7 +566,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   Widget _where(BuildContext context, DeliveryFormState form) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final quote = form.quote;
     final zones = quote?.zones ?? const <DeliveryZone>[];
     final pinned = form.pinFor(_location.text) != null;
@@ -664,7 +664,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                       Expanded(
                         child: Text(
                           l10n.deliveryLocationFound(quote?.distanceMeters == null ? '' : distanceLabel(l10n, quote!.distanceMeters!)),
-                          style: theme.typography.sm,
+                          style: theme.type.detail,
                         ),
                       ),
                       FButton(
@@ -738,7 +738,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   Widget _shareLocation(BuildContext context, DeliveryFormState form) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     if (_pinSource == PinSource.shared && _location.text.trim().isNotEmpty) {
       final green = AppColors.emerald(theme.colors.brightness);
       return Container(
@@ -748,7 +748,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           children: [
             Icon(FIcons.circleCheck, size: Sizes.icon, color: green),
             const SizedBox(width: 8),
-            Expanded(child: Text(l10n.deliveryShareReceived, style: theme.typography.sm.copyWith(color: green, fontWeight: FontWeight.w600))),
+            Expanded(child: Text(l10n.deliveryShareReceived, style: theme.type.detail.copyWith(color: green, fontWeight: FontWeight.w600))),
           ],
         ),
       );
@@ -761,7 +761,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           children: [
             const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()),
             const SizedBox(width: 8),
-            Expanded(child: Text(l10n.deliveryShareWaiting, style: theme.typography.sm)),
+            Expanded(child: Text(l10n.deliveryShareWaiting, style: theme.type.detail)),
             FButton(
               variant: FButtonVariant.ghost,
               mainAxisSize: MainAxisSize.min,
@@ -787,9 +787,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         ),
         const SizedBox(height: 4),
         if (form.shareFailed)
-          Text(l10n.deliveryShareFailed, style: theme.typography.sm.copyWith(color: theme.colors.destructive))
+          Text(l10n.deliveryShareFailed, style: theme.type.detail.copyWith(color: theme.colors.destructive))
         else if (form.shareExpired)
-          Text(l10n.deliveryShareExpired, style: theme.typography.sm.copyWith(color: AppColors.amber(theme.colors.brightness)))
+          Text(l10n.deliveryShareExpired, style: theme.type.detail.copyWith(color: AppColors.amber(theme.colors.brightness)))
         else
           Text(l10n.deliveryAskLocationHint, style: muted),
       ],
@@ -800,7 +800,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   Widget _check(BuildContext context, DeliveryFormState form) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final quote = form.quote;
     final reading = form.reading;
     final pinned = form.pinFor(_location.text) != null;
@@ -847,13 +847,13 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
               row([
-                Text(_shownName(form), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                Text(_shownName(form), style: theme.type.heading),
                 Text(plainPhone(phone), textDirection: TextDirection.ltr, style: muted),
               ], () => setState(() => _step = DeliveryStep.who)),
               Divider(height: 1, color: theme.colors.border),
               row([
                 if (zone != null) Text(zone.name.localized(context), style: muted.copyWith(fontWeight: FontWeight.w600)),
-                Text(_street.text.trim(), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                Text(_street.text.trim(), style: theme.type.heading),
                 if ([_building, _floor, _apartment].any((c) => c.text.trim().isNotEmpty))
                   Text(_addressLine(l10n, '', _building.text.trim(), _floor.text.trim(), _apartment.text.trim()), style: muted),
                 if (directions.isNotEmpty) Text('"$directions"', style: muted.copyWith(fontStyle: FontStyle.italic)),
@@ -894,7 +894,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress())
             else
               Text(fee > 0 ? money(context, fee) : l10n.deliveryFree,
-                  style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                  style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
           ],
         ),
         if (!reading && alternatives.isNotEmpty) ...[
@@ -990,9 +990,9 @@ class _StepBar extends StatelessWidget {
                   labels[i],
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: theme.typography.sm.copyWith(
+                  style: theme.type.detail.copyWith(
                     color: lit ? theme.colors.foreground : theme.colors.mutedForeground,
-                    fontWeight: now ? FontWeight.w700 : (past ? FontWeight.w500 : null),
+                    fontWeight: now ? FontWeight.w600 : (past ? FontWeight.w500 : null),
                   ),
                 ),
               ),
@@ -1005,7 +1005,7 @@ class _StepBar extends StatelessWidget {
                 held,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+                style: theme.type.caption.copyWith(color: theme.colors.mutedForeground),
               ),
             ),
         ],
@@ -1018,10 +1018,7 @@ class _StepBar extends StatelessWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         // Said in words first, so a glance knows there is more to come
-        Text(
-          l10n.deliveryStepOf(at + 1, labels.length),
-          style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontWeight: FontWeight.w500),
-        ),
+        TypeLabel(l10n.deliveryStepOf(at + 1, labels.length)),
         const SizedBox(height: 8),
         Row(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -1083,10 +1080,10 @@ class _RiderChoice extends ConsumerWidget {
                     ),
                     const SizedBox(width: 6),
                   ],
-                  Text(title, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                  Text(title, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                 ],
               ),
-              if (status != null) Text(status, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+              if (status != null) Text(status, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
             ],
           ),
         );
@@ -1095,7 +1092,7 @@ class _RiderChoice extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       mainAxisSize: MainAxisSize.min,
       children: [
-        Text(l10n.deliveryGiveTo, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontWeight: FontWeight.w500)),
+        Text(l10n.deliveryGiveTo, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontWeight: FontWeight.w500)),
         const SizedBox(height: 6),
         Wrap(
           spacing: 8,
@@ -1136,7 +1133,7 @@ class _Said extends StatelessWidget {
   Widget build(BuildContext context) => Padding(
         padding: const EdgeInsets.symmetric(vertical: 16),
         child: Text(text,
-            textAlign: TextAlign.center, style: context.theme.typography.sm.copyWith(color: context.theme.colors.mutedForeground)),
+            textAlign: TextAlign.center, style: context.theme.type.detail.copyWith(color: context.theme.colors.mutedForeground)),
       );
 }
 
@@ -1218,7 +1215,7 @@ class _NearerBranchesState extends State<NearerBranches> {
                             if (a.paused)
                               TextSpan(text: ' \u00b7 ${l10n.deliveryBranchPaused}', style: TextStyle(color: amber, fontWeight: FontWeight.w600)),
                           ]),
-                          style: theme.typography.sm,
+                          style: theme.type.detail,
                         ),
                       ),
                     ],
@@ -1285,7 +1282,7 @@ class _Warning extends StatelessWidget {
         children: [
           Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: amber),
           const SizedBox(width: 6),
-          Expanded(child: Text(text, style: theme.typography.sm.copyWith(color: amber))),
+          Expanded(child: Text(text, style: theme.type.detail.copyWith(color: amber))),
           if (action != null) ...[const SizedBox(width: 8), action!],
         ],
       ),

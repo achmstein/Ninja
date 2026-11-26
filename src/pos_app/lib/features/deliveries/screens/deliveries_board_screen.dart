@@ -4,7 +4,6 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -16,6 +15,7 @@ import '../providers/deliveries_provider.dart';
 import '../widgets/delivery_card.dart';
 import '../widgets/delivery_dialog.dart';
 import '../widgets/rider_cash_dialog.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Below this the four columns would be too narrow to read: one at a time, picked by its chip
 const _fourColumnsFrom = 1000.0;
@@ -90,7 +90,7 @@ class _DeliveriesBoardScreenState extends ConsumerState<DeliveriesBoardScreen> {
                 ),
               ),
               const SizedBox(width: 8),
-              Text(l10n.deliveries, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+              Text(l10n.deliveries, style: theme.type.title),
               const SizedBox(width: 10),
               FBadge(child: Text('$total', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]))),
               const Spacer(),
@@ -107,7 +107,7 @@ class _DeliveriesBoardScreenState extends ConsumerState<DeliveriesBoardScreen> {
           const SizedBox(height: 16),
           Expanded(
             child: !delivering
-                ? Center(child: Text(l10n.deliveryErrorNotDelivering, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)))
+                ? Center(child: Text(l10n.deliveryErrorNotDelivering, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)))
                 : deliveries.isLoading && !deliveries.hasValue
                     ? const Center(child: FCircularProgress())
                     : LayoutBuilder(
@@ -176,7 +176,7 @@ class _LaneChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         onPress: onPress,
         prefix: Icon(lane.icon, size: Sizes.iconSmall),
-        child: Text('${lane.label(l10n)} · $count', style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600).forButton),
+        child: Text('${lane.label(l10n)} · $count', style: theme.type.buttonSmall.copyWith(fontWeight: FontWeight.w600)),
       ),
     );
   }
@@ -222,7 +222,7 @@ class _Column extends ConsumerWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(lane.label(l10n),
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.heading),
                   ),
                   Container(
                     height: 24,
@@ -234,14 +234,14 @@ class _Column extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(Sizes.radius),
                     ),
                     child: Text('${orders.length}',
-                        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                        style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
                   ),
                 ],
               ),
             ),
           Expanded(
             child: orders.isEmpty
-                ? Center(child: Text(l10n.laneEmpty, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)))
+                ? Center(child: Text(l10n.laneEmpty, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)))
                 : ListView(
                     padding: EdgeInsets.fromLTRB(10, header ? 0 : 10, 10, 10),
                     children: [
@@ -321,7 +321,7 @@ class _RiderBlockState extends ConsumerState<_RiderBlock> {
                 decoration: BoxDecoration(color: theme.colors.secondary, shape: BoxShape.circle),
                 child: Text(
                   name.characters.first.toUpperCase(),
-                  style: theme.typography.sm.copyWith(fontWeight: FontWeight.w700),
+                  style: theme.type.detail.copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
               const SizedBox(width: 10),
@@ -329,10 +329,10 @@ class _RiderBlockState extends ConsumerState<_RiderBlock> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.heading),
                     Text(
                       widget.cash ? '${l10n.riderOrders(group.orders.length)} · ${money(context, group.total)}' : l10n.riderOrders(group.orders.length),
-                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
+                      style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
                     ),
                   ],
                 ),
@@ -346,7 +346,7 @@ class _RiderBlockState extends ConsumerState<_RiderBlock> {
               child: FButton(
                 onPress: _busy ? null : _takeCash,
                 prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: FCircularProgress()) : const Icon(FIcons.banknote, size: Sizes.icon),
-                child: Text(l10n.riderCashTake, style: theme.typography.base.forButton),
+                child: Text(l10n.riderCashTake, style: theme.type.button),
               ),
             ),
           ],

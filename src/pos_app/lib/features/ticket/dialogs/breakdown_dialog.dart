@@ -5,6 +5,7 @@ import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/ticket_detail.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The bill's parts, one label/value row each, a tap away from the total:
 /// menu money, the discount, service, VAT (out of the price or on top), and
@@ -12,7 +13,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 Future<void> showBreakdownDialog(BuildContext context, TicketDetail ticket) {
   return showPosDialog<void>(
     context,
-    maxWidth: 384,
+    size: DialogSize.sm,
     builder: (context) => _BreakdownDialog(ticket: ticket),
   );
 }
@@ -44,13 +45,13 @@ class _BreakdownDialog extends StatelessWidget {
       if (ticket.refundedTotal > 0) (l10n.refundedSoFar, '−${money(context, ticket.refundedTotal)}', false, true),
     ];
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.breakdown, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.breakdown, style: theme.type.title),
           const SizedBox(height: 16),
           Container(
             decoration: BoxDecoration(
@@ -70,13 +71,13 @@ class _BreakdownDialog extends StatelessWidget {
                       children: [
                         Expanded(
                           child: Text(rows[i].$1,
-                              style: theme.typography.base.copyWith(
+                              style: theme.type.body.copyWith(
                                 color: rows[i].$3 ? null : theme.colors.mutedForeground,
                                 fontWeight: rows[i].$3 ? FontWeight.w600 : null,
                               )),
                         ),
                         Text(rows[i].$2,
-                            style: theme.typography.base.copyWith(
+                            style: theme.type.body.copyWith(
                               fontWeight: rows[i].$3 ? FontWeight.w600 : null,
                               color: rows[i].$4 ? theme.colors.destructive : null,
                               fontFeatures: tabular,

@@ -330,8 +330,8 @@ void main() {
 
       final panel = find.byType(SaleOrderPanel);
       Finder inPanel(Finder what) => find.descendant(of: panel, matching: what);
-      expect(inPanel(find.text(l10n.newItems)), findsOneWidget);
-      expect(inPanel(find.text(l10n.sentItems)), findsOneWidget);
+      expect(inPanel(find.text(l10n.newItems.toUpperCase())), findsOneWidget);
+      expect(inPanel(find.text(l10n.sentItems.toUpperCase())), findsOneWidget);
       expect(inPanel(find.byType(CartLineRow)), findsNWidgets(2));
       expect(tester.getRect(inPanel(find.byType(CartLineRow)).last).bottom,
           lessThanOrEqualTo(tester.getRect(inPanel(find.byType(SentLines))).top));

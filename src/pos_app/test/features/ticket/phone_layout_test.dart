@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/core/auth/auth_service.dart';
 import 'package:pos_app/core/printing/kitchen_printing.dart';
+import 'package:pos_app/core/theme/type_roles.dart';
 import 'package:pos_app/core/utils/bidi.dart';
 import 'package:pos_app/features/customers/models/customer_card.dart';
 import 'package:pos_app/features/customers/providers/customer_providers.dart';
@@ -294,7 +295,7 @@ void main() {
       expectFits(tester);
       expect(find.text(l10n.moveItemsTitle(2)), findsOneWidget);
       for (final caption in [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable]) {
-        expect(find.text(caption), findsOneWidget);
+        expect(find.text(labelCase(caption)), findsOneWidget);
       }
       // An open bill is a row: its kind and number under its name
       expect(find.text('${l10n.room} · ${hashNumber(1041)}'), findsOneWidget);

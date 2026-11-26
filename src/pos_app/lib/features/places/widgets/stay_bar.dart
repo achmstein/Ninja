@@ -5,15 +5,14 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../stay_actions.dart';
 import '../status.dart';
 import 'rate_option_toggle.dart';
 import 'stay_members.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The running clock on a room ticket. Its time is not on the bill yet —
 /// it lands as lines when the session ends — so the card answers the two
@@ -119,7 +118,7 @@ class _StayBarState extends ConsumerState<StayBar> {
     final used = session.usedOptions(now);
     final estimate = session.estimate(now);
     final hoursLabel = l10n.billedHoursFormat(hoursText(estimate.hours));
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
 
     if (widget.panel) {
@@ -131,11 +130,11 @@ class _StayBarState extends ConsumerState<StayBar> {
         children: [
           if (widget.clock) ...[
             Text(formatClock(session.elapsedSeconds(now)),
-                style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                style: theme.type.figure),
             Text('≈ ${money(context, estimate.amount)} · $hoursLabel',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
           ],
           if (used.length > 1)
             Text(
@@ -158,7 +157,7 @@ class _StayBarState extends ConsumerState<StayBar> {
             ),
           ],
           const SizedBox(height: Sizes.gapXl),
-          Heading(l10n.inTheRoom),
+          TypeLabel(l10n.inTheRoom),
           const SizedBox(height: Sizes.gapSm),
           StayMembers(session: session),
           const SizedBox(height: Sizes.gapXl),
@@ -168,7 +167,7 @@ class _StayBarState extends ConsumerState<StayBar> {
               variant: FButtonVariant.outline,
               onPress: _busy ? null : () => _end(hoursLabel),
               prefix: const Icon(FIcons.square, size: Sizes.icon),
-              child: Text(l10n.endSessionButton, style: theme.typography.body.forButton),
+              child: Text(l10n.endSessionButton, style: theme.type.button),
             ),
           ),
         ],
@@ -201,7 +200,7 @@ class _StayBarState extends ConsumerState<StayBar> {
                         const SizedBox(width: 12),
                         Expanded(
                           child: Text(formatClock(session.elapsedSeconds(now)),
-                              style: theme.typography.xl3.copyWith(fontFeatures: tabular)),
+                              style: theme.type.figure),
                         ),
                       ],
                     ),
@@ -225,9 +224,9 @@ class _StayBarState extends ConsumerState<StayBar> {
                 children: [
                   Text(l10n.timeSoFar, style: muted),
                   Text(money(context, estimate.amount),
-                      style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                      style: theme.type.figure),
                   Text(hoursLabel,
-                      style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
                 ],
               ),
             ],
@@ -260,7 +259,7 @@ class _StayBarState extends ConsumerState<StayBar> {
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _end(hoursLabel),
                   prefix: const Icon(FIcons.square, size: Sizes.icon),
-                  child: Text(l10n.endSessionButton, style: theme.typography.base.forButton),
+                  child: Text(l10n.endSessionButton, style: theme.type.button),
                 ),
               ),
             ],

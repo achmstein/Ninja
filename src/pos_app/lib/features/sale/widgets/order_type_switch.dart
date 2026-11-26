@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// What kind of order this is, chosen first and always in sight at the top
 /// of a new sale: at the counter, or delivered. Delivery opens the phone
@@ -60,7 +60,7 @@ class _OrderTypeSwitchState extends State<OrderTypeSwitch> {
                 variant: active ? null : FButtonVariant.outline,
                 onPress: onPress,
                 prefix: Icon(icon, size: Sizes.icon),
-                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.forButton),
+                child: Text(label, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.button),
               ),
             ),
           ),
@@ -89,7 +89,7 @@ class _OrderTypeSwitchState extends State<OrderTypeSwitch> {
               child: Text(
                 l10n.orderTypeCounterConfirm,
                 textAlign: TextAlign.center,
-                style: theme.typography.sm.copyWith(
+                style: theme.type.detail.copyWith(
                   fontWeight: FontWeight.w500,
                   color: AppColors.amber(theme.colors.brightness),
                 ),

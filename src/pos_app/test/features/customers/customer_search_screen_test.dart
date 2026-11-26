@@ -85,8 +85,8 @@ void main() {
     await _open(tester);
 
     expect(customers.asked, ['|200']);
-    expect(find.text('Recent'), findsOneWidget);
-    expect(find.text('Everyone'), findsOneWidget);
+    expect(find.text('RECENT'), findsOneWidget);
+    expect(find.text('EVERYONE'), findsOneWidget);
     // Once under Recent, once under Everyone; whoever is no longer a customer is not offered
     expect(find.text('Ahmed Hady'), findsNWidgets(2));
     expect(find.text('Left Town'), findsNothing);
@@ -107,11 +107,11 @@ void main() {
     await tester.pump(_press);
     expect(find.text('Mona Ali'), findsOneWidget);
     expect(find.text('Ahmed Hady'), findsNothing);
-    expect(find.text('Everyone'), findsNothing);
+    expect(find.text('EVERYONE'), findsNothing);
 
     await tester.tap(find.text('M'));
     await tester.pump(_press);
-    expect(find.text('Everyone'), findsOneWidget);
+    expect(find.text('EVERYONE'), findsOneWidget);
   });
 
   testWidgets('picking returns the account and remembers it', (tester) async {
@@ -150,7 +150,7 @@ void main() {
 
     expect(customers.asked.last, 'Sara|20');
     expect(find.text('Nobody by that name'), findsOneWidget);
-    expect(find.text('Not in the list?'), findsOneWidget);
+    expect(find.text('NOT IN THE LIST?'), findsOneWidget);
     expect(find.text('New customer'), findsOneWidget);
 
     await tester.tap(find.text('Use "Sara"'));
@@ -167,7 +167,7 @@ void main() {
     await tester.pump(const Duration(milliseconds: 300));
     await tester.pump();
 
-    expect(find.text('Not in the list?'), findsNothing);
+    expect(find.text('NOT IN THE LIST?'), findsNothing);
     expect(find.text('New customer'), findsOneWidget);
   });
 }

@@ -6,6 +6,7 @@ import '../../../core/models/money.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../models/sale_line.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// One line of the running sale: name, options, note, and the quantity
 /// stepper — the minus becomes a bin on the last unit. On an open bill it is
@@ -57,13 +58,13 @@ class CartLineRow extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(name, maxLines: 1, overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+                    style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
                 if (options.isNotEmpty)
                   Text(options, maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                 if (line.specialInstructions?.isNotEmpty ?? false)
                   Text('"${line.specialInstructions}"', maxLines: 1, overflow: TextOverflow.ellipsis,
-                      style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontStyle: FontStyle.italic)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontStyle: FontStyle.italic)),
                 const SizedBox(height: 6),
                 Row(
                   children: [
@@ -77,7 +78,7 @@ class CartLineRow extends ConsumerWidget {
                       child: Text(
                         '${line.quantity}',
                         textAlign: TextAlign.center,
-                        style: theme.typography.sm.copyWith(
+                        style: theme.type.detail.copyWith(
                           fontWeight: FontWeight.w600,
                           fontFeatures: const [FontFeature.tabularFigures()],
                         ),
@@ -92,7 +93,7 @@ class CartLineRow extends ConsumerWidget {
           const SizedBox(width: 8),
           Text(
             money(context, line.total),
-            style: theme.typography.sm.copyWith(
+            style: theme.type.detail.copyWith(
               fontWeight: FontWeight.w600,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),

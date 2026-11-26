@@ -6,7 +6,6 @@ import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -20,6 +19,7 @@ import '../../tickets/models/tab_payment.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../models/customer_card.dart';
 import '../providers/customer_providers.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Take money against a customer's tab: cash into the drawer, card or
 /// InstaPay to the terminal. What is owed is prefilled — the common case is
@@ -35,7 +35,6 @@ Future<TabPaymentSlip?> showPayTabDialog(BuildContext context, {required CardCus
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _PayTabDialog(customer: customer, balance: balance),
     ),
   );
@@ -132,7 +131,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
     final slip = _slip;
 
     if (slip != null) {
-      return Padding(
+      return SingleChildScrollView(
         padding: const EdgeInsets.all(24),
         child: Column(
           mainAxisSize: MainAxisSize.min,
@@ -140,12 +139,12 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
           children: [
             const Icon(FIcons.circleCheck, size: Sizes.iconHero, color: AppColors.emerald500),
             const SizedBox(height: 12),
-            Text(l10n.tabPaymentRecorded, textAlign: TextAlign.center, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.tabPaymentRecorded, textAlign: TextAlign.center, style: theme.type.title),
             if (slip.number > 0) ...[
               const SizedBox(height: 8),
               Text(l10n.tabPaymentNumber(slip.number),
                   textAlign: TextAlign.center,
-                  style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                  style: theme.type.title.copyWith(fontFeatures: tabular)),
             ],
             const SizedBox(height: 12),
             Container(
@@ -154,12 +153,12 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
               decoration: BoxDecoration(color: theme.colors.secondary, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
               child: Column(
                 children: [
-                  Text(l10n.newBalance, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                  Text(l10n.newBalance, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                   Text(
                       slip.balanceAfter < 0
                           ? l10n.creditAmount(money(context, -slip.balanceAfter))
                           : money(context, slip.balanceAfter),
-                      style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                      style: theme.type.figure),
                 ],
               ),
             ),
@@ -172,7 +171,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                     child: FButton(
                       variant: FButtonVariant.outline,
                       onPress: () => Navigator.of(context, rootNavigator: true).pop(slip),
-                      child: Text(l10n.done, style: theme.typography.base.forButton),
+                      child: Text(l10n.done, style: theme.type.button),
                     ),
                   ),
                 ),
@@ -183,7 +182,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                     child: FButton(
                       onPress: () => _print(slip),
                       prefix: const Icon(FIcons.printer, size: Sizes.icon),
-                      child: Text(l10n.print, style: theme.typography.base.forButton),
+                      child: Text(l10n.print, style: theme.type.button),
                     ),
                   ),
                 ),
@@ -194,7 +193,8 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
       );
     }
 
-    return Column(
+    // Never taller than the screen: on a short one the keypad scrolls under the amount
+    return SingleChildScrollView(child: Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -211,7 +211,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                 children: [
                   Expanded(
                       child: Text(widget.balance > 0 ? l10n.payTab : l10n.topUp,
-                          style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600))),
+                          style: theme.type.title)),
                   const SizedBox(width: 12),
                   Text(
                     widget.balance > 0
@@ -219,7 +219,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                         : widget.balance < 0
                             ? l10n.creditAmount(money(context, -widget.balance))
                             : l10n.settledUp,
-                    style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+                    style: theme.type.title.copyWith(fontFeatures: tabular),
                   ),
                 ],
               ),
@@ -227,7 +227,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                 widget.customer.name.isNotEmpty ? widget.customer.name : l10n.guest,
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
               ),
             ],
           ),
@@ -270,14 +270,14 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
                 child: FButton(
                   onPress: _amount > 0 && !_saving ? _confirm : null,
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  suffix: Text(money(context, _amount), style: theme.typography.lg.forButton.copyWith(fontFeatures: tabular)),
-                  child: Text(l10n.confirmTabPayment, style: theme.typography.lg.forButton),
+                  suffix: Text(money(context, _amount), style: theme.type.mainAction.copyWith(fontFeatures: tabular)),
+                  child: Text(l10n.confirmTabPayment, style: theme.type.mainAction),
                 ),
               ),
             ],
           ),
         ),
       ],
-    );
+    ));
   }
 }

@@ -4,7 +4,6 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/stock_disposition_choice.dart';
@@ -13,6 +12,7 @@ import '../../orders/models/stock_disposition.dart';
 import '../../orders/services/order_service.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Owner-only: voids an open ticket. The reason is mandatory — a voided
 /// ticket disappears from the floor, and the reason is the only audit
@@ -116,7 +116,7 @@ class _VoidDialogState extends ConsumerState<VoidDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.voidTicket, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.voidTicket, style: theme.type.title),
           const SizedBox(height: 16),
           FTextField(
             control: FTextFieldControl.managed(controller: _reason),
@@ -135,8 +135,7 @@ class _VoidDialogState extends ConsumerState<VoidDialog> {
             ),
           ],
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          DialogActions(
             children: [
               SizedBox(
                 height: Sizes.control,
@@ -144,17 +143,16 @@ class _VoidDialogState extends ConsumerState<VoidDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
-              const SizedBox(width: 8),
               SizedBox(
                 height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _canVoid ? _void : null,
-                  child: Text(l10n.confirmVoid, style: theme.typography.base.forButton),
+                  child: Text(l10n.confirmVoid, style: theme.type.button),
                 ),
               ),
             ],

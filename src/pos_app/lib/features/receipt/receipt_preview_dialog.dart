@@ -18,6 +18,7 @@ import '../../l10n/app_localizations.dart';
 import '../tickets/models/ticket_detail.dart';
 import '../tickets/providers/tickets_provider.dart';
 import 'receipt_sheet.dart';
+import '../../core/theme/type_roles.dart';
 
 /// The receipt as the printer will lay it down, on screen: the same sheet
 /// widget the print job rasterizes, scaled to fit the dialog. From here
@@ -29,7 +30,6 @@ Future<void> showReceiptPreview(BuildContext context, int ticketId) {
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _ReceiptPreview(ticketId: ticketId),
     ),
   );
@@ -107,7 +107,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
         children: [
           Text(
             number == null ? l10n.receipts : l10n.receiptNumber(number),
-            style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600),
+            style: theme.type.title,
           ),
           const SizedBox(height: 16),
           // The sheet is laid out at paper width and shrunk to the dialog;
@@ -126,7 +126,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
                     padding: const EdgeInsets.symmetric(vertical: 48),
                     child: Text(describeError(e, l10n),
                         textAlign: TextAlign.center,
-                        style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                        style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                   ),
                   data: (ticket) => FutureBuilder<ui.Image?>(
                     future: brandLogo(brand.receiptImageUrl),

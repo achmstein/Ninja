@@ -3,11 +3,11 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../services/price_check_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// What the cashier does with the other branch's menu
 enum PriceReviewChoice {
@@ -63,10 +63,10 @@ class _PriceReview extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.priceReviewTitle(branch), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.priceReviewTitle(branch), style: theme.type.title),
           if (drops && !nothingLeft) ...[
             const SizedBox(height: 4),
-            Text(l10n.priceReviewDropped, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+            Text(l10n.priceReviewDropped, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           ],
           const SizedBox(height: 12),
           for (final item in review.items)
@@ -83,21 +83,21 @@ class _PriceReview extends StatelessWidget {
                   ],
                   Expanded(
                     child: Text(describe(item),
-                        style: theme.typography.sm.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                        style: theme.type.detail.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
                   ),
                 ],
               ),
             ),
           if (nothingLeft) ...[
             const SizedBox(height: 6),
-            Text(l10n.priceReviewNothingLeft(branch), style: theme.typography.sm.copyWith(color: amber)),
+            Text(l10n.priceReviewNothingLeft(branch), style: theme.type.detail.copyWith(color: amber)),
           ],
           const SizedBox(height: 16),
           SizedBox(
             height: Sizes.controlLarge,
             child: FButton(
               onPress: nothingLeft ? null : () => close(PriceReviewChoice.useTheirs),
-              child: Text(l10n.priceReviewUse(branch), style: theme.typography.base.forButton),
+              child: Text(l10n.priceReviewUse(branch), style: theme.type.button),
             ),
           ),
           const SizedBox(height: 8),
@@ -106,7 +106,7 @@ class _PriceReview extends StatelessWidget {
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => close(PriceReviewChoice.keepHere),
-              child: Text(l10n.deliveryKeepHere, style: theme.typography.base.forButton),
+              child: Text(l10n.deliveryKeepHere, style: theme.type.button),
             ),
           ),
         ],

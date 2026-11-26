@@ -5,10 +5,10 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../places/models/place.dart';
 import '../../tickets/models/ticket_summary.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Every place that has no bill yet, as a narrow column beside the bills so
 /// opening one is a single tap. It stays a list, searchable, so forty tables
@@ -162,7 +162,7 @@ class _PlaceListState extends State<PlaceList> {
           ),
         for (final (kind, label) in groups)
           if (free.any((p) => p.kind == kind)) ...[
-            Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: Heading(label)),
+            Padding(padding: const EdgeInsets.fromLTRB(0, 8, 0, 4), child: TypeLabel(label)),
             for (final place in free.where((p) => p.kind == kind))
               Builder(builder: (context) {
                 // A place with a clock has a state; one without is only
@@ -212,7 +212,7 @@ class _PlaceListState extends State<PlaceList> {
             child: Text(
               needle.isNotEmpty ? l10n.noPlaceMatches : l10n.everyPlaceHasABill,
               textAlign: TextAlign.center,
-              style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+              style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
             ),
           ),
       ],
@@ -295,7 +295,7 @@ class _PlaceRow extends StatelessWidget {
                 child: Text(name,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                    style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
               ),
               if (detail != null) ...[
                 const SizedBox(width: 8),
@@ -304,7 +304,7 @@ class _PlaceRow extends StatelessWidget {
                   child: Text(detail!,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.sm.copyWith(
+                      style: theme.type.detail.copyWith(
                         color: theme.colors.mutedForeground,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       )),

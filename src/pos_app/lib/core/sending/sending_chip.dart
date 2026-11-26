@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/money.dart';
 import '../layout/breakpoints.dart';
@@ -11,6 +10,7 @@ import '../utils/bidi.dart';
 import '../widgets/compact_chip.dart';
 import '../widgets/pos_dialog.dart';
 import 'sending.dart';
+import '../theme/type_roles.dart';
 
 /// Header chip, red, while a charge never reached the server: wherever the
 /// cashier has gone since, it is in sight. Tap → each one with its bill, why
@@ -50,7 +50,7 @@ class SendingChip extends ConsumerWidget {
           prefix: Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
           child: Text(
             l10n.sendsFailed(failed),
-            style: theme.typography.sm.forButton.copyWith(
+            style: theme.type.buttonSmall.copyWith(
               color: theme.colors.destructive,
               fontFeatures: const [FontFeature.tabularFigures()],
             ),
@@ -66,7 +66,7 @@ class SendingChip extends ConsumerWidget {
         builder: (context, style, animation) => DialogPanel(
           style: style,
           animation: animation,
-          maxWidth: 512,
+          size: DialogSize.lg,
           builder: (context) => const _FailedSends(),
         ),
       );
@@ -96,9 +96,9 @@ class _FailedSends extends ConsumerWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.notSent, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.notSent, style: theme.type.title),
           const SizedBox(height: 4),
-          Text(l10n.sendsFailedHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.sendsFailedHint, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           ConstrainedBox(
             constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.6),
@@ -123,12 +123,12 @@ class _FailedSends extends ConsumerWidget {
                                 Expanded(
                                   child: Text(
                                     send.ticketId != null ? hashNumber(send.ticketId!) : l10n.newTicket,
-                                    style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+                                    style: theme.type.heading,
                                   ),
                                 ),
                                 Text(
                                   money(context, send.total),
-                                  style: theme.typography.base.copyWith(
+                                  style: theme.type.body.copyWith(
                                     fontWeight: FontWeight.w600,
                                     fontFeatures: const [FontFeature.tabularFigures()],
                                   ),
@@ -137,7 +137,7 @@ class _FailedSends extends ConsumerWidget {
                             ),
                           ),
                           if ((send.error ?? '').isNotEmpty)
-                            Text(send.error!, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                            Text(send.error!, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                           const SizedBox(height: 8),
                           Row(
                             mainAxisAlignment: MainAxisAlignment.end,
@@ -149,7 +149,7 @@ class _FailedSends extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   onPress: () => notifier.drop(send.requestId),
                                   prefix: const Icon(FIcons.trash2, size: Sizes.iconSmall),
-                                  child: Text(l10n.remove, style: theme.typography.sm.forButton),
+                                  child: Text(l10n.remove, style: theme.type.buttonSmall),
                                 ),
                               ),
                               const SizedBox(width: 8),
@@ -159,7 +159,7 @@ class _FailedSends extends ConsumerWidget {
                                   mainAxisSize: MainAxisSize.min,
                                   onPress: () => notifier.send(send.requestId),
                                   prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
-                                  child: Text(l10n.retrySync, style: theme.typography.sm.forButton),
+                                  child: Text(l10n.retrySync, style: theme.type.buttonSmall),
                                 ),
                               ),
                             ],

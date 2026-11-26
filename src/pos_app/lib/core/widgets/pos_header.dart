@@ -16,6 +16,7 @@ import 'branch_switcher.dart';
 import 'compact_status_chips.dart';
 import 'offline_chip.dart';
 import '../sending/sending_chip.dart';
+import '../theme/type_roles.dart';
 
 /// The single app-chrome row: brand + branch on the start side, drawer
 /// shift status on the end side. Language, theme and sign-out are a
@@ -52,7 +53,7 @@ class _PosHeaderState extends ConsumerState<PosHeader> with SingleTickerProvider
     final themeState = ref.watch(themeProvider);
     final isDark = themeState.resolveBrightness(context) == Brightness.dark;
 
-    final rowStyle = theme.typography.base;
+    final rowStyle = theme.type.body;
     // The names the sign-in screen offers, kept current while someone is here
     ref.watch(cashierRosterKeeperProvider);
 

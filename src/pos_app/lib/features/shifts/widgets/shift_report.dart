@@ -9,6 +9,7 @@ import '../../../core/layout/breakpoints.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../ticket/tenders.dart';
 import '../models/shift.dart';
+import '../../../core/theme/type_roles.dart';
 
 const _tabular = [FontFeature.tabularFigures()];
 
@@ -54,7 +55,7 @@ class OverShortPill extends StatelessWidget {
       ),
       child: Text(
         overShortText(l10n, context, value),
-        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: color, fontFeatures: _tabular),
+        style: theme.type.detail.copyWith(fontWeight: FontWeight.w500, color: color, fontFeatures: _tabular),
       ),
     );
   }
@@ -73,7 +74,7 @@ class ShiftReport extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final emerald = AppColors.emerald(theme.colors.brightness);
     final overShort = shift.overShort ?? 0;
 
@@ -96,10 +97,10 @@ class ShiftReport extends StatelessWidget {
                   fit: BoxFit.scaleDown,
                   alignment: AlignmentDirectional.centerStart,
                   child: Text(value,
-                      maxLines: 1, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                      maxLines: 1, style: theme.type.heading.copyWith(fontFeatures: _tabular)),
                 )
               else
-                Text(value, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                Text(value, style: theme.type.heading.copyWith(fontFeatures: _tabular)),
             ],
           ),
         );
@@ -116,7 +117,7 @@ class ShiftReport extends StatelessWidget {
                 child: Text.rich(
                   TextSpan(
                     text: at == null ? '' : formatDateTime(context, at),
-                    style: theme.typography.sm.copyWith(fontFeatures: _tabular),
+                    style: theme.type.detail.copyWith(fontFeatures: _tabular),
                     children: [if (by != null && by.isNotEmpty) TextSpan(text: ' · $by', style: muted)],
                   ),
                   textAlign: TextAlign.end,
@@ -131,7 +132,7 @@ class ShiftReport extends StatelessWidget {
             Text(label, style: muted),
             Text(value,
                 textAlign: TextAlign.center,
-                style: style ?? theme.typography.xl.copyWith(fontWeight: FontWeight.w700, fontFeatures: _tabular)),
+                style: style ?? theme.type.title.copyWith(fontFeatures: _tabular)),
           ],
         );
 
@@ -161,8 +162,7 @@ class ShiftReport extends StatelessWidget {
                       child: headline(
                         l10n.overShort,
                         overShortText(l10n, context, overShort),
-                        style: theme.typography.xl.copyWith(
-                          fontWeight: FontWeight.w700,
+                        style: theme.type.title.copyWith(
                           fontFeatures: _tabular,
                           color: overShort >= 0 ? emerald : theme.colors.destructive,
                         ),
@@ -173,7 +173,7 @@ class ShiftReport extends StatelessWidget {
               : headline(
                   l10n.expectedInDrawer,
                   money(context, shift.expectedInDrawer),
-                  style: theme.typography.figure.copyWith(fontWeight: FontWeight.w700, fontFeatures: _tabular),
+                  style: theme.type.figure,
                 ),
         ),
         const SizedBox(height: 16),
@@ -195,7 +195,7 @@ class ShiftReport extends StatelessWidget {
         ],
         if (shift.tenderTotals.isNotEmpty) ...[
           const SizedBox(height: 8),
-          Text(l10n.billTenders, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.billTenders, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           _Bordered(
             children: [
@@ -207,12 +207,12 @@ class ShiftReport extends StatelessWidget {
                       Expanded(
                         child: Text.rich(TextSpan(
                           text: tenderLabel(l10n, total.tender),
-                          style: theme.typography.base,
+                          style: theme.type.body,
                           children: [TextSpan(text: ' × ${total.count}', style: muted.copyWith(fontFeatures: _tabular))],
                         )),
                       ),
                       Text(money(context, total.amount),
-                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                          style: theme.type.heading.copyWith(fontFeatures: _tabular)),
                     ],
                   ),
                 ),
@@ -221,7 +221,7 @@ class ShiftReport extends StatelessWidget {
         ],
         if (shift.tabPaymentTenderTotals.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Text(l10n.tabPayments, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.tabPayments, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
           const SizedBox(height: 4),
           _Bordered(
             children: [
@@ -233,12 +233,12 @@ class ShiftReport extends StatelessWidget {
                       Expanded(
                         child: Text.rich(TextSpan(
                           text: tenderLabel(l10n, total.tender),
-                          style: theme.typography.base,
+                          style: theme.type.body,
                           children: [TextSpan(text: ' × ${total.count}', style: muted.copyWith(fontFeatures: _tabular))],
                         )),
                       ),
                       Text(money(context, total.amount),
-                          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: _tabular)),
+                          style: theme.type.heading.copyWith(fontFeatures: _tabular)),
                     ],
                   ),
                 ),
@@ -246,11 +246,11 @@ class ShiftReport extends StatelessWidget {
           ),
         ],
         const SizedBox(height: 16),
-        Text(l10n.drawerCashTitle, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+        Text(l10n.drawerCashTitle, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         _DrawerSum(shift: shift),
         const SizedBox(height: 16),
-        Text(l10n.drawerMovements, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+        Text(l10n.drawerMovements, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(height: 4),
         if (shift.movements.isEmpty)
           Padding(padding: const EdgeInsets.symmetric(vertical: 8), child: Text(l10n.noMovements, style: muted))
@@ -266,7 +266,7 @@ class ShiftReport extends StatelessWidget {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(movement.reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base),
+                            Text(movement.reason, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body),
                             Text(
                               [
                                 movement.isOut ? l10n.payOut : l10n.payIn,
@@ -283,7 +283,7 @@ class ShiftReport extends StatelessWidget {
                       const SizedBox(width: 16),
                       Text(
                         '${movement.isOut ? '−' : '+'}${money(context, movement.amount)}',
-                        style: theme.typography.base.copyWith(
+                        style: theme.type.body.copyWith(
                           fontWeight: FontWeight.w600,
                           fontFeatures: _tabular,
                           color: movement.isOut ? theme.colors.destructive : emerald,
@@ -322,11 +322,10 @@ class _DrawerSum extends StatelessWidget {
             children: [
               Expanded(
                 child: Text(label,
-                    style: bold ? theme.typography.base.copyWith(fontWeight: FontWeight.w700) : theme.typography.base),
+                    style: bold ? theme.type.heading : theme.type.body),
               ),
               Text(value,
-                  style: theme.typography.base.copyWith(
-                    fontWeight: bold ? FontWeight.w700 : FontWeight.w600,
+                  style: (bold ? theme.type.heading : theme.type.body.copyWith(fontWeight: FontWeight.w500)).copyWith(
                     fontFeatures: _tabular,
                     color: color,
                   )),

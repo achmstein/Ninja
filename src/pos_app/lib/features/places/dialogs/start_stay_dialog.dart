@@ -5,12 +5,12 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../stay_actions.dart';
 import '../widgets/rate_option_toggle.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// What the start dialog ended in
 enum StartOutcome {
@@ -34,7 +34,6 @@ Future<StartOutcome> showStartStayDialog(BuildContext context, Place room, {Rese
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _StartStayDialog(room: room, reservation: reservation),
     ),
   );
@@ -91,7 +90,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
     final name = room.name.localized(context);
     final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: Sizes.icon));
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -103,7 +102,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(session != null ? l10n.startSession : l10n.startWalkInSession,
-                    style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+                    style: theme.type.title),
               ),
             ],
           ),
@@ -111,7 +110,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
             const SizedBox(height: 4),
             Text(
               [name, if ((session.customerName ?? '').isNotEmpty) session.customerName!].join(' · '),
-              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
+              style: theme.type.body.copyWith(color: theme.colors.mutedForeground),
             ),
           ],
           const SizedBox(height: 16),
@@ -122,17 +121,15 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
             decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radiusCard)),
             child: Column(
               children: [
-                Text(name, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                Text(name, style: theme.type.heading),
                 Text.rich(
                   TextSpan(
                     text: money(context, _chosen?.hourlyRate ?? 0),
-                    style: theme.typography.heading.copyWith(
-                      fontWeight: FontWeight.w700,
+                    style: theme.type.figure.copyWith(
                       color: theme.colors.primary,
-                      fontFeatures: const [FontFeature.tabularFigures()],
                     ),
                     children: [
-                      TextSpan(text: ' ${l10n.perHour}', style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                      TextSpan(text: ' ${l10n.perHour}', style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                     ],
                   ),
                   textAlign: TextAlign.center,
@@ -142,7 +139,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
           ),
           if (room.hasOptions) ...[
             const SizedBox(height: 16),
-            Text(l10n.rate, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+            Text(l10n.rate, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500)),
             const SizedBox(height: 8),
             RateOptionToggle(
               options: room.options,
@@ -166,7 +163,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                         variant: FButtonVariant.outline,
                         onPress: _busy ? null : _reserve,
                         prefix: const Icon(FIcons.clock, size: Sizes.icon),
-                        child: Text(l10n.reserve, style: theme.typography.base.forButton),
+                        child: Text(l10n.reserve, style: theme.type.button),
                       ),
                     ),
                   ),
@@ -180,7 +177,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                         variant: FButtonVariant.outline,
                         onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.billOnly),
                         prefix: const Icon(FIcons.receiptText, size: Sizes.icon),
-                        child: Text(l10n.billOnly, style: theme.typography.base.forButton),
+                        child: Text(l10n.billOnly, style: theme.type.button),
                       ),
                     ),
                   ),
@@ -197,7 +194,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: _busy ? null : () => Navigator.of(context, rootNavigator: true).pop(StartOutcome.none),
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                    child: Text(l10n.cancel, style: theme.type.button),
                   ),
                 ),
               ),
@@ -209,7 +206,7 @@ class _StartStayDialogState extends ConsumerState<_StartStayDialog> {
                   child: FButton(
                     onPress: _busy ? null : _start,
                     prefix: _busy ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : playIcon,
-                    child: Text(l10n.startSession, style: theme.typography.base.forButton),
+                    child: Text(l10n.startSession, style: theme.type.button),
                   ),
                 ),
               ),

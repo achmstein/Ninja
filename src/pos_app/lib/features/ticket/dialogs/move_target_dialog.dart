@@ -3,7 +3,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/money.dart';
@@ -18,6 +17,7 @@ import '../../tickets/models/move_lines.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Moving the picked lines: one list of every place they can go, one tap
 /// each. A bill already on the floor (the customer who ordered at a table and
@@ -42,7 +42,7 @@ Future<MoveTarget?> showMoveTargetDialog(
 }) {
   return showPosDialog<MoveTarget>(
     context,
-    maxWidth: 512,
+    size: DialogSize.lg,
     builder: (context) =>
         MoveTargetList(ticket: ticket, count: count, allSelected: allSelected, suggestedName: suggestedName),
   );
@@ -134,7 +134,7 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
 
     Widget caption(String text) => Padding(
           padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
-          child: Text(text, style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, color: muted)),
+          child: TypeLabel(text),
         );
 
     // A row of the list: what it is, a quieter line under it, and the way on.
@@ -168,11 +168,11 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
                         overflow: TextOverflow.ellipsis,
                         textDirection: textDirectionFor(title),
                         textAlign: textAlignFor(context),
-                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                        style: theme.type.heading),
                     Text(detail,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.typography.sm
+                        style: theme.type.detail
                             .copyWith(color: muted, fontFeatures: const [FontFeature.tabularFigures()])),
                   ],
                 ),
@@ -181,7 +181,7 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
                 const SizedBox(width: 12),
                 Text(amount,
                     maxLines: 1,
-                    style: theme.typography.base.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+                    style: theme.type.body.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ],
               const SizedBox(width: 8),
               Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.chevronLeft : FIcons.chevronRight,
@@ -225,7 +225,7 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
                   child: FButton(
                     mainAxisSize: MainAxisSize.min,
                     onPress: _createTab,
-                    child: Text(l10n.moveCreate, style: theme.typography.base.forButton),
+                    child: Text(l10n.moveCreate, style: theme.type.button),
                   ),
                 ),
               ],
@@ -271,7 +271,7 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
       if (others.isEmpty && freeTables.isEmpty && !offersNew)
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-          child: Text(l10n.moveNothing, textAlign: TextAlign.center, style: theme.typography.base.copyWith(color: muted)),
+          child: Text(l10n.moveNothing, textAlign: TextAlign.center, style: theme.type.body.copyWith(color: muted)),
         ),
     ];
 
@@ -282,9 +282,9 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.moveItemsTitle(widget.count), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.moveItemsTitle(widget.count), style: theme.type.title),
             const SizedBox(height: 4),
-            Text(l10n.moveItemsHint(bidiIsolate(place)), style: theme.typography.base.copyWith(color: muted)),
+            Text(l10n.moveItemsHint(bidiIsolate(place)), style: theme.type.body.copyWith(color: muted)),
             const SizedBox(height: 12),
             FTextField(
               control: FTextFieldControl.managed(controller: _search),
@@ -351,7 +351,7 @@ class _TableTile extends StatelessWidget {
             overflow: TextOverflow.ellipsis,
             textDirection: textDirectionFor(name),
             textAlign: textAlignFor(context),
-            style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+            style: theme.type.heading),
       ),
     );
   }

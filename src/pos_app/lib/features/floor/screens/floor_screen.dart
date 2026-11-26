@@ -13,9 +13,7 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/motion/motion.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/utils/natural_order.dart';
 import '../../../l10n/app_localizations.dart';
@@ -41,6 +39,7 @@ import '../dialogs/new_ticket_dialog.dart';
 import '../just_settled.dart';
 import '../widgets/bill_card.dart';
 import '../widgets/place_list.dart';
+import '../../../core/theme/type_roles.dart';
 
 enum _Filter { all, room, table, counter }
 
@@ -362,7 +361,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         ),
       ),
     );
-    final title = Text(l10n.openBills, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700));
+    final title = Text(l10n.openBills, style: theme.type.title);
     // On a tablet the two worded buttons are as wide as their words; on a
     // phone they stretch over the row the icon buttons leave them
     Widget saleButton({bool stretch = false}) => SizedBox(
@@ -377,7 +376,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
             prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(l10n.newSale, style: theme.typography.base.forButton),
+              child: Text(l10n.newSale, style: theme.type.button),
             ),
           ),
         );
@@ -390,7 +389,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
             prefix: const Icon(FIcons.plus, size: Sizes.icon),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
-              child: Text(l10n.newTab, style: theme.typography.base.forButton),
+              child: Text(l10n.newTab, style: theme.type.button),
             ),
           ),
         );
@@ -478,7 +477,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
             ),
           ),
           error: (e, _) => Center(
-            child: Text(l10n.somethingWentWrong, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+            child: Text(l10n.somethingWentWrong, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           ),
           data: (list) => _Bills(
             bills: [...list, ?leaving]..sort(compareBills),
@@ -867,7 +866,7 @@ class _HoldsRow extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Heading(l10n.statusReserved),
+        TypeLabel(l10n.statusReserved),
         const SizedBox(height: 8),
         SingleChildScrollView(
           scrollDirection: Axis.horizontal,
@@ -903,13 +902,13 @@ class _HoldsRow extends StatelessWidget {
                                 (places.where((r) => r.id == session.placeId).firstOrNull?.name ?? session.placeName).localized(context),
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+                                style: theme.type.heading,
                               ),
                               Text(
                                 (session.customerName ?? '').isNotEmpty ? session.customerName! : l10n.statusReserved,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                                style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
                               ),
                             ],
                           ),
@@ -917,11 +916,11 @@ class _HoldsRow extends StatelessWidget {
                         if (session.isHolding ? session.secondsUntilExpiry(now) : null case final left?) ...[
                           const SizedBox(width: 8),
                           Text(formatCountdown(left),
-                              style: theme.typography.sm.copyWith(color: amber, fontFeatures: const [FontFeature.tabularFigures()])),
+                              style: theme.type.detail.copyWith(color: amber, fontFeatures: const [FontFeature.tabularFigures()])),
                         ] else if (!session.isHolding && session.forTime != null) ...[
                           const SizedBox(width: 8),
                           Text(TimeOfDay.fromDateTime(session.forTime!.toLocal()).format(context),
-                              style: theme.typography.sm
+                              style: theme.type.detail
                                   .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()])),
                         ],
                       ],
@@ -959,7 +958,7 @@ class _FilterPill extends StatelessWidget {
           variant: FBadgeVariant.secondary,
           child: Text('$count', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()])),
         ),
-        child: Text(label, style: theme.typography.base.forButton),
+        child: Text(label, style: theme.type.button),
       ),
     );
   }
@@ -977,7 +976,7 @@ class _EmptyFloor extends StatelessWidget {
       child: Column(
         children: [
           Text(l10n.noOpenBills,
-              style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
+              style: theme.type.body.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
         ],
       ),
     );

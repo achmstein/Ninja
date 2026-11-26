@@ -8,6 +8,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/shifts_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The branch's two customer-facing switches — taking orders, taking
 /// reservations — for a mid-day pause. The shift flips both on its own
@@ -97,10 +98,10 @@ class _FlagRow extends StatelessWidget {
               decoration: BoxDecoration(color: on ? AppColors.emerald500 : AppColors.amber500, shape: BoxShape.circle),
             ),
             const SizedBox(width: 8),
-            Text(label, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+            Text(label, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
             if (!on) ...[
               const SizedBox(width: 8),
-              Text(l10n.paused, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+              Text(l10n.paused, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
             ],
             const Spacer(),
             FSwitch(value: on, enabled: !disabled, onChange: onChange),

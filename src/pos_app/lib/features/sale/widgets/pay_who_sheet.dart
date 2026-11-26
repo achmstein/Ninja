@@ -7,6 +7,7 @@ import '../../../core/utils/bidi.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../bill_payers.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// What "Who is paying?" was answered with: one payer's own part, or with no
 /// payer the whole of what is left
@@ -27,7 +28,7 @@ Future<PayChoice?> showPayWho(
 }) =>
     showPosDialog<PayChoice>(
       context,
-      maxWidth: 512,
+      size: DialogSize.lg,
       builder: (context) => PayWhoSheet(
         title: title,
         total: total,
@@ -68,7 +69,7 @@ class PayWhoSheet extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final heading = theme.typography.base.copyWith(fontWeight: FontWeight.w600);
+    final heading = theme.type.heading;
 
     Widget row({required Widget words, required String amount, required TextStyle amountStyle, required VoidCallback onPress}) =>
         FTappable(
@@ -95,7 +96,7 @@ class PayWhoSheet extends StatelessWidget {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.payWhoTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.payWhoTitle, style: theme.type.title),
             const SizedBox(height: 16),
             Container(
               clipBehavior: Clip.antiAlias,
@@ -136,11 +137,11 @@ class PayWhoSheet extends StatelessWidget {
                               ].join(' · '),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
-                              style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                              style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                         ],
                       ),
                       amount: money(context, payer.subtotal),
-                      amountStyle: theme.typography.base,
+                      amountStyle: theme.type.body,
                       onPress: () => onPick(PayChoice.part(payer)),
                     ),
                   ],
@@ -148,7 +149,7 @@ class PayWhoSheet extends StatelessWidget {
               ),
             ),
             const SizedBox(height: 12),
-            Text(l10n.payWhoHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+            Text(l10n.payWhoHint, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           ],
         ),
       ),

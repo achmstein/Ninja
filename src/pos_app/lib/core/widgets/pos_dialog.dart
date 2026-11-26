@@ -1,6 +1,27 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import '../layout/breakpoints.dart';
+import '../theme/type_roles.dart';
+
+/// How wide a pop-up is, said by what it holds (pos_web's `DialogContent
+/// size`). A width is never typed as a number: see docs/layout.md.
+enum DialogSize {
+  /// A question and its answers: confirm, discard, a short notice
+  sm(384),
+
+  /// A few fields or a short list: the usual pop-up
+  md(448),
+
+  /// A list to pick from, a form in steps, a keypad beside its figures
+  lg(512),
+
+  /// Two columns side by side: a report, a count beside its keypad
+  xl(768);
+
+  final double width;
+
+  const DialogSize(this.width);
+}
 
 /// A dialog the keyboard slides over rather than pushes. It keeps its place
 /// and its height when the keyboard opens; the body, a [DialogScroll],
@@ -18,7 +39,7 @@ import '../layout/breakpoints.dart';
 Future<T?> showPosDialog<T>(
   BuildContext context, {
   required WidgetBuilder builder,
-  double maxWidth = 448,
+  DialogSize size = DialogSize.md,
 }) {
   return showFDialog<T>(
     context: context,
@@ -58,7 +79,7 @@ Future<T?> showPosDialog<T>(
                 child: DialogPanel(
                   style: style,
                   animation: animation,
-                  maxWidth: maxWidth,
+                  size: size,
                   builder: builder,
                 ),
               ),
@@ -71,7 +92,7 @@ Future<T?> showPosDialog<T>(
 }
 
 /// What every till dialog is drawn on. A tablet gets Forui's dialog: a card
-/// in the middle of the screen, no wider than [maxWidth]. A phone gets a
+/// in the middle of the screen, no wider than its [size]. A phone gets a
 /// sheet rising from the bottom edge, as pos_web's dialogs do below the same
 /// width: the whole width of the screen, in thumb reach, its top corners
 /// rounded and a grab handle saying where it came from. A card in the middle
@@ -85,7 +106,7 @@ class DialogPanel extends StatelessWidget {
   final Animation<double> animation;
 
   /// How wide the card may grow on a tablet. A phone's sheet takes the screen's width.
-  final double maxWidth;
+  final DialogSize size;
   final WidgetBuilder builder;
 
   const DialogPanel({
@@ -93,7 +114,7 @@ class DialogPanel extends StatelessWidget {
     required this.style,
     required this.animation,
     required this.builder,
-    this.maxWidth = 448,
+    this.size = DialogSize.md,
   });
 
   /// pos_web's `rounded-t-2xl`
@@ -114,7 +135,7 @@ class DialogPanel extends StatelessWidget {
       return FDialog.raw(
         style: style,
         animation: animation,
-        constraints: BoxConstraints(maxWidth: maxWidth),
+        constraints: BoxConstraints(maxWidth: size.width),
         builder: (context, _) => builder(context),
       );
     }
@@ -141,7 +162,7 @@ class DialogPanel extends StatelessWidget {
           child: SlideTransition(
             position: animation.drive(_rise),
             child: DefaultTextStyle(
-              style: theme.typography.base.copyWith(color: theme.colors.foreground),
+              style: theme.type.body.copyWith(color: theme.colors.foreground),
               child: Semantics(
                 scopesRoute: true,
                 explicitChildNodes: true,
@@ -215,10 +236,39 @@ class _SheetLayout extends SingleChildLayoutDelegate {
   bool shouldRelayout(_SheetLayout old) => old.keyboard != keyboard || old.top != top;
 }
 
+/// Buttons side by side at one width, the widest one's, so the options of
+/// one choice (or a pop-up's answers) stand the same whatever their words.
+/// They sit at the row's end and take no more room than they need.
+class EqualButtons extends StatelessWidget {
+  final List<Widget> children;
+
+  const EqualButtons({super.key, required this.children});
+
+  @override
+  Widget build(BuildContext context) {
+    return Align(
+      alignment: AlignmentDirectional.centerEnd,
+      heightFactor: 1,
+      // Each an equal share of a row that is as wide as the widest one needs, times how many there are
+      child: IntrinsicWidth(
+        child: Row(
+          children: [
+            for (final (index, child) in children.indexed) ...[
+              if (index > 0) const SizedBox(width: 8),
+              Expanded(child: child),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+}
+
 /// A dialog's closing actions, in reading order with the main one last. A
-/// tablet sets them side by side at the dialog's end. A phone's dialog is too
-/// narrow for two labelled buttons, so there each takes the full width, the
-/// main one on top, as pos_web's dialog footer stacks them.
+/// tablet sets them side by side at the dialog's end, each the same width.
+/// A phone's dialog is too narrow for two labelled buttons, so there each
+/// takes the full width, the main one on top, as pos_web's dialog footer
+/// stacks them.
 class DialogActions extends StatelessWidget {
   final List<Widget> children;
 
@@ -241,12 +291,12 @@ class DialogActions extends StatelessWidget {
         ],
       );
     }
+    if (!fill) return EqualButtons(children: children);
     return Row(
-      mainAxisAlignment: MainAxisAlignment.end,
       children: [
         for (final (index, child) in children.indexed) ...[
           if (index > 0) const SizedBox(width: 8),
-          fill ? Expanded(child: child) : child,
+          Expanded(child: child),
         ],
       ],
     );

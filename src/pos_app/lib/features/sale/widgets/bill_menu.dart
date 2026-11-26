@@ -23,6 +23,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../bill_actions.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The rest a bill can do, from the order screen it is rung up on: a
 /// discount, the bill on paper, the kitchen's tickets again, picking lines to
@@ -125,7 +126,7 @@ class _BillMenuState extends ConsumerState<BillMenu> with SingleTickerProviderSt
     final l10n = AppLocalizations.of(context)!;
     final ticket = widget.ticket;
     final lines = ticket.lines;
-    final rowStyle = theme.typography.body;
+    final rowStyle = theme.type.body;
     final destructiveStyle = rowStyle.copyWith(color: theme.colors.destructive);
     // Voiding is Owner-only (the server enforces the same rule)
     final isOwner = ref.watch(authServiceProvider.select((s) => s.isOwner));

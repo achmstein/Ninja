@@ -3,12 +3,12 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/models/money.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Who a courier company sent for a delivery, as the till heard it, and its fee for this one
 typedef CourierDetails = ({String? courierName, String? courierPhone, double? fee});
@@ -34,7 +34,7 @@ class CourierPicker extends ConsumerWidget {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         const SizedBox(height: 8),
-        Text(l10n.deliveryCouriers, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+        Text(l10n.deliveryCouriers, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
         const SizedBox(height: 8),
         for (final provider in providers)
           Padding(
@@ -113,8 +113,8 @@ class _CourierRow extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.center,
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(provider.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
-                    if (detail.isNotEmpty) Text(detail, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                    Text(provider.name, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
+                    if (detail.isNotEmpty) Text(detail, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                   ],
                 ),
               ),
@@ -168,7 +168,7 @@ class _CourierDetailsDialogState extends State<CourierDetailsDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(widget.provider.name, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(widget.provider.name, style: theme.type.title),
           const SizedBox(height: 16),
           FTextField(
             control: FTextFieldControl.managed(controller: _name),
@@ -198,7 +198,7 @@ class _CourierDetailsDialogState extends State<CourierDetailsDialog> {
                       .pop<CourierDetails>((courierName: _text(_name), courierPhone: _text(_phone), fee: _feeValue))
                   : null,
               prefix: const Icon(FIcons.truck, size: Sizes.icon),
-              child: Text(l10n.deliveryCourierGive(widget.provider.name), style: theme.typography.base.forButton),
+              child: Text(l10n.deliveryCourierGive(widget.provider.name), style: theme.type.button),
             ),
           ),
         ],
@@ -242,10 +242,10 @@ class _CourierDeliveredDialogState extends State<CourierDeliveredDialog> {
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(l10n.deliveryCourierDeliveredTitle(widget.order.delivery.holderName ?? ''),
-              style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+              style: theme.type.title),
           const SizedBox(height: 4),
           Text(paidAhead ? l10n.deliveryCourierPaidOnline : l10n.deliveryCourierDeliveredHint,
-              style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           if (!paidAhead) ...[
             const SizedBox(height: 16),
             FTextField(
@@ -261,7 +261,7 @@ class _CourierDeliveredDialogState extends State<CourierDeliveredDialog> {
             child: FButton(
               onPress: collected == null || collected < 0 ? null : () => Navigator.of(context, rootNavigator: true).pop(collected),
               prefix: const Icon(FIcons.check, size: Sizes.icon),
-              child: Text(l10n.deliveryMarkDelivered, style: theme.typography.base.forButton),
+              child: Text(l10n.deliveryMarkDelivered, style: theme.type.button),
             ),
           ),
         ],

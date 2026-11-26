@@ -10,6 +10,7 @@ import '../models/delivery_board.dart';
 import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
 import '../screens/deliveries_board_screen.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The deliveries on the floor in one row, however many there are: how many
 /// in each lane (the ones waiting on the cashier tinted) and the cash still
@@ -47,7 +48,7 @@ class DeliveriesSummary extends ConsumerWidget {
             const SizedBox(width: 6),
             Text(
               lane == BoardLane.cashDue && count > 0 ? '${lane.label(l10n)} $count · ${money(context, cash)}' : '${lane.label(l10n)} $count',
-              style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: color, fontFeatures: const [FontFeature.tabularFigures()]),
+              style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, color: color, fontFeatures: const [FontFeature.tabularFigures()]),
             ),
           ],
         ),
@@ -71,7 +72,7 @@ class DeliveriesSummary extends ConsumerWidget {
               children: [
                 Icon(FIcons.bike, size: Sizes.icon, color: theme.colors.primary),
                 const SizedBox(width: 8),
-                Text(l10n.deliveries, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                Text(l10n.deliveries, style: theme.type.heading),
                 const SizedBox(width: 12),
                 // The lanes scroll sideways on a narrow till rather than wrap the row
                 Expanded(

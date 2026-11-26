@@ -8,6 +8,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/ticket_summary.dart';
+import '../../../core/theme/type_roles.dart';
 
 IconData ticketTypeIcon(TicketType? type) => switch (type) {
       TicketType.room => FIcons.doorOpen,
@@ -80,11 +81,11 @@ class BillCard extends StatelessWidget {
     return needed < minHeight ? minHeight : needed.ceilToDouble();
   }
 
-  static TextStyle _nameStyle(FThemeData theme) => theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25);
+  static TextStyle _nameStyle(FThemeData theme) => theme.type.heading;
   static TextStyle _clockStyle(FThemeData theme) =>
-      theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]);
+      theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]);
   static TextStyle _totalStyle(FThemeData theme) =>
-      theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()]);
+      theme.type.heading.copyWith(fontFeatures: const [FontFeature.tabularFigures()]);
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +115,7 @@ class BillCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Padding(
-                padding: const EdgeInsets.only(top: 2),
+                padding: const EdgeInsets.only(top: 4),
                 child: Icon(ticketTypeIcon(ticket.type), size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               ),
               const SizedBox(width: 8),

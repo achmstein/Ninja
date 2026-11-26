@@ -6,7 +6,6 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/printing/print_service.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/shift.dart';
@@ -14,6 +13,7 @@ import '../providers/shifts_provider.dart';
 import '../services/shifts_service.dart';
 import '../widgets/shift_report.dart';
 import 'shift_screen.dart' show ShiftStatusPill;
+import '../../../core/theme/type_roles.dart';
 
 /// One shift from the history, laid out exactly like the Z shown at close
 /// time, with the same 80 mm print. (An open shift's id renders too — as
@@ -70,14 +70,14 @@ class ShiftDetailScreen extends ConsumerWidget {
         child: Column(
           children: [
             Text(gone ? l10n.shiftNotFound : l10n.somethingWentWrong,
-                style: theme.typography.lg.copyWith(color: theme.colors.mutedForeground)),
+                style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
             const SizedBox(height: 16),
             SizedBox(
               height: Sizes.control,
               child: FButton(
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => context.go('/shifts'),
-                child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+                child: Text(l10n.shiftHistory, style: theme.type.button),
               ),
             ),
           ],
@@ -101,7 +101,7 @@ class ShiftDetailScreen extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(l10n.shiftNumber(shift.id),
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.title),
             ),
             const SizedBox(width: 8),
             ShiftStatusPill(open: !shift.isClosed),
@@ -126,7 +126,7 @@ class ShiftDetailScreen extends ConsumerWidget {
                   mainAxisSize: MainAxisSize.min,
                   onPress: () => _print(context, ref, shift),
                   prefix: const Icon(FIcons.printer, size: Sizes.icon),
-                  child: Text(l10n.print, style: theme.typography.base.forButton),
+                  child: Text(l10n.print, style: theme.type.button),
                 ),
               ),
           ],

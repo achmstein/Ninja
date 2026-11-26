@@ -3,7 +3,6 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/money.dart';
 import '../../../core/sending/sending.dart';
@@ -19,6 +18,7 @@ import 'cart_line_row.dart';
 import 'customer_field.dart';
 import 'order_type_switch.dart';
 import 'sent_lines.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// The order's one big button: what it says, what it comes to, and whether
 /// it can be pressed
@@ -211,14 +211,14 @@ class SaleOrderPanel extends StatelessWidget {
                         child: Text(title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700)),
+                            style: theme.type.heading),
                       ),
                       if (onBill || lines.isNotEmpty) ...[
                         const SizedBox(width: 8),
                         Text(
                           onBill ? hashNumber(bill.ticketId) : l10n.linesCount(saleCount(lines)),
                           maxLines: 1,
-                          style: theme.typography.sm.copyWith(
+                          style: theme.type.detail.copyWith(
                               fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
                         ),
                       ],
@@ -286,7 +286,7 @@ class SaleOrderPanel extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
                         child: Text(l10n.orderEmptyHint,
                             textAlign: TextAlign.center,
-                            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                            style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                       )
                     : const SizedBox.shrink())
                 // Every row built (a sale is a few dozen at most), so the
@@ -326,7 +326,7 @@ class SaleOrderPanel extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(l10n.goesWellWith, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                  Text(l10n.goesWellWith, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                   const SizedBox(height: 6),
                   SingleChildScrollView(
                     scrollDirection: Axis.horizontal,
@@ -343,7 +343,7 @@ class SaleOrderPanel extends StatelessWidget {
                                 onPress: () => onSuggestion(item),
                                 prefix: const Icon(FIcons.plus, size: Sizes.iconSmall),
                                 child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
-                                    style: theme.typography.base.forButton),
+                                    style: theme.type.button),
                               ),
                             ),
                           ),
@@ -367,10 +367,10 @@ class SaleOrderPanel extends StatelessWidget {
                             fee.minutes == null
                                 ? l10n.deliveryFee
                                 : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(fee.minutes!)}',
-                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                       ),
                       Text(fee.fee > 0 ? money(context, fee.fee) : l10n.deliveryFree,
-                          style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                          style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
                     ],
                   ),
                   const SizedBox(height: 8),
@@ -380,10 +380,10 @@ class SaleOrderPanel extends StatelessWidget {
                   textBaseline: TextBaseline.alphabetic,
                   children: [
                     Expanded(
-                      child: Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                      child: Text(l10n.total, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                     ),
                     Text(money(context, total),
-                        style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                        style: theme.type.figure),
                   ],
                 ),
                 // Part of it is paid already: what was taken, and what is left to take
@@ -392,11 +392,11 @@ class SaleOrderPanel extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(l10n.partPaidSoFar(money(context, partPaid)),
-                            style: theme.typography.sm.copyWith(
+                            style: theme.type.detail.copyWith(
                                 fontWeight: FontWeight.w500, color: AppColors.emerald(theme.colors.brightness))),
                       ),
                       Text(l10n.leftToPay(money(context, total - partPaid < 0 ? 0 : total - partPaid)),
-                          style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                          style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
                     ],
                   ),
                 const SizedBox(height: 12),
@@ -426,8 +426,8 @@ class SaleOrderPanel extends StatelessWidget {
                         suffix: primary.amount == null
                             ? null
                             : Text(money(context, primary.amount!),
-                                style: theme.typography.lg.forButton.copyWith(fontFeatures: tabular)),
-                        child: Text(primary.label, style: theme.typography.lg.forButton),
+                                style: theme.type.mainAction.copyWith(fontFeatures: tabular)),
+                        child: Text(primary.label, style: theme.type.mainAction),
                       ),
                     ),
               ],

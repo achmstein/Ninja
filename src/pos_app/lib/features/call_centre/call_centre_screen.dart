@@ -8,7 +8,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../core/brand/brand_provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/models/money.dart';
@@ -25,6 +24,7 @@ import '../orders/models/order.dart' show PinSource;
 import '../sale/models/sale_delivery.dart';
 import '../sale/models/sale_line.dart';
 import 'call_centre_controller.dart';
+import '../../core/theme/type_roles.dart';
 
 /// Enough digits to be worth looking the caller up
 const _minPhoneDigits = 8;
@@ -153,13 +153,12 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
     if (_customer(ref.read(callCentreControllerProvider)) == null || !_phoneOk) return;
     final branchId = await showPosDialog<int>(
       context,
-      maxWidth: 420,
       builder: (dialogContext) => DialogScroll(
         child: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.callCentrePickupAt, style: dialogContext.theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.callCentrePickupAt, style: dialogContext.theme.type.title),
             const SizedBox(height: 12),
             for (final b in branches)
               Padding(
@@ -186,8 +185,8 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
-    final error = theme.typography.sm.copyWith(color: theme.colors.destructive);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
+    final error = theme.type.detail.copyWith(color: theme.colors.destructive);
     final amber = AppColors.amber(theme.colors.brightness);
     final call = ref.watch(callCentreControllerProvider);
     final branches = ref.watch(branchProvider).branches;
@@ -225,7 +224,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               children: [
                 const Icon(FIcons.headset, size: Sizes.icon),
                 const SizedBox(width: 8),
-                Expanded(child: Text(l10n.callCentreNextCaller, style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700))),
+                Expanded(child: Text(l10n.callCentreNextCaller, style: theme.type.title)),
               ],
             ),
             const SizedBox(height: 4),
@@ -240,7 +239,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                 children: [
                   Icon(FIcons.userCheck, size: Sizes.iconSmall, color: theme.colors.primary),
                   const SizedBox(width: 6),
-                  Expanded(child: Text(call.customer!.displayName, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600))),
+                  Expanded(child: Text(call.customer!.displayName, style: theme.type.heading)),
                 ],
               )
             else ...[
@@ -249,7 +248,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             ],
             if (call.known.isNotEmpty) ...[
               const SizedBox(height: 12),
-              Text(l10n.deliveryKnownAddresses, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+              Text(l10n.deliveryKnownAddresses, style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
               const SizedBox(height: 6),
               for (final a in call.known)
                 Padding(
@@ -276,7 +275,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                               a.address,
                               if ((a.building ?? '').isNotEmpty) '${l10n.deliveryBuilding} ${a.building}',
                             ].join(l10n.listSeparator),
-                            style: theme.typography.sm,
+                            style: theme.type.detail,
                           ),
                         ),
                       ],
@@ -387,7 +386,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                         if (zone.minimumOrder > 0) l10n.deliveryAreaMinimum(money(context, zone.minimumOrder)),
                         if (zone.etaMinutes != null) l10n.deliveryAboutMinutes(zone.etaMinutes!),
                       ].join(' · '),
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
+                      style: theme.type.detail.copyWith(fontWeight: FontWeight.w500),
                     ),
                   ),
                 ],
@@ -455,7 +454,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                                 if (b.paused && _confirming != b.branchId)
                                   TextSpan(text: ' · ${l10n.deliveryBranchPaused}', style: TextStyle(color: amber, fontWeight: FontWeight.w600)),
                               ]),
-                              style: theme.typography.sm,
+                              style: theme.type.detail,
                             ),
                           ),
                         ],
@@ -475,7 +474,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
                   // button's row the words shorten instead of running over
                   child: Flexible(
                     child: Text(l10n.callCentreTakeAt(nameOf(chosen.branchId)),
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.lg.forButton),
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.mainAction),
                   ),
                 ),
               ),

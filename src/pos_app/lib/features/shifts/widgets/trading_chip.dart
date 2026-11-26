@@ -3,11 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../providers/shifts_provider.dart';
 import 'trading_switches.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Header button for the branch's two customer-facing switches: taking
 /// orders, taking reservations. It says where the branch stands (a green dot
@@ -63,7 +63,7 @@ class TradingChip extends ConsumerWidget {
         ),
         child: Text(
           label,
-          style: theme.typography.sm.forButton
+          style: theme.type.buttonSmall
               .copyWith(color: flags.paused ? AppColors.amber(theme.colors.brightness) : null),
         ),
       ),
@@ -78,7 +78,6 @@ Future<void> showTradingDialog(BuildContext context) => showFDialog<void>(
       builder: (context, style, animation) => DialogPanel(
         style: style,
         animation: animation,
-        maxWidth: 448,
         builder: (context) => const _TradingDialog(),
       ),
     );
@@ -92,7 +91,7 @@ class _TradingDialog extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final reservations = ref.watch(branchFlagsProvider).reservations;
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -104,12 +103,12 @@ class _TradingDialog extends ConsumerWidget {
               const SizedBox(width: 8),
               Expanded(
                 child: Text(reservations ? l10n.ordersAndReservations : l10n.customerOrders,
-                    style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+                    style: theme.type.title),
               ),
             ],
           ),
           const SizedBox(height: 4),
-          Text(l10n.tradingHint, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.tradingHint, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           const TradingSwitches(),
           const SizedBox(height: 16),
@@ -118,7 +117,7 @@ class _TradingDialog extends ConsumerWidget {
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-              child: Text(l10n.done, style: theme.typography.base.forButton),
+              child: Text(l10n.done, style: theme.type.button),
             ),
           ),
         ],

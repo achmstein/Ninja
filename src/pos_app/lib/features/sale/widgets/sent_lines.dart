@@ -9,6 +9,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../bill_lines.dart';
 import '../bill_people.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// A quiet heading over a part of the order: what is new, what was sent
 class OrderSectionLabel extends StatelessWidget {
@@ -18,11 +19,9 @@ class OrderSectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
     return Padding(
       padding: const EdgeInsets.fromLTRB(12, 12, 12, 4),
-      child: Text(text,
-          style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, color: theme.colors.mutedForeground)),
+      child: TypeLabel(text),
     );
   }
 }
@@ -102,7 +101,7 @@ class _SentRow extends StatelessWidget {
     final negative = line.total < 0;
     final emerald = AppColors.emerald(theme.colors.brightness);
     final ink = negative ? emerald : theme.colors.mutedForeground;
-    final style = theme.typography.sm.copyWith(color: ink);
+    final style = theme.type.detail.copyWith(color: ink);
     const tabular = [FontFeature.tabularFigures()];
     final details = line.details?.localized(context) ?? '';
     final who = line.customerName ?? '';
@@ -155,7 +154,7 @@ class _SentRow extends StatelessWidget {
                   Text(details,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                      style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
                 // Whose it is, in full and on its own line. Laid out in the
                 // name's own script, so a long one is cut at its end, and
                 // pinned to the row's start, so it still sits under its item
@@ -166,7 +165,7 @@ class _SentRow extends StatelessWidget {
                     overflow: TextOverflow.ellipsis,
                     textDirection: textDirectionFor(who),
                     textAlign: textAlignFor(context),
-                    style: theme.typography.xs.copyWith(
+                    style: theme.type.caption.copyWith(
                       fontWeight: FontWeight.w500,
                       color: theme.colors.foreground.withValues(alpha: 0.7),
                     ),
@@ -183,7 +182,7 @@ class _SentRow extends StatelessWidget {
                 borderRadius: BorderRadius.circular(999),
               ),
               child: Text(AppLocalizations.of(context)!.paidTag,
-                  style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, color: emerald)),
+                  style: theme.type.caption.copyWith(fontWeight: FontWeight.w600, color: emerald)),
             ),
           ],
           const SizedBox(width: 8),

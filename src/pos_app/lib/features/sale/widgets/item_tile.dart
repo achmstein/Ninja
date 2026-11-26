@@ -6,6 +6,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import '../../catalog/models/catalog_item.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// A menu item's picture, or the same default the customer app shows when
 /// it has none or the file fails to load: the utensils mark on a muted box.
@@ -72,12 +73,12 @@ class ItemTile extends StatelessWidget {
                     item.name.localized(context),
                     maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, height: 1.25),
+                    style: theme.type.detail.copyWith(fontWeight: FontWeight.w500),
                   ),
                   const SizedBox(height: 2),
                   Text(
                     money(context, item.unitPrice),
-                    style: theme.typography.sm.copyWith(
+                    style: theme.type.detail.copyWith(
                       color: theme.colors.mutedForeground,
                       fontFeatures: const [FontFeature.tabularFigures()],
                     ),
@@ -143,14 +144,14 @@ class CompactItemTile extends StatelessWidget {
                         overflow: TextOverflow.ellipsis,
                         textDirection: textDirectionFor(name),
                         textAlign: textAlignFor(context),
-                        style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, height: 1.2),
+                        style: theme.type.detail.copyWith(fontWeight: FontWeight.w500),
                       ),
                     ),
                     Text(
                       money(context, item.unitPrice),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.sm.copyWith(
+                      style: theme.type.detail.copyWith(
                         color: theme.colors.mutedForeground,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       ),

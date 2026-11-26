@@ -6,7 +6,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/order.dart';
@@ -17,6 +16,7 @@ import 'platform_badge.dart';
 import '../../../core/utils/bidi.dart';
 
 import '../../../core/utils/phone.dart';
+import '../../../core/theme/type_roles.dart';
 /// The queue of customer app orders waiting for a cashier's tap, wherever
 /// it is shown: sideways on the floor, stacked on the ticket they will land
 /// on. Confirm is right on the card — the usual answer — and the card body
@@ -201,7 +201,7 @@ class _PendingOrderCard extends StatelessWidget {
                         child: Text(title,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                            style: theme.type.heading),
                       ),
                     ],
                   ),
@@ -209,7 +209,7 @@ class _PendingOrderCard extends StatelessWidget {
                     // A delivery platform's order: its logo and the code the rider asks for, and how it leaves
                     Row(
                       children: [
-                        Text(hashNumber(order.id), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                        Text(hashNumber(order.id), style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                         const SizedBox(width: 8),
                         Flexible(child: PlatformBadge(platform: platform)),
                       ],
@@ -220,7 +220,7 @@ class _PendingOrderCard extends StatelessWidget {
                       subtitle == null || subtitle.isEmpty ? hashNumber(order.id) : '${hashNumber(order.id)} · $subtitle',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                      style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
                     ),
                   if (history != null)
                     Row(
@@ -232,14 +232,14 @@ class _PendingOrderCard extends StatelessWidget {
                             history,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.sm.copyWith(color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
+                            style: theme.type.detail.copyWith(color: ordersBefore == 0 ? amber : theme.colors.mutedForeground),
                           ),
                         ),
                       ],
                     ),
                   Text(
                     '${relativeTime(context, l10n, order.date, now)} · ${money(context, order.total)}',
-                    style: theme.typography.sm.copyWith(
+                    style: theme.type.detail.copyWith(
                       color: ageColor,
                       fontWeight: urgency == OrderUrgency.fresh ? FontWeight.w400 : FontWeight.w500,
                       fontFeatures: const [FontFeature.tabularFigures()],
@@ -256,7 +256,7 @@ class _PendingOrderCard extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               onPress: acting ? null : onConfirm,
               prefix: const Icon(FIcons.check, size: Sizes.icon),
-              child: Text(l10n.confirmOrder, style: theme.typography.base.forButton),
+              child: Text(l10n.confirmOrder, style: theme.type.button),
             ),
           ),
         ],
@@ -284,7 +284,7 @@ class PendingOrdersStrip extends ConsumerWidget {
           children: [
             Icon(FIcons.clock, size: Sizes.icon, color: AppColors.amber(theme.colors.brightness)),
             const SizedBox(width: 8),
-            Text(l10n.pendingOrders, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.pendingOrders, style: theme.type.heading),
             const SizedBox(width: 8),
             FBadge(child: Text('${pending.length}', style: const TextStyle(fontFeatures: [FontFeature.tabularFigures()]))),
           ],

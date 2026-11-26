@@ -6,11 +6,11 @@ import '../../../core/network/api_client.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/printing/kitchen_printing.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/models/ticket_detail.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Whether the bill can send its kitchen tickets again: the branch has a
 /// station that prints, and the bill has orders on it
@@ -45,7 +45,7 @@ class KitchenReprintButton extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           onPress: () => showPosDialog<void>(context, builder: (_) => _KitchenReprintDialog(ticket: ticket)),
           prefix: const Icon(FIcons.printer, size: Sizes.icon),
-          child: Text(l10n.kitchenTickets, style: theme.typography.base.forButton),
+          child: Text(l10n.kitchenTickets, style: theme.type.button),
         ),
       ),
     );
@@ -102,9 +102,9 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.kitchenTickets, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.kitchenTickets, style: theme.type.title),
           const SizedBox(height: 4),
-          Text(l10n.kitchenTicketsHint, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+          Text(l10n.kitchenTicketsHint, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
           const SizedBox(height: 16),
           Flexible(
             child: SingleChildScrollView(
@@ -122,7 +122,7 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
                               children: [
                                 Text(
                                   l10n.orderNumber(entry.key),
-                                  style: theme.typography.base.copyWith(
+                                  style: theme.type.body.copyWith(
                                     fontWeight: FontWeight.w600,
                                     fontFeatures: const [FontFeature.tabularFigures()],
                                   ),
@@ -131,7 +131,7 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
                                   entry.value
                                       .map((line) => '${_qty(line.qty)}× ${line.description?.localized(context) ?? ''}')
                                       .join(' · '),
-                                  style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                                  style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
                                   maxLines: 2,
                                   overflow: TextOverflow.ellipsis,
                                 ),
@@ -146,7 +146,7 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
                               mainAxisSize: MainAxisSize.min,
                               onPress: _sending.contains(entry.key) ? null : () => _reprint(entry.key),
                               prefix: Icon(_sent.contains(entry.key) ? FIcons.check : FIcons.printer, size: Sizes.icon),
-                              child: Text(l10n.reprint, style: theme.typography.base.forButton),
+                              child: Text(l10n.reprint, style: theme.type.button),
                             ),
                           ),
                         ],
@@ -166,7 +166,7 @@ class _KitchenReprintDialogState extends ConsumerState<_KitchenReprintDialog> {
                 variant: FButtonVariant.outline,
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-                child: Text(l10n.close, style: theme.typography.base.forButton),
+                child: Text(l10n.close, style: theme.type.button),
               ),
             ),
           ),

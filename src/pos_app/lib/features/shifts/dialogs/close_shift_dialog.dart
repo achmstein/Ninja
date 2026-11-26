@@ -8,7 +8,6 @@ import '../../../core/network/api_errors.dart';
 import '../../../core/offline/offline_queue.dart';
 import '../../../core/printing/print_service.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
@@ -17,6 +16,7 @@ import '../providers/shifts_provider.dart';
 import '../services/shifts_service.dart';
 import '../widgets/amount_entry.dart';
 import '../widgets/shift_report.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Count the drawer and close the shift. The count comes off the keypad (a
 /// count of exactly 0 is a valid — if sad — answer, so the cashier must
@@ -39,7 +39,7 @@ Future<ShiftView?> showCloseShiftDialog(BuildContext context, ShiftView shift) a
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 512,
+      size: DialogSize.lg,
       builder: (context) => _CloseShiftDialog(shift: shift),
     ),
   );
@@ -110,7 +110,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              Text(l10n.shiftClosed, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+              Text(l10n.shiftClosed, style: theme.type.title),
               const SizedBox(height: 16),
               ShiftReport(shift: result),
               const SizedBox(height: 16),
@@ -122,7 +122,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                       child: FButton(
                         variant: FButtonVariant.outline,
                         onPress: () => Navigator.of(context, rootNavigator: true).pop(result),
-                        child: Text(l10n.done, style: theme.typography.base.forButton),
+                        child: Text(l10n.done, style: theme.type.button),
                       ),
                     ),
                   ),
@@ -133,7 +133,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                       child: FButton(
                         onPress: () => _print(result),
                         prefix: const Icon(FIcons.printer, size: Sizes.icon),
-                        child: Text(l10n.print, style: theme.typography.base.forButton),
+                        child: Text(l10n.print, style: theme.type.button),
                       ),
                     ),
                   ),
@@ -153,7 +153,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.closeShiftTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.closeShiftTitle, style: theme.type.title),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
@@ -161,11 +161,11 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
             child: Row(
               children: [
                 Expanded(
-                  child: Text(l10n.expectedInDrawer, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                  child: Text(l10n.expectedInDrawer, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                 ),
                 const SizedBox(width: 12),
                 Text(money(context, widget.shift.expectedInDrawer),
-                    style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, fontFeatures: const [FontFeature.tabularFigures()])),
+                    style: theme.type.heading.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ],
             ),
           ),
@@ -180,7 +180,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                 child: FButton(
                   variant: FButtonVariant.outline,
                   onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
               SizedBox(
@@ -188,7 +188,7 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   onPress: canClose ? _close : null,
-                  child: Text(l10n.confirmCloseShift, style: theme.typography.base.forButton),
+                  child: Text(l10n.confirmCloseShift, style: theme.type.button),
                 ),
               ),
             ],

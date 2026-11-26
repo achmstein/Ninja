@@ -10,7 +10,6 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -23,6 +22,7 @@ import '../stay_actions.dart';
 import '../status.dart';
 import '../widgets/rate_option_toggle.dart';
 import 'start_stay_dialog.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// One room's live state and every control the till has for it — the
 /// admin room panel's "now" section, sized for a thumb. Hours here; the
@@ -39,7 +39,6 @@ Future<PlacePanelOutcome> showPlacePanel(BuildContext context, int placeId) asyn
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _PlacePanel(placeId: placeId),
     ),
   );
@@ -180,7 +179,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
     final reserved = !active && seated == null && reservation != null;
     final maintenance = room.status == PlaceStatus.outOfService;
     final amber = AppColors.amber(theme.colors.brightness);
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     const tabular = [FontFeature.tabularFigures()];
     final playIcon = Transform.flip(flipX: rtl, child: const Icon(FIcons.play, size: Sizes.icon));
     final dot = switch (room.status) {
@@ -203,7 +202,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
             variant: variant,
             onPress: onPress,
             prefix: icon,
-            child: Text(label, style: theme.typography.base.forButton),
+            child: Text(label, style: theme.type.button),
           ),
         );
 
@@ -219,7 +218,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           Text(formatClock(elapsed),
               textAlign: TextAlign.center,
-              style: theme.typography.figure.copyWith(fontWeight: FontWeight.w300, letterSpacing: 4, fontFeatures: tabular)),
+              style: theme.type.figure.copyWith(letterSpacing: 4)),
           if (used.isNotEmpty && session.hasOptions) ...[
             const SizedBox(height: 4),
             Text(
@@ -261,7 +260,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                       const SizedBox(width: 6),
                       FTappable(
                         onPress: () => showCustomerCard(context, id: member.customerId, name: member.customerName ?? ''),
-                        child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.typography.sm),
+                        child: Text((member.customerName ?? '').isNotEmpty ? member.customerName! : l10n.guest, style: theme.type.detail),
                       ),
                       if (!member.isOwner) ...[
                         const SizedBox(width: 4),
@@ -293,7 +292,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _pickCustomer(session: session, assign: false),
                   prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                  child: Text(l10n.addCustomer, style: theme.typography.sm.forButton.copyWith(color: theme.colors.mutedForeground)),
+                  child: Text(l10n.addCustomer, style: theme.type.buttonSmall.copyWith(color: theme.colors.mutedForeground)),
                 ),
               ),
             ],
@@ -312,13 +311,13 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                       Row(children: [
                         Text(session.hasOptions ? c.optionName.localized(context) : l10n.time, style: muted),
                         const Spacer(),
-                        Text(l10n.billedHoursFormat(hoursText(c.hours)), style: theme.typography.sm.copyWith(fontFeatures: tabular)),
+                        Text(l10n.billedHoursFormat(hoursText(c.hours)), style: theme.type.detail.copyWith(fontFeatures: tabular)),
                       ]),
                   const FDivider(),
                   Row(children: [
-                    Text(l10n.billedHours, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                    Text(l10n.billedHours, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                     const Spacer(),
-                    Text(l10n.billedHoursFormat(hoursText(billed)), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                    Text(l10n.billedHoursFormat(hoursText(billed)), style: theme.type.detail.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
                   ]),
                 ],
               ),
@@ -347,7 +346,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               variant: FButtonVariant.ghost,
               onPress: _busy ? null : () => _confirmCancel(session: session),
               prefix: Icon(FIcons.x, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-              child: Text(l10n.cancelSessionButton, style: theme.typography.base.forButton.copyWith(color: theme.colors.mutedForeground)),
+              child: Text(l10n.cancelSessionButton, style: theme.type.button.copyWith(color: theme.colors.mutedForeground)),
             ),
           ),
         ],
@@ -360,14 +359,14 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           Center(child: circle(FIcons.users, AppColors.sky500, AppColors.sky500.withValues(alpha: 0.1))),
           const SizedBox(height: 12),
-          Text(l10n.partySeated, textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+          Text(l10n.partySeated, textAlign: TextAlign.center, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
               Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
               const SizedBox(width: 4),
-              Text('$who$party', style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+              Text('$who$party', style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
             ],
           ),
           if (seated.seatedAt != null) ...[
@@ -402,7 +401,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
           Center(child: circle(FIcons.clock, AppColors.amber500, AppColors.amber500.withValues(alpha: 0.1))),
           const SizedBox(height: 12),
           Text(timed ? l10n.readyToStart : l10n.statusReserved,
-              textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+              textAlign: TextAlign.center, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
           const SizedBox(height: 8),
           if ((reservation.customerName ?? '').isNotEmpty)
             Row(
@@ -410,7 +409,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               children: [
                 Icon(FIcons.user, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                 const SizedBox(width: 4),
-                Text(reservation.customerName!, style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                Text(reservation.customerName!, style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
               ],
             )
           else
@@ -422,14 +421,14 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
                   mainAxisSize: MainAxisSize.min,
                   onPress: _busy ? null : () => _pickCustomer(reservation: reservation, assign: true),
                   prefix: const Icon(FIcons.userPlus, size: Sizes.iconSmall),
-                  child: Text(l10n.assignCustomer, style: theme.typography.base.forButton),
+                  child: Text(l10n.assignCustomer, style: theme.type.button),
                 ),
               ),
             ),
           if (expiresIn != null) ...[
             const SizedBox(height: 8),
             Text(l10n.expiresIn(formatCountdown(expiresIn)),
-                textAlign: TextAlign.center, style: theme.typography.sm.copyWith(color: amber, fontFeatures: tabular)),
+                textAlign: TextAlign.center, style: theme.type.detail.copyWith(color: amber, fontFeatures: tabular)),
           ],
           // The customer asked for the clock to start the moment the counter
           // confirms the reservation, at the rate they picked: one tap does both
@@ -479,7 +478,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           circle(FIcons.wrench, theme.colors.mutedForeground, theme.colors.muted),
           const SizedBox(height: 12),
-          Text(l10n.underMaintenance, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
+          Text(l10n.underMaintenance, style: theme.type.body.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground)),
         ],
       );
     } else {
@@ -489,7 +488,7 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
         children: [
           Center(child: circle(FIcons.circleCheck, AppColors.successColor, AppColors.successColor.withValues(alpha: 0.1))),
           const SizedBox(height: 12),
-          Text(l10n.statusAvailable, textAlign: TextAlign.center, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+          Text(l10n.statusAvailable, textAlign: TextAlign.center, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
           if (description.isNotEmpty) ...[
             const SizedBox(height: 4),
             Text(description, textAlign: TextAlign.center, style: muted),
@@ -528,12 +527,12 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               children: [
                 Container(width: 12, height: 12, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
                 const SizedBox(width: 8),
-                Expanded(child: Text(room.name.localized(context), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600))),
+                Expanded(child: Text(room.name.localized(context), style: theme.type.title)),
               ],
             ),
             const SizedBox(height: 4),
             Text('${tariffLine(context, room.options, (v) => money(context, v))} ${l10n.perHour}',
-                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
             const SizedBox(height: 16),
             body,
           ],

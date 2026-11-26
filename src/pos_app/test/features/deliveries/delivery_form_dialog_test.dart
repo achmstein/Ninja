@@ -79,7 +79,7 @@ void main() {
     await tester.pumpWidget(_host(_Repository(), _Customers()));
     await _open(tester);
 
-    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(find.text('STEP 1 OF 3'), findsOneWidget);
     for (final step in ['Customer', 'Address', 'Confirm']) {
       expect(find.text(step), findsOneWidget);
     }
@@ -135,7 +135,7 @@ void main() {
     ));
     await _open(tester);
 
-    expect(find.text('Step 2 of 3'), findsOneWidget);
+    expect(find.text('STEP 2 OF 3'), findsOneWidget);
     // The step behind says who, under its name
     expect(find.text('Mona'), findsOneWidget);
     expect(find.text('Area and street'), findsOneWidget);
@@ -145,7 +145,7 @@ void main() {
     await tester.tap(find.text('Same address'));
     await tester.pump(const Duration(milliseconds: 600));
     await tester.pump();
-    expect(find.text('Step 3 of 3'), findsOneWidget);
+    expect(find.text('STEP 3 OF 3'), findsOneWidget);
 
     await tester.tap(find.text('Deliver here'));
     await tester.pump(const Duration(milliseconds: 600));
@@ -157,7 +157,7 @@ void main() {
   testWidgets('a sale with a name and no number still asks for the number first', (tester) async {
     await tester.pumpWidget(_host(_Repository(), _Customers(), customer: const SaleCustomer(name: 'Mona')));
     await _open(tester);
-    expect(find.text('Step 1 of 3'), findsOneWidget);
+    expect(find.text('STEP 1 OF 3'), findsOneWidget);
   });
 
   for (final locale in phoneLocales) {

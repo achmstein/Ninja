@@ -5,7 +5,6 @@ import 'package:forui/forui.dart';
 import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/name_match.dart';
 import '../../../core/utils/phone.dart';
 import '../../../core/widgets/toast_helpers.dart';
@@ -13,6 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_line.dart';
 import '../providers/customer_providers.dart';
 import '../services/customer_search_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 const _lookupDebounce = Duration(milliseconds: 300);
 const _minPhoneDigits = 7;
@@ -155,8 +155,8 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
-    final error = theme.typography.sm.copyWith(color: theme.colors.destructive);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
+    final error = theme.type.detail.copyWith(color: theme.colors.destructive);
 
     final typedPhone = normalizePhone(_phone.text, _country);
     // An exact number match is the same person: using them is the way on
@@ -224,7 +224,7 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(user.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                              style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                              style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                           if (!user.enabled)
                             Text(l10n.customerDisabled, style: muted)
                           else if (user.contact case final contact?)
@@ -247,7 +247,7 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
                   child: FButton(
                     variant: FButtonVariant.outline,
                     onPress: widget.onCancel,
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                    child: Text(l10n.cancel, style: theme.type.button),
                   ),
                 ),
               ),
@@ -259,7 +259,7 @@ class _NewCustomerFormState extends ConsumerState<NewCustomerForm> {
                     // With a match on screen, using them is the primary way on
                     variant: exact != null ? FButtonVariant.outline : null,
                     onPress: canCreate ? _create : null,
-                    child: Text(l10n.createCustomer, style: theme.typography.base.forButton),
+                    child: Text(l10n.createCustomer, style: theme.type.button),
                   ),
                 ),
               ),
@@ -282,7 +282,7 @@ class _ExistingCard extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final showPoints = ref.watch(featuresProvider).loyalty && ref.watch(onlineProvider);
     final points = showPoints ? ref.watch(loyaltyAccountProvider(user.id)).value?.pointsBalance : null;
 
@@ -307,7 +307,7 @@ class _ExistingCard extends ConsumerWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(user.displayName, maxLines: 1, overflow: TextOverflow.ellipsis,
-                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                        style: theme.type.heading),
                     Row(
                       children: [
                         if (user.phoneNumber case final phone?)
@@ -333,7 +333,7 @@ class _ExistingCard extends ConsumerWidget {
               height: Sizes.control,
               child: FButton(
                 onPress: onUse,
-                child: Text(l10n.useThisCustomer, style: theme.typography.base.forButton),
+                child: Text(l10n.useThisCustomer, style: theme.type.button),
               ),
             ),
         ],

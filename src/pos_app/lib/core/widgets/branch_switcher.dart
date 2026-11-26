@@ -9,6 +9,7 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../features/call_centre/call_centre_mode.dart';
+import '../theme/type_roles.dart';
 
 /// Header branch switcher, same contract as pos_web's: the business's mark and
 /// name with the active branch under them, and a menu of branches. Picking a branch scopes every branch-aware API call via the
@@ -54,15 +55,14 @@ class BranchSwitcher extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  // Tight leading: two lines fit the 48 dp row (pos_web's `leading-tight`)
+                  // Two lines at their roles' own height (20 each) fit the 48 dp row
                   Text(
                     business.isEmpty ? branchLabel : business,
                     maxLines: 1,
                     softWrap: false,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.copyWith(
+                    style: theme.type.detail.copyWith(
                       fontWeight: FontWeight.w600,
-                      height: 1.0,
                       color: theme.colors.foreground,
                     ),
                   ),
@@ -73,9 +73,8 @@ class BranchSwitcher extends ConsumerWidget {
                       maxLines: 1,
                       softWrap: false,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.typography.xs.copyWith(
+                      style: theme.type.caption.copyWith(
                         color: theme.colors.mutedForeground,
-                        height: 1.0,
                       ),
                     ),
                 ],
@@ -110,7 +109,7 @@ class BranchSwitcher extends ConsumerWidget {
           children: [
             for (final branch in branchState.branches)
               FItem(
-                title: Text(branch.name.localized(context), style: theme.typography.base),
+                title: Text(branch.name.localized(context), style: theme.type.body),
                 suffix: !inCallCentre && branch.id == branchState.selectedBranchId
                     ? const Icon(FIcons.check, size: Sizes.icon)
                     : null,
@@ -126,7 +125,7 @@ class BranchSwitcher extends ConsumerWidget {
             children: [
               FItem(
                 prefix: const Icon(FIcons.headset, size: Sizes.icon),
-                title: Text(l10n.callCentre, style: theme.typography.base),
+                title: Text(l10n.callCentre, style: theme.type.body),
                 suffix: inCallCentre ? const Icon(FIcons.check, size: Sizes.icon) : null,
                 onPress: () => ref.read(callCentreModeSwitchProvider).set(true),
               ),

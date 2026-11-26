@@ -10,7 +10,7 @@ import '../layout/breakpoints.dart';
 import 'compact_chip.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
+import '../theme/type_roles.dart';
 
 /// Header chip for the one state the cashier must know about: the network
 /// is down (sales are kept on the till), sales are being sent now that it
@@ -58,7 +58,7 @@ class OfflineChip extends ConsumerWidget {
           mainAxisSize: MainAxisSize.min,
           onPress: () => context.go('/settings'),
           prefix: Container(width: 8, height: 8, decoration: BoxDecoration(color: dot, shape: BoxShape.circle)),
-          child: Text(label, style: theme.typography.sm.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+          child: Text(label, style: theme.type.buttonSmall.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
         ),
       ),
     );

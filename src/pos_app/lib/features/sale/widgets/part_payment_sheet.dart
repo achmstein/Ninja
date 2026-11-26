@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
@@ -17,6 +16,7 @@ import '../../tickets/models/enums.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../bill_payers.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// What is being paid apart from the rest of the bill: whose it is, which
 /// lines, and what it comes to
@@ -110,7 +110,7 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final due = widget.part.amount;
     final notes = cashNotes(due);
     final handed = _received ?? due;
@@ -125,11 +125,11 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
           Text(l10n.partPayTitle(bidiIsolate(name)),
               maxLines: 2,
               overflow: TextOverflow.ellipsis,
-              style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+              style: theme.type.title),
           const SizedBox(height: 16),
           Text(l10n.partPayDue, style: muted),
           Text(money(context, due),
-              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+              style: theme.type.figure),
           const SizedBox(height: 16),
           // The ways of one choice, the same width
           Row(
@@ -148,7 +148,7 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
                         child: Flexible(
                           child: FittedBox(
                             fit: BoxFit.scaleDown,
-                            child: Text(tenderLabel(l10n, tender), maxLines: 1, style: theme.typography.base.forButton),
+                            child: Text(tenderLabel(l10n, tender), maxLines: 1, style: theme.type.button),
                           ),
                         ),
                       ),
@@ -181,7 +181,7 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
                                   child: Text(
                                     notes[index] == due ? l10n.partPayExact : notes[index].toStringAsFixed(0),
                                     maxLines: 1,
-                                    style: theme.typography.base.forButton.copyWith(fontFeatures: tabular),
+                                    style: theme.type.button.copyWith(fontFeatures: tabular),
                                   ),
                                 ),
                               ),
@@ -195,9 +195,9 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
               const SizedBox(height: 8),
               Row(
                 children: [
-                  Text('${l10n.changeDue}: ', style: theme.typography.base),
+                  Text('${l10n.changeDue}: ', style: theme.type.body),
                   Text(money(context, change),
-                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                      style: theme.type.heading.copyWith(fontFeatures: tabular)),
                 ],
               ),
             ],
@@ -215,7 +215,7 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.primaryForeground),
                     )
                   : null,
-              child: Text(l10n.partPayTake(money(context, due)), style: theme.typography.lg.forButton),
+              child: Text(l10n.partPayTake(money(context, due)), style: theme.type.mainAction),
             ),
           ),
         ],

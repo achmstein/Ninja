@@ -8,11 +8,11 @@ import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/providers/catalog_provider.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Marking items sold out (and back) for this branch. Reads the same
 /// providers as the sale pad, so a flip here greys the tile there at once.
@@ -91,7 +91,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
             variant: category.id == activeCategoryId ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
             onPress: () => setState(() => _activeCategory = category.id),
-            child: Text(category.name.localized(context), style: theme.typography.base.forButton),
+            child: Text(category.name.localized(context), style: theme.type.button),
           ),
         );
 
@@ -115,7 +115,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(l10n.availability, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                  Text(l10n.availability, style: theme.type.title),
                 ],
               ),
               const SizedBox(height: 16),
@@ -172,7 +172,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                   padding: const EdgeInsets.symmetric(vertical: 64),
                   child: Text(l10n.somethingWentWrong,
                       textAlign: TextAlign.center,
-                      style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                      style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                 ),
                 data: (items) {
                   final visible = [
@@ -187,7 +187,7 @@ class _AvailabilityScreenState extends ConsumerState<AvailabilityScreen> {
                       padding: const EdgeInsets.symmetric(vertical: 64),
                       child: Text(search.isNotEmpty ? l10n.noItemsMatch : l10n.noItemsInCategory,
                           textAlign: TextAlign.center,
-                          style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                          style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
                     );
                   }
                   return Container(
@@ -244,14 +244,14 @@ class _ItemRow extends StatelessWidget {
                     item.name.localized(context),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.base.copyWith(
+                    style: theme.type.body.copyWith(
                       fontWeight: FontWeight.w500,
                       color: available ? null : theme.colors.mutedForeground,
                       decoration: available ? null : TextDecoration.lineThrough,
                     ),
                   ),
                   Text(money(context, item.unitPrice),
-                      style: theme.typography.sm.copyWith(
+                      style: theme.type.detail.copyWith(
                         color: theme.colors.mutedForeground,
                         fontFeatures: const [FontFeature.tabularFigures()],
                       )),
@@ -261,7 +261,7 @@ class _ItemRow extends StatelessWidget {
             const SizedBox(width: 12),
             Text(
               available ? l10n.available : l10n.soldOut,
-              style: theme.typography.sm.copyWith(
+              style: theme.type.detail.copyWith(
                 fontWeight: FontWeight.w500,
                 color: available ? AppColors.emerald(theme.colors.brightness) : theme.colors.destructive,
               ),

@@ -14,6 +14,7 @@ import '../customer_letters.dart';
 import '../dialogs/new_customer_dialog.dart';
 import '../recent_customers.dart';
 import '../services/customer_search_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 const _searchDebounce = Duration(milliseconds: 250);
 
@@ -188,7 +189,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
     final typed = _term.text.trim();
     final arabicFirst = Localizations.localeOf(context).languageCode == 'ar';
     final rule = BorderSide(color: theme.colors.border);
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     // The letters that matched, marked, so the eye lands on the right Ahmed
     // without reading every row
     final mark = TextStyle(backgroundColor: theme.colors.primary.withValues(alpha: 0.15), fontWeight: FontWeight.w700);
@@ -220,7 +221,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
           overflow: TextOverflow.ellipsis,
           textDirection: textDirectionFor(name),
           textAlign: textAlignFor(context),
-          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+          style: theme.type.heading,
         );
 
     Widget row(IdentityUser user, {bool marked = false}) {
@@ -274,7 +275,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
                     Text(title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                        style: theme.type.heading),
                     Text(subtitle, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
                   ],
                 ),
@@ -285,7 +286,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
 
     Widget caption(String text) => Padding(
           padding: const EdgeInsets.fromLTRB(Sizes.gapLg, Sizes.gap, Sizes.gapLg, Sizes.gapXs),
-          child: Text(text, style: muted.copyWith(fontWeight: FontWeight.w500)),
+          child: TypeLabel(text),
         );
 
     Widget nothing(String text) => Padding(
@@ -405,7 +406,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
           topRow(
             onBack: () => setState(() => _adding = false),
             child: Text(l10n.newCustomer,
-                maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600)),
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.title),
           ),
           Expanded(
             child: NewCustomerForm(
@@ -482,7 +483,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
                               ),
                               child: Text(
                                 letter,
-                                style: theme.typography.base.copyWith(
+                                style: theme.type.body.copyWith(
                                   fontWeight: FontWeight.w600,
                                   color: _letter == letter ? theme.colors.primaryForeground : null,
                                 ),

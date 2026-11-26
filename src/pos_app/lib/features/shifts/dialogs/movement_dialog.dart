@@ -7,7 +7,6 @@ import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/widgets/pos_dialog.dart';
@@ -17,6 +16,7 @@ import '../providers/shifts_provider.dart';
 import '../services/shifts_service.dart';
 import '../services/till_picks_service.dart';
 import '../widgets/amount_entry.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Records cash put into or taken out of the drawer mid-shift. Amount comes
 /// off the keypad; the reason is required — an unexplained drawer movement
@@ -27,7 +27,7 @@ import '../widgets/amount_entry.dart';
 Future<bool> showMovementDialog(BuildContext context, int shiftId, CashMovementType type) async {
   final recorded = await showPosDialog<bool>(
     context,
-    maxWidth: 672,
+    size: DialogSize.xl,
     builder: (context) => _MovementDialog(shiftId: shiftId, type: type),
   );
   return recorded ?? false;
@@ -178,7 +178,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                     _kindLabel(l10n, kind),
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: theme.typography.sm.forButton,
+                    style: theme.type.buttonSmall,
                   ),
                 ),
               ),
@@ -213,7 +213,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(title, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(title, style: theme.type.title),
             const SizedBox(height: 16),
             if (context.isCompact) ...[
               what,
@@ -229,8 +229,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                 ],
               ),
             const SizedBox(height: 16),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
+            DialogActions(
               children: [
                 SizedBox(
                   height: Sizes.control,
@@ -238,10 +237,9 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                    child: Text(l10n.cancel, style: theme.type.button),
                   ),
                 ),
-                const SizedBox(width: 8),
                 SizedBox(
                   height: Sizes.control,
                   child: FButton(
@@ -249,7 +247,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
                     onPress: _canSubmit ? _submit : null,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(title, style: theme.typography.base.forButton),
+                      child: Text(title, style: theme.type.button),
                     ),
                   ),
                 ),
@@ -269,7 +267,7 @@ class _Label extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    return Text(text, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500));
+    return Text(text, style: theme.type.detail.copyWith(fontWeight: FontWeight.w500));
   }
 }
 
@@ -321,7 +319,7 @@ class _PickList extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final list = ref.watch(tillPicksProvider(pick));
 
     return list.when(
@@ -391,7 +389,7 @@ class _PickButton extends StatelessWidget {
               item.name.localized(context),
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: theme.typography.base.forButton.copyWith(fontWeight: selected ? FontWeight.w600 : null),
+              style: theme.type.button.copyWith(fontWeight: selected ? FontWeight.w600 : null),
             ),
           ),
           if (hint != null) ...[
@@ -400,7 +398,7 @@ class _PickButton extends StatelessWidget {
             Text(
               hint,
               maxLines: 1,
-              style: theme.typography.xs.copyWith(
+              style: theme.type.caption.copyWith(
                 color: hintColor,
                 fontFeatures: const [FontFeature.tabularFigures()],
               ),

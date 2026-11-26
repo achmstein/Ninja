@@ -11,6 +11,7 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/widgets/app_text.dart';
 import '../../../core/widgets/connection_foot.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Keycloak is the only identity provider and the till signs in with a
 /// staff username and password, once. Same form as admin_app.
@@ -136,8 +137,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   Center(
                     child: AppText(
                       business.isEmpty ? l10n.posName : business,
-                      style: theme.typography.heading.copyWith(
-                        fontWeight: FontWeight.w600,
+                      style: theme.type.title.copyWith(
                         letterSpacing: -0.5,
                         color: theme.colors.foreground,
                       ),
@@ -148,7 +148,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: AppText(
                         l10n.posName,
-                        style: theme.typography.base.copyWith(color: theme.colors.mutedForeground),
+                        style: theme.type.body.copyWith(color: theme.colors.mutedForeground),
                       ),
                     ),
                   ],
@@ -171,7 +171,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: AppText(
                         l10n.whoIsSelling,
-                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, color: theme.colors.foreground),
+                        style: theme.type.heading.copyWith(color: theme.colors.foreground),
                       ),
                     ),
                     const SizedBox(height: 12),
@@ -203,7 +203,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     Center(
                       child: AppText(
                         l10n.orSignInWithPassword,
-                        style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground),
+                        style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
                       ),
                     ),
                     const SizedBox(height: 12),

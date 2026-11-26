@@ -4,12 +4,12 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:uuid/uuid.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Throws away an open ticket nothing ever landed on — opened for the wrong
 /// table, or for a walk-in who changed their mind at the counter. Unlike a
@@ -24,7 +24,6 @@ Future<bool> showDiscardDialog(BuildContext context, int ticketId) async {
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _DiscardDialog(ticketId: ticketId),
     ),
   );
@@ -64,16 +63,15 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(l10n.discardTicketTitle, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+          Text(l10n.discardTicketTitle, style: theme.type.title),
           const SizedBox(height: 16),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.end,
+          DialogActions(
             children: [
               SizedBox(
                 height: Sizes.control,
@@ -81,17 +79,16 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
                   variant: FButtonVariant.outline,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(false),
-                  child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                  child: Text(l10n.cancel, style: theme.type.button),
                 ),
               ),
-              const SizedBox(width: 8),
               SizedBox(
                 height: Sizes.control,
                 child: FButton(
                   variant: FButtonVariant.destructive,
                   mainAxisSize: MainAxisSize.min,
                   onPress: _pending ? null : _discard,
-                  child: Text(l10n.confirmDiscard, style: theme.typography.base.forButton),
+                  child: Text(l10n.confirmDiscard, style: theme.type.button),
                 ),
               ),
             ],

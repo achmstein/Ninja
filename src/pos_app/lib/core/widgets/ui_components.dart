@@ -5,6 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/widgets/app_text.dart';
+import '../theme/type_roles.dart';
 
 /// Standard screen padding for all screens
 const kScreenPadding = EdgeInsets.all(16);
@@ -210,8 +211,8 @@ class ShimmerListTile extends StatelessWidget {
 
 /// Standardized empty state widget
 /// - Icon: 48px
-/// - Title: typography.base
-/// - Subtitle: typography.sm
+/// - Title: body
+/// - Subtitle: detail
 class EmptyState extends StatelessWidget {
   final IconData icon;
   final String title;
@@ -242,7 +243,7 @@ class EmptyState extends StatelessWidget {
             const SizedBox(height: 12),
             AppText(
               title,
-              style: theme.typography.base.copyWith(
+              style: theme.type.body.copyWith(
                 color: theme.colors.mutedForeground,
               ),
             ),
@@ -250,7 +251,7 @@ class EmptyState extends StatelessWidget {
               const SizedBox(height: 4),
               AppText(
                 subtitle!,
-                style: theme.typography.sm.copyWith(
+                style: theme.type.detail.copyWith(
                   color: theme.colors.mutedForeground,
                 ),
                 textAlign: TextAlign.center,
@@ -286,7 +287,7 @@ class SectionHeader extends StatelessWidget {
       children: [
         AppText(
           title,
-          style: theme.typography.base.copyWith(fontWeight: FontWeight.w600),
+          style: theme.type.heading,
         ),
         if (count != null && count! > 0) ...[
           const SizedBox(width: 8),
@@ -298,7 +299,7 @@ class SectionHeader extends StatelessWidget {
             ),
             child: AppText(
               '$count',
-              style: theme.typography.xs.copyWith(fontWeight: FontWeight.w500),
+              style: theme.type.caption.copyWith(fontWeight: FontWeight.w500),
             ),
           ),
         ],
@@ -308,7 +309,7 @@ class SectionHeader extends StatelessWidget {
             onTap: onAction,
             child: AppText(
               actionText!,
-              style: theme.typography.sm.copyWith(color: theme.colors.primary),
+              style: theme.type.detail.copyWith(color: theme.colors.primary),
             ),
           ),
       ],

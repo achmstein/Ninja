@@ -18,11 +18,11 @@ import '../../../core/services/kiosk_service.dart';
 import 'package:ninja_app_core/services/update_service.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/connection_row.dart';
 import '../../../core/widgets/pos_toast.dart';
 import 'package:ninja_app_core/widgets/settings_list.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Per-till settings, as the till lists everything else: this device (the
 /// business, kiosk mode, the app's version), the receipt printer, and the sales
@@ -166,7 +166,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
             prefix: icon == null ? null : Icon(icon, size: Sizes.icon),
-            child: Text(label, style: theme.typography.base.forButton),
+            child: Text(label, style: theme.type.button),
           ),
         );
 
@@ -190,7 +190,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ),
                   const SizedBox(width: 8),
-                  Text(l10n.settings, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                  Text(l10n.settings, style: theme.type.title),
                 ],
               ),
               const SizedBox(height: 24),
@@ -254,7 +254,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         ),
                         const SizedBox(height: 6),
                         Text(l10n.offlineKitchenPrinterHint,
-                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                            style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                       ],
                     ),
                   ),
@@ -346,7 +346,7 @@ class _UpdateRow extends ConsumerWidget {
             mainAxisSize: MainAxisSize.min,
             onPress: busy ? null : (canInstall ? notifier.install : notifier.check),
             prefix: Icon(canInstall ? FIcons.download : FIcons.refreshCw, size: Sizes.icon),
-            child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.typography.base.forButton),
+            child: Text(canInstall ? l10n.installUpdate : l10n.checkForUpdates, style: theme.type.button),
           ),
         ),
       ],
@@ -373,7 +373,7 @@ class _OfflineSales extends ConsumerWidget {
             variant: primary ? null : FButtonVariant.outline,
             mainAxisSize: MainAxisSize.min,
             onPress: onPress,
-            child: Text(label, style: theme.typography.sm.forButton.copyWith(color: color)),
+            child: Text(label, style: theme.type.buttonSmall.copyWith(color: color)),
           ),
         );
 
@@ -399,7 +399,7 @@ class _OfflineSales extends ConsumerWidget {
                 title: '${sale.provisionalReceiptNumber} · ${money(context, sale.total)}',
                 subtitle: formatDateTimeShort(context, sale.placedAt),
                 trailing: Text(online ? l10n.syncingSales(1) : l10n.offlineQueued(1),
-                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                    style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
               ),
           if (queued > 0 && online)
             Padding(

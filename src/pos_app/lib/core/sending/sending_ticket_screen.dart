@@ -4,7 +4,6 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../features/sale/providers/sale_provider.dart';
 import '../../features/ticket/screens/settle_screen.dart';
 import '../../features/tickets/models/enums.dart';
@@ -22,6 +21,7 @@ import '../offline/offline_sale.dart';
 import '../widgets/pos_toast.dart';
 import 'sending.dart';
 import 'sending_lines.dart';
+import '../theme/type_roles.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 96.0;
@@ -227,7 +227,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
             child: Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+                child: Text(label, maxLines: 1, style: theme.type.button),
               ),
             ),
           ),
@@ -242,7 +242,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
           prefix: leading,
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(label, style: theme.typography.lg.forButton),
+            child: Text(label, style: theme.type.mainAction),
           ),
         ),
       );
@@ -251,11 +251,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
     final amount = Text(
       money(context, total),
       maxLines: 1,
-      style: theme.typography.figure.copyWith(
-        fontWeight: FontWeight.w700,
-        height: 1.1,
-        fontFeatures: const [FontFeature.tabularFigures()],
-      ),
+      style: theme.type.figure,
     );
 
     final actions = [
@@ -310,11 +306,11 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                         child: Text.rich(
                           TextSpan(
                             text: title,
-                            style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700),
+                            style: theme.type.title,
                             children: [
                               TextSpan(
                                 text: '  ${l10n.newTicket}',
-                                style: theme.typography.base
+                                style: theme.type.body
                                     .copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground),
                               ),
                             ],
@@ -356,7 +352,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                             height: _totalLineHeight,
                             child: Row(
                               children: [
-                                Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                                Text(l10n.total, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                                 const SizedBox(width: Sizes.gap),
                                 // One line whatever the amount: it shrinks rather than wraps
                                 Expanded(
@@ -389,7 +385,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
                               mainAxisSize: MainAxisSize.min,
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                                Text(l10n.total, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                                 amount,
                               ],
                             ),

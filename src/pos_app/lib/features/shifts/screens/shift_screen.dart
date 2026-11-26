@@ -5,7 +5,6 @@ import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../l10n/app_localizations.dart';
 import '../dialogs/close_shift_dialog.dart';
@@ -14,6 +13,7 @@ import '../dialogs/open_shift_dialog.dart';
 import '../models/shift.dart';
 import '../providers/shifts_provider.dart';
 import '../widgets/shift_report.dart';
+import '../../../core/theme/type_roles.dart';
 
 const _maxWidth = 768.0;
 const _actionBarHeight = 80.0;
@@ -46,7 +46,7 @@ class ShiftScreen extends ConsumerWidget {
           children: [
             Icon(FIcons.banknote, size: Sizes.iconHero, color: theme.colors.mutedForeground),
             const SizedBox(height: 16),
-            Text(l10n.noShiftOpen, style: theme.typography.lg.copyWith(fontWeight: FontWeight.w500)),
+            Text(l10n.noShiftOpen, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
             const SizedBox(height: 16),
             SizedBox(
               height: Sizes.controlLarge,
@@ -55,7 +55,7 @@ class ShiftScreen extends ConsumerWidget {
                 onPress: () => showOpenShiftDialog(context),
                 child: Padding(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
-                  child: Text(l10n.openShiftAction, style: theme.typography.lg.forButton),
+                  child: Text(l10n.openShiftAction, style: theme.type.mainAction),
                 ),
               ),
             ),
@@ -67,7 +67,7 @@ class ShiftScreen extends ConsumerWidget {
                 mainAxisSize: MainAxisSize.min,
                 onPress: () => context.go('/shifts'),
                 prefix: const Icon(FIcons.history, size: Sizes.icon),
-                child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+                child: Text(l10n.shiftHistory, style: theme.type.button),
               ),
             ),
           ],
@@ -103,7 +103,7 @@ class ShiftScreen extends ConsumerWidget {
                         child: Text(l10n.shiftNumber(shift.id),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700)),
+                            style: theme.type.title),
                       ),
                       const SizedBox(width: 8),
                       const ShiftStatusPill(open: true),
@@ -128,7 +128,7 @@ class ShiftScreen extends ConsumerWidget {
                             mainAxisSize: MainAxisSize.min,
                             onPress: () => context.go('/shifts'),
                             prefix: const Icon(FIcons.history, size: Sizes.icon),
-                            child: Text(l10n.shiftHistory, style: theme.typography.base.forButton),
+                            child: Text(l10n.shiftHistory, style: theme.type.button),
                           ),
                         ),
                     ],
@@ -184,7 +184,7 @@ class ShiftActionBar extends StatelessWidget {
             child: Flexible(
               child: FittedBox(
                 fit: BoxFit.scaleDown,
-                child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+                child: Text(label, maxLines: 1, style: theme.type.button),
               ),
             ),
           ),
@@ -255,7 +255,7 @@ class ShiftStatusPill extends StatelessWidget {
       ),
       child: Text(
         open ? l10n.shiftOpenBadge : l10n.shiftClosedBadge,
-        style: theme.typography.sm.copyWith(
+        style: theme.type.detail.copyWith(
           fontWeight: FontWeight.w500,
           color: open ? AppColors.emerald(theme.colors.brightness) : theme.colors.secondaryForeground,
         ),

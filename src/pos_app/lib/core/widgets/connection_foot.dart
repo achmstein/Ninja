@@ -9,6 +9,7 @@ import '../config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../l10n/app_localizations.dart';
+import '../theme/type_roles.dart';
 
 /// Under the sign-in form: which business this tablet is connected to, and a
 /// way to change it before anyone signs in (a tablet pointed at the wrong
@@ -22,7 +23,7 @@ class ConnectionFoot extends ConsumerWidget {
     if (AppConfig.isPinned || connection == null) return const SizedBox.shrink();
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final muted = theme.typography.xs.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.caption.copyWith(color: theme.colors.mutedForeground);
 
     Future<void> change() async {
       // Sales this business has not been sent yet stay with it: the tablet does not move on

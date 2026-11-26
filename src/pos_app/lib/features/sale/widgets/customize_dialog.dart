@@ -10,6 +10,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../catalog/services/catalog_service.dart';
 import '../models/sale_line.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Customization picker for an item pad tile: option chips (defaults
 /// pre-selected), quantity, special instructions. Same selection semantics
@@ -152,7 +153,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
             Row(
               children: [
                 Flexible(
-                  child: Text(item.name.localized(context), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+                  child: Text(item.name.localized(context), style: theme.type.title),
                 ),
                 if (_prefLoaded) ...[
                   const SizedBox(width: 8),
@@ -162,7 +163,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
             ),
             if (description != null && description.isNotEmpty) ...[
               const SizedBox(height: 4),
-              Text(description, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+              Text(description, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
             ],
             for (final customization in customizations) ...[
               const SizedBox(height: 16),
@@ -171,10 +172,10 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                 textBaseline: TextBaseline.alphabetic,
                 children: [
                   Text(customization.name.localized(context),
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                      style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                   if (customization.isRequired) ...[
                     const SizedBox(width: 8),
-                    Text(l10n.required, style: theme.typography.xs.copyWith(color: theme.colors.destructive)),
+                    Text(l10n.required, style: theme.type.caption.copyWith(color: theme.colors.destructive)),
                   ],
                 ],
               ),
@@ -197,7 +198,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
             const SizedBox(height: 16),
             Row(
               children: [
-                Text(l10n.quantity, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                Text(l10n.quantity, style: theme.type.detail.copyWith(fontWeight: FontWeight.w600)),
                 const Spacer(),
                 SizedBox.square(
                   dimension: Sizes.controlSmall,
@@ -209,7 +210,7 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                 SizedBox(
                   width: 40,
                   child: Text('$_quantity', textAlign: TextAlign.center,
-                      style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+                      style: theme.type.heading.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
                 ),
                 SizedBox.square(
                   dimension: Sizes.controlSmall,
@@ -234,9 +235,9 @@ class _CustomizeFormState extends ConsumerState<_CustomizeForm> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 suffix: item.isAvailable
                     ? Text(money(context, _unitPrice * _quantity),
-                        style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()]))
+                        style: theme.type.mainAction.copyWith(fontFeatures: const [FontFeature.tabularFigures()]))
                     : null,
-                child: Text(item.isAvailable ? l10n.addToOrder : l10n.unavailable, style: theme.typography.lg.forButton),
+                child: Text(item.isAvailable ? l10n.addToOrder : l10n.unavailable, style: theme.type.mainAction),
               ),
             ),
           ],
@@ -274,11 +275,11 @@ class _OptionChip extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         onPress: outOfStock ? null : onTap,
         suffix: outOfStock
-            ? Opacity(opacity: 0.7, child: Text(outOfStockLabel!, style: theme.typography.xs.forButton))
+            ? Opacity(opacity: 0.7, child: Text(outOfStockLabel!, style: theme.type.caption.forButton))
             : adjustment > 0
-                ? Opacity(opacity: 0.7, child: Text('+${adjustment.toStringAsFixed(adjustment == adjustment.roundToDouble() ? 0 : 2)}', style: theme.typography.xs.forButton))
+                ? Opacity(opacity: 0.7, child: Text('+${adjustment.toStringAsFixed(adjustment == adjustment.roundToDouble() ? 0 : 2)}', style: theme.type.caption.forButton))
                 : null,
-        child: Text(label, style: theme.typography.base.forButton),
+        child: Text(label, style: theme.type.button),
       ),
     );
   }

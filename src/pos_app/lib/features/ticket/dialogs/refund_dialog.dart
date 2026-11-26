@@ -7,7 +7,6 @@ import 'package:uuid/uuid.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
@@ -17,6 +16,7 @@ import '../../tickets/models/refund.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../../core/theme/type_roles.dart';
 
 /// Owner-only: issues a credit note against a settled ticket. Lines are
 /// picked by quantity — what is left of each after earlier credit notes —
@@ -166,13 +166,13 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     // Half a phone's dialog is a little short of an icon and "Account": the
     // word shrinks to its button rather than run over
     Widget tenderName(String name) => Flexible(
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            child: Text(name, maxLines: 1, style: theme.typography.base.forButton),
+            child: Text(name, maxLines: 1, style: theme.type.button),
           ),
         );
 
@@ -183,10 +183,10 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(l10n.refundTitle(ticket.receiptNumber ?? 0), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.refundTitle(ticket.receiptNumber ?? 0), style: theme.type.title),
             const SizedBox(height: 4),
             Text(l10n.refundHint(money(context, _remainder)),
-                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
             const SizedBox(height: 16),
             if (_entries.isEmpty)
               Padding(
@@ -211,7 +211,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                             Text(entry.line.description?.localized(context) ?? '',
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
-                                style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                                style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                             Text('${l10n.leftToRefund(entry.left.round())} · ${money(context, entry.line.unitPrice)}',
                                 style: muted.copyWith(fontFeatures: tabular)),
                           ],
@@ -230,7 +230,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                         width: 36,
                         child: Text('${(_picked[entry.line.id] ?? 0).round()}',
                             textAlign: TextAlign.center,
-                            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                            style: theme.type.heading.copyWith(fontFeatures: tabular)),
                       ),
                       SizedBox.square(
                         dimension: Sizes.controlSmall,
@@ -259,7 +259,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                                 _picked[entry.line.id] = entry.left;
                               }
                             }),
-                    child: Text(l10n.refundEverything, style: theme.typography.base.forButton),
+                    child: Text(l10n.refundEverything, style: theme.type.button),
                   ),
                 ),
               ),
@@ -314,7 +314,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                         variant: _holder?.id == h.id ? null : FButtonVariant.outline,
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => setState(() => _holderId = h.id),
-                        child: Text(h.name.isEmpty ? h.id : h.name, style: theme.typography.sm.forButton),
+                        child: Text(h.name.isEmpty ? h.id : h.name, style: theme.type.buttonSmall),
                       ),
                     ),
                 ],
@@ -329,7 +329,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                     variant: FButtonVariant.outline,
                     mainAxisSize: MainAxisSize.min,
                     onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: Text(l10n.cancel, style: theme.typography.base.forButton),
+                    child: Text(l10n.cancel, style: theme.type.button),
                   ),
                 ),
                 SizedBox(
@@ -341,7 +341,7 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
                     prefix: _pending ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : null,
                     child: Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(l10n.confirmRefund(money(context, _preview)), style: theme.typography.base.forButton),
+                      child: Text(l10n.confirmRefund(money(context, _preview)), style: theme.type.button),
                     ),
                   ),
                 ),

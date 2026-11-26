@@ -8,7 +8,6 @@ import '../../../core/models/money.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/customer_card.dart';
@@ -17,6 +16,7 @@ import 'app_link_dialog.dart';
 import 'pay_tab_dialog.dart';
 
 import '../../../core/utils/phone.dart';
+import '../../../core/theme/type_roles.dart';
 /// The customer in front of the cashier, at a glance: their points (as
 /// information — points are earned, joined and spent in the customer app,
 /// never at the till) and their tab, which the till can take money against.
@@ -32,7 +32,6 @@ Future<void> showCustomerCard(BuildContext context, {required String id, require
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      maxWidth: 448,
       builder: (context) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter),
     ),
   );
@@ -57,7 +56,7 @@ class _CustomerCard extends ConsumerWidget {
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
     const tabular = [FontFeature.tabularFigures()];
-    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final online = ref.watch(onlineProvider);
     // A tenant without loyalty or tabs has no such block at all
     final features = ref.watch(featuresProvider);
@@ -101,7 +100,7 @@ class _CustomerCard extends ConsumerWidget {
       ),
     );
 
-    return Padding(
+    return SingleChildScrollView(
       padding: const EdgeInsets.all(24),
       child: Column(
         mainAxisSize: MainAxisSize.min,
@@ -112,7 +111,7 @@ class _CustomerCard extends ConsumerWidget {
             const SizedBox(width: 8),
             Expanded(
               child: Text(customer.name.isNotEmpty ? customer.name : l10n.guest,
-                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+                  maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.title),
             ),
           ]),
           if (customer.phone case final phone? when phone.isNotEmpty) ...[
@@ -150,7 +149,7 @@ class _CustomerCard extends ConsumerWidget {
                           ? Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(l10n.notEnrolled, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500)),
+                                Text(l10n.notEnrolled, style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                                 Text(l10n.joinsFromApp, style: muted),
                               ],
                             )
@@ -159,7 +158,7 @@ class _CustomerCard extends ConsumerWidget {
                               textBaseline: TextBaseline.alphabetic,
                               children: [
                                 Text(l10n.pointsBalance(account.pointsBalance),
-                                    style: theme.typography.heading.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                                    style: theme.type.figure),
                                 const SizedBox(width: 8),
                                 Expanded(child: Text(l10n.pointsWorth(money(context, account.worth)), style: muted.copyWith(fontFeatures: tabular))),
                                 if (account.tier.isNotEmpty)
@@ -185,16 +184,14 @@ class _CustomerCard extends ConsumerWidget {
                           children: [
                             Expanded(
                               child: account == null
-                                  ? Text(l10n.noTab, style: theme.typography.base.copyWith(fontWeight: FontWeight.w500))
+                                  ? Text(l10n.noTab, style: theme.type.body.copyWith(fontWeight: FontWeight.w500))
                                   : Text(
                                       owed > 0
                                           ? l10n.owesAmount(money(context, owed))
                                           : owed < 0
                                               ? l10n.creditAmount(money(context, -owed))
                                               : l10n.settledUp,
-                                      style: theme.typography.heading.copyWith(
-                                        fontWeight: FontWeight.w700,
-                                        fontFeatures: tabular,
+                                      style: theme.type.figure.copyWith(
                                         color: owed > 0 ? theme.colors.destructive : AppColors.emerald(brightness),
                                       ),
                                     ),
@@ -211,7 +208,7 @@ class _CustomerCard extends ConsumerWidget {
                                   await showPayTabDialog(context, customer: customer, balance: owed);
                                   ref.invalidate(tabAccountProvider(customer.id));
                                 },
-                                child: Text(owed > 0 ? l10n.payTab : l10n.topUp, style: theme.typography.base.forButton),
+                                child: Text(owed > 0 ? l10n.payTab : l10n.topUp, style: theme.type.button),
                               ),
                             ),
                           ],
@@ -229,7 +226,7 @@ class _CustomerCard extends ConsumerWidget {
                 variant: FButtonVariant.outline,
                 onPress: () => sendAppLink(context, ref, id: customer.id, name: customer.name, phone: customer.phone),
                 prefix: const Icon(FIcons.qrCode, size: Sizes.icon),
-                child: Text(l10n.sendAppLink, style: theme.typography.base.forButton),
+                child: Text(l10n.sendAppLink, style: theme.type.button),
               ),
             ),
             const SizedBox(height: 8),
@@ -240,7 +237,7 @@ class _CustomerCard extends ConsumerWidget {
             child: FButton(
               variant: FButtonVariant.outline,
               onPress: () => Navigator.of(context, rootNavigator: true).pop(),
-              child: Text(l10n.done, style: theme.typography.base.forButton),
+              child: Text(l10n.done, style: theme.type.button),
             ),
           ),
         ],
