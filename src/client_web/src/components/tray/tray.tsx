@@ -754,8 +754,8 @@ function OrderButton({
   const t = useT()
   const price = usePrice()
   const swap = blurSwap(useReducedMotion())
-  // Said shut or open: shut, a tap still opens the order to add to it
-  const state = busy ? 'busy' : short > 0 ? 'short' : open ? 'place' : 'order'
+  // Said once the order is open, in place of Place order; shut, the button only opens it
+  const state = busy ? 'busy' : open ? (short > 0 ? 'short' : 'place') : 'order'
   return (
     <motion.button
       type='button'
