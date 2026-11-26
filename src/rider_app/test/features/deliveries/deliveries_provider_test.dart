@@ -6,6 +6,7 @@ import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:rider_app/features/deliveries/models/delivery_order.dart';
 import 'package:rider_app/features/deliveries/providers/deliveries_provider.dart';
 import 'package:rider_app/features/deliveries/services/delivery_service.dart';
+import 'package:rider_app/features/deliveries/services/hand_over_locator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class _FakeAuth extends AuthService {
@@ -20,6 +21,14 @@ class _FakeAuth extends AuthService {
 }
 
 /// Ordering as the rider app sees it: what it answers, and what it was told
+/// The phone's GPS at the door: a fix, or none (no permission, off, too slow)
+class _FakeLocator implements HandOverLocator {
+  HandOverFix? fix;
+
+  @override
+  Future<HandOverFix?> current() async => fix;
+}
+
 class _FakeDeliveries implements DeliveryService {
   List<DeliveryOrder> orders = [];
   bool fail = false;
@@ -38,7 +47,8 @@ class _FakeDeliveries implements DeliveryService {
   Future<void> markOut(int orderId) async => calls.add('out $orderId');
 
   @override
-  Future<void> markDelivered(int orderId) async => calls.add('delivered $orderId');
+  Future<void> markDelivered(int orderId, {HandOverFix? at}) async =>
+      calls.add('delivered $orderId${at == null ? '' : ' at ${at.toJson()}'}');
 
   @override
   Future<void> markFailed(int orderId, String reason) async => calls.add('failed $orderId $reason');
@@ -56,6 +66,8 @@ DeliveryOrder _order(int id, {String stage = 'Assigned'}) => DeliveryOrder.fromJ
       'delivery': {'address': 'Tahrir St', 'phone': '01001234567', 'stage': stage},
     });
 
+final _locator = _FakeLocator();
+
 Future<(ProviderContainer, _FakeDeliveries)> _container({String userId = 'rider-1', Map<String, Object> prefs = const {}}) async {
   SharedPreferences.setMockInitialValues(prefs);
   await initializeBranch();
@@ -63,6 +75,7 @@ Future<(ProviderContainer, _FakeDeliveries)> _container({String userId = 'rider-
   final container = ProviderContainer(overrides: [
     authServiceProvider.overrideWith(() => _FakeAuth(userId)),
     deliveryServiceProvider.overrideWithValue(fake),
+    handOverLocatorProvider.overrideWithValue(_locator),
     selectedBranchIdProvider.overrideWithValue(1),
   ]);
   addTearDown(container.dispose);
@@ -95,6 +108,26 @@ void main() {
       await container.read(deliveriesProvider.notifier).markFailed(7, 'NoAnswer');
       expect(fake.calls, ['failed 7 NoAnswer']);
       expect(container.read(deliveriesProvider).value!.toGo.single.isFailed, isTrue);
+    });
+  });
+
+  group('handed over', () {
+    test('says where the phone was at the door', () async {
+      final (container, fake) = await _container();
+      fake.orders = [_order(8, stage: 'OnTheWay')];
+      await container.read(deliveriesProvider.future);
+      _locator.fix = const HandOverFix(latitude: 30.05, longitude: 31.23, accuracyMeters: 9);
+      addTearDown(() => _locator.fix = null);
+      await container.read(deliveriesProvider.notifier).markDelivered(8);
+      expect(fake.calls, ['delivered 8 at {latitude: 30.05, longitude: 31.23, accuracyMeters: 9.0}']);
+    });
+
+    test('goes without a position when the phone cannot give one', () async {
+      final (container, fake) = await _container();
+      fake.orders = [_order(9, stage: 'OnTheWay')];
+      await container.read(deliveriesProvider.future);
+      await container.read(deliveriesProvider.notifier).markDelivered(9);
+      expect(fake.calls, ['delivered 9']);
     });
   });
 

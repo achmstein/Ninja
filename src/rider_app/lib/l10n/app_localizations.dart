@@ -961,6 +961,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Not now'**
   String get notNow;
+
+  /// No description provided for @pinQualityCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer\'s location'**
+  String get pinQualityCustomer;
+
+  /// No description provided for @pinQualityRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Where a rider found it before'**
+  String get pinQualityRider;
+
+  /// No description provided for @pinQualitySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate: from a map search'**
+  String get pinQualitySearch;
+
+  /// No description provided for @pinQualityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No pin: call the customer before leaving'**
+  String get pinQualityNone;
 }
 
 class _AppLocalizationsDelegate

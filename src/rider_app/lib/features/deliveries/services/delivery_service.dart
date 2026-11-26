@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:ninja_app_core/network/api_client.dart';
 import '../models/delivery_order.dart';
+import 'hand_over_locator.dart';
 
 /// The rider's side of Ordering's delivery endpoints: their deliveries, the
 /// moves a rider makes, and saying when they are on duty.
@@ -19,7 +20,10 @@ class DeliveryService {
 
   Future<void> markOut(int orderId) => _orders.put<void>('$orderId/delivery/out');
 
-  Future<void> markDelivered(int orderId) => _orders.put<void>('$orderId/delivery/delivered');
+  /// Handed over; [at] is where the phone was then, when it could tell: the
+  /// next delivery to that door finds it
+  Future<void> markDelivered(int orderId, {HandOverFix? at}) =>
+      _orders.put<void>('$orderId/delivery/delivered', data: at?.toJson());
 
   /// Could not hand it over (after leaving): the bag goes back to the branch
   Future<void> markFailed(int orderId, String reason) => _orders.put<void>('$orderId/delivery/failed', data: {'reason': reason});

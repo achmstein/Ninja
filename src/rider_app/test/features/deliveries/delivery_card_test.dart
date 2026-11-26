@@ -73,4 +73,21 @@ void main() {
     expect(find.text('2×'), findsOneWidget);
     expect(find.text('Latte'), findsOneWidget);
   });
+
+  testWidgets('says how good the pin is; with none, Call comes first', (tester) async {
+    await tester.pumpWidget(_host(DeliveryCard(order: _order('OnTheWay'), money: _money)));
+    await tester.pumpAndSettle();
+    expect(find.text('No pin: call the customer before leaving'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('Call')).dx, lessThan(tester.getTopLeft(find.text('Navigate')).dx));
+
+    final pinned = DeliveryOrder.fromJson({
+      'orderNumber': 43,
+      'total': 50,
+      'delivery': {'address': 'Road 9', 'phone': '0100', 'stage': 'OnTheWay', 'latitude': 30.0, 'longitude': 31.0, 'pinSource': 'Search'},
+    });
+    await tester.pumpWidget(_host(DeliveryCard(order: pinned, money: _money)));
+    await tester.pumpAndSettle();
+    expect(find.text('Approximate: from a map search'), findsOneWidget);
+    expect(tester.getTopLeft(find.text('Navigate')).dx, lessThan(tester.getTopLeft(find.text('Call')).dx));
+  });
 }

@@ -24,6 +24,31 @@ enum DeliveryStage {
       };
 }
 
+/// Where a delivery's pin came from, as Ordering says it: the customer's own
+/// GPS in the app, a location the caller shared through a link the till sent,
+/// where a rider handed an earlier delivery over at that door, a search on
+/// the map at the till (near, not the door), or no pin at all
+enum PinSource {
+  customer,
+  shared,
+  rider,
+  search,
+  none;
+
+  /// Anything unknown or missing is none
+  static PinSource parse(Object? value) => switch (value) {
+        'Customer' => customer,
+        'Shared' => shared,
+        'Rider' => rider,
+        'Search' => search,
+        _ => none,
+      };
+
+  /// What the rider is told of a place: no pin is none, whatever the source;
+  /// a pin with no source said (an older delivery) is the customer's own
+  static PinSource of(PinSource source, {required bool hasPin}) => !hasPin ? none : (source == none ? customer : source);
+}
+
 double _num(Object? value) => value is num ? value.toDouble() : double.tryParse('${value ?? ''}') ?? 0;
 
 double? _numOrNull(Object? value) => value == null ? null : _num(value);
@@ -102,6 +127,9 @@ class DeliveryOrder {
   /// What the till counted in from the rider for it
   final double? cashCollected;
 
+  /// Where the pin came from
+  final PinSource pinSource;
+
   const DeliveryOrder({
     required this.orderNumber,
     this.branchId,
@@ -127,6 +155,7 @@ class DeliveryOrder {
     this.failureReason,
     this.cashHandedInAt,
     this.cashCollected,
+    this.pinSource = PinSource.none,
   });
 
   factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
@@ -160,6 +189,7 @@ class DeliveryOrder {
       failureReason: _text(d['failureReason']),
       cashHandedInAt: _time(d['cashHandedInAt']),
       cashCollected: _numOrNull(d['cashCollected']),
+      pinSource: PinSource.parse(d['pinSource']),
     );
   }
 
@@ -194,6 +224,9 @@ class DeliveryOrder {
 
   /// Whether the customer pinned the door, or only said where it is
   bool get hasPin => latitude != null && longitude != null;
+
+  /// How good the pin is: the door itself, near it, or none
+  PinSource get pinQuality => PinSource.of(pinSource, hasPin: hasPin);
 
   /// Google Maps' way to the door from wherever the rider is: to the pin, or
   /// to the address as the caller said it, for Maps to find

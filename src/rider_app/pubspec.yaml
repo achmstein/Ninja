@@ -52,6 +52,8 @@ dependencies:
 
   # The way to the door (Google Maps) and the customer's phone
   url_launcher: ^6.3.2
+  # Where the rider handed a delivery over: the next one to that door finds it
+  geolocator: ^14.1.1
 
   # New-delivery chime (the same file the other apps ship)
   audioplayers: ^6.1.0

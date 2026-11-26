@@ -9,6 +9,11 @@
     <!-- The app updates itself from the platform's download page (AppUpdater) -->
     <uses-permission
         android:name="android.permission.REQUEST_INSTALL_PACKAGES"/>
+    <!-- Where an order was handed over, so the next delivery to that door finds it -->
+    <uses-permission
+        android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <uses-permission
+        android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false"/>

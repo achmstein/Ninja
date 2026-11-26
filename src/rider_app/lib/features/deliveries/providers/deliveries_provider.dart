@@ -9,6 +9,7 @@ import '../../../core/network/api_errors.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
+import '../services/hand_over_locator.dart';
 
 /// The rider's deliveries, refetched on every hub nudge and push, and on a
 /// slow poll while the app is in front in case both went quiet. A refusal
@@ -73,8 +74,10 @@ class DeliveriesNotifier extends AsyncNotifier<RiderDay> {
     await refresh();
   }
 
+  /// Handed over, with where the phone was when it can say quickly; never held up for it
   Future<void> markDelivered(int orderId) async {
-    await ref.read(deliveryServiceProvider).markDelivered(orderId);
+    final at = await ref.read(handOverLocatorProvider).current();
+    await ref.read(deliveryServiceProvider).markDelivered(orderId, at: at);
     await refresh();
   }
 

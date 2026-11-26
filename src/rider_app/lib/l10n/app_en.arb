@@ -239,5 +239,9 @@
   "pinSaved": "PIN saved",
   "pinNotSaved": "The PIN wasn't saved. Try again.",
   "savePin": "Save PIN",
-  "notNow": "Not now"
+  "notNow": "Not now",
+  "pinQualityCustomer": "Customer's location",
+  "pinQualityRider": "Where a rider found it before",
+  "pinQualitySearch": "Approximate: from a map search",
+  "pinQualityNone": "No pin: call the customer before leaving"
 }

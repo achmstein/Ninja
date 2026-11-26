@@ -479,4 +479,16 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get notNow => 'Not now';
+
+  @override
+  String get pinQualityCustomer => 'Customer\'s location';
+
+  @override
+  String get pinQualityRider => 'Where a rider found it before';
+
+  @override
+  String get pinQualitySearch => 'Approximate: from a map search';
+
+  @override
+  String get pinQualityNone => 'No pin: call the customer before leaving';
 }

@@ -143,5 +143,9 @@
   "pinSaved": "تم حفظ الرمز",
   "pinNotSaved": "لم يُحفظ الرمز. حاول مرة أخرى.",
   "savePin": "حفظ الرمز",
-  "notNow": "ليس الآن"
+  "notNow": "ليس الآن",
+  "pinQualityCustomer": "موقع العميل",
+  "pinQualityRider": "المكان الذي وصله مندوب من قبل",
+  "pinQualitySearch": "تقريبي: من بحث على الخريطة",
+  "pinQualityNone": "بدون موقع: كلّم العميل قبل ما تخرج"
 }

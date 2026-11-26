@@ -479,4 +479,16 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get notNow => 'ليس الآن';
+
+  @override
+  String get pinQualityCustomer => 'موقع العميل';
+
+  @override
+  String get pinQualityRider => 'المكان الذي وصله مندوب من قبل';
+
+  @override
+  String get pinQualitySearch => 'تقريبي: من بحث على الخريطة';
+
+  @override
+  String get pinQualityNone => 'بدون موقع: كلّم العميل قبل ما تخرج';
 }

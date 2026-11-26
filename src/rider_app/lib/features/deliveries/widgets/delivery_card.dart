@@ -16,6 +16,7 @@ import '../models/delivery_order.dart';
 import '../providers/deliveries_provider.dart';
 import 'fail_reason_dialog.dart';
 import 'parts.dart';
+import 'pin_quality.dart';
 
 /// One delivery still to do, read top to bottom as the rider needs it:
 /// where it stands, the branch to collect it from (for a rider shared by
@@ -113,11 +114,33 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
     // A rider given one branch knows where the bag is; one shared by branches is told
     final branches = ref.watch(branchProvider.select((s) => s.branches));
     final pickup = branches.length > 1 ? branches.where((b) => b.id == order.branchId).firstOrNull?.name.localized(context) : null;
+    // Nothing on the map to go by: calling the customer comes first, as the button that stands out
+    final callFirst = order.pinQuality == PinSource.none && order.phone.isNotEmpty;
     final details = order.addressDetails(
       building: l10n.building,
       floor: l10n.floor,
       apartment: l10n.apartment,
       separator: l10n.listSeparator,
+    );
+
+    final navigate = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        variant: FButtonVariant.outline,
+        onPress: () => _open(order.directionsUri, (l10n) => l10n.couldNotOpenMaps),
+        prefix: const Icon(FIcons.navigation, size: Sizes.icon),
+        child: Text(l10n.navigate, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
+      ),
+    );
+    final call = SizedBox(
+      height: Sizes.control,
+      child: FButton(
+        // With no pin the call is the way to the door: it stands out, and comes first
+        variant: callFirst ? null : FButtonVariant.outline,
+        onPress: order.phone.isEmpty ? null : () => _open(order.phoneUri, (l10n) => l10n.couldNotOpenDialer),
+        prefix: const Icon(FIcons.phone, size: Sizes.icon),
+        child: Text(l10n.call, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
+      ),
     );
 
     return Container(
@@ -187,11 +210,9 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                       const SizedBox(height: 4),
                       Text(typed('"${order.directions}"'), style: theme.typography.sm.copyWith(color: muted, fontStyle: FontStyle.italic)),
                     ],
-                    // Taken over the phone without a shared location: Maps searches the words
-                    if (!order.hasPin) ...[
-                      const SizedBox(height: 4),
-                      Text(l10n.noPin, style: theme.typography.xs.copyWith(color: amber, fontWeight: FontWeight.w500)),
-                    ],
+                    // How good the pin is: the door itself, near it (Maps searched at the till), or none
+                    const SizedBox(height: 6),
+                    PinQualityLabel(quality: order.pinQuality),
                   ],
                 ),
                 if (order.customerNote != null) ...[
@@ -286,29 +307,9 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
                 children: [
                   Row(
                     children: [
-                      Expanded(
-                        child: SizedBox(
-                          height: Sizes.control,
-                          child: FButton(
-                            variant: FButtonVariant.outline,
-                            onPress: () => _open(order.directionsUri, (l10n) => l10n.couldNotOpenMaps),
-                            prefix: const Icon(FIcons.navigation, size: Sizes.icon),
-                            child: Text(l10n.navigate, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
-                          ),
-                        ),
-                      ),
+                      Expanded(child: callFirst ? call : navigate),
                       const SizedBox(width: 10),
-                      Expanded(
-                        child: SizedBox(
-                          height: Sizes.control,
-                          child: FButton(
-                            variant: FButtonVariant.outline,
-                            onPress: order.phone.isEmpty ? null : () => _open(order.phoneUri, (l10n) => l10n.couldNotOpenDialer),
-                            prefix: const Icon(FIcons.phone, size: Sizes.icon),
-                            child: Text(l10n.call, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600).forButton),
-                          ),
-                        ),
-                      ),
+                      Expanded(child: callFirst ? navigate : call),
                     ],
                   ),
                   const SizedBox(height: 10),

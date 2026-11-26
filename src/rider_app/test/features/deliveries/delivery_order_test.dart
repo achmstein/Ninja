@@ -100,6 +100,22 @@ void main() {
       expect(order.directionsUri.toString(), 'https://www.google.com/maps/dir/?api=1&destination=Maadi%2C+Road+9');
     });
 
+    test('says where the pin came from: none without one, the customer for an older one that does not say', () {
+      final searched = _json();
+      (searched['delivery'] as Map)['pinSource'] = 'Search';
+      expect(DeliveryOrder.fromJson(searched).pinQuality, PinSource.search);
+      final byRider = _json();
+      (byRider['delivery'] as Map)['pinSource'] = 'Rider';
+      expect(DeliveryOrder.fromJson(byRider).pinQuality, PinSource.rider);
+      expect(DeliveryOrder.fromJson(_json()).pinQuality, PinSource.customer);
+      final noPin = _json();
+      (noPin['delivery'] as Map)
+        ..['latitude'] = null
+        ..['longitude'] = null
+        ..['pinSource'] = 'Shared';
+      expect(DeliveryOrder.fromJson(noPin).pinQuality, PinSource.none);
+    });
+
     test('an unknown stage is one still waiting', () {
       expect(DeliveryOrder.fromJson(_json(stage: 'Something')).stage, DeliveryStage.waiting);
     });
