@@ -106,9 +106,10 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
 
         <div className='flex gap-2'>
           <Input
-            type='number'
+            // Typed as a figure, without the browser's own arrows beside it
+            type='text'
             inputMode='decimal'
-            min={0}
+            dir='ltr'
             value={value}
             onChange={(e) => setValue(e.target.value)}
             className='h-12 text-lg tabular-nums'
@@ -120,7 +121,8 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
                 key={k}
                 type='button'
                 variant={kind === k ? 'default' : 'ghost'}
-                className='h-12 rounded-none px-4 text-base first:rounded-s-md last:rounded-e-md'
+                // The two ways to say a discount are the same width, whatever their words
+                className='h-12 w-16 rounded-none px-0 text-base first:rounded-s-md last:rounded-e-md'
                 onClick={() => setKind(k)}
               >
                 {k === 'percent' ? '%' : currency}
@@ -161,12 +163,12 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
             <Button
               variant='outline'
               size='lg'
-              className='h-12'
+              className='h-12 min-w-28'
               onClick={() => onOpenChange(false)}
             >
               {t('cancel')}
             </Button>
-            <Button size='lg' className='h-12' disabled={!canApply} onClick={doApply}>
+            <Button size='lg' className='h-12 min-w-28' disabled={!canApply} onClick={doApply}>
               {t('apply')}
             </Button>
           </div>

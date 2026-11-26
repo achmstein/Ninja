@@ -22,6 +22,14 @@ never set by hand (`max-w-*`) on a `DialogContent`: it is given a `size`.
   size.
 - **Its title is `type-title`**, one per pop-up (see `type.md`).
 
+## Buttons side by side
+
+- **Options of one choice are the same width** (percent or amount, counter or
+  delivery), whatever their words.
+- **A pop-up's answers are the same width**, the main one last.
+- **A figure is typed without the browser's own arrows**: `type='text'` with
+  `inputMode='decimal'`, never `type='number'`.
+
 ## What is not a pop-up
 
 - **Finding a customer** takes the whole screen (`CustomerSearch`), so a
