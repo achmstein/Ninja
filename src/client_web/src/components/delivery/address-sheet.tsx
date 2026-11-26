@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Phone, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Check, ChevronRight, Home, Briefcase, Loader2, LocateFixed, MapPin, Phone, Plus, Trash2 } from 'lucide-react'
 import {
   addMyAddressMutation,
   deleteMyAddressMutation,
@@ -23,6 +23,7 @@ import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 import { useGuestStore } from '@/stores/guest-store'
 import { Input } from '@/components/ui/input'
 import { pillAction } from '@/components/ui/ninja-sheet'
+import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
 import { AddressSearch } from './address-search'
 import { MapPicker } from './map-pin'
@@ -85,6 +86,8 @@ export function AddressSheet({
           <AddressForm
             key={form === 'new' ? 'new' : (form.id ?? 'device')}
             initial={form === 'new' ? null : form}
+            // Backed out of a new address's map: to the list, or shut when there is nothing on it to pick
+            onCancel={() => (editing != null && (!empty || manage) ? setEditing(null) : onOpenChange(false))}
             onDone={(address) => {
               if (!manage) {
                 if (address) setAddress(address)
@@ -171,7 +174,16 @@ function LabelIcon({ kind }: { kind: LabelKind }) {
  * opens on its words, the map one tap away. Removing one is at the foot of
  * its form, asked once more.
  */
-function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onDone: (address: DeliveryAddress | null) => void }) {
+function AddressForm({
+  initial,
+  onDone,
+  onCancel,
+}: {
+  initial: DeliveryAddress | null
+  onDone: (address: DeliveryAddress | null) => void
+  /** Backed out of the map before a new address's pin was confirmed */
+  onCancel: () => void
+}) {
   const t = useT()
   const auth = useAuth()
   const queryClient = useQueryClient()
@@ -265,8 +277,13 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
     // The map is the customer's now: coming back to it starts where they left it, not at a fix
     setMoved(true)
     setFlyTo(null)
+    setConfirmed(true)
     setStep('details')
   }
+
+  // Back from the whole map: to the words, once the pin was confirmed before; a new one goes back to where it came from
+  const [confirmed, setConfirmed] = useState(initial != null)
+  const leavePin = () => (confirmed ? setStep('details') : onCancel())
 
   const save = async () => {
     setTried(true)
@@ -328,8 +345,16 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
       }}
     >
       {step === 'pin' ? (
-        <>
-      <div className='relative'>
+        // The map alone, the whole screen: the one thing to do is put the pin on the door. Its own
+        // layer over the sheet, so nothing of the sheet's slide holds it in
+        <SheetPrimitive.Root open onOpenChange={(open) => !open && leavePin()}>
+          <SheetPrimitive.Portal>
+            <SheetPrimitive.Content
+              aria-describedby={undefined}
+              className='bg-background fixed inset-0 z-[100] flex flex-col outline-none'
+            >
+              <SheetPrimitive.Title className='sr-only'>{t('deliveryConfirmPin')}</SheetPrimitive.Title>
+      <div className='relative min-h-0 flex-1'>
         <MapPicker
           start={point}
           to={flyTo}
@@ -340,10 +365,19 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               setMoved(true)
             }
           }}
-          className='h-[min(26rem,52dvh)]'
+          className='absolute inset-0 h-full rounded-none'
         />
-        {/* A street named rather than found, on the map itself: the map flies there, and the pin is then put on the door */}
-        <div className='absolute inset-x-2 top-2 z-10'>
+        {/* Back, and a street named rather than found, on the map itself: the map flies there, and the pin is then put on the door */}
+        <div className='absolute inset-x-3 top-[max(0.75rem,env(safe-area-inset-top))] z-10 flex items-start gap-2'>
+          <button
+            type='button'
+            onClick={leavePin}
+            aria-label={t('back')}
+            className='bg-background text-foreground grid size-11 shrink-0 place-items-center rounded-full shadow-md'
+          >
+            <ArrowLeft className='size-5 rtl:rotate-180' />
+          </button>
+          <div className='min-w-0 flex-1'>
           <AddressSearch
             near={pointOf(branch)}
             onPick={(place) => {
@@ -353,6 +387,7 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               if (!street.trim() && place.address) setStreet(place.address)
             }}
           />
+          </div>
         </div>
         {location.canLocate && (
           <button
@@ -364,13 +399,14 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
               location.locate()
             }}
             disabled={location.locating}
-            className='bg-background text-foreground absolute end-2 bottom-2 grid size-11 place-items-center rounded-full shadow-md'
+            className='bg-background text-foreground absolute end-3 bottom-3 grid size-12 place-items-center rounded-full shadow-md'
             aria-label={t('useMyLocation')}
           >
-            {location.locating ? <Loader2 className='size-4 animate-spin' /> : <LocateFixed className='size-4' />}
+            {location.locating ? <Loader2 className='size-5 animate-spin' /> : <LocateFixed className='size-5' />}
           </button>
         )}
       </div>
+      <div className='flex flex-col gap-3 px-4 pt-3 pb-[max(1rem,env(safe-area-inset-bottom))]'>
       {explain && !moved ? (
         // Why the app would like the position, before the browser asks for it
         <button
@@ -390,20 +426,31 @@ function AddressForm({ initial, onDone }: { initial: DeliveryAddress | null; onD
           {pinTried && !pinned ? t('deliveryNeedPin') : t('deliveryMovePin')}
         </p>
       )}
-      <button type='submit' className={pillAction}>
+      {/* Outside the form in the page (a layer of its own), so it confirms by its own tap */}
+      <button type='button' onClick={confirmPin} className={cn(pillAction, 'h-14 text-body')}>
         <Check className='size-4' strokeWidth={3} />
         {t('deliveryConfirmPin')}
       </button>
-        </>
+      </div>
+            </SheetPrimitive.Content>
+          </SheetPrimitive.Portal>
+        </SheetPrimitive.Root>
       ) : (
         <>
-      {/* Where the pin is, and the way back to the map */}
-      <button type='button' onClick={() => setStep('pin')} className='bg-muted flex min-h-14 items-center gap-3 rounded-[1.25rem] px-4 text-start'>
-        <span className='bg-background grid size-9 shrink-0 place-items-center rounded-full'>
-          <MapPin className='size-4' />
+      {/* Where the pin is, as a small map that stays still; a tap opens the whole map to move it */}
+      <button
+        type='button'
+        onClick={() => setStep('pin')}
+        aria-label={t('deliveryAdjustPin')}
+        className='relative block h-32 overflow-hidden rounded-[1.25rem] text-start'
+      >
+        <div className='pointer-events-none absolute inset-0' aria-hidden>
+          <MapPicker start={point} onSettle={() => {}} className='h-full' />
+        </div>
+        <span className='bg-background text-foreground absolute end-2 bottom-2 flex items-center gap-1.5 rounded-full px-3 py-1.5 text-caption font-semibold shadow-md'>
+          <MapPin className='size-3.5' />
+          {t('deliveryAdjustPin')}
         </span>
-        <span className='flex-1 text-note font-semibold'>{t('deliveryPinSet')}</span>
-        <span className='text-note font-semibold underline underline-offset-4'>{t('deliveryChange')}</span>
       </button>
 
       <Input
