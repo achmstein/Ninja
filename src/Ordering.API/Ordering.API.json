@@ -6110,7 +6110,14 @@
         }
       },
       "DeliveryPinSource": {
-        "type": "integer"
+        "enum": [
+          "None",
+          "Customer",
+          "Search",
+          "Shared",
+          "Rider",
+          null
+        ]
       },
       "DeliveryQuote": {
         "required": [

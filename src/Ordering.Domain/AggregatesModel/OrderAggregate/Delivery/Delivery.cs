@@ -25,8 +25,9 @@ public enum DeliveryStage
 
 /// <summary>
 /// Where a delivery's pin came from, which says how far a rider can trust it.
-/// Stored by name.
+/// Stored and sent by name.
 /// </summary>
+[System.Text.Json.Serialization.JsonConverter(typeof(System.Text.Json.Serialization.JsonStringEnumConverter))]
 public enum DeliveryPinSource
 {
     /// <summary>No pin: the rider goes by the words and calls.</summary>

@@ -255,7 +255,7 @@ export type DeliveryOrder = {
     delivery?: DeliveryStaffView;
 };
 
-export type DeliveryPinSource = number;
+export type DeliveryPinSource = 'None' | 'Customer' | 'Search' | 'Shared' | 'Rider';
 
 export type DeliveryQuote = {
     delivers: boolean;
