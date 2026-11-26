@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
-import '../../../core/models/money.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
-import 'package:ninja_app_core/widgets/heading.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/layout/breakpoints.dart';
+import '../../../core/models/money.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
-import '../../../core/brand/brand_provider.dart';
 import '../../tables/models/dining_table.dart';
 import '../../tables/services/tables_service.dart';
 import '../../tickets/models/enums.dart';
@@ -18,54 +18,57 @@ import '../../tickets/models/move_lines.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
-import '../../../core/utils/bidi.dart';
 
-/// How the picker opens: `move` shows the bills already on the floor as a
-/// searchable card grid; `new` the ways to open a fresh bill. Two focused
-/// screens instead of one long modal, so a busy floor is not a wall of
-/// buttons to scroll.
-enum MoveMode { move, newBill }
-
-/// Where the selected lines go. Any bill already on the floor — the
-/// customer who ordered at a table and then took a room. Or a new one: a
-/// counter tab for whoever is leaving the table to pay on their way out, a
-/// free table for the group that moved, or the same place again — the
-/// turnover split. A room's own bill follows its session, so a room never
-/// gets a second one. Resolves to the pick.
+/// Moving the picked lines: one list of every place they can go, one tap
+/// each. A bill already on the floor (the customer who ordered at a table and
+/// then took a room). A new tab by name, for whoever is paying on their own.
+/// A second bill for the same place, when an order landed on the previous
+/// group's bill. A free table, opened and filled in one step. A room's own
+/// bill follows its stay, so a room never gets a second one. The box on the
+/// top row narrows the list by a bill's or a table's name. Resolves to the
+/// pick. The web till's MoveTargetDialog is the same.
 Future<MoveTarget?> showMoveTargetDialog(
   BuildContext context, {
   required TicketDetail ticket,
+
+  /// How many lines are picked: the dialog only says what it will move
   required int count,
+
+  /// Every movable line is picked: a same-place split would just be a rename
   required bool allSelected,
-  required MoveMode mode,
+
+  /// The one customer every picked line is for: the new tab's name, ready to take or change
   String? suggestedName,
 }) {
   return showPosDialog<MoveTarget>(
     context,
-    maxWidth: mode == MoveMode.move ? 680 : 448,
+    maxWidth: 512,
     builder: (context) =>
-        _MoveTargetDialog(ticket: ticket, count: count, allSelected: allSelected, mode: mode, suggestedName: suggestedName),
+        MoveTargetList(ticket: ticket, count: count, allSelected: allSelected, suggestedName: suggestedName),
   );
 }
 
-class _MoveTargetDialog extends ConsumerStatefulWidget {
+/// The body of the move dialog: it closes the dialog with the pick
+class MoveTargetList extends ConsumerStatefulWidget {
   final TicketDetail ticket;
   final int count;
   final bool allSelected;
-  final MoveMode mode;
-
-  /// The one customer every selected line is for: the new counter bill's name, ready to take or change
   final String? suggestedName;
-  const _MoveTargetDialog({required this.ticket, required this.count, required this.allSelected, required this.mode, this.suggestedName});
+
+  const MoveTargetList({super.key, required this.ticket, required this.count, required this.allSelected, this.suggestedName});
 
   @override
-  ConsumerState<_MoveTargetDialog> createState() => _MoveTargetDialogState();
+  ConsumerState<MoveTargetList> createState() => _MoveTargetListState();
 }
 
-class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
-  // The selected lines' one customer, already there: one tap names the bill for them
-  late final _label = TextEditingController(text: widget.suggestedName ?? '');
+class _MoveTargetListState extends ConsumerState<MoveTargetList> {
   final _search = TextEditingController();
+
+  // The picked lines' one customer, already there: one tap names the tab for them
+  late final _label = TextEditingController(text: widget.suggestedName ?? '');
+
+  /// The new tab's name is asked only once that row is tapped: a step replaces the row
+  bool _naming = false;
 
   @override
   void initState() {
@@ -75,18 +78,202 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
 
   @override
   void dispose() {
-    _label.dispose();
     _search.dispose();
+    _label.dispose();
     super.dispose();
   }
 
   void _pick(MoveTarget target) => Navigator.of(context, rootNavigator: true).pop(target);
 
+  void _createTab() {
+    final name = _label.text.trim();
+    _pick(MoveToCounter(name.isEmpty ? null : name));
+  }
+
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final move = widget.mode == MoveMode.move;
+    final ticket = widget.ticket;
+    final tickets = ref.watch(openTicketsProvider).value ?? const <TicketSummary>[];
+    // Places with no clock: lines can move to a free one; a timed place's bill
+    // follows its stay. A cloud kitchen seats nobody: nothing moves to a table
+    final tables = ref.watch(isCloudKitchenProvider)
+        ? const <DiningTable>[]
+        : ref.watch(tablesProvider).value ?? const <DiningTable>[];
+
+    String titleOf(TicketSummary target) {
+      final place = target.locationName?.localized(context) ?? '';
+      if (place.isNotEmpty) return place;
+      final label = target.label ?? '';
+      return label.isNotEmpty ? label : ticketTypeLabel(l10n, target.type);
+    }
+
+    final q = _search.text.trim().toLowerCase();
+    bool has(String text) => text.toLowerCase().contains(q);
+    final others = [
+      for (final target in tickets)
+        if (target.id != ticket.id &&
+            (q.isEmpty || has(titleOf(target)) || has(ticketTypeLabel(l10n, target.type)) || '${target.id}'.contains(q)))
+          target,
+    ];
+    final freeTables = [
+      for (final table in tables)
+        if (table.isActive &&
+            !tickets.any((taken) => taken.type == TicketType.table && taken.placeId == table.id) &&
+            (q.isEmpty || has(table.name.localized(context)) || has(l10n.table)))
+          table,
+    ];
+    final canSplit = ticket.sessionId == null && !widget.allSelected;
+    final placeName = ticket.locationName?.localized(context) ?? '';
+    final place = placeName.isNotEmpty ? placeName : ((ticket.label ?? '').isNotEmpty ? ticket.label! : l10n.counter);
+    // A new bill's rows are for when nothing is being searched for by name
+    final offersNew = q.isEmpty;
+    final muted = theme.colors.mutedForeground;
+    final rule = Container(height: 1, color: theme.colors.border);
+
+    Widget caption(String text) => Padding(
+          padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
+          child: Text(text, style: theme.typography.xs.copyWith(fontWeight: FontWeight.w600, color: muted)),
+        );
+
+    // A row of the list: what it is, a quieter line under it, and the way on.
+    // A name is laid out in its own script and pinned to the row's start
+    Widget row({
+      required IconData icon,
+      required String title,
+      required String detail,
+      String? amount,
+      required VoidCallback onPress,
+    }) =>
+        FTappable(
+          onPress: onPress,
+          builder: (context, states, child) => Container(
+            constraints: const BoxConstraints(minHeight: Sizes.controlLarge),
+            color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: child,
+          ),
+          child: Row(
+            children: [
+              Icon(icon, size: Sizes.icon, color: muted),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    Text(title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        textDirection: textDirectionFor(title),
+                        textAlign: textAlignFor(context),
+                        style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+                    Text(detail,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.typography.sm
+                            .copyWith(color: muted, fontFeatures: const [FontFeature.tabularFigures()])),
+                  ],
+                ),
+              ),
+              if (amount != null) ...[
+                const SizedBox(width: 12),
+                Text(amount,
+                    maxLines: 1,
+                    style: theme.typography.base.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
+              ],
+              const SizedBox(width: 8),
+              Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.chevronLeft : FIcons.chevronRight,
+                  size: Sizes.iconSmall, color: muted),
+            ],
+          ),
+        );
+
+    final rows = <Widget>[
+      if (others.isNotEmpty) caption(l10n.moveOpenBills),
+      for (final target in others)
+        row(
+          icon: ticketTypeIcon(target.type),
+          title: titleOf(target),
+          detail: '${ticketTypeLabel(l10n, target.type)} · ${hashNumber(target.id)}',
+          amount: money(context, target.total),
+          onPress: () => _pick(MoveToTicket(target.id)),
+        ),
+      if (offersNew) ...[
+        caption(l10n.moveNewBill),
+        if (_naming)
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.end,
+              children: [
+                Expanded(
+                  child: FTextField(
+                    control: FTextFieldControl.managed(controller: _label),
+                    label: Text(l10n.tabName),
+                    maxLines: 1,
+                    // Asked for by the tap on its row: it is what is typed into next
+                    autofocus: true,
+                    textInputAction: TextInputAction.done,
+                    onSubmit: (_) => _createTab(),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 96, minHeight: Sizes.control),
+                  child: FButton(
+                    mainAxisSize: MainAxisSize.min,
+                    onPress: _createTab,
+                    child: Text(l10n.moveCreate, style: theme.typography.base.forButton),
+                  ),
+                ),
+              ],
+            ),
+          )
+        else
+          row(
+            icon: FIcons.receiptText,
+            title: l10n.moveTabWithName,
+            detail: l10n.moveTabWithNameHint,
+            onPress: () => setState(() => _naming = true),
+          ),
+        if (canSplit)
+          row(
+            icon: FIcons.split,
+            title: l10n.moveSecondBill(place),
+            detail: l10n.moveSecondBillHint,
+            onPress: () => _pick(const MoveToSplit()),
+          ),
+      ],
+      if (freeTables.isNotEmpty) ...[
+        caption(l10n.moveFreeTable),
+        // Tiles in a grid, all the same size: a few to choose between, one tap each
+        Padding(
+          padding: const EdgeInsets.fromLTRB(16, 4, 16, 16),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final columns = context.isCompact ? 2 : 3;
+              final width = (constraints.maxWidth - 8 * (columns - 1)) / columns;
+              return Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: [
+                  for (final table in freeTables)
+                    _TableTile(
+                        name: table.name.localized(context), width: width, onPress: () => _pick(MoveToTable(table.id))),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+      if (others.isEmpty && freeTables.isEmpty && !offersNew)
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
+          child: Text(l10n.moveNothing, textAlign: TextAlign.center, style: theme.typography.base.copyWith(color: muted)),
+        ),
+    ];
 
     return ConstrainedBox(
       constraints: BoxConstraints(maxHeight: MediaQuery.sizeOf(context).height * 0.9),
@@ -95,199 +282,63 @@ class _MoveTargetDialogState extends ConsumerState<_MoveTargetDialog> {
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
-            Text(move ? l10n.moveToBill : l10n.newBill,
-                style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
+            Text(l10n.moveItemsTitle(widget.count), style: theme.typography.xl.copyWith(fontWeight: FontWeight.w600)),
             const SizedBox(height: 4),
-            Text(l10n.moveLinesAction(widget.count),
-                style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
-            const SizedBox(height: 16),
-            if (move) _moveBody(theme, l10n) else _newBillBody(theme, l10n),
+            Text(l10n.moveItemsHint(bidiIsolate(place)), style: theme.typography.base.copyWith(color: muted)),
+            const SizedBox(height: 12),
+            FTextField(
+              control: FTextFieldControl.managed(controller: _search),
+              hint: l10n.moveFind,
+              maxLines: 1,
+              textInputAction: TextInputAction.search,
+              clearable: (value) => value.text.isNotEmpty,
+            ),
+            const SizedBox(height: 12),
+            Container(
+              clipBehavior: Clip.antiAlias,
+              decoration: BoxDecoration(
+                border: Border.all(color: theme.colors.border),
+                borderRadius: BorderRadius.circular(Sizes.radius),
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (index, one) in rows.indexed) ...[
+                    // A rule between two rows; a caption opens its own part
+                    if (index > 0 && one is FTappable && rows[index - 1] is FTappable) rule,
+                    one,
+                  ],
+                ],
+              ),
+            ),
           ],
         ),
       ),
     );
   }
-
-  // The bills already on the floor, searchable, grouped by kind so the
-  // cashier's eye lands where they expect (rooms, then tables, then tabs).
-  Widget _moveBody(FThemeData theme, AppLocalizations l10n) {
-    final tickets = ref.watch(openTicketsProvider).value ?? const [];
-    final others = tickets.where((t) => t.id != widget.ticket.id).toList();
-    final q = _search.text.trim().toLowerCase();
-    final visible = q.isEmpty
-        ? others
-        : others.where((t) {
-            final name = (t.locationName?.localized(context) ?? t.label ?? '').toLowerCase();
-            return name.contains(q) ||
-                ticketTypeLabel(l10n, t.type).toLowerCase().contains(q) ||
-                '${t.id}'.contains(q);
-          }).toList();
-
-    final groups = <(TicketType, String)>[
-      (TicketType.room, l10n.rooms),
-      (TicketType.table, l10n.tables),
-      (TicketType.counter, l10n.counterTabs),
-    ];
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        FTextField(
-          control: FTextFieldControl.managed(controller: _search),
-          hint: l10n.searchBills,
-          maxLines: 1,
-          prefixBuilder: (context, style, _) => Padding(
-            padding: const EdgeInsetsDirectional.only(start: 12),
-            child: Icon(FIcons.search, size: Sizes.icon, color: theme.colors.mutedForeground),
-          ),
-          suffixBuilder: _search.text.isEmpty
-              ? null
-              : (context, style, _) => FTappable(
-                    onPress: () => setState(() => _search.clear()),
-                    child: Padding(
-                      padding: const EdgeInsetsDirectional.only(end: 12),
-                      child: Icon(FIcons.x, size: Sizes.icon, color: theme.colors.mutedForeground),
-                    ),
-                  ),
-        ),
-        const SizedBox(height: 12),
-        if (visible.isEmpty)
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 32),
-            child: Text(l10n.noBillsToMoveTo,
-                textAlign: TextAlign.center,
-                style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-          )
-        else
-          for (final (type, label) in groups)
-            if (visible.any((t) => t.type == type)) ...[
-              Heading(label),
-              const SizedBox(height: 8),
-              LayoutBuilder(
-                builder: (context, constraints) {
-                  // A phone's dialog holds one card of the tablet's width and
-                  // a gap: there the cards go two across, as on pos_web
-                  final width = context.isCompact ? (constraints.maxWidth - 8) / 2 : _billCardWidth;
-                  return Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: [
-                      for (final target in visible.where((t) => t.type == type))
-                        _BillCard(target: target, width: width, onTap: () => _pick(MoveToTicket(target.id))),
-                    ],
-                  );
-                },
-              ),
-              const SizedBox(height: 16),
-            ],
-      ],
-    );
-  }
-
-  // Ways to open a fresh bill: a named counter tab, the same place again
-  // (turnover split), or a free table the group moved to.
-  Widget _newBillBody(FThemeData theme, AppLocalizations l10n) {
-    final tickets = ref.watch(openTicketsProvider).value ?? const [];
-    // A cloud kitchen seats nobody: a bill never moves to a table
-    final tables = ref.watch(isCloudKitchenProvider)
-        ? const <DiningTable>[]
-        : ref.watch(tablesProvider).value ?? const <DiningTable>[];
-    final freeTables = [
-      for (final table in tables)
-        if (table.isActive && !tickets.any((t) => t.type == TicketType.table && t.placeId == table.id)) table,
-    ];
-    final canSplit = widget.ticket.sessionId == null && !widget.allSelected;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        Row(
-          children: [
-            Expanded(
-              child: FTextField(
-                control: FTextFieldControl.managed(controller: _label),
-                hint: l10n.tabName,
-                maxLines: 1,
-              ),
-            ),
-            const SizedBox(width: 8),
-            SizedBox(
-              height: Sizes.control,
-              child: FButton(
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: () => _pick(MoveToCounter(_label.text.trim().isEmpty ? null : _label.text.trim())),
-                prefix: const Icon(FIcons.plus, size: Sizes.icon),
-                child: Text(l10n.newTab, style: theme.typography.base.forButton),
-              ),
-            ),
-          ],
-        ),
-        if (canSplit) ...[
-          const SizedBox(height: 8),
-          SizedBox(
-            height: Sizes.controlLarge,
-            child: FButton(
-              variant: FButtonVariant.outline,
-              mainAxisAlignment: MainAxisAlignment.start,
-              onPress: () => _pick(const MoveToSplit()),
-              prefix: Icon(FIcons.split, size: Sizes.icon, color: theme.colors.mutedForeground),
-              child: Text(l10n.newTicketForPlace, style: theme.typography.base.forButton),
-            ),
-          ),
-        ],
-        if (freeTables.isNotEmpty) ...[
-          const SizedBox(height: 16),
-          Heading(l10n.freeTables),
-          const SizedBox(height: 8),
-          Wrap(
-            spacing: 8,
-            runSpacing: 8,
-            children: [
-              for (final table in freeTables)
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: () => _pick(MoveToTable(table.id)),
-                    prefix: Icon(FIcons.armchair, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                    child: Text(table.name.localized(context), style: theme.typography.base.forButton),
-                  ),
-                ),
-            ],
-          ),
-        ],
-      ],
-    );
-  }
 }
 
-const _billCardWidth = 190.0;
-
-/// One open bill as a card in the move grid: kind icon and name, then its
-/// number and running total.
-class _BillCard extends StatelessWidget {
-  final TicketSummary target;
+/// A free table to move the lines to: every tile the same size, its name on
+/// up to two lines
+class _TableTile extends StatelessWidget {
+  final String name;
   final double width;
-  final VoidCallback onTap;
+  final VoidCallback onPress;
 
-  const _BillCard({required this.target, required this.width, required this.onTap});
+  const _TableTile({required this.name, required this.width, required this.onPress});
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    final title = (target.locationName?.localized(context) ?? '').isNotEmpty
-        ? target.locationName!.localized(context)
-        : (target.label ?? ticketTypeLabel(l10n, target.type));
-
     return SizedBox(
       width: width,
+      height: 64,
       child: FTappable(
-        onPress: onTap,
+        onPress: onPress,
         builder: (context, states, child) => Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+          alignment: AlignmentDirectional.centerStart,
           decoration: BoxDecoration(
             color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary : null,
             border: Border.all(color: theme.colors.border),
@@ -295,44 +346,12 @@ class _BillCard extends StatelessWidget {
           ),
           child: child,
         ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Row(
-              children: [
-                Icon(ticketTypeIcon(target.type), size: Sizes.icon, color: theme.colors.mutedForeground),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(title,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Text(hashNumber(target.id),
-                    style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                const SizedBox(width: 8),
-                // Whole whatever the amount: in a narrow card it shrinks rather than runs over
-                Flexible(
-                  child: FittedBox(
-                    fit: BoxFit.scaleDown,
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: Text(money(context, target.total),
-                        maxLines: 1,
-                        style: theme.typography.base.copyWith(
-                            fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
+        child: Text(name,
+            maxLines: 2,
+            overflow: TextOverflow.ellipsis,
+            textDirection: textDirectionFor(name),
+            textAlign: textAlignFor(context),
+            style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
       ),
     );
   }

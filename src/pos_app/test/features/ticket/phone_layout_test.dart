@@ -155,8 +155,7 @@ Widget _bar(TicketDetail ticket, {bool selecting = false, bool confirming = fals
         onPrint: () {},
         onRefund: () {},
         onAssign: () {},
-        onMoveTo: () {},
-        onNewBill: () {},
+        onMove: () {},
       ),
     );
 
@@ -203,21 +202,18 @@ void main() {
       expect(tester.getTopLeft(find.widgetWithText(FButton, l10n.settleAction)).dy,
           greaterThan(tester.getBottomLeft(find.text(l10n.total)).dy));
 
-      // Lines picked: assign on a row of its own, move and new bill sharing the next
+      // Lines picked: whose they are and where they go, side by side at one width
       await tester.pumpWidget(tillApp(_bar(_bill(), selecting: true), locale: locale));
       await tester.pumpAndSettle();
       expectFits(tester);
       final assign = tester.getRect(find.widgetWithText(FButton, l10n.assignCustomer));
-      final move = tester.getRect(find.widgetWithText(FButton, l10n.moveToBill));
-      final fresh = tester.getRect(find.widgetWithText(FButton, l10n.newBill));
-      expect(assign.width, 360 - 32);
-      expect(move.top, greaterThan(assign.bottom));
-      expect(move.top, fresh.top);
-      expect(move.width, fresh.width);
-      for (final rect in [assign, move, fresh]) {
+      final move = tester.getRect(find.widgetWithText(FButton, l10n.moveItems));
+      expect(move.top, assign.top);
+      expect(move.width, assign.width);
+      for (final rect in [assign, move]) {
         expect(rect.height, greaterThanOrEqualTo(48));
       }
-      for (final label in [l10n.assignCustomer, l10n.moveToBill, l10n.newBill]) {
+      for (final label in [l10n.assignCustomer, l10n.moveItems]) {
         expectWhole(tester, label);
       }
 
@@ -272,13 +268,11 @@ void main() {
       expectFits(tester);
       expect(find.text(l10n.addItems), findsOneWidget);
       expect(find.text(l10n.selectLines), findsOneWidget);
-      // One row: the total, then the three actions
-      final tops = {
-        for (final label in [l10n.assignCustomer, l10n.moveToBill, l10n.newBill])
-          tester.getRect(find.widgetWithText(FButton, label)).top,
-      };
-      expect(tops, hasLength(1));
-      expect(tester.getSize(find.widgetWithText(FButton, l10n.newBill)).width, greaterThanOrEqualTo(240));
+      // One row: the total, then the two things done with picked lines, at one width
+      final assign = tester.getRect(find.widgetWithText(FButton, l10n.assignCustomer));
+      final move = tester.getRect(find.widgetWithText(FButton, l10n.moveItems));
+      expect(assign.top, move.top);
+      expect(assign.width, move.width);
     });
 
     testWidgets('moving lines to another bill fits a phone ($lang)', (tester) async {
@@ -288,27 +282,44 @@ void main() {
         tablesRepositoryProvider.overrideWithValue(_Tables()),
       ];
 
-      for (final mode in MoveMode.values) {
-        await tester.pumpWidget(tillApp(
-          opener((context) => showMoveTargetDialog(context,
-              ticket: _bill(), count: 2, allSelected: false, mode: mode, suggestedName: 'Mohamed Abdelrahman')),
-          locale: locale,
-          overrides: overrides,
-        ));
-        await tester.tap(find.text('open'));
-        await tester.pumpAndSettle();
-        expectFits(tester, reason: '$mode');
-        if (mode == MoveMode.move) {
-          // Two cards across, inside the sheet: the phone's width less its padding
-          final first = tester.getRect(find.text(hashNumber(1041)));
-          final second = tester.getRect(find.text(hashNumber(1042)));
-          // (a long total shrinks to its card, and its row with it: the tops are a hair apart,
-          // by up to the few points between a shrunk total's height and a whole one's)
-          expect(first.top, closeTo(second.top, 4));
-          expect((first.left - second.left).abs(), closeTo((360 - 48 - 8) / 2 + 8, 40));
-        }
-        await tester.pumpWidget(const SizedBox.shrink());
+      // One dialog, no modes: every place the lines can go in one list
+      await tester.pumpWidget(tillApp(
+        opener((context) => showMoveTargetDialog(context,
+            ticket: _bill(), count: 2, allSelected: false, suggestedName: 'Mohamed Abdelrahman')),
+        locale: locale,
+        overrides: overrides,
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      expect(find.text(l10n.moveItemsTitle(2)), findsOneWidget);
+      for (final caption in [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable]) {
+        expect(find.text(caption), findsOneWidget);
       }
+      // An open bill is a row: its kind and number under its name
+      expect(find.text('${l10n.room} · ${hashNumber(1041)}'), findsOneWidget);
+      expect(find.text(l10n.moveTabWithName), findsOneWidget);
+      // Free tables are tiles of one size, two across on a phone
+      Rect tile(int n) => tester.getRect(find
+          .ancestor(
+              of: find.text(LocalizedText(en: 'Terrace table $n', ar: 'طاولة التراس $n').getText(locale)),
+              matching: find.byWidgetPredicate((w) => w is FTappable))
+          .first);
+      final first = tile(1);
+      final second = tile(2);
+      expect(first.top, second.top);
+      expect(first.size, second.size);
+      expect((first.left - second.left).abs(), closeTo((360 - 48 - 2 - 32 - 8) / 2 + 8, 40));
+
+      // The new tab's name is asked only once its row is tapped, the lines' one customer already in it
+      await tester.ensureVisible(find.text(l10n.moveTabWithName));
+      await tester.tap(find.text(l10n.moveTabWithName));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      expect(find.text(l10n.moveTabWithName), findsNothing);
+      expect(find.text('Mohamed Abdelrahman'), findsWidgets);
+      expect(find.widgetWithText(FButton, l10n.moveCreate), findsOneWidget);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
 
     testWidgets('an order\'s details fit a phone, cancelling too ($lang)', (tester) async {
@@ -519,12 +530,13 @@ void _wholeBillTests() {
         expect(find.byType(TicketActionBar), findsOneWidget);
         if (id == 1) expect(find.textContaining('Karim Mostafa'), findsWidgets);
 
-        // Select mode on the open bill: the lines grow their checkboxes, the bar its three actions
+        // Select mode on the open bill: the lines grow their checkboxes, the bar its two actions
         if (id == 1) {
           await tester.tap(find.byTooltip(l10n.selectLines));
           await tester.pump(const Duration(milliseconds: 600));
           expectFits(tester);
-          expect(find.widgetWithText(FButton, l10n.newBill), findsOneWidget);
+          expect(find.widgetWithText(FButton, l10n.assignCustomer), findsOneWidget);
+          expect(find.widgetWithText(FButton, l10n.moveItems), findsOneWidget);
         }
 
         await tester.drag(find.byType(SingleChildScrollView).first, const Offset(0, -3000));

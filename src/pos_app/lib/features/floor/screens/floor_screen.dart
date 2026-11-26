@@ -33,6 +33,8 @@ import '../../tickets/models/open_ticket.dart';
 import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../../sale/bill_route.dart';
+import '../../sale/providers/sale_provider.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../deliveries/widgets/deliveries_summary.dart';
 import '../dialogs/new_ticket_dialog.dart';
@@ -170,7 +172,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
   Future<void> _newTab() async {
     final ticketId = await showNewTicketDialog(context);
     // A new bill has nothing on it yet: straight to the pad, pointed at it
-    if (ticketId != null && mounted) context.go('/sale?ticket=$ticketId');
+    if (ticketId != null && mounted) context.go('/order/$ticketId');
   }
 
   // Search, then the card: no sale, no list of everyone
@@ -189,7 +191,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         .where((t) => t.type == TicketType.table && t.sessionId == null && t.placeId == table.id)
         .firstOrNull;
     if (existing != null) {
-      context.go('/ticket/${existing.id}');
+      context.go(billRoute(existing.id, label: existing.label));
       return;
     }
     setState(() => _openingTable = true);
@@ -202,7 +204,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
       ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
       // A new bill has nothing on it yet: straight to the pad, pointed at it
-      context.go('/sale?ticket=$ticketId');
+      context.go('/order/$ticketId');
     } catch (e) {
       if (!mounted) return;
       showPosToast(context, PosToastType.error, describeError(e, AppLocalizations.of(context)!));
@@ -258,7 +260,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           .where((t) => t.placeId == placeId && t.sessionId != null)
           .firstOrNull;
       if (bill != null) {
-        context.go('/ticket/${bill.id}');
+        context.go(billRoute(bill.id, label: bill.label));
         return;
       }
       await Future.delayed(const Duration(milliseconds: 600));
@@ -367,7 +369,11 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
           height: Sizes.control,
           child: FButton(
             mainAxisSize: stretch ? MainAxisSize.max : MainAxisSize.min,
-            onPress: () => context.go('/sale'),
+            // A new sale always starts empty, with nobody on it
+            onPress: () {
+              ref.read(saleProvider.notifier).clear();
+              context.go('/sale');
+            },
             prefix: const Icon(FIcons.shoppingCart, size: Sizes.icon),
             child: Padding(
               padding: const EdgeInsets.symmetric(horizontal: 4),
@@ -827,7 +833,9 @@ class _BillsState extends State<_Bills> {
                             clock: clocks[ticket.id],
                             waiting: waitingIds.contains(ticket.id),
                             height: rowHeight(index),
-                            onTap: () => context.go('/ticket/${ticket.id}'),
+                            // An open bill opens as the order screen, its lines beside the menu; a
+                            // delivery's bill, never added to, on its own page
+                            onTap: () => context.go(billRoute(ticket.id, label: ticket.label)),
                           ),
                         ),
                       ),

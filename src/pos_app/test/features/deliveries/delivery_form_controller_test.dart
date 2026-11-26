@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/features/call_centre/call_centre_mode.dart';
+import 'package:pos_app/features/customers/services/customer_search_service.dart';
 import 'package:pos_app/features/deliveries/models/delivery_order.dart';
 import 'package:pos_app/features/deliveries/providers/delivery_form_controller.dart';
 import 'package:pos_app/features/deliveries/services/delivery_service.dart';
@@ -15,6 +16,9 @@ class _FakeRepository implements DeliveryRepository {
   final List<int?> zonesAsked = [];
   final Map<int, TillDeliveryQuote> zoneAnswers = {};
   final List<bool> everyBranchAsked = [];
+
+  /// What a number's earlier addresses are; a number not listed has the two spellings of one door
+  final Map<String, List<KnownAddress>> knownBy = {};
   int sharesMade = 0;
   LocationShare share = const LocationShare();
 
@@ -40,6 +44,7 @@ class _FakeRepository implements DeliveryRepository {
   @override
   Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone, bool everyBranch = false}) async {
     everyBranchAsked.add(everyBranch);
+    if (knownBy.containsKey(phone)) return knownBy[phone]!;
     return const [
       KnownAddress(address: 'Tahrir St', building: '12'),
       KnownAddress(address: 'tahrir st', building: '12', label: 'Home'),
@@ -50,11 +55,33 @@ class _FakeRepository implements DeliveryRepository {
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
 }
 
-(ProviderContainer, _FakeRepository) _container({bool callCentre = false}) {
+/// The customers the till's search finds for the digits typed, and the one the server pairs a whole number with
+class _FakeCustomers implements CustomerSearchService, CounterCustomerService {
+  List<IdentityUser> found = const [];
+  IdentityUser? match;
+  final List<String> searched = [];
+
+  @override
+  Future<List<IdentityUser>> search(String term, {int max = 20}) async {
+    searched.add(term);
+    return found;
+  }
+
+  @override
+  Future<CustomerLookup> lookup({String? phone, String? name}) async => CustomerLookup(phone: phone ?? '', phoneValid: true, match: match);
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
+}
+
+(ProviderContainer, _FakeRepository) _container({bool callCentre = false, _FakeCustomers? customers}) {
   final fake = _FakeRepository();
+  final people = customers ?? _FakeCustomers();
   final container = ProviderContainer(overrides: [
     deliveryRepositoryProvider.overrideWithValue(fake),
     callCentreModeProvider.overrideWithValue(callCentre),
+    customerSearchServiceProvider.overrideWithValue(people),
+    counterCustomerServiceProvider.overrideWithValue(people),
   ]);
   addTearDown(container.dispose);
   // Keep the auto-disposed controller alive for the test
@@ -223,6 +250,95 @@ void main() {
 
     expect(atBranch.everyBranchAsked, [false]);
     expect(atHotline.everyBranchAsked, [true]);
+  });
+
+  test('the form opens where the call is: a sale that says who it is for is not asked again', () {
+    expect(firstDeliveryStep(changing: false), DeliveryStep.who);
+    expect(firstDeliveryStep(changing: false, customerName: 'Mona', customerPhone: '+201001234567'), DeliveryStep.where);
+    // A name with no number, or half a number, still has the number to ask for
+    expect(firstDeliveryStep(changing: false, customerName: 'Mona'), DeliveryStep.who);
+    expect(firstDeliveryStep(changing: false, customerName: 'Mona', customerPhone: '0100123'), DeliveryStep.who);
+    expect(firstDeliveryStep(changing: false, customerName: '  ', customerPhone: '01001234567'), DeliveryStep.who);
+    // A delivery being changed has everything to look over
+    expect(firstDeliveryStep(changing: true), DeliveryStep.check);
+    expect(firstDeliveryStep(changing: true, customerName: 'Mona', customerPhone: '01001234567'), DeliveryStep.check);
+  });
+
+  group('who the number is', () {
+    const mona = IdentityUser(id: 'u1', firstName: 'Mona', phoneNumber: '+201001234567');
+    const omar = IdentityUser(id: 'u2', firstName: 'Omar', phoneNumber: '+201001239999');
+    const off = IdentityUser(id: 'u3', firstName: 'Gone', phoneNumber: '+201001230000', enabled: false);
+    const whole = '+201001234567';
+
+    test('a few digits offer the customers whose numbers hold them; under five, nobody', () async {
+      final people = _FakeCustomers()..found = const [mona, omar, off];
+      final (container, _) = _container(customers: people);
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+
+      await controller.lookUpCaller(typed: '0100', normalizedPhone: '', country: 'EG');
+      expect(people.searched, isEmpty);
+      expect(container.read(deliveryFormControllerProvider).suggestions, isEmpty);
+
+      await controller.lookUpCaller(typed: '010012', normalizedPhone: '', country: 'EG');
+      final state = container.read(deliveryFormControllerProvider);
+      expect(people.searched, ['010012']);
+      expect(state.suggestions.map((u) => u.id), ['u1', 'u2'], reason: 'an account switched off is not offered');
+      expect(state.account, isNull);
+      expect(state.callerFor(''), isNull);
+    });
+
+    test("an account's own number says the customer, and offers nobody else", () async {
+      final people = _FakeCustomers()..found = const [omar, mona];
+      final (container, _) = _container(customers: people);
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      await controller.lookUpCaller(typed: '01001234567', normalizedPhone: whole, country: 'EG');
+      final state = container.read(deliveryFormControllerProvider);
+      expect(state.account?.id, 'u1');
+      expect(state.suggestions, isEmpty);
+      expect(state.callerFor(whole), DeliveryCaller.customer);
+    });
+
+    test('a whole number with no account: delivered to before, or a new caller, once both answers are in', () async {
+      final (container, fake) = _container();
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      fake.knownBy['+201110000000'] = const [];
+
+      await controller.lookUpCaller(typed: '01001234567', normalizedPhone: whole, country: 'EG');
+      expect(container.read(deliveryFormControllerProvider).callerFor(whole), isNull, reason: 'their earlier addresses are not in yet');
+      await controller.lookUpKnown(customerUserId: null, normalizedPhone: whole);
+      expect(container.read(deliveryFormControllerProvider).callerFor(whole), DeliveryCaller.calledBefore);
+
+      // Another number: nothing is said of it on the strength of the last one's answer
+      expect(container.read(deliveryFormControllerProvider).callerFor('+201110000000'), isNull);
+      await controller.lookUpCaller(typed: '01110000000', normalizedPhone: '+201110000000', country: 'EG');
+      await controller.lookUpKnown(customerUserId: null, normalizedPhone: '+201110000000');
+      final state = container.read(deliveryFormControllerProvider);
+      expect(state.known, isEmpty);
+      expect(state.callerFor('+201110000000'), DeliveryCaller.newCaller);
+    });
+
+    test('a whole number the search did not pair is still the account the server reads it as', () async {
+      final people = _FakeCustomers()..match = mona;
+      final (container, _) = _container(customers: people);
+      await container
+          .read(deliveryFormControllerProvider.notifier)
+          .lookUpCaller(typed: '01001234567', normalizedPhone: whole, country: 'EG');
+      expect(container.read(deliveryFormControllerProvider).account?.id, 'u1');
+    });
+
+    test('typing on unsettles what was said until the new number is answered', () async {
+      final (container, fake) = _container();
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      fake.knownBy[whole] = const [];
+      await controller.lookUpCaller(typed: '01001234567', normalizedPhone: whole, country: 'EG');
+      await controller.lookUpKnown(customerUserId: null, normalizedPhone: whole);
+      expect(container.read(deliveryFormControllerProvider).callerFor(whole), DeliveryCaller.newCaller);
+
+      controller.phoneChanged(customerUserId: null, normalizedPhone: '+201001234568', typed: '01001234568', country: 'EG');
+      final state = container.read(deliveryFormControllerProvider);
+      expect((state.searching, state.knownReading), (true, true));
+      expect(state.callerFor('+201001234568'), isNull);
+    });
   });
 
   group('location link', () {

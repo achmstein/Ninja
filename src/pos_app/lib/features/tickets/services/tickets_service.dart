@@ -79,6 +79,24 @@ abstract class TicketsRepository {
   /// wrong one: puts it under [tender] (another of those three). Refused
   /// once the bill's shift has closed
   Future<void> changePaymentTender(int ticketId, int paymentId, PaymentTender tender, {String? requestId});
+
+  /// Money for part of an open bill, the bill staying open for the rest:
+  /// one person's lines ([lineIds]) or an amount on account of it (none).
+  /// Cash, Card or InstaPay, always less than what is left: an amount that
+  /// pays the bill in full is a settle. The money is the open shift's from
+  /// this moment. One [requestId] per attempt takes the money once.
+  Future<PartPaymentResult> takePartPayment(
+    int ticketId, {
+    required PaymentTender tender,
+    required double amount,
+    String? payerName,
+    List<int> lineIds = const [],
+    String? requestId,
+  });
+
+  /// Owner-only: give a part payment back while the bill is open. The bill
+  /// owes the money again; cash leaves the drawer of the shift open now
+  Future<PartPaymentResult> returnPartPayment(int ticketId, int partPaymentId, {String? requestId});
 }
 
 class ApiTicketsRepository implements TicketsRepository {
@@ -265,6 +283,48 @@ class ApiTicketsRepository implements TicketsRepository {
         data: {'tender': tender.name_},
         requestId: requestId,
       );
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<PartPaymentResult> takePartPayment(
+    int ticketId, {
+    required PaymentTender tender,
+    required double amount,
+    String? payerName,
+    List<int> lineIds = const [],
+    String? requestId,
+  }) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        'tickets/$ticketId/part-payments',
+        data: {
+          'payments': [
+            {'tender': tender.value, 'amount': amount},
+          ],
+          'payerName': payerName,
+          'lineIds': lineIds,
+        },
+        requestId: requestId,
+      );
+      return PartPaymentResult.fromJson(response.data!);
+    } on DioException catch (e) {
+      throw asSalesException(e);
+    }
+  }
+
+  @override
+  Future<PartPaymentResult> returnPartPayment(int ticketId, int partPaymentId, {String? requestId}) async {
+    try {
+      final response = await _apiClient.post<Map<String, dynamic>>(
+        'tickets/$ticketId/part-payments/$partPaymentId/return',
+        // An empty body: the server gives it back out of the shift open now
+        data: const <String, dynamic>{},
+        requestId: requestId,
+      );
+      return PartPaymentResult.fromJson(response.data!);
     } on DioException catch (e) {
       throw asSalesException(e);
     }

@@ -14,6 +14,7 @@ import 'package:ninja_app_core/theme/text_styles.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../sale/bill_route.dart';
 import '../../sale/widgets/customer_dialog.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../models/place.dart';
@@ -331,7 +332,8 @@ class _PlacePanelState extends ConsumerState<_PlacePanel> {
               icon: const Icon(FIcons.receipt, size: Sizes.icon),
               onPress: () {
                 _close();
-                context.go('/ticket/${ticket.id}');
+                // The room's bill opens as the order screen, as it does from the bills
+                context.go(billRoute(ticket.id, label: ticket.label));
               },
             ),
             const SizedBox(height: 8),

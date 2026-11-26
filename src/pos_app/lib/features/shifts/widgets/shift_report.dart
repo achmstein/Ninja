@@ -22,6 +22,8 @@ String drawerPartLabel(AppLocalizations l10n, DrawerPart part) => switch (part) 
       DrawerPart.openingFloat => l10n.openingFloat,
       DrawerPart.cashTaken => l10n.cashTakenNet,
       DrawerPart.cashTabPayments => l10n.cashTabPayments,
+      DrawerPart.cashPartPayments => l10n.cashPartPayments,
+      DrawerPart.cashPartPaymentsReturned => l10n.cashPartPaymentsReturned,
       DrawerPart.payIns => l10n.payInsTotal,
       DrawerPart.payOuts => l10n.payOutsTotal,
       DrawerPart.cashRefunds => l10n.cashRefunds,
@@ -298,7 +300,8 @@ class ShiftReport extends StatelessWidget {
 }
 
 /// The drawer sum written out — float + cash taken (after change) + cash
-/// tab payments + pay-ins − pay-outs − cash refunds = expected — so the
+/// tab payments + cash for parts of open bills − part payments given back
+/// + pay-ins − pay-outs − cash refunds = expected — so the
 /// parts visibly reach the figure; on a closed shift with late cash, the
 /// frozen expectation, the late cash and the over/short they make
 class _DrawerSum extends StatelessWidget {

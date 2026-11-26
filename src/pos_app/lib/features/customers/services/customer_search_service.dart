@@ -61,11 +61,17 @@ class CustomerSearchService {
 
   CustomerSearchService(this._apiClient);
 
+  /// The customers matching [term]; with nothing typed, everyone, up to [max]
   Future<List<IdentityUser>> search(String term, {int max = 20}) async {
     final response = await _apiClient.get<List<dynamic>>(
       'users',
       // A duplicate merged into another customer is not a person to show
-      queryParameters: {'search': term, 'excludeRole': 'Admin,Owner,Cashier', 'merged': false, 'max': max},
+      queryParameters: {
+        if (term.isNotEmpty) 'search': term,
+        'excludeRole': 'Admin,Owner,Cashier',
+        'merged': false,
+        'max': max,
+      },
     );
     return (response.data ?? []).map((e) => IdentityUser.fromJson(e as Map<String, dynamic>)).toList();
   }

@@ -28,20 +28,31 @@ import '../../call_centre/call_centre_mode.dart';
 import '../compact_columns.dart';
 import '../../../core/utils/bidi.dart';
 import '../../catalog/services/catalog_service.dart';
+import '../../customers/services/customer_search_service.dart';
 import '../../deliveries/delivery_errors.dart';
 import '../../deliveries/providers/deliveries_provider.dart';
 import '../../deliveries/widgets/delivery_form_dialog.dart';
+import '../../orders/models/order.dart';
+import '../../orders/providers/pending_orders_provider.dart';
 import '../../orders/services/order_service.dart';
 import '../../places/models/place.dart';
 import '../../places/providers/places_provider.dart';
 import '../../places/stay_actions.dart';
 import '../../places/status.dart';
+import '../../../core/widgets/pos_dialog.dart';
 import '../../ticket/screens/settle_screen.dart';
 import '../../tickets/models/enums.dart';
 import '../../tickets/models/pricing.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/pricing_provider.dart';
 import '../../tickets/providers/tickets_provider.dart';
+import '../../tickets/services/online_payments_service.dart';
+import '../../tickets/services/tickets_service.dart';
+import '../bill_actions.dart';
+import '../bill_lines.dart';
+import '../bill_payers.dart';
+import '../bill_people.dart';
+import '../bill_route.dart';
 import '../models/pos_order_request.dart';
 import '../models/sale_delivery.dart';
 import '../services/price_check_service.dart';
@@ -54,20 +65,11 @@ import '../pending_ticket_customer.dart';
 import '../widgets/customer_dialog.dart';
 import '../widgets/customize_dialog.dart';
 import '../widgets/item_tile.dart';
+import '../widgets/bill_menu.dart';
+import '../widgets/part_payment_sheet.dart';
+import '../widgets/pay_who_sheet.dart';
 import '../widgets/sale_order_panel.dart';
-
-/// The item pad: category chips + item grid on the start side, the running
-/// sale on the end side. Charging posts a POS order (the kitchen sees it
-/// like any other order), waits for the counter ticket it lands on, then
-/// jumps straight into the settle dialog — the walk-in pays on the spot.
-///
-/// Given a `ticketId` it is the same pad against a bill that is already on
-/// the floor: the order names that ticket, so Sales appends to it instead
-/// of opening a counter one, and the cashier lands back on the ticket.
-// Whose round the last add on a session went to, so the next round defaults
-// to the same person without re-picking. Keyed by session id; kept for the
-// life of the app run, which is a till's shift.
-final Map<int, SaleCustomer> _lastRoundBySession = {};
+import '../widgets/send_sheet.dart';
 
 /// The attached customer's usuals, shown as a category of their own
 const _usualsCategory = -1;
@@ -95,8 +97,16 @@ typedef _Order = ({
   bool synced,
   List<SaleLine> lines,
   SaleCustomer? customer,
-  Stay? roomSession,
-  bool showChips,
+
+  /// The open bill, when there is one: as the server has it, the lines
+  /// charged here that it has not confirmed yet, and its room's stay
+  TicketDetail? ticket,
+  List<Sending> sends,
+  Set<int> landed,
+  Stay? stay,
+
+  /// Everyone the bill already knows: who Send offers first
+  List<SaleCustomer> people,
   DeliveryCharge charge,
   bool canDeliver,
   SaleDelivery? delivery,
@@ -109,6 +119,14 @@ typedef _Order = ({
   int? goneZoneId,
 });
 
+/// The order screen: the menu on one side, the order on the other, for every
+/// kind of order.
+///
+/// With no `ticketId` it is a new sale: a counter sale (charged, then paid on
+/// the spot) or a delivery. Given a `ticketId` it is that open bill (a table,
+/// a room, a tab): what is on it already sits under what is being rung up, a
+/// round is sent with one button that asks who it is for, and with nothing
+/// new the button takes the money. The web till's SalePad is the same.
 class SalePadScreen extends ConsumerStatefulWidget {
   final int? ticketId;
 
@@ -164,18 +182,83 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
   bool get _addingToTicket => widget.ticketId != null;
 
-  // Pre-select the ticket's customer once, so adding items to someone's
-  // open bill keeps going onto their account without re-asking
-  bool _prefilledCustomer = false;
+  /// Anyone named for this bill since it was opened here, the customer a
+  /// tab was opened for (the new-tab dialog) first: Send offers them again
+  final List<SaleCustomer> _named = [];
 
-  /// The room's session behind the bill being added to, watched so the
-  /// customer picker can offer the roster; null for a table or the counter
-  Stay? _watchRoomSession(WidgetRef ref) {
+  /// Quick refreshes while an order the server took is still to show its lines here
+  Timer? _landingPoll;
+
+  /// The bill went, or closed, under the screen: the till is on its way elsewhere
+  bool _leaving = false;
+
+  /// A phone opens a bill with something on it on the order, once
+  bool _openedOnOrder = false;
+
+  /// Lines charged onto this bill that the server has not confirmed yet
+  /// (core/sending): shown faded over the bill's own, in its total, and
+  /// holding the payment until they are in
+  List<Sending> _sends(List<Sending> all) =>
+      _addingToTicket ? all.where((s) => s.ticketId == widget.ticketId).toList() : const [];
+
+  /// An order's lines are on the bill: its faded copy goes, the real ones tick
+  void _landArrived() {
     final ticketId = widget.ticketId;
-    if (ticketId == null) return null;
-    final ticket = ref.watch(ticketProvider(ticketId)).value;
-    if (ticket == null || ticket.sessionId == null) return null;
-    return ref.watch(stayProvider(ticket.sessionId!)).value;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticket == null) return;
+    final orderIds = {for (final line in ticket.lines) ?line.orderId};
+    for (final send in _sends(ref.read(sendingProvider))) {
+      final orderId = send.orderId;
+      if (send.status == SendStatus.placed && orderId != null && orderIds.contains(orderId)) {
+        unawaited(ref.read(sendingProvider.notifier).land(send.requestId, orderId));
+      }
+    }
+  }
+
+  void _syncLandingPoll() {
+    final placed = _sends(ref.read(sendingProvider)).any((s) => s.status == SendStatus.placed);
+    if (!placed) {
+      _landingPoll?.cancel();
+      _landingPoll = null;
+    } else {
+      _landingPoll ??= Timer.periodic(const Duration(milliseconds: 700), (_) {
+        if (mounted) ref.invalidate(ticketProvider(widget.ticketId!));
+      });
+    }
+  }
+
+  /// The bill as it is read, and read again. Gone (discarded under the
+  /// screen): back to the floor. Paid or voided: nothing more is rung onto
+  /// it, its own page says the rest
+  void _onTicket(AsyncValue<TicketDetail>? previous, AsyncValue<TicketDetail> next) {
+    if (next.error is TicketNotFound) return _leaveTo('/');
+    final ticket = next.value;
+    if (ticket == null) return;
+    if (!ticket.isOpen || ticket.isVoided) {
+      // Paid from here a moment ago: the settle goes on to the floor itself
+      if (!_settling) _leaveTo('/ticket/${ticket.id}');
+      return;
+    }
+    _landArrived();
+    // A phone shows the menu first; a bill with something on it opens on the bill instead
+    if (!_openedOnOrder) {
+      _openedOnOrder = true;
+      if (ticket.lines.isNotEmpty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_leaving && context.isNarrow) _openOrderSheet();
+        });
+      }
+    }
+  }
+
+  void _leaveTo(String location) {
+    if (_leaving) return;
+    _leaving = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      _closeOrderSheet();
+      context.go(location);
+    });
   }
 
   @override
@@ -191,11 +274,23 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     _note.addListener(() => ref.read(saleProvider.notifier).setNote(_note.text));
     _search.addListener(() => setState(() {}));
     _noteFocus.addListener(() => setState(() {}));
+    final ticketId = widget.ticketId;
+    if (ticketId != null) {
+      // A tab opened for an account: they are who its first round is offered to. Read once, then forgotten
+      final opened = pendingTicketCustomer.remove(ticketId);
+      if (opened != null) _named.add(opened);
+      ref.listenManual(ticketProvider(ticketId), _onTicket, fireImmediately: true);
+      ref.listenManual(sendingProvider, (_, _) {
+        _landArrived();
+        _syncLandingPoll();
+      }, fireImmediately: true);
+    }
   }
 
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
+    _landingPoll?.cancel();
     // Left by a way that did not close the sheet first: it goes with the
     // pad, once this frame is done with the tree
     final sheet = _orderSheet;
@@ -268,8 +363,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
   Future<void> _tapItem(CatalogItem item, {bool suggested = false}) async {
     if (item.customizations.isNotEmpty) {
-      // Pre-fill from the attached customer's saved choices, if any.
-      final customerId = ref.read(saleProvider).customer?.id;
+      // Pre-fill from the attached customer's saved choices, if any. A bill
+      // is nobody's until Send
+      final customerId = _addingToTicket ? null : ref.read(saleProvider).customer?.id;
       final line = await showCustomizeDialog(context, item, customerId: customerId);
       if (line != null) {
         _add(suggested ? line.suggested() : line);
@@ -326,23 +422,55 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     if ((result.customer.id ?? '').isNotEmpty || (sale.customer?.id ?? '').isEmpty) notifier.setCustomer(result.customer);
   }
 
+  /// What makes a sale the same sale when it is sent again
+  String _signatureOf(SaleState sale) => json.encode({
+        'lines': [
+          for (final line in sale.lines)
+            [line.productId, line.quantity, line.specialInstructions, [for (final c in line.customizations) [c.customizationId, c.optionId]]],
+        ],
+        'note': sale.note.trim(),
+        // Attaching (or removing) a customer makes it a different sale, not a
+        // retry of the previous one — a bare name counts too
+        'customer': sale.customer?.id ?? sale.customer?.name,
+        // And sent somewhere else, another sale again
+        'delivery': _delivering(sale) ? sale.delivery?.toJson() : null,
+      });
+
+  /// A caller with no account yet becomes a customer as their order goes:
+  /// the number is the customer, so the next call finds them, with their
+  /// points and what they ordered. A number that already has an account
+  /// answers with it. Null when it could not be done (a number that is not
+  /// one here, no answer): the order then goes as a guest's, never held up
+  /// for this.
+  Future<SaleCustomer?> _ensureCaller(String name, String phone) async {
+    try {
+      final result = await ref
+          .read(counterCustomerServiceProvider)
+          .add(name: name, phone: phone)
+          .timeout(const Duration(seconds: 8));
+      final user = switch (result) {
+        CustomerAdded(:final user) => user,
+        CustomerExists(:final existing) => existing,
+        CustomerRefused() => null,
+      };
+      if (user == null) return null;
+      return SaleCustomer(
+        id: user.id,
+        name: user.displayName.isNotEmpty ? user.displayName : name,
+        phone: user.phoneNumber ?? phone,
+        addedAtCounter: user.addedAtCounter,
+      );
+    } catch (_) {
+      return null;
+    }
+  }
+
   Future<void> _charge() async {
+    // A bill's rounds are sent for whoever Send is told (_sendRound), never charged
+    if (_addingToTicket) return;
     final sale = ref.read(saleProvider);
     final l10n = AppLocalizations.of(context)!;
-    final signature = json.encode({
-      'lines': [
-        for (final line in sale.lines)
-          [line.productId, line.quantity, line.specialInstructions, [for (final c in line.customizations) [c.customizationId, c.optionId]]],
-      ],
-      'note': sale.note.trim(),
-      // Attaching (or removing) a customer makes it a different sale, not a
-      // retry of the previous one — a bare name counts too
-      'customer': sale.customer?.id ?? sale.customer?.name,
-      // The same items against a different bill are a different sale too
-      'ticket': widget.ticketId,
-      // And sent somewhere else, another sale again
-      'delivery': _delivering(sale) ? sale.delivery?.toJson() : null,
-    });
+    final signature = _signatureOf(sale);
     if (_requestId == null || _requestSignature != signature) {
       _requestSignature = signature;
       _requestId = const Uuid().v4();
@@ -412,15 +540,13 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       }
     }
 
-    // Onto an open bill, or a walk-in's new one: the bill shows the lines at
-    // once, faded until the server has them, and the till is free for the
-    // next thing (core/sending)
+    // A walk-in's new bill shows the lines at once, faded until the server
+    // has them, on the way to its payment (core/sending)
     if (delivery == null && !callCentre) {
       final requestId = _requestId!;
-      final ticketId = widget.ticketId;
       unawaited(ref.read(sendingProvider.notifier).start(Sending(
             requestId: requestId,
-            ticketId: ticketId,
+            ticketId: null,
             branchId: ref.read(selectedBranchIdProvider),
             lines: lines,
             note: sale.note,
@@ -430,19 +556,34 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       _requestSignature = null;
       _requestId = null;
       ref.read(saleProvider.notifier).clear();
-      context.go(ticketId != null ? '/ticket/$ticketId' : '/ticket/sending/$requestId');
+      context.go('/ticket/sending/$requestId');
       return;
     }
 
     var goOffline = false;
     setState(() => _placing = true);
     try {
+      // A caller with no account yet becomes a customer as their order
+      // goes; when that cannot be done it goes as a guest's
+      var customer = sale.customer;
+      final callerName = customer?.name.trim() ?? '';
+      final deliveryPhone = delivery?.phone.trim() ?? '';
+      final callerPhone = deliveryPhone.isNotEmpty ? deliveryPhone : (customer?.phone?.trim() ?? '');
+      if ((customer?.id ?? '').isEmpty && callerName.isNotEmpty && callerPhone.isNotEmpty) {
+        final added = await _ensureCaller(callerName, callerPhone);
+        if (!mounted) return;
+        if (added != null) {
+          customer = added;
+          ref.read(saleProvider.notifier).setCustomer(added);
+          // Still the same sale: sent again after a failure, it keeps its request id
+          _requestSignature = _signatureOf(ref.read(saleProvider));
+        }
+      }
       final orderId = await ref.read(orderRepositoryProvider).createPosOrder(
             PosOrderRequest(
               lines: lines,
               note: sale.note,
-              customer: sale.customer,
-              ticketId: widget.ticketId,
+              customer: customer,
               delivery: delivery,
             ),
             requestId: _requestId!,
@@ -452,7 +593,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       _requestId = null;
       // Remember how this customer's items were customized, so they prefill
       // next time — fire-and-forget, the same as the customer app does.
-      _saveCustomerPreferences(sale.customer?.id, sale.lines);
+      _saveCustomerPreferences(customer?.id, sale.lines);
       if (!mounted) return;
 
       // A delivery is a bill of its own, settled when the rider's cash comes
@@ -568,75 +709,253 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     }
   }
 
-  /// Who this round should go to by default, so items keep landing on the
-  /// right account without re-picking. The single account already on the
-  /// bill wins. Otherwise, on a room: the person the last round went to,
-  /// then the session owner, then the only member. Null when the bill is
-  /// already split across people — then the cashier says whose round it is.
-  SaleCustomer? _defaultTicketCustomer(TicketDetail ticket, Stay? session) {
-    // A tab opened for an account (the new-tab dialog) pre-selects them so the
-    // round lands on their tab. One-shot: read once, then cleared.
-    final pending = pendingTicketCustomer.remove(ticket.id);
-    if (pending != null) return pending;
-
-    final byId = <String, String>{};
-    for (final line in ticket.lines) {
-      final id = line.customerId;
-      if (id != null && id.isNotEmpty) byId[id] = line.customerName ?? '';
-    }
-    if (byId.length == 1) {
-      final entry = byId.entries.first;
-      return SaleCustomer(id: entry.key, name: entry.value);
-    }
-    if (byId.isNotEmpty || session == null) return null;
-
-    final roster = session.roster;
-    if (roster.isEmpty) return null;
-    if (roster.length == 1) return SaleCustomer(id: roster.first.id, name: roster.first.name);
-
-    final last = _lastRoundBySession[session.id];
-    if (last?.id != null && roster.any((m) => m.id == last!.id)) return last;
-
-    final ownerId = session.members.where((m) => m.isOwner).map((m) => m.customerId).firstOrNull;
-    final owner = ownerId == null ? null : roster.where((m) => m.id == ownerId).firstOrNull;
-    if (owner != null) return SaleCustomer(id: owner.id, name: owner.name);
-
-    return null;
+  /// A new sale's customer, found by name; a bill's round asks through Send
+  Future<void> _chooseCustomer() async {
+    final picked = await showCustomerDialog(context);
+    if (picked == null || !mounted) return;
+    ref.read(saleProvider.notifier).setCustomer(picked);
   }
 
-  // Attribute this round in a room: remember it for the next round, and put
-  // a newly named person onto the roster so their share needs a tab at settle
-  void _pickInRoom(SaleCustomer picked, Stay? session) {
-    ref.read(saleProvider.notifier).setCustomer(picked);
-    if (session != null && (picked.id ?? '').isNotEmpty) {
-      _lastRoundBySession[session.id] = picked;
-      if (!session.roster.any((m) => m.id == picked.id)) {
-        StayActions(ref, context).addMember(session.id, picked.id!, picked.name);
+  /// A round (or the ticked part of one) onto the open bill, for this person
+  /// or for nobody. The bill shows it at once, faded until the server has it
+  /// (core/sending); what was not sent stays on the sale, and the till stays
+  /// on this screen. False when it could not go, so nothing is taken off the
+  /// sale.
+  bool _sendRound(List<SaleLine> part, SaleCustomer? who) {
+    final ticketId = widget.ticketId;
+    if (!mounted || ticketId == null || part.isEmpty) return false;
+    final l10n = AppLocalizations.of(context)!;
+    if (!ref.read(onlineProvider)) {
+      showPosToast(context, PosToastType.warning, l10n.offlineNotAvailable);
+      return false;
+    }
+    final sale = ref.read(saleProvider);
+    unawaited(ref
+        .read(sendingProvider.notifier)
+        .start(Sending(
+          requestId: const Uuid().v4(),
+          ticketId: ticketId,
+          branchId: ref.read(selectedBranchIdProvider),
+          lines: part,
+          note: sale.note,
+          customer: who,
+          startedAt: DateTime.now(),
+        ))
+        .then((outcome) {
+      if (outcome == SendOutcome.alreadyPlaced && mounted) showPosToast(context, PosToastType.info, l10n.orderAlreadyPlaced);
+    }));
+    ref.read(saleProvider.notifier).removeLines(part.map((line) => line.key));
+    // The note was the round's: gone with its last line
+    final note = ref.read(saleProvider).note;
+    if (_note.text != note) _note.text = note;
+
+    if (who != null) {
+      setState(() => _named.add(who));
+      // Somebody new to the room: the cashier is telling us they are there,
+      // and their share of the time will need a tab at settle
+      final ticket = ref.read(ticketProvider(ticketId)).value;
+      final sessionId = ticket?.sessionId;
+      final stay = sessionId == null ? null : ref.read(stayProvider(sessionId)).value;
+      final id = who.id ?? '';
+      if (stay != null && id.isNotEmpty && !stay.roster.any((member) => member.id == id)) {
+        StayActions(ref, context).addMember(stay.id, id, who.name);
       }
     }
+    return true;
   }
 
-  // Adding to a room's bill: the people in the room are the first choice
-  // for whose round this is, and somebody picked from the search who is not
-  // in the room yet joins the roster right here — the cashier is telling us
-  // they are there, and their share of the time will need a tab at settle
-  Future<void> _chooseCustomer(Stay? roomSession) async {
-    final roster = roomSession?.roster ?? const <({String id, String name})>[];
-    final picked = await showCustomerDialog(context, quickPicks: roster);
-    if (picked == null || !mounted) return;
-    ref.read(saleProvider.notifier).setCustomer(picked);
-    final id = picked.id;
-    if (roomSession != null && id != null && id.isNotEmpty && !roster.any((m) => m.id == id)) {
-      StayActions(ref, context).addMember(roomSession.id, id, picked.name);
+  /// Send on a bill: the one moment the till asks who the round is for. The
+  /// sheet is a route of its own: it hears of the sale and of the pad
+  /// through the same two the phone's order sheet does
+  Future<void> _openSendSheet() => showPosDialog<void>(
+        context,
+        maxWidth: 560,
+        builder: (_) => ListenableBuilder(
+          listenable: _padChanged,
+          builder: (context, _) => Consumer(
+            builder: (context, ref, _) {
+              if (!mounted) return const SizedBox.shrink();
+              final order = _watchOrder(ref, context);
+              return SendSheet(lines: order.lines, people: order.people, onSend: _sendRound);
+            },
+          ),
+        ),
+      );
+
+  /// Paid from here: the bill closes under the screen, and the settle goes on to the floor itself
+  bool _settling = false;
+
+  /// Sent lines being picked, to split off, move to another bill or name:
+  /// null when they are not
+  Set<int>? _picked;
+
+  /// The picked lines are being moved or named
+  bool _lineBusy = false;
+
+  void _stopPicking() {
+    if (mounted) setState(() => _picked = null);
+  }
+
+  void _togglePicked(int lineId) => setState(() {
+        final picked = _picked ??= {};
+        if (!picked.remove(lineId)) picked.add(lineId);
+      });
+
+  /// What is picked and still on the bill to pick: a line may have gone
+  /// (moved from another till, paid for) while its box was ticked
+  Set<int> _pickedOn(TicketDetail ticket) {
+    final picked = _picked ?? const <int>{};
+    return {for (final line in ticket.lines) if (pickableLine(line) && picked.contains(line.id)) line.id};
+  }
+
+  void _setLineBusy(bool busy) {
+    if (mounted) setState(() => _lineBusy = busy);
+  }
+
+  /// The picked lines are told whose they are (bill_lines)
+  Future<void> _assignPicked() async {
+    final ticketId = widget.ticketId;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticket == null) return;
+    final named = await assignPickedLines(context, ref, ticket, _pickedOn(ticket), onBusy: _setLineBusy);
+    if (named) _stopPicking();
+  }
+
+  /// The picked lines go to another bill; the till follows them there
+  Future<void> _movePicked() async {
+    final ticketId = widget.ticketId;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticket == null) return;
+    final to = await movePickedLines(context, ref, ticket, _pickedOn(ticket), onBusy: _setLineBusy);
+    if (to == null || !mounted) return;
+    _stopPicking();
+    _closeOrderSheet();
+    context.go(billRoute(to.ticketId, label: to.label));
+  }
+
+  /// What stands in the order's button's place while lines are picked: how
+  /// many, the way out, and the two things done with them (say whose they
+  /// are, or move them), side by side at the same width
+  Widget _pickingFoot(BuildContext context, TicketDetail ticket) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final count = _pickedOn(ticket).length;
+    final none = count == 0 || _lineBusy;
+
+    // The words shrink to their half of the order's column before they are cut
+    Widget action(String label, IconData icon, {required VoidCallback onPress, FButtonVariant? variant}) => Expanded(
+          child: SizedBox(
+            height: Sizes.controlLarge,
+            child: FButton(
+              variant: variant,
+              onPress: none ? null : onPress,
+              prefix: Icon(icon, size: Sizes.icon),
+              child: Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label, maxLines: 1, style: theme.typography.base.forButton),
+                ),
+              ),
+            ),
+          ),
+        );
+
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Text(l10n.selectedLinesCount(count),
+                  style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+            ),
+            SizedBox(
+              height: Sizes.control,
+              child: FButton(
+                variant: FButtonVariant.ghost,
+                mainAxisSize: MainAxisSize.min,
+                onPress: _stopPicking,
+                child: Text(l10n.cancel, style: theme.typography.base.forButton),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 8),
+        Row(
+          children: [
+            action(l10n.assignCustomer, FIcons.userPlus, onPress: _assignPicked, variant: FButtonVariant.outline),
+            const SizedBox(width: 8),
+            action(l10n.moveItems, FIcons.arrowRightLeft, onPress: _movePicked),
+          ],
+        ),
+      ],
+    );
+  }
+
+  /// Taking the money. A bill that is more than one person's asks who is
+  /// paying first: everything in one payment (the ordinary settle), or one
+  /// person's own part, the bill staying open for the rest. Never under a
+  /// running clock, whose time is not on the bill yet
+  Future<void> _pay() async {
+    final ticketId = widget.ticketId;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticketId == null || ticket == null || _settling) return;
+    final sessionId = ticket.sessionId;
+    final stay = sessionId == null ? null : ref.read(stayProvider(sessionId)).value;
+    final payers = payersOf(ticket.lines);
+    if (payers.length < 2 || (stay?.isRunning ?? false)) return _settle();
+
+    final left = billLeftToPay(ticket);
+    final title = billTitle(context, ticket);
+    final choice =
+        await showPayWho(context, title: title, total: left, payers: payers, partPaid: ticket.partPaid > 0);
+    if (choice == null || !mounted) return;
+    final payer = choice.payer;
+    if (payer == null) return _settle();
+    // Their items carry their share of the bill's service, tax and discount.
+    // The last part is the bill's rest: that is its ordinary payment, which closes it
+    final share = payerShare(payer, ticket.lines, ticket.total);
+    if (share <= 0 || share >= left) return _settle();
+    await showPartPayment(
+      context,
+      ticketId: ticketId,
+      title: title,
+      part: (name: payer.name, lineIds: payer.lineIds, amount: share),
+    );
+  }
+
+  /// The bill's whole payment: the same guards and the same settle page as
+  /// the bill's own (bill_actions), then on to the floor
+  Future<void> _settle() async {
+    final ticketId = widget.ticketId;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticketId == null || ticket == null || _settling) return;
+    final sessionId = ticket.sessionId;
+    // The stay is read by id, not off the running ones: once it has ended the
+    // bill is still open, and the people in the room are still its account holders
+    final stay = sessionId == null ? null : ref.read(stayProvider(sessionId)).value;
+    final waiting = pendingForTicket(ref.read(pendingOrdersProvider).value ?? const <Order>[],
+        sessionId: sessionId, placeId: ticket.placeId);
+    _settling = true;
+    final outcome = await settleBill(
+      context,
+      ref,
+      ticket,
+      waiting: waiting,
+      activeSession: stay != null && stay.isRunning ? stay : null,
+      members: stay?.members ?? const [],
+    );
+    _settling = false;
+    if (!mounted) return;
+    if (outcome != null) {
+      _closeOrderSheet();
+      context.go('/');
+      return;
     }
-  }
-
-  // Someone not shown as a chip: the search, adding them to the room
-  Future<void> _chooseSomeoneElse(Stay? session) async {
-    final roster = session?.roster ?? const <({String id, String name})>[];
-    final picked = await showCustomerDialog(context, quickPicks: roster);
-    if (picked == null || !mounted) return;
-    _pickInRoom(picked, session);
+    // Left unpaid, the cashier is back on its order; closed some other way meanwhile, on its own page
+    final now = ref.read(ticketProvider(ticketId)).value;
+    if (now != null && (!now.isOpen || now.isVoided)) _leaveTo('/ticket/$ticketId');
   }
 
   /// Everything the running sale comes to: whose it is, where it goes and
@@ -644,16 +963,21 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
   /// sheet's: the sheet is another route and has to hear of a change itself.
   _Order _watchOrder(WidgetRef ref, BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    final roomSession = _watchRoomSession(ref);
     final sale = ref.watch(saleProvider);
     // Until the cart points at this destination, show it empty
     final synced = sale.target == widget.ticketId;
     final lines = synced ? sale.lines : const <SaleLine>[];
     final customer = synced ? sale.customer : null;
-    final roster = roomSession?.roster ?? const <({String id, String name})>[];
-    // A room with more than one person: show whose-round chips instead of the
-    // plain picker, so attributing a round is one tap.
-    final showChips = _addingToTicket && roomSession != null && roster.length >= 2;
+    // The open bill, when there is one: its lines, what is on its way, its room's stay
+    final ticketId = widget.ticketId;
+    final ticket = ticketId == null ? null : ref.watch(ticketProvider(ticketId)).value;
+    final open = ticket != null && ticket.isOpen && !ticket.isVoided;
+    final sessionId = open ? ticket.sessionId : null;
+    final stay = sessionId == null ? null : ref.watch(stayProvider(sessionId)).value;
+    final sends = open ? _sends(ref.watch(sendingProvider)) : const <Sending>[];
+    final landed = ticketId == null ? const <int>{} : ref.watch(landedOrdersProvider);
+    // Charged here and still on their way: part of the total
+    final onTheirWay = sends.where((s) => s.status != SendStatus.failed).fold<double>(0, (sum, s) => sum + s.total);
     // A walk-in sale can go out with a rider instead, where the business and
     // the branch deliver; a round on an open bill never does
     final features = ref.watch(featuresProvider);
@@ -690,19 +1014,27 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       synced: synced,
       lines: lines,
       customer: customer,
-      roomSession: roomSession,
-      showChips: showChips,
+      ticket: ticket,
+      sends: sends,
+      landed: landed,
+      stay: stay,
+      // Who Send offers for a round: the room's people, whoever earlier
+      // rounds were for, and anyone named since this bill was opened here
+      people: billPeople(stay?.roster ?? const [], ticket?.lines ?? const [], _named),
       charge: charge,
       canDeliver: canDeliver,
       delivery: delivery,
       deliveryFee: deliveryFee,
       deliveryMinutes: deliveryMinutes,
-      total: saleTotal(lines) + deliveryFee,
-      title: callCentreBranch == null
-          ? l10n.currentSale
-          : sale.delivery != null
-              ? l10n.callCentreOrderAt(callCentreBranch)
-              : l10n.callCentrePickupAtBranch(callCentreBranch),
+      // The whole bill with what is on its way and what is new, or the new sale with its delivery
+      total: ticket != null ? totalWith(ticket, onTheirWay + saleTotal(lines)) : saleTotal(lines) + deliveryFee,
+      title: _addingToTicket
+          ? (ticket == null ? '' : billTitle(context, ticket))
+          : callCentreBranch == null
+              ? l10n.currentSale
+              : sale.delivery != null
+                  ? l10n.callCentreOrderAt(callCentreBranch)
+                  : l10n.callCentrePickupAtBranch(callCentreBranch),
       goneZoneId: zoneGone ? saleZoneId : null,
     );
   }
@@ -713,21 +1045,61 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     final l10n = AppLocalizations.of(context)!;
     final sale = order.sale;
     final lines = order.lines;
-    final roomSession = order.roomSession;
+    final ticket = order.ticket;
     final delivery = order.delivery;
     final deliveryBlocked = deliveryBlocksCharge(order.charge);
-    // The way to send it out with a rider, while it is not going out yet
-    final offerDelivery = order.canDeliver && !deliveryBlocked && delivery == null;
+    final stay = order.stay;
+    final runningStay = stay != null && stay.isRunning ? stay : null;
+    final confirming = order.sends.any((s) => s.status != SendStatus.failed);
+    // One button at the order's foot. A new sale: charge it or send the
+    // delivery. On a bill: send what is new, or with nothing new take the
+    // money (never against a bill the server has not got all of)
+    final OrderPrimary primary = !_addingToTicket
+        ? (
+            label: delivery != null ? l10n.deliverySend : l10n.chargeAction,
+            amount: order.total,
+            onPress: lines.isEmpty || _placing || deliveryBlocked ? null : _charge,
+            busy: false,
+          )
+        : lines.isNotEmpty
+            ? (label: l10n.sendNewItems(saleCount(lines)), amount: saleTotal(lines), onPress: _openSendSheet, busy: false)
+            : (
+                label: confirming ? l10n.confirming : l10n.settleAction,
+                amount: null,
+                onPress: ticket == null || ticket.lines.isEmpty || order.sends.isNotEmpty ? null : _pay,
+                busy: confirming,
+              );
     // The note being typed with the keyboard up: the column gives it the
     // room. Put away with the system's back, the keyboard leaves the focus
     // behind, so the keyboard itself is what is asked
     // (the window's own insets: the shell's Scaffold hides them from its body)
     final typingNote = _noteFocus.hasFocus && View.of(context).viewInsets.bottom > 0;
+    // The bill whose sent lines are being picked, while they are
+    final picking = _picked != null && ticket != null && ticket.isOpen && !ticket.isVoided ? ticket : null;
     return SaleOrderPanel(
       title: order.title,
       lines: lines,
+      bill: widget.ticketId == null
+          ? null
+          : (
+              ticketId: widget.ticketId!,
+              ticket: ticket,
+              sends: order.sends,
+              landed: order.landed,
+              runningStay: runningStay,
+              // The rest a bill can do, while it is open
+              menu: ticket != null && ticket.isOpen && !ticket.isVoided
+                  ? BillMenu(
+                      ticket: ticket,
+                      runningStay: runningStay,
+                      sending: order.sends.isNotEmpty,
+                      onSelectLines: () => setState(() => _picked = {}),
+                    )
+                  : null,
+            ),
       customer: order.customer,
-      onClear: lines.isEmpty && order.customer == null && sale.note.isEmpty && sale.delivery == null
+      // A bill clears only what is new on it; a new sale, everything said about it
+      onClear: lines.isEmpty && (_addingToTicket || (order.customer == null && sale.note.isEmpty && sale.delivery == null))
           ? null
           : () {
               ref.read(saleProvider.notifier).clear();
@@ -735,12 +1107,17 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
             },
       onClose: onClose,
       typingNote: typingNote,
-      roundRoster: order.showChips ? roomSession?.roster : null,
-      onPickRound: (m) => _pickInRoom(SaleCustomer(id: m.id, name: m.name), roomSession),
-      onSomeoneElse: () => _chooseSomeoneElse(roomSession),
-      onChooseCustomer: () => _chooseCustomer(roomSession),
+      onChooseCustomer: _chooseCustomer,
       onRemoveCustomer: () => ref.read(saleProvider.notifier).setCustomer(null),
-      onDeliver: offerDelivery ? _openDeliveryForm : null,
+      // Counter or delivery, wherever the business delivers: never hidden
+      // while the branch's terms are read. Back to the counter drops the delivery
+      orderType: order.canDeliver
+          ? (
+              delivering: order.synced && sale.delivery != null,
+              onDelivery: _openDeliveryForm,
+              onCounter: () => ref.read(saleProvider.notifier).setDelivery(null),
+            )
+          : null,
       // A delivery the terms do not confirm: said, with the way out of it
       deliveryDetail: deliveryBlocked
           ? DeliveryBlockedNote(
@@ -766,13 +1143,11 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
       deliveryFee: delivery == null ? null : (fee: order.deliveryFee, minutes: order.deliveryMinutes),
       note: _note,
       noteFocus: _noteFocus,
-      chargeLabel: _addingToTicket
-          ? l10n.addToTicket
-          : delivery != null
-              ? l10n.deliverySend
-              : l10n.chargeAction,
       total: order.total,
-      onCharge: lines.isEmpty || _placing || deliveryBlocked ? null : _charge,
+      primary: primary,
+      // Sent lines being picked: boxes to tick, and at the foot what is done with them
+      selection: picking == null ? null : (chosen: _pickedOn(picking), onToggle: _togglePicked),
+      footer: picking == null ? null : _pickingFoot(context, picking),
     );
   }
 
@@ -858,21 +1233,20 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final order = _watchOrder(ref, context);
-    final sale = order.sale;
     final lines = order.lines;
-    final customer = order.customer;
-    final roomSession = order.roomSession;
-    if (_addingToTicket && order.synced && !_prefilledCustomer) {
-      final ticket = ref.watch(ticketProvider(widget.ticketId!)).value;
-      if (ticket != null) {
-        _prefilledCustomer = true;
-        final only = _defaultTicketCustomer(ticket, roomSession);
-        if (only != null && sale.customer == null && sale.lines.isEmpty) {
-          WidgetsBinding.instance.addPostFrameCallback((_) {
-            if (mounted) ref.read(saleProvider.notifier).setCustomer(only);
-          });
-        }
-      }
+    // A new sale's customer brings their usuals; a bill is nobody's until Send
+    final customer = _addingToTicket ? null : order.customer;
+    if (_addingToTicket) {
+      // What the settle asks about: orders from the app still waiting, and
+      // what guests paid, or are paying, from their phones
+      ref.watch(pendingOrdersProvider);
+      ref.watch(onlinePaymentsProvider(widget.ticketId!));
+      // A payment that just landed may have settled the bill by itself
+      ref.listen(onlinePaymentsProvider(widget.ticketId!), (previous, next) {
+        final before = previous?.value?.where((p) => p.isPaid).length ?? 0;
+        final after = next.value?.where((p) => p.isPaid).length ?? 0;
+        if (after != before) ref.invalidate(ticketProvider(widget.ticketId!));
+      });
     }
     final categories = ref.watch(catalogCategoriesProvider).value ?? const <CatalogCategory>[];
     final itemsAsync = ref.watch(catalogItemsProvider);
@@ -980,7 +1354,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                           dimension: Sizes.control,
                           child: FButton.icon(
                             variant: FButtonVariant.ghost,
-                            onPress: () => context.go(_addingToTicket ? '/ticket/${widget.ticketId}' : '/'),
+                            onPress: () => context.go('/'),
                             child: Icon(FIcons.arrowLeft, size: Sizes.iconNav),
                           ),
                         ),

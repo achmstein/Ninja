@@ -30,7 +30,11 @@ class StayBar extends ConsumerStatefulWidget {
   /// the panel's full width, with no card of its own
   final bool panel;
 
-  const StayBar({super.key, required this.session, this.panel = false});
+  /// The panel's own clock and money lines; left off under the order's
+  /// one-line strip, which says them already
+  final bool clock;
+
+  const StayBar({super.key, required this.session, this.panel = false, this.clock = true});
 
   @override
   ConsumerState<StayBar> createState() => _StayBarState();
@@ -125,12 +129,14 @@ class _StayBarState extends ConsumerState<StayBar> {
       return Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Text(formatClock(session.elapsedSeconds(now)),
-              style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
-          Text('≈ ${money(context, estimate.amount)} · $hoursLabel',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+          if (widget.clock) ...[
+            Text(formatClock(session.elapsedSeconds(now)),
+                style: theme.typography.figure.copyWith(height: 1.4, fontWeight: FontWeight.w700, fontFeatures: tabular)),
+            Text('≈ ${money(context, estimate.amount)} · $hoursLabel',
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+          ],
           if (used.length > 1)
             Text(
               used.map((o) => '${o.name.localized(context)} ${formatClock(session.optionSeconds(o.code, now))}').join(' · '),
@@ -139,7 +145,7 @@ class _StayBarState extends ConsumerState<StayBar> {
               style: muted.copyWith(fontFeatures: tabular),
             ),
           if (session.hasOptions) ...[
-            const SizedBox(height: Sizes.gapXl),
+            if (widget.clock || used.length > 1) const SizedBox(height: Sizes.gapXl),
             RateOptionToggle(
               options: session.options,
               value: session.currentOptionCode,

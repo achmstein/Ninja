@@ -128,6 +128,15 @@ class SaleNotifier extends Notifier<SaleState> {
     ));
   }
 
+  /// Takes these lines off: the part of a round that was just sent, the
+  /// rest staying to be sent. The note was the round's: with nothing left
+  /// of it, it is said
+  void removeLines(Iterable<String> keys) {
+    final gone = keys.toSet();
+    final lines = state.lines.where((l) => !gone.contains(l.key)).toList();
+    _set(state.copyWith(lines: lines, note: lines.isEmpty ? '' : null));
+  }
+
   void setNote(String note) => _set(state.copyWith(note: note));
 
   void setCustomer(SaleCustomer? customer) =>

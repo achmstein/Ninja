@@ -17,25 +17,31 @@ import 'sending.dart';
 class SendingLines extends ConsumerWidget {
   final List<Sending> sends;
 
-  const SendingLines({super.key, required this.sends});
+  /// Ruled off from the bill's own lines above them. Left off on the order
+  /// screen, where they lead the sent lines under a heading of their own
+  final bool ruled;
+
+  const SendingLines({super.key, required this.sends, this.ruled = true});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     if (sends.isEmpty) return const SizedBox.shrink();
     final theme = context.theme;
+    final blocks = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        for (final (index, send) in sends.indexed) ...[
+          if (index > 0) const SizedBox(height: 8),
+          _SendBlock(send: send),
+        ],
+      ],
+    );
+    if (!ruled) return blocks;
     return Container(
       margin: const EdgeInsets.only(top: 4),
       padding: const EdgeInsets.only(top: 4),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          for (final (index, send) in sends.indexed) ...[
-            if (index > 0) const SizedBox(height: 8),
-            _SendBlock(send: send),
-          ],
-        ],
-      ),
+      child: blocks,
     );
   }
 }

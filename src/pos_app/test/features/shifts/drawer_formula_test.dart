@@ -42,6 +42,70 @@ void main() {
     expect(drawer.addsUpTo(shift.expectedInDrawer), isTrue);
   });
 
+  test('cash for parts of open bills goes in, and what was given back comes out', () {
+    // A 100 bill settled in cash, two cash parts of bills still open (60 and
+    // 40) and a card one (80, never the drawer's), and a 40 part given back
+    final shift = ShiftView.fromJson({
+      'id': 12,
+      'status': 'Open',
+      'openingFloat': 500,
+      'salesTotal': 100,
+      'tenderTotals': [
+        {'tender': 'Cash', 'amount': 100, 'count': 1, 'tendered': 100},
+      ],
+      'cashTendered': 100,
+      'changeGiven': 0,
+      'payOutsTotal': 20,
+      'partPaymentsTotal': 180,
+      'cashPartPayments': 100,
+      'partPaymentsReturned': 40,
+      'cashPartPaymentsReturned': 40,
+      'partPaymentTenderTotals': [
+        {'tender': 'Cash', 'amount': 100, 'count': 2},
+        {'tender': 'Card', 'amount': 80, 'count': 1},
+      ],
+      'expectedInDrawer': 640,
+    });
+
+    expect(shift.partPaymentsTotal, 180);
+    expect(shift.cashPartPayments, 100);
+    expect(shift.partPaymentsReturned, 40);
+    expect(shift.cashPartPaymentsReturned, 40);
+    expect(shift.partPaymentTenderTotals.map((t) => (t.tender, t.amount, t.count)), [
+      (PaymentTender.cash, 100.0, 2),
+      (PaymentTender.card, 80.0, 1),
+    ]);
+    final drawer = shift.drawer;
+    expect(drawer.lines.map((l) => (l.part, l.amount)), [
+      (DrawerPart.openingFloat, 500.0),
+      (DrawerPart.cashTaken, 100.0),
+      (DrawerPart.cashPartPayments, 100.0),
+      (DrawerPart.cashPartPaymentsReturned, -40.0),
+      (DrawerPart.payOuts, -20.0),
+    ]);
+    // 500 + 100 + 100 − 40 − 20
+    expect(drawer.total, 640);
+    expect(drawer.lines.fold<double>(0, (sum, l) => sum + l.amount), 640);
+    expect(drawer.addsUpTo(shift.expectedInDrawer), isTrue);
+  });
+
+  test('a server from before part payments: no such rows, and the drawer still adds up', () {
+    final shift = ShiftView.fromJson({
+      'id': 13,
+      'openingFloat': 200,
+      'cashTendered': 50,
+      'changeGiven': 0,
+      'expectedInDrawer': 250,
+    });
+    expect(shift.partPaymentsTotal, 0);
+    expect(shift.cashPartPayments, 0);
+    expect(shift.partPaymentsReturned, 0);
+    expect(shift.cashPartPaymentsReturned, 0);
+    expect(shift.partPaymentTenderTotals, isEmpty);
+    expect(shift.drawer.lines.map((l) => l.part), [DrawerPart.openingFloat, DrawerPart.cashTaken]);
+    expect(shift.drawer.addsUpTo(shift.expectedInDrawer), isTrue);
+  });
+
   test('parts that are nothing are left off, float and cash taken never', () {
     const drawer = DrawerFormula(openingFloat: 0, cashTaken: 0, cashTabPayments: 0, payIns: 0, payOuts: 0, cashRefunds: 0);
     expect(drawer.lines.map((l) => l.part), [DrawerPart.openingFloat, DrawerPart.cashTaken]);

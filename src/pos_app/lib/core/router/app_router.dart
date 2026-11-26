@@ -170,11 +170,28 @@ final routerProvider = Provider<GoRouter>((ref) {
               child: _Home(),
             ),
           ),
+          // A new sale: rung up at the counter and paid on the spot, or sent out as a delivery
           GoRoute(
             path: '/sale',
-            pageBuilder: (context, state) {
+            // How an open bill was once addressed here; it has its own address now
+            redirect: (context, state) {
               final ticket = int.tryParse(state.uri.queryParameters['ticket'] ?? '');
-              return NoTransitionPage(child: SalePadScreen(ticketId: ticket));
+              return ticket != null && ticket > 0 ? '/order/$ticket' : null;
+            },
+            pageBuilder: (context, state) => const NoTransitionPage(child: SalePadScreen()),
+          ),
+          // An open bill (a table, a room, a tab) as the order screen: the menu beside what is on it
+          GoRoute(
+            path: '/order/:ticketId',
+            // Not a bill's number: there is nothing to open
+            redirect: (context, state) => (int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0) > 0 ? null : '/',
+            pageBuilder: (context, state) {
+              final ticketId = int.tryParse(state.pathParameters['ticketId'] ?? '') ?? 0;
+              // Keyed by the bill: going from one bill to another starts the screen clean
+              return NoTransitionPage(
+                key: ValueKey('order-$ticketId'),
+                child: SalePadScreen(key: ValueKey(ticketId), ticketId: ticketId),
+              );
             },
           ),
           // A new counter sale charged a moment ago, before the server has made its ticket

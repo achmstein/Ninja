@@ -8,12 +8,17 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import '../models/sale_line.dart';
 
 /// One line of the running sale: name, options, note, and the quantity
-/// stepper — the minus becomes a bin on the last unit.
+/// stepper — the minus becomes a bin on the last unit. On an open bill it is
+/// [marked] down its start edge, so what is new is told from what was sent
+/// at a glance.
 class CartLineRow extends ConsumerWidget {
   final SaleLine line;
   final void Function(String key, int quantity) onSetQuantity;
 
-  const CartLineRow({super.key, required this.line, required this.onSetQuantity});
+  /// On an open bill, where sent lines sit under it
+  final bool marked;
+
+  const CartLineRow({super.key, required this.line, required this.onSetQuantity, this.marked = false});
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
@@ -35,8 +40,15 @@ class CartLineRow extends ConsumerWidget {
           ),
         );
 
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+    return Container(
+      // The mark takes its three points out of the padding: the words stay in line with the rows under them
+      padding: EdgeInsetsDirectional.fromSTEB(marked ? 9 : 12, 8, 12, 8),
+      decoration: marked
+          ? BoxDecoration(
+              color: theme.colors.primary.withValues(alpha: 0.05),
+              border: BorderDirectional(start: BorderSide(color: theme.colors.primary, width: 3)),
+            )
+          : null,
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [

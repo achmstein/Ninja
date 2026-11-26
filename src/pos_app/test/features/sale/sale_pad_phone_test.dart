@@ -81,8 +81,8 @@ Widget _app({Locale locale = const Locale('en'), String tillItems = 'photos'}) =
         catalogItemsProvider.overrideWith(_Items.new),
         catalogCategoriesProvider.overrideWith((ref) async => _categories),
         pricingProvider.overrideWith(_Pricing.new),
-        // The branch delivers, so the sale carries its tightest row: the
-        // customer picker and "Deliver it" side by side
+        // The branch delivers, so the sale carries the counter or delivery
+        // switch over its customer
         tillDeliveryTermsProvider.overrideWith((ref) async => const TillDeliveryQuote(delivers: true, fee: 20)),
         callCentreModeProvider.overrideWithValue(false),
       ],
@@ -254,6 +254,10 @@ void main() {
       expect(find.descendant(of: find.byType(SaleOrderPanel), matching: find.byIcon(FIcons.x)), findsNothing);
       // No search button: every category is in view, or listed down the side with its search
       expect(find.byIcon(FIcons.search), tillItems == 'compact' ? findsOneWidget : findsNothing);
+      // The note is the sale's: it is asked for once something is rung up
+      expect(find.byType(FTextField), findsNWidgets(tillItems == 'compact' ? 1 : 0));
+      await tester.tap((tillItems == 'compact' ? find.byType(CompactItemTile) : find.byType(ItemTile)).first);
+      await tester.pumpAndSettle(const Duration(milliseconds: 100), EnginePhase.sendSemanticsUpdate, const Duration(seconds: 5));
       expect(find.byType(FTextField), findsNWidgets(tillItems == 'compact' ? 2 : 1));
     });
   }

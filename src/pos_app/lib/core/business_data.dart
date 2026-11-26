@@ -14,7 +14,14 @@ import 'package:shared_preferences/shared_preferences.dart';
 const _unsentKeys = ['pos.offline.sales', 'pos.sending'];
 
 /// Forgotten outright
-const _businessKeys = ['pos_cashier_roster', 'ninja-pos-sale', 'ninja-pos-call-centre', 'pos.offline.next'];
+const _businessKeys = [
+  'pos_cashier_roster',
+  'ninja-pos-sale',
+  'ninja-pos-call-centre',
+  'pos.offline.next',
+  // The customers picked lately are this business's own
+  'pos.recentCustomers',
+];
 
 /// Forgotten by prefix: kept per branch
 const _businessPrefixes = ['pos.catalog.', 'pos.pricing.'];

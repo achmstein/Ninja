@@ -14,6 +14,7 @@ import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/dialogs/app_link_dialog.dart' show customerOrigin;
+import '../../customers/services/customer_search_service.dart' show IdentityUser;
 import '../../orders/models/order.dart' show PinSource;
 import '../../sale/models/sale_delivery.dart';
 import '../../sale/models/sale_line.dart';
@@ -25,20 +26,17 @@ import 'area_picker_field.dart';
 import 'delivery_details.dart';
 import 'pin_quality.dart';
 
-/// Enough digits to be worth asking whether the caller had deliveries before
-const _minPhoneDigits = 8;
-
 /// The delivery a cashier took down, and who it is for: the account found
 /// (or already on the sale), else the name the caller gave
 typedef DeliveryFormResult = ({SaleDelivery delivery, SaleCustomer customer});
 
-/// The three steps of a phone call: who is calling, where it goes, then a look over it and send
-enum _Step { who, where, check }
-
 /// A delivery the till takes over the phone, in the order the call goes.
 /// First the number: a caller who had deliveries before is found by it, with
 /// their name when they have an account, and an earlier address is one tap
-/// to the last step. Then, for a new address, where it goes: the branch's
+/// to the last step; who the number is (a customer, someone delivered to
+/// before, a new caller) is said under it as it is typed. A sale that already
+/// says who it is for opens on the next step, with that customer's addresses
+/// at its top. Then, for a new address, where it goes: the branch's
 /// named area (which sets the fee) and the street, building, floor and flat
 /// as the caller says them, whatever Google knows. A pin on the map is an
 /// extra for the rider, folded away with the directions, and never changes
@@ -79,8 +77,19 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   late final _directions = TextEditingController(text: widget.initial?.directions ?? '');
   late final _location = TextEditingController(text: widget.initial?.location ?? '');
 
-  /// Changing a delivery already made opens on its last step: everything is there to look over
-  late _Step _step = widget.initial == null ? _Step.who : _Step.check;
+  /// Changing a delivery already made opens on its last step: everything is there to look over.
+  /// The sale already says who it is for, number and all: nobody is asked twice, the form opens on where
+  late DeliveryStep _step = firstDeliveryStep(
+    changing: widget.initial != null,
+    customerName: widget.customer?.name,
+    customerPhone: widget.customer?.phone,
+  );
+
+  /// Opened past the first step, for a customer the sale already had: their addresses are offered on the second
+  late final bool _cameWithCustomer;
+
+  /// The name the field holds because the number is an account's: it goes when the number is no longer theirs
+  String? _filledName;
 
   /// A step's mistakes show once its Next was pressed, and then as they are put right
   bool _triedWho = false;
@@ -104,11 +113,53 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   bool get _hasAccount => (widget.customer?.id ?? '').isNotEmpty;
   DeliveryFormController get _controller => ref.read(deliveryFormControllerProvider.notifier);
 
-  String get _lookupPhone => phoneDigitCount(_phone.text) >= _minPhoneDigits ? normalizePhone(_phone.text, _country) : '';
+  String get _lookupPhone => phoneDigitCount(_phone.text) >= minDeliveryPhoneDigits ? normalizePhone(_phone.text, _country) : '';
 
   @override
   void initState() {
     super.initState();
+    _cameWithCustomer = _step == DeliveryStep.where;
+    // Once this build is over: what the form knows may not change while the screen is being built
+    unawaited(Future.microtask(_start));
+    // The account's name stands in the empty field until the cashier types another
+    ref.listenManual(deliveryFormControllerProvider.select((f) => f.account), (before, account) {
+      if (!mounted || _hasAccount) return;
+      final theirs = _name.text.trim().isEmpty || _name.text == _filledName;
+      if (account != null) {
+        if (theirs) _name.text = account.displayName;
+        _filledName = _name.text == account.displayName ? account.displayName : null;
+      } else {
+        if (_filledName != null && theirs) _name.clear();
+        _filledName = null;
+      }
+    });
+    _location.addListener(() => _controller.locationChanged(_location.text));
+    // The caller shared: their point is the pin, said as coordinates like any other
+    ref.listenManual(deliveryFormControllerProvider.select((f) => f.shared), (before, shared) {
+      if (shared == null || before != null || !mounted) return;
+      setState(() {
+        _location.text = '${shared.latitude}, ${shared.longitude}';
+        _pinSource = PinSource.shared;
+        _more = true;
+      });
+    });
+    _phone.addListener(() {
+      _controller.phoneChanged(
+          customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone, typed: _phone.text, country: _country);
+      // Who the number is follows every digit
+      setState(() {});
+    });
+    for (final c in [_name, _street]) {
+      c.addListener(() {
+        if (_triedWho || _triedWhere) setState(() {});
+      });
+    }
+  }
+
+  /// What the form asks as it opens: the branch's terms, the customer's
+  /// earlier addresses, whose number it is, and a location link still out
+  void _start() {
+    if (!mounted) return;
     // The terms (and any pin already there) at once, then on every new text
     final area = widget.initial?.zoneId == null ? null : widget.initial!.zone;
     _controller.locationChanged(
@@ -127,26 +178,10 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             ),
     );
     unawaited(_controller.lookUpKnown(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
-    if (!_hasAccount) unawaited(_controller.lookUpAccount(_lookupPhone));
-    _location.addListener(() => _controller.locationChanged(_location.text));
+    if (!_hasAccount) unawaited(_controller.lookUpCaller(typed: _phone.text, normalizedPhone: _lookupPhone, country: _country));
     // A link sent for this delivery before the form was closed still brings the caller's point
     final token = widget.initial?.locationShareToken;
     if (token != null && widget.initial?.pinSource != PinSource.shared) _controller.watchShare(token);
-    // The caller shared: their point is the pin, said as coordinates like any other
-    ref.listenManual(deliveryFormControllerProvider.select((f) => f.shared), (before, shared) {
-      if (shared == null || before != null || !mounted) return;
-      setState(() {
-        _location.text = '${shared.latitude}, ${shared.longitude}';
-        _pinSource = PinSource.shared;
-        _more = true;
-      });
-    });
-    _phone.addListener(() => _controller.phoneChanged(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
-    for (final c in [_name, _phone, _street]) {
-      c.addListener(() {
-        if (_triedWho || _triedWhere) setState(() {});
-      });
-    }
   }
 
   @override
@@ -169,20 +204,20 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   String _shownName(DeliveryFormState form) => _name.text.trim().isNotEmpty ? _name.text.trim() : _account(form)?.name ?? '';
 
   bool _nameOk(DeliveryFormState form) => _account(form) != null || _name.text.trim().isNotEmpty;
-  bool get _phoneOk => phoneDigitCount(_phone.text) >= _minPhoneDigits;
+  bool get _phoneOk => phoneDigitCount(_phone.text) >= minDeliveryPhoneDigits;
   bool get _streetOk => _street.text.trim().isNotEmpty;
 
   void _toWhere(DeliveryFormState form) {
     setState(() {
       _triedWho = true;
-      if (_phoneOk && _nameOk(form)) _step = _Step.where;
+      if (_phoneOk && _nameOk(form)) _step = DeliveryStep.where;
     });
   }
 
   void _toCheck() {
     setState(() {
       _triedWhere = true;
-      if (_streetOk) _step = _Step.check;
+      if (_streetOk) _step = DeliveryStep.check;
     });
   }
 
@@ -197,16 +232,18 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     _location.text = a.hasPin ? '${a.latitude}, ${a.longitude}' : '';
     _pinSource = a.hasPin ? a.pinSource : null;
     _sendTo = null;
+    // Another address altogether: its own pin says the area again
+    _controller.pickZone(null);
     setState(() {
       _triedWho = true;
-      if (_phoneOk && _nameOk(form)) _step = _Step.check;
+      if (_phoneOk && _nameOk(form)) _step = DeliveryStep.check;
     });
   }
 
   void _save(DeliveryFormState form) {
     if (form.reading) return;
-    if (!_phoneOk || !_nameOk(form)) return setState(() => _step = _Step.who);
-    if (!_streetOk) return setState(() => _step = _Step.where);
+    if (!_phoneOk || !_nameOk(form)) return setState(() => _step = DeliveryStep.who);
+    if (!_streetOk) return setState(() => _step = DeliveryStep.where);
     // The pin of the very text in the field, never one an earlier text answered
     final pin = form.pinFor(_location.text);
     final sending = keptSendTo(_sendTo, form.quote?.alternatives ?? const [], pinned: pin != null);
@@ -267,9 +304,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
       body = const Padding(padding: EdgeInsets.all(24), child: Center(child: FCircularProgress()));
     } else {
       body = switch (_step) {
-        _Step.who => _who(context, form),
-        _Step.where => _where(context, form),
-        _Step.check => _check(context, form),
+        DeliveryStep.who => _who(context, form),
+        DeliveryStep.where => _where(context, form),
+        DeliveryStep.check => _check(context, form),
       };
     }
 
@@ -289,8 +326,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
           _StepBar(
             step: _step,
             done: {
-              _Step.who: _name.text.trim().isNotEmpty ? _name.text.trim() : showPhone(_phone.text.trim()),
-              _Step.where: [
+              DeliveryStep.who: _name.text.trim().isNotEmpty ? _name.text.trim() : showPhone(_phone.text.trim()),
+              DeliveryStep.where: [
                 if (form.zone != null) form.zone!.name.localized(context),
                 if (_street.text.trim().isNotEmpty) _street.text.trim(),
               ].join(l10n.listSeparator),
@@ -341,93 +378,181 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         ),
       );
 
-  /// Step one: the number first, as the call starts; a caller who had deliveries before is one tap away
-  Widget _who(BuildContext context, DeliveryFormState form) {
+  /// A customer whose number holds the digits typed was tapped: the number and the name are theirs
+  void _pickCaller(IdentityUser customer) {
+    _name.text = customer.displayName;
+    _phone.text = plainPhone(customer.phoneNumber);
+  }
+
+  /// Who the number is, said under it as it is typed: a customer with an
+  /// account, the customers whose numbers hold its digits (a tap each),
+  /// someone delivered to before, or a new caller
+  Widget? _caller(BuildContext context, DeliveryFormState form, SaleCustomer? account) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    Widget line(IconData icon, String text, {Color? color, Color? fill, FontWeight? weight}) => Container(
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(color: fill ?? theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
+          child: Row(
+            children: [
+              Icon(icon, size: Sizes.iconSmall, color: color ?? theme.colors.mutedForeground),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Text(text, style: theme.typography.sm.copyWith(color: color ?? theme.colors.mutedForeground, fontWeight: weight)),
+              ),
+            ],
+          ),
+        );
+
+    if (account != null) {
+      final green = AppColors.emerald(theme.colors.brightness);
+      return line(
+        FIcons.userRound,
+        [if (account.name.isNotEmpty) account.name, l10n.deliveryKnownCustomer].join(' · '),
+        color: green,
+        fill: green.withValues(alpha: 0.1),
+        weight: FontWeight.w600,
+      );
+    }
+    if (form.suggestions.isNotEmpty) {
+      return Container(
+        clipBehavior: Clip.antiAlias,
+        decoration: BoxDecoration(
+          border: Border.all(color: theme.colors.border),
+          borderRadius: BorderRadius.circular(Sizes.radius),
+        ),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            for (final (i, c) in form.suggestions.indexed) ...[
+              if (i > 0) Divider(height: 1, color: theme.colors.border),
+              FTappable(
+                key: ValueKey(c.id),
+                semanticsLabel: c.displayName,
+                onPress: () => _pickCaller(c),
+                child: Container(
+                  constraints: const BoxConstraints(minHeight: 48),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                  child: Row(
+                    children: [
+                      Icon(FIcons.userRound, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(c.displayName,
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        plainPhone(c.phoneNumber),
+                        textDirection: TextDirection.ltr,
+                        style: theme.typography.sm
+                            .copyWith(color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()]),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ],
+          ],
+        ),
+      );
+    }
+    return switch (form.callerFor(_lookupPhone)) {
+      DeliveryCaller.calledBefore => line(FIcons.history, l10n.deliveryCalledBefore, color: theme.colors.foreground, weight: FontWeight.w500),
+      DeliveryCaller.newCaller => line(FIcons.plus, l10n.deliveryNewCaller),
+      _ => null,
+    };
+  }
+
+  /// A customer's earlier addresses, one tap each: the same address again is the commonest delivery there is
+  Widget _knownAddresses(BuildContext context, DeliveryFormState form) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
-    final account = _account(form);
-    // The account's name stands in the empty field until the cashier types another
-    if (account != null && _name.text.trim().isEmpty) _name.text = account.name;
     return Column(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        Row(
+          children: [
+            Icon(FIcons.history, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+            const SizedBox(width: 6),
+            Text(l10n.deliveryKnownAddresses, style: muted),
+          ],
+        ),
+        const SizedBox(height: 6),
+        for (final a in form.known)
+          Padding(
+            key: ValueKey(a.identity),
+            padding: const EdgeInsets.only(bottom: 8),
+            child: FTappable(
+              onPress: () => _pickKnown(a, form),
+              builder: (context, states, child) => Container(
+                constraints: const BoxConstraints(minHeight: 64),
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  border: Border.all(color: theme.colors.border),
+                  borderRadius: BorderRadius.circular(Sizes.radius),
+                ),
+                child: child,
+              ),
+              child: Row(
+                children: [
+                  Icon(FIcons.mapPin, size: Sizes.icon, color: theme.colors.mutedForeground),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          [
+                            if ((a.label ?? '').isNotEmpty) a.label!,
+                            _addressLine(l10n, a.address, a.building, a.floor, a.apartment),
+                          ].join(' · '),
+                          style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
+                        ),
+                        if ((a.directions ?? '').isNotEmpty)
+                          Text('"${a.directions}"',
+                              maxLines: 1, overflow: TextOverflow.ellipsis, style: muted.copyWith(fontStyle: FontStyle.italic)),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
+                  const SizedBox(width: 4),
+                  Text(l10n.deliverySameAddress,
+                      style: theme.typography.sm.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w600)),
+                ],
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+
+  /// Step one: the number first, as the call starts; a caller who had deliveries before is one tap away
+  Widget _who(BuildContext context, DeliveryFormState form) {
+    final l10n = AppLocalizations.of(context)!;
+    final caller = _caller(context, form, _account(form));
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // The same box as every other in the form: its height and its text size
         _field(_phone, l10n.deliveryPhoneLabel,
             keyboard: TextInputType.phone,
             direction: TextDirection.ltr,
             autofocus: _phone.text.isEmpty,
             error: _triedWho && !_phoneOk ? l10n.deliveryPhoneInvalid : null,
             onSubmit: () => _toWhere(form)),
+        if (caller != null) ...[const SizedBox(height: 8), caller],
         const SizedBox(height: 12),
         _field(_name, l10n.deliveryCustomerName,
             error: _triedWho && !_nameOk(form) ? l10n.deliveryNeedsName : null, onSubmit: () => _toWhere(form)),
-        if (account != null)
-          Padding(
-            padding: const EdgeInsets.only(top: 4),
-            child: Row(
-              children: [
-                Icon(FIcons.userRound, size: Sizes.iconSmall, color: theme.colors.primary),
-                const SizedBox(width: 6),
-                Text(l10n.deliveryKnownCustomer, style: muted),
-              ],
-            ),
-          ),
         if (form.known.isNotEmpty) ...[
           const SizedBox(height: 16),
-          Row(
-            children: [
-              Icon(FIcons.history, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-              const SizedBox(width: 6),
-              Text(l10n.deliveryKnownAddresses, style: muted),
-            ],
-          ),
-          const SizedBox(height: 6),
-          for (final a in form.known)
-            Padding(
-              key: ValueKey(a.identity),
-              padding: const EdgeInsets.only(bottom: 8),
-              child: FTappable(
-                onPress: () => _pickKnown(a, form),
-                builder: (context, states, child) => Container(
-                  constraints: const BoxConstraints(minHeight: 64),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    border: Border.all(color: theme.colors.border),
-                    borderRadius: BorderRadius.circular(Sizes.radius),
-                  ),
-                  child: child,
-                ),
-                child: Row(
-                  children: [
-                    Icon(FIcons.mapPin, size: Sizes.icon, color: theme.colors.mutedForeground),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            [
-                              if ((a.label ?? '').isNotEmpty) a.label!,
-                              _addressLine(l10n, a.address, a.building, a.floor, a.apartment),
-                            ].join(' · '),
-                            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600),
-                          ),
-                          if ((a.directions ?? '').isNotEmpty)
-                            Text('"${a.directions}"',
-                                maxLines: 1, overflow: TextOverflow.ellipsis, style: muted.copyWith(fontStyle: FontStyle.italic)),
-                        ],
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
-                    const SizedBox(width: 4),
-                    Text(l10n.deliverySameAddress,
-                        style: theme.typography.sm.copyWith(color: theme.colors.primary, fontWeight: FontWeight.w600)),
-                  ],
-                ),
-              ),
-            ),
+          _knownAddresses(context, form),
         ],
         const SizedBox(height: 16),
         form.known.isNotEmpty
@@ -455,6 +580,11 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // The sale already said who it is for, so the first step was passed over: their addresses are offered here
+        if (_cameWithCustomer && form.known.isNotEmpty) ...[
+          _knownAddresses(context, form),
+          const SizedBox(height: 8),
+        ],
         if (zones.isNotEmpty) ...[
           AreaChoice(zones: zones, picked: form.zone, onPick: pick),
           const SizedBox(height: 12),
@@ -483,7 +613,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               mainAxisSize: MainAxisSize.min,
               prefix: const Icon(FIcons.chevronDown),
               onPress: () => setState(() => _more = true),
-              child: Text(l10n.deliveryMoreForRider),
+              // Wider than a phone's dialog in one line: the words shorten instead of running over
+              child: Flexible(child: Text(l10n.deliveryMoreForRider, maxLines: 1, overflow: TextOverflow.ellipsis)),
             ),
           )
         else
@@ -577,7 +708,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 button: true,
                 child: FButton.icon(
                   variant: FButtonVariant.outline,
-                  onPress: () => setState(() => _step = _Step.who),
+                  onPress: () => setState(() => _step = DeliveryStep.who),
                   child: Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.arrowRight : FIcons.arrowLeft),
                 ),
               ),
@@ -718,7 +849,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
               row([
                 Text(_shownName(form), style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
                 Text(plainPhone(phone), textDirection: TextDirection.ltr, style: muted),
-              ], () => setState(() => _step = _Step.who)),
+              ], () => setState(() => _step = DeliveryStep.who)),
               Divider(height: 1, color: theme.colors.border),
               row([
                 if (zone != null) Text(zone.name.localized(context), style: muted.copyWith(fontWeight: FontWeight.w600)),
@@ -729,7 +860,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 const SizedBox(height: 4),
                 PinQualityLabel(quality: pinned ? PinSource.of(_pinSource ?? PinSource.search, hasPin: true) : PinSource.none),
                 if (!pinned && form.shareWaiting) Text(l10n.deliveryShareWaiting, style: muted),
-              ], () => setState(() => _step = _Step.where)),
+              ], () => setState(() => _step = DeliveryStep.where)),
             ],
           ),
         ),
@@ -740,7 +871,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             action: FButton(
               variant: FButtonVariant.outline,
               mainAxisSize: MainAxisSize.min,
-              onPress: () => setState(() => _step = _Step.where),
+              onPress: () => setState(() => _step = DeliveryStep.where),
               child: Text(l10n.deliveryPickArea),
             ),
           ),
@@ -804,19 +935,22 @@ String _addressLine(AppLocalizations l10n, String street, String? building, Stri
 /// The arrow that points on to the next step, whichever way the language reads
 IconData _forwardIcon(BuildContext context) => Directionality.of(context) == TextDirection.rtl ? FIcons.arrowLeft : FIcons.arrowRight;
 
-/// Where in the three steps the call is, seen at a glance: numbered circles
-/// joined by a line, the one now filled, the ones behind ticked with what was
-/// said there (the caller, the street) and a tap away to change it.
+/// Where in the three steps the call is, seen at a glance: "Step 1 of 3",
+/// then a bar per step with its icon and name under it. The bars of the step
+/// now and the ones behind are filled; the ones behind are ticked, say what
+/// was entered there (the caller, the area and street) and are a tap away to
+/// change it.
 class _StepBar extends StatelessWidget {
-  final _Step step;
+  final DeliveryStep step;
 
   /// What each step behind holds, said under its name
-  final Map<_Step, String> done;
-  final void Function(_Step step) onGo;
+  final Map<DeliveryStep, String> done;
+  final void Function(DeliveryStep step) onGo;
 
   const _StepBar({required this.step, required this.done, required this.onGo});
 
-  static const _circle = 36.0;
+  static const _bar = 6.0;
+  static const _icons = [FIcons.userRound, FIcons.mapPin, FIcons.send];
 
   @override
   Widget build(BuildContext context) {
@@ -824,101 +958,81 @@ class _StepBar extends StatelessWidget {
     final l10n = AppLocalizations.of(context)!;
     final labels = [l10n.deliveryStepWho, l10n.deliveryStepWhere, l10n.deliveryStepCheck];
     final at = step.index;
-    final faint = theme.colors.mutedForeground.withValues(alpha: 0.3);
 
-    Widget circle(int i) {
+    Widget one(int i) {
       final past = i < at;
       final now = i == at;
-      return Container(
-        width: _circle,
-        height: _circle,
-        alignment: Alignment.center,
-        decoration: BoxDecoration(
-          shape: BoxShape.circle,
-          color: past ? theme.colors.primary : theme.colors.background,
-          border: Border.all(color: past || now ? theme.colors.primary : faint, width: 2),
-          boxShadow: now ? [BoxShadow(color: theme.colors.primary.withValues(alpha: 0.2), spreadRadius: 4)] : null,
-        ),
-        child: past
-            ? Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primaryForeground)
-            : Text('${i + 1}',
-                style: theme.typography.sm.copyWith(
-                  fontWeight: FontWeight.w700,
-                  color: now ? theme.colors.primary : theme.colors.mutedForeground,
-                )),
+      final lit = past || now;
+      final held = past ? done[DeliveryStep.values[i]] ?? '' : '';
+      final body = Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // The step's bar: filled behind and now
+          Container(
+            height: _bar,
+            decoration: BoxDecoration(
+              color: lit ? theme.colors.primary : theme.colors.muted,
+              borderRadius: BorderRadius.circular(_bar / 2),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Icon(
+                past ? FIcons.check : _icons[i],
+                size: Sizes.iconSmall,
+                color: lit ? theme.colors.primary : theme.colors.mutedForeground.withValues(alpha: 0.6),
+              ),
+              const SizedBox(width: 6),
+              Expanded(
+                child: Text(
+                  labels[i],
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: theme.typography.sm.copyWith(
+                    color: lit ? theme.colors.foreground : theme.colors.mutedForeground,
+                    fontWeight: now ? FontWeight.w700 : (past ? FontWeight.w500 : null),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (held.isNotEmpty)
+            Padding(
+              padding: const EdgeInsetsDirectional.only(start: Sizes.iconSmall + 6, top: 2),
+              child: Text(
+                held,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+              ),
+            ),
+        ],
       );
+      return past ? FTappable(semanticsLabel: labels[i], onPress: () => onGo(DeliveryStep.values[i]), child: body) : body;
     }
 
-    // Half a line either side of a circle: the halves of neighbours meet between them
-    Widget line(bool shown, bool filled) => Expanded(
-          child: Container(height: 2, color: !shown ? null : (filled ? theme.colors.primary : faint)),
-        );
-
-    return Semantics(
-      label: l10n.deliveryStepOf(at + 1, labels.length),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-        decoration: BoxDecoration(color: theme.colors.muted.withValues(alpha: 0.5), borderRadius: BorderRadius.circular(Sizes.radius * 1.5)),
-        child: Column(
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        // Said in words first, so a glance knows there is more to come
+        Text(
+          l10n.deliveryStepOf(at + 1, labels.length),
+          style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground, fontWeight: FontWeight.w500),
+        ),
+        const SizedBox(height: 8),
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            // The circles and the lines between them
-            Row(
-              children: [
-                for (var i = 0; i < labels.length; i++)
-                  Expanded(
-                    child: Row(
-                      children: [
-                        line(i > 0, i <= at),
-                        i < at
-                            ? Semantics(
-                                button: true,
-                                label: labels[i],
-                                child: FTappable(onPress: () => onGo(_Step.values[i]), child: circle(i)),
-                              )
-                            : circle(i),
-                        line(i < labels.length - 1, i < at),
-                      ],
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 6),
-            // Each step's name under its circle, and what a step behind holds
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                for (var i = 0; i < labels.length; i++)
-                  Expanded(
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onTap: i < at ? () => onGo(_Step.values[i]) : null,
-                      child: Column(
-                        children: [
-                          Text(
-                            labels[i],
-                            textAlign: TextAlign.center,
-                            style: theme.typography.sm.copyWith(
-                              color: i <= at ? theme.colors.foreground : theme.colors.mutedForeground,
-                              fontWeight: i == at ? FontWeight.w700 : (i < at ? FontWeight.w500 : null),
-                            ),
-                          ),
-                          if (i < at && (done[_Step.values[i]] ?? '').isNotEmpty)
-                            Text(
-                              done[_Step.values[i]]!,
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              textAlign: TextAlign.center,
-                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            ),
+            for (var i = 0; i < labels.length; i++) ...[
+              if (i > 0) const SizedBox(width: 8),
+              Expanded(child: one(i)),
+            ],
           ],
         ),
-      ),
+      ],
     );
   }
 }

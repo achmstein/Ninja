@@ -1,27 +1,83 @@
 import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/layout/breakpoints.dart';
 import '../../../core/models/money.dart';
+import '../../../core/sending/sending.dart';
+import '../../../core/sending/sending_lines.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
+import '../../places/models/place.dart';
+import '../../places/widgets/stay_strip.dart';
+import '../../tickets/models/ticket_detail.dart';
 import '../models/sale_line.dart';
 import 'cart_line_row.dart';
 import 'customer_field.dart';
+import 'order_type_switch.dart';
+import 'sent_lines.dart';
 
-/// The running sale: its heading, who it is for and whether a rider takes
-/// it, the lines, what goes well with the last one, the note and the charge
-/// button. Beside the menu on a tablet, in the bottom sheet on a phone: the
-/// same parts either way, so nothing is out of reach on either. The web
-/// till's order panel is the same.
+/// The order's one big button: what it says, what it comes to, and whether
+/// it can be pressed
+typedef OrderPrimary = ({
+  String label,
+
+  /// Shown at the button's end; left out, the words are centred
+  double? amount,
+
+  /// Null while it cannot be pressed
+  VoidCallback? onPress,
+
+  /// Lines are still on their way: a small spinner beside the words
+  bool busy,
+});
+
+/// The open bill the order is rung onto, as the panel draws it
+typedef OrderBill = ({
+  int ticketId,
+
+  /// Read from the server; null until it is
+  TicketDetail? ticket,
+
+  /// Charged here and not confirmed yet (core/sending)
+  List<Sending> sends,
+
+  /// Orders whose lines have just landed, tinted for a moment
+  Set<int> landed,
+
+  /// The room's clock, while it runs
+  Stay? runningStay,
+
+  /// The rest the bill can do (the ⋯ menu); null until the bill is read
+  Widget? menu,
+});
+
+/// The order side of the sale screen: one plain list, as a receipt reads.
+/// Beside the menu on a tablet, in the bottom sheet on a phone: the same
+/// parts either way, so nothing is out of reach on either. The web till's
+/// order panel is the same.
+///
+/// Its head says what it is (a new sale, or the table, room or tab it is
+/// rung onto) and carries what goes with that: the room's clock, the counter
+/// or delivery switch, the sale's customer, the delivery's address. Its list
+/// is what is new, then what was sent; nobody is asked for a name while items
+/// are rung up. Its foot is the total and one button: Send what is new, or
+/// take the money.
 ///
 /// It only draws what the sale pad hands it: the pad owns the sale, and the
 /// charge.
 class SaleOrderPanel extends StatelessWidget {
   final String title;
   final List<SaleLine> lines;
+
+  /// The open bill; null for a new sale
+  final OrderBill? bill;
+
+  /// A new sale's customer: one for the whole sale, and optional. A bill
+  /// asks at Send
   final SaleCustomer? customer;
 
   /// Empties the sale; null while there is nothing on it to clear
@@ -31,20 +87,16 @@ class SaleOrderPanel extends StatelessWidget {
   /// is nothing to close
   final VoidCallback? onClose;
 
-  /// The note is being typed with the keyboard up: the customer row and the
-  /// suggestions step aside so the note stays in view
+  /// The note is being typed with the keyboard up: what stands under the
+  /// head and the suggestions step aside so the note stays in view
   final bool typingNote;
 
-  /// The room's people, for whose round this is; null where the plain
-  /// customer picker is shown instead
-  final List<({String id, String name})>? roundRoster;
-  final void Function(({String id, String name}) member) onPickRound;
-  final VoidCallback onSomeoneElse;
   final VoidCallback onChooseCustomer;
   final VoidCallback onRemoveCustomer;
 
-  /// Sends it out with a rider; null where that is not on offer
-  final VoidCallback? onDeliver;
+  /// Counter or delivery, where a new sale can go out with a rider; null
+  /// where that is not on offer
+  final ({bool delivering, VoidCallback onDelivery, VoidCallback onCounter})? orderType;
 
   /// Where a delivery on the sale goes, or why it cannot go yet
   final Widget? deliveryDetail;
@@ -66,26 +118,29 @@ class SaleOrderPanel extends StatelessWidget {
   final TextEditingController note;
   final FocusNode noteFocus;
 
-  final String chargeLabel;
+  /// What the order comes to: the whole bill with what is new and on its
+  /// way, or the new sale with its delivery
   final double total;
+  final OrderPrimary primary;
 
-  /// Null while the sale cannot be charged
-  final VoidCallback? onCharge;
+  /// Sent lines are being picked (to split off, move or name)
+  final LineSelection? selection;
+
+  /// What stands in the button's place while lines are picked
+  final Widget? footer;
 
   const SaleOrderPanel({
     super.key,
     required this.title,
     required this.lines,
+    required this.bill,
     required this.customer,
     required this.onClear,
     this.onClose,
     required this.typingNote,
-    required this.roundRoster,
-    required this.onPickRound,
-    required this.onSomeoneElse,
     required this.onChooseCustomer,
     required this.onRemoveCustomer,
-    required this.onDeliver,
+    required this.orderType,
     required this.deliveryDetail,
     required this.rowKeys,
     required this.rungUp,
@@ -95,291 +150,291 @@ class SaleOrderPanel extends StatelessWidget {
     required this.deliveryFee,
     required this.note,
     required this.noteFocus,
-    required this.chargeLabel,
     required this.total,
-    required this.onCharge,
+    required this.primary,
+    this.selection,
+    this.footer,
   });
 
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final roster = roundRoster;
-    final showChips = roster != null;
-    final offerDelivery = onDeliver != null;
+    final bill = this.bill;
+    final onBill = bill != null;
     final customer = this.customer;
+    final orderType = this.orderType;
     final fee = deliveryFee;
+    final rule = BorderSide(color: theme.colors.border);
+    const tabular = [FontFeature.tabularFigures()];
     // A chip is a finger's 48 on a phone, where nothing else is near to
     // steady the hand; the tablet's column keeps its tighter rows
     final chipHeight = context.isNarrow ? Sizes.control : Sizes.controlSmall;
 
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      children: [
-        // Built like the pad's header (8 + 48 + 8), so the two rules under them meet in one line
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-          decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-          child: Row(
-            children: [
-              Expanded(
-                child: Text.rich(
-                  TextSpan(
-                    text: title,
-                    style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700),
-                    children: [
-                      if (lines.isNotEmpty)
-                        TextSpan(
-                          text: '  ${l10n.linesCount(saleCount(lines))}',
-                          style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground),
-                        ),
-                    ],
-                  ),
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                ),
-              ),
-              SizedBox.square(
-                dimension: Sizes.control,
-                child: FButton.icon(
-                  variant: FButtonVariant.ghost,
-                  onPress: onClear,
-                  child: const Icon(FIcons.trash2, size: Sizes.icon),
-                ),
-              ),
-              // In a sheet the heading is its title, and carries the way out
-              if (onClose != null)
-                SizedBox.square(
-                  dimension: Sizes.control,
-                  child: Semantics(
-                    label: l10n.close,
-                    child: FButton.icon(
-                      variant: FButtonVariant.ghost,
-                      onPress: onClose,
-                      child: const Icon(FIcons.x, size: Sizes.iconNav),
-                    ),
-                  ),
-                ),
-            ],
-          ),
-        ),
-        // Who it is for and whether a rider takes it, side by side on
-        // one row; out of the way while the note is typed into
-        if (!typingNote)
+    final sends = bill?.sends ?? const <Sending>[];
+    final sent = bill?.ticket?.lines ?? const <TicketLineView>[];
+    final hasSent = sent.isNotEmpty || sends.isNotEmpty;
+    final runningStay = bill?.runningStay;
+    // Taken already in part payments, on a bill still open
+    final partPaid = bill?.ticket?.partPaid ?? 0;
+
+    // What goes with the order, under its head: each in its one fixed place
+    final about = <Widget>[
+      // The room's clock, one line: always in sight, the rest a tap away
+      if (runningStay != null) StayStrip(session: runningStay),
+      // What kind of order: decided first, and always in sight
+      if (orderType != null)
+        OrderTypeSwitch(delivering: orderType.delivering, onDelivery: orderType.onDelivery, onCounter: orderType.onCounter),
+      // A new sale is one customer's whole, and optional: always in this one place
+      if (!onBill)
+        customer != null
+            ? SelectedCustomerChip(customer: customer, onRemove: onRemoveCustomer)
+            : ChooseCustomerButton(onPress: onChooseCustomer),
+      ?deliveryDetail,
+    ];
+
+    return LayoutBuilder(
+      builder: (context, constraints) => Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Built like the pad's header (8 + 48 + 8), so the two rules under them meet in one line
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+            decoration: BoxDecoration(border: Border(bottom: rule)),
+            child: Row(
               children: [
-                if (roster != null) ...[
-                  _WhoseRoundChips(
-                    roster: roster,
-                    selectedId: customer?.id,
-                    chipHeight: chipHeight,
-                    onPick: onPickRound,
-                    onSomeoneElse: onSomeoneElse,
-                  ),
-                  if (customer != null || offerDelivery) const SizedBox(height: 8),
-                ],
-                if (customer != null || !showChips || offerDelivery)
-                  Row(
-                    children: [
-                      if (customer != null)
-                        Expanded(
-                          child: SelectedCustomerChip(customer: customer, onRemove: onRemoveCustomer),
-                        )
-                      else if (!showChips)
-                        Expanded(
-                          child: ChooseCustomerButton(
-                            // Beside the delivery button there is no room for "(optional)"
-                            showOptional: !offerDelivery,
-                            onPress: onChooseCustomer,
-                          ),
-                        ),
-                      if (offerDelivery) ...[
-                        if (customer != null || !showChips) const SizedBox(width: 8),
-                        SizedBox(
-                          height: Sizes.control,
-                          child: FButton(
-                            variant: FButtonVariant.outline,
-                            mainAxisSize: MainAxisSize.min,
-                            onPress: onDeliver,
-                            prefix: const Icon(FIcons.bike, size: Sizes.icon),
-                            child: Text(l10n.deliverIt, style: theme.typography.base.forButton),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                if (deliveryDetail != null) ...[
-                  const SizedBox(height: 8),
-                  deliveryDetail!,
-                ],
-              ],
-            ),
-          ),
-        Expanded(
-          child: lines.isEmpty
-              ? const SizedBox.shrink()
-              // Every row built (a sale is a few dozen at most), so the
-              // one just rung up can always be brought into view
-              : SingleChildScrollView(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.stretch,
-                    children: [
-                      for (final (index, line) in lines.indexed) ...[
-                        if (index > 0) Container(height: 1, color: theme.colors.border),
-                        KeyedSubtree(
-                          key: rowKeys.putIfAbsent(line.key, GlobalKey.new),
-                          child: _RungUp(
-                            tick: rungUp[line.key] ?? 0,
-                            child: CartLineRow(line: line, onSetQuantity: onSetQuantity),
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-        ),
-        // What the item rung up last goes well with: one tap to offer it
-        if (suggestions.isNotEmpty && !typingNote)
-          Container(
-            padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
-            decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(l10n.goesWellWith, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
-                const SizedBox(height: 6),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
+                // The name gives way, cut with an ellipsis; the bill's number never does
+                Expanded(
                   child: Row(
                     children: [
-                      for (final item in suggestions)
-                        Padding(
-                          padding: const EdgeInsetsDirectional.only(end: 8, bottom: 4),
-                          child: ConstrainedBox(
-                            constraints: BoxConstraints(minHeight: chipHeight),
-                            child: FButton(
-                              variant: FButtonVariant.outline,
-                              mainAxisSize: MainAxisSize.min,
-                              onPress: () => onSuggestion(item),
-                              prefix: const Icon(FIcons.plus, size: Sizes.iconSmall),
-                              child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
-                                  style: theme.typography.base.forButton),
-                            ),
-                          ),
+                      Flexible(
+                        child: Text(title,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700)),
+                      ),
+                      if (onBill || lines.isNotEmpty) ...[
+                        const SizedBox(width: 8),
+                        Text(
+                          onBill ? hashNumber(bill.ticketId) : l10n.linesCount(saleCount(lines)),
+                          maxLines: 1,
+                          style: theme.typography.sm.copyWith(
+                              fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
                         ),
+                      ],
                     ],
                   ),
                 ),
+                // A bill with nothing new has no button of its own here: the head keeps its height all the same
+                const SizedBox(height: Sizes.control),
+                // The rest a bill can do (discount, print, void) opens here, over the order
+                ?bill?.menu,
+                if (!onBill || lines.isNotEmpty)
+                  SizedBox.square(
+                    dimension: Sizes.control,
+                    child: Semantics(
+                      label: l10n.clearSale,
+                      child: FButton.icon(
+                        variant: FButtonVariant.ghost,
+                        onPress: onClear,
+                        child: const Icon(FIcons.trash2, size: Sizes.icon),
+                      ),
+                    ),
+                  ),
+                // In a sheet the heading is its title, and carries the way out
+                if (onClose != null)
+                  SizedBox.square(
+                    dimension: Sizes.control,
+                    child: Semantics(
+                      label: l10n.close,
+                      child: FButton.icon(
+                        variant: FButtonVariant.ghost,
+                        onPress: onClose,
+                        child: const Icon(FIcons.x, size: Sizes.iconNav),
+                      ),
+                    ),
+                  ),
               ],
             ),
           ),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              if (fee != null) ...[
-                Row(
+          // Out of the way while the note is typed into. The room's opened
+          // strip can be long: it scrolls in its place and never takes the
+          // lines' whole room
+          if (about.isNotEmpty && !typingNote)
+            Container(
+              constraints: BoxConstraints(maxHeight: constraints.maxHeight * 0.55),
+              decoration: BoxDecoration(border: Border(bottom: rule)),
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Expanded(
-                      child: Text(
-                          fee.minutes == null
-                              ? l10n.deliveryFee
-                              : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(fee.minutes!)}',
-                          style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-                    ),
-                    Text(fee.fee > 0 ? money(context, fee.fee) : l10n.deliveryFree,
-                        style: theme.typography.sm.copyWith(
-                            color: theme.colors.mutedForeground, fontFeatures: const [FontFeature.tabularFigures()])),
+                    for (final (index, one) in about.indexed) ...[
+                      if (index > 0) const SizedBox(height: 8),
+                      one,
+                    ],
                   ],
                 ),
-                const SizedBox(height: 8),
-              ],
-              FTextField(
-                control: FTextFieldControl.managed(controller: note),
-                focusNode: noteFocus,
-                hint: l10n.orderNoteOptional,
-                maxLines: 1,
-              ),
-              const SizedBox(height: 12),
-              SizedBox(
-                height: Sizes.controlLarge,
-                child: FButton(
-                  onPress: onCharge,
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  suffix: Text(money(context, total),
-                      style: theme.typography.lg.forButton.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
-                  child: Text(chargeLabel, style: theme.typography.lg.forButton),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-/// "Whose round?" — the room's members as one-tap chips, the selected one
-/// filled, plus a "someone else" chip for a person not in the room yet.
-class _WhoseRoundChips extends StatelessWidget {
-  final List<({String id, String name})> roster;
-  final String? selectedId;
-  final double chipHeight;
-  final void Function(({String id, String name}) member) onPick;
-  final VoidCallback onSomeoneElse;
-
-  const _WhoseRoundChips({
-    required this.roster,
-    required this.selectedId,
-    required this.chipHeight,
-    required this.onPick,
-    required this.onSomeoneElse,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.whoseRound, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
-        const SizedBox(height: 6),
-        Wrap(
-          spacing: 8,
-          runSpacing: 8,
-          children: [
-            for (final member in roster)
-              ConstrainedBox(
-                constraints: BoxConstraints(minHeight: chipHeight),
-                child: FButton(
-                  variant: member.id == selectedId ? null : FButtonVariant.outline,
-                  mainAxisSize: MainAxisSize.min,
-                  onPress: () => onPick(member),
-                  child: Text(member.name.isEmpty ? l10n.guest : member.name, style: theme.typography.base.forButton),
-                ),
-              ),
-            ConstrainedBox(
-              constraints: BoxConstraints(minHeight: chipHeight),
-              child: FButton(
-                variant: FButtonVariant.outline,
-                mainAxisSize: MainAxisSize.min,
-                onPress: onSomeoneElse,
-                prefix: Icon(FIcons.userPlus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                child: Text(l10n.someoneElse, style: theme.typography.base.forButton),
               ),
             ),
-          ],
-        ),
-      ],
+          Expanded(
+            child: lines.isEmpty && !hasSent
+                // An open bill with nothing on it yet says how to start
+                ? (onBill && bill.ticket != null
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 64),
+                        child: Text(l10n.orderEmptyHint,
+                            textAlign: TextAlign.center,
+                            style: theme.typography.base.copyWith(color: theme.colors.mutedForeground)),
+                      )
+                    : const SizedBox.shrink())
+                // Every row built (a sale is a few dozen at most), so the
+                // one just rung up can always be brought into view
+                : SingleChildScrollView(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        // What is new first: it is what the hands are on
+                        if (lines.isNotEmpty && hasSent) OrderSectionLabel(l10n.newItems),
+                        for (final (index, line) in lines.indexed) ...[
+                          if (index > 0) Container(height: 1, color: theme.colors.border),
+                          KeyedSubtree(
+                            key: rowKeys.putIfAbsent(line.key, GlobalKey.new),
+                            child: _RungUp(
+                              tick: rungUp[line.key] ?? 0,
+                              child: CartLineRow(line: line, onSetQuantity: onSetQuantity, marked: onBill),
+                            ),
+                          ),
+                        ],
+                        if (hasSent) ...[
+                          if (lines.isNotEmpty) OrderSectionLabel(l10n.sentItems),
+                          // Charged a moment ago and on their way: they breathe until the server has them
+                          SendingLines(sends: sends, ruled: false),
+                          if (sends.isNotEmpty && sent.isNotEmpty) Container(height: 1, color: theme.colors.border),
+                          SentLines(lines: sent, landed: bill?.landed ?? const {}, selection: selection),
+                        ],
+                      ],
+                    ),
+                  ),
+          ),
+          // What the item rung up last goes well with: one tap to offer it
+          if (suggestions.isNotEmpty && !typingNote)
+            Container(
+              padding: const EdgeInsets.fromLTRB(12, 8, 12, 4),
+              decoration: BoxDecoration(border: Border(top: rule)),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(l10n.goesWellWith, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                  const SizedBox(height: 6),
+                  SingleChildScrollView(
+                    scrollDirection: Axis.horizontal,
+                    child: Row(
+                      children: [
+                        for (final item in suggestions)
+                          Padding(
+                            padding: const EdgeInsetsDirectional.only(end: 8, bottom: 4),
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(minHeight: chipHeight),
+                              child: FButton(
+                                variant: FButtonVariant.outline,
+                                mainAxisSize: MainAxisSize.min,
+                                onPress: () => onSuggestion(item),
+                                prefix: const Icon(FIcons.plus, size: Sizes.iconSmall),
+                                child: Text('${item.name.localized(context)}  ${money(context, item.unitPrice)}',
+                                    style: theme.typography.base.forButton),
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(border: Border(top: rule)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                if (fee != null) ...[
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                            fee.minutes == null
+                                ? l10n.deliveryFee
+                                : '${l10n.deliveryFee} · ${l10n.deliveryAboutMinutes(fee.minutes!)}',
+                            style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                      ),
+                      Text(fee.fee > 0 ? money(context, fee.fee) : l10n.deliveryFree,
+                          style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                ],
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.baseline,
+                  textBaseline: TextBaseline.alphabetic,
+                  children: [
+                    Expanded(
+                      child: Text(l10n.total, style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground)),
+                    ),
+                    Text(money(context, total),
+                        style: theme.typography.xl2.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular)),
+                  ],
+                ),
+                // Part of it is paid already: what was taken, and what is left to take
+                if (partPaid > 0)
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(l10n.partPaidSoFar(money(context, partPaid)),
+                            style: theme.typography.sm.copyWith(
+                                fontWeight: FontWeight.w500, color: AppColors.emerald(theme.colors.brightness))),
+                      ),
+                      Text(l10n.leftToPay(money(context, total - partPaid < 0 ? 0 : total - partPaid)),
+                          style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                    ],
+                  ),
+                const SizedBox(height: 12),
+                // The note is the round's: there is nothing to say it about until something is rung up
+                if (lines.isNotEmpty) ...[
+                  FTextField(
+                    control: FTextFieldControl.managed(controller: note),
+                    focusNode: noteFocus,
+                    hint: l10n.orderNoteOptional,
+                    maxLines: 1,
+                  ),
+                  const SizedBox(height: 12),
+                ],
+                // While lines are picked, what is done with them stands in the button's place
+                footer ??
+                    SizedBox(
+                      height: Sizes.controlLarge,
+                      child: FButton(
+                        onPress: primary.onPress,
+                        mainAxisAlignment: primary.amount == null ? MainAxisAlignment.center : MainAxisAlignment.spaceBetween,
+                        prefix: primary.busy
+                            ? SizedBox.square(
+                                dimension: Sizes.icon,
+                                child: CircularProgressIndicator(strokeWidth: 2, color: theme.colors.primaryForeground),
+                              )
+                            : null,
+                        suffix: primary.amount == null
+                            ? null
+                            : Text(money(context, primary.amount!),
+                                style: theme.typography.lg.forButton.copyWith(fontFeatures: tabular)),
+                        child: Text(primary.label, style: theme.typography.lg.forButton),
+                      ),
+                    ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

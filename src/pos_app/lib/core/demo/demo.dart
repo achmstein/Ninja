@@ -505,7 +505,8 @@ class _DemoTicketsRepository implements TicketsRepository {
   Future<SettleResult> settle(int id, SettleRequest request, {String? requestId}) async {
     final ticket = _tickets[id];
     if (ticket == null || !ticket.isOpen) throw const SalesException('This bill is no longer open.');
-    final paid = request.payments.fold<double>(0, (s, p) => s + p.amount);
+    // What was taken earlier in parts counts towards the bill
+    final paid = request.payments.fold<double>(0, (s, p) => s + p.amount) + ticket.partPaid;
     if (paid < ticket.total) throw const SalesException('The payments do not cover the bill.');
     final receiptNumber = _nextReceipt++;
     _tickets[id] = TicketDetail(
@@ -525,9 +526,99 @@ class _DemoTicketsRepository implements TicketsRepository {
       payments: [
         for (final (index, p) in request.payments.indexed)
           PaymentView(id: index + 1, tender: p.tender, amount: p.amount, customerName: p.customerName, recordedAt: DateTime.now()),
+        for (final (index, p) in ticket.partPayments.indexed)
+          PaymentView(
+            id: request.payments.length + index + 1,
+            tender: p.tender,
+            amount: p.amount,
+            customerName: p.payerName,
+            recordedAt: p.recordedAt,
+            partPaymentId: p.id,
+          ),
       ],
     );
     return SettleResult(receiptNumber: receiptNumber, change: paid - ticket.total);
+  }
+
+  int _nextPartPayment = 1;
+
+  @override
+  Future<PartPaymentResult> takePartPayment(
+    int ticketId, {
+    required PaymentTender tender,
+    required double amount,
+    String? payerName,
+    List<int> lineIds = const [],
+    String? requestId,
+  }) async {
+    final ticket = _tickets[ticketId];
+    if (ticket == null || !ticket.isOpen) throw const SalesException('This bill is no longer open.');
+    if (amount <= 0) throw const SalesException('A part payment must be a positive amount.');
+    if (amount >= ticket.total - ticket.partPaid) {
+      throw const SalesException('That pays the bill in full: settle it instead.');
+    }
+    final part = PartPayment(
+      id: _nextPartPayment++,
+      tender: tender,
+      amount: amount,
+      payerName: payerName,
+      lineIds: lineIds,
+      recordedBy: 'Demo Cashier',
+      recordedAt: DateTime.now(),
+    );
+    return _withParts(ticket, [...ticket.partPayments, part], [part.id]);
+  }
+
+  @override
+  Future<PartPaymentResult> returnPartPayment(int ticketId, int partPaymentId, {String? requestId}) async {
+    final ticket = _tickets[ticketId];
+    if (ticket == null || !ticket.isOpen) throw const SalesException('This bill is no longer open.');
+    if (!ticket.partPayments.any((p) => p.id == partPaymentId)) throw const TicketNotFound();
+    return _withParts(ticket, ticket.partPayments.where((p) => p.id != partPaymentId).toList(), [partPaymentId]);
+  }
+
+  /// The open bill with these part payments on it: their sum off what is
+  /// left, and the lines they paid for marked paid
+  PartPaymentResult _withParts(TicketDetail t, List<PartPayment> parts, List<int> changed) {
+    final paidLines = {for (final p in parts) ...p.lineIds};
+    final partPaid = parts.fold<double>(0, (s, p) => s + p.amount);
+    _tickets[t.id] = TicketDetail(
+      id: t.id,
+      type: t.type,
+      status: t.status,
+      sessionId: t.sessionId,
+      placeId: t.placeId,
+      locationName: t.locationName,
+      label: t.label,
+      openedAt: t.openedAt,
+      subtotal: t.subtotal,
+      discount: t.discount,
+      discountRate: t.discountRate,
+      discountReason: t.discountReason,
+      discountBy: t.discountBy,
+      total: t.total,
+      lines: [
+        for (final l in t.lines)
+          TicketLineView(
+            id: l.id,
+            source: l.source,
+            orderId: l.orderId,
+            description: l.description,
+            details: l.details,
+            qty: l.qty,
+            unitPrice: l.unitPrice,
+            discount: l.discount,
+            total: l.total,
+            customerId: l.customerId,
+            customerName: l.customerName,
+            guestId: l.guestId,
+            paid: paidLines.contains(l.id),
+          ),
+      ],
+      partPayments: parts,
+      partPaid: partPaid,
+    );
+    return PartPaymentResult(partPaymentIds: changed, paid: partPaid, remaining: t.total - partPaid);
   }
 }
 

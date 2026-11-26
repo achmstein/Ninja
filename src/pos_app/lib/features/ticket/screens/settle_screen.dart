@@ -131,8 +131,9 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
   final String _requestId = const Uuid().v4();
 
   double get _total => widget.ticket.total;
-  // What the till takes: the total less what guests paid online
-  double get _due => _round2(math.max(0, _total - widget.onlinePaid));
+  // What the till takes: the total less what guests paid online, and less
+  // what the till itself took earlier, in parts, while the bill stayed open
+  double get _due => settleDue(_total, onlinePaid: widget.onlinePaid, partPaid: widget.ticket.partPaid);
   double get _paid => _payments.fold(0, (sum, p) => sum + p.amount);
   double get _remaining => _round2(math.max(0, _due - _paid));
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
@@ -400,16 +401,19 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
         if (p.customerId case final id? when id.isNotEmpty) invalidateCustomerFrom(ref, id);
       }
       if (!mounted) return;
-      // The receipt lists what guests paid online beside the till's tenders
-      final outcome = SettleOutcome(receiptNumber: result.receiptNumber, change: result.change, payments: [
-        ..._payments,
-        if (widget.onlinePaid > 0) SettlePayment(tender: PaymentTender.online, amount: widget.onlinePaid),
-      ]);
+      // The receipt lists what was taken earlier in parts and what guests
+      // paid online beside the till's tenders
+      final outcome = SettleOutcome(
+        receiptNumber: result.receiptNumber,
+        change: result.change,
+        payments: receiptPayments(_payments, partPayments: widget.ticket.partPayments, onlinePaid: widget.onlinePaid),
+      );
       // The floor folds this bill away when it is next shown
       ref.read(justSettledProvider.notifier).settled(widget.ticket);
       // No paper by default — many single-item orders never need one. Cash
-      // still opens the drawer; the receipt waits for the Print button.
-      _openDrawerForCash(outcome.payments);
+      // still opens the drawer; the receipt waits for the Print button. Only
+      // cash taken now: a part's cash went in when it was taken.
+      _openDrawerForCash(_payments);
       await _land(outcome, AppLocalizations.of(context)!.receiptNumber(result.receiptNumber));
     } catch (e) {
       if (!mounted) return;
@@ -1097,6 +1101,27 @@ class _SettledView extends StatelessWidget {
     );
   }
 }
+
+/// What the till takes at the settle: the bill's total less what guests
+/// paid online and less what the till took earlier in parts (the ticket's
+/// `partPaid`), never below nothing.
+double settleDue(double total, {double onlinePaid = 0, double partPaid = 0}) =>
+    _round2(math.max(0, total - onlinePaid - partPaid));
+
+/// The payments on the receipt printed right after a settle, as pos_web
+/// lists them: the tenders just taken, then the part payments taken while
+/// the bill was open (as the payments they were, under who paid), then what
+/// guests paid online, which the server adds to the settle by itself.
+List<SettlePayment> receiptPayments(
+  List<SettlePayment> taken, {
+  List<PartPayment> partPayments = const [],
+  double onlinePaid = 0,
+}) =>
+    [
+      ...taken,
+      for (final part in partPayments) SettlePayment(tender: part.tender, amount: part.amount, customerName: part.payerName),
+      if (onlinePaid > 0) SettlePayment(tender: PaymentTender.online, amount: onlinePaid),
+    ];
 
 /// Two decimals, like pos_web's `+(x).toFixed(2)`
 double _round2(num value) => (value * 100).roundToDouble() / 100;

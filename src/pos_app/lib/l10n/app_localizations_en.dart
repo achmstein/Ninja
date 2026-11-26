@@ -775,6 +775,173 @@ class AppLocalizationsEn extends AppLocalizations {
   String get currentSale => 'Current sale';
 
   @override
+  String sendNewItems(int count) {
+    return 'Send $count new';
+  }
+
+  @override
+  String get newItems => 'New';
+
+  @override
+  String get sentItems => 'Sent';
+
+  @override
+  String get sendWhoTitle => 'Who is this for?';
+
+  @override
+  String get sendWhoSplitHint =>
+      'For more than one person: untick the items that are someone else\'s. They stay for the next name.';
+
+  @override
+  String get sendWhoAnother => 'Another customer';
+
+  @override
+  String get sendWhoNobody => 'Send without a customer';
+
+  @override
+  String get orderEmptyHint => 'Tap items on the menu to start the order';
+
+  @override
+  String get orderTypeLabel => 'Order type';
+
+  @override
+  String get orderTypeCounter => 'Counter';
+
+  @override
+  String get orderTypeCounterConfirm =>
+      'Tap Counter again to remove the delivery';
+
+  @override
+  String get roomMore => 'Rate, people, end';
+
+  @override
+  String get splitOrMove => 'Split or move items';
+
+  @override
+  String get moreActions => 'More';
+
+  @override
+  String partPaidSoFar(String amount) {
+    return 'Paid $amount';
+  }
+
+  @override
+  String leftToPay(String amount) {
+    return 'Left $amount';
+  }
+
+  @override
+  String get paidTag => 'Paid';
+
+  @override
+  String get payWhoTitle => 'Who is paying?';
+
+  @override
+  String get payEverything => 'Everything, one payment';
+
+  @override
+  String get payTheRest => 'The rest, one payment';
+
+  @override
+  String get payWhoHint =>
+      'One person\'s part is paid on its own. The bill stays open for the rest.';
+
+  @override
+  String partPayTitle(String name) {
+    return '$name pays';
+  }
+
+  @override
+  String get partPayDue => 'To pay';
+
+  @override
+  String get partPayReceived => 'Cash received';
+
+  @override
+  String get partPayExact => 'Exact';
+
+  @override
+  String get partPayHint => 'The bill stays open for the rest.';
+
+  @override
+  String partPayTake(String amount) {
+    return 'Take $amount';
+  }
+
+  @override
+  String partPaymentTaken(String amount) {
+    return '$amount taken. The bill stays open.';
+  }
+
+  @override
+  String partGiveBack(String amount) {
+    return 'Give back $amount';
+  }
+
+  @override
+  String partGiveBackTitle(String amount, String name) {
+    return 'Give back $amount to $name?';
+  }
+
+  @override
+  String get partGiveBackHint =>
+      'The money leaves this shift\'s drawer, and those items are to pay again.';
+
+  @override
+  String get partGivenBack => 'Given back';
+
+  @override
+  String get moveItems => 'Move';
+
+  @override
+  String moveItemsTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Move $count items',
+      one: 'Move 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveItemsHint(String place) {
+    return 'From $place. Pick where they go.';
+  }
+
+  @override
+  String get moveFind => 'Find a bill or a table…';
+
+  @override
+  String get moveOpenBills => 'Open bills';
+
+  @override
+  String get moveNewBill => 'A new bill';
+
+  @override
+  String get moveTabWithName => 'A tab with a name';
+
+  @override
+  String get moveTabWithNameHint => 'For someone paying on their own';
+
+  @override
+  String moveSecondBill(String place) {
+    return 'A second bill for $place';
+  }
+
+  @override
+  String get moveSecondBillHint => 'Same place, paid apart';
+
+  @override
+  String get moveFreeTable => 'A free table';
+
+  @override
+  String get moveCreate => 'Create';
+
+  @override
+  String get moveNothing => 'Nothing by that name';
+
+  @override
   String get noItemsInCategory => 'No items in this category';
 
   @override
@@ -830,6 +997,34 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get noCustomersFound => 'No customers found';
+
+  @override
+  String get recentCustomers => 'Recent';
+
+  @override
+  String get customerSearchPlaceholder => 'Search by name…';
+
+  @override
+  String get customerSearchLetters => 'Names by first letter';
+
+  @override
+  String get customerSearchEveryone => 'Everyone';
+
+  @override
+  String get customerSearchNone => 'Nobody by that name';
+
+  @override
+  String get customerSearchNotListed => 'Not in the list?';
+
+  @override
+  String get customerSearchAddHint =>
+      'Saved with their phone, for points and next time';
+
+  @override
+  String get customerSearchTypeForMore => 'Type a name to find more';
+
+  @override
+  String get customerSearchClear => 'Clear';
 
   @override
   String get settleTitle => 'Settle ticket';
@@ -1223,6 +1418,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get cashTabPayments => 'Cash tab payments';
+
+  @override
+  String get cashPartPayments => 'Cash for parts of open bills';
+
+  @override
+  String get cashPartPaymentsReturned => 'Part payments given back';
 
   @override
   String get cashRefunds => 'Cash refunds';
@@ -2574,7 +2775,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliveryNewAddress => 'New address';
 
   @override
-  String get deliveryKnownCustomer => 'A customer with an account';
+  String get deliveryKnownCustomer => 'Customer';
+
+  @override
+  String get deliveryCalledBefore => 'Ordered delivery before';
+
+  @override
+  String get deliveryNewCaller =>
+      'New caller: added to customers when the order is sent';
 
   @override
   String get deliveryMoreForRider =>

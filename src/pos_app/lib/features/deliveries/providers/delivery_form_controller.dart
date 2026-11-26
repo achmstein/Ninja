@@ -3,9 +3,35 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../call_centre/call_centre_mode.dart';
+import '../../../core/utils/phone.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';
+
+/// The three steps of a phone call: who is calling, where it goes, then a look over it and send
+enum DeliveryStep { who, where, check }
+
+/// Enough digits to be a whole number: worth asking whether the caller had deliveries before
+const minDeliveryPhoneDigits = 8;
+
+/// Digits enough to start offering the customers whose number holds them
+const suggestPhoneDigits = 5;
+
+/// The most customers offered for the digits typed
+const maxCallerSuggestions = 4;
+
+/// The step the form opens on. Changing a delivery already made opens on its
+/// last step: everything is there to look over. A sale that already says who
+/// it is for, name and whole number, is not asked twice: it opens on where.
+DeliveryStep firstDeliveryStep({required bool changing, String? customerName, String? customerPhone}) {
+  if (changing) return DeliveryStep.check;
+  final known = (customerName ?? '').trim().isNotEmpty && phoneDigitCount(customerPhone ?? '') >= minDeliveryPhoneDigits;
+  return known ? DeliveryStep.where : DeliveryStep.who;
+}
+
+/// Who a number is, said under it as it is typed: a customer with an account,
+/// someone delivered to before, or a new caller
+enum DeliveryCaller { customer, calledBefore, newCaller }
 
 /// What the phone-order form knows besides what is typed: the branch's
 /// answer for the location it last asked about, whether it is asking, and the
@@ -26,6 +52,12 @@ class DeliveryFormState {
 
   final List<KnownAddress> known;
 
+  /// The number [known] was asked for (empty for an account alone); null before any answer
+  final String? knownFor;
+
+  /// Asking for the earlier addresses of the number in the field
+  final bool knownReading;
+
   /// The named area the cashier picked by name, as the branch's list has it
   final DeliveryZone? picked;
 
@@ -35,6 +67,12 @@ class DeliveryFormState {
 
   /// The customer account that has the number typed, when there is one
   final IdentityUser? account;
+
+  /// Until a number is an account's: the few customers whose numbers hold the digits typed so far
+  final List<IdentityUser> suggestions;
+
+  /// Asking who the digits typed belong to
+  final bool searching;
 
   /// The location link sent to the caller, while the form waits for it or after
   final String? shareToken;
@@ -57,9 +95,13 @@ class DeliveryFormState {
     this.reading = false,
     this.quoteFailed = false,
     this.known = const [],
+    this.knownFor,
+    this.knownReading = false,
     this.picked,
     this.pinZone,
     this.account,
+    this.suggestions = const [],
+    this.searching = false,
     this.shareToken,
     this.shareMaking = false,
     this.shareFailed = false,
@@ -78,12 +120,27 @@ class DeliveryFormState {
   /// The pin fell in an area that is switched off, and the cashier picked none by name
   bool get pinInOffArea => picked == null && quote?.zoneId != null && (quote!.zoneOff || quote!.zone?.on == false);
 
+  /// Who [normalizedPhone] is, once both answers for it are in: null while
+  /// the number is not whole, while asking, and while customers are offered
+  /// for its digits (the list says it then)
+  DeliveryCaller? callerFor(String normalizedPhone) {
+    if (account != null) return DeliveryCaller.customer;
+    if (normalizedPhone.isEmpty || suggestions.isNotEmpty) return null;
+    if (searching || knownReading || knownFor != normalizedPhone) return null;
+    return known.isEmpty ? DeliveryCaller.newCaller : DeliveryCaller.calledBefore;
+  }
+
   DeliveryFormState copyWith({
     TillDeliveryQuote? quote,
     String? quoteFor,
     bool? reading,
     bool? quoteFailed,
     List<KnownAddress>? known,
+    String? knownFor,
+    bool clearKnownFor = false,
+    bool? knownReading,
+    List<IdentityUser>? suggestions,
+    bool? searching,
     bool clearQuote = false,
     DeliveryZone? picked,
     bool clearPicked = false,
@@ -104,6 +161,10 @@ class DeliveryFormState {
         reading: reading ?? this.reading,
         quoteFailed: quoteFailed ?? this.quoteFailed,
         known: known ?? this.known,
+        knownFor: clearKnownFor ? null : knownFor ?? this.knownFor,
+        knownReading: knownReading ?? this.knownReading,
+        suggestions: suggestions ?? this.suggestions,
+        searching: searching ?? this.searching,
         picked: clearPicked ? null : picked ?? this.picked,
         pinZone: clearPinZone ? null : pinZone ?? this.pinZone,
         account: clearAccount ? null : account ?? this.account,
@@ -126,13 +187,14 @@ class DeliveryFormState {
 
 /// The phone-order form's work, out of the widget: asking the branch about
 /// a pasted location (debounced, the answer tied to the text it was for),
-/// and looking up the caller's earlier addresses by account or number
+/// looking up the caller's earlier addresses by account or number, and
+/// saying whose number it is as it is typed
 class DeliveryFormController extends Notifier<DeliveryFormState> {
   Timer? _locationDebounce;
   Timer? _phoneDebounce;
   Timer? _sharePoll;
   String? _lastLocation;
-  String _lookedUpPhone = '';
+  String? _lookedUpPhone;
   int _asks = 0;
 
   @override
@@ -252,54 +314,115 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
     }
   }
 
-  /// The phone field changed: the caller's earlier addresses and their
-  /// account, once the number is long enough
-  void phoneChanged({required String? customerUserId, required String normalizedPhone}) {
+  /// The phone field changed: the caller's earlier addresses once the number
+  /// is whole, and whose number it is from its first few digits. [typed] is
+  /// the field's own text; nothing is settled until the answers for it are in.
+  void phoneChanged({required String? customerUserId, required String normalizedPhone, String typed = '', String country = ''}) {
     _phoneDebounce?.cancel();
+    final asksWho = (customerUserId ?? '').isEmpty;
+    final asked = _suggestFor(typed);
+    final searching = asksWho && asked.isNotEmpty && (asked != _callerTyped || _callerAsking);
+    final knownReading = normalizedPhone.isNotEmpty && normalizedPhone != state.knownFor;
+    if (searching != state.searching || knownReading != state.knownReading) {
+      state = state.copyWith(searching: searching, knownReading: knownReading);
+    }
     _phoneDebounce = Timer(AppConfig.deliveryLookupDebounce, () {
       unawaited(lookUpKnown(customerUserId: customerUserId, normalizedPhone: normalizedPhone));
-      if ((customerUserId ?? '').isEmpty) unawaited(lookUpAccount(normalizedPhone));
+      if (asksWho) unawaited(lookUpCaller(typed: typed, normalizedPhone: normalizedPhone, country: country));
     });
   }
 
-  String _accountPhone = '';
+  /// The text customers are searched by: what was typed, once it has digits enough
+  static String _suggestFor(String typed) => phoneDigitCount(typed) >= suggestPhoneDigits ? typed.trim() : '';
 
-  /// The one customer account with this number, switched on: their name comes with it
-  Future<void> lookUpAccount(String normalizedPhone) async {
-    if (normalizedPhone == _accountPhone) return;
-    _accountPhone = normalizedPhone;
-    if (normalizedPhone.isEmpty) {
-      if (state.account != null) state = state.copyWith(clearAccount: true);
+  String? _callerTyped;
+  bool _callerAsking = false;
+  bool _knownAsking = false;
+
+  /// Whose number this is: the customer account that has exactly it, switched
+  /// on (their name comes with it), and until there is one, the few customers
+  /// whose numbers hold the digits typed so far, a tap away
+  Future<void> lookUpCaller({required String typed, required String normalizedPhone, required String country}) async {
+    final asked = _suggestFor(typed);
+    if (asked == _callerTyped) return;
+    _callerTyped = asked;
+    if (asked.isEmpty) {
+      _callerAsking = false;
+      state = state.copyWith(clearAccount: true, suggestions: const [], searching: false);
       return;
     }
+    _callerAsking = true;
+    if (!state.searching) state = state.copyWith(searching: true);
+
+    var found = const <IdentityUser>[];
     try {
-      final match = (await ref.read(counterCustomerServiceProvider).lookup(phone: normalizedPhone)).match;
-      if (!ref.mounted || _accountPhone != normalizedPhone) return;
-      state = match != null && match.enabled ? state.copyWith(account: match) : state.copyWith(clearAccount: true);
+      found = [
+        for (final u in await ref.read(customerSearchServiceProvider).search(asked, max: maxCallerSuggestions + 1))
+          if (u.enabled && (u.phoneNumber ?? '').isNotEmpty) u,
+      ];
     } catch (_) {
-      // Only a convenience: the cashier types the name
+      // Only a convenience: the cashier types the number out
     }
+    if (!ref.mounted || _callerTyped != asked) return;
+
+    IdentityUser? exact;
+    for (final u in found) {
+      if (normalizePhone(u.phoneNumber, country) == normalizedPhone) {
+        exact = u;
+        break;
+      }
+    }
+    // A whole number the search did not pair: the server reads it its own way
+    if (exact == null && phoneDigitCount(typed) >= minDeliveryPhoneDigits) {
+      try {
+        final match = (await ref.read(counterCustomerServiceProvider).lookup(phone: normalizedPhone)).match;
+        if (!ref.mounted || _callerTyped != asked) return;
+        if (match != null && match.enabled) exact = match;
+      } catch (_) {
+        // Only a convenience: the cashier types the name
+        if (!ref.mounted || _callerTyped != asked) return;
+      }
+    }
+    _callerAsking = false;
+    state = exact != null
+        ? state.copyWith(account: exact, suggestions: const [], searching: false)
+        : state.copyWith(clearAccount: true, suggestions: found.take(maxCallerSuggestions).toList(), searching: false);
   }
 
+  /// Where this customer had deliveries before, and the addresses they saved
+  /// in the app: by their account when they have one, and by their number
   Future<void> lookUpKnown({required String? customerUserId, required String normalizedPhone}) async {
     final hasAccount = (customerUserId ?? '').isNotEmpty;
     if (!hasAccount && normalizedPhone.isEmpty) {
-      if (state.known.isNotEmpty) state = state.copyWith(known: const []);
+      // An answer still on its way is for a number no longer in the field
+      _lookedUpPhone = null;
+      _knownAsking = false;
+      if (state.known.isNotEmpty || state.knownReading || state.knownFor != null) {
+        state = state.copyWith(known: const [], knownReading: false, clearKnownFor: true);
+      }
       return;
     }
-    if (normalizedPhone == _lookedUpPhone && state.known.isNotEmpty) return;
+    // Answered already, or being asked now
+    if (normalizedPhone == state.knownFor || (normalizedPhone == _lookedUpPhone && _knownAsking)) return;
     _lookedUpPhone = normalizedPhone;
+    _knownAsking = true;
+    state = state.copyWith(knownReading: true);
     try {
       final known = await ref.read(deliveryRepositoryProvider).knownAddresses(
           customerUserId: customerUserId,
           phone: normalizedPhone,
           // The call centre answers for every branch: any of them may have delivered there
           everyBranch: ref.read(callCentreModeProvider));
+      if (!ref.mounted || _lookedUpPhone != normalizedPhone) return;
+      _knownAsking = false;
       // The same door once, whichever list it came from
       final seen = <String>{};
-      if (ref.mounted) state = state.copyWith(known: [for (final a in known) if (seen.add(a.identity)) a]);
+      state = state.copyWith(known: [for (final a in known) if (seen.add(a.identity)) a], knownFor: normalizedPhone, knownReading: false);
     } catch (_) {
       // Only a convenience: the cashier types the address
+      if (!ref.mounted || _lookedUpPhone != normalizedPhone) return;
+      _knownAsking = false;
+      state = state.copyWith(knownReading: false);
     }
   }
 }

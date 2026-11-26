@@ -790,6 +790,175 @@ class AppLocalizationsAr extends AppLocalizations {
   String get currentSale => 'البيع الحالي';
 
   @override
+  String sendNewItems(int count) {
+    return 'إرسال $count جديد';
+  }
+
+  @override
+  String get newItems => 'جديد';
+
+  @override
+  String get sentItems => 'أُرسل';
+
+  @override
+  String get sendWhoTitle => 'لمن هذا الطلب؟';
+
+  @override
+  String get sendWhoSplitHint =>
+      'لأكثر من شخص: ألغِ علامة أصناف الشخص الآخر، وستبقى للاسم التالي.';
+
+  @override
+  String get sendWhoAnother => 'عميل آخر';
+
+  @override
+  String get sendWhoNobody => 'أرسل دون عميل';
+
+  @override
+  String get orderEmptyHint => 'اضغط على الأصناف لبدء الطلب';
+
+  @override
+  String get orderTypeLabel => 'نوع الطلب';
+
+  @override
+  String get orderTypeCounter => 'في المحل';
+
+  @override
+  String get orderTypeCounterConfirm =>
+      'اضغط «في المحل» مرة أخرى لإلغاء التوصيل';
+
+  @override
+  String get roomMore => 'السعر، الأشخاص، إنهاء';
+
+  @override
+  String get splitOrMove => 'تقسيم أو نقل أصناف';
+
+  @override
+  String get moreActions => 'المزيد';
+
+  @override
+  String partPaidSoFar(String amount) {
+    return 'مدفوع $amount';
+  }
+
+  @override
+  String leftToPay(String amount) {
+    return 'المتبقي $amount';
+  }
+
+  @override
+  String get paidTag => 'مدفوع';
+
+  @override
+  String get payWhoTitle => 'من يدفع؟';
+
+  @override
+  String get payEverything => 'الكل، دفعة واحدة';
+
+  @override
+  String get payTheRest => 'الباقي، دفعة واحدة';
+
+  @override
+  String get payWhoHint =>
+      'نصيب الشخص يُدفع وحده، وتبقى الفاتورة مفتوحة للباقي.';
+
+  @override
+  String partPayTitle(String name) {
+    return 'دفع $name';
+  }
+
+  @override
+  String get partPayDue => 'المطلوب';
+
+  @override
+  String get partPayReceived => 'المبلغ المستلم';
+
+  @override
+  String get partPayExact => 'بالضبط';
+
+  @override
+  String get partPayHint => 'تبقى الفاتورة مفتوحة للباقي.';
+
+  @override
+  String partPayTake(String amount) {
+    return 'حصّل $amount';
+  }
+
+  @override
+  String partPaymentTaken(String amount) {
+    return 'تم تحصيل $amount. الفاتورة ما زالت مفتوحة.';
+  }
+
+  @override
+  String partGiveBack(String amount) {
+    return 'أرجع $amount';
+  }
+
+  @override
+  String partGiveBackTitle(String amount, String name) {
+    return 'إرجاع $amount إلى $name؟';
+  }
+
+  @override
+  String get partGiveBackHint =>
+      'يخرج المبلغ من درج هذه الوردية، وتعود تلك الأصناف مطلوبة الدفع.';
+
+  @override
+  String get partGivenBack => 'تم الإرجاع';
+
+  @override
+  String get moveItems => 'نقل';
+
+  @override
+  String moveItemsTitle(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'نقل $count صنفًا',
+      few: 'نقل $count أصناف',
+      two: 'نقل صنفين',
+      one: 'نقل صنف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String moveItemsHint(String place) {
+    return 'من $place. اختر أين تذهب.';
+  }
+
+  @override
+  String get moveFind => 'ابحث عن فاتورة أو طاولة…';
+
+  @override
+  String get moveOpenBills => 'فواتير مفتوحة';
+
+  @override
+  String get moveNewBill => 'فاتورة جديدة';
+
+  @override
+  String get moveTabWithName => 'حساب باسم';
+
+  @override
+  String get moveTabWithNameHint => 'لمن يدفع وحده';
+
+  @override
+  String moveSecondBill(String place) {
+    return 'فاتورة ثانية لـ $place';
+  }
+
+  @override
+  String get moveSecondBillHint => 'نفس المكان، تُدفع منفصلة';
+
+  @override
+  String get moveFreeTable => 'طاولة فارغة';
+
+  @override
+  String get moveCreate => 'أنشئ';
+
+  @override
+  String get moveNothing => 'لا يوجد شيء بهذا الاسم';
+
+  @override
   String get noItemsInCategory => 'لا توجد أصناف في هذا القسم';
 
   @override
@@ -846,6 +1015,33 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get noCustomersFound => 'لا يوجد عملاء مطابقون لهذا البحث';
+
+  @override
+  String get recentCustomers => 'الأخيرون';
+
+  @override
+  String get customerSearchPlaceholder => 'ابحث بالاسم…';
+
+  @override
+  String get customerSearchLetters => 'الأسماء حسب أول حرف';
+
+  @override
+  String get customerSearchEveryone => 'الجميع';
+
+  @override
+  String get customerSearchNone => 'لا يوجد أحد بهذا الاسم';
+
+  @override
+  String get customerSearchNotListed => 'ليس في القائمة؟';
+
+  @override
+  String get customerSearchAddHint => 'يُحفظ برقمه، للنقاط وللمرة القادمة';
+
+  @override
+  String get customerSearchTypeForMore => 'اكتب الاسم للعثور على المزيد';
+
+  @override
+  String get customerSearchClear => 'مسح';
 
   @override
   String get settleTitle => 'إغلاق الفاتورة';
@@ -1238,6 +1434,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get cashTabPayments => 'سداد الحسابات الآجلة نقدًا';
+
+  @override
+  String get cashPartPayments => 'نقد مقابل أجزاء من فواتير مفتوحة';
+
+  @override
+  String get cashPartPaymentsReturned => 'دفعات جزئية مُرتجعة';
 
   @override
   String get cashRefunds => 'المرتجعات النقدية';
@@ -2588,7 +2790,13 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryNewAddress => 'عنوان جديد';
 
   @override
-  String get deliveryKnownCustomer => 'عميل له حساب';
+  String get deliveryKnownCustomer => 'عميل مسجل';
+
+  @override
+  String get deliveryCalledBefore => 'طلب توصيل من قبل';
+
+  @override
+  String get deliveryNewCaller => 'متصل جديد: يضاف إلى العملاء عند إرسال الطلب';
 
   @override
   String get deliveryMoreForRider => 'وصف أو موقع على الخريطة (اختياري)';

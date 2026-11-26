@@ -162,6 +162,20 @@ class ShiftView {
   /// sales, never inside them
   final List<TenderTotal> tabPaymentTenderTotals;
 
+  /// Money taken during the shift for parts of bills still open, all
+  /// tenders, and the cash part: this drawer's from the moment it was
+  /// taken, beside the sales, never inside them
+  final double partPaymentsTotal;
+  final double cashPartPayments;
+
+  /// Part payments given back during the shift, all tenders, whichever
+  /// shift took them, and the part that left this drawer as cash
+  final double partPaymentsReturned;
+  final double cashPartPaymentsReturned;
+
+  /// What the shift took in part payments, by tender
+  final List<TenderTotal> partPaymentTenderTotals;
+
   /// The drawer worked out from the shift's rows now; on a closed shift it
   /// is the frozen [expectedCash] plus any [lateCash]
   final double expectedInDrawer;
@@ -208,6 +222,11 @@ class ShiftView {
     this.tabPaymentsTotal = 0,
     this.cashTabPayments = 0,
     this.tabPaymentTenderTotals = const [],
+    this.partPaymentsTotal = 0,
+    this.cashPartPayments = 0,
+    this.partPaymentsReturned = 0,
+    this.cashPartPaymentsReturned = 0,
+    this.partPaymentTenderTotals = const [],
     this.expectedInDrawer = 0,
     this.lateCash = 0,
     this.adjustedOverShort,
@@ -224,11 +243,14 @@ class ShiftView {
   double get cashTaken => cashTendered - changeGiven;
 
   /// The drawer, part by part — float + cash taken + cash tab payments +
-  /// pay-ins − pay-outs − cash refunds — adding up to [expectedInDrawer]
+  /// cash for parts of open bills − part payments given back + pay-ins −
+  /// pay-outs − cash refunds — adding up to [expectedInDrawer]
   DrawerFormula get drawer => DrawerFormula(
         openingFloat: openingFloat,
         cashTaken: cashTaken,
         cashTabPayments: cashTabPayments,
+        cashPartPayments: cashPartPayments,
+        cashPartPaymentsReturned: cashPartPaymentsReturned,
         payIns: payInsTotal,
         payOuts: payOutsTotal,
         cashRefunds: cashRefunds,
@@ -281,6 +303,12 @@ class ShiftView {
       tabPaymentsTotal: optional('tabPaymentsTotal') ?? tabTenders.fold<double>(0, (sum, t) => sum + t.amount),
       cashTabPayments: optional('cashTabPayments') ?? cashOf(tabTenders, (t) => t.amount),
       tabPaymentTenderTotals: tabTenders,
+      // A server from before part payments sends none of these: nothing taken
+      partPaymentsTotal: toNumber(json['partPaymentsTotal']),
+      cashPartPayments: toNumber(json['cashPartPayments']),
+      partPaymentsReturned: toNumber(json['partPaymentsReturned']),
+      cashPartPaymentsReturned: toNumber(json['cashPartPaymentsReturned']),
+      partPaymentTenderTotals: tenders('partPaymentTenderTotals'),
       expectedInDrawer: toNumber(json['expectedInDrawer']),
       lateCash: toNumber(json['lateCash']),
       adjustedOverShort: optional('adjustedOverShort'),

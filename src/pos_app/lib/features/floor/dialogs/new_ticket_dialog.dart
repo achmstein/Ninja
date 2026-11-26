@@ -23,10 +23,10 @@ import '../../tickets/services/tickets_service.dart';
 
 /// Opens a counter tab: a bill with no place, for whoever it is for. The
 /// customer is chosen exactly as on the sale pad — the same picker (search
-/// by name or number, a walk-in's typed name, a new counter customer with
-/// its duplicate check) and the same card once picked — so the round goes
-/// on their tab. With nobody picked, the tab can still carry a name, or
-/// none. Accounts that already have a bill running (on a tab, at a table,
+/// by name, a walk-in's typed name, a new counter customer with its
+/// duplicate check) — and picking opens their bill at once, so the round
+/// goes on their tab. With nobody picked, the tab can still carry a name, or
+/// none: that is what Open is for. Accounts that already have a bill running (on a tab, at a table,
 /// in a room) show greyed out in the picker with the bill they are on, so
 /// the cashier sees they exist but cannot open a second one: one person,
 /// one bill.
@@ -83,22 +83,25 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
     final picked = await showCustomerDialog(context, busy: busy);
     if (picked == null || !mounted) return;
     setState(() => _customer = picked);
+    // Picking who it is for opens their bill at once: there is nothing left to say
+    await _open(picked);
   }
 
-  Future<void> _open() async {
+  /// Opens the tab: for the customer given, else the one picked, else under the name typed
+  Future<void> _open([SaleCustomer? who]) async {
     if (_pending) return;
     final l10n = AppLocalizations.of(context)!;
+    who ??= _customer;
     setState(() => _pending = true);
     try {
-      final label = _customer?.name ?? _label.text.trim();
+      final label = who?.name ?? _label.text.trim();
       final ticketId = await ref.read(ticketsRepositoryProvider).openTicket(
             OpenTicketRequest(type: TicketType.counter, label: label.isEmpty ? null : label),
             requestId: _requestId,
           );
       // Client-side link: remember the account so the sale pad pre-selects it
-      final picked = _customer;
-      if (picked?.id != null && picked!.id!.isNotEmpty) {
-        pendingTicketCustomer[ticketId] = picked;
+      if (who?.id != null && who!.id!.isNotEmpty) {
+        pendingTicketCustomer[ticketId] = who;
       }
       ref.read(openTicketsProvider.notifier).refresh();
       if (!mounted) return;
@@ -175,7 +178,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
                 height: Sizes.control,
                 child: FButton(
                   mainAxisSize: MainAxisSize.min,
-                  onPress: _pending ? null : _open,
+                  onPress: _pending ? null : () => _open(),
                   prefix: _pending
                       ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2))
                       : const Icon(FIcons.shoppingBag, size: Sizes.icon),

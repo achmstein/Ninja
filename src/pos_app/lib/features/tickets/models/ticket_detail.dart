@@ -18,6 +18,10 @@ class TicketLineView {
   final String? customerName;
   final String? guestId;
 
+  /// Paid for by a part payment while the bill is open: not to be paid
+  /// again, nor moved
+  final bool paid;
+
   const TicketLineView({
     required this.id,
     this.source = 'Order',
@@ -31,6 +35,7 @@ class TicketLineView {
     this.customerId,
     this.customerName,
     this.guestId,
+    this.paid = false,
   });
 
   factory TicketLineView.fromJson(Map<String, dynamic> json) {
@@ -47,8 +52,66 @@ class TicketLineView {
       customerId: json['customerId'] as String?,
       customerName: json['customerName'] as String?,
       guestId: json['guestId'] as String?,
+      paid: json['paid'] as bool? ?? false,
     );
   }
+}
+
+/// Money the till took for part of an open bill (Sales `PartPaymentView`):
+/// one of a group paying for what they had, or an amount on account of it.
+class PartPayment {
+  final int id;
+  final PaymentTender tender;
+  final double amount;
+  final String? payerName;
+
+  /// The lines it paid for; empty for an amount on account of the bill
+  final List<int> lineIds;
+  final String recordedBy;
+  final DateTime? recordedAt;
+
+  const PartPayment({
+    required this.id,
+    required this.tender,
+    required this.amount,
+    this.payerName,
+    this.lineIds = const [],
+    this.recordedBy = '',
+    this.recordedAt,
+  });
+
+  factory PartPayment.fromJson(Map<String, dynamic> json) => PartPayment(
+        id: toInt(json['id']),
+        tender: PaymentTender.fromName(json['tender'] as String?),
+        amount: toNumber(json['amount']),
+        payerName: json['payerName'] as String?,
+        lineIds: ((json['lineIds'] as List<dynamic>?) ?? []).map(toInt).toList(),
+        recordedBy: json['recordedBy'] as String? ?? '',
+        recordedAt: json['recordedAt'] == null ? null : DateTime.tryParse(json['recordedAt'] as String),
+      );
+}
+
+/// What Sales answers a part payment taken or given back with (Sales
+/// `PartPaymentResult`). [partPaymentIds] is empty when a repeated request
+/// was answered from what already stands.
+class PartPaymentResult {
+  /// The part payments this request made (or gave back)
+  final List<int> partPaymentIds;
+
+  /// Every part payment the bill counts now
+  final double paid;
+
+  /// What is left to pay: the total less the part payments and what guests
+  /// paid or are paying online
+  final double remaining;
+
+  const PartPaymentResult({this.partPaymentIds = const [], this.paid = 0, this.remaining = 0});
+
+  factory PartPaymentResult.fromJson(Map<String, dynamic> json) => PartPaymentResult(
+        partPaymentIds: ((json['partPaymentIds'] as List<dynamic>?) ?? []).map(toInt).toList(),
+        paid: toNumber(json['paid']),
+        remaining: toNumber(json['remaining']),
+      );
 }
 
 /// A payment taken against a bill (Sales `PaymentView`).
@@ -68,6 +131,10 @@ class PaymentView {
   final String? tenderChangedBy;
   final DateTime? tenderChangedAt;
 
+  /// Set when this was taken earlier as a part payment, before the bill
+  /// closed; its method cannot be changed
+  final int? partPaymentId;
+
   const PaymentView({
     required this.id,
     required this.tender,
@@ -78,11 +145,14 @@ class PaymentView {
     this.tenderChangedFrom,
     this.tenderChangedBy,
     this.tenderChangedAt,
+    this.partPaymentId,
   });
 
-  /// Only the till's own tenders can be swapped for one another
+  /// Only the till's own tenders can be swapped for one another, and never
+  /// one taken as a part payment (the server refuses it)
   bool get canChangeTender =>
-      tender == PaymentTender.cash || tender == PaymentTender.card || tender == PaymentTender.instaPay;
+      partPaymentId == null &&
+      (tender == PaymentTender.cash || tender == PaymentTender.card || tender == PaymentTender.instaPay);
 
   factory PaymentView.fromJson(Map<String, dynamic> json) {
     return PaymentView(
@@ -95,6 +165,7 @@ class PaymentView {
       tenderChangedFrom: json['tenderChangedFrom'] == null ? null : PaymentTender.fromName(json['tenderChangedFrom'] as String?),
       tenderChangedBy: json['tenderChangedBy'] as String?,
       tenderChangedAt: json['tenderChangedAt'] == null ? null : DateTime.tryParse(json['tenderChangedAt'] as String),
+      partPaymentId: json['partPaymentId'] == null ? null : toInt(json['partPaymentId']),
     );
   }
 }
@@ -204,6 +275,14 @@ class TicketDetail {
   final List<PaymentView> payments;
   final List<RefundView> refunds;
 
+  /// What the till took for part of this bill while it is open, not given
+  /// back, oldest first. Empty once the bill closes: each is then one of
+  /// [payments], with its `partPaymentId`
+  final List<PartPayment> partPayments;
+
+  /// Their sum: off [total], it is what the till still has to take
+  final double partPaid;
+
   const TicketDetail({
     required this.id,
     this.type,
@@ -240,6 +319,8 @@ class TicketDetail {
     this.lines = const [],
     this.payments = const [],
     this.refunds = const [],
+    this.partPayments = const [],
+    this.partPaid = 0,
   });
 
   bool get isOpen => status == TicketStatus.open;
@@ -294,6 +375,11 @@ class TicketDetail {
       refunds: ((json['refunds'] as List<dynamic>?) ?? [])
           .map((e) => RefundView.fromJson(e as Map<String, dynamic>))
           .toList(),
+      // A server from before part payments sends neither: none taken
+      partPayments: ((json['partPayments'] as List<dynamic>?) ?? [])
+          .map((e) => PartPayment.fromJson(e as Map<String, dynamic>))
+          .toList(),
+      partPaid: toNumber(json['partPaid']),
     );
   }
 }

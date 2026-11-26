@@ -110,6 +110,35 @@ void main() {
     });
   }
 
+  for (final locale in const [Locale('en'), Locale('ar')]) {
+    testWidgets('part payments have their drawer rows only when there were any (${locale.languageCode})', (tester) async {
+      tester.view.physicalSize = const Size(800, 2400);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.resetPhysicalSize);
+      final l10n = lookupAppLocalizations(locale);
+
+      // Float 300 + cash for parts of open bills 90 − a part given back 40
+      final shift = ShiftView.fromJson({
+        'id': 2,
+        'openingFloat': 300,
+        'cashPartPayments': 90,
+        'cashPartPaymentsReturned': 40,
+        'expectedInDrawer': 350,
+      });
+      await tester.pumpWidget(_app(shift, locale));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.cashPartPayments), findsOneWidget);
+      expect(find.text(l10n.cashPartPaymentsReturned), findsOneWidget);
+      expect(shift.drawer.addsUpTo(shift.expectedInDrawer), isTrue);
+
+      await tester.pumpWidget(_app(_shift, locale));
+      await tester.pumpAndSettle();
+      expect(find.text(l10n.cashPartPayments), findsNothing);
+      expect(find.text(l10n.cashPartPaymentsReturned), findsNothing);
+      expect(tester.takeException(), isNull);
+    });
+  }
+
   testWidgets('an open shift shows no late cash', (tester) async {
     tester.view.physicalSize = const Size(800, 2400);
     tester.view.devicePixelRatio = 1;

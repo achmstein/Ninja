@@ -5,7 +5,6 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:shimmer/shimmer.dart';
-import 'package:uuid/uuid.dart';
 import '../../customers/dialogs/customer_card_dialog.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/layout/breakpoints.dart';
@@ -26,7 +25,6 @@ import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeLabel;
 import '../../orders/models/order.dart';
 import '../../orders/providers/pending_orders_provider.dart';
-import '../../orders/services/order_service.dart';
 import '../../orders/widgets/pending_orders.dart';
 import '../../places/models/place.dart';
 import '../../places/providers/places_provider.dart';
@@ -35,10 +33,9 @@ import '../../places/status.dart';
 import '../../places/widgets/stay_bar.dart';
 import '../../places/widgets/stay_members.dart';
 import '../../places/widgets/time_so_far.dart';
-import '../../sale/models/sale_line.dart';
-import '../../sale/widgets/customer_dialog.dart';
+import '../../sale/bill_actions.dart';
+import '../../sale/bill_lines.dart';
 import '../../tickets/models/enums.dart';
-import '../../tickets/models/move_lines.dart';
 import '../../tickets/models/online_payment.dart';
 import '../../tickets/models/pricing.dart';
 import '../../tickets/services/online_payments_service.dart';
@@ -47,11 +44,9 @@ import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 import '../dialogs/discard_dialog.dart';
-import '../dialogs/move_target_dialog.dart';
 import '../dialogs/refund_dialog.dart';
 import '../dialogs/change_tender_dialog.dart';
 import '../tenders.dart';
-import 'settle_screen.dart';
 import '../dialogs/void_dialog.dart';
 import '../dialogs/discount_dialog.dart';
 import '../dialogs/kitchen_reprint_dialog.dart';
@@ -185,44 +180,9 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
     Stay? activeSession,
     List<StayMember> members = const [],
   }) async {
-    final l10n = AppLocalizations.of(context)!;
-    // A guest at the provider's checkout: their money would land on a
-    // closed bill, so the server refuses the settle until they finish
-    final online = ref.read(onlinePaymentsProvider(ticket.id)).value ?? const <OnlinePaymentView>[];
-    if (online.anyPending) {
-      showPosToast(context, PosToastType.warning, l10n.guestPayingOnline);
-      return;
-    }
-    // A running session cannot be settled past — its time is not on the
-    // bill yet, so the only way forward is to end it
-    if (activeSession != null) {
-      final end = await showConfirmDialog(
-        context,
-        title: l10n.settleWithSessionTitle,
-        cancelLabel: l10n.goBack,
-        actionLabel: l10n.endSessionButton,
-        destructive: true,
-      );
-      if (end && mounted) await StayActions(ref, context).endStay(activeSession.id);
-      return;
-    }
-    // An order still waiting can be settled past (it may be stale) — but
-    // not by accident: confirmed later, it would land on a closed bill
-    if (waiting.isNotEmpty) {
-      final l10n = AppLocalizations.of(context)!;
-      final anyway = await showConfirmDialog(
-        context,
-        title: l10n.settleWithPendingTitle,
-        cancelLabel: l10n.goBack,
-        actionLabel: l10n.settleAnyway,
-        destructive: true,
-      );
-      if (!anyway || !mounted) return;
-    }
-    // The settle page refreshes the floor and this ticket itself on success
-    final place = ticket.locationName?.localized(context) ?? '';
-    final title = place.isNotEmpty ? place : (ticket.label ?? ticketTypeLabel(AppLocalizations.of(context)!, ticket.type));
-    final outcome = await showSettle(context, ticket, title: title, members: members, onlinePaid: online.paidOnline);
+    // The guards and the settle page are the order screen's too (sale/bill_actions)
+    final outcome =
+        await settleBill(context, ref, ticket, waiting: waiting, activeSession: activeSession, members: members);
     // Paid, the bill is done: Done (or the way back) from the settled page goes on to the open bills, not
     // back to a closed bill with nothing left to do on it. Left unpaid, the cashier is back on the bill
     if (outcome != null && mounted) context.go('/');
@@ -332,134 +292,33 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
         if (!_selected.remove(id)) _selected.add(id);
       });
 
-  // Where the lines go: an open bill, a new tab or table, or a fresh ticket
-  // for the same place (the split) when nothing else is named
-  /// The one customer every given line is for, by name: none when a line is nobody's or there are two
-  static String? _oneCustomer(List<TicketLineView> lines) {
-    String? key;
-    String? name;
-    for (final line in lines) {
-      final n = (line.customerName ?? '').trim();
-      if (n.isEmpty) return null;
-      final k = (line.customerId ?? '').isNotEmpty ? line.customerId! : n;
-      if (key != null && k != key) return null;
-      key = k;
-      name = n;
-    }
-    return name;
+  void _setBusy(bool busy) {
+    if (mounted) setState(() => _busy = busy);
   }
 
-  Future<void> _move(TicketDetail ticket, {required MoveMode mode}) async {
-    final movable = ticket.lines.where((l) => l.source != 'SessionTime').length;
-    final target = await showMoveTargetDialog(
-      context,
-      ticket: ticket,
-      count: _selected.length,
-      allSelected: _selected.length >= movable,
-      mode: mode,
-      suggestedName: _oneCustomer([for (final line in ticket.lines) if (_selected.contains(line.id)) line]),
-    );
-    if (target == null || !mounted) return;
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _busy = true);
-    try {
-      final landedOn = await ref.read(ticketsRepositoryProvider).moveLines(
-            ticket.id,
-            MoveLinesRequest(lineIds: _selected.toList(), target: target),
-            // A retry on business Wi-Fi must not become a second command
-            requestId: const Uuid().v4(),
-          );
-      ref.invalidate(ticketProvider(ticket.id));
-      ref.read(openTicketsProvider.notifier).refresh();
-      if (!mounted) return;
-      setState(() {
-        _selecting = false;
-        _selected.clear();
-      });
-      showPosToast(context, PosToastType.success, l10n.linesMoved);
-      context.go('/ticket/$landedOn');
-    } catch (e) {
-      if (!mounted) return;
-      showPosToast(context, PosToastType.error, describeError(e, l10n));
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+  void _stopSelecting() {
+    if (!mounted) return;
+    setState(() {
+      _selecting = false;
+      _selected.clear();
+    });
   }
 
-  // Selected lines → who gets them. A whole order goes through Ordering: the
-  // customer owns the order and its points, so naming (or re-naming) it
-  // moves the points with it. Anything less is a Sales-side snapshot on
-  // just those lines — the bill grouping, the receipt, an Account tender —
-  // and the points stay where they are.
+  /// The selected lines go to another bill (one list of every place they
+  /// can go), and the till follows them there. Shared with the order screen
+  /// (sale/bill_lines)
+  Future<void> _move(TicketDetail ticket) async {
+    final to = await movePickedLines(context, ref, ticket, {..._selected}, onBusy: _setBusy);
+    if (to == null || !mounted) return;
+    _stopSelecting();
+    context.go('/ticket/${to.ticketId}');
+  }
+
+  /// The selected lines are told whose they are: a whole order through
+  /// Ordering, part of one as a snapshot on just those lines (sale/bill_lines)
   Future<void> _assign(TicketDetail ticket) async {
-    final byOrder = <int, List<TicketLineView>>{};
-    for (final line in ticket.lines) {
-      final orderId = line.orderId;
-      if (orderId == null) continue;
-      (byOrder[orderId] ??= []).add(line);
-    }
-    final orderIds = <int>[];
-    final lineIds = <int>[];
-    for (final entry in byOrder.entries) {
-      final chosen = entry.value.where((l) => _selected.contains(l.id)).toList();
-      if (chosen.isEmpty) continue;
-      if (chosen.length == entry.value.length) {
-        orderIds.add(entry.key);
-      } else {
-        lineIds.addAll(chosen.map((l) => l.id));
-      }
-    }
-    // Manual and session-time lines have no order behind them
-    if (orderIds.isEmpty && lineIds.isEmpty) return;
-
-    // The room's people first when this is a room's bill; and somebody with
-    // an account named on its lines is in the room — onto the roster, so
-    // their share of the time has a tab at settle
-    final session = ticket.sessionId == null ? null : ref.read(stayProvider(ticket.sessionId!)).value;
-    final roster = session?.roster ?? const <({String id, String name})>[];
-    final SaleCustomer? customer = await showCustomerDialog(context, quickPicks: roster);
-    if (customer == null || !mounted) return;
-    final accountId = customer.id;
-    if (session != null && accountId != null && accountId.isNotEmpty && !roster.any((m) => m.id == accountId)) {
-      StayActions(ref, context).addMember(session.id, accountId, customer.name);
-    }
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _busy = true);
-    try {
-      final orders = ref.read(orderRepositoryProvider);
-      // A fresh id per call: the server deduplicates a retried request, and
-      // a later assignment is a new one
-      await Future.wait([
-        for (final orderId in orderIds)
-          orders.assignOrderCustomer(orderId,
-              customerUserId: customer.id, customerName: customer.name, requestId: const Uuid().v4()),
-      ]);
-      // Part of an order (or several): the snapshot on just those lines
-      if (lineIds.isNotEmpty) {
-        await ref.read(ticketsRepositoryProvider).assignLinesCustomer(
-              ticket.id,
-              lineIds: lineIds,
-              customerId: customer.id,
-              customerName: customer.name,
-              requestId: const Uuid().v4(),
-            );
-      }
-      ref.invalidate(ticketProvider(ticket.id));
-      if (!mounted) return;
-      setState(() {
-        _selecting = false;
-        _selected.clear();
-      });
-      showPosToast(context, PosToastType.success, l10n.customerAssigned);
-    } catch (e) {
-      if (!mounted) return;
-      // A 400 carries the domain's own words (cancelled, already somebody's)
-      final detail = describeError(e, l10n);
-      showPosToast(context, PosToastType.error, l10n.failedToAssignCustomer,
-          description: detail == l10n.somethingWentWrong ? null : detail);
-    } finally {
-      if (mounted) setState(() => _busy = false);
-    }
+    final named = await assignPickedLines(context, ref, ticket, {..._selected}, onBusy: _setBusy);
+    if (named) _stopSelecting();
   }
 
   @override
@@ -722,8 +581,7 @@ class _TicketScreenState extends ConsumerState<TicketScreen> {
       onPrint: () => _print(ticket),
       onRefund: () => _refund(ticket),
       onAssign: () => _assign(ticket),
-      onMoveTo: () => _move(ticket, mode: MoveMode.move),
-      onNewBill: () => _move(ticket, mode: MoveMode.newBill),
+      onMove: () => _move(ticket),
     );
 
     Widget scroll(List<Widget> children) => SingleChildScrollView(
@@ -1031,8 +889,8 @@ class _LineList extends StatelessWidget {
           if (index > 0) Container(height: 1, color: theme.colors.border),
           _LineRow(
             line: line,
-            // Session time belongs to the session: it is never offered for a move
-            selectable: selecting && line.source != 'SessionTime',
+            // The room's time is the room's, and what a part payment paid for is done
+            selectable: selecting && pickableLine(line),
             selected: selected.contains(line.id),
             onToggle: () => onToggle(line.id),
             landed: landed.contains(line.orderId),
@@ -1381,7 +1239,8 @@ class _RefundCard extends StatelessWidget {
 
 /// The bar across every bill's foot, room or table alike: the money at the
 /// start, and at the end what is done with the bill — Settle; while lines
-/// are picked, where they go; once paid, Print and an owner's Refund. The
+/// are picked, whose they are or where they go (two buttons of one width);
+/// once paid, Print and an owner's Refund. The
 /// actions give way before the total does.
 class TicketActionBar extends StatelessWidget {
   final TicketDetail ticket;
@@ -1404,8 +1263,7 @@ class TicketActionBar extends StatelessWidget {
   final VoidCallback onPrint;
   final VoidCallback onRefund;
   final VoidCallback onAssign;
-  final VoidCallback onMoveTo;
-  final VoidCallback onNewBill;
+  final VoidCallback onMove;
 
   const TicketActionBar({
     super.key,
@@ -1422,8 +1280,7 @@ class TicketActionBar extends StatelessWidget {
     required this.onPrint,
     required this.onRefund,
     required this.onAssign,
-    required this.onMoveTo,
-    required this.onNewBill,
+    required this.onMove,
   });
 
   @override
@@ -1444,7 +1301,13 @@ class TicketActionBar extends StatelessWidget {
     final compact = context.isCompact;
 
     Widget action(String label,
-        {VoidCallback? onPress, FButtonVariant? variant, IconData? icon, Widget? prefix, Color? color, bool main = false}) {
+        {VoidCallback? onPress,
+        FButtonVariant? variant,
+        IconData? icon,
+        Widget? prefix,
+        Color? color,
+        bool main = false,
+        double? width}) {
       final leading = prefix ?? (icon == null ? null : Icon(icon, size: Sizes.icon, color: color));
       if (compact) {
         return SizedBox(
@@ -1467,7 +1330,10 @@ class TicketActionBar extends StatelessWidget {
       return ConstrainedBox(
         // Side by side in the bar, every action the main action's height;
         // the main one wide enough to be the obvious one
-        constraints: BoxConstraints.tightFor(height: Sizes.controlLarge).copyWith(minWidth: main ? 240 : 160),
+        // (two that are one choice's two answers are given one width instead)
+        constraints: width != null
+            ? BoxConstraints.tightFor(width: width, height: Sizes.controlLarge)
+            : BoxConstraints.tightFor(height: Sizes.controlLarge).copyWith(minWidth: main ? 240 : 160),
         child: FButton(
           variant: variant,
           mainAxisSize: MainAxisSize.min,
@@ -1498,10 +1364,12 @@ class TicketActionBar extends StatelessWidget {
             : selecting
                 ? [
                     action(l10n.assignCustomer,
-                        onPress: none ? null : onAssign, variant: FButtonVariant.outline, icon: FIcons.userPlus),
-                    action(l10n.moveToBill,
-                        onPress: none ? null : onMoveTo, variant: FButtonVariant.outline, icon: FIcons.arrowRightLeft),
-                    action(l10n.newBill, onPress: none ? null : onNewBill, icon: FIcons.plus, main: true),
+                        onPress: none ? null : onAssign,
+                        variant: FButtonVariant.outline,
+                        icon: FIcons.userPlus,
+                        width: 220),
+                    action(l10n.moveItems,
+                        onPress: none ? null : onMove, icon: FIcons.arrowRightLeft, width: 220),
                   ]
                 : [
                     confirming

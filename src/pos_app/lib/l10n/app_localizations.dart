@@ -1406,6 +1406,276 @@ abstract class AppLocalizations {
   /// **'Current sale'**
   String get currentSale;
 
+  /// No description provided for @sendNewItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Send {count} new'**
+  String sendNewItems(int count);
+
+  /// No description provided for @newItems.
+  ///
+  /// In en, this message translates to:
+  /// **'New'**
+  String get newItems;
+
+  /// No description provided for @sentItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Sent'**
+  String get sentItems;
+
+  /// No description provided for @sendWhoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is this for?'**
+  String get sendWhoTitle;
+
+  /// No description provided for @sendWhoSplitHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For more than one person: untick the items that are someone else\'s. They stay for the next name.'**
+  String get sendWhoSplitHint;
+
+  /// No description provided for @sendWhoAnother.
+  ///
+  /// In en, this message translates to:
+  /// **'Another customer'**
+  String get sendWhoAnother;
+
+  /// No description provided for @sendWhoNobody.
+  ///
+  /// In en, this message translates to:
+  /// **'Send without a customer'**
+  String get sendWhoNobody;
+
+  /// No description provided for @orderEmptyHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap items on the menu to start the order'**
+  String get orderEmptyHint;
+
+  /// No description provided for @orderTypeLabel.
+  ///
+  /// In en, this message translates to:
+  /// **'Order type'**
+  String get orderTypeLabel;
+
+  /// No description provided for @orderTypeCounter.
+  ///
+  /// In en, this message translates to:
+  /// **'Counter'**
+  String get orderTypeCounter;
+
+  /// No description provided for @orderTypeCounterConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap Counter again to remove the delivery'**
+  String get orderTypeCounterConfirm;
+
+  /// No description provided for @roomMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate, people, end'**
+  String get roomMore;
+
+  /// No description provided for @splitOrMove.
+  ///
+  /// In en, this message translates to:
+  /// **'Split or move items'**
+  String get splitOrMove;
+
+  /// No description provided for @moreActions.
+  ///
+  /// In en, this message translates to:
+  /// **'More'**
+  String get moreActions;
+
+  /// No description provided for @partPaidSoFar.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid {amount}'**
+  String partPaidSoFar(String amount);
+
+  /// No description provided for @leftToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Left {amount}'**
+  String leftToPay(String amount);
+
+  /// No description provided for @paidTag.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid'**
+  String get paidTag;
+
+  /// No description provided for @payWhoTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Who is paying?'**
+  String get payWhoTitle;
+
+  /// No description provided for @payEverything.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything, one payment'**
+  String get payEverything;
+
+  /// No description provided for @payTheRest.
+  ///
+  /// In en, this message translates to:
+  /// **'The rest, one payment'**
+  String get payTheRest;
+
+  /// No description provided for @payWhoHint.
+  ///
+  /// In en, this message translates to:
+  /// **'One person\'s part is paid on its own. The bill stays open for the rest.'**
+  String get payWhoHint;
+
+  /// No description provided for @partPayTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} pays'**
+  String partPayTitle(String name);
+
+  /// No description provided for @partPayDue.
+  ///
+  /// In en, this message translates to:
+  /// **'To pay'**
+  String get partPayDue;
+
+  /// No description provided for @partPayReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash received'**
+  String get partPayReceived;
+
+  /// No description provided for @partPayExact.
+  ///
+  /// In en, this message translates to:
+  /// **'Exact'**
+  String get partPayExact;
+
+  /// No description provided for @partPayHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The bill stays open for the rest.'**
+  String get partPayHint;
+
+  /// No description provided for @partPayTake.
+  ///
+  /// In en, this message translates to:
+  /// **'Take {amount}'**
+  String partPayTake(String amount);
+
+  /// No description provided for @partPaymentTaken.
+  ///
+  /// In en, this message translates to:
+  /// **'{amount} taken. The bill stays open.'**
+  String partPaymentTaken(String amount);
+
+  /// No description provided for @partGiveBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Give back {amount}'**
+  String partGiveBack(String amount);
+
+  /// No description provided for @partGiveBackTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Give back {amount} to {name}?'**
+  String partGiveBackTitle(String amount, String name);
+
+  /// No description provided for @partGiveBackHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The money leaves this shift\'s drawer, and those items are to pay again.'**
+  String get partGiveBackHint;
+
+  /// No description provided for @partGivenBack.
+  ///
+  /// In en, this message translates to:
+  /// **'Given back'**
+  String get partGivenBack;
+
+  /// No description provided for @moveItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Move'**
+  String get moveItems;
+
+  /// No description provided for @moveItemsTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Move 1 item} other{Move {count} items}}'**
+  String moveItemsTitle(int count);
+
+  /// No description provided for @moveItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'From {place}. Pick where they go.'**
+  String moveItemsHint(String place);
+
+  /// No description provided for @moveFind.
+  ///
+  /// In en, this message translates to:
+  /// **'Find a bill or a table…'**
+  String get moveFind;
+
+  /// No description provided for @moveOpenBills.
+  ///
+  /// In en, this message translates to:
+  /// **'Open bills'**
+  String get moveOpenBills;
+
+  /// No description provided for @moveNewBill.
+  ///
+  /// In en, this message translates to:
+  /// **'A new bill'**
+  String get moveNewBill;
+
+  /// No description provided for @moveTabWithName.
+  ///
+  /// In en, this message translates to:
+  /// **'A tab with a name'**
+  String get moveTabWithName;
+
+  /// No description provided for @moveTabWithNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'For someone paying on their own'**
+  String get moveTabWithNameHint;
+
+  /// No description provided for @moveSecondBill.
+  ///
+  /// In en, this message translates to:
+  /// **'A second bill for {place}'**
+  String moveSecondBill(String place);
+
+  /// No description provided for @moveSecondBillHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Same place, paid apart'**
+  String get moveSecondBillHint;
+
+  /// No description provided for @moveFreeTable.
+  ///
+  /// In en, this message translates to:
+  /// **'A free table'**
+  String get moveFreeTable;
+
+  /// No description provided for @moveCreate.
+  ///
+  /// In en, this message translates to:
+  /// **'Create'**
+  String get moveCreate;
+
+  /// No description provided for @moveNothing.
+  ///
+  /// In en, this message translates to:
+  /// **'Nothing by that name'**
+  String get moveNothing;
+
   /// No description provided for @noItemsInCategory.
   ///
   /// In en, this message translates to:
@@ -1513,6 +1783,60 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No customers found'**
   String get noCustomersFound;
+
+  /// No description provided for @recentCustomers.
+  ///
+  /// In en, this message translates to:
+  /// **'Recent'**
+  String get recentCustomers;
+
+  /// No description provided for @customerSearchPlaceholder.
+  ///
+  /// In en, this message translates to:
+  /// **'Search by name…'**
+  String get customerSearchPlaceholder;
+
+  /// No description provided for @customerSearchLetters.
+  ///
+  /// In en, this message translates to:
+  /// **'Names by first letter'**
+  String get customerSearchLetters;
+
+  /// No description provided for @customerSearchEveryone.
+  ///
+  /// In en, this message translates to:
+  /// **'Everyone'**
+  String get customerSearchEveryone;
+
+  /// No description provided for @customerSearchNone.
+  ///
+  /// In en, this message translates to:
+  /// **'Nobody by that name'**
+  String get customerSearchNone;
+
+  /// No description provided for @customerSearchNotListed.
+  ///
+  /// In en, this message translates to:
+  /// **'Not in the list?'**
+  String get customerSearchNotListed;
+
+  /// No description provided for @customerSearchAddHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Saved with their phone, for points and next time'**
+  String get customerSearchAddHint;
+
+  /// No description provided for @customerSearchTypeForMore.
+  ///
+  /// In en, this message translates to:
+  /// **'Type a name to find more'**
+  String get customerSearchTypeForMore;
+
+  /// No description provided for @customerSearchClear.
+  ///
+  /// In en, this message translates to:
+  /// **'Clear'**
+  String get customerSearchClear;
 
   /// No description provided for @settleTitle.
   ///
@@ -2263,6 +2587,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Cash tab payments'**
   String get cashTabPayments;
+
+  /// No description provided for @cashPartPayments.
+  ///
+  /// In en, this message translates to:
+  /// **'Cash for parts of open bills'**
+  String get cashPartPayments;
+
+  /// No description provided for @cashPartPaymentsReturned.
+  ///
+  /// In en, this message translates to:
+  /// **'Part payments given back'**
+  String get cashPartPaymentsReturned;
 
   /// No description provided for @cashRefunds.
   ///
@@ -4445,8 +4781,20 @@ abstract class AppLocalizations {
   /// No description provided for @deliveryKnownCustomer.
   ///
   /// In en, this message translates to:
-  /// **'A customer with an account'**
+  /// **'Customer'**
   String get deliveryKnownCustomer;
+
+  /// No description provided for @deliveryCalledBefore.
+  ///
+  /// In en, this message translates to:
+  /// **'Ordered delivery before'**
+  String get deliveryCalledBefore;
+
+  /// No description provided for @deliveryNewCaller.
+  ///
+  /// In en, this message translates to:
+  /// **'New caller: added to customers when the order is sent'**
+  String get deliveryNewCaller;
 
   /// No description provided for @deliveryMoreForRider.
   ///
