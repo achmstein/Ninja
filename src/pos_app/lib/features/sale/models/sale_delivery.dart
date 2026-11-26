@@ -1,5 +1,6 @@
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../deliveries/models/delivery_order.dart';
+import '../../orders/models/order.dart';
 
 /// The branch's named area a delivery on the sale goes to, as it stood when
 /// the cashier picked it: the sale pad asks the branch again for what it
@@ -39,8 +40,9 @@ class SaleDeliveryZone {
 }
 
 /// Where a sale the till took over the phone goes: the words the caller
-/// said, the number the rider calls, and a pin only when they shared their
-/// location (a pasted map link, read by Ordering into [latitude]/[longitude]).
+/// said, the number the rider calls, and a pin when there is one: an earlier
+/// address's, a place searched on the map, or the caller's own phone through
+/// a location link (read by Ordering into [latitude]/[longitude]).
 class SaleDelivery {
   final String address;
   final String building;
@@ -65,6 +67,14 @@ class SaleDelivery {
   /// null to give it from Deliveries later. Never with [sendTo]: that branch has its own riders.
   final SaleDeliveryRider? rider;
 
+  /// Where the pin came from: an earlier address's own source, a map search,
+  /// or the caller sharing it; null without a pin
+  final PinSource? pinSource;
+
+  /// The location link sent to the caller: placed with the order, a location
+  /// they share after it is placed still reaches it
+  final String? locationShareToken;
+
   const SaleDelivery({
     required this.address,
     required this.phone,
@@ -78,6 +88,8 @@ class SaleDelivery {
     this.sendTo,
     this.zone,
     this.rider,
+    this.pinSource,
+    this.locationShareToken,
   });
 
   bool get hasPin => latitude != null && longitude != null;
@@ -104,6 +116,8 @@ class SaleDelivery {
         sendTo: clearSendTo ? null : sendTo ?? this.sendTo,
         zone: clearZone ? null : zone ?? this.zone,
         rider: rider,
+        pinSource: pinSource,
+        locationShareToken: locationShareToken,
       );
 
   /// The same delivery, made here after all
@@ -130,6 +144,9 @@ class SaleDelivery {
         'apartment': _orNull(apartment),
         'directions': _orNull(directions),
         if (zoneId != null) 'zoneId': zoneId,
+        // Said only of a pin, and never as none: Ordering decides a pin with no source
+        if (hasPin && pinSource != null && pinSource != PinSource.none) 'pinSource': pinSource!.wire,
+        if ((locationShareToken ?? '').isNotEmpty) 'locationShareToken': locationShareToken,
       };
 
   Map<String, dynamic> toJson() => {
@@ -145,6 +162,8 @@ class SaleDelivery {
         'sendTo': sendTo?.toJson(),
         if (zone != null) 'zone': zone!.toJson(),
         if (rider != null) 'rider': rider!.toJson(),
+        if (pinSource != null) 'pinSource': pinSource!.wire,
+        if (locationShareToken != null) 'locationShareToken': locationShareToken,
       };
 
   factory SaleDelivery.fromJson(Map<String, dynamic> json) => SaleDelivery(
@@ -160,6 +179,8 @@ class SaleDelivery {
         sendTo: json['sendTo'] is Map ? DeliveryAlternative.fromJson((json['sendTo'] as Map).cast<String, dynamic>()) : null,
         zone: json['zone'] is Map ? SaleDeliveryZone.fromJson((json['zone'] as Map).cast<String, dynamic>()) : null,
         rider: json['rider'] is Map ? SaleDeliveryRider.fromJson((json['rider'] as Map).cast<String, dynamic>()) : null,
+        pinSource: json['pinSource'] is String ? PinSource.parse(json['pinSource']) : null,
+        locationShareToken: json['locationShareToken'] as String?,
       );
 }
 

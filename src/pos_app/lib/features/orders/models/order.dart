@@ -186,6 +186,45 @@ enum DeliveryStage {
       };
 }
 
+/// Where a delivery's pin came from, as Ordering says it: the customer's own
+/// GPS in the app, a location the caller shared through a link the till sent,
+/// where a rider handed an earlier delivery over at that door, a search on
+/// the map at the till (near, not the door), or no pin at all
+enum PinSource {
+  customer,
+  shared,
+  rider,
+  search,
+  none;
+
+  /// Ordering's spelling: Customer, Shared, Rider, Search, None
+  String get wire => switch (this) {
+        customer => 'Customer',
+        shared => 'Shared',
+        rider => 'Rider',
+        search => 'Search',
+        none => 'None',
+      };
+
+  /// Anything unknown or missing is none
+  static PinSource parse(Object? value) => switch (value) {
+        'Customer' => customer,
+        'Shared' => shared,
+        'Rider' => rider,
+        'Search' => search,
+        _ => none,
+      };
+
+  /// What the till says of a place: [hasPin] false is never pinned, whatever
+  /// the source; a pin with no source said (an older delivery) is the
+  /// customer's own, as Ordering reads those
+  static PinSource of(PinSource source, {required bool hasPin}) =>
+      !hasPin ? none : (source == none ? customer : source);
+
+  /// The pin is the door itself: the customer's, shared by them, or a rider's from before
+  bool get exact => this == customer || this == shared || this == rider;
+}
+
 /// The business's own delivery of an order, as the counter reads it: where
 /// it goes, the number to call at the door, the fee, and who has it
 class OrderDelivery {
@@ -245,6 +284,9 @@ class OrderDelivery {
   /// About how long that area takes, when the owner said
   final int? etaMinutes;
 
+  /// Where the pin came from
+  final PinSource pinSource;
+
   const OrderDelivery({
     this.latitude,
     this.longitude,
@@ -274,6 +316,7 @@ class OrderDelivery {
     this.courierTrackingUrl,
     this.zoneName,
     this.etaMinutes,
+    this.pinSource = PinSource.none,
   });
 
   /// A courier company has it, not one of the branch's riders
@@ -330,8 +373,12 @@ class OrderDelivery {
       courierTrackingUrl: _text(json['courierTrackingUrl']),
       zoneName: _name(json['zoneName']),
       etaMinutes: _maybe(json['etaMinutes'])?.round(),
+      pinSource: PinSource.parse(json['pinSource']),
     );
   }
+
+  /// How good the pin is, as the till says it: none without one
+  PinSource get pinQuality => PinSource.of(pinSource, hasPin: hasPin);
 
   /// The customer's number to dial: only what a dialler reads (digits, a leading +)
   Uri get phoneUri => Uri(scheme: 'tel', path: phone.replaceAll(RegExp(r'[^0-9+]'), ''));

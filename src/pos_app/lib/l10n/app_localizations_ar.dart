@@ -2769,4 +2769,50 @@ class AppLocalizationsAr extends AppLocalizations {
   @override
   String get customerDisabledNumber =>
       'هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء.';
+
+  @override
+  String get pinQualityCustomer => 'موقع العميل';
+
+  @override
+  String get pinQualityRider => 'المكان الذي وصله المندوب من قبل';
+
+  @override
+  String get pinQualitySearch => 'تقريبي: من بحث على الخريطة';
+
+  @override
+  String get pinQualityNone => 'بدون موقع: كلّم العميل قبل ما تخرج';
+
+  @override
+  String get deliveryCallCustomer => 'اتصل بالعميل';
+
+  @override
+  String get deliveryAskLocation => 'اطلب موقعه';
+
+  @override
+  String get deliveryAskLocationHint =>
+      'يوصله لينك على واتساب: يضغط عليه وموبايله يشارك مكانه.';
+
+  @override
+  String deliveryShareMessage(String url) {
+    return 'من فضلك شارك موقعك علشان المندوب يوصلك: $url';
+  }
+
+  @override
+  String get deliveryShareWaiting => 'في انتظار العميل يشارك موقعه…';
+
+  @override
+  String get deliveryShareSendAgain => 'ابعت تاني';
+
+  @override
+  String get deliveryShareReceived => 'وصل موقع العميل';
+
+  @override
+  String get deliveryShareExpired =>
+      'اللينك انتهى قبل ما يشارك. ابعت لينك جديد.';
+
+  @override
+  String get deliveryShareFailed => 'تعذّر عمل اللينك. حاول تاني.';
+
+  @override
+  String get couldNotOpenWhatsApp => 'تعذّر فتح واتساب';
 }

@@ -9,6 +9,7 @@ import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';
 import '../models/delivery_order.dart';
+import 'pin_quality.dart';
 
 import '../../../core/utils/phone.dart';
 /// "800 m", "2.4 km" in the app's language
@@ -52,7 +53,8 @@ Future<void> openOrSay(BuildContext context, Uri uri, String failed) async {
 /// Where an order is going, for the till: the address with the map at the
 /// end of its line, the rider's note, then the number to call (its digits
 /// alone left to right, the icon at the line's start), how far, and the fee;
-/// and why it came back, when it did.
+/// and why it came back, when it did. How good the pin is is said under the
+/// address; with none, calling the customer is the big button.
 class DeliveryDetails extends StatelessWidget {
   final OrderDelivery delivery;
 
@@ -63,6 +65,8 @@ class DeliveryDetails extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    // Nothing on the map to go by: the rider calls before leaving, so the call is the first thing offered
+    final callFirst = delivery.pinQuality == PinSource.none && delivery.phone.isNotEmpty;
 
     return Container(
       padding: const EdgeInsets.all(12),
@@ -85,7 +89,8 @@ class DeliveryDetails extends StatelessWidget {
                     Text(areaAddressLine(context, l10n, delivery), style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
                     if ((delivery.directions ?? '').isNotEmpty)
                       Text('"${delivery.directions}"', style: muted.copyWith(fontStyle: FontStyle.italic)),
-                    if (!delivery.hasPin) Text(l10n.deliveryNoPin, style: muted),
+                    const SizedBox(height: 4),
+                    PinQualityLabel(quality: delivery.pinQuality),
                   ],
                 ),
               ),
@@ -107,13 +112,34 @@ class DeliveryDetails extends StatelessWidget {
             Text(l10n.deliveryFailedBecause(failReasonLabel(l10n, delivery.failureReason)),
                 style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
           ],
+          if (callFirst) ...[
+            const SizedBox(height: 8),
+            SizedBox(
+              height: Sizes.controlLarge,
+              child: FButton(
+                onPress: () => openOrSay(context, delivery.phoneUri, l10n.couldNotOpenDialer),
+                prefix: const Icon(FIcons.phone),
+                child: Flexible(
+                  child: Text.rich(
+                    TextSpan(children: [
+                      TextSpan(text: '${l10n.deliveryCallCustomer} · '),
+                      TextSpan(text: showPhone(delivery.phone)),
+                    ]),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.typography.base.forButton,
+                  ),
+                ),
+              ),
+            ),
+          ],
           const SizedBox(height: 8),
           Wrap(
             spacing: 16,
             runSpacing: 4,
             crossAxisAlignment: WrapCrossAlignment.center,
             children: [
-              if (delivery.phone.isNotEmpty)
+              if (delivery.phone.isNotEmpty && !callFirst)
                 Semantics(
                   button: true,
                   label: showPhone(delivery.phone),

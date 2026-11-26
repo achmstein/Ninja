@@ -94,6 +94,18 @@ class DeliveryRepository {
     return [for (final e in _list(response.data)) KnownAddress.fromJson(e)];
   }
 
+  /// A link for the caller to share where their phone is, for this branch, good for a day
+  Future<LocationShareLink> createLocationShare() async {
+    final response = await _orders.post('delivery/location-shares');
+    return LocationShareLink.fromJson((response.data as Map).cast<String, dynamic>());
+  }
+
+  /// What came back through a link this branch made: nothing yet, the point, or expired
+  Future<LocationShare> getLocationShare(String token) async {
+    final response = await _orders.get('delivery/location-shares/${Uri.encodeComponent(token)}');
+    return LocationShare.fromJson((response.data as Map).cast<String, dynamic>());
+  }
+
   /// The call centre's question: which branches deliver to the caller's
   /// [location] (a Google Maps link or coordinates), nearest first
   Future<StaffDeliveryResolution> resolveForStaff(String location) async {

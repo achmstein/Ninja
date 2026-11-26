@@ -125,4 +125,34 @@ void main() {
     expect(DeliveryStage.parse('Returned'), DeliveryStage.returned);
     expect(DeliveryStage.parse('Something'), DeliveryStage.waiting);
   });
+
+  test("a pin says where it came from; an older pin with none said is the customer's, no pin is none", () {
+    expect(PinSource.parse('Shared'), PinSource.shared);
+    expect(PinSource.parse('Rider'), PinSource.rider);
+    expect(PinSource.parse(null), PinSource.none);
+    expect(PinSource.parse('Something'), PinSource.none);
+    expect(PinSource.search.wire, 'Search');
+
+    final searched = OrderDelivery.parse({'address': 'Road 9', 'phone': '010', 'latitude': 30.0, 'longitude': 31.0, 'pinSource': 'Search'});
+    expect(searched!.pinQuality, PinSource.search);
+    final older = OrderDelivery.parse({'address': 'Road 9', 'phone': '010', 'latitude': 30.0, 'longitude': 31.0});
+    expect(older!.pinQuality, PinSource.customer);
+    final none = OrderDelivery.parse({'address': 'Road 9', 'phone': '010', 'pinSource': 'Rider'});
+    expect(none!.pinQuality, PinSource.none);
+    expect(PinSource.rider.exact, isTrue);
+    expect(PinSource.search.exact, isFalse);
+
+    final known = KnownAddress.fromJson({'address': 'Road 9', 'latitude': 30.0, 'longitude': 31.0, 'pinSource': 'Rider'});
+    expect(known.pinSource, PinSource.rider);
+    expect(known.hasPin, isTrue);
+  });
+
+  test('what came back through a location link: nothing yet, the point, or expired', () {
+    expect(LocationShare.fromJson({'token': 't', 'sharedAt': null, 'expired': false}).shared, isFalse);
+    final shared = LocationShare.fromJson(
+        {'token': 't', 'latitude': '30.1', 'longitude': 31.2, 'accuracyMeters': 8, 'sharedAt': '2026-11-26T10:00:00Z', 'expired': false});
+    expect(shared.shared, isTrue);
+    expect(shared.latitude, 30.1);
+    expect(LocationShare.fromJson({'token': 't', 'expired': true}).expired, isTrue);
+  });
 }

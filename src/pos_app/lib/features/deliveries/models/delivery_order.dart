@@ -467,6 +467,9 @@ class KnownAddress {
   final String? directions;
   final String? phone;
 
+  /// Where its pin came from: a rider's hand-over there, the customer's own, or a map search
+  final PinSource pinSource;
+
   const KnownAddress({
     this.label,
     this.latitude,
@@ -477,7 +480,10 @@ class KnownAddress {
     this.apartment,
     this.directions,
     this.phone,
+    this.pinSource = PinSource.none,
   });
+
+  bool get hasPin => latitude != null && longitude != null;
 
   static String? _text(Object? value) {
     final text = value is String ? value.trim() : null;
@@ -494,10 +500,51 @@ class KnownAddress {
         apartment: _text(json['apartment']),
         directions: _text(json['directions']),
         phone: _text(json['phone']),
+        pinSource: PinSource.parse(json['pinSource']),
       );
 
   /// The same door, whichever list it came from
   String get identity => [address, building, floor, apartment].map((s) => (s ?? '').toLowerCase()).join('|');
+}
+
+/// A link the till made for a caller to share where their phone is
+/// (`POST /api/orders/delivery/location-shares`): good for a day
+class LocationShareLink {
+  final String token;
+  final DateTime expiresAt;
+
+  const LocationShareLink(this.token, this.expiresAt);
+
+  /// The page the caller opens on the customer site
+  Uri url(String customerOrigin) => Uri.parse('$customerOrigin/l/${Uri.encodeComponent(token)}');
+
+  factory LocationShareLink.fromJson(Map<String, dynamic> json) => LocationShareLink(
+        json['token'] as String? ?? '',
+        DateTime.tryParse(json['expiresAt'] as String? ?? '')?.toUtc() ?? DateTime.now().toUtc(),
+      );
+}
+
+/// What came back through a location link (`GET /api/orders/delivery/location-shares/{token}`):
+/// nothing yet, the caller's point, or a link no longer taking one
+class LocationShare {
+  final double? latitude;
+  final double? longitude;
+  final double? accuracyMeters;
+  final DateTime? sharedAt;
+  final bool expired;
+
+  const LocationShare({this.latitude, this.longitude, this.accuracyMeters, this.sharedAt, this.expired = false});
+
+  /// The caller shared it: a point to put in the form
+  bool get shared => sharedAt != null && latitude != null && longitude != null;
+
+  factory LocationShare.fromJson(Map<String, dynamic> json) => LocationShare(
+        latitude: json['latitude'] == null ? null : toNumber(json['latitude']),
+        longitude: json['longitude'] == null ? null : toNumber(json['longitude']),
+        accuracyMeters: json['accuracyMeters'] == null ? null : toNumber(json['accuracyMeters']),
+        sharedAt: json['sharedAt'] is String ? DateTime.tryParse(json['sharedAt'] as String)?.toUtc() : null,
+        expired: json['expired'] == true,
+      );
 }
 
 /// How far, said briefly: 800 m, 2.4 km

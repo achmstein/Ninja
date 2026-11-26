@@ -15,6 +15,17 @@ class _FakeRepository implements DeliveryRepository {
   final List<int?> zonesAsked = [];
   final Map<int, TillDeliveryQuote> zoneAnswers = {};
   final List<bool> everyBranchAsked = [];
+  int sharesMade = 0;
+  LocationShare share = const LocationShare();
+
+  @override
+  Future<LocationShareLink> createLocationShare() async {
+    sharesMade++;
+    return LocationShareLink('tok$sharesMade', DateTime.utc(2030));
+  }
+
+  @override
+  Future<LocationShare> getLocationShare(String token) async => share;
 
   @override
   Future<TillDeliveryQuote> tillQuote({String? location, int? zoneId}) async {
@@ -212,5 +223,43 @@ void main() {
 
     expect(atBranch.everyBranchAsked, [false]);
     expect(atHotline.everyBranchAsked, [true]);
+  });
+
+  group('location link', () {
+    test("waits for the caller, then holds their point and stops asking", () async {
+      final (container, fake) = _container();
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      final link = await controller.makeShareLink(poll: const Duration(hours: 1));
+      expect(link?.token, 'tok1');
+      expect(link?.url('https://cafe.example').toString(), 'https://cafe.example/l/tok1');
+      expect(container.read(deliveryFormControllerProvider).shareWaiting, isTrue);
+
+      await controller.readShare();
+      expect(container.read(deliveryFormControllerProvider).shareWaiting, isTrue);
+
+      fake.share = LocationShare(latitude: 30.05, longitude: 31.23, accuracyMeters: 12, sharedAt: DateTime.utc(2026, 11, 26));
+      await controller.readShare();
+      final state = container.read(deliveryFormControllerProvider);
+      expect(state.shareWaiting, isFalse);
+      expect(state.shared?.latitude, 30.05);
+      expect(state.shareToken, 'tok1');
+    });
+
+    test('an expired link stops the waiting, and asking again makes a new one', () async {
+      final (container, fake) = _container();
+      final controller = container.read(deliveryFormControllerProvider.notifier);
+      await controller.makeShareLink(poll: const Duration(hours: 1));
+      fake.share = const LocationShare(expired: true);
+      await controller.readShare();
+      expect(container.read(deliveryFormControllerProvider).shareExpired, isTrue);
+      expect(container.read(deliveryFormControllerProvider).shareWaiting, isFalse);
+
+      fake.share = const LocationShare();
+      await controller.makeShareLink(poll: const Duration(hours: 1));
+      final state = container.read(deliveryFormControllerProvider);
+      expect(state.shareToken, 'tok2');
+      expect(state.shareExpired, isFalse);
+      expect(state.shareWaiting, isTrue);
+    });
   });
 }

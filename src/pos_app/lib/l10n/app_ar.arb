@@ -1098,5 +1098,19 @@
   "pinNotSaved": "لم يُحفظ الرمز. أعد المحاولة.",
   "pinDigitsTyped": "كُتب {count} أرقام",
   "customerDisabled": "الحساب موقوف · لا يمكن إضافته",
-  "customerDisabledNumber": "هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء."
+  "customerDisabledNumber": "هذا الرقم لحساب أوقفه المالك. يمكن للمالك إعادة تفعيله من صفحة العملاء.",
+  "pinQualityCustomer": "موقع العميل",
+  "pinQualityRider": "المكان الذي وصله المندوب من قبل",
+  "pinQualitySearch": "تقريبي: من بحث على الخريطة",
+  "pinQualityNone": "بدون موقع: كلّم العميل قبل ما تخرج",
+  "deliveryCallCustomer": "اتصل بالعميل",
+  "deliveryAskLocation": "اطلب موقعه",
+  "deliveryAskLocationHint": "يوصله لينك على واتساب: يضغط عليه وموبايله يشارك مكانه.",
+  "deliveryShareMessage": "من فضلك شارك موقعك علشان المندوب يوصلك: {url}",
+  "deliveryShareWaiting": "في انتظار العميل يشارك موقعه…",
+  "deliveryShareSendAgain": "ابعت تاني",
+  "deliveryShareReceived": "وصل موقع العميل",
+  "deliveryShareExpired": "اللينك انتهى قبل ما يشارك. ابعت لينك جديد.",
+  "deliveryShareFailed": "تعذّر عمل اللينك. حاول تاني.",
+  "couldNotOpenWhatsApp": "تعذّر فتح واتساب"
 }

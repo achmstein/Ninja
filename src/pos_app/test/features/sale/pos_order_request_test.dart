@@ -1,4 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
+import 'package:pos_app/features/orders/models/order.dart';
 import 'package:pos_app/features/sale/models/pos_order_request.dart';
 import 'package:pos_app/features/sale/models/sale_delivery.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
@@ -52,5 +53,27 @@ void main() {
     expect(tea.basePrice, 20);
     expect(large.basePrice, 50);
     expect(large.total, 120, reason: 'what the pad shows is unchanged');
+  });
+
+  test("a pin goes out with where it came from, and the location link's token always", () {
+    const searched = SaleDelivery(address: 'Maadi', phone: '0100', latitude: 30.06, longitude: 31.47, pinSource: PinSource.search);
+    expect(searched.toRequest()['pinSource'], 'Search');
+
+    // No pin yet, the caller still to share: the token alone, for the point to land on the order later
+    const waiting = SaleDelivery(address: 'Maadi', phone: '0100', pinSource: PinSource.shared, locationShareToken: 'tok');
+    expect(waiting.toRequest().containsKey('pinSource'), isFalse);
+    expect(waiting.toRequest()['locationShareToken'], 'tok');
+
+    // A source of none is never said: Ordering decides a pin it was not told about
+    const unsaid = SaleDelivery(address: 'Maadi', phone: '0100', latitude: 30.06, longitude: 31.47, pinSource: PinSource.none);
+    expect(unsaid.toRequest().containsKey('pinSource'), isFalse);
+
+    const shared = SaleDelivery(
+        address: 'Maadi', phone: '0100', latitude: 30.06, longitude: 31.47, pinSource: PinSource.shared, locationShareToken: 'tok');
+    final back = SaleDelivery.fromJson(shared.toJson());
+    expect(back.pinSource, PinSource.shared);
+    expect(back.locationShareToken, 'tok');
+    expect(back.toRequest()['pinSource'], 'Shared');
+    expect(SaleDelivery.fromJson(const SaleDelivery(address: 'a', phone: 'b').toJson()).pinSource, isNull);
   });
 }

@@ -2755,4 +2755,50 @@ class AppLocalizationsEn extends AppLocalizations {
   @override
   String get customerDisabledNumber =>
       'This number belongs to an account the owner switched off. The owner can switch it back on from Customers.';
+
+  @override
+  String get pinQualityCustomer => 'Customer\'s location';
+
+  @override
+  String get pinQualityRider => 'Where the rider found it before';
+
+  @override
+  String get pinQualitySearch => 'Approximate: from a map search';
+
+  @override
+  String get pinQualityNone => 'No pin: call the customer before leaving';
+
+  @override
+  String get deliveryCallCustomer => 'Call the customer';
+
+  @override
+  String get deliveryAskLocation => 'Ask for their location';
+
+  @override
+  String get deliveryAskLocationHint =>
+      'Sends them a link on WhatsApp: they tap it and their phone shares where they are.';
+
+  @override
+  String deliveryShareMessage(String url) {
+    return 'Please share your location so the rider finds you: $url';
+  }
+
+  @override
+  String get deliveryShareWaiting => 'Waiting for the customer to share…';
+
+  @override
+  String get deliveryShareSendAgain => 'Send again';
+
+  @override
+  String get deliveryShareReceived => 'Location received from the customer';
+
+  @override
+  String get deliveryShareExpired =>
+      'The link expired before they shared. Send a new one.';
+
+  @override
+  String get deliveryShareFailed => 'Couldn\'t make the link. Try again.';
+
+  @override
+  String get couldNotOpenWhatsApp => 'Couldn\'t open WhatsApp';
 }

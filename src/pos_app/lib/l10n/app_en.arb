@@ -1239,5 +1239,20 @@
   "pinDigitsTyped": "{count} digits typed",
   "@pinDigitsTyped": { "placeholders": { "count": { "type": "int" } } },
   "customerDisabled": "Account switched off · can't be added",
-  "customerDisabledNumber": "This number belongs to an account the owner switched off. The owner can switch it back on from Customers."
+  "customerDisabledNumber": "This number belongs to an account the owner switched off. The owner can switch it back on from Customers.",
+  "pinQualityCustomer": "Customer's location",
+  "pinQualityRider": "Where the rider found it before",
+  "pinQualitySearch": "Approximate: from a map search",
+  "pinQualityNone": "No pin: call the customer before leaving",
+  "deliveryCallCustomer": "Call the customer",
+  "deliveryAskLocation": "Ask for their location",
+  "deliveryAskLocationHint": "Sends them a link on WhatsApp: they tap it and their phone shares where they are.",
+  "deliveryShareMessage": "Please share your location so the rider finds you: {url}",
+  "@deliveryShareMessage": { "placeholders": { "url": { "type": "String" } } },
+  "deliveryShareWaiting": "Waiting for the customer to share…",
+  "deliveryShareSendAgain": "Send again",
+  "deliveryShareReceived": "Location received from the customer",
+  "deliveryShareExpired": "The link expired before they shared. Send a new one.",
+  "deliveryShareFailed": "Couldn't make the link. Try again.",
+  "couldNotOpenWhatsApp": "Couldn't open WhatsApp"
 }

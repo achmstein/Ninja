@@ -10,8 +10,11 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../core/utils/phone.dart';
+import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../customers/dialogs/app_link_dialog.dart' show customerOrigin;
+import '../../orders/models/order.dart' show PinSource;
 import '../../sale/models/sale_delivery.dart';
 import '../../sale/models/sale_line.dart';
 import '../models/delivery_order.dart';
@@ -20,6 +23,7 @@ import '../providers/delivery_form_controller.dart';
 import 'address_search_field.dart';
 import 'area_picker_field.dart';
 import 'delivery_details.dart';
+import 'pin_quality.dart';
 
 /// Enough digits to be worth asking whether the caller had deliveries before
 const _minPhoneDigits = 8;
@@ -41,7 +45,9 @@ enum _Step { who, where, check }
 /// named area (which sets the fee) and the street, building, floor and flat
 /// as the caller says them, whatever Google knows. A pin on the map is an
 /// extra for the rider, folded away with the directions, and never changes
-/// the area. Last, everything on one screen: the fee, anything to watch out
+/// the area; Ask for their location sends the caller a link on WhatsApp, and
+/// the point their phone shares comes into the form while it is open (or
+/// reaches the order after it is placed). Last, everything on one screen: the fee, anything to watch out
 /// for, a nearer branch that could make it, and the rider to give it to.
 Future<DeliveryFormResult?> showDeliveryFormDialog(
   BuildContext context, {
@@ -92,6 +98,11 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
   /// The rider picked while the call is on; null gives it later
   late SaleDeliveryRider? _rider = widget.initial?.rider;
 
+  /// Where the pin in [_location] came from: an earlier address's own
+  /// source, a map search, or the caller sharing it; null with no pin or an
+  /// older sale's pin whose source was never said
+  late PinSource? _pinSource = widget.initial?.pinSource;
+
   String get _country => ref.read(brandProvider).locale.country;
   bool get _hasAccount => (widget.customer?.id ?? '').isNotEmpty;
   DeliveryFormController get _controller => ref.read(deliveryFormControllerProvider.notifier);
@@ -121,6 +132,18 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     unawaited(_controller.lookUpKnown(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
     if (!_hasAccount) unawaited(_controller.lookUpAccount(_lookupPhone));
     _location.addListener(() => _controller.locationChanged(_location.text));
+    // A link sent for this delivery before the form was closed still brings the caller's point
+    final token = widget.initial?.locationShareToken;
+    if (token != null && widget.initial?.pinSource != PinSource.shared) _controller.watchShare(token);
+    // The caller shared: their point is the pin, said as coordinates like any other
+    ref.listenManual(deliveryFormControllerProvider.select((f) => f.shared), (before, shared) {
+      if (shared == null || before != null || !mounted) return;
+      setState(() {
+        _location.text = '${shared.latitude}, ${shared.longitude}';
+        _pinSource = PinSource.shared;
+        _more = true;
+      });
+    });
     _phone.addListener(() => _controller.phoneChanged(customerUserId: widget.customer?.id, normalizedPhone: _lookupPhone));
     for (final c in [_name, _phone, _street]) {
       c.addListener(() {
@@ -174,7 +197,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
     _directions.text = a.directions ?? '';
     if (_phone.text.trim().isEmpty) _phone.text = a.phone ?? '';
     // Its pin as coordinates, which reads back as the same pin
-    _location.text = a.latitude != null && a.longitude != null ? '${a.latitude}, ${a.longitude}' : '';
+    _location.text = a.hasPin ? '${a.latitude}, ${a.longitude}' : '';
+    _pinSource = a.hasPin ? a.pinSource : null;
     _sendTo = null;
     setState(() {
       _triedWho = true;
@@ -208,6 +232,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
         zone: zone == null ? null : SaleDeliveryZone.of(zone),
         // Another branch's riders are its own: one picked here never follows the order there
         rider: sending == null ? _rider : null,
+        pinSource: pin == null ? null : _pinSource,
+        // Placed with the order, a location the caller shares later still reaches it
+        locationShareToken: form.shareToken,
       ),
       customer: account == null
           ? SaleCustomer(name: _name.text.trim(), phone: phone)
@@ -440,6 +467,8 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             Expanded(child: _field(_apartment, l10n.deliveryApartmentLabel)),
           ],
         ),
+        const SizedBox(height: 12),
+        _shareLocation(context, form),
         const SizedBox(height: 8),
         if (!_more)
           Align(
@@ -477,6 +506,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 if (ref.watch(brandProvider.select((b) => b.addressSearch)))
                   AddressSearchField(
                     onPick: (place) {
+                      _pinSource = PinSource.search;
                       _location.text = place.locationText;
                       if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
                     },
@@ -504,7 +534,10 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                       FButton(
                         variant: FButtonVariant.ghost,
                         mainAxisSize: MainAxisSize.min,
-                        onPress: () => _location.clear(),
+                        onPress: () {
+                          _pinSource = null;
+                          _location.clear();
+                        },
                         child: Text(l10n.deliveryPinRemove),
                       ),
                     ],
@@ -548,6 +581,81 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
             Expanded(child: _bigButton(l10n.deliveryNext, _toCheck)),
           ],
         ),
+      ],
+    );
+  }
+
+  /// Sends the caller the location link on WhatsApp: the one already waiting,
+  /// else a new one (the first, or after the last expired)
+  Future<void> _askLocation() async {
+    final l10n = AppLocalizations.of(context)!;
+    final form = ref.read(deliveryFormControllerProvider);
+    final token = form.shareWaiting ? form.shareToken : (await _controller.makeShareLink())?.token;
+    if (token == null || !mounted) return;
+    final url = LocationShareLink(token, DateTime.now()).url(customerOrigin(ref));
+    await openOrSay(context, whatsAppLink(_phone.text, country: _country, text: l10n.deliveryShareMessage(url.toString())),
+        l10n.couldNotOpenWhatsApp);
+  }
+
+  /// The caller's own point, asked for over WhatsApp: the button, then
+  /// waiting (with Send again), then received
+  Widget _shareLocation(BuildContext context, DeliveryFormState form) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final muted = theme.typography.sm.copyWith(color: theme.colors.mutedForeground);
+    if (_pinSource == PinSource.shared && _location.text.trim().isNotEmpty) {
+      final green = AppColors.emerald(theme.colors.brightness);
+      return Container(
+        padding: const EdgeInsets.all(12),
+        decoration: BoxDecoration(color: green.withValues(alpha: 0.08), borderRadius: BorderRadius.circular(Sizes.radius)),
+        child: Row(
+          children: [
+            Icon(FIcons.circleCheck, size: Sizes.icon, color: green),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.deliveryShareReceived, style: theme.typography.sm.copyWith(color: green, fontWeight: FontWeight.w600))),
+          ],
+        ),
+      );
+    }
+    if (form.shareWaiting) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+        decoration: BoxDecoration(border: Border.all(color: theme.colors.border), borderRadius: BorderRadius.circular(Sizes.radius)),
+        child: Row(
+          children: [
+            const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress()),
+            const SizedBox(width: 8),
+            Expanded(child: Text(l10n.deliveryShareWaiting, style: theme.typography.sm)),
+            FButton(
+              variant: FButtonVariant.ghost,
+              mainAxisSize: MainAxisSize.min,
+              prefix: const Icon(FIcons.send),
+              onPress: () => unawaited(_askLocation()),
+              child: Text(l10n.deliveryShareSendAgain),
+            ),
+          ],
+        ),
+      );
+    }
+    return Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _bigButton(
+          l10n.deliveryAskLocation,
+          form.shareMaking ? null : () => unawaited(_askLocation()),
+          outline: true,
+          prefix: form.shareMaking
+              ? const SizedBox.square(dimension: Sizes.iconSmall, child: FCircularProgress())
+              : const Icon(FIcons.mapPinHouse),
+        ),
+        const SizedBox(height: 4),
+        if (form.shareFailed)
+          Text(l10n.deliveryShareFailed, style: theme.typography.sm.copyWith(color: theme.colors.destructive))
+        else if (form.shareExpired)
+          Text(l10n.deliveryShareExpired, style: theme.typography.sm.copyWith(color: AppColors.amber(theme.colors.brightness)))
+        else
+          Text(l10n.deliveryAskLocationHint, style: muted),
       ],
     );
   }
@@ -613,7 +721,9 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 if ([_building, _floor, _apartment].any((c) => c.text.trim().isNotEmpty))
                   Text(_addressLine(l10n, '', _building.text.trim(), _floor.text.trim(), _apartment.text.trim()), style: muted),
                 if (directions.isNotEmpty) Text('"$directions"', style: muted.copyWith(fontStyle: FontStyle.italic)),
-                Text(pinned ? l10n.deliveryPinned : l10n.deliveryNoPin, style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
+                const SizedBox(height: 4),
+                PinQualityLabel(quality: pinned ? PinSource.of(_pinSource ?? PinSource.search, hasPin: true) : PinSource.none),
+                if (!pinned && form.shareWaiting) Text(l10n.deliveryShareWaiting, style: muted),
               ], () => setState(() => _step = _Step.where)),
             ],
           ),

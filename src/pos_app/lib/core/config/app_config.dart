@@ -96,6 +96,9 @@ class AppConfig {
   /// How often the deliveries board redraws its "since" times
   static const Duration deliveriesClockTick = Duration(seconds: 30);
 
+  /// The phone-order form asks this often whether the caller shared their location through the link
+  static const Duration locationSharePoll = Duration(seconds: 3);
+
   /// The phone-order form waits this long after typing stops before asking the server
   static const Duration deliveryLookupDebounce = Duration(milliseconds: 400);
 

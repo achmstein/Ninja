@@ -4753,6 +4753,90 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'This number belongs to an account the owner switched off. The owner can switch it back on from Customers.'**
   String get customerDisabledNumber;
+
+  /// No description provided for @pinQualityCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer\'s location'**
+  String get pinQualityCustomer;
+
+  /// No description provided for @pinQualityRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Where the rider found it before'**
+  String get pinQualityRider;
+
+  /// No description provided for @pinQualitySearch.
+  ///
+  /// In en, this message translates to:
+  /// **'Approximate: from a map search'**
+  String get pinQualitySearch;
+
+  /// No description provided for @pinQualityNone.
+  ///
+  /// In en, this message translates to:
+  /// **'No pin: call the customer before leaving'**
+  String get pinQualityNone;
+
+  /// No description provided for @deliveryCallCustomer.
+  ///
+  /// In en, this message translates to:
+  /// **'Call the customer'**
+  String get deliveryCallCustomer;
+
+  /// No description provided for @deliveryAskLocation.
+  ///
+  /// In en, this message translates to:
+  /// **'Ask for their location'**
+  String get deliveryAskLocation;
+
+  /// No description provided for @deliveryAskLocationHint.
+  ///
+  /// In en, this message translates to:
+  /// **'Sends them a link on WhatsApp: they tap it and their phone shares where they are.'**
+  String get deliveryAskLocationHint;
+
+  /// No description provided for @deliveryShareMessage.
+  ///
+  /// In en, this message translates to:
+  /// **'Please share your location so the rider finds you: {url}'**
+  String deliveryShareMessage(String url);
+
+  /// No description provided for @deliveryShareWaiting.
+  ///
+  /// In en, this message translates to:
+  /// **'Waiting for the customer to share…'**
+  String get deliveryShareWaiting;
+
+  /// No description provided for @deliveryShareSendAgain.
+  ///
+  /// In en, this message translates to:
+  /// **'Send again'**
+  String get deliveryShareSendAgain;
+
+  /// No description provided for @deliveryShareReceived.
+  ///
+  /// In en, this message translates to:
+  /// **'Location received from the customer'**
+  String get deliveryShareReceived;
+
+  /// No description provided for @deliveryShareExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'The link expired before they shared. Send a new one.'**
+  String get deliveryShareExpired;
+
+  /// No description provided for @deliveryShareFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t make the link. Try again.'**
+  String get deliveryShareFailed;
+
+  /// No description provided for @couldNotOpenWhatsApp.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t open WhatsApp'**
+  String get couldNotOpenWhatsApp;
 }
 
 class _AppLocalizationsDelegate

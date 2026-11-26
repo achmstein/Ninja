@@ -36,6 +36,21 @@ class DeliveryFormState {
   /// The customer account that has the number typed, when there is one
   final IdentityUser? account;
 
+  /// The location link sent to the caller, while the form waits for it or after
+  final String? shareToken;
+
+  /// Making the link
+  final bool shareMaking;
+
+  /// The link could not be made
+  final bool shareFailed;
+
+  /// The caller's point, once they shared it through the link
+  final LocationShare? shared;
+
+  /// The link stopped taking a location before the caller shared one
+  final bool shareExpired;
+
   const DeliveryFormState({
     this.quote,
     this.quoteFor,
@@ -45,7 +60,15 @@ class DeliveryFormState {
     this.picked,
     this.pinZone,
     this.account,
+    this.shareToken,
+    this.shareMaking = false,
+    this.shareFailed = false,
+    this.shared,
+    this.shareExpired = false,
   });
+
+  /// A link was sent and the caller has not shared yet: the form waits
+  bool get shareWaiting => shareToken != null && shared == null && !shareExpired;
 
   /// The area the delivery goes to: the one picked by name, else the one the
   /// pin fell in. The quote's fee and minimum are then that area's. An area
@@ -68,6 +91,12 @@ class DeliveryFormState {
     bool clearPinZone = false,
     IdentityUser? account,
     bool clearAccount = false,
+    String? shareToken,
+    bool? shareMaking,
+    bool? shareFailed,
+    LocationShare? shared,
+    bool clearShared = false,
+    bool? shareExpired,
   }) =>
       DeliveryFormState(
         quote: clearQuote ? null : quote ?? this.quote,
@@ -78,6 +107,11 @@ class DeliveryFormState {
         picked: clearPicked ? null : picked ?? this.picked,
         pinZone: clearPinZone ? null : pinZone ?? this.pinZone,
         account: clearAccount ? null : account ?? this.account,
+        shareToken: shareToken ?? this.shareToken,
+        shareMaking: shareMaking ?? this.shareMaking,
+        shareFailed: shareFailed ?? this.shareFailed,
+        shared: clearShared ? null : shared ?? this.shared,
+        shareExpired: shareExpired ?? this.shareExpired,
       );
 
   /// The pin for what is in the field now: only when the branch answered
@@ -96,6 +130,7 @@ class DeliveryFormState {
 class DeliveryFormController extends Notifier<DeliveryFormState> {
   Timer? _locationDebounce;
   Timer? _phoneDebounce;
+  Timer? _sharePoll;
   String? _lastLocation;
   String _lookedUpPhone = '';
   int _asks = 0;
@@ -105,8 +140,57 @@ class DeliveryFormController extends Notifier<DeliveryFormState> {
     ref.onDispose(() {
       _locationDebounce?.cancel();
       _phoneDebounce?.cancel();
+      _sharePoll?.cancel();
     });
     return const DeliveryFormState();
+  }
+
+  /// A link for the caller to share where their phone is: made once per form
+  /// (Send again sends the same one), then asked about every few seconds
+  /// until the caller shares or it stops taking one. Null when it could not be made.
+  Future<LocationShareLink?> makeShareLink({Duration poll = AppConfig.locationSharePoll}) async {
+    if (state.shareMaking) return null;
+    state = state.copyWith(shareMaking: true, shareFailed: false);
+    try {
+      final link = await ref.read(deliveryRepositoryProvider).createLocationShare();
+      if (!ref.mounted) return null;
+      state = state.copyWith(shareToken: link.token, shareMaking: false, shareExpired: false, clearShared: true);
+      watchShare(link.token, poll: poll);
+      return link;
+    } catch (_) {
+      if (ref.mounted) state = state.copyWith(shareMaking: false, shareFailed: true);
+      return null;
+    }
+  }
+
+  /// Wait for what comes back through [token]: a link sent earlier for this
+  /// delivery, when the form opens on it again, or one just made
+  void watchShare(String token, {Duration poll = AppConfig.locationSharePoll}) {
+    _sharePoll?.cancel();
+    if (state.shareToken != token) state = state.copyWith(shareToken: token);
+    _sharePoll = Timer.periodic(poll, (_) => unawaited(readShare()));
+  }
+
+  /// Ask once whether the caller shared; stops the waiting when they did, or the link expired
+  Future<void> readShare() async {
+    final token = state.shareToken;
+    if (token == null || state.shared != null || state.shareExpired) {
+      _sharePoll?.cancel();
+      return;
+    }
+    try {
+      final share = await ref.read(deliveryRepositoryProvider).getLocationShare(token);
+      if (!ref.mounted || state.shareToken != token) return;
+      if (share.shared) {
+        _sharePoll?.cancel();
+        state = state.copyWith(shared: share);
+      } else if (share.expired) {
+        _sharePoll?.cancel();
+        state = state.copyWith(shareExpired: true);
+      }
+    } catch (_) {
+      // A blip: asked again on the next tick
+    }
   }
 
   /// The location field changed. A cursor move or a selection is not a
