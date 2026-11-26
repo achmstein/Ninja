@@ -99,10 +99,23 @@ export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDelivery
 // Keycloak user as the identity route returns it (see sale/customer-dialog)
 type IdentityUser = { id: string; username?: string; firstName?: string; lastName?: string; phoneNumber?: string; enabled?: boolean }
 
-/** The customer account that has exactly this number, when there is one: found as the number is typed */
+/** Digits enough to start offering the customers whose number holds them */
+const SUGGEST_PHONE_DIGITS = 5
+
+const toCustomer = (user: IdentityUser): SaleCustomer => ({
+  id: user.id,
+  name: [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || '',
+  phone: user.phoneNumber ?? null,
+})
+
+/**
+ * Who the number belongs to, as it is typed: the customer account that has
+ * exactly this number, and until there is one, the few customers whose
+ * numbers hold the digits typed so far, a tap away.
+ */
 function useAccountByPhone(phone: string, country: string, enabled: boolean) {
-  const typed = digitCount(phone) >= MIN_PHONE_DIGITS ? phone.trim() : ''
-  const search = useDebounced(typed, 400)
+  const typed = digitCount(phone) >= SUGGEST_PHONE_DIGITS ? phone.trim() : ''
+  const search = useDebounced(typed, 300)
   const query = useQuery({
     queryKey: ['identityUserSearch', search, 'deliveryPhone'],
     queryFn: async () =>
@@ -114,14 +127,17 @@ function useAccountByPhone(phone: string, country: string, enabled: boolean) {
     enabled: enabled && search !== '',
     staleTime: 60_000,
   })
-  if (!enabled || search === '' || search !== typed) return null
+  const none = { account: null, suggestions: [] as SaleCustomer[], searching: false }
+  if (!enabled || typed === '') return none
+  if (search !== typed || query.isLoading) return { ...none, searching: true }
   const wanted = normalizePhone(phone, country)
-  const user = (query.data ?? []).find(
-    (u) => u.enabled !== false && !!u.phoneNumber && normalizePhone(u.phoneNumber, country) === wanted,
-  )
-  if (!user) return null
-  const name = [user.firstName, user.lastName].filter(Boolean).join(' ') || user.username || ''
-  return { id: user.id, name, phone: user.phoneNumber ?? null } satisfies SaleCustomer
+  const users = (query.data ?? []).filter((u) => u.enabled !== false && !!u.phoneNumber)
+  const exact = users.find((u) => normalizePhone(u.phoneNumber!, country) === wanted)
+  return {
+    account: exact ? toCustomer(exact) : null,
+    suggestions: exact ? [] : users.slice(0, 4).map(toCustomer),
+    searching: false,
+  }
 }
 
 function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<PhoneDeliveryFormProps, 'open' | 'onOpenChange'>) {
@@ -134,7 +150,10 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const callCentre = useFeatures().callCentre === true
 
   // Changing a delivery already made opens on its last step: everything is there to look over
-  const [step, setStep] = useState<Step>(initial ? 'check' : 'who')
+  // The sale already says who it is for, number and all: nobody is asked twice, the form opens on where
+  const [step, setStep] = useState<Step>(
+    initial ? 'check' : customer?.name.trim() && digitCount(customer.phone ?? '') >= MIN_PHONE_DIGITS ? 'where' : 'who',
+  )
   const [form, setForm] = useState<SaleDelivery>(() => initial ?? { ...emptyDelivery, phone: editablePhone(customer?.phone) })
   const [name, setName] = useState(customer?.name ?? '')
   const [sendTo, setSendTo] = useState<SaleSendTo | null>(initial?.sendTo ?? null)
@@ -148,8 +167,8 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
   const set = (patch: Partial<SaleDelivery>) => setForm((f) => ({ ...f, ...patch }))
 
   // Who: the account the sale is for already, or the one this number belongs to
-  const found = useAccountByPhone(form.phone, country, !customer?.id)
-  const account: SaleCustomer | null = customer?.id ? customer : found
+  const lookup = useAccountByPhone(form.phone, country, !customer?.id)
+  const account: SaleCustomer | null = customer?.id ? customer : lookup.account
   const shownName = account && !name.trim() ? account.name : name
 
   // Where: the branch's named areas, and the terms for the area picked (or the pin when none is)
@@ -287,6 +306,12 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
           onName={setName}
           nameError={triedWho && !!whoErrors.name}
           account={account}
+          suggestions={lookup.suggestions}
+          searching={lookup.searching}
+          onSuggestion={(c) => {
+            set({ phone: editablePhone(c.phone) })
+            setName(c.name)
+          }}
           customerId={customer?.id ?? null}
           country={country}
           onKnown={pickKnown}
@@ -576,6 +601,9 @@ function WhoStep({
   onName,
   nameError,
   account,
+  suggestions,
+  searching,
+  onSuggestion,
   customerId,
   country,
   onKnown,
@@ -590,6 +618,10 @@ function WhoStep({
   onName: (name: string) => void
   nameError: boolean
   account: SaleCustomer | null
+  /** Customers whose numbers hold the digits typed so far */
+  suggestions: SaleCustomer[]
+  searching: boolean
+  onSuggestion: (customer: SaleCustomer) => void
   customerId: string | null
   country: string
   onKnown: (address: KnownAddressView) => void
@@ -605,6 +637,9 @@ function WhoStep({
     enabled: !!customerId || !!account?.id || lookupPhone !== '',
   })
   const addresses = known.data ?? []
+  const whole = digitCount(phone) >= MIN_PHONE_DIGITS
+  // Who the number is, said under it: a customer, someone delivered to before, or a new caller
+  const settled = whole && !searching && !known.isFetching && lookupPhone !== ''
 
   return (
     <>
@@ -624,6 +659,44 @@ function WhoStep({
           />
         )}
       </Field>
+
+      <div aria-live='polite' className='-mt-2 flex flex-col gap-2 empty:hidden'>
+        {account ? (
+          <p className='flex items-center gap-2 rounded-lg bg-emerald-500/10 px-3 py-2 text-sm font-medium text-emerald-700 dark:text-emerald-400'>
+            <UserRound className='size-4 shrink-0' aria-hidden />
+            <span className='min-w-0 truncate'>
+              <bdi>{account.name}</bdi> · {t('deliveryKnownCustomer')}
+            </span>
+          </p>
+        ) : suggestions.length > 0 ? (
+          <div className='flex flex-col overflow-hidden rounded-lg border'>
+            {suggestions.map((c) => (
+              <button
+                key={c.id}
+                type='button'
+                onClick={() => onSuggestion(c)}
+                className='hover:bg-muted flex min-h-12 items-center gap-2 border-b px-3 py-2 text-start last:border-b-0'
+              >
+                <UserRound className='text-muted-foreground size-4 shrink-0' aria-hidden />
+                <bdi className='min-w-0 flex-1 truncate font-medium'>{c.name}</bdi>
+                <span dir='ltr' className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                  {showPhone(c.phone ?? '')}
+                </span>
+              </button>
+            ))}
+          </div>
+        ) : settled && addresses.length > 0 ? (
+          <p className='bg-muted flex items-center gap-2 rounded-lg px-3 py-2 text-sm font-medium'>
+            <History className='size-4 shrink-0' aria-hidden />
+            {t('deliveryCalledBefore')}
+          </p>
+        ) : settled ? (
+          <p className='bg-muted text-muted-foreground flex items-center gap-2 rounded-lg px-3 py-2 text-sm'>
+            <Plus className='size-4 shrink-0' aria-hidden />
+            {t('deliveryNewCaller')}
+          </p>
+        ) : null}
+      </div>
 
       <Field id={`${ids}-name`} label={t('deliveryCustomerName')} error={nameError ? t('deliveryNeedsName') : null}>
         {(a) => (

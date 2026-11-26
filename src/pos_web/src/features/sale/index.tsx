@@ -29,6 +29,7 @@ import {
   SelectedCustomer,
 } from '@/features/customer/selected-customer'
 import { useBranchName } from '@/features/branch/use-branch-name'
+import { customerName, ensureCounterCustomer } from '@/features/customer/counter-customers'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
 import { useDeliveryActions } from '@/features/deliveries/use-deliveries'
 import { useOfflineCharge } from '@/features/offline/offline-charge'
@@ -322,6 +323,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   // Taken at the call centre: nothing is paid here, and the next caller follows
   const callCentre = useCallCentre().on
   const [priceReview, setPriceReview] = useState<PriceReview | null>(null)
+  // A new caller is being added to the customers, a moment before their order goes
+  const [addingCaller, setAddingCaller] = useState(false)
 
   // Before paint, so the cashier never sees the previous destination's cart
   useLayoutEffect(() => {
@@ -765,15 +768,35 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       return
     }
 
-    placeOrder.mutate({
-      body,
-      headers: { 'x-requestid': requestId },
-      query: { 'api-version': API_VERSION },
-      // A line that has gone quiet answers nothing for minutes: past this,
-      // the sale is taken offline (and the same request id keeps a late
-      // arrival from becoming a second sale)
-      timeout: CHARGE_TIMEOUT_MS,
-    })
+    const place = (as: typeof body) =>
+      placeOrder.mutate({
+        body: as,
+        headers: { 'x-requestid': requestId },
+        query: { 'api-version': API_VERSION },
+        // A line that has gone quiet answers nothing for minutes: past this,
+        // the sale is taken offline (and the same request id keeps a late
+        // arrival from becoming a second sale)
+        timeout: CHARGE_TIMEOUT_MS,
+      })
+
+    // A caller with no account yet becomes a customer as their order goes:
+    // the number is the customer, so the next call finds them, with their
+    // points and what they ordered. Never holds the order up: when it cannot
+    // be done the order goes as a guest's
+    const callerPhone = delivery?.phone || customer?.phone || ''
+    if (!customer?.id && customer?.name.trim() && callerPhone) {
+      setAddingCaller(true)
+      void ensureCounterCustomer(customer.name.trim(), callerPhone)
+        .then((added) => {
+          if (!added) return place(body)
+          const name = customerName(added) || customer.name
+          setCustomer({ id: added.id, name, phone: added.phoneNumber ?? callerPhone })
+          place({ ...body, customerUserId: added.id, customerUserName: name })
+        })
+        .finally(() => setAddingCaller(false))
+      return
+    }
+    place(body)
   }
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft
@@ -1233,7 +1256,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       {/* Blocking wait for a delivery or a call-centre order, which has no
           bill on this till to show itself on: nothing else may be touched
           until the server has it */}
-      {(placeOrder.isPending || priceCheck.checking) && (
+      {(placeOrder.isPending || priceCheck.checking || addingCaller) && (
         <div className='bg-background/80 fixed inset-0 z-50 flex flex-col items-center justify-center gap-3 backdrop-blur-sm'>
           <Loader2 className='size-10 animate-spin' />
           <p className='text-lg font-semibold'>

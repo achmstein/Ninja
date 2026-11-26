@@ -84,6 +84,22 @@ export async function createCounterCustomer(name: string, phoneNumber: string) {
   return response.data
 }
 
+/**
+ * The customer with this number, made now when there is none: a caller the
+ * till took an order from becomes a customer without anyone pressing "New
+ * customer". The number is the customer, so one already there is used as is.
+ * Null when it could not be done (a number that is not one here, no answer):
+ * the order then goes as a guest's, never held up for this.
+ */
+export async function ensureCounterCustomer(name: string, phoneNumber: string): Promise<IdentityCustomer | null> {
+  try {
+    return await createCounterCustomer(name, phoneNumber)
+  } catch (error) {
+    const existing = (error as { response?: { status?: number; data?: { existing?: IdentityCustomer } } }).response
+    return existing?.status === 409 ? (existing.data?.existing ?? null) : null
+  }
+}
+
 export async function issueClaimLink(customerId: string) {
   const response = await apiClient.post<ClaimLink>(
     `/api/identity/customers/${encodeURIComponent(customerId)}/claim-link`
