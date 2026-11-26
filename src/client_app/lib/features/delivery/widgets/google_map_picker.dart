@@ -32,8 +32,17 @@ class GoogleMapPicker extends StatefulWidget {
   final geo.LatLng? to;
   final void Function(geo.LatLng point, bool byUser) onSettle;
   final VoidCallback onFail;
+  final BorderRadius borderRadius;
 
-  const GoogleMapPicker({super.key, required this.apiKey, required this.start, this.to, required this.onSettle, required this.onFail});
+  const GoogleMapPicker({
+    super.key,
+    required this.apiKey,
+    required this.start,
+    this.to,
+    required this.onSettle,
+    required this.onFail,
+    this.borderRadius = mapCorners,
+  });
 
   @override
   State<GoogleMapPicker> createState() => _GoogleMapPickerState();
@@ -106,7 +115,7 @@ class _GoogleMapPickerState extends State<GoogleMapPicker> {
   Widget build(BuildContext context) {
     final theme = context.theme;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: widget.borderRadius,
       child: ColoredBox(
         color: theme.colors.muted,
         child: Stack(

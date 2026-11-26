@@ -3117,6 +3117,18 @@ abstract class AppLocalizations {
   /// **'Deliver here'**
   String get deliverySaveAddress;
 
+  /// No description provided for @deliverySaveDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Save address'**
+  String get deliverySaveDetails;
+
+  /// No description provided for @deliveryAdjustPin.
+  ///
+  /// In en, this message translates to:
+  /// **'Adjust pin'**
+  String get deliveryAdjustPin;
+
   /// No description provided for @deliveryAddressSaved.
   ///
   /// In en, this message translates to:

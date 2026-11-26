@@ -16,6 +16,9 @@ const _style = 'https://tiles.openfreemap.org/styles/liberty';
 /// Close enough to tell one building from the next
 const _streetZoom = 17.0;
 
+/// A map's corners inside a sheet
+const mapCorners = BorderRadius.all(Radius.circular(20));
+
 /// A map the customer moves under a pin that stays in the middle, the way
 /// delivery apps ask "where exactly" (client_web's map-pin.tsx): wherever
 /// the map comes to rest is the point. [to] moves the map (the customer's
@@ -31,7 +34,10 @@ class MapPicker extends StatefulWidget {
   final geo.LatLng? to;
   final void Function(geo.LatLng point, bool byUser) onSettle;
 
-  const MapPicker({super.key, required this.start, this.to, required this.onSettle});
+  /// Its corners: rounded inside a sheet, square across the whole screen
+  final BorderRadius borderRadius;
+
+  const MapPicker({super.key, required this.start, this.to, required this.onSettle, this.borderRadius = mapCorners});
 
   @override
   State<MapPicker> createState() => _MapPickerState();
@@ -43,12 +49,13 @@ class _MapPickerState extends State<MapPicker> {
   @override
   Widget build(BuildContext context) {
     final key = _googleFailed ? null : AppConfig.googleMapsKey;
-    if (key == null) return FreeMapPicker(start: widget.start, to: widget.to, onSettle: widget.onSettle);
+    if (key == null) return FreeMapPicker(start: widget.start, to: widget.to, onSettle: widget.onSettle, borderRadius: widget.borderRadius);
     return GoogleMapPicker(
       apiKey: key,
       start: widget.start,
       to: widget.to,
       onSettle: widget.onSettle,
+      borderRadius: widget.borderRadius,
       onFail: () => setState(() => _googleFailed = true),
     );
   }
@@ -95,8 +102,9 @@ class FreeMapPicker extends StatefulWidget {
   final geo.LatLng start;
   final geo.LatLng? to;
   final void Function(geo.LatLng point, bool byUser) onSettle;
+  final BorderRadius borderRadius;
 
-  const FreeMapPicker({super.key, required this.start, this.to, required this.onSettle});
+  const FreeMapPicker({super.key, required this.start, this.to, required this.onSettle, this.borderRadius = mapCorners});
 
   @override
   State<FreeMapPicker> createState() => _FreeMapPickerState();
@@ -170,7 +178,7 @@ class _FreeMapPickerState extends State<FreeMapPicker> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     return ClipRRect(
-      borderRadius: BorderRadius.circular(20),
+      borderRadius: widget.borderRadius,
       child: ColoredBox(
         color: theme.colors.muted,
         child: Stack(

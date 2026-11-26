@@ -1744,6 +1744,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get deliverySaveAddress => 'Deliver here';
 
   @override
+  String get deliverySaveDetails => 'Save address';
+
+  @override
+  String get deliveryAdjustPin => 'Adjust pin';
+
+  @override
   String get deliveryAddressSaved => 'Address saved';
 
   @override

@@ -1,9 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:geolocator/geolocator.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/providers/branch_provider.dart';
 import '../../../core/services/location_service.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
@@ -11,15 +9,8 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_address.dart';
 import '../services/delivery_service.dart';
-import 'address_search_field.dart';
 import 'map_picker.dart';
-
-/// Where the map opens when neither the customer nor the branch is placed: the middle of the business's country
-const _countryCentres = <String, LatLng>{
-  'EG': (lat: 30.0444, lng: 31.2357),
-  'SA': (lat: 24.7136, lng: 46.6753),
-  'AE': (lat: 25.2048, lng: 55.2708),
-};
+import 'pin_map_screen.dart';
 
 /// A language's list comma: ", " in English, "، " in Arabic
 String listSeparator(BuildContext context) => Localizations.localeOf(context).languageCode == 'ar' ? '، ' : ', ';
@@ -36,28 +27,54 @@ String addressLineOf(BuildContext context, DeliveryAddress address) {
 }
 
 /// Where the order is brought: the customer's saved addresses, one tap to
-/// pick, and a new one pinned on the map with the words that find the door
-/// (client_web's address-sheet.tsx). Opened from the tray, and from the You
-/// page's "My addresses" ([manage]: picking one there edits it rather than
-/// choosing it).
-Future<void> showAddressSheet(BuildContext context, {bool manage = false}) => showNinjaSheet<void>(
-      context: context,
-      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-      builder: (_) => _AddressSheet(manage: manage),
-    );
+/// pick (client_web's address-sheet.tsx). A new one is the delivery apps'
+/// way: the whole screen a map to put the pin on the door ([pickPinOnMap]),
+/// then this sheet for the words that find it. Opened from the tray, and from
+/// the You page's "My addresses" ([manage]: picking one there edits it rather
+/// than choosing it). From the tray, a customer with none goes straight to the map.
+Future<void> showAddressSheet(BuildContext context, {bool manage = false}) async {
+  PinnedPoint? pin;
+  final saved = ProviderScope.containerOf(context).read(myAddressesProvider);
+  if (!manage && saved.hasValue && saved.value!.isEmpty) {
+    pin = await pickPinOnMap(context);
+    if (pin == null || !context.mounted) return;
+  }
+  await showNinjaSheet<void>(
+    context: context,
+    padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+    builder: (_) => _AddressSheet(manage: manage, firstPin: pin),
+  );
+}
 
 class _AddressSheet extends ConsumerStatefulWidget {
   final bool manage;
 
-  const _AddressSheet({required this.manage});
+  /// The pin of a new address put on the map before the sheet opened
+  final PinnedPoint? firstPin;
+
+  const _AddressSheet({required this.manage, this.firstPin});
 
   @override
   ConsumerState<_AddressSheet> createState() => _AddressSheetState();
 }
 
 class _AddressSheetState extends ConsumerState<_AddressSheet> {
-  /// The form, for a new address (`null` inside) or one being changed; unset shows the list
-  ({DeliveryAddress? address})? _editing;
+  /// The details, for a new address (its pin put on the map) or one being changed; unset shows the list
+  late ({DeliveryAddress? address, PinnedPoint? pin})? _editing = widget.firstPin == null ? null : (address: null, pin: widget.firstPin);
+
+  /// The map was opened on its own for a customer found to have none
+  bool _mapOpened = false;
+
+  /// A new address: the map first, then its details here; back from the map leaves the list as it was
+  Future<void> _addNew({bool closeIfNone = false}) async {
+    final pin = await pickPinOnMap(context);
+    if (!mounted) return;
+    if (pin == null) {
+      if (closeIfNone) Navigator.of(context).pop();
+      return;
+    }
+    setState(() => _editing = (address: null, pin: pin));
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -67,8 +84,14 @@ class _AddressSheetState extends ConsumerState<_AddressSheet> {
     final chosen = ref.watch(deliveryChoiceProvider).address;
     final list = saved.value ?? const <DeliveryAddress>[];
     final empty = saved.hasValue && list.isEmpty;
-    // A customer with none goes straight to adding one, from the tray
-    final form = _editing ?? (empty && !widget.manage ? (address: null) : null);
+    // A customer with none goes straight to the map, from the tray: here when that was only known once the sheet was open
+    if (empty && !widget.manage && _editing == null && !_mapOpened) {
+      _mapOpened = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _addNew(closeIfNone: true);
+      });
+    }
+    final form = _editing;
     final title = form == null
         ? (widget.manage ? l10n.myAddresses : l10n.deliveryAddressTitle)
         : form.address == null
@@ -87,6 +110,7 @@ class _AddressSheetState extends ConsumerState<_AddressSheet> {
           _AddressForm(
             key: ValueKey(form.address?.id ?? 'new'),
             initial: form.address,
+            pin: form.pin,
             onDone: (address) {
               if (widget.manage) {
                 setState(() => _editing = null);
@@ -107,7 +131,7 @@ class _AddressSheetState extends ConsumerState<_AddressSheet> {
                 manage: widget.manage,
                 onTap: () {
                   if (widget.manage) {
-                    setState(() => _editing = (address: address));
+                    setState(() => _editing = (address: address, pin: null));
                     return;
                   }
                   ref.read(deliveryChoiceProvider.notifier).setAddress(address);
@@ -120,7 +144,7 @@ class _AddressSheetState extends ConsumerState<_AddressSheet> {
               child: AppText(l10n.myAddressesEmpty, style: context.localeText(theme.typography.note.copyWith(color: theme.colors.mutedForeground))),
             ),
           Pressable(
-            onTap: () => setState(() => _editing = (address: null)),
+            onTap: _addNew,
             child: SizedBox(
               height: 56,
               child: Row(
@@ -215,16 +239,16 @@ class _AddressRow extends StatelessWidget {
   }
 }
 
-/// One address: the map first (move it until the pin is on the door), then
-/// the words a rider needs. A new one is saved only once its pin was put
-/// somewhere (moved, or found by "use my location"): the map's starting
-/// point is the branch, and a rider sent there finds nobody. Removing one is
-/// at the foot of its form, asked once more.
+/// One address's details: the pin, small at the top (a tap opens the whole
+/// screen map to move it), then the words a rider needs. A new one comes here
+/// only with its pin put on the map ([pin]). Removing one is at the foot of its
+/// form, asked once more.
 class _AddressForm extends ConsumerStatefulWidget {
   final DeliveryAddress? initial;
+  final PinnedPoint? pin;
   final void Function(DeliveryAddress? address) onDone;
 
-  const _AddressForm({super.key, required this.initial, required this.onDone});
+  const _AddressForm({super.key, required this.initial, this.pin, required this.onDone});
 
   @override
   ConsumerState<_AddressForm> createState() => _AddressFormState();
@@ -232,15 +256,9 @@ class _AddressForm extends ConsumerStatefulWidget {
 
 class _AddressFormState extends ConsumerState<_AddressForm> {
   late final DeliveryAddress? _initial = widget.initial;
-  late LatLng _point;
-  late bool _pinned = _initial != null;
+  late LatLng _point = _initial != null ? (lat: _initial.latitude, lng: _initial.longitude) : widget.pin!.point;
 
-  /// The customer moved the map themselves: a later fix does not take it from them
-  late bool _moved = _initial != null;
-  LatLng? _flyTo;
-  LatLng? _flownTo;
-
-  late final _street = TextEditingController(text: _initial?.address ?? '');
+  late final _street = TextEditingController(text: _initial?.address ?? widget.pin?.street ?? '');
   late final _building = TextEditingController(text: _initial?.building ?? '');
   late final _floor = TextEditingController(text: _initial?.floor ?? '');
   late final _apartment = TextEditingController(text: _initial?.apartment ?? '');
@@ -255,42 +273,14 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
   bool _busy = false;
   bool _removing = false;
 
-  @override
-  void initState() {
-    super.initState();
-    final here = ref.read(locationProvider).here;
-    final branch = ref.read(branchProvider).selectedBranch?.point;
-    final country = ref.read(brandProvider).locale.country;
-    _point = _initial != null
-        ? (lat: _initial.latitude, lng: _initial.longitude)
-        : here ?? branch ?? _countryCentres[country] ?? _countryCentres['EG']!;
-    if (_initial == null) {
-      _pinned = here != null;
-      _flownTo = here;
-      // A new address takes the GPS's own fix, not the coarse one the branch list may have had: at once
-      // where the phone gives it already, else on the customer's word once they have read why (under the map)
-      WidgetsBinding.instance.addPostFrameCallback((_) async {
-        final permission = await ref.read(locationProvider.notifier).permission();
-        if (!mounted) return;
-        if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-          ref.read(locationProvider.notifier).request(precise: true);
-        } else if (permission == LocationPermission.denied) {
-          setState(() => _explain = true);
-        }
-      });
-    }
-  }
-
-  /// The phone would ask for the position: why, before it does, and the way to say yes
-  bool _explain = false;
-
-  Future<void> _useMyLocation() async {
-    final l10n = AppLocalizations.of(context)!;
-    setState(() => _explain = false);
-    final allowed = await ref.read(locationProvider.notifier).locate(precise: true);
-    if (!allowed && mounted) {
-      showIsland(title: Text(l10n.locationOff), icon: Icon(LucideIcons.mapPinOff, color: context.theme.colors.mutedForeground));
-    }
+  /// The pin moved on the whole screen map; a street the search found there fills an empty street
+  Future<void> _adjust() async {
+    final pin = await pickPinOnMap(context, at: _point);
+    if (pin == null || !mounted) return;
+    setState(() {
+      _point = pin.point;
+      if (_street.text.trim().isEmpty && pin.street != null) _street.text = pin.street!;
+    });
   }
 
   @override
@@ -303,7 +293,6 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
 
   String? _problem(AppLocalizations l10n) {
     final phoneOk = ref.read(brandProvider).locale.isValidPhone(_phone.text);
-    if (!_pinned) return l10n.deliveryNeedPin;
     if (_street.text.trim().isEmpty) return l10n.deliveryNeedStreet;
     if (!phoneOk) return l10n.deliveryNeedPhone;
     return null;
@@ -369,15 +358,6 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
     final theme = context.theme;
     final c = theme.colors;
     final l10n = AppLocalizations.of(context)!;
-    final location = ref.watch(locationProvider);
-    // The map flies to where the customer is each time a fix comes (the coarse one, then the GPS's),
-    // until they move it themselves; "Use my location" hands it back to the fix
-    final here = location.here;
-    if (!_moved && here != null && here != _flownTo) {
-      _flownTo = here;
-      _flyTo = here;
-      _pinned = true;
-    }
     final problem = _tried ? _problem(l10n) : null;
     final caption = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
 
@@ -385,106 +365,8 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        // A street named rather than found: the map flies there, and the pin is then put on the door
-        AddressSearchField(
-          near: ref.read(branchProvider).selectedBranch?.point,
-          onPick: (place) => setState(() {
-            _flyTo = place.point;
-            _pinned = true;
-            _moved = true;
-            if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
-          }),
-        ),
-        SizedBox(
-          height: 224,
-          child: Stack(
-            children: [
-              Positioned.fill(
-                child: MapPicker(
-                  start: _point,
-                  to: _flyTo,
-                  onSettle: (point, byUser) => setState(() {
-                    _point = point;
-                    if (byUser) {
-                      _pinned = true;
-                      _moved = true;
-                    }
-                  }),
-                ),
-              ),
-              PositionedDirectional(
-                end: 8,
-                bottom: 8,
-                child: Semantics(
-                  button: true,
-                  label: l10n.useMyLocation,
-                  child: Pressable(
-                    onTap: location.locating
-                        ? null
-                        : () async {
-                            setState(() {
-                              _moved = false;
-                              // Back to the fix there is at once; a fresher one follows it
-                              if (here != null) _flyTo = (lat: here.lat, lng: here.lng);
-                            });
-                            final allowed = await ref.read(locationProvider.notifier).locate(precise: true);
-                            if (!allowed && context.mounted) {
-                              showIsland(title: Text(l10n.locationOff), icon: Icon(LucideIcons.mapPinOff, color: c.mutedForeground));
-                            }
-                          },
-                    child: Container(
-                      width: 44,
-                      height: 44,
-                      decoration: BoxDecoration(
-                        color: c.background,
-                        shape: BoxShape.circle,
-                        boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 8, offset: Offset(0, 2))],
-                      ),
-                      child: location.locating
-                          ? Padding(padding: const EdgeInsets.all(13), child: CircularProgressIndicator(strokeWidth: 2, color: c.foreground))
-                          : Icon(LucideIcons.locateFixed, size: 18, color: c.foreground),
-                    ),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-        if (_explain && !_moved && location.here == null)
-          // Why the app would like the position, before the phone asks for it
-          Padding(
-            padding: const EdgeInsets.only(top: 6, bottom: 10),
-            child: Pressable(
-              onTap: _useMyLocation,
-              child: Container(
-                padding: const EdgeInsets.all(12),
-                decoration: BoxDecoration(color: c.primary.withValues(alpha: 0.1), borderRadius: BorderRadius.circular(16)),
-                child: Row(
-                  children: [
-                    Icon(LucideIcons.locateFixed, size: 20, color: c.primary),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          AppText(l10n.useMyLocation, style: caption.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
-                          AppText(l10n.deliveryPinWhy, style: caption),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          )
-        else
-          Padding(
-            padding: const EdgeInsets.fromLTRB(4, 6, 4, 10),
-            child: AppText(
-              _tried && !_pinned ? l10n.deliveryNeedPin : l10n.deliveryMovePin,
-              style: _tried && !_pinned ? caption.copyWith(color: c.destructive) : caption,
-            ),
-          ),
+        _PinPreview(point: _point, onTap: _busy ? null : _adjust),
+        const SizedBox(height: 12),
         NinjaField(
           controller: _street,
           hint: l10n.deliveryStreet,
@@ -557,7 +439,7 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
           busy: _busy && !_removing,
           onPress: _busy ? null : _save,
           prefix: const Icon(LucideIcons.check),
-          child: AppText(l10n.deliverySaveAddress),
+          child: AppText(l10n.deliverySaveDetails),
         ),
         if (_initial?.id != null) ...[
           const SizedBox(height: 8),
@@ -597,6 +479,60 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
             ),
         ],
       ],
+    );
+  }
+}
+
+/// The pin, small and still, at the top of an address's details: a tap opens
+/// the whole screen map to move it
+class _PinPreview extends StatelessWidget {
+  final LatLng point;
+  final VoidCallback? onTap;
+
+  const _PinPreview({required this.point, required this.onTap});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final c = theme.colors;
+    final l10n = AppLocalizations.of(context)!;
+    return Pressable(
+      onTap: onTap,
+      semanticLabel: l10n.deliveryAdjustPin,
+      child: SizedBox(
+        height: 132,
+        child: Stack(
+          fit: StackFit.expand,
+          children: [
+            // Not to be moved here: a finger on it is the tap that opens the big one
+            IgnorePointer(
+              child: ExcludeSemantics(
+                child: MapPicker(start: point, to: point, onSettle: (_, _) {}),
+              ),
+            ),
+            PositionedDirectional(
+              end: 8,
+              bottom: 8,
+              child: Container(
+                height: 32,
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                decoration: ShapeDecoration(color: c.background, shape: const StadiumBorder(), shadows: Ninja.surfaceShadow),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(LucideIcons.move, size: 14, color: c.foreground),
+                    const SizedBox(width: 6),
+                    AppText(
+                      l10n.deliveryAdjustPin,
+                      style: context.localeText(theme.typography.caption.copyWith(fontWeight: FontWeight.w600, color: c.foreground)),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

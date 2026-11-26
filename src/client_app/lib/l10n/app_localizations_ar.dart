@@ -1740,6 +1740,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliverySaveAddress => 'وصّل هنا';
 
   @override
+  String get deliverySaveDetails => 'احفظ العنوان';
+
+  @override
+  String get deliveryAdjustPin => 'عدّل مكان الدبوس';
+
+  @override
   String get deliveryAddressSaved => 'العنوان اتحفظ';
 
   @override
@@ -3338,6 +3344,12 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get deliverySaveAddress => 'التوصيل إلى هنا';
+
+  @override
+  String get deliverySaveDetails => 'حفظ العنوان';
+
+  @override
+  String get deliveryAdjustPin => 'تعديل موقع الدبوس';
 
   @override
   String get deliveryAddressSaved => 'تم حفظ العنوان';
