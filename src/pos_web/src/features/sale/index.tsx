@@ -4,7 +4,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
-  Bike,
   Loader2,
   Minus,
   Plus,
@@ -37,6 +36,7 @@ import { saveCustomerPreferences, startSend } from '@/features/sending/sending'
 import { PriceReviewDialog } from './price-review-dialog'
 import { sendToBranchId, toPosDeliveryRequest } from './sale-delivery'
 import { SaleDeliverySummary } from './sale-delivery-summary'
+import { OrderTypeSwitch } from './order-type-switch'
 import { useBranchPriceCheck, type PriceReview } from './use-branch-price-check'
 import { useSaleDelivery } from './use-sale-delivery'
 import { stayRoster } from '@/features/places/status'
@@ -828,6 +828,16 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       </div>
 
       <div className='border-b px-3 py-2'>
+        {/* What kind of order: decided first, and always in sight */}
+        {saleDelivery.canOffer && (
+          <div className='mb-2'>
+            <OrderTypeSwitch
+              delivering={!!delivery}
+              onDelivery={() => saleDelivery.setFormOpen(true)}
+              onCounter={saleDelivery.remove}
+            />
+          </div>
+        )}
         {addingToTicket && roomSession && roster.length >= 2 && (
           <div className='mb-2 flex flex-col gap-1.5'>
             <span className='text-muted-foreground text-xs font-medium'>
@@ -860,7 +870,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </div>
           </div>
         )}
-        {/* Who it is for and whether a rider takes it, side by side on one row */}
+        {/* Who it is for */}
         <div className='flex items-center gap-2 empty:hidden'>
           {customer ? (
             <div className='min-w-0 flex-1'>
@@ -871,21 +881,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </div>
           ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
             <div className='min-w-0 flex-1'>
-              <ChooseCustomerButton
-                onClick={() => setCustomerOpen(true)}
-                showOptional={!(saleDelivery.canOffer && !delivery)}
-              />
+              <ChooseCustomerButton onClick={() => setCustomerOpen(true)} showOptional />
             </div>
-          )}
-          {!delivery && saleDelivery.canOffer && (
-            <Button
-              variant='outline'
-              className='h-12 shrink-0 gap-2 text-base'
-              onClick={() => saleDelivery.setFormOpen(true)}
-            >
-              <Bike className='size-5' />
-              {t('deliverIt')}
-            </Button>
           )}
         </div>
         {delivery && (

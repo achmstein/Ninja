@@ -583,6 +583,9 @@ const dictionary = {
   deliveryMarkDelivered: { en: "It was delivered", ar: "سُلِّم إلى العميل" },
   // A delivery the till takes over the phone
   deliverIt: { en: "Delivery", ar: "توصيل" },
+  orderTypeLabel: { en: "Order type", ar: "نوع الطلب" },
+  orderTypeCounter: { en: "Counter", ar: "في المحل" },
+  orderTypeCounterConfirm: { en: "Tap Counter again to remove the delivery", ar: "اضغط «في المحل» مرة أخرى لإلغاء التوصيل" },
   deliveryFormTitle: { en: "Delivery over the phone", ar: "طلب توصيل عبر الهاتف" },
   deliveryCustomerName: { en: "Customer's name", ar: "اسم العميل" },
   deliveryStreetLabel: { en: "Area and street", ar: "المنطقة والشارع" },
