@@ -6,6 +6,8 @@ import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/theme/text_styles.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/sale_delivery.dart';
+import '../../deliveries/widgets/pin_quality.dart';
+import '../../orders/models/order.dart';
 
 import '../../../core/utils/phone.dart';
 /// The delivery on the sale: where it goes and the number the rider calls
@@ -54,18 +56,14 @@ class DeliverySummary extends StatelessWidget {
                       overflow: TextOverflow.ellipsis,
                       style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500),
                     ),
-                    Row(
-                      children: [
-                        if (delivery.hasPin) ...[
-                          Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                          const SizedBox(width: 4),
-                        ],
-                        Text(showPhone(delivery.phone), textDirection: TextDirection.ltr, style: muted),
-                        if (!delivery.hasPin)
-                          Flexible(
-                            child: Text(' · ${l10n.deliveryNoPin}', maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
-                          ),
-                      ],
+                    Text(showPhone(delivery.phone), textDirection: TextDirection.ltr, style: muted),
+                    // How far the rider can go by the pin: the door, near it, or none (call first)
+                    PinQualityLabel(
+                      quality: !delivery.hasPin
+                          ? PinSource.none
+                          : delivery.pinSource == null || delivery.pinSource == PinSource.none
+                              ? PinSource.search
+                              : delivery.pinSource!,
                     ),
                     if (sendToName == null && delivery.rider != null)
                       Row(
