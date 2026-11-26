@@ -85,6 +85,8 @@ describe('toPosDeliveryRequest', () => {
       apartment: null,
       directions: 'Blue gate',
       zoneId: null,
+      pinSource: null,
+      locationShareToken: null,
     })
   })
 
