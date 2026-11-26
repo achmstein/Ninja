@@ -11,7 +11,6 @@ import {
   Search,
   Sparkles,
   Trash2,
-  UserRound,
   X,
 } from 'lucide-react'
 import {
@@ -24,10 +23,14 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { Skeleton } from '@/components/ui/skeleton'
+import { CustomerBox } from '@/features/customer/customer-box'
+import { InitialsBadge } from '@/features/customer/initials-badge'
 import {
-  ChooseCustomerButton,
-  SelectedCustomer,
-} from '@/features/customer/selected-customer'
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { customerName, ensureCounterCustomer } from '@/features/customer/counter-customers'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
@@ -61,6 +64,8 @@ import { toast } from '@/lib/toast'
 import { toBasketItems } from './basket-items'
 import {
   lineKey,
+  linesByPerson,
+  personKey,
   saleCount,
   tillSuggestions,
   saleTotal,
@@ -68,7 +73,6 @@ import {
   type SaleCustomer,
   type SaleLine,
 } from './cart'
-import { CustomerDialog } from './customer-dialog'
 import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
 import { cn } from '@/lib/utils'
 import { CustomizeDialog } from './customize-dialog'
@@ -215,10 +219,16 @@ function SectionLabel({ children, accent = false }: { children: ReactNode; accen
 function CartLineRow({
   line,
   onSetQuantity,
+  people,
+  onAssign,
 }: {
   line: SaleLine
   onSetQuantity: (key: string, quantity: number) => void
+  /** On a bill: who the line could be for, a tap on its badge moving it */
+  people?: SaleCustomer[]
+  onAssign?: (person: SaleCustomer | null) => void
 }) {
+  const t = useT()
   const language = useLanguage((s) => s.language)
   const money = useMoney()
 
@@ -278,6 +288,34 @@ function CartLineRow({
           >
             <Plus className='size-4' />
           </Button>
+          {people && onAssign && (
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button
+                  type='button'
+                  aria-label={t('moveLineTo')}
+                  className='hover:bg-muted ms-auto flex min-h-9 max-w-[45%] items-center gap-1.5 rounded-full border py-0.5 ps-0.5 pe-2.5 text-xs font-medium'
+                >
+                  <InitialsBadge name={line.for?.name ?? ''} size='sm' />
+                  <bdi className='truncate'>{line.for ? line.for.name || t('guest') : t('nobodysItems')}</bdi>
+                </button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align='end' className='min-w-48'>
+                {people.map((p) => (
+                  <DropdownMenuItem key={p.id ?? `name:${p.name}`} className='min-h-11 gap-2' onClick={() => onAssign(p)}>
+                    <InitialsBadge name={p.name} size='sm' />
+                    <bdi className='truncate'>{p.name || t('guest')}</bdi>
+                  </DropdownMenuItem>
+                ))}
+                {line.for && (
+                  <DropdownMenuItem className='text-muted-foreground min-h-11 gap-2' onClick={() => onAssign(null)}>
+                    <InitialsBadge name='' size='sm' />
+                    {t('nobodysItems')}
+                  </DropdownMenuItem>
+                )}
+              </DropdownMenuContent>
+            </DropdownMenu>
+          )}
         </div>
       </div>
       <span className='shrink-0 text-sm font-semibold tabular-nums'>
@@ -327,6 +365,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     customer,
     add: addToSale,
     setQuantity,
+    assignLine,
+    adoptUnassigned,
     setNote,
     setCustomer,
     setTarget,
@@ -363,7 +403,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const [customizeSuggested, setCustomizeSuggested] = useState(false)
   // The item rung up last: what it goes well with is offered under the sale
   const [lastAdded, setLastAdded] = useState<CatalogItemDto | null>(null)
-  const [customerOpen, setCustomerOpen] = useState(false)
   // On a phone the running order lives in a sheet under the menu, opened
   // from the bar along the bottom; a tablet keeps it beside the menu
   const isMobile = useIsMobile()
@@ -410,6 +449,10 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     }
   }
   const pickCustomer = (picked: SaleCustomer) => {
+    // On a bill the one picked is who the next taps are for. What was rung
+    // up before anybody was picked becomes theirs; what is another person's
+    // already stays that person's
+    if (addingToTicket && !customer) adoptUnassigned(picked)
     setCustomer(picked)
     rememberLast(picked)
     if (roomSession && picked.id && !roster.some((m) => m.id === picked.id)) {
@@ -606,7 +649,9 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
 
   /** Adds the line and brings its row into view: a new line lands at the end
    * of a long sale, an extra one of a line already there anywhere in it */
-  const add = (line: SaleLine) => {
+  const add = (rung: SaleLine) => {
+    // On a bill, a line is whoever's is picked as it is tapped
+    const line = addingToTicket && customer ? { ...rung, for: customer } : rung
     addToSale(line)
     const key = lineKey(line)
     setRungUp((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }))
@@ -808,21 +853,32 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     // the next thing (features/sending)
     if (!delivering && !callCentre) {
       const target = ticketId ?? null
-      void startSend({
-        requestId,
-        ticketId: target,
-        branchId: getActiveBranchId(),
-        lines: toSend,
-        note,
-        customer,
-        body,
-      }).then((outcome) => {
-        if (outcome.kind === 'alreadyPlaced') toast.info(t('orderAlreadyPlaced'))
-        if (outcome.kind !== 'failed') {
-          queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
-          queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-        }
-      })
+      // A round on a bill goes as one order per person, so each gets their
+      // points and their history; a new sale is one customer's whole
+      const groups = target != null ? linesByPerson(toSend, customer) : [{ who: customer, lines: toSend }]
+      for (const group of groups) {
+        void startSend({
+          requestId: groups.length === 1 ? requestId : crypto.randomUUID(),
+          ticketId: target,
+          branchId: getActiveBranchId(),
+          lines: group.lines,
+          note,
+          customer: group.who,
+          body: {
+            ...body,
+            items: toBasketItems(group.lines),
+            customerUserId: group.who?.id ?? null,
+            customerUserName: group.who?.id ? group.who.name : null,
+            customerName: group.who?.name ?? null,
+          },
+        }).then((outcome) => {
+          if (outcome.kind === 'alreadyPlaced') toast.info(t('orderAlreadyPlaced'))
+          if (outcome.kind !== 'failed') {
+            queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+            queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
+          }
+        })
+      }
       requestIdRef.current = null
       clear()
       if (target != null) {
@@ -960,31 +1016,28 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         {/* Who it is for: one box, as on a new sale. On a bill the people
             already on it sit under the box, a tap each, so the next round
             changes hands without a search */}
-        <div className='flex items-center gap-2 empty:hidden'>
-          {customer ? (
-            <div className='min-w-0 flex-1'>
-              <SelectedCustomer
-                customer={customer}
-                onRemove={() => setCustomer(null)}
-              />
-            </div>
-          ) : (
-            <div className='min-w-0 flex-1'>
-              <ChooseCustomerButton onClick={() => setCustomerOpen(true)} showOptional={!addingToTicket} />
-            </div>
-          )}
-        </div>
-        {addingToTicket && otherPeople.length > 0 && (
+        {/* One box finds or adds the customer in place. On a bill whoever is
+            in it is who the next taps are for */}
+        {addingToTicket && customer && (
+          <span className='text-muted-foreground mb-1 block text-xs font-medium'>{t('roundFor')}</span>
+        )}
+        <CustomerBox
+          customer={customer}
+          onPick={pickCustomer}
+          onRemove={() => setCustomer(null)}
+          people={addingToTicket ? billPeople : []}
+        />
+        {addingToTicket && customer && otherPeople.length > 0 && (
+          // Switching hands mid-round: the others on the bill, a tap each
           <div className='mt-2 flex flex-wrap items-center gap-2'>
-            <span className='text-muted-foreground text-xs font-medium'>{t('alsoOnBill')}</span>
             {otherPeople.map((p) => (
               <button
                 key={p.id ?? `name:${p.name}`}
                 type='button'
                 onClick={() => pickCustomer(p)}
-                className='bg-background hover:bg-muted flex min-h-10 max-w-full items-center gap-1.5 rounded-full border px-3 text-sm font-medium'
+                className='bg-background hover:bg-muted flex min-h-10 max-w-full items-center gap-1.5 rounded-full border py-1 ps-1 pe-3 text-sm font-medium'
               >
-                <UserRound className='size-4 shrink-0 opacity-60' />
+                <InitialsBadge name={p.name} size='sm' />
                 <bdi className='truncate'>{p.name || t('guest')}</bdi>
               </button>
             ))}
@@ -1024,27 +1077,50 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
           </div>
         )}
         {addingToTicket && lines.length > 0 && <SectionLabel accent>{t('newItems')}</SectionLabel>}
-        {lines.length === 0 ? null : (
-          <div className='flex flex-col divide-y'>
-            {lines.map((line) => (
-              <div
-                key={lineKey(line)}
-                ref={(el) => {
-                  if (el) rowRefs.current.set(lineKey(line), el)
-                  else rowRefs.current.delete(lineKey(line))
-                }}
-              >
-                {/* Just rung up: a soft tint behind it fades out, keyed by
-                    the tap so each one starts it again */}
-                <div
-                  key={rungUp[lineKey(line)] ?? 0}
-                  className={cn(rungUp[lineKey(line)] && 'animate-landed')}
-                >
-                  <CartLineRow line={line} onSetQuantity={setQuantity} />
+        {/* A round on a bill reads person by person, each under their name;
+            a new sale is one list */}
+        {(addingToTicket ? linesByPerson(lines, null) : [{ who: null, lines }]).map((group) =>
+          group.lines.length === 0 ? null : (
+            <div key={personKey(group.who) || '__nobody__'}>
+              {addingToTicket && lines.some((l) => l.for) && (
+                <div className='bg-muted/50 flex items-center gap-2 px-3 py-1.5'>
+                  <InitialsBadge name={group.who?.name ?? ''} size='sm' />
+                  <bdi className='min-w-0 flex-1 truncate text-sm font-semibold'>
+                    {group.who ? group.who.name || t('guest') : t('nobodysItems')}
+                  </bdi>
+                  <span className='text-muted-foreground shrink-0 text-sm tabular-nums'>
+                    {money(saleTotal(group.lines))}
+                  </span>
                 </div>
+              )}
+              <div className='flex flex-col divide-y'>
+                {group.lines.map((line) => (
+                  <div
+                    key={lineKey(line)}
+                    ref={(el) => {
+                      if (el) rowRefs.current.set(lineKey(line), el)
+                      else rowRefs.current.delete(lineKey(line))
+                    }}
+                  >
+                    {/* Just rung up: a soft tint behind it fades out, keyed by
+                        the tap so each one starts it again */}
+                    <div
+                      key={rungUp[lineKey(line)] ?? 0}
+                      className={cn(rungUp[lineKey(line)] && 'animate-landed')}
+                    >
+                      <CartLineRow
+                        line={line}
+                        onSetQuantity={setQuantity}
+                        // More than one person could have it: a tap on its badge moves it
+                        people={addingToTicket && billPeople.length > 0 ? billPeople : undefined}
+                        onAssign={(person) => assignLine(lineKey(line), person)}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
-            ))}
-          </div>
+            </div>
+          ),
         )}
       </div>
 
@@ -1374,12 +1450,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         }}
       />
       {offlineCharge.element}
-      <CustomerDialog
-        open={customerOpen}
-        onOpenChange={setCustomerOpen}
-        onSelect={pickCustomer}
-        quickPicks={roster}
-      />
 
       {/* Blocking wait for a delivery or a call-centre order, which has no
           bill on this till to show itself on: nothing else may be touched
