@@ -53,7 +53,7 @@ export function SendingChip() {
         </span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className='sm:max-w-lg'>
+        <DialogContent size='lg'>
           <DialogHeader>
             <DialogTitle>{t('notSent')}</DialogTitle>
             <DialogDescription>{t('sendsFailedHint')}</DialogDescription>

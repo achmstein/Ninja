@@ -84,7 +84,7 @@ export function PrintSettingsDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] overflow-y-auto sm:max-w-lg'>
+      <DialogContent className='max-h-[90svh]' size='lg'>
         <DialogHeader>
           <DialogTitle>{t('printingSettings')}</DialogTitle>
           <DialogDescription>{t('printingSettingsHint')}</DialogDescription>

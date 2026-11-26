@@ -8,7 +8,7 @@ import {
 } from '@/api/sales/@tanstack/react-query.gen'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import type { SaleCustomer } from '@/features/sale/cart'
-import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import {
   ChooseCustomerButton,
   SelectedCustomer,
@@ -139,7 +139,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='gap-5 sm:max-w-md'>
+      <DialogContent className='gap-5'>
         <DialogHeader>
           <DialogTitle className='type-title'>{t('newTab')}</DialogTitle>
         </DialogHeader>
@@ -210,10 +210,10 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
           </Button>
         </DialogFooter>
       </DialogContent>
-      <CustomerDialog
+      <CustomerSearch
         open={pickerOpen}
         onOpenChange={setPickerOpen}
-        onSelect={setCustomer}
+        onPick={setCustomer}
         busy={busy}
       />
     </Dialog>

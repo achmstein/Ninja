@@ -78,7 +78,7 @@ export function AppLinkDialog({ customer, onOpenChange }: AppLinkDialogProps) {
 
   return (
     <Dialog open={customer !== null} onOpenChange={onOpenChange}>
-      <DialogContent className='flex flex-col items-center gap-4 sm:max-w-sm'>
+      <DialogContent className='flex flex-col items-center gap-4' size='sm'>
         <DialogHeader className='w-full'>
           <DialogTitle className='type-title'>
             {t('appLinkTitle', { name: customer?.name ?? '' })}

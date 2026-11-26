@@ -164,7 +164,7 @@ export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) 
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-4'>
         <DialogHeader>
           <DialogTitle className='type-title'>
             {t('refundTitle', { number: toNumber(ticket.receiptNumber ?? 0) })}

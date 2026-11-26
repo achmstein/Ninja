@@ -61,7 +61,7 @@ export function SendSheet({
           onOpenChange(next)
         }}
       >
-        <DialogContent className='max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg'>
+        <DialogContent size='lg'>
           <DialogHeader>
             <DialogTitle>{t('sendWhoTitle')}</DialogTitle>
           </DialogHeader>

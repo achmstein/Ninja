@@ -82,7 +82,7 @@ export function PhoneDeliveryForm({ open, onOpenChange, ...rest }: PhoneDelivery
   const t = useT()
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg'>
+      <DialogContent size='lg'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <Bike className='size-5' aria-hidden />

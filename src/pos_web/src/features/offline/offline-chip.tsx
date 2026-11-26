@@ -78,7 +78,7 @@ function OfflineSalesDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[90svh] gap-4 overflow-y-auto sm:max-w-lg'>
+      <DialogContent className='max-h-[90svh] gap-4' size='lg'>
         <DialogHeader>
           <DialogTitle className='type-title'>{t('offlineSales')}</DialogTitle>
           <DialogDescription className='type-body'>

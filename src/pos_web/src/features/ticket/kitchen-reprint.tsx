@@ -86,7 +86,7 @@ export function KitchenReprintDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle>{t('kitchenTickets')}</DialogTitle>
           <DialogDescription>{t('kitchenTicketsHint')}</DialogDescription>

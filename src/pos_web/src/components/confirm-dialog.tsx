@@ -48,7 +48,7 @@ export function ConfirmDialog({
 }: ConfirmDialogProps) {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='gap-4 sm:max-w-md'>
+      <DialogContent className='gap-4'>
         <DialogHeader>
           <DialogTitle className='type-title'>{title}</DialogTitle>
           {description && (

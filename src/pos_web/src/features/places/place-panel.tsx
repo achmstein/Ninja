@@ -36,7 +36,7 @@ import {
   CustomerCard,
   type CardCustomer,
 } from '@/features/customer/customer-card'
-import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -155,7 +155,7 @@ export function PlacePanel({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+        <DialogContent className='max-h-[95svh] gap-4'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 type-title'>
               <span
@@ -493,13 +493,13 @@ export function PlacePanel({
         customer={cardFor}
         onOpenChange={(isOpen) => !isOpen && setCardFor(null)}
       />
-      <CustomerDialog
+      <CustomerSearch
         accountsOnly
         open={pickerFor != null}
         onOpenChange={(isOpen) => {
           if (!isOpen) setPickerFor(null)
         }}
-        onSelect={(picked) => {
+        onPick={(picked) => {
           if (picked.id) {
             if (pickerFor === 'assign')
               actions.assignReservationCustomer(

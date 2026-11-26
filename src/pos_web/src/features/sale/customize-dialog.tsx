@@ -125,7 +125,7 @@ export function CustomizeDialog({
 }: CustomizeDialogProps) {
   return (
     <Dialog open={!!item} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-4'>
         {item && (
           // Keyed on item + customer so switching either resets the form state
           <CustomizeForm

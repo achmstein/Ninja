@@ -45,13 +45,30 @@ function DialogOverlay({
   )
 }
 
+/**
+ * How wide a pop-up is, by what it holds (docs/layout.md). A width is never
+ * set by hand on a pop-up: it says which of these it is.
+ */
+const DIALOG_SIZES = {
+  /** A question and its answers: confirm, discard, a short notice */
+  sm: 'sm:max-w-sm',
+  /** A few fields or a short list: the usual pop-up */
+  md: 'sm:max-w-md',
+  /** A list to pick from, a form in steps, a keypad beside its figures */
+  lg: 'sm:max-w-lg',
+  /** Two columns side by side: a report, a bill beside its payment */
+  xl: 'sm:max-w-3xl',
+} as const
+
 function DialogContent({
   className,
   children,
   showCloseButton = true,
+  size = 'md',
   ...props
 }: React.ComponentProps<typeof DialogPrimitive.Content> & {
   showCloseButton?: boolean
+  size?: keyof typeof DIALOG_SIZES
 }) {
   return (
     <DialogPortal data-slot='dialog-portal'>
@@ -59,7 +76,10 @@ function DialogContent({
       <DialogPrimitive.Content
         data-slot='dialog-content'
         className={cn(
-          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200 sm:max-w-lg',
+          'bg-background data-[state=open]:animate-in data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=open]:fade-in-0 data-[state=closed]:zoom-out-95 data-[state=open]:zoom-in-95 fixed top-[50%] left-[50%] z-50 grid w-full max-w-[calc(100%-2rem)] translate-x-[-50%] translate-y-[-50%] gap-4 rounded-lg border p-6 shadow-lg duration-200',
+          // Never taller than the screen: what does not fit scrolls inside it
+          'max-h-[calc(100svh-2rem)] overflow-y-auto',
+          DIALOG_SIZES[size],
           // A phone gets a sheet from the bottom edge instead of a card in
           // the middle: full width, in thumb reach, scrolling on its own
           // when it is taller than the screen, clear of the home bar

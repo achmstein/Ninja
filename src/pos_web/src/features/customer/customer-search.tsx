@@ -10,6 +10,7 @@ import { apiClient } from '@/lib/api-client'
 import { Highlight, matchRanges } from '@/lib/highlight'
 import { useLanguage, useT } from '@/lib/i18n'
 import { editablePhone } from '@/lib/phone'
+import { toast } from '@/lib/toast'
 import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { customerName, type IdentityCustomer } from './counter-customers'
@@ -56,12 +57,28 @@ export function CustomerSearch({
   onOpenChange,
   onPick,
   exclude = [],
+  accountsOnly = false,
+  offered = [],
+  busy,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
   onPick: (customer: SaleCustomer) => void
   /** Accounts not to list: the people the caller already offers */
   exclude?: readonly string[]
+  /**
+   * Only people with an account can be picked: no "use this name". For a
+   * room's people and a reservation, where a bare name is nobody
+   */
+  accountsOnly?: boolean
+  /** People offered before anything else: the room's, when the lines are a room's */
+  offered?: readonly { id: string; name: string }[]
+  /**
+   * Accounts that cannot be picked, each with where their bill is: opening
+   * a new bill, whoever already has one shows greyed out with it. One
+   * person, one bill
+   */
+  busy?: ReadonlyMap<string, string>
 }) {
   return (
     <DialogPrimitive.Root open={open} onOpenChange={onOpenChange}>
@@ -76,6 +93,9 @@ export function CustomerSearch({
           {open && (
             <SearchBody
               exclude={exclude}
+              accountsOnly={accountsOnly}
+              offered={offered}
+              busy={busy}
               onClose={() => onOpenChange(false)}
               onPick={(customer) => {
                 rememberRecentCustomer(customer)
@@ -92,10 +112,16 @@ export function CustomerSearch({
 
 function SearchBody({
   exclude,
+  accountsOnly,
+  offered,
+  busy,
   onClose,
   onPick,
 }: {
   exclude: readonly string[]
+  accountsOnly: boolean
+  offered: readonly { id: string; name: string }[]
+  busy: ReadonlyMap<string, string> | undefined
   onClose: () => void
   onPick: (customer: SaleCustomer) => void
 }) {
@@ -130,7 +156,16 @@ function SearchBody({
           <DialogPrimitive.Title className='min-w-0 flex-1 type-title truncate'>{t('newCustomer')}</DialogPrimitive.Title>
         </TopRow>
         <div className='min-h-0 flex-1 overflow-y-auto p-4'>
-          <NewCustomerForm initialText={typed} onPick={(added) => onPick(toCustomer(added))} onCancel={() => setAdding(false)} />
+          <NewCustomerForm
+            initialText={typed}
+            onPick={(added) => {
+              // Their number was somebody's who already has a bill open
+              const where = busy?.get(added.id)
+              if (where) return toast.error(t('alreadyOnBill', { where }))
+              onPick(toCustomer(added))
+            }}
+            onCancel={() => setAdding(false)}
+          />
         </div>
       </Frame>
     )
@@ -139,11 +174,12 @@ function SearchBody({
   const row = (user: IdentityCustomer, mark = false) => {
     const name = customerName(user)
     const off = user.enabled === false
+    const where = busy?.get(user.id)
     return (
       <button
         key={user.id}
         type='button'
-        disabled={off}
+        disabled={off || !!where}
         onClick={() => onPick(toCustomer(user))}
         className='hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 type-body text-start disabled:cursor-not-allowed disabled:opacity-50'
       >
@@ -151,7 +187,11 @@ function SearchBody({
           <span className='block truncate font-semibold'>
             <bdi>{mark ? <Highlight text={name} ranges={matchRanges(name, typed)} /> : name}</bdi>
           </span>
-          {off && <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>}
+          {off ? (
+            <span className='text-muted-foreground type-detail block truncate'>{t('customerDisabled')}</span>
+          ) : (
+            where && <span className='text-muted-foreground type-detail block truncate'>{t('alreadyOnBill', { where })}</span>
+          )}
         </span>
         {user.phoneNumber && (
           <bdi dir='ltr' className='text-muted-foreground type-detail shrink-0 tabular-nums'>
@@ -170,7 +210,7 @@ function SearchBody({
       <>
         {waiting ? <RowSkeletons /> : found.length > 0 ? found.map((u) => row(u, true)) : <Nothing>{t('customerSearchNone')}</Nothing>}
         {/* A name that is nobody's yet: on this order as it is, or a customer from now on */}
-        {!looksLikePhone(typed) && (
+        {!accountsOnly && !looksLikePhone(typed) && (
           <>
             <Caption>{t('customerSearchNotListed')}</Caption>
             <button
@@ -214,6 +254,23 @@ function SearchBody({
         .filter((u): u is IdentityCustomer => !!u)
       body = (
         <>
+          {offered.length > 0 && (
+            <>
+              <Caption>{t('inTheRoom')}</Caption>
+              {offered.map((person) => (
+                <button
+                  key={person.id}
+                  type='button'
+                  onClick={() => onPick({ id: person.id, name: person.name })}
+                  className='hover:bg-muted type-body flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start font-semibold'
+                >
+                  <span className='block truncate'>
+                    <bdi>{person.name || t('guest')}</bdi>
+                  </span>
+                </button>
+              ))}
+            </>
+          )}
           {recent.length > 0 && (
             <>
               <Caption>{t('recentCustomers')}</Caption>

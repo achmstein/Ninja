@@ -89,7 +89,7 @@ export function StartStayDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='gap-4 sm:max-w-md'>
+      <DialogContent className='gap-4'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2 type-title'>
             <Play className='size-5 rtl:rotate-180' />

@@ -99,7 +99,7 @@ export function CloseShiftDialog({
   if (result) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-lg'>
+        <DialogContent className='max-h-[95svh] gap-4' size='lg'>
           <DialogHeader>
             <DialogTitle className='type-title'>{t('shiftClosed')}</DialogTitle>
           </DialogHeader>
@@ -134,7 +134,7 @@ export function CloseShiftDialog({
   // ----- count entry view -----
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-4'>
         <DialogHeader>
           <DialogTitle className='type-title'>{t('closeShiftTitle')}</DialogTitle>
         </DialogHeader>

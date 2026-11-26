@@ -6,7 +6,7 @@ import {
   CustomerCard,
   type CardCustomer,
 } from '@/features/customer/customer-card'
-import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { useStayActions } from './use-places'
@@ -90,11 +90,11 @@ export function StayMembers({ stay }: { stay: StayViewModel }) {
         </button>
       </div>
 
-      <CustomerDialog
+      <CustomerSearch
         open={pickerOpen}
         onOpenChange={setPickerOpen}
         accountsOnly
-        onSelect={(picked) => {
+        onPick={(picked) => {
           if (picked.id) actions.addMember(stayId, picked.id, picked.name)
           setPickerOpen(false)
         }}

@@ -40,7 +40,7 @@ export function PriceReviewDialog({
 
   return (
     <Dialog open={review != null} onOpenChange={(open) => !open && onClose()}>
-      <DialogContent className='sm:max-w-md'>
+      <DialogContent>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             <ArrowRightLeft className='size-5' aria-hidden />

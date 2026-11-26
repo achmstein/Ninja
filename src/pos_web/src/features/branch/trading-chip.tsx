@@ -71,7 +71,7 @@ export function TradingChip() {
         </span>
       </Button>
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className='gap-4 sm:max-w-md'>
+        <DialogContent className='gap-4'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 type-title'>
               <Store className='size-5' />

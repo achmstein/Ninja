@@ -29,7 +29,7 @@ type Asking = 'delivered' | 'courierDelivered' | 'cash' | 'cancel' | 'failed' | 
 export function DeliveryOrderDialog({ order, onOpenChange }: { order: BoardDelivery | null; onOpenChange: (open: boolean) => void }) {
   return (
     <Dialog open={order != null} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-4'>
         {/* Keyed by the order, so a confirm half-asked for one is never carried to another */}
         {order && <DeliveryOrderBody key={toNumber(order.orderNumber)} order={order} close={() => onOpenChange(false)} />}
       </DialogContent>

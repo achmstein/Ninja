@@ -101,7 +101,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
   if (slip) {
     return (
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className='gap-5 sm:max-w-md'>
+        <DialogContent className='gap-5'>
           <div className='flex flex-col items-center gap-3 py-4 text-center'>
             <CheckCircle2 className='size-14 text-emerald-500' />
             <DialogTitle className='type-title'>{t('tabPaymentRecorded')}</DialogTitle>
@@ -142,7 +142,7 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
   // ----- entry view -----
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-0 p-0'>
         {/* The name on its own line: a long one must not squeeze the amount */}
         <DialogHeader className='border-b px-5 py-3 pe-14'>
           <DialogTitle className='flex items-baseline justify-between gap-4 type-title'>

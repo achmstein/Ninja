@@ -38,7 +38,7 @@ export function RiderCashDialog({
 }) {
   return (
     <Dialog open={rider != null} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-3xl'>
+      <DialogContent className='max-h-[95svh] gap-4' size='xl'>
         {rider && <Body key={rider.riderUserId ?? ''} rider={rider} busy={busy} cancel={() => onOpenChange(false)} onTake={onTake} />}
       </DialogContent>
     </Dialog>

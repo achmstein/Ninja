@@ -62,7 +62,7 @@ import {
   CustomerCard,
   type CardCustomer,
 } from '@/features/customer/customer-card'
-import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList, PlaceSearch } from './place-list'
 import { TimerReset } from 'lucide-react'
@@ -663,12 +663,11 @@ export function Floor() {
 
       <NewTicketDialog open={newTabOpen} onOpenChange={setNewTabOpen} />
       {/* Search, then the card: no sale, no list of everyone */}
-      <CustomerDialog
+      <CustomerSearch
         open={findOpen}
         onOpenChange={setFindOpen}
         accountsOnly
-        titleKey='findCustomer'
-        onSelect={(picked) => {
+        onPick={(picked) => {
           if (picked.id)
             setCardFor({
               id: picked.id,

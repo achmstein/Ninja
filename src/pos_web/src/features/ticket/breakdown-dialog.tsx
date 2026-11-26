@@ -67,7 +67,7 @@ export function BreakdownDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='gap-4 sm:max-w-sm'>
+      <DialogContent className='gap-4' size='sm'>
         <DialogHeader>
           <DialogTitle className='type-title'>{t('breakdown')}</DialogTitle>
         </DialogHeader>

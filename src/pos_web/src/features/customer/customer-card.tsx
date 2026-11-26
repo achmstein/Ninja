@@ -92,7 +92,7 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
   return (
     <>
       <Dialog open={open && !payOpen && !linkOpen} onOpenChange={onOpenChange}>
-        <DialogContent className='flex flex-col gap-4 sm:max-w-md'>
+        <DialogContent className='flex flex-col gap-4'>
           <DialogHeader>
             <DialogTitle className='flex items-center gap-2 type-title'>
               <User className='size-5 shrink-0' />

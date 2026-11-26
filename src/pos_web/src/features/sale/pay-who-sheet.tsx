@@ -63,7 +63,7 @@ export function PayWhoSheet({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[calc(100svh-2rem)] overflow-y-auto sm:max-w-lg'>
+      <DialogContent size='lg'>
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             {t('payWhoTitle')}

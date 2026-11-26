@@ -59,7 +59,7 @@ import { saleTotal, type SaleCustomer } from '@/features/sale/cart'
 import { totalWith } from '@/features/sending/bill'
 import { landSend, sendsFor, useSending } from '@/features/sending/sending'
 import { SendingLines } from '@/features/sending/sending-lines'
-import { CustomerDialog } from '@/features/sale/customer-dialog'
+import { CustomerSearch } from '@/features/customer/customer-search'
 import {
   CustomerCard,
   type CardCustomer,
@@ -1239,13 +1239,13 @@ export function TicketScreen({
       />
       {/* The sale pad's own picker, reused: an account, or just a name —
           with the room's people first when this is a room's bill */}
-      <CustomerDialog
+      <CustomerSearch
         open={assignOrderIds !== null || assignLineIds !== null}
         onOpenChange={(open) => {
           if (!open) closeAssign()
         }}
-        onSelect={doAssignCustomer}
-        quickPicks={stayRoster(stay)}
+        onPick={doAssignCustomer}
+        offered={stayRoster(stay)}
       />
       <CustomerCard
         customer={cardFor}

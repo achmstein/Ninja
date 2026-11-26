@@ -69,7 +69,7 @@ export function ChangeTenderDialog({
   const from = payment ? t(tenderLabelKey[payment.tender] ?? 'cash') : ''
   return (
     <Dialog open={!!payment} onOpenChange={onOpenChange}>
-      <DialogContent className='sm:max-w-sm'>
+      <DialogContent size='sm'>
         <DialogHeader>
           <DialogTitle>{t('changeTenderTitle')}</DialogTitle>
           <DialogDescription>

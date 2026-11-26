@@ -222,7 +222,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
   // scrolls off a landscape tablet; a phone stacks them.
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-0 overflow-y-auto p-0 sm:max-w-2xl'>
+      <DialogContent className='max-h-[95svh] gap-0 p-0' size='xl'>
         <DialogHeader className='border-b px-5 py-3 pe-14'>
           <DialogTitle className='type-title'>{title}</DialogTitle>
         </DialogHeader>

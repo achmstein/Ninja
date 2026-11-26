@@ -68,7 +68,7 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className='max-h-[95svh] gap-4 overflow-y-auto sm:max-w-md'>
+      <DialogContent className='max-h-[95svh] gap-4'>
         <DialogHeader>
           <DialogTitle className='type-title'>{t('openShiftTitle')}</DialogTitle>
         </DialogHeader>
