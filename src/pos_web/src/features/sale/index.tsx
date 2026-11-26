@@ -4,6 +4,7 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
+  Check,
   Ellipsis,
   Loader2,
   Minus,
@@ -12,6 +13,7 @@ import {
   Sparkles,
   Trash2,
   UserPlus,
+  UserRound,
   X,
 } from 'lucide-react'
 import {
@@ -193,6 +195,10 @@ function RailCategory({
     </button>
   )
 }
+
+/** The same person: by their account when they have one, else by the name the till was told */
+const samePerson = (a: SaleCustomer | null, b: SaleCustomer) =>
+  !!a && (a.id || b.id ? a.id === b.id : a.name.trim() === b.name.trim())
 
 /** A quiet heading over a part of the bill: what is on it already, what is new */
 function SectionLabel({ children, accent = false }: { children: ReactNode; accent?: boolean }) {
@@ -405,7 +411,13 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       // A browser that refuses storage just loses the convenience
     }
   }
+  // On a bill, the cashier says whose round it is, or that it is nobody's:
+  // Send asks (once) when neither was said
+  const [noCustomer, setNoCustomer] = useState(false)
+  const [askWho, setAskWho] = useState(false)
   const pickCustomer = (picked: SaleCustomer) => {
+    setNoCustomer(false)
+    setAskWho(false)
     setCustomer(picked)
     rememberLast(picked)
     if (roomSession && picked.id && !roster.some((m) => m.id === picked.id)) {
@@ -564,6 +576,31 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const billTotal = bill.ticket
     ? totalWith(bill.ticket, bill.onTheirWay.reduce((sum, x) => sum + saleTotal(x.lines), 0) + itemsTotal)
     : null
+
+  // Everyone this bill already knows: the room's people, and whoever earlier
+  // rounds were rung up for (an account, or a name the till was told), with
+  // the one picked now when they are new to it
+  const billPeople: SaleCustomer[] = []
+  const addPerson = (p: SaleCustomer) => {
+    if (!billPeople.some((x) => samePerson(x, p))) billPeople.push(p)
+  }
+  for (const m of roster) addPerson({ id: m.id, name: m.name })
+  for (const line of billLines) {
+    if (line.customerId) addPerson({ id: String(line.customerId), name: line.customerName ?? '' })
+    else if (line.customerName) addPerson({ id: null, name: line.customerName })
+  }
+  if (customer) addPerson(customer)
+
+  // A bill whose earlier rounds were nobody's keeps going that way without
+  // being asked every time; the names are still a tap away. Once per bill
+  const settledWhoFor = useRef<number | null>(null)
+  useEffect(() => {
+    if (ticketId === undefined || !bill.ticket || settledWhoFor.current === ticketId) return
+    settledWhoFor.current = ticketId
+    const lines = bill.ticket.lines ?? []
+    setNoCustomer(lines.length > 0 && !lines.some((l) => l.customerId || l.customerName))
+    setAskWho(false)
+  }, [ticketId, bill.ticket])
 
   // A phone shows the menu first; a bill with something on it opens on the
   // bill instead, as its own page did. Once per bill
@@ -731,6 +768,12 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const charge = () => {
     if (!online) {
       chargeOffline()
+      return
+    }
+    // A round on a bill is somebody's, or said to be nobody's: asked here
+    // when neither, so it never goes without its customer by accident
+    if (addingToTicket && !customer && !noCustomer) {
+      setAskWho(true)
       return
     }
     // A delivery waits for its terms: it never goes out as a counter sale
@@ -933,48 +976,82 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             />
           </div>
         )}
-        {addingToTicket && roomSession && roster.length >= 2 && (
-          <div className='mb-2 flex flex-col gap-1.5'>
-            <span className='text-muted-foreground text-xs font-medium'>
-              {t('whoseRound')}
+        {/* On a bill, whose round this is: everyone already on it one tap
+            away, someone new, or nobody, said outright. Send asks when it was
+            not said, so a round never goes without its customer by accident */}
+        {addingToTicket && (
+          <div
+            className={cn(
+              'flex flex-col gap-1.5 rounded-lg',
+              askWho && 'bg-amber-500/10 ring-2 ring-amber-500/60 ring-offset-4 ring-offset-background',
+            )}
+          >
+            <span
+              className={cn(
+                'text-xs font-medium',
+                askWho ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground',
+              )}
+              role={askWho ? 'alert' : undefined}
+            >
+              {askWho ? t('whoseRoundAsk') : t('whoseRound')}
             </span>
-            <div className='flex flex-wrap gap-2'>
-              {roster.map((m) => (
-                <button
-                  key={m.id}
-                  type='button'
-                  onClick={() => pickCustomer({ id: m.id, name: m.name })}
-                  className={cn(
-                    'rounded-full border px-3 py-1.5 text-sm max-md:min-h-11 max-md:px-4',
-                    customer?.id === m.id
-                      ? 'border-primary bg-primary text-primary-foreground'
-                      : 'bg-background',
-                  )}
-                >
-                  {m.name || t('guest')}
-                </button>
-              ))}
+            <div className='flex flex-wrap gap-2' role='radiogroup' aria-label={t('whoseRound')}>
+              {billPeople.map((p) => {
+                const chosen = samePerson(customer, p)
+                return (
+                  <button
+                    key={p.id ?? `name:${p.name}`}
+                    type='button'
+                    role='radio'
+                    aria-checked={chosen}
+                    onClick={() => (chosen ? setCustomer(null) : pickCustomer(p))}
+                    className={cn(
+                      'flex min-h-11 max-w-full items-center gap-1.5 rounded-full border px-4 text-sm font-medium',
+                      chosen ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted',
+                    )}
+                  >
+                    {chosen ? <Check className='size-4 shrink-0' /> : <UserRound className='size-4 shrink-0 opacity-60' />}
+                    <bdi className='truncate'>{p.name || t('guest')}</bdi>
+                  </button>
+                )
+              })}
               <button
                 type='button'
                 onClick={() => setCustomerOpen(true)}
-                className='text-muted-foreground flex items-center gap-1 rounded-full border border-dashed px-3 py-1.5 text-sm max-md:min-h-11 max-md:px-4'
+                className='text-foreground hover:bg-muted flex min-h-11 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm font-medium'
               >
-                <UserPlus className='size-4' />
-                {t('someoneElse')}
+                <UserPlus className='size-4 shrink-0' />
+                {billPeople.length > 0 ? t('someoneElse') : t('addCustomer')}
+              </button>
+              <button
+                type='button'
+                role='radio'
+                aria-checked={!customer && noCustomer}
+                onClick={() => {
+                  setCustomer(null)
+                  setNoCustomer(true)
+                  setAskWho(false)
+                }}
+                className={cn(
+                  'flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-medium',
+                  !customer && noCustomer ? 'border-foreground bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
+                )}
+              >
+                {t('noCustomer')}
               </button>
             </div>
           </div>
         )}
         {/* Who it is for */}
         <div className='flex items-center gap-2 empty:hidden'>
-          {customer ? (
+          {addingToTicket ? null : customer ? (
             <div className='min-w-0 flex-1'>
               <SelectedCustomer
                 customer={customer}
                 onRemove={() => setCustomer(null)}
               />
             </div>
-          ) : addingToTicket && roomSession && roster.length >= 2 ? null : (
+          ) : (
             <div className='min-w-0 flex-1'>
               <ChooseCustomerButton onClick={() => setCustomerOpen(true)} showOptional />
             </div>
