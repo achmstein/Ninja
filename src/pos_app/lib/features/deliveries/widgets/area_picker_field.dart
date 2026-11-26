@@ -12,6 +12,134 @@ import '../models/delivery_order.dart';
 /// The most areas offered for what was typed
 const maxAreaMatches = 8;
 
+/// Up to this many named areas are shown as buttons, one tap each; more are searched by name
+const areaButtonsMax = 12;
+
+/// The area the caller says, the same way on every till screen: a few areas
+/// are buttons to tap, many are searched by name.
+class AreaChoice extends StatelessWidget {
+  final List<DeliveryZone> zones;
+  final DeliveryZone? picked;
+
+  /// The area tapped; null when the search field's cross cleared it
+  final void Function(DeliveryZone? zone) onPick;
+
+  /// The branch's name, said with each area when they span several branches
+  final String Function(int branchId)? branchName;
+
+  const AreaChoice({super.key, required this.zones, required this.picked, required this.onPick, this.branchName});
+
+  @override
+  Widget build(BuildContext context) => zones.length <= areaButtonsMax
+      ? AreaButtons(zones: zones, picked: picked, onPick: onPick, branchName: branchName)
+      : AreaPickerField(zones: zones, picked: picked, onPick: onPick, branchName: branchName);
+}
+
+/// The named areas as buttons, each with its fee (and its branch, where
+/// several branches' areas are shown): the caller says the area, the cashier
+/// taps it. One switched off for a while, or whose branch paused, says so and
+/// takes a second tap.
+class AreaButtons extends StatefulWidget {
+  final List<DeliveryZone> zones;
+  final DeliveryZone? picked;
+  final void Function(DeliveryZone zone) onPick;
+  final String Function(int branchId)? branchName;
+
+  const AreaButtons({super.key, required this.zones, required this.picked, required this.onPick, this.branchName});
+
+  @override
+  State<AreaButtons> createState() => _AreaButtonsState();
+}
+
+class _AreaButtonsState extends State<AreaButtons> {
+  int? _armed;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final amber = AppColors.amber(theme.colors.brightness);
+    final branchName = widget.zones.map((z) => z.branchId).toSet().length > 1 ? widget.branchName : null;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(l10n.deliveryAreaLabel, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
+        const SizedBox(height: 6),
+        LayoutBuilder(
+          builder: (context, box) {
+            final columns = box.maxWidth >= 420 ? 3 : 2;
+            final width = (box.maxWidth - 8 * (columns - 1)) / columns;
+            return Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                for (final z in widget.zones)
+                  SizedBox(
+                    key: ValueKey(z.zoneId),
+                    width: width,
+                    child: FTappable(
+                      semanticsLabel: z.name.localized(context),
+                      selected: widget.picked?.zoneId == z.zoneId,
+                      onPress: () {
+                        final held = !z.on || z.branchPaused;
+                        if (held && _armed != z.zoneId) return setState(() => _armed = z.zoneId);
+                        setState(() => _armed = null);
+                        widget.onPick(z);
+                      },
+                      builder: (context, states, child) {
+                        final chosen = widget.picked?.zoneId == z.zoneId;
+                        return Container(
+                          constraints: const BoxConstraints(minHeight: 56),
+                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                          decoration: BoxDecoration(
+                            color: chosen ? theme.colors.primary.withValues(alpha: 0.06) : null,
+                            border: Border.all(color: chosen ? theme.colors.primary : theme.colors.border, width: chosen ? 1.5 : 1),
+                            borderRadius: BorderRadius.circular(Sizes.radius),
+                          ),
+                          child: child,
+                        );
+                      },
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Row(
+                            children: [
+                              Expanded(
+                                child: Text(z.name.localized(context),
+                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
+                              ),
+                              if (widget.picked?.zoneId == z.zoneId) Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
+                            ],
+                          ),
+                          Text(
+                            [
+                              if (branchName != null) branchName(z.branchId),
+                              z.fee > 0 ? money(context, z.fee) : l10n.deliveryFree,
+                            ].join(' · '),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
+                          ),
+                          if (!z.on || z.branchPaused)
+                            Text(
+                              _armed == z.zoneId ? l10n.deliveryAreaOffTapAgain : (!z.on ? l10n.deliveryAreaOff : l10n.deliveryBranchPaused),
+                              style: theme.typography.xs.copyWith(color: amber, fontWeight: FontWeight.w600),
+                            ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+            );
+          },
+        ),
+      ],
+    );
+  }
+}
+
 /// The areas whose name, in either language, holds every word typed: spelled
 /// as the server's name search reads names (Arabic letter variants and
 /// diacritics set aside), in the list's own order, the first few only.

@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { useBranchName } from '@/features/branch/use-branch-name'
 import { AddressSearchField } from '@/features/deliveries/address-search-field'
-import { AreaPicker } from '@/features/deliveries/area-picker'
+import { AreaChoice } from '@/features/deliveries/area-picker'
 import { useAddressLine, useDistanceText } from '@/features/deliveries/delivery-details'
-import { emptyDelivery, useSale, type SaleDelivery } from '@/features/sale/cart'
+import { PinQualityLabel } from '@/features/deliveries/pin-quality'
+import { emptyDelivery, useSale, type PinSource, type SaleDelivery } from '@/features/sale/cart'
 import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, toSaleZone, validatePhoneDelivery } from '@/features/sale/sale-delivery'
 import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { API_VERSION } from '@/lib/api-client'
@@ -121,6 +122,8 @@ export function CallCentre() {
       location: a.latitude != null && a.longitude != null ? `${toNumber(a.latitude)}, ${toNumber(a.longitude)}` : '',
       latitude: null,
       longitude: null,
+      // An earlier address keeps where its pin came from: the customer's own, a rider's, or a search
+      pinSource: (a.pinSource as PinSource | undefined) ?? null,
     })
   }
 
@@ -220,12 +223,13 @@ export function CallCentre() {
             settles the branch and what delivering there costs, whatever the map says */}
         {zones.length > 0 && (
           <Labelled id={`${ids}-area`} label={t('deliveryAreaLabel')}>
-            <AreaPicker
+            <AreaChoice
               id={`${ids}-area`}
               zones={zones}
               value={area ? toSaleZone(area) : null}
               onPick={(zone) => {
                 setConfirmingPaused(null)
+                setAreaOff(false)
                 setAreaId(toNumber(zone.zoneId))
               }}
               onClear={() => {
@@ -245,6 +249,7 @@ export function CallCentre() {
             set({
               location: `${place.lat.toFixed(6)}, ${place.lng.toFixed(6)}`,
               address: form.address.trim() ? form.address : (place.address ?? '').slice(0, DELIVERY_LIMITS.address),
+              pinSource: 'Search',
             })
           }}
         />
@@ -290,10 +295,11 @@ export function CallCentre() {
           />
         </Labelled>
         {/* On the map or not: a search pick or an earlier address put it there, and it can be taken off */}
-        {location !== '' && (
-          <p className='text-muted-foreground flex items-center gap-1.5 text-sm'>
-            <MapPin className='size-3.5 shrink-0' aria-hidden />
-            {t('callCentreOnMap')}
+        {location === '' ? (
+          <PinQualityLabel source='None' pinned={false} className='self-start' />
+        ) : (
+          <p className='flex items-center gap-1.5 text-sm'>
+            <PinQualityLabel source={form.pinSource} pinned />
             <button
               type='button'
               aria-label={t('callCentreOffMap')}
@@ -302,7 +308,7 @@ export function CallCentre() {
                 setPicked(null)
                 setConfirmingPaused(null)
                 setAreaOff(false)
-                set({ location: '' })
+                set({ location: '', pinSource: null })
               }}
             >
               <X className='size-3.5' aria-hidden />

@@ -20,6 +20,8 @@ import '../deliveries/models/delivery_order.dart';
 import '../deliveries/widgets/address_search_field.dart';
 import '../deliveries/widgets/area_picker_field.dart';
 import '../deliveries/widgets/delivery_details.dart';
+import '../deliveries/widgets/pin_quality.dart';
+import '../orders/models/order.dart' show PinSource;
 import '../sale/models/sale_delivery.dart';
 import '../sale/models/sale_line.dart';
 import 'call_centre_controller.dart';
@@ -53,6 +55,9 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
 
   /// The paused branch whose pick was tapped once
   int? _confirming;
+
+  /// Where the point on the map came from: an earlier address's own, or a search
+  PinSource? _pinSource;
 
   String get _country => ref.read(brandProvider).locale.country;
   CallCentreController get _controller => ref.read(callCentreControllerProvider.notifier);
@@ -94,6 +99,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
     _apartment.text = a.apartment ?? '';
     _directions.text = a.directions ?? '';
     _location.text = a.latitude != null && a.longitude != null ? '${a.latitude}, ${a.longitude}' : '';
+    _pinSource = a.pinSource;
     setState(() => _confirming = null);
     // With its point on the map the nearest branch is found; without one the agent picks
     unawaited(_controller.resolve(_location.text));
@@ -134,6 +140,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               latitude: pinned ? resolution.latitude : null,
               longitude: pinned ? resolution.longitude : null,
               zone: zone == null ? null : SaleDeliveryZone.of(zone),
+              pinSource: pinned ? (_pinSource == null || _pinSource == PinSource.none ? PinSource.search : _pinSource) : null,
             )
           : null,
     );
@@ -281,7 +288,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             // picks its branch and its fee, with no point on the map needed
             if (call.zones.isNotEmpty) ...[
               const SizedBox(height: 12),
-              AreaPickerField(
+              AreaChoice(
                 zones: call.zones,
                 picked: zone,
                 branchName: nameOf,
@@ -298,6 +305,7 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
               AddressSearchField(
                 onPick: (place) {
                   _location.text = place.locationText;
+                  _pinSource = PinSource.search;
                   if (_street.text.trim().isEmpty && place.address != null) _street.text = place.address!;
                   setState(() => _confirming = null);
                   _controller.resolve(_location.text);
@@ -322,17 +330,18 @@ class _CallCentreScreenState extends ConsumerState<CallCentreScreen> {
             field(_directions, l10n.deliveryDirectionsLabel, hint: l10n.deliveryDirectionsHint),
             const SizedBox(height: 12),
             // On the map or not: a search pick or an earlier address put it there, and it can be taken off
-            if (_location.text.trim().isNotEmpty)
+            if (_location.text.trim().isEmpty)
+              const Align(alignment: AlignmentDirectional.centerStart, child: PinQualityLabel(quality: PinSource.none))
+            else
               Row(
                 children: [
-                  Icon(FIcons.mapPin, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-                  const SizedBox(width: 6),
-                  Text(l10n.callCentreOnMap, style: muted),
+                  PinQualityLabel(quality: _pinSource == null || _pinSource == PinSource.none ? PinSource.search : _pinSource!),
                   const SizedBox(width: 4),
                   FTappable(
                     semanticsLabel: l10n.callCentreOffMap,
                     onPress: () {
                       _location.clear();
+                      _pinSource = null;
                       setState(() => _confirming = null);
                       _controller.resolve('');
                     },

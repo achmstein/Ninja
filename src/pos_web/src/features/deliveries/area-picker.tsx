@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { MapPinned, X } from 'lucide-react'
+import { Check, MapPinned, X } from 'lucide-react'
 import type { StaffDeliveryZone } from '@/api/ordering/types.gen'
 import { Input } from '@/components/ui/input'
 import { useBranchName } from '@/features/branch/use-branch-name'
@@ -8,6 +8,102 @@ import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { matchAreas } from './area-match'
+
+/** Up to this many named areas are shown as buttons, one tap each; more are searched by name */
+export const AREA_BUTTONS = 12
+
+/**
+ * The area the caller says, the same way on every till screen: a few areas
+ * are buttons to tap, many are searched by name.
+ */
+export function AreaChoice({
+  id,
+  zones,
+  value,
+  onPick,
+  onClear,
+}: {
+  id: string
+  zones: readonly StaffDeliveryZone[]
+  value: SaleZone | null
+  onPick: (zone: StaffDeliveryZone) => void
+  onClear: () => void
+}) {
+  return zones.length <= AREA_BUTTONS ? (
+    <AreaButtons zones={zones} value={value} onPick={onPick} />
+  ) : (
+    <AreaPicker id={id} zones={zones} value={value} onPick={onPick} onClear={onClear} />
+  )
+}
+
+/**
+ * The named areas as buttons, each with its fee (and its branch, where
+ * several branches' areas are shown): the caller says the area, the cashier
+ * taps it. One switched off for a while, or whose branch paused, says so and
+ * takes a second tap.
+ */
+export function AreaButtons({
+  zones,
+  value,
+  onPick,
+}: {
+  zones: readonly StaffDeliveryZone[]
+  value: { id: number } | null
+  onPick: (zone: StaffDeliveryZone) => void
+}) {
+  const t = useT()
+  const money = useMoney()
+  const localized = useLocalized()
+  const branchName = useBranchName()
+  const [armed, setArmed] = useState<number | null>(null)
+  const severalBranches = new Set(zones.map((z) => toNumber(z.branchId))).size > 1
+  return (
+    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3' role='radiogroup'>
+      {zones.map((z) => {
+        const id = toNumber(z.zoneId)
+        const fee = toNumber(z.fee)
+        const chosen = value?.id === id
+        const held = !z.on || z.branchPaused
+        return (
+          <button
+            key={id}
+            type='button'
+            role='radio'
+            aria-checked={chosen}
+            onClick={() => {
+              if (held && armed !== id) return setArmed(id)
+              setArmed(null)
+              onPick(z)
+            }}
+            className={cn(
+              'flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
+              chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
+            )}
+          >
+            <span className='flex w-full items-center gap-1.5 font-medium'>
+              <bdi className='min-w-0 flex-1 truncate'>{localized(z.name)}</bdi>
+              {chosen && <Check className='text-primary size-4 shrink-0' aria-hidden />}
+            </span>
+            <span className='text-muted-foreground w-full truncate text-xs tabular-nums'>
+              {severalBranches && (
+                <>
+                  <bdi>{branchName(toNumber(z.branchId))}</bdi>
+                  {' · '}
+                </>
+              )}
+              {fee > 0 ? money(fee) : t('deliveryFree')}
+            </span>
+            {held && (
+              <span className='text-xs font-medium text-amber-700 dark:text-amber-400'>
+                {armed === id ? t('deliveryAreaOffTapAgain') : !z.on ? t('deliveryAreaOff') : t('deliveryBranchPaused')}
+              </span>
+            )}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 /**
  * The area the caller says they live in, found by name among the named areas

@@ -17,7 +17,7 @@ import {
   UserRound,
 } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import type { DeliveryAlternative, KnownAddressView, StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, KnownAddressView } from '@/api/ordering/types.gen'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -45,7 +45,7 @@ import { useDebounced } from '@/lib/use-debounced'
 import { cn } from '@/lib/utils'
 import { useAddressLine, useDistanceText } from './delivery-details'
 import { AddressSearchField } from './address-search-field'
-import { AreaPicker } from './area-picker'
+import { AreaChoice } from './area-picker'
 import { outOfRangeKey } from './delivery-format'
 import { LocationLink } from './location-link'
 import { PinQualityLabel } from './pin-quality'
@@ -65,9 +65,6 @@ type PhoneDeliveryFormProps = {
 
 /** The three steps of a phone call: who is calling, where it goes, then a look over it and send */
 type Step = 'who' | 'where' | 'check'
-
-/** Up to this many named areas are shown as buttons, one tap each; more are searched by name */
-const AREA_BUTTONS = 12
 
 /**
  * A delivery the till takes over the phone, in the order the call goes.
@@ -294,31 +291,20 @@ function PhoneDeliveryBody({ initial, customer, itemsTotal, onSave }: Omit<Phone
           {zones.length > 0 && (
             <div className='flex flex-col gap-1.5'>
               <Label htmlFor={`${ids}-area`}>{t('deliveryAreaLabel')}</Label>
-              {zones.length <= AREA_BUTTONS ? (
-                <AreaButtons
-                  zones={zones}
-                  value={zone}
-                  onPick={(picked) => {
-                    setSendTo(null)
-                    setAreaOff(false)
-                    set({ zone: toSaleZone(picked) })
-                  }}
-                />
-              ) : (
-                <AreaPicker
-                  id={`${ids}-area`}
-                  zones={zones}
-                  value={zone}
-                  onPick={(picked) => {
-                    setSendTo(null)
-                    set({ zone: toSaleZone(picked) })
-                  }}
-                  onClear={() => {
-                    setAreaOff(true)
-                    set({ zone: null })
-                  }}
-                />
-              )}
+              <AreaChoice
+                id={`${ids}-area`}
+                zones={zones}
+                value={zone}
+                onPick={(picked) => {
+                  setSendTo(null)
+                  setAreaOff(false)
+                  set({ zone: toSaleZone(picked) })
+                }}
+                onClear={() => {
+                  setAreaOff(true)
+                  set({ zone: null })
+                }}
+              />
             </div>
           )}
 
@@ -627,64 +613,6 @@ function WhoStep({
         )}
       </Button>
     </>
-  )
-}
-
-/**
- * The branch's named areas as buttons, each with its fee: the caller says the
- * area, the cashier taps it. One switched off for a while, or whose branch
- * paused, says so and takes a second tap.
- */
-function AreaButtons({
-  zones,
-  value,
-  onPick,
-}: {
-  zones: readonly StaffDeliveryZone[]
-  value: { id: number } | null
-  onPick: (zone: StaffDeliveryZone) => void
-}) {
-  const t = useT()
-  const money = useMoney()
-  const localized = useLocalized()
-  const [armed, setArmed] = useState<number | null>(null)
-  return (
-    <div className='grid grid-cols-2 gap-2 sm:grid-cols-3' role='radiogroup'>
-      {zones.map((z) => {
-        const id = toNumber(z.zoneId)
-        const fee = toNumber(z.fee)
-        const chosen = value?.id === id
-        const held = !z.on || z.branchPaused
-        return (
-          <button
-            key={id}
-            type='button'
-            role='radio'
-            aria-checked={chosen}
-            onClick={() => {
-              if (held && armed !== id) return setArmed(id)
-              setArmed(null)
-              onPick(z)
-            }}
-            className={cn(
-              'flex min-h-14 flex-col items-start justify-center rounded-lg border px-3 py-2 text-start',
-              chosen ? 'border-primary bg-primary/5 ring-primary ring-1' : 'hover:bg-muted',
-            )}
-          >
-            <span className='flex w-full items-center gap-1.5 font-medium'>
-              <bdi className='min-w-0 flex-1 truncate'>{localized(z.name)}</bdi>
-              {chosen && <Check className='text-primary size-4 shrink-0' aria-hidden />}
-            </span>
-            <span className='text-muted-foreground text-xs tabular-nums'>{fee > 0 ? money(fee) : t('deliveryFree')}</span>
-            {held && (
-              <span className='text-xs font-medium text-amber-700 dark:text-amber-400'>
-                {armed === id ? t('deliveryAreaOffTapAgain') : !z.on ? t('deliveryAreaOff') : t('deliveryBranchPaused')}
-              </span>
-            )}
-          </button>
-        )
-      })}
-    </div>
   )
 }
 

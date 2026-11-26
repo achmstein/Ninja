@@ -28,9 +28,6 @@ import 'pin_quality.dart';
 /// Enough digits to be worth asking whether the caller had deliveries before
 const _minPhoneDigits = 8;
 
-/// Up to this many named areas are shown as buttons, one tap each; more are searched by name
-const _areaButtons = 12;
-
 /// The delivery a cashier took down, and who it is for: the account found
 /// (or already on the sale), else the name the caller gave
 typedef DeliveryFormResult = ({SaleDelivery delivery, SaleCustomer customer});
@@ -448,10 +445,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         if (zones.isNotEmpty) ...[
-          if (zones.length <= _areaButtons)
-            _AreaButtons(zones: zones, picked: form.zone, onPick: pick)
-          else
-            AreaPickerField(zones: zones, picked: form.zone, onPick: pick),
+          AreaChoice(zones: zones, picked: form.zone, onPick: pick),
           const SizedBox(height: 12),
         ],
         _field(_street, l10n.deliveryStreetLabel,
@@ -834,101 +828,6 @@ class _StepBar extends StatelessWidget {
             ),
           ),
         ],
-      ],
-    );
-  }
-}
-
-/// The branch's named areas as buttons, each with its fee: the caller says
-/// the area, the cashier taps it. One switched off for a while, or whose
-/// branch paused, says so and takes a second tap.
-class _AreaButtons extends StatefulWidget {
-  final List<DeliveryZone> zones;
-  final DeliveryZone? picked;
-  final void Function(DeliveryZone zone) onPick;
-
-  const _AreaButtons({required this.zones, required this.picked, required this.onPick});
-
-  @override
-  State<_AreaButtons> createState() => _AreaButtonsState();
-}
-
-class _AreaButtonsState extends State<_AreaButtons> {
-  int? _armed;
-
-  @override
-  Widget build(BuildContext context) {
-    final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
-    final amber = AppColors.amber(theme.colors.brightness);
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.stretch,
-      mainAxisSize: MainAxisSize.min,
-      children: [
-        Text(l10n.deliveryAreaLabel, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500)),
-        const SizedBox(height: 6),
-        LayoutBuilder(
-          builder: (context, box) {
-            final columns = box.maxWidth >= 420 ? 3 : 2;
-            final width = (box.maxWidth - 8 * (columns - 1)) / columns;
-            return Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final z in widget.zones)
-                  SizedBox(
-                    key: ValueKey(z.zoneId),
-                    width: width,
-                    child: FTappable(
-                      semanticsLabel: z.name.localized(context),
-                      selected: widget.picked?.zoneId == z.zoneId,
-                      onPress: () {
-                        final held = !z.on || z.branchPaused;
-                        if (held && _armed != z.zoneId) return setState(() => _armed = z.zoneId);
-                        setState(() => _armed = null);
-                        widget.onPick(z);
-                      },
-                      builder: (context, states, child) {
-                        final chosen = widget.picked?.zoneId == z.zoneId;
-                        return Container(
-                          constraints: const BoxConstraints(minHeight: 56),
-                          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                          decoration: BoxDecoration(
-                            color: chosen ? theme.colors.primary.withValues(alpha: 0.06) : null,
-                            border: Border.all(color: chosen ? theme.colors.primary : theme.colors.border, width: chosen ? 1.5 : 1),
-                            borderRadius: BorderRadius.circular(Sizes.radius),
-                          ),
-                          child: child,
-                        );
-                      },
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Row(
-                            children: [
-                              Expanded(
-                                child: Text(z.name.localized(context),
-                                    maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
-                              ),
-                              if (widget.picked?.zoneId == z.zoneId) Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primary),
-                            ],
-                          ),
-                          Text(z.fee > 0 ? money(context, z.fee) : l10n.deliveryFree,
-                              style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground)),
-                          if (!z.on || z.branchPaused)
-                            Text(
-                              _armed == z.zoneId ? l10n.deliveryAreaOffTapAgain : (!z.on ? l10n.deliveryAreaOff : l10n.deliveryBranchPaused),
-                              style: theme.typography.xs.copyWith(color: amber, fontWeight: FontWeight.w600),
-                            ),
-                        ],
-                      ),
-                    ),
-                  ),
-              ],
-            );
-          },
-        ),
       ],
     );
   }
