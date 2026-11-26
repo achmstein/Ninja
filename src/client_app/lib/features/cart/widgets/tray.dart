@@ -462,10 +462,13 @@ class OrderButton extends ConsumerWidget {
       listenable: motion,
       builder: (context, _) {
         final open = motion.expanded;
+        // Said shut or open: shut, a tap still opens the order to add to it
         final state = busy
             ? 'busy'
+            : short > 0
+            ? 'short'
             : open
-            ? (short > 0 ? 'short' : 'place')
+            ? 'place'
             : 'order';
         final ink = c.primaryForeground;
         final label = context.localeText(theme.typography.body.copyWith(color: ink, fontWeight: FontWeight.w700));
