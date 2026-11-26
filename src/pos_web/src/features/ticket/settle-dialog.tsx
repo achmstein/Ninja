@@ -174,7 +174,10 @@ export function SettleDialog({
 
   const total = toNumber(ticket.total)
   // What the till takes: the total less what guests paid online
-  const online = onlineSummary(ticket.total, onlinePayments)
+  // ...and less what the till itself took earlier, in parts, while the bill stayed open
+  const partPaid = toNumber(ticket.partPaid)
+  const onlineOnly = onlineSummary(ticket.total, onlinePayments)
+  const online = { ...onlineOnly, remaining: Math.max(0, +(onlineOnly.remaining - partPaid).toFixed(2)) }
   const due = online.remaining
 
   // Everyone this bill can go on, with their share. The people in the room
@@ -296,6 +299,12 @@ export function SettleDialog({
             tender: sent[i]?.tenderName ?? 'Cash',
             amount: toNumber(p.amount),
             customerName: sent[i]?.customerName,
+          })),
+          // Taken earlier in parts: on the receipt as the payments they were
+          ...(ticket.partPayments ?? []).map((p) => ({
+            tender: (p.tender as TenderName) ?? 'Cash',
+            amount: toNumber(p.amount),
+            customerName: p.payerName ?? undefined,
           })),
           // The server added these to the settle; the receipt shows them
           ...(onlinePayments ?? [])

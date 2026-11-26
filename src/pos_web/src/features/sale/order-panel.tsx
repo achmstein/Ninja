@@ -56,6 +56,7 @@ export function OrderPanel({
   note,
   onNote,
   total,
+  partPaid,
   deliveryFee,
   primary,
   onClear,
@@ -85,6 +86,8 @@ export function OrderPanel({
   onNote: (note: string) => void
   /** What the order comes to: the whole bill with what is new, or the new sale */
   total: number
+  /** Taken already in part payments, on a bill still open */
+  partPaid: number
   deliveryFee: number
   primary: PrimaryAction
   onClear: () => void
@@ -233,6 +236,13 @@ export function OrderPanel({
           <span className='text-muted-foreground type-detail'>{t('total')}</span>
           <span className='type-figure'>{money(total)}</span>
         </div>
+        {/* Part of it is paid already: what was taken, and what is left to take */}
+        {partPaid > 0 && (
+          <div className='type-detail -mt-2 flex items-baseline justify-between'>
+            <span className='font-medium text-emerald-700 dark:text-emerald-400'>{t('partPaidSoFar', { amount: money(partPaid) })}</span>
+            <span className='font-semibold tabular-nums'>{t('leftToPay', { amount: money(Math.max(0, total - partPaid)) })}</span>
+          </div>
+        )}
         {lines.length > 0 && (
           <Input
             value={note}

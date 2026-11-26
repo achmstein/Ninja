@@ -74,7 +74,7 @@ export function NewLineRow({
 
 /** Who a sent line was for, as the bill keeps them apart: an account, else the name told, else nobody */
 const whoKey = (line: TicketLineView) =>
-  line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : ''
+  (line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : '') + (line.paid ? '|paid' : '')
 
 /** The lines being picked, to move to another bill or to name: which, and the tap that picks one */
 export type LineSelection = { chosen: ReadonlySet<number>; onToggle: (lineId: number) => void }
@@ -108,7 +108,7 @@ export function SentLines({
       {shown.map((line) => {
         const id = toNumber(line.id)
         const negative = toNumber(line.total) < 0
-        const pickable = !!selection && line.source !== 'SessionTime'
+        const pickable = !!selection && line.source !== 'SessionTime' && !line.paid
         const picked = pickable && selection.chosen.has(id)
         const body = (
           <>
@@ -136,6 +136,11 @@ export function SentLines({
                 </span>
               )}
             </span>
+            {line.paid && (
+              <span className='type-caption shrink-0 rounded-full bg-emerald-500/10 px-2 font-semibold text-emerald-700 dark:text-emerald-400'>
+                {t('paidTag')}
+              </span>
+            )}
             <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>
               {money(line.total)}
             </span>

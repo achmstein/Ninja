@@ -23,6 +23,7 @@ import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLin
 import { CustomizeDialog } from './customize-dialog'
 import { ItemPad } from './item-pad'
 import { OrderPanel, type PrimaryAction } from './order-panel'
+import { PartPaymentSheet, type PartToPay } from './part-payment-sheet'
 import { PayWhoSheet, payersOf, type Payer } from './pay-who-sheet'
 import { PriceReviewDialog } from './price-review-dialog'
 import { SendSheet } from './send-sheet'
@@ -192,15 +193,21 @@ export function SalePad({
   // and never under a running clock, whose time is not on the bill yet
   const payers = payersOf(sent)
   const pay = () => (payers.length > 1 && !bill.runningStay ? setAskingWho(true) : setPaying(true))
-  /** One person's part becomes a bill of its own, opened to be paid at once; the rest stays here */
-  const payFor = async (payer: Payer) => {
-    try {
-      const part = await billLines.move(payer.lineIds, { kind: 'counter', label: payer.name ?? title })
-      setAskingWho(false)
-      navigate({ to: '/order/$ticketId', params: { ticketId: String(part) }, search: { pay: true, back: ticketId } })
-    } catch (error) {
-      handleServerError(error)
-    }
+  // What is still to pay: the bill less what was taken in parts already
+  const partPaid = toNumber(bill.ticket?.partPaid)
+  const leftToPay = bill.ticket ? Math.max(0, Math.round((toNumber(bill.ticket.total) - partPaid) * 100) / 100) : 0
+  const [part, setPart] = useState<PartToPay | null>(null)
+  /**
+   * One person's part is paid on its own, the bill staying open for the rest.
+   * Their items carry their share of the bill's service, tax and discount. The
+   * last part is the bill's rest: that is its ordinary payment, which closes it
+   */
+  const payFor = (payer: Payer) => {
+    setAskingWho(false)
+    const menu = sent.reduce((sum, line) => sum + toNumber(line.total), 0)
+    const share = menu > 0 ? Math.round(payer.subtotal * (toNumber(bill.ticket?.total) / menu) * 100) / 100 : 0
+    if (share <= 0 || share >= leftToPay) return setPaying(true)
+    setPart({ name: payer.name, lineIds: payer.lineIds, amount: share })
   }
   // Split off to be paid: the payment opens as soon as the bill is read. Once
   const paidOnArrival = useRef(false)
@@ -282,6 +289,7 @@ export function SalePad({
       note={note}
       onNote={setNote}
       total={total}
+      partPaid={partPaid}
       deliveryFee={saleDelivery.fee}
       primary={primary}
       onClear={clear}
@@ -416,14 +424,21 @@ export function SalePad({
             open={askingWho}
             onOpenChange={setAskingWho}
             title={title}
-            total={toNumber(bill.ticket.total)}
+            total={leftToPay}
             payers={payers}
-            busy={billLines.moving}
+            partPaid={partPaid > 0}
             onEverything={() => {
               setAskingWho(false)
               setPaying(true)
             }}
             onPayer={payFor}
+          />
+          <PartPaymentSheet
+            ticketId={toNumber(bill.ticket.id)}
+            title={title}
+            part={part}
+            onOpenChange={(open) => !open && setPart(null)}
+            onTaken={() => setPart(null)}
           />
           <BillPayment
             ticket={bill.ticket}

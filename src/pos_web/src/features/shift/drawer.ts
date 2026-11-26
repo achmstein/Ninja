@@ -7,6 +7,8 @@ export type DrawerTerm = {
     | 'openingFloat'
     | 'cashTakenNet'
     | 'cashTabPayments'
+    | 'cashPartPayments'
+    | 'cashPartPaymentsReturned'
     | 'payInsTotal'
     | 'payOutsTotal'
     | 'cashRefunds'
@@ -32,7 +34,8 @@ export type DrawerFormula = {
  * by term (those of zero left out, but for the float and the cash taken),
  * so the report shows parts that add up to Expected: the float,
  * the cash taken for bills net of the change handed back, cash paid against
- * tabs, pay-ins, less pay-outs and cash refunds. Card, InstaPay, online and
+ * tabs and for parts of open bills, pay-ins, less pay-outs, cash refunds
+ * and part payments given back. Card, InstaPay, online and
  * account money never touch the drawer.
  */
 export function drawerFormula(shift: ShiftView): DrawerFormula {
@@ -51,6 +54,9 @@ export function drawerFormula(shift: ShiftView): DrawerFormula {
       amount: round(cashTendered - toNumber(shift.changeGiven)),
     },
     { key: 'cashTabPayments', sign: 1, amount: toNumber(shift.cashTabPayments) },
+    // Cash taken for part of a bill still open went in when it was taken, and out again if given back
+    { key: 'cashPartPayments', sign: 1, amount: toNumber(shift.cashPartPayments) },
+    { key: 'cashPartPaymentsReturned', sign: -1, amount: toNumber(shift.cashPartPaymentsReturned) },
     { key: 'payInsTotal', sign: 1, amount: toNumber(shift.payInsTotal) },
     { key: 'payOutsTotal', sign: -1, amount: toNumber(shift.payOutsTotal) },
     { key: 'cashRefunds', sign: -1, amount: toNumber(shift.cashRefunds) },

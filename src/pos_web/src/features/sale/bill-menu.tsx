@@ -1,7 +1,9 @@
 import { useState } from 'react'
 import { useAuth } from 'react-oidc-context'
-import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2 } from 'lucide-react'
-import type { TicketDetail } from '@/api/sales/types.gen'
+import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2, Undo2 } from 'lucide-react'
+import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { returnPartPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import type { PartPaymentView, TicketDetail } from '@/api/sales/types.gen'
 import type { StayViewModel } from '@/api/spaces/types.gen'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { Button } from '@/components/ui/button'
@@ -19,7 +21,10 @@ import { DiscardTicketDialog } from '@/features/ticket/discard-dialog'
 import { DiscountDialog } from '@/features/ticket/discount-dialog'
 import { KitchenReprintDialog, useCanReprintKitchen } from '@/features/ticket/kitchen-reprint'
 import { VoidTicketDialog } from '@/features/ticket/void-dialog'
+import { API_VERSION } from '@/lib/api-client'
+import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import { useMoney, toNumber } from '@/lib/money'
 import { orderIdsOn } from '@/lib/stock-disposition'
 
@@ -52,6 +57,20 @@ export function BillMenu({
   const [discardOpen, setDiscardOpen] = useState(false)
   const [voidOpen, setVoidOpen] = useState(false)
   const [voidGuardOpen, setVoidGuardOpen] = useState(false)
+  // A part payment an owner is giving back: the money leaves this shift's drawer
+  const [givingBack, setGivingBack] = useState<PartPaymentView | null>(null)
+  const queryClient = useQueryClient()
+  const giveBack = useMutation({
+    ...returnPartPaymentMutation(),
+    onError: handleServerError,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
+      queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
+      toast.success(t('partGivenBack'))
+    },
+  })
+  const isOwner = getRealmRoles(auth.user).includes('Owner')
+  const parts = isOwner ? (ticket.partPayments ?? []) : []
 
   const ticketId = toNumber(ticket.id)
   const lines = ticket.lines ?? []
@@ -61,7 +80,7 @@ export function BillMenu({
   // discard (a room's only once its clock has stopped); with lines on it,
   // only an owner's void, with its reason, takes it off the floor
   const canDiscard = lines.length === 0 && !sending && (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
-  const canVoid = !canDiscard && getRealmRoles(auth.user).includes('Owner')
+  const canVoid = !canDiscard && isOwner
 
   const item = 'h-12 gap-3 px-3 text-base'
   return (
@@ -102,6 +121,16 @@ export function BillMenu({
               {t('splitOrMove')}
             </DropdownMenuItem>
           )}
+          {/* What was taken in parts, each to give back: an owner's to do, as a void is */}
+          {parts.map((p) => (
+            <DropdownMenuItem key={String(p.id)} className={item} onSelect={() => setGivingBack(p)}>
+              <Undo2 className='size-5' />
+              <span className='min-w-0 flex-1 truncate'>
+                {t('partGiveBack', { amount: money(p.amount) })}
+                {p.payerName ? <bdi> · {p.payerName}</bdi> : null}
+              </span>
+            </DropdownMenuItem>
+          ))}
           {canDiscard ? (
             <DropdownMenuItem variant='destructive' className={item} onSelect={() => setDiscardOpen(true)}>
               <Trash2 className='size-5' />
@@ -136,6 +165,23 @@ export function BillMenu({
         destructive
         onAction={() => {
           if (runningStay) stayActions.endStay(toNumber(runningStay.id))
+        }}
+      />
+      <ConfirmDialog
+        open={givingBack !== null}
+        onOpenChange={(open) => !open && setGivingBack(null)}
+        title={t('partGiveBackTitle', { amount: money(givingBack?.amount ?? 0), name: givingBack?.payerName ?? t('guest') })}
+        description={t('partGiveBackHint')}
+        cancelLabel={t('goBack')}
+        actionLabel={t('partGiveBack', { amount: money(givingBack?.amount ?? 0) })}
+        destructive
+        onAction={() => {
+          if (!givingBack) return
+          giveBack.mutate({
+            path: { id: ticketId, partPaymentId: toNumber(givingBack.id) },
+            query: { 'api-version': API_VERSION },
+            headers: { 'x-requestid': crypto.randomUUID() },
+          })
         }}
       />
       {/* What Print bill puts on paper */}

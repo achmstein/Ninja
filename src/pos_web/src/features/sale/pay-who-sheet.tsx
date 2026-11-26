@@ -1,4 +1,3 @@
-import { Loader2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -10,13 +9,15 @@ export type Payer = { key: string; name: string | null; lineIds: number[]; subto
 /**
  * Who could pay their own part of this bill: each person something was sent
  * for, and the lines that were nobody's as the bill's own. The room's time is
- * the room's: it is never one person's to carry off, and stays with the bill.
+ * the room's: it is never one person's own, and is paid with the bill's rest.
+ * Lines already paid for are done.
  * Fewer than two, and there is nothing to choose between.
  */
 export function payersOf(lines: readonly TicketLineView[]): Payer[] {
   const payers: Payer[] = []
   for (const line of lines) {
-    if (line.source === 'SessionTime') continue
+    // Paid for already, or the room's time: neither is anybody's part to pay now
+    if (line.source === 'SessionTime' || line.paid) continue
     const key = line.customerId ? `id:${line.customerId}` : line.customerName ? `name:${line.customerName}` : ''
     let payer = payers.find((p) => p.key === key)
     if (!payer) {
@@ -32,8 +33,8 @@ export function payersOf(lines: readonly TicketLineView[]): Payer[] {
 
 /**
  * "Who is paying?", asked when a bill is more than one person's: everything
- * in one payment, or one person's own part. A part is paid as a bill of its
- * own, split off the moment it is picked, and the rest stays open.
+ * in one payment, or one person's own part. A part is paid on its own and the
+ * bill stays open for the rest.
  */
 export function PayWhoSheet({
   open,
@@ -41,7 +42,7 @@ export function PayWhoSheet({
   title,
   total,
   payers,
-  busy,
+  partPaid = false,
   onEverything,
   onPayer,
 }: {
@@ -51,8 +52,8 @@ export function PayWhoSheet({
   title: string
   total: number
   payers: Payer[]
-  /** A part is being split off */
-  busy: boolean
+  /** Part of the bill is paid already: "everything" is then the rest */
+  partPaid?: boolean
   onEverything: () => void
   onPayer: (payer: Payer) => void
 }) {
@@ -67,16 +68,15 @@ export function PayWhoSheet({
         <DialogHeader>
           <DialogTitle className='flex items-center gap-2'>
             {t('payWhoTitle')}
-            {busy && <Loader2 className='size-4 animate-spin' aria-hidden />}
           </DialogTitle>
         </DialogHeader>
         <div className='flex flex-col overflow-hidden rounded-lg border'>
-          <button type='button' className={row} disabled={busy} onClick={onEverything}>
-            <span className='type-heading min-w-0 flex-1'>{t('payEverything')}</span>
+          <button type='button' className={row} onClick={onEverything}>
+            <span className='type-heading min-w-0 flex-1'>{partPaid ? t('payTheRest') : t('payEverything')}</span>
             <span className='type-heading shrink-0 tabular-nums'>{money(total)}</span>
           </button>
           {payers.map((payer) => (
-            <button key={payer.key} type='button' className={row} disabled={busy} onClick={() => onPayer(payer)}>
+            <button key={payer.key} type='button' className={row} onClick={() => onPayer(payer)}>
               <span className='min-w-0 flex-1'>
                 <span className='type-heading block truncate'>
                   <bdi>{payer.name ?? title}</bdi>
