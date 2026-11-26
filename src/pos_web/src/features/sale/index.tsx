@@ -4,7 +4,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import {
   ArrowLeft,
   ArrowRight,
-  Check,
   Ellipsis,
   Loader2,
   Minus,
@@ -12,7 +11,6 @@ import {
   Search,
   Sparkles,
   Trash2,
-  UserPlus,
   UserRound,
   X,
 } from 'lucide-react'
@@ -411,13 +409,7 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
       // A browser that refuses storage just loses the convenience
     }
   }
-  // On a bill, the cashier says whose round it is, or that it is nobody's:
-  // Send asks (once) when neither was said
-  const [noCustomer, setNoCustomer] = useState(false)
-  const [askWho, setAskWho] = useState(false)
   const pickCustomer = (picked: SaleCustomer) => {
-    setNoCustomer(false)
-    setAskWho(false)
     setCustomer(picked)
     rememberLast(picked)
     if (roomSession && picked.id && !roster.some((m) => m.id === picked.id)) {
@@ -471,6 +463,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
         (ownerId && roster.find((m) => m.id === ownerId)) ||
         (roster.length === 1 ? roster[0] : null)
       if (pick) only = { id: pick.id, name: pick.name }
+    } else if (byId.size > 1) {
+      // Several people on the bill: the one the last round went to is the
+      // likeliest for the next, and the others are a tap away under the box
+      const last = [...(ticket.lines ?? [])].reverse().find((l) => l.customerId)
+      if (last) only = { id: String(last.customerId), name: last.customerName ?? '' }
     }
     if (only) setCustomer(only)
   }, [
@@ -589,18 +586,8 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
     if (line.customerId) addPerson({ id: String(line.customerId), name: line.customerName ?? '' })
     else if (line.customerName) addPerson({ id: null, name: line.customerName })
   }
-  if (customer) addPerson(customer)
-
-  // A bill whose earlier rounds were nobody's keeps going that way without
-  // being asked every time; the names are still a tap away. Once per bill
-  const settledWhoFor = useRef<number | null>(null)
-  useEffect(() => {
-    if (ticketId === undefined || !bill.ticket || settledWhoFor.current === ticketId) return
-    settledWhoFor.current = ticketId
-    const lines = bill.ticket.lines ?? []
-    setNoCustomer(lines.length > 0 && !lines.some((l) => l.customerId || l.customerName))
-    setAskWho(false)
-  }, [ticketId, bill.ticket])
+  // The ones a tap changes the round to: everyone but who it is for now
+  const otherPeople = billPeople.filter((p) => !samePerson(customer, p))
 
   // A phone shows the menu first; a bill with something on it opens on the
   // bill instead, as its own page did. Once per bill
@@ -768,12 +755,6 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
   const charge = () => {
     if (!online) {
       chargeOffline()
-      return
-    }
-    // A round on a bill is somebody's, or said to be nobody's: asked here
-    // when neither, so it never goes without its customer by accident
-    if (addingToTicket && !customer && !noCustomer) {
-      setAskWho(true)
       return
     }
     // A delivery waits for its terms: it never goes out as a counter sale
@@ -976,75 +957,11 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             />
           </div>
         )}
-        {/* On a bill, whose round this is: everyone already on it one tap
-            away, someone new, or nobody, said outright. Send asks when it was
-            not said, so a round never goes without its customer by accident */}
-        {addingToTicket && (
-          <div
-            className={cn(
-              'flex flex-col gap-1.5 rounded-lg',
-              askWho && 'bg-amber-500/10 ring-2 ring-amber-500/60 ring-offset-4 ring-offset-background',
-            )}
-          >
-            <span
-              className={cn(
-                'text-xs font-medium',
-                askWho ? 'text-amber-700 dark:text-amber-400' : 'text-muted-foreground',
-              )}
-              role={askWho ? 'alert' : undefined}
-            >
-              {askWho ? t('whoseRoundAsk') : t('whoseRound')}
-            </span>
-            <div className='flex flex-wrap gap-2' role='radiogroup' aria-label={t('whoseRound')}>
-              {billPeople.map((p) => {
-                const chosen = samePerson(customer, p)
-                return (
-                  <button
-                    key={p.id ?? `name:${p.name}`}
-                    type='button'
-                    role='radio'
-                    aria-checked={chosen}
-                    onClick={() => (chosen ? setCustomer(null) : pickCustomer(p))}
-                    className={cn(
-                      'flex min-h-11 max-w-full items-center gap-1.5 rounded-full border px-4 text-sm font-medium',
-                      chosen ? 'border-primary bg-primary text-primary-foreground' : 'bg-background hover:bg-muted',
-                    )}
-                  >
-                    {chosen ? <Check className='size-4 shrink-0' /> : <UserRound className='size-4 shrink-0 opacity-60' />}
-                    <bdi className='truncate'>{p.name || t('guest')}</bdi>
-                  </button>
-                )
-              })}
-              <button
-                type='button'
-                onClick={() => setCustomerOpen(true)}
-                className='text-foreground hover:bg-muted flex min-h-11 items-center gap-1.5 rounded-full border border-dashed px-4 text-sm font-medium'
-              >
-                <UserPlus className='size-4 shrink-0' />
-                {billPeople.length > 0 ? t('someoneElse') : t('addCustomer')}
-              </button>
-              <button
-                type='button'
-                role='radio'
-                aria-checked={!customer && noCustomer}
-                onClick={() => {
-                  setCustomer(null)
-                  setNoCustomer(true)
-                  setAskWho(false)
-                }}
-                className={cn(
-                  'flex min-h-11 items-center gap-1.5 rounded-full border px-4 text-sm font-medium',
-                  !customer && noCustomer ? 'border-foreground bg-foreground text-background' : 'text-muted-foreground hover:bg-muted',
-                )}
-              >
-                {t('noCustomer')}
-              </button>
-            </div>
-          </div>
-        )}
-        {/* Who it is for */}
+        {/* Who it is for: one box, as on a new sale. On a bill the people
+            already on it sit under the box, a tap each, so the next round
+            changes hands without a search */}
         <div className='flex items-center gap-2 empty:hidden'>
-          {addingToTicket ? null : customer ? (
+          {customer ? (
             <div className='min-w-0 flex-1'>
               <SelectedCustomer
                 customer={customer}
@@ -1053,10 +970,26 @@ export function SalePad({ ticketId }: { ticketId?: number }) {
             </div>
           ) : (
             <div className='min-w-0 flex-1'>
-              <ChooseCustomerButton onClick={() => setCustomerOpen(true)} showOptional />
+              <ChooseCustomerButton onClick={() => setCustomerOpen(true)} showOptional={!addingToTicket} />
             </div>
           )}
         </div>
+        {addingToTicket && otherPeople.length > 0 && (
+          <div className='mt-2 flex flex-wrap items-center gap-2'>
+            <span className='text-muted-foreground text-xs font-medium'>{t('alsoOnBill')}</span>
+            {otherPeople.map((p) => (
+              <button
+                key={p.id ?? `name:${p.name}`}
+                type='button'
+                onClick={() => pickCustomer(p)}
+                className='bg-background hover:bg-muted flex min-h-10 max-w-full items-center gap-1.5 rounded-full border px-3 text-sm font-medium'
+              >
+                <UserRound className='size-4 shrink-0 opacity-60' />
+                <bdi className='truncate'>{p.name || t('guest')}</bdi>
+              </button>
+            ))}
+          </div>
+        )}
         {delivery && (
           <div className='mt-2'>
             <SaleDeliverySummary
