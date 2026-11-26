@@ -308,6 +308,7 @@ export function Tray({
         busy={order.isPending}
         online={order.payAhead.online}
         disabled={order.tableUnconfirmed || (order.delivery.active && !order.delivery.ready)}
+        short={order.delivery.active && order.delivery.problem === 'minimum' ? order.delivery.short : 0}
       />
     )
   })()
@@ -733,6 +734,7 @@ function OrderButton({
   busy,
   online = false,
   disabled,
+  short = 0,
 }: {
   open: boolean
   onOpen: () => void
@@ -742,10 +744,17 @@ function OrderButton({
   online?: boolean
   /** The order cannot go yet (the table is still to be confirmed in the sheet) */
   disabled?: boolean
+  /**
+   * How much the items are short of the delivery minimum: said on the button
+   * itself, where the customer is looking, rather than only further up the
+   * order where they may never scroll
+   */
+  short?: number
 }) {
   const t = useT()
+  const price = usePrice()
   const swap = blurSwap(useReducedMotion())
-  const state = busy ? 'busy' : open ? 'place' : 'order'
+  const state = busy ? 'busy' : open ? (short > 0 ? 'short' : 'place') : 'order'
   return (
     <motion.button
       type='button'
@@ -755,14 +764,23 @@ function OrderButton({
       aria-busy={busy}
       onClick={open ? onPlace : onOpen}
       style={{ borderRadius: 24 }}
-      className='bg-primary text-primary-foreground text-body flex h-12 shrink-0 items-center gap-2 overflow-hidden px-5 font-bold whitespace-nowrap shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[opacity,scale] active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none @max-[21rem]:h-11 @max-[21rem]:px-4'
+      className={cn(
+        'bg-primary text-primary-foreground text-body flex h-12 items-center gap-2 overflow-hidden px-5 font-bold whitespace-nowrap shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[opacity,scale] active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none @max-[21rem]:h-11 @max-[21rem]:px-4',
+        // What is missing is said in full where there is room, and cut short only on the narrowest phone
+        state === 'short' ? 'min-w-0 shrink' : 'shrink-0',
+      )}
     >
       <AnimatePresence mode='popLayout' initial={false}>
-        <motion.span key={state} className='flex items-center gap-2' {...swap}>
+        <motion.span key={state} className='flex min-w-0 items-center gap-2' {...swap}>
           {state === 'busy' ? (
             <>
               <Loader2 className='size-4 animate-spin' />
               {t('ninjaSending')}
+            </>
+          ) : state === 'short' ? (
+            <>
+              <Plus className='size-4' strokeWidth={3} />
+              <span className='truncate'>{t('deliveryAddMore', { amount: price(short) })}</span>
             </>
           ) : state === 'place' ? (
             <>
