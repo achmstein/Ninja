@@ -38,8 +38,10 @@ class BillPeopleRow extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final none = people.all.isEmpty;
-    final add = SizedBox(
-      height: height,
+    // At least [height], and as tall as its words need, as a category chip is: held to
+    // the height, the words were cut along their foot
+    final add = ConstrainedBox(
+      constraints: BoxConstraints(minHeight: height),
       child: FButton(
         variant: FButtonVariant.outline,
         mainAxisSize: none ? MainAxisSize.max : MainAxisSize.min,
@@ -89,27 +91,20 @@ class _PersonChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = context.theme;
+    // A button as a category chip is one, so the two rows read alike: at least
+    // [height], and as tall as the name needs
     return Semantics(
-      button: true,
       selected: picked,
-      child: FTappable(
-        onPress: onTap,
-        onLongPress: onHold,
-        child: Container(
-          height: height,
-          constraints: const BoxConstraints(maxWidth: 200),
-          padding: const EdgeInsets.symmetric(horizontal: 16),
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: picked ? theme.colors.primary : null,
-            border: Border.all(color: picked ? theme.colors.primary : theme.colors.border),
-            borderRadius: BorderRadius.circular(Sizes.radius),
+      child: ConstrainedBox(
+        constraints: BoxConstraints(minHeight: height, maxWidth: 200),
+        child: FButton(
+          variant: picked ? null : FButtonVariant.outline,
+          mainAxisSize: MainAxisSize.min,
+          onPress: onTap,
+          onLongPress: onHold,
+          child: Flexible(
+            child: Text(name, maxLines: 1, overflow: TextOverflow.ellipsis, style: context.theme.type.button),
           ),
-          child: Text(name,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: theme.type.button.copyWith(color: picked ? theme.colors.primaryForeground : null)),
         ),
       ),
     );
