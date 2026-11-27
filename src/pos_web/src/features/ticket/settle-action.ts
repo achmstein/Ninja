@@ -28,10 +28,11 @@ export function settleAction(tenderName: string, entered: number | null, remaini
 }
 
 /**
- * What a customer is likely to hand over in cash for what is left: exactly
- * it, then the notes it rounds up to. Four at most, each once.
+ * The notes a customer is likely to hand over in cash for what is left: what
+ * it rounds up to, each once. Never the exact amount itself: that is what is
+ * taken with nothing typed, so a button for it would only repeat the amount.
  */
 export function cashNotes(remaining: number): number[] {
   if (remaining <= 0) return []
-  return [...new Set([remaining, ...[50, 100, 200, 500].map((step) => Math.ceil(remaining / step) * step)])].slice(0, 4)
+  return [...new Set([50, 100, 200, 500].map((step) => Math.ceil(remaining / step) * step))].filter((note) => note > remaining)
 }

@@ -862,9 +862,6 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partPayPays => 'Pays';
 
   @override
-  String get partPayExact => 'Exact';
-
-  @override
   String get partPayOther => 'Another amount';
 
   @override
@@ -1073,7 +1070,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String settleAddPayment(String tender) {
-    return 'Add $tender payment';
+    return 'Add $tender';
   }
 
   @override

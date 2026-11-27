@@ -15,6 +15,7 @@ import 'package:ninja_app_core/providers/branch_provider.dart';
 import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import '../../../core/widgets/count_column.dart';
 import '../../../core/widgets/numeric_keypad.dart';
 import '../../../core/widgets/paid_tag.dart';
 import '../../../core/widgets/pos_toast.dart';
@@ -567,18 +568,24 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                   ? _amountStr
                   : (_tender != PaymentTender.account && _remaining > 0 ? _fmt(_remaining) : '0'),
               maxLines: 1,
+              // The figures sit in the middle of their line: the font keeps more room over them than
+              // under, which read as a gap above the amount
               style: theme.typography.xl3.copyWith(
                 fontWeight: FontWeight.w700,
                 fontFeatures: tabular,
+                height: 1,
+                leadingDistribution: TextLeadingDistribution.even,
                 color: _amountStr.isEmpty ? theme.colors.mutedForeground.withValues(alpha: 0.6) : null,
               ),
+              textHeightBehavior: const TextHeightBehavior(leadingDistribution: TextLeadingDistribution.even),
             ),
           ),
         ),
       ),
-      // Cash handed over, one tap: exactly what is left, or the note it was paid with.
-      // Four to a row whatever there are, so each is the same width
-      if (_tender == PaymentTender.cash && _remaining > 0) ...[
+      // Cash handed over, one tap: the note it was paid with. Exactly what is left needs no
+      // button: it is what is taken with nothing typed. Four to a row whatever there are,
+      // so each is the same width
+      if (_tender == PaymentTender.cash && settleCashNotes(_remaining).isNotEmpty) ...[
         const SizedBox(height: Sizes.gap),
         Row(
           children: [
@@ -588,14 +595,16 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                 child: SizedBox(
                   height: Sizes.control,
                   child: FButton(
-                    variant: (note == _remaining ? _amountStr.isEmpty : _amountStr.isNotEmpty && _entered == note)
+                    variant: _amountStr.isNotEmpty && _entered == note ? null : FButtonVariant.outline,
+                    // A second tap on the note picked takes it back: all that is left again
+                    onPress: _settling
                         ? null
-                        : FButtonVariant.outline,
-                    onPress: _settling ? null : () => setState(() => _amountStr = note == _remaining ? '' : _fmt(note)),
+                        : () => setState(
+                            () => _amountStr = _amountStr.isNotEmpty && _entered == note ? '' : _fmt(note)),
                     child: Flexible(
                       child: FittedBox(
                         fit: BoxFit.scaleDown,
-                        child: Text(note == _remaining ? l10n.partPayExact : _fmt(note),
+                        child: Text(_fmt(note),
                             maxLines: 1, style: theme.type.button.copyWith(fontFeatures: tabular)),
                       ),
                     ),
@@ -624,6 +633,13 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     const tabular = [FontFeature.tabularFigures()];
     final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
     final lines = widget.ticket.lines;
+    String count(TicketLineView line) =>
+        line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×';
+    final countStyle = theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
+    // One column for the whole list, as wide as its widest count with a gap after it: a room's
+    // hours (1.25) are wider than a whole count, and the names still start in one line
+    final countWidth =
+        withLines ? countColumnWidth(context, [for (final line in lines) count(line)], countStyle, min: 32) + 8 : 40.0;
     return [
       if (withLines && lines.isNotEmpty) ...[
         for (final (index, line) in lines.indexed) ...[
@@ -633,14 +649,11 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 40),
+                SizedBox(
+                  width: countWidth,
                   child: PaidDim(
                     paid: line.paid,
-                    child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
-                        maxLines: 1,
-                        softWrap: false,
-                        style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                    child: Text(count(line), maxLines: 1, softWrap: false, style: countStyle),
                   ),
                 ),
                 Expanded(
@@ -933,11 +946,25 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                 settle,
               ],
             )
+          // The button takes the larger share of the bar, up to a width its longest words sit in
+          // (a tab's: Take On account, with the money): held to 300 they ran past its edges
           : Row(
               children: [
-                Expanded(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures)),
+                Expanded(
+                  flex: 2,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerStart,
+                    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures),
+                  ),
+                ),
                 const SizedBox(width: Sizes.gapLg),
-                SizedBox(width: 300, child: settle),
+                Expanded(
+                  flex: 3,
+                  child: Align(
+                    alignment: AlignmentDirectional.centerEnd,
+                    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: settle),
+                  ),
+                ),
               ],
             ),
     );

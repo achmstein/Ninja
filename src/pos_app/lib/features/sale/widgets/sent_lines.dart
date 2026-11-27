@@ -10,6 +10,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../bill_lines.dart';
 import '../bill_people.dart';
 import '../../../core/theme/type_roles.dart';
+import '../../../core/widgets/count_column.dart';
 import '../../../core/widgets/paid_tag.dart';
 
 /// A quiet heading over a part of the order: what is new, what was sent
@@ -52,6 +53,9 @@ class SentLines extends StatelessWidget {
     final shown = selection == null
         ? sentLinesByPerson(lines)
         : [for (final line in lines) (line: line, paid: line.paid)];
+    final countWidth = countColumnWidth(
+        context, [for (final one in shown) _SentRow.count(one.line)], _SentRow.countStyle(context),
+        min: 32);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -60,6 +64,7 @@ class SentLines extends StatelessWidget {
           _SentRow(
             key: ValueKey(one.line.id),
             line: one.line,
+            countWidth: countWidth,
             paid: one.paid,
             landed: landed.contains(one.line.orderId),
             // Null outside picking; false for a line that cannot be picked, which keeps the box's room
@@ -82,6 +87,9 @@ typedef LineSelection = ({Set<int> chosen, void Function(int lineId) onToggle});
 class _SentRow extends StatelessWidget {
   final TicketLineView line;
 
+  /// The count column's width, the same for every row of the list
+  final double countWidth;
+
   /// Paid for already, by a part payment taken while the bill is open
   final bool paid;
   final bool landed;
@@ -92,9 +100,23 @@ class _SentRow extends StatelessWidget {
   /// The tap that ticks it; null for a line that cannot be picked
   final VoidCallback? onToggle;
 
-  const _SentRow({super.key, required this.line, required this.paid, required this.landed, this.picked, this.onToggle});
+  const _SentRow({
+    super.key,
+    required this.line,
+    required this.countWidth,
+    required this.paid,
+    required this.landed,
+    this.picked,
+    this.onToggle,
+  });
 
   static String _qty(double qty) => qty == qty.roundToDouble() ? qty.toStringAsFixed(0) : qty.toString();
+
+  /// A line's count as the list writes it
+  static String count(TicketLineView line) => '${_qty(line.qty)}×';
+
+  static TextStyle countStyle(BuildContext context) => context.theme.type.detail
+      .copyWith(fontWeight: FontWeight.w500, fontFeatures: const [FontFeature.tabularFigures()]);
 
   @override
   Widget build(BuildContext context) {
@@ -139,17 +161,16 @@ class _SentRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
           ],
-          // As wide as the count needs, and never under the column the whole counts keep:
-          // a room's hours (1.25) are wider, and were cut onto two lines
-          ConstrainedBox(
-            constraints: const BoxConstraints(minWidth: 32),
+          // One column for the whole list, as wide as its widest count: a room's hours
+          // (1.25) are wider than a whole count, and the names still start in one line
+          SizedBox(
+            width: countWidth,
             child: PaidDim(
               paid: paid,
-              child: Text('${_qty(line.qty)}×',
+              child: Text(count(line),
                   maxLines: 1,
                   softWrap: false,
-                  style: style.copyWith(
-                      color: theme.colors.mutedForeground, fontWeight: FontWeight.w500, fontFeatures: tabular)),
+                  style: countStyle(context).copyWith(color: theme.colors.mutedForeground)),
             ),
           ),
           const SizedBox(width: 8),

@@ -30,10 +30,11 @@ describe('settleAction', () => {
 })
 
 describe('cashNotes', () => {
-  it('offers exactly what is left, then the notes it rounds up to', () => {
-    expect(cashNotes(180)).toEqual([180, 200, 500])
-    expect(cashNotes(35)).toEqual([35, 50, 100, 200])
-    expect(cashNotes(100)).toEqual([100, 200, 500])
+  it('offers the notes what is left rounds up to, never the exact amount itself', () => {
+    expect(cashNotes(540)).toEqual([550, 600, 1000])
+    expect(cashNotes(180)).toEqual([200, 500])
+    expect(cashNotes(35)).toEqual([50, 100, 200, 500])
+    expect(cashNotes(100)).toEqual([200, 500])
     expect(cashNotes(0)).toEqual([])
   })
 })

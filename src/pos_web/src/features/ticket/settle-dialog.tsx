@@ -481,7 +481,7 @@ export function SettleDialog({
       doSettle(list)
     }
   }
-  // Cash handed over, one tap: exactly what is left, or the note it was paid with
+  // Cash handed over, one tap: the note it was paid with. Exactly what is left needs no button: it is what is taken with nothing typed
   const notes = tender.name === 'Cash' ? cashNotes(remaining) : []
 
   const header = (
@@ -595,17 +595,17 @@ export function SettleDialog({
       {notes.length > 0 && (
         <div className='grid grid-cols-4 gap-2'>
           {notes.map((note) => {
-            const exact = note === remaining
-            const picked = exact ? amountStr === '' : amountStr !== '' && enteredAmount === note
+            const picked = amountStr !== '' && enteredAmount === note
             return (
               <Button
                 key={note}
                 variant='outline'
                 className={cn('h-12 px-1 text-base tabular-nums', picked && 'border-primary ring-primary ring-1')}
                 disabled={busy}
-                onClick={() => setAmountStr(exact ? '' : String(note))}
+                // A second tap on the note picked takes it back: all that is left again
+                onClick={() => setAmountStr(picked ? '' : String(note))}
               >
-                {exact ? t('partPayExact') : note}
+                {note}
               </Button>
             )
           })}
@@ -618,13 +618,16 @@ export function SettleDialog({
 
   // ----- what is being paid: the lines, what guests paid online, whose
   // rounds, and the payments taken so far -----
+  // One count column for the whole list, as wide as its widest count: a room's hours
+  // (1.25×) are wider than a whole count, and the names still start in one line
+  const countWidth = `max(2.5rem, ${Math.max(...(ticket.lines ?? []).map((line) => `${toNumber(line.qty)}×`.length), 0) + 1}ch)`
   const whatPaid = (withLines: boolean) => (
     <div className='flex flex-col gap-4'>
       {withLines && (ticket.lines ?? []).length > 0 && (
         <div className='divide-y'>
           {(ticket.lines ?? []).map((line) => (
             <div key={String(line.id)} className='flex items-start gap-3 py-2 text-base'>
-              <span className={cn('text-muted-foreground min-w-10 shrink-0 whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>
+              <span style={{ width: countWidth }} className={cn('text-muted-foreground shrink-0 whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>
                 {toNumber(line.qty)}×
               </span>
               <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>

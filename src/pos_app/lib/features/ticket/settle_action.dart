@@ -34,14 +34,15 @@ SettleAction settleActionFor(PaymentTender tender, double? entered, double remai
   return (kind: SettleActionKind.take, amount: tender == PaymentTender.cash ? entered : remaining);
 }
 
-/// What a customer is likely to hand over in cash for what is left: exactly
-/// it, then the notes it rounds up to. Four at most, each once
+/// The notes a customer is likely to hand over in cash for what is left: what
+/// it rounds up to, each once. Never the exact amount itself: that is what is
+/// taken with nothing typed, so a button for it would only repeat the amount
 List<double> settleCashNotes(double remaining) {
   if (remaining <= 0) return const [];
-  final notes = <double>[remaining];
+  final notes = <double>[];
   for (final step in const [50, 100, 200, 500]) {
     final note = (remaining / step).ceil() * step.toDouble();
-    if (!notes.contains(note)) notes.add(note);
+    if (note > remaining && !notes.contains(note)) notes.add(note);
   }
-  return notes.take(4).toList();
+  return notes;
 }

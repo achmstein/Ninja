@@ -103,6 +103,10 @@ export function SentLines({
   const keys = [...new Set(lines.map(whoKey))]
   const shown = selection ? lines : keys.flatMap((key) => mergeIdenticalLines(lines.filter((line) => whoKey(line) === key)))
 
+  // One column for the whole list, as wide as its widest count: a room's hours
+  // (1.25×) are wider than a whole count, and the names still start in one line
+  const countWidth = `max(1.75rem, ${Math.max(...shown.map((line) => `${toNumber(line.qty)}×`.length), 0)}ch)`
+
   return (
     <div className='flex flex-col divide-y'>
       {shown.map((line) => {
@@ -124,7 +128,7 @@ export function SentLines({
                 {picked && <Check className='size-4' />}
               </span>
             )}
-            <span className={cn('min-w-7 shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
+            <span style={{ width: countWidth }} className={cn('shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
             <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
               <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
                 {localized(line.description)}

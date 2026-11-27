@@ -31,10 +31,11 @@ void main() {
     });
   });
 
-  test('cash is offered exactly, then the notes it rounds up to', () {
-    expect(settleCashNotes(180), [180, 200, 500]);
-    expect(settleCashNotes(35), [35, 50, 100, 200]);
-    expect(settleCashNotes(100), [100, 200, 500]);
+  test('cash is offered as the notes what is left rounds up to, never the exact amount itself', () {
+    expect(settleCashNotes(540), [550, 600, 1000]);
+    expect(settleCashNotes(180), [200, 500]);
+    expect(settleCashNotes(35), [50, 100, 200, 500]);
+    expect(settleCashNotes(100), [200, 500]);
     expect(settleCashNotes(0), isEmpty);
   });
 }

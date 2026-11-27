@@ -1,3 +1,4 @@
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
@@ -191,5 +192,36 @@ void main() {
     final confirm = tester.widget<MorphButton>(find.byType(MorphButton));
     expect(confirm.onPressed, isNotNull);
     expect(find.textContaining('Take Cash'), findsOneWidget);
+  });
+
+  testWidgets('a count that is not whole keeps the names in one line on the payment page', (tester) async {
+    tester.view.physicalSize = const Size(1280, 900);
+    tester.view.devicePixelRatio = 1;
+    addTearDown(tester.view.resetPhysicalSize);
+    const room = TicketDetail(id: 8, total: 220, lines: [
+      TicketLineView(id: 1, description: LocalizedText(en: 'Latte', ar: 'Latte'), qty: 1, unitPrice: 70, total: 70),
+      TicketLineView(
+          id: 2,
+          source: 'SessionTime',
+          description: LocalizedText(en: 'Room 1 time', ar: 'Room 1 time'),
+          qty: 1.25,
+          unitPrice: 120,
+          total: 150),
+    ]);
+
+    await tester.pumpWidget(_app(
+      Builder(
+        builder: (context) => TextButton(onPressed: () => showSettle(context, room), child: const Text('open')),
+      ),
+      tickets: _Tickets(),
+    ));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+
+    // The room's hours (1.25×) are wider than a whole count: the column widens for every row
+    final latte = tester.getTopLeft(find.text('Latte'));
+    final time = tester.getTopLeft(find.text('Room 1 time'));
+    expect(time.dx, latte.dx);
+    expect(tester.getSize(find.text('1.25×')).height, tester.getSize(find.text('1×')).height, reason: 'on one line');
   });
 }

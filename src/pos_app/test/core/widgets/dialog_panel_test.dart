@@ -157,6 +157,24 @@ void main() {
     expect(raised.bottom, _phone.height - 300);
   });
 
+  testWidgets('the card of a tablet moves above the keyboard at its own height, with no room added under it', (tester) async {
+    _surface(tester, _tablet);
+    await tester.pumpWidget(tillApp(opener(showTradingDialog)));
+    await tester.tap(find.text('open'));
+    await tester.pumpAndSettle();
+    final resting = _card(tester);
+
+    tester.view.viewInsets = const FakeViewPadding(bottom: 360);
+    await tester.pumpAndSettle();
+    expectFits(tester);
+    final raised = _card(tester);
+    // As tall as it was: slack as tall as the keyboard under it read as a white gap down to the keys
+    expect(raised.height, resting.height);
+    // In the middle of what the keyboard leaves, and clear of it
+    expect(raised.center.dy, moreOrLessEquals((_tablet.height - 360) / 2, epsilon: 0.5));
+    expect(raised.bottom, lessThanOrEqualTo(_tablet.height - 360));
+  });
+
   testWidgets('a sheet as tall as its content allows stops short of the top of the screen', (tester) async {
     _surface(tester, _phone);
     await tester.pumpWidget(tillApp(opener(

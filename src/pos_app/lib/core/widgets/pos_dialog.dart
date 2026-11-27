@@ -23,14 +23,14 @@ enum DialogSize {
   const DialogSize(this.width);
 }
 
-/// A dialog the keyboard slides over rather than pushes. It keeps its place
-/// and its height when the keyboard opens; the body, a [DialogScroll],
-/// gains that much bottom slack so whatever the keyboard covers can be
-/// scrolled up into the part still showing. Forui's default would shove
-/// the dialog up and squeeze it into the half of a landscape tablet the
-/// keyboard leaves — less than most dialogs need. A phone's sheet (see
-/// [DialogPanel]) keeps its height the same way, and rises above the
-/// keyboard where the screen has the room.
+/// A dialog that stays whole when the keyboard opens. On a tablet the card
+/// moves up into the part of the screen the keyboard leaves and sits in the
+/// middle of it, as tall as it was; only a card too tall for that part is
+/// held to it, and its body, a [DialogScroll], then scrolls. It gains no
+/// empty room of its own: slack as tall as the keyboard under every dialog
+/// made a short one (a discount, a name) end in a white gap down to the keys.
+/// A phone's sheet (see [DialogPanel]) rises above the keyboard where the
+/// screen has the room, and keeps the slack for the part that could not.
 ///
 /// A tap anywhere that is not a control while the keyboard is up — the
 /// dimmed screen or the dialog's own blank space — only puts the keyboard
@@ -50,11 +50,14 @@ Future<T?> showPosDialog<T>(
       // Read the keyboard here, above the dialog, then hide it from the
       // dialog so it stays put; the body gets it back through [_Keyboard]
       final keyboard = MediaQuery.viewInsetsOf(context).bottom;
+      final sheet = context.isCompact;
       return MediaQuery.removeViewInsets(
         context: context,
         removeBottom: true,
         child: _Keyboard(
-          height: keyboard,
+          // A tablet's card is moved clear of the keyboard below: nothing of it is covered,
+          // so its body needs no slack. A phone's sheet works out its own
+          height: sheet ? keyboard : 0,
           child: Stack(
             children: [
               Positioned.fill(
@@ -76,11 +79,16 @@ Future<T?> showPosDialog<T>(
                 behavior: HitTestBehavior.translucent,
                 excludeFromSemantics: true,
                 onTap: keyboard > 0 ? () => FocusManager.instance.primaryFocus?.unfocus() : null,
-                child: DialogPanel(
-                  style: style,
-                  animation: animation,
-                  size: size,
-                  builder: builder,
+                // The card is laid out in what the keyboard leaves: in the middle of it, and
+                // no taller. The keyboard's own slide is what moves it, frame by frame
+                child: Padding(
+                  padding: EdgeInsets.only(bottom: sheet ? 0 : keyboard),
+                  child: DialogPanel(
+                    style: style,
+                    animation: animation,
+                    size: size,
+                    builder: builder,
+                  ),
                 ),
               ),
             ],
@@ -314,8 +322,9 @@ class DialogActions extends StatelessWidget {
 }
 
 /// The body of a [showPosDialog]: padded like every till dialog, scrolling
-/// when the content is taller than the dialog or when the keyboard covers
-/// its lower part.
+/// when the content is taller than the dialog (a tablet's card held to what
+/// the keyboard leaves) or when the keyboard covers the lower part of a
+/// phone's sheet.
 class DialogScroll extends StatelessWidget {
   final Widget child;
 

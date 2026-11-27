@@ -1556,12 +1556,6 @@ abstract class AppLocalizations {
   /// **'Pays'**
   String get partPayPays;
 
-  /// No description provided for @partPayExact.
-  ///
-  /// In en, this message translates to:
-  /// **'Exact'**
-  String get partPayExact;
-
   /// No description provided for @partPayOther.
   ///
   /// In en, this message translates to:
@@ -1913,7 +1907,7 @@ abstract class AppLocalizations {
   /// No description provided for @settleAddPayment.
   ///
   /// In en, this message translates to:
-  /// **'Add {tender} payment'**
+  /// **'Add {tender}'**
   String settleAddPayment(String tender);
 
   /// No description provided for @card.

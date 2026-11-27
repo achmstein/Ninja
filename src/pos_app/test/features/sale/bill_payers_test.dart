@@ -382,7 +382,6 @@ void main() {
       final split = l10n.partPaySplit(money(context, 148.2), money(context, 51.8));
       expect(inSheet(find.text(split)), findsNothing);
       expect(inSheet(find.byType(NumericKeypad)), findsNothing);
-      expect(inSheet(find.text(l10n.partPayExact)), findsNothing);
       Future<void> key(String label) async {
         final button = inSheet(find.widgetWithText(FButton, label));
         await tester.ensureVisible(button);

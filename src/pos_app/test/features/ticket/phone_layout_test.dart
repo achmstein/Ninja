@@ -368,8 +368,6 @@ void main() {
 
       // Nothing typed: the one button takes all that is left in cash, and says so
       expect(find.textContaining(l10n.settleTake(tenderLabel(l10n, PaymentTender.cash))), findsOneWidget);
-      // Cash handed over, one tap each, the same width
-      expect(find.widgetWithText(FButton, l10n.partPayExact), findsOneWidget);
 
       // Every key a finger's size
       for (final key in ['1', '00', '.']) {
