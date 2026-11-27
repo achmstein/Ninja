@@ -68,16 +68,30 @@ double billLeftToPay(TicketDetail ticket) {
   return left < 0 ? 0 : left;
 }
 
-/// What a customer is likely to hand over for [due] in cash: the exact
-/// amount, then the notes it rounds up to. Four at most, each once
-List<double> cashNotes(double due) {
-  final notes = <double>[due];
-  for (final step in const [50, 100, 200]) {
-    final note = (due / step).ceil() * step.toDouble();
-    if (!notes.contains(note)) notes.add(note);
+/// The amounts one tap offers for a part payment: exactly what their items
+/// come to, then the round sums above it. For an amount on account, the round
+/// sums alone. The web till's `partAmounts` is the same
+List<double> partAmounts(double items) {
+  if (items <= 0) return const [50, 100, 200];
+  final sums = <double>[items];
+  for (final step in const [100, 200]) {
+    final sum = (items / step).floor() * step + step.toDouble();
+    if (!sums.contains(sum)) sums.add(sum);
   }
-  return notes.take(4).toList();
+  return sums;
 }
 
-/// The change out of [handed] for [due]
-double changeFor(double handed, double due) => _round2(handed - due);
+/// What stands in the way of taking an amount as a part payment
+enum PartAmountProblem { none, empty, belowItems, paysAll }
+
+/// Somebody pays at least for what they had. And on a bill whose time is all
+/// on it, a part is less than the whole: paying all that is left is the
+/// bill's own payment, which closes it. A room whose clock still runs has
+/// more to come, so there any amount is taken. The web till's
+/// `partAmountProblem` is the same
+PartAmountProblem partAmountProblem(double amount, double items, double left, {required bool clockRunning}) {
+  if (!(amount > 0)) return PartAmountProblem.empty;
+  if (amount < items) return PartAmountProblem.belowItems;
+  if (!clockRunning && amount >= left) return PartAmountProblem.paysAll;
+  return PartAmountProblem.none;
+}

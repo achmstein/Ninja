@@ -1,4 +1,5 @@
 import type { TicketLineView } from '@/api/sales/types.gen'
+import { ChevronRight } from 'lucide-react'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -35,6 +36,10 @@ export function payersOf(lines: readonly TicketLineView[]): Payer[] {
  * "Who is paying?", asked when a bill is more than one person's: everything
  * in one payment, or one person's own part. A part is paid on its own and the
  * bill stays open for the rest.
+ *
+ * Under a room's running clock it is always asked: someone may be leaving
+ * while the others play on. Everything then means stopping the clock, and an
+ * amount on account is there for whoever leaves with nothing of their own.
  */
 export function PayWhoSheet({
   open,
@@ -43,8 +48,10 @@ export function PayWhoSheet({
   total,
   payers,
   partPaid = false,
+  clockRunning = false,
   onEverything,
   onPayer,
+  onAccount,
 }: {
   open: boolean
   onOpenChange: (open: boolean) => void
@@ -54,8 +61,12 @@ export function PayWhoSheet({
   payers: Payer[]
   /** Part of the bill is paid already: "everything" is then the rest */
   partPaid?: boolean
+  /** The room's clock is running: its time is not in the total yet */
+  clockRunning?: boolean
   onEverything: () => void
   onPayer: (payer: Payer) => void
+  /** An amount on account of the bill, from someone with no lines of their own; offered where given */
+  onAccount?: () => void
 }) {
   const t = useT()
   const money = useMoney()
@@ -72,8 +83,12 @@ export function PayWhoSheet({
         </DialogHeader>
         <div className='flex flex-col overflow-hidden rounded-lg border'>
           <button type='button' className={row} onClick={onEverything}>
-            <span className='type-heading min-w-0 flex-1'>{partPaid ? t('payTheRest') : t('payEverything')}</span>
-            <span className='type-heading shrink-0 tabular-nums'>{money(total)}</span>
+            <span className='min-w-0 flex-1'>
+              <span className='type-heading block'>{partPaid ? t('payTheRest') : t('payEverything')}</span>
+              {clockRunning && <span className='text-muted-foreground type-detail block truncate'>{t('payEverythingClock')}</span>}
+            </span>
+            {/* The time is still to come: the sum so far would read as the whole */}
+            {!clockRunning && <span className='type-heading shrink-0 tabular-nums'>{money(total)}</span>}
           </button>
           {payers.map((payer) => (
             <button key={payer.key} type='button' className={row} onClick={() => onPayer(payer)}>
@@ -88,6 +103,15 @@ export function PayWhoSheet({
               <span className='type-body shrink-0 tabular-nums'>{money(payer.subtotal)}</span>
             </button>
           ))}
+          {onAccount && (
+            <button type='button' className={row} onClick={onAccount}>
+              <span className='min-w-0 flex-1'>
+                <span className='type-heading block truncate'>{t('partPayOnAccount')}</span>
+                <span className='text-muted-foreground type-detail block truncate'>{t('partPayOnAccountHint')}</span>
+              </span>
+              <ChevronRight className='text-muted-foreground size-5 shrink-0 rtl:rotate-180' aria-hidden />
+            </button>
+          )}
         </div>
         <p className='text-muted-foreground type-detail'>{t('payWhoHint')}</p>
       </DialogContent>

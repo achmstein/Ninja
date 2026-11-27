@@ -1532,17 +1532,29 @@ abstract class AppLocalizations {
   /// **'{name} pays'**
   String partPayTitle(String name);
 
-  /// No description provided for @partPayDue.
+  /// No description provided for @partPayOnAccount.
   ///
   /// In en, this message translates to:
-  /// **'To pay'**
-  String get partPayDue;
+  /// **'Amount on account'**
+  String get partPayOnAccount;
 
-  /// No description provided for @partPayReceived.
+  /// No description provided for @partPayOnAccountHint.
   ///
   /// In en, this message translates to:
-  /// **'Cash received'**
-  String get partPayReceived;
+  /// **'For someone leaving who had nothing of their own'**
+  String get partPayOnAccountHint;
+
+  /// No description provided for @partPayItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Their items'**
+  String get partPayItems;
+
+  /// No description provided for @partPayPays.
+  ///
+  /// In en, this message translates to:
+  /// **'Pays'**
+  String get partPayPays;
 
   /// No description provided for @partPayExact.
   ///
@@ -1550,17 +1562,53 @@ abstract class AppLocalizations {
   /// **'Exact'**
   String get partPayExact;
 
+  /// No description provided for @partPayOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Other'**
+  String get partPayOther;
+
+  /// No description provided for @partPaySplit.
+  ///
+  /// In en, this message translates to:
+  /// **'{items} for their items + {extra} on account of the bill'**
+  String partPaySplit(String items, String extra);
+
+  /// No description provided for @partPayBelowItems.
+  ///
+  /// In en, this message translates to:
+  /// **'Less than their items ({items})'**
+  String partPayBelowItems(String items);
+
+  /// No description provided for @partPayPaysAll.
+  ///
+  /// In en, this message translates to:
+  /// **'That pays the whole bill: take it as the bill\'s payment.'**
+  String get partPayPaysAll;
+
   /// No description provided for @partPayHint.
   ///
   /// In en, this message translates to:
   /// **'The bill stays open for the rest.'**
   String get partPayHint;
 
-  /// No description provided for @partPayTake.
+  /// No description provided for @partPayHintClock.
   ///
   /// In en, this message translates to:
-  /// **'Take {amount}'**
-  String partPayTake(String amount);
+  /// **'The clock runs on and the bill stays open for the rest.'**
+  String get partPayHintClock;
+
+  /// No description provided for @partPayTakeWith.
+  ///
+  /// In en, this message translates to:
+  /// **'Take {tender}'**
+  String partPayTakeWith(String tender);
+
+  /// No description provided for @payEverythingClock.
+  ///
+  /// In en, this message translates to:
+  /// **'Stops the clock and closes the bill'**
+  String get payEverythingClock;
 
   /// No description provided for @partPaymentTaken.
   ///

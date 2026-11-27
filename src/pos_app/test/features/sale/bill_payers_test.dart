@@ -136,12 +136,22 @@ void main() {
       expect(billLeftToPay(const TicketDetail(id: 1, total: 50, partPaid: 60)), 0);
     });
 
-    test('cash is offered exact, then rounded up to the notes likely handed over', () {
-      expect(cashNotes(148.2), [148.2, 150, 200]);
-      expect(cashNotes(35), [35, 50, 100, 200]);
-      expect(cashNotes(100), [100, 200]);
-      expect(cashNotes(420), [420, 450, 500, 600]);
-      expect(changeFor(200, 148.2), 51.8);
+    test('a part is offered exact, then the round sums above it; an amount on account the round sums alone', () {
+      expect(partAmounts(148.2), [148.2, 200]);
+      expect(partAmounts(70), [70, 100, 200]);
+      expect(partAmounts(100), [100, 200]);
+      expect(partAmounts(0), [50, 100, 200]);
+    });
+
+    test('a part is at least their items and less than the whole, but any amount under a running clock', () {
+      expect(partAmountProblem(70, 70, 190, clockRunning: false), PartAmountProblem.none);
+      expect(partAmountProblem(100, 70, 190, clockRunning: false), PartAmountProblem.none);
+      expect(partAmountProblem(50, 70, 190, clockRunning: false), PartAmountProblem.belowItems);
+      expect(partAmountProblem(0, 0, 190, clockRunning: true), PartAmountProblem.empty);
+      expect(partAmountProblem(190, 70, 190, clockRunning: false), PartAmountProblem.paysAll);
+      // The room's time is still to come: past what the bill holds, and on a bill that holds nothing
+      expect(partAmountProblem(200, 70, 190, clockRunning: true), PartAmountProblem.none);
+      expect(partAmountProblem(50, 0, 0, clockRunning: true), PartAmountProblem.none);
     });
   });
 
@@ -267,6 +277,79 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
+    testWidgets('under a running clock everything stops it, and someone leaving can pay an amount on account ($lang)',
+        (tester) async {
+      await usePhone(tester);
+      PayChoice? picked;
+      await tester.pumpWidget(tillApp(
+        opener((context) async => picked =
+            await showPayWho(context, title: 'Room 3', total: 190, payers: payers, clockRunning: true)),
+        locale: locale,
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      final sheet = find.byType(PayWhoSheet);
+      final context = tester.element(sheet);
+      // The time is still to come: the sum so far is not shown as the whole
+      expect(find.text(l10n.payEverythingClock), findsOneWidget);
+      expect(find.descendant(of: sheet, matching: find.text(money(context, 190))), findsNothing);
+      await tester.tap(find.text(l10n.partPayOnAccount));
+      await tester.pumpAndSettle();
+      expect(picked, isNotNull);
+      expect(picked!.onAccount, isTrue);
+      expect(picked!.payer, isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('an amount on account is typed and taken with no items of its own ($lang)', (tester) async {
+      await usePhone(tester);
+      final tickets = _Tickets();
+      await tester.pumpWidget(tillApp(
+        opener((context) async => showPartPayment(
+              context,
+              ticketId: 12,
+              title: 'Room 3',
+              part: (name: null, lineIds: const <int>[], amount: 0),
+              left: 0,
+              clockRunning: true,
+            )),
+        locale: locale,
+        overrides: [
+          ticketsRepositoryProvider.overrideWithValue(tickets),
+          shiftsRepositoryProvider.overrideWithValue(_Shifts()),
+        ],
+      ));
+      await tester.tap(find.text('open'));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      final sheet = find.byType(PartPaymentSheet);
+      Finder inSheet(Finder what) => find.descendant(of: sheet, matching: what);
+      expect(inSheet(find.text(l10n.partPayOnAccount)), findsOneWidget);
+      expect(inSheet(find.text(l10n.partPayItems)), findsNothing);
+      expect(inSheet(find.text(l10n.partPayHintClock)), findsOneWidget);
+      // Nothing to take until an amount is typed; the keypad is already there
+      final take = inSheet(find.widgetWithText(FButton, l10n.partPayTakeWith(l10n.cash)));
+      expect(tester.widget<FButton>(take).onPress, isNull);
+      for (final key in ['8', '0']) {
+        final button = inSheet(find.widgetWithText(FButton, key));
+        await tester.ensureVisible(button);
+        await tester.pump();
+        await tester.tap(button);
+        await tester.pump();
+      }
+      expect(tester.widget<FButton>(take).onPress, isNotNull);
+      await tester.ensureVisible(take);
+      await tester.pump();
+      await tester.tap(take);
+      await tester.pumpAndSettle();
+      expect(tickets.taken.single.amount, 80);
+      expect(tickets.taken.single.lineIds, isEmpty);
+      expect(tickets.taken.single.payerName, isNull);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 10));
+    });
+
     testWidgets('a part is taken once, in the way picked, and the bill stays open ($lang)', (tester) async {
       await usePhone(tester);
       final tickets = _Tickets();
@@ -277,6 +360,7 @@ void main() {
               ticketId: 12,
               title: 'Terrace table 4',
               part: (name: 'Mohamed Abdelrahman Elsayed Mahmoud', lineIds: [1, 4], amount: 148.2),
+              left: 400,
             )),
         locale: locale,
         overrides: [
@@ -292,29 +376,42 @@ void main() {
       Finder inSheet(Finder what) => find.descendant(of: sheet, matching: what);
       final context = tester.element(sheet);
       expect(inSheet(find.textContaining('Mohamed Abdelrahman Elsayed Mahmoud')), findsOneWidget);
-      expect(inSheet(find.text(money(context, 148.2))), findsOneWidget);
+      // Their items, what they pay, and the button: the same sum until they choose to pay more
+      expect(inSheet(find.text(money(context, 148.2))), findsNWidgets(3));
       expect(inSheet(find.text(l10n.partPayHint)), findsOneWidget);
       // The three ways to pay, the same width
       final widths = {
         for (final label in [l10n.cash, l10n.card, l10n.instapay]) tester.getSize(inSheet(find.widgetWithText(FButton, label))).width,
       };
       expect(widths, hasLength(1));
-      // Cash: exact, and the notes it rounds up to, each the same width; the change for what was handed over
-      final notes = [l10n.partPayExact, '150', '200'];
-      expect({for (final note in notes) tester.getSize(inSheet(find.widgetWithText(FButton, note))).width}, hasLength(1));
-      expect(inSheet(find.textContaining(l10n.changeDue)), findsNothing);
+      // What they pay: exact, a round sum above it, or any amount, each the same width
+      final sums = [l10n.partPayExact, '200', l10n.partPayOther];
+      expect({for (final sum in sums) tester.getSize(inSheet(find.widgetWithText(FButton, sum))).width}, hasLength(1));
+      final split = l10n.partPaySplit(money(context, 148.2), money(context, 51.8));
+      expect(inSheet(find.text(split)), findsNothing);
+      // More than their items: the amount on the sheet is the amount taken, and the rest is said to be on account
       await tester.tap(inSheet(find.widgetWithText(FButton, '200')));
       await tester.pump();
-      expect(inSheet(find.text(money(context, 51.8))), findsOneWidget);
+      expectFits(tester);
+      expect(inSheet(find.text(split)), findsOneWidget);
+      expect(inSheet(find.text(money(context, 200))), findsNWidgets(2));
+      // Any amount is typed on the keypad; under their items is not taken
+      await tester.tap(inSheet(find.widgetWithText(FButton, l10n.partPayOther)));
+      await tester.pump();
+      expectFits(tester);
+      await tester.tap(inSheet(find.widgetWithText(FButton, '9')));
+      await tester.pump();
+      expect(inSheet(find.text(l10n.partPayBelowItems(money(context, 148.2)))), findsOneWidget);
+      await tester.tap(inSheet(find.widgetWithText(FButton, l10n.partPayExact)));
+      await tester.pump();
+      expect(inSheet(find.text(split)), findsNothing);
 
-      // Card has nothing handed over
       await tester.tap(inSheet(find.widgetWithText(FButton, l10n.card)));
       await tester.pump();
       expectFits(tester);
-      expect(inSheet(find.text(l10n.partPayReceived)), findsNothing);
 
       final took = l10n.partPaymentTaken(money(context, 148.2));
-      final take = inSheet(find.widgetWithText(FButton, l10n.partPayTake(money(context, 148.2))));
+      final take = inSheet(find.widgetWithText(FButton, l10n.partPayTakeWith(l10n.card)));
       expect(take, findsOneWidget);
       await tester.tap(take);
       await tester.pumpAndSettle();

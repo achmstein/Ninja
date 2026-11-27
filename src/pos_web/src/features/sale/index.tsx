@@ -189,10 +189,12 @@ export function SalePad({
     }
   }
 
-  // Who could pay their own part. Asked only when there is more than one,
-  // and never under a running clock, whose time is not on the bill yet
+  // Who could pay their own part. Asked when there is more than one, and
+  // always under a running clock: somebody may be leaving while the others
+  // play on, and pays what they had with whatever they choose towards the time
   const payers = payersOf(sent)
-  const pay = () => (payers.length > 1 && !bill.runningStay ? setAskingWho(true) : setPaying(true))
+  const clockRunning = !!bill.runningStay
+  const pay = () => (payers.length > 1 || clockRunning ? setAskingWho(true) : setPaying(true))
   // What is still to pay: the bill less what was taken in parts already
   const partPaid = toNumber(bill.ticket?.partPaid)
   const leftToPay = bill.ticket ? Math.max(0, Math.round((toNumber(bill.ticket.total) - partPaid) * 100) / 100) : 0
@@ -206,7 +208,8 @@ export function SalePad({
     setAskingWho(false)
     const menu = sent.reduce((sum, line) => sum + toNumber(line.total), 0)
     const share = menu > 0 ? Math.round(payer.subtotal * (toNumber(bill.ticket?.total) / menu) * 100) / 100 : 0
-    if (share <= 0 || share >= leftToPay) return setPaying(true)
+    // Under a running clock the bill is not whole yet: what is on it so far is never its rest
+    if (share <= 0 || (!clockRunning && share >= leftToPay)) return setPaying(true)
     setPart({ name: payer.name, lineIds: payer.lineIds, amount: share })
   }
   // Split off to be paid: the payment opens as soon as the bill is read. Once
@@ -247,8 +250,9 @@ export function SalePad({
       : {
           label: bill.onTheirWay.length > 0 ? t('confirming') : t('settleAction'),
           busy: bill.onTheirWay.length > 0,
-          // Never against a bill the server has not got all of
-          disabled: sent.length === 0 || bill.mySends.length > 0,
+          // Never against a bill the server has not got all of. A room with nothing
+          // rung up still has its time to pay for, by whoever leaves it
+          disabled: (sent.length === 0 && !clockRunning) || bill.mySends.length > 0,
           onClick: pay,
         }
 
@@ -423,16 +427,27 @@ export function SalePad({
             total={leftToPay}
             payers={payers}
             partPaid={partPaid > 0}
+            clockRunning={clockRunning}
             onEverything={() => {
               setAskingWho(false)
               setPaying(true)
             }}
             onPayer={payFor}
+            onAccount={
+              clockRunning
+                ? () => {
+                    setAskingWho(false)
+                    setPart({ name: null, lineIds: [], amount: 0 })
+                  }
+                : undefined
+            }
           />
           <PartPaymentSheet
             ticketId={toNumber(bill.ticket.id)}
             title={title}
             part={part}
+            left={leftToPay}
+            clockRunning={clockRunning}
             onOpenChange={(open) => !open && setPart(null)}
             onTaken={() => setPart(null)}
           />

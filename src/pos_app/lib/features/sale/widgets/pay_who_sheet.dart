@@ -9,13 +9,20 @@ import '../../../l10n/app_localizations.dart';
 import '../bill_payers.dart';
 import '../../../core/theme/type_roles.dart';
 
-/// What "Who is paying?" was answered with: one payer's own part, or with no
-/// payer the whole of what is left
+/// What "Who is paying?" was answered with: one payer's own part, an amount
+/// on account of the bill from someone with nothing of their own on it, or
+/// with neither the whole of what is left
 class PayChoice {
   final Payer? payer;
+  final bool onAccount;
 
-  const PayChoice.everything() : payer = null;
-  const PayChoice.part(Payer this.payer);
+  const PayChoice.everything()
+      : payer = null,
+        onAccount = false;
+  const PayChoice.part(Payer this.payer) : onAccount = false;
+  const PayChoice.account()
+      : payer = null,
+        onAccount = true;
 }
 
 /// Asks who is paying; null when the question was put away unanswered
@@ -25,6 +32,7 @@ Future<PayChoice?> showPayWho(
   required double total,
   required List<Payer> payers,
   bool partPaid = false,
+  bool clockRunning = false,
 }) =>
     showPosDialog<PayChoice>(
       context,
@@ -34,13 +42,19 @@ Future<PayChoice?> showPayWho(
         total: total,
         payers: payers,
         partPaid: partPaid,
+        clockRunning: clockRunning,
         onPick: (choice) => Navigator.of(context, rootNavigator: true).pop(choice),
       ),
     );
 
 /// "Who is paying?", asked when a bill is more than one person's: everything
 /// in one payment, or one person's own part. A part is paid on its own and
-/// the bill stays open for the rest. The web till's PayWhoSheet is the same.
+/// the bill stays open for the rest.
+///
+/// Under a room's running clock it is always asked: someone may be leaving
+/// while the others play on. Everything then means stopping the clock, and an
+/// amount on account is there for whoever leaves with nothing of their own.
+/// The web till's PayWhoSheet is the same.
 class PayWhoSheet extends StatelessWidget {
   /// The bill's own name, said for the lines that were nobody's
   final String title;
@@ -51,6 +65,9 @@ class PayWhoSheet extends StatelessWidget {
 
   /// Part of the bill is paid already: "everything" is then the rest
   final bool partPaid;
+
+  /// The room's clock is running: its time is not in the total yet
+  final bool clockRunning;
   final ValueChanged<PayChoice> onPick;
 
   const PayWhoSheet({
@@ -59,6 +76,7 @@ class PayWhoSheet extends StatelessWidget {
     required this.total,
     required this.payers,
     this.partPaid = false,
+    this.clockRunning = false,
     required this.onPick,
   });
 
@@ -71,7 +89,7 @@ class PayWhoSheet extends StatelessWidget {
     const tabular = [FontFeature.tabularFigures()];
     final heading = theme.type.heading;
 
-    Widget row({required Widget words, required String amount, required TextStyle amountStyle, required VoidCallback onPress}) =>
+    Widget row({required Widget words, required String? amount, required TextStyle amountStyle, required VoidCallback onPress}) =>
         FTappable(
           onPress: onPress,
           builder: (context, states, child) => Container(
@@ -83,8 +101,10 @@ class PayWhoSheet extends StatelessWidget {
           child: Row(
             children: [
               Expanded(child: words),
-              const SizedBox(width: 12),
-              Text(amount, maxLines: 1, style: amountStyle.copyWith(fontFeatures: tabular)),
+              if (amount != null) ...[
+                const SizedBox(width: 12),
+                Text(amount, maxLines: 1, style: amountStyle.copyWith(fontFeatures: tabular)),
+              ],
             ],
           ),
         );
@@ -109,9 +129,21 @@ class PayWhoSheet extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   row(
-                    words: Text(partPaid ? l10n.payTheRest : l10n.payEverything,
-                        maxLines: 1, overflow: TextOverflow.ellipsis, style: heading),
-                    amount: money(context, total),
+                    words: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
+                      children: [
+                        Text(partPaid ? l10n.payTheRest : l10n.payEverything,
+                            maxLines: 1, overflow: TextOverflow.ellipsis, style: heading),
+                        if (clockRunning)
+                          Text(l10n.payEverythingClock,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
+                      ],
+                    ),
+                    // The time is still to come: the sum so far would read as the whole
+                    amount: clockRunning ? null : money(context, total),
                     amountStyle: heading,
                     onPress: () => onPick(const PayChoice.everything()),
                   ),
@@ -143,6 +175,25 @@ class PayWhoSheet extends StatelessWidget {
                       amount: money(context, payer.subtotal),
                       amountStyle: theme.type.body,
                       onPress: () => onPick(PayChoice.part(payer)),
+                    ),
+                  ],
+                  if (clockRunning) ...[
+                    Container(height: 1, color: theme.colors.border),
+                    row(
+                      words: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          Text(l10n.partPayOnAccount, maxLines: 1, overflow: TextOverflow.ellipsis, style: heading),
+                          Text(l10n.partPayOnAccountHint,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
+                        ],
+                      ),
+                      amount: null,
+                      amountStyle: theme.type.body,
+                      onPress: () => onPick(const PayChoice.account()),
                     ),
                   ],
                 ],

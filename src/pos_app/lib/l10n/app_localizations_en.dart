@@ -849,21 +849,52 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get partPayDue => 'To pay';
+  String get partPayOnAccount => 'Amount on account';
 
   @override
-  String get partPayReceived => 'Cash received';
+  String get partPayOnAccountHint =>
+      'For someone leaving who had nothing of their own';
+
+  @override
+  String get partPayItems => 'Their items';
+
+  @override
+  String get partPayPays => 'Pays';
 
   @override
   String get partPayExact => 'Exact';
 
   @override
+  String get partPayOther => 'Other';
+
+  @override
+  String partPaySplit(String items, String extra) {
+    return '$items for their items + $extra on account of the bill';
+  }
+
+  @override
+  String partPayBelowItems(String items) {
+    return 'Less than their items ($items)';
+  }
+
+  @override
+  String get partPayPaysAll =>
+      'That pays the whole bill: take it as the bill\'s payment.';
+
+  @override
   String get partPayHint => 'The bill stays open for the rest.';
 
   @override
-  String partPayTake(String amount) {
-    return 'Take $amount';
+  String get partPayHintClock =>
+      'The clock runs on and the bill stays open for the rest.';
+
+  @override
+  String partPayTakeWith(String tender) {
+    return 'Take $tender';
   }
+
+  @override
+  String get payEverythingClock => 'Stops the clock and closes the bill';
 
   @override
   String partPaymentTaken(String amount) {

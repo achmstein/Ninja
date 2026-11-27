@@ -864,21 +864,49 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get partPayDue => 'المطلوب';
+  String get partPayOnAccount => 'مبلغ على الحساب';
 
   @override
-  String get partPayReceived => 'المبلغ المستلم';
+  String get partPayOnAccountHint => 'لمن يغادر وليس له أصناف';
+
+  @override
+  String get partPayItems => 'أصنافه';
+
+  @override
+  String get partPayPays => 'يدفع';
 
   @override
   String get partPayExact => 'بالضبط';
 
   @override
+  String get partPayOther => 'مبلغ آخر';
+
+  @override
+  String partPaySplit(String items, String extra) {
+    return '$items لأصنافه + $extra على حساب الفاتورة';
+  }
+
+  @override
+  String partPayBelowItems(String items) {
+    return 'أقل من أصنافه ($items)';
+  }
+
+  @override
+  String get partPayPaysAll => 'هذا يسدد الفاتورة كلها: حصّله من دفع الفاتورة.';
+
+  @override
   String get partPayHint => 'تبقى الفاتورة مفتوحة للباقي.';
 
   @override
-  String partPayTake(String amount) {
-    return 'حصّل $amount';
+  String get partPayHintClock => 'العدّاد يكمل وتبقى الفاتورة مفتوحة للباقي.';
+
+  @override
+  String partPayTakeWith(String tender) {
+    return 'حصّل $tender';
   }
+
+  @override
+  String get payEverythingClock => 'يوقف العدّاد ويغلق الفاتورة';
 
   @override
   String partPaymentTaken(String amount) {

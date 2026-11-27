@@ -895,8 +895,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
 
   /// Taking the money. A bill that is more than one person's asks who is
   /// paying first: everything in one payment (the ordinary settle), or one
-  /// person's own part, the bill staying open for the rest. Never under a
-  /// running clock, whose time is not on the bill yet
+  /// person's own part, the bill staying open for the rest. Always asked
+  /// under a running clock: somebody may be leaving while the others play on,
+  /// and pays what they had with whatever they choose towards the time
   Future<void> _pay() async {
     final ticketId = widget.ticketId;
     final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
@@ -904,24 +905,40 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     final sessionId = ticket.sessionId;
     final stay = sessionId == null ? null : ref.read(stayProvider(sessionId)).value;
     final payers = payersOf(ticket.lines);
-    if (payers.length < 2 || (stay?.isRunning ?? false)) return _settle();
+    final clockRunning = stay?.isRunning ?? false;
+    if (payers.length < 2 && !clockRunning) return _settle();
 
     final left = billLeftToPay(ticket);
     final title = billTitle(context, ticket);
     final choice =
-        await showPayWho(context, title: title, total: left, payers: payers, partPaid: ticket.partPaid > 0);
+        await showPayWho(context,
+            title: title, total: left, payers: payers, partPaid: ticket.partPaid > 0, clockRunning: clockRunning);
     if (choice == null || !mounted) return;
+    if (choice.onAccount) {
+      await showPartPayment(
+        context,
+        ticketId: ticketId,
+        title: title,
+        part: (name: null, lineIds: const <int>[], amount: 0),
+        left: left,
+        clockRunning: clockRunning,
+      );
+      return;
+    }
     final payer = choice.payer;
     if (payer == null) return _settle();
     // Their items carry their share of the bill's service, tax and discount.
     // The last part is the bill's rest: that is its ordinary payment, which closes it
     final share = payerShare(payer, ticket.lines, ticket.total);
-    if (share <= 0 || share >= left) return _settle();
+    // Under a running clock the bill is not whole yet: what is on it so far is never its rest
+    if (share <= 0 || (!clockRunning && share >= left)) return _settle();
     await showPartPayment(
       context,
       ticketId: ticketId,
       title: title,
       part: (name: payer.name, lineIds: payer.lineIds, amount: share),
+      left: left,
+      clockRunning: clockRunning,
     );
   }
 
@@ -1066,7 +1083,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
             : (
                 label: confirming ? l10n.confirming : l10n.settleAction,
                 amount: null,
-                onPress: ticket == null || ticket.lines.isEmpty || order.sends.isNotEmpty ? null : _pay,
+                // A room with nothing rung up still has its time to pay for, by whoever leaves it
+                onPress: ticket == null || (ticket.lines.isEmpty && runningStay == null) || order.sends.isNotEmpty
+                    ? null
+                    : _pay,
                 busy: confirming,
               );
     // The note being typed with the keyboard up: the column gives it the

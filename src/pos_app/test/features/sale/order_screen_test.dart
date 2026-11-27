@@ -572,7 +572,7 @@ void main() {
       final part = find.byType(PartPaymentSheet);
       expect(part, findsOneWidget);
       expect(find.descendant(of: part, matching: find.textContaining('منى عادل')), findsOneWidget);
-      final take = find.descendant(of: part, matching: find.widgetWithText(FButton, l10n.partPayTake(money(context, 66))));
+      final take = find.descendant(of: part, matching: find.widgetWithText(FButton, l10n.partPayTakeWith(l10n.cash)));
       expect(take, findsOneWidget);
       await tester.tap(take);
       await _frames(tester);

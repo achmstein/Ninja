@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { takePartPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { NumericKeypad } from '@/components/numeric-keypad'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { openCashDrawer } from '@/features/printing/print-sheets'
@@ -12,22 +13,30 @@ import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { partAmountProblem, partAmounts } from './part-amounts'
 
-/** What is being paid apart from the rest of the bill: whose it is, which lines, and what it comes to */
+/**
+ * What is being paid apart from the rest of the bill: whose it is, which lines,
+ * and what those come to. No lines and nothing owed is an amount on account of
+ * the bill, from someone who had nothing of their own on it.
+ */
 export type PartToPay = { name: string | null; lineIds: number[]; amount: number }
 
 const round2 = (n: number) => Math.round(n * 100) / 100
 
 /**
- * Taking one person's part of a bill, the bill staying open for the rest: what
- * they owe, how they pay it (cash, card or InstaPay; a tab is for the bill's
- * last payment), and for cash what they handed over, with the change. The
- * money is in this shift's drawer from this moment.
+ * Taking one person's part of a bill, the bill staying open for the rest. The
+ * customer says what they pay: exactly what they had, or more, the rest going
+ * on account of the bill (a player leaving a room pays towards its time, and
+ * how much is theirs to say, never the till's to work out). The amount on the
+ * sheet is the amount taken; it goes into this shift's drawer at once.
  */
 export function PartPaymentSheet({
   ticketId,
   title,
   part,
+  left,
+  clockRunning,
   onOpenChange,
   onTaken,
 }: {
@@ -36,6 +45,10 @@ export function PartPaymentSheet({
   title: string
   /** The part to pay; null when nothing is being paid */
   part: PartToPay | null
+  /** What is still to pay on the bill as it stands */
+  left: number
+  /** The room's clock is running: its time is not on the bill yet */
+  clockRunning: boolean
   onOpenChange: (open: boolean) => void
   onTaken: () => void
 }) {
@@ -43,16 +56,25 @@ export function PartPaymentSheet({
   const money = useMoney()
   const queryClient = useQueryClient()
   const [tender, setTender] = useState(BASE_TENDERS[0])
-  // Cash handed over, when it is more than what is owed: only for the change
-  const [received, setReceived] = useState<number | null>(null)
+  // What they pay, as typed; empty is exactly what their items come to
+  const [typed, setTyped] = useState('')
+  const [keypad, setKeypad] = useState(false)
   // One request id per opening: a second press, or a retry on a poor line, takes the money once
   const [requestId, setRequestId] = useState('')
+  const items = part?.amount ?? 0
+  const onAccount = !!part && items <= 0
   useEffect(() => {
     if (!part) return
     setTender(BASE_TENDERS[0])
-    setReceived(null)
+    setTyped('')
+    // An amount on account has nothing to start from: the keypad is what the hand is after
+    setKeypad(part.amount <= 0)
     setRequestId(crypto.randomUUID())
   }, [part])
+
+  const amount = typed === '' ? items : round2(Number(typed) || 0)
+  const extra = round2(amount - items)
+  const problem = partAmountProblem(amount, items, left, clockRunning)
 
   const take = useMutation({
     ...takePartPaymentMutation(),
@@ -63,30 +85,68 @@ export function PartPaymentSheet({
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
       // The drawer's expected cash just moved
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
-      toast.success(t('partPaymentTaken', { amount: money(part?.amount ?? 0) }))
+      toast.success(t('partPaymentTaken', { amount: money(amount) }))
       onTaken()
     },
   })
-
-  const due = part?.amount ?? 0
-  // The exact amount, then the notes a customer is likely to hand over
-  const notes = [...new Set([due, ...[50, 100, 200].map((step) => Math.ceil(due / step) * step)])].slice(0, 4)
-  const handed = received ?? due
-  const change = round2(handed - due)
 
   return (
     <Dialog open={part !== null} onOpenChange={onOpenChange}>
       <DialogContent>
         <DialogHeader>
           <DialogTitle className='type-title'>
-            <bdi>{t('partPayTitle', { name: part?.name ?? title })}</bdi>
+            {onAccount ? t('partPayOnAccount') : <bdi>{t('partPayTitle', { name: part?.name ?? title })}</bdi>}
           </DialogTitle>
         </DialogHeader>
 
+        {!onAccount && (
+          <div className='type-detail flex items-baseline justify-between'>
+            <span className='text-muted-foreground'>{t('partPayItems')}</span>
+            <span className='font-medium tabular-nums'>{money(items)}</span>
+          </div>
+        )}
+
         <div>
-          <span className='text-muted-foreground type-detail'>{t('partPayDue')}</span>
-          <div className='type-figure'>{money(due)}</div>
+          <span className='text-muted-foreground type-detail'>{t('partPayPays')}</span>
+          <div className={cn('type-figure tabular-nums', amount <= 0 && 'text-muted-foreground')}>{money(amount)}</div>
         </div>
+
+        {/* What they pay, one tap: exactly their own, a round sum, or any amount */}
+        <div className='grid grid-cols-4 gap-2'>
+          {partAmounts(items).map((sum) => (
+            <Button
+              key={sum}
+              variant='outline'
+              className={cn('h-12 px-1 text-base tabular-nums', !keypad && amount === sum && 'border-primary ring-primary ring-1')}
+              onClick={() => {
+                setKeypad(false)
+                setTyped(String(sum))
+              }}
+            >
+              {sum === items ? t('partPayExact') : sum}
+            </Button>
+          ))}
+          <Button
+            variant='outline'
+            className={cn('h-12 px-1 text-base', keypad && 'border-primary ring-primary ring-1')}
+            onClick={() => {
+              setKeypad(true)
+              setTyped('')
+            }}
+          >
+            {t('partPayOther')}
+          </Button>
+        </div>
+        {keypad && <NumericKeypad value={typed} onChange={setTyped} />}
+
+        {/* Said before the tap: what is theirs, and what goes towards the rest of the bill */}
+        {problem === 'none' && !onAccount && extra > 0 && (
+          <p className='type-detail rounded-lg bg-emerald-500/10 px-3 py-2 text-emerald-700 dark:text-emerald-400'>
+            {t('partPaySplit', { items: money(items), extra: money(extra) })}
+          </p>
+        )}
+        {problem === 'belowItems' && <p className='text-destructive type-detail'>{t('partPayBelowItems', { items: money(items) })}</p>}
+        {problem === 'paysAll' && <p className='text-destructive type-detail'>{t('partPayPaysAll')}</p>}
 
         {/* The ways of one choice, the same width */}
         <div className='bg-muted grid grid-cols-3 gap-1 rounded-lg p-1' role='radiogroup'>
@@ -107,35 +167,12 @@ export function PartPaymentSheet({
           ))}
         </div>
 
-        {tender.name === 'Cash' && (
-          <div className='flex flex-col gap-2'>
-            <span className='text-muted-foreground type-detail'>{t('partPayReceived')}</span>
-            <div className='grid grid-cols-4 gap-2'>
-              {notes.map((note) => (
-                <Button
-                  key={note}
-                  variant='outline'
-                  className={cn('h-12 px-1 text-base tabular-nums', handed === note && 'border-primary ring-primary ring-1')}
-                  onClick={() => setReceived(note)}
-                >
-                  {note === due ? t('partPayExact') : note}
-                </Button>
-              ))}
-            </div>
-            {change > 0 && (
-              <p className='type-body'>
-                {t('changeDue')}: <span className='font-semibold tabular-nums'>{money(change)}</span>
-              </p>
-            )}
-          </div>
-        )}
-
-        <p className='text-muted-foreground type-detail'>{t('partPayHint')}</p>
+        <p className='text-muted-foreground type-detail'>{t(clockRunning ? 'partPayHintClock' : 'partPayHint')}</p>
 
         <Button
           size='lg'
-          className='h-14 w-full text-lg font-semibold'
-          disabled={take.isPending || due <= 0}
+          className='h-14 w-full justify-between px-5 text-lg font-semibold'
+          disabled={take.isPending || problem !== 'none'}
           onClick={() =>
             part &&
             take.mutate({
@@ -143,15 +180,18 @@ export function PartPaymentSheet({
               query: { 'api-version': API_VERSION },
               headers: { 'x-requestid': requestId },
               body: {
-                payments: [{ tender: tender.value, amount: part.amount }],
+                payments: [{ tender: tender.value, amount }],
                 payerName: part.name,
                 lineIds: part.lineIds,
               },
             })
           }
         >
-          {take.isPending && <Loader2 className='size-5 animate-spin' />}
-          {t('partPayTake', { amount: money(due) })}
+          <span className='flex items-center gap-2'>
+            {take.isPending && <Loader2 className='size-5 animate-spin' />}
+            {t('partPayTakeWith', { tender: t(tender.labelKey) })}
+          </span>
+          <span className='tabular-nums'>{money(amount)}</span>
         </Button>
       </DialogContent>
     </Dialog>
