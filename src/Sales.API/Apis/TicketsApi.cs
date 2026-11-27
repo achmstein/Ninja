@@ -44,6 +44,11 @@ public static class TicketsApi
             .WithName("GetOpenTickets")
             .WithSummary("Open tickets for the branch (the POS floor)");
 
+        api.MapGet("/recent-customers", GetRecentCustomers)
+            .WithName("GetRecentCustomers")
+            .WithSummary("The customers the branch last rang something up for, latest first")
+            .WithDescription("What the till offers before a name is typed. Read from the branch's latest bills, so every till of the branch offers the same people; a voided bill counts for nobody.");
+
         api.MapGet("/settled", GetSettledTickets)
             .WithName("GetSettledTickets")
             .WithSummary("Settled bills for the branch, newest receipt first")
@@ -192,6 +197,15 @@ public static class TicketsApi
     {
         var branchId = httpContext.GetRequiredBranchId();
         return TypedResults.Ok(await queries.GetOpenTicketsAsync(branchId));
+    }
+
+    public static async Task<Ok<IReadOnlyList<RecentCustomer>>> GetRecentCustomers(
+        HttpContext httpContext,
+        [FromServices] ITicketQueries queries,
+        [Description("How many, 20 at most")] int take = 8)
+    {
+        var branchId = httpContext.GetRequiredBranchId();
+        return TypedResults.Ok(await queries.GetRecentCustomersAsync(branchId, Math.Clamp(take, 1, 20)));
     }
 
     public static async Task<Ok<IEnumerable<SettledTicketSummary>>> GetSettledTickets(

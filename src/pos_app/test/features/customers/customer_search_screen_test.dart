@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
+import 'package:pos_app/features/customers/recent_customers.dart';
 import 'package:pos_app/features/customers/services/customer_search_service.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
 import 'package:pos_app/features/sale/widgets/customer_dialog.dart';
@@ -36,8 +37,15 @@ const _press = Duration(milliseconds: 250);
 SaleCustomer? _picked;
 bool _closed = false;
 
-Widget _app(_Customers customers, {bool accountsOnly = false, Map<String, String> busy = const {}}) => ProviderScope(
-      overrides: [customerSearchServiceProvider.overrideWithValue(customers)],
+Widget _app(_Customers customers,
+        {bool accountsOnly = false, Map<String, String> busy = const {}, List<String>? branchRecent}) =>
+    ProviderScope(
+      overrides: [
+        customerSearchServiceProvider.overrideWithValue(customers),
+        // The branch's own list when the server answers; left out, it cannot be asked and the tablet's stands in
+        branchRecentCustomersProvider
+            .overrideWithValue(() async => branchRecent ?? (throw StateError('the server cannot be asked'))),
+      ],
       child: MaterialApp(
         locale: const Locale('en'),
         supportedLocales: AppLocalizations.supportedLocales,
@@ -92,6 +100,18 @@ void main() {
     expect(find.text('Left Town'), findsNothing);
     expect(find.text('Mona Ali'), findsOneWidget);
     expect(tester.testTextInput.isVisible, isFalse);
+  });
+
+  testWidgets('the recent ones are those of the branch, from its bills, whatever was picked on this tablet', (tester) async {
+    final customers = _Customers();
+    // The tablet remembers Ahmed; the branch last rang up Mona
+    await tester.pumpWidget(_app(customers, branchRecent: ['c1', 'gone']));
+    await _open(tester);
+
+    expect(find.text('RECENT'), findsOneWidget);
+    expect(find.text('Mona Ali'), findsNWidgets(2), reason: 'under Recent and under Everyone');
+    expect(find.text('Ahmed Hady'), findsOneWidget, reason: 'only under Everyone');
+    expect(find.text('Left Town'), findsNothing);
   });
 
   testWidgets('a letter shows the names filed under it, and again clears it', (tester) async {

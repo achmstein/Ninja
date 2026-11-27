@@ -1,11 +1,29 @@
 import 'dart:convert';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import '../../core/network/api_client.dart';
 import '../sale/models/sale_line.dart';
 
 const _key = 'pos.recentCustomers';
 const _max = 5;
 
-/// The customers picked on this till lately, newest first: most sales are a regular's
+/// Whoever the branch last rang something up for, the latest first, by their account's id: read
+/// from the branch's bills by Sales, so every till of the branch offers the same people. Throws
+/// when the server cannot be asked (offline, or a business not on that release yet); the
+/// customers picked on this tablet stand in then
+final branchRecentCustomersProvider = Provider<Future<List<String>> Function()>((ref) {
+  return () async {
+    final response = await ref.read(salesApiProvider).get<List<dynamic>>('tickets/recent-customers');
+    return [
+      for (final entry in response.data ?? const <dynamic>[])
+        if (entry is Map && entry['customerId'] is String && (entry['customerId'] as String).isNotEmpty)
+          entry['customerId'] as String,
+    ];
+  };
+});
+
+/// The customers picked on this tablet lately, newest first: only what stands in for the
+/// branch's own list while the server cannot be asked
 Future<List<({String id, String name})>> readRecentCustomers() async {
   try {
     final prefs = await SharedPreferences.getInstance();

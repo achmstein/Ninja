@@ -33,6 +33,11 @@ public record TicketSummary
     public IReadOnlyCollection<string> CustomerIds { get; init; } = [];
 }
 
+/// <summary>Someone the branch rang something up for lately, as the till offers them before a name is typed.</summary>
+/// <param name="CustomerName">Their name as the latest bill had it.</param>
+/// <param name="LastAt">When that bill was last touched.</param>
+public record RecentCustomer(string CustomerId, string CustomerName, DateTime LastAt);
+
 /// <summary>A settled bill as the receipts screen lists it.</summary>
 public record SettledTicketSummary(
     int Id,

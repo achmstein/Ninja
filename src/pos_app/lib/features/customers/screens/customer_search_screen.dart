@@ -90,9 +90,20 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
     super.initState();
     _term.addListener(_onTermChanged);
     _loadEveryone();
-    readRecentCustomers().then((recent) {
-      if (mounted) setState(() => _recent = [for (final c in recent) c.id]);
-    });
+    _loadRecent();
+  }
+
+  /// Whoever the branch last rang something up for, from its bills: the same people on every
+  /// till. Until the server answers (offline, or a business not on that release yet) the
+  /// customers picked on this tablet stand in
+  Future<void> _loadRecent() async {
+    List<String> ids;
+    try {
+      ids = await ref.read(branchRecentCustomersProvider)();
+    } catch (_) {
+      ids = [for (final c in await readRecentCustomers()) c.id];
+    }
+    if (mounted) setState(() => _recent = ids);
   }
 
   @override

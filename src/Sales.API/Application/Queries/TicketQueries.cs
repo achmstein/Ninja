@@ -9,6 +9,13 @@ public interface ITicketQueries
     Task<IEnumerable<TicketSummary>> GetOpenTicketsAsync(int branchId);
 
     /// <summary>
+    /// The customers the branch last rang something up for, the latest first: most sales are a
+    /// regular's, so the till offers these before a name is typed. From the bills themselves, so
+    /// every till of the branch offers the same people.
+    /// </summary>
+    Task<IReadOnlyList<RecentCustomer>> GetRecentCustomersAsync(int branchId, int take);
+
+    /// <summary>
     /// Settled bills for the branch, newest receipt first — the way back to
     /// a bill after it left the floor. A receipt number narrows to that one.
     /// </summary>
@@ -85,6 +92,31 @@ public interface ITicketQueries
 
 public class TicketQueries(SalesContext context) : ITicketQueries
 {
+    /// <summary>How many of the branch's latest bills are read for their customers: a handful of people is found well within them.</summary>
+    private const int RecentBills = 80;
+
+    public async Task<IReadOnlyList<RecentCustomer>> GetRecentCustomersAsync(int branchId, int take)
+    {
+        // A voided bill was a mistake or a test: whoever was on it did not come by
+        var bills = await context.Tickets
+            .AsNoTracking()
+            .Where(t => t.BranchId == branchId && t.Status != TicketStatus.Voided)
+            .OrderByDescending(t => t.LastActivityAt)
+            .Take(RecentBills)
+            .ToListAsync();
+
+        // Only an account is somebody to find again: a bare name the till was told is not
+        return bills
+            .SelectMany(t => t.Lines
+                .Where(l => !string.IsNullOrEmpty(l.CustomerId))
+                .Select(l => (Id: l.CustomerId!, Name: l.CustomerName ?? string.Empty, At: t.LastActivityAt)))
+            .GroupBy(x => x.Id)
+            .Select(g => new RecentCustomer(g.Key, g.OrderByDescending(x => x.At).First().Name, g.Max(x => x.At)))
+            .OrderByDescending(c => c.LastAt)
+            .Take(take)
+            .ToList();
+    }
+
     public async Task<IEnumerable<TicketSummary>> GetOpenTicketsAsync(int branchId)
     {
         var tickets = await context.Tickets

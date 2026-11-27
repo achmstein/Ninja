@@ -631,6 +631,12 @@ export type ReceiptView = {
     refundedTotal: number | string;
 };
 
+export type RecentCustomer = {
+    customerId: string;
+    customerName: string;
+    lastAt: string;
+};
+
 export type RefundLineRequest = {
     lineId: number | string;
     qty: number | string;
@@ -973,6 +979,42 @@ export type GetOpenTicketsResponses = {
 };
 
 export type GetOpenTicketsResponse = GetOpenTicketsResponses[keyof GetOpenTicketsResponses];
+
+export type GetRecentCustomersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * How many, 20 at most
+         */
+        take?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/recent-customers';
+};
+
+export type GetRecentCustomersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRecentCustomersResponses = {
+    /**
+     * OK
+     */
+    200: Array<RecentCustomer>;
+};
+
+export type GetRecentCustomersResponse = GetRecentCustomersResponses[keyof GetRecentCustomersResponses];
 
 export type GetSettledTicketsData = {
     body?: never;

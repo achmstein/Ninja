@@ -3,7 +3,10 @@ import type { SaleCustomer } from '@/features/sale/cart'
 const KEY = 'pos.recentCustomers'
 const MAX = 5
 
-/** The customers picked on this till lately, newest first: most sales are a regular's */
+/**
+ * The customers picked on this till lately, newest first. Only what stands in for the branch's
+ * own list (read from its bills, the same on every till) while the server cannot be asked.
+ */
 export function readRecentCustomers(): { id: string; name: string }[] {
   try {
     const raw = localStorage.getItem(KEY)

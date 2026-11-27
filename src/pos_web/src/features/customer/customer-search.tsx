@@ -2,11 +2,12 @@ import { useState } from 'react'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, UserPlus, X } from 'lucide-react'
+import { getRecentCustomersOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import type { SaleCustomer } from '@/features/sale/cart'
-import { apiClient } from '@/lib/api-client'
+import { API_VERSION, apiClient } from '@/lib/api-client'
 import { Highlight, matchRanges } from '@/lib/highlight'
 import { useLanguage, useT } from '@/lib/i18n'
 import { editablePhone } from '@/lib/phone'
@@ -135,6 +136,15 @@ function SearchBody({
   const search = useDebounced(typed, 250)
   // Everyone, for the list and the letters; and the matches once a name is typed
   const everyone = useQuery({ ...usersQuery('', LIST_MAX), staleTime: 60_000 })
+  // Whoever the branch last rang something up for, from its bills: the same people on every
+  // till. Until the server answers (offline, or a business not on that release yet) the
+  // customers picked on this till stand in
+  const lately = useQuery({
+    ...getRecentCustomersOptions({ query: { 'api-version': API_VERSION } }),
+    staleTime: 30_000,
+    retry: false,
+  })
+  const recentIds = lately.data ? lately.data.map((c) => c.customerId) : readRecentCustomers().map((c) => c.id)
   const matches = useQuery({ ...usersQuery(search, 20), placeholderData: keepPreviousData, enabled: search !== '' })
 
   const listed = (users: IdentityCustomer[] | undefined) => (users ?? []).filter((u) => !exclude.includes(u.id))
@@ -249,8 +259,8 @@ function SearchBody({
       const under = all.filter((u) => filedUnder(customerName(u)) === letter)
       body = under.length > 0 ? under.map((u) => row(u)) : <Nothing>{t('customerSearchNone')}</Nothing>
     } else {
-      const recent = readRecentCustomers()
-        .map((r) => all.find((u) => u.id === r.id))
+      const recent = recentIds
+        .map((id) => all.find((u) => u.id === id))
         .filter((u): u is IdentityCustomer => !!u)
       body = (
         <>
