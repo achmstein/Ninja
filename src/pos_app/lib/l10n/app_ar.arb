@@ -445,7 +445,6 @@
   "orderTypeLabel": "نوع الطلب",
   "orderTypeCounter": "في المحل",
   "orderTypeCounterConfirm": "اضغط «في المحل» مرة أخرى لإلغاء التوصيل",
-  "roomMore": "السعر، الأشخاص، إنهاء",
   "splitOrMove": "تقسيم أو نقل أصناف",
   "moreActions": "المزيد",
   "partPaidSoFar": "مدفوع {amount}",

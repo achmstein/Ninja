@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Timer } from 'lucide-react'
 import type { StayViewModel } from '@/api/spaces/types.gen'
-import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { StayBar } from './stay-bar'
@@ -15,7 +14,6 @@ import { useSecondsClock } from './use-places'
  * so the menu keeps the room the whole panel used to take.
  */
 export function StayStrip({ stay }: { stay: StayViewModel }) {
-  const t = useT()
   const money = useMoney()
   const now = useSecondsClock(true)
   const [open, setOpen] = useState(false)
@@ -32,7 +30,6 @@ export function StayStrip({ stay }: { stay: StayViewModel }) {
         <Timer className='text-primary size-5 shrink-0' aria-hidden />
         <span className='type-title tabular-nums'>{formatClock(elapsedSeconds(stay, now))}</span>
         <span className='text-muted-foreground min-w-0 flex-1 type-detail truncate tabular-nums'>≈ {money(estimate.amount)}</span>
-        <span className='text-muted-foreground max-w-[45%] shrink-0 type-caption truncate'>{t('roomMore')}</span>
         <ChevronDown className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')} aria-hidden />
       </button>
       {open && (

@@ -827,9 +827,6 @@ class AppLocalizationsAr extends AppLocalizations {
       'اضغط «في المحل» مرة أخرى لإلغاء التوصيل';
 
   @override
-  String get roomMore => 'السعر، الأشخاص، إنهاء';
-
-  @override
   String get splitOrMove => 'تقسيم أو نقل أصناف';
 
   @override

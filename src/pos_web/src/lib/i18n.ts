@@ -782,7 +782,6 @@ const dictionary = {
   splitOrMove: { en: "Split or move items", ar: "تقسيم أو نقل أصناف" },
   newItems: { en: "New", ar: "جديد" },
   sendNewItems: { en: "Send {count} new", ar: "إرسال {count} جديد" },
-  roomMore: { en: "Rate, people, end", ar: "السعر، الأشخاص، إنهاء" },
   deliveryMoreForRider: { en: "Directions or a pin on the map (optional)", ar: "وصف أو موقع على الخريطة (اختياري)" },
   deliveryPinLabel: { en: "Pin on the map, for the rider", ar: "موقع على الخريطة للمندوب" },
   deliveryPinOptional: { en: "Optional: the rider can go by the address alone.", ar: "اختياري: يكفي المندوب العنوان وحده." },

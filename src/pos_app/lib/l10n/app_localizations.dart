@@ -1472,12 +1472,6 @@ abstract class AppLocalizations {
   /// **'Tap Counter again to remove the delivery'**
   String get orderTypeCounterConfirm;
 
-  /// No description provided for @roomMore.
-  ///
-  /// In en, this message translates to:
-  /// **'Rate, people, end'**
-  String get roomMore;
-
   /// No description provided for @splitOrMove.
   ///
   /// In en, this message translates to:

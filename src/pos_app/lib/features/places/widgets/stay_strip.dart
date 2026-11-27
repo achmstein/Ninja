@@ -3,7 +3,6 @@ import 'package:flutter/material.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/models/money.dart';
-import '../../../l10n/app_localizations.dart';
 import '../models/place.dart';
 import '../status.dart';
 import 'stay_bar.dart';
@@ -43,7 +42,6 @@ class _StayStripState extends State<StayStrip> {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
     final session = widget.session;
     final now = DateTime.now();
     const tabular = [FontFeature.tabularFigures()];
@@ -78,12 +76,6 @@ class _StayStripState extends State<StayStrip> {
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: theme.type.detail.copyWith(color: muted, fontFeatures: tabular)),
-                    ),
-                    const SizedBox(width: 8),
-                    // What the tap opens, said in a few words; the clock and the money never give way to it
-                    Flexible(
-                      child: Text(l10n.roomMore,
-                          maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.caption.copyWith(color: muted)),
                     ),
                     const SizedBox(width: 4),
                     Icon(_open ? FIcons.chevronUp : FIcons.chevronDown, size: Sizes.iconSmall, color: muted),

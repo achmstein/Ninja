@@ -812,9 +812,6 @@ class AppLocalizationsEn extends AppLocalizations {
       'Tap Counter again to remove the delivery';
 
   @override
-  String get roomMore => 'Rate, people, end';
-
-  @override
   String get splitOrMove => 'Split or move items';
 
   @override
