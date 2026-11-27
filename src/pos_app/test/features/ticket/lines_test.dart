@@ -14,6 +14,7 @@ TicketLineView line(
   String? customerId,
   String? customerName,
   String? guestId,
+  bool paid = false,
 }) =>
     TicketLineView(
       id: id,
@@ -27,6 +28,7 @@ TicketLineView line(
       customerId: customerId,
       customerName: customerName,
       guestId: guestId,
+      paid: paid,
     );
 
 void main() {
@@ -51,6 +53,17 @@ void main() {
         line(5, 'Latte', 1, 55, source: 'Manual'),
       ]);
       expect(merged.length, 5);
+    });
+
+    test('what a part payment paid for stays apart from what is still to pay, and stays marked', () {
+      final merged = mergeIdenticalLines([
+        line(1, 'Latte', 1, 55, paid: true),
+        line(2, 'Latte', 1, 55),
+        line(3, 'Latte', 1, 55, paid: true),
+      ]);
+      expect(merged.map((l) => l.id), [1, 2]);
+      expect(merged.map((l) => l.paid), [true, false]);
+      expect(merged.first.qty, 2);
     });
   });
 

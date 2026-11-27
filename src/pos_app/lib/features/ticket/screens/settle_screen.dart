@@ -16,6 +16,7 @@ import '../../../core/printing/print_service.dart';
 import '../../../core/printing/printer_settings.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../../core/widgets/numeric_keypad.dart';
+import '../../../core/widgets/paid_tag.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../customers/providers/customer_providers.dart';
@@ -620,7 +621,14 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                   ),
                 ),
                 const SizedBox(width: Sizes.gap),
-                Text(money(context, line.total), style: theme.type.body.copyWith(fontFeatures: tabular)),
+                // Taken earlier as a part payment: on the bill, not in what is due now
+                if (line.paid) ...[
+                  const Padding(padding: EdgeInsets.only(top: 2), child: PaidTag()),
+                  const SizedBox(width: 8),
+                ],
+                Text(money(context, line.total),
+                    style: theme.type.body
+                        .copyWith(fontFeatures: tabular, color: line.paid ? theme.colors.mutedForeground : null)),
               ],
             ),
           ),

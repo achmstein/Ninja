@@ -10,6 +10,7 @@ import '../../tickets/models/ticket_detail.dart';
 import '../bill_lines.dart';
 import '../bill_people.dart';
 import '../../../core/theme/type_roles.dart';
+import '../../../core/widgets/paid_tag.dart';
 
 /// A quiet heading over a part of the order: what is new, what was sent
 class OrderSectionLabel extends StatelessWidget {
@@ -175,15 +176,7 @@ class _SentRow extends StatelessWidget {
           ),
           if (paid) ...[
             const SizedBox(width: 8),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
-              decoration: BoxDecoration(
-                color: emerald.withValues(alpha: 0.1),
-                borderRadius: BorderRadius.circular(999),
-              ),
-              child: Text(AppLocalizations.of(context)!.paidTag,
-                  style: theme.type.caption.copyWith(fontWeight: FontWeight.w600, color: emerald)),
-            ),
+            const PaidTag(),
           ],
           const SizedBox(width: 8),
           Text(money(context, line.total), style: style.copyWith(fontFeatures: tabular)),

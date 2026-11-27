@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Check, Minus, Plus, Trash2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Button } from '@/components/ui/button'
-import { mergeIdenticalLines } from '@/features/ticket/bill-lines'
+import { mergeIdenticalLines, PaidTag } from '@/features/ticket/bill-lines'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -136,11 +136,7 @@ export function SentLines({
                 </span>
               )}
             </span>
-            {line.paid && (
-              <span className='type-caption shrink-0 rounded-full bg-emerald-500/10 px-2 font-semibold text-emerald-700 dark:text-emerald-400'>
-                {t('paidTag')}
-              </span>
-            )}
+            {line.paid && <PaidTag />}
             <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>
               {money(line.total)}
             </span>

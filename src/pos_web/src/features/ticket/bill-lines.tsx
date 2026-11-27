@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils'
  * evening writes two lines — two orders, two kitchen tickets, two audit rows,
  * all of which stay exactly as they are underneath — but on screen they add
  * up to "Cappuccino 2 ×". Only identical lines merge: same item, same options,
- * same price, same discount, same origin.
+ * same price, same discount, same origin; and what a part payment already
+ * paid for stays apart from what is still to pay.
  */
 export function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
   const merged: TicketLineView[] = []
@@ -26,6 +27,7 @@ export function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
       line.details?.ar ?? '',
       line.unitPrice,
       line.discount,
+      line.paid ?? false,
     ])
 
     const at = seen.get(key)
@@ -44,6 +46,16 @@ export function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
   }
 
   return merged
+}
+
+/** Paid for by a part payment while the bill is open: said beside the line, wherever a bill's lines are listed */
+export function PaidTag() {
+  const t = useT()
+  return (
+    <span className='type-caption shrink-0 rounded-full bg-emerald-500/10 px-2 font-semibold text-emerald-700 dark:text-emerald-400'>
+      {t('paidTag')}
+    </span>
+  )
 }
 
 export function LineRow({
@@ -66,8 +78,8 @@ export function LineRow({
 
   const isNegative = toNumber(line.total) < 0
   const discount = toNumber(line.discount)
-  // Session time belongs to the session: it is never offered for a move
-  const selectable = selecting && line.source !== 'SessionTime'
+  // Session time belongs to the session, and what a part payment paid for is done: neither is offered for a move
+  const selectable = selecting && line.source !== 'SessionTime' && !line.paid
 
   const content = (
     <>
@@ -106,10 +118,12 @@ export function LineRow({
           )}
         </div>
       </div>
+      {line.paid && <PaidTag />}
       <div
         className={cn(
           'shrink-0 type-body font-semibold tabular-nums',
           isNegative && 'text-emerald-600 dark:text-emerald-400',
+          line.paid && 'text-muted-foreground',
         )}
       >
         {money(line.total)}

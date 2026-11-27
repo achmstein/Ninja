@@ -18,6 +18,7 @@ import '../../../core/sending/sending.dart';
 import '../../../core/sending/sending_lines.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
+import '../../../core/widgets/paid_tag.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../floor/widgets/bill_card.dart' show ticketTypeLabel;
@@ -970,10 +971,19 @@ class _LineRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 12),
+        // Taken earlier as a part payment: on the bill, not in what is left to pay
+        if (line.paid) ...[
+          const Padding(padding: EdgeInsets.only(top: 3), child: PaidTag()),
+          const SizedBox(width: 8),
+        ],
         Text(
           money(context, line.total),
           style: theme.type.heading.copyWith(
-            color: negative ? emerald : null,
+            color: negative
+                ? emerald
+                : line.paid
+                    ? theme.colors.mutedForeground
+                    : null,
             fontFeatures: const [FontFeature.tabularFigures()],
           ),
         ),

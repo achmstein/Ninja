@@ -33,6 +33,7 @@ import {
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
+import { PaidTag } from './bill-lines'
 import { canSettleWith, onlineSummary } from './online-payments'
 import {
   ACCOUNT_TENDER,
@@ -621,7 +622,11 @@ export function SettleDialog({
                   </span>
                 )}
               </span>
-              <span className='shrink-0 tabular-nums'>{money(toNumber(line.total))}</span>
+              {/* Taken earlier as a part payment: on the bill, not in what is due now */}
+              {line.paid && <PaidTag />}
+              <span className={cn('shrink-0 tabular-nums', line.paid && 'text-muted-foreground')}>
+                {money(toNumber(line.total))}
+              </span>
             </div>
           ))}
         </div>
