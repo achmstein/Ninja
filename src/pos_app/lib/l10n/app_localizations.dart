@@ -1019,7 +1019,7 @@ abstract class AppLocalizations {
   /// No description provided for @confirmRefund.
   ///
   /// In en, this message translates to:
-  /// **'Issue credit note · {amount}'**
+  /// **'Refund {amount}'**
   String confirmRefund(String amount);
 
   /// No description provided for @ticketRefunded.

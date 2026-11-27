@@ -547,7 +547,7 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String confirmRefund(String amount) {
-    return 'Issue credit note · $amount';
+    return 'Refund $amount';
   }
 
   @override

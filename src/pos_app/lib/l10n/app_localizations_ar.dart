@@ -557,7 +557,7 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String confirmRefund(String amount) {
-    return 'إصدار إشعار استرجاع · $amount';
+    return 'إرجاع $amount';
   }
 
   @override

@@ -316,7 +316,7 @@
   },
   "refundEverything": "استرجاع الكل",
   "nothingLeftToRefund": "لم يتبقَّ شيء للاسترجاع على هذا الإيصال",
-  "confirmRefund": "إصدار إشعار استرجاع · {amount}",
+  "confirmRefund": "إرجاع {amount}",
   "@confirmRefund": {
     "placeholders": {
       "amount": {

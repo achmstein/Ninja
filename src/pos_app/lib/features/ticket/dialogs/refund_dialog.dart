@@ -321,32 +321,36 @@ class _RefundDialogState extends ConsumerState<_RefundDialog> {
               ),
             ],
             const SizedBox(height: 16),
-            DialogActions(
-              children: [
-                SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
-                    child: Text(l10n.cancel, style: theme.type.button),
+            // The action keeps its whole label, with the money in it: the way out keeps its own
+            // width and the action takes the rest. Two buttons of one width, the wider one's, ran
+            // the label past its button. A phone stacks them at full width
+            Builder(builder: (context) {
+              final cancel = SizedBox(
+                height: Sizes.control,
+                child: FButton(
+                  variant: FButtonVariant.outline,
+                  mainAxisSize: MainAxisSize.min,
+                  onPress: _pending ? null : () => Navigator.of(context, rootNavigator: true).pop(),
+                  child: Text(l10n.cancel, style: theme.type.button),
+                ),
+              );
+              final refund = SizedBox(
+                height: Sizes.control,
+                child: FButton(
+                  variant: FButtonVariant.destructive,
+                  onPress: _canRefund ? _submit : null,
+                  prefix: _pending
+                      ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2))
+                      : null,
+                  child: Flexible(
+                    child: Text(l10n.confirmRefund(money(context, _preview)),
+                        maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.button),
                   ),
                 ),
-                SizedBox(
-                  height: Sizes.control,
-                  child: FButton(
-                    variant: FButtonVariant.destructive,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: _canRefund ? _submit : null,
-                    prefix: _pending ? const SizedBox.square(dimension: Sizes.icon, child: CircularProgressIndicator(strokeWidth: 2)) : null,
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
-                      child: Text(l10n.confirmRefund(money(context, _preview)), style: theme.type.button),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+              );
+              if (MediaQuery.sizeOf(context).width < 640) return DialogActions(children: [cancel, refund]);
+              return Row(children: [cancel, const SizedBox(width: 8), Expanded(child: refund)]);
+            }),
           ],
         ),
       ),

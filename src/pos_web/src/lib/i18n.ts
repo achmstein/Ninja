@@ -207,7 +207,7 @@ const dictionary = {
   leftToRefund: { plural: "count", en: {"=1":"1 left","other":"{count} left"}, ar: {"one":"متبقٍّ واحد","two":"متبقٍّ اثنان","few":"متبقٍّ {count}","other":"متبقٍّ {count}"} },
   refundEverything: { en: "Refund everything", ar: "استرجاع الكل" },
   nothingLeftToRefund: { en: "Nothing is left to refund on this receipt", ar: "لم يتبقَّ شيء للاسترجاع على هذا الإيصال" },
-  confirmRefund: { en: "Issue credit note · {amount}", ar: "إصدار إشعار استرجاع · {amount}" },
+  confirmRefund: { en: "Refund {amount}", ar: "إرجاع {amount}" },
   ticketRefunded: { en: "Credit note #{number} issued for {amount}", ar: "صدر إشعار الاسترجاع #\u200F{number} بقيمة {amount}" },
   refundsTitle: { en: "Refunds", ar: "الاسترجاعات" },
   paymentsTitle: { en: "Payments", ar: "المدفوعات" },

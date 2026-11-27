@@ -330,7 +330,7 @@
   },
   "refundEverything": "Refund everything",
   "nothingLeftToRefund": "Nothing is left to refund on this receipt",
-  "confirmRefund": "Issue credit note · {amount}",
+  "confirmRefund": "Refund {amount}",
   "@confirmRefund": {
     "placeholders": {
       "amount": {
