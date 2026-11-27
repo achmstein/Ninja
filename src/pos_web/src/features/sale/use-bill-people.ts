@@ -4,7 +4,7 @@ import { stayRoster } from '@/features/places/status'
 import { useStayActions } from '@/features/places/use-places'
 import { toNumber } from '@/lib/money'
 import { billPeople } from './bill-people'
-import { samePerson, type SaleCustomer } from './cart'
+import { samePerson, useSale, type SaleCustomer } from './cart'
 import type { useOpenBill } from './use-open-bill'
 
 /** The customer a tab was opened for (the new-tab dialog): read once, then forgotten */
@@ -22,8 +22,8 @@ function takePendingCustomer(ticketId: number): SaleCustomer | null {
 }
 
 /**
- * The people of an open bill, as the order screen works with them: the names
- * over the order.
+ * Whose the order is, as the order screen works with it: the names over the
+ * order. On an open bill they are its people:
  *
  * - **Who they are**: the room's members, whoever earlier rounds were rung up
  *   for, and anyone named since the bill was opened here (`billPeople`).
@@ -35,10 +35,13 @@ function takePendingCustomer(ticketId: number): SaleCustomer | null {
  * - **Their card** (`card`): opened by holding a name; while the room's clock
  *   runs, anyone but whoever it was started for can be taken out from there.
  *
- * A new sale (no `ticketId`) has no people: one optional customer, kept by
- * the cart.
+ * A new sale (no `ticketId`) reads the same way with one name at most: its
+ * customer, kept by the cart. Tapped, they are let go of; another found by
+ * name takes their place.
  */
 export function useBillPeople(ticketId: number | undefined, bill: ReturnType<typeof useOpenBill>) {
+  const onBill = ticketId !== undefined
+  const { customer, setCustomer } = useSale()
   const stayActions = useStayActions()
   const [named, setNamed] = useState<SaleCustomer[]>([])
   // undefined until a name is tapped or let go of
@@ -52,9 +55,14 @@ export function useBillPeople(ticketId: number | undefined, bill: ReturnType<typ
   }, [ticketId])
 
   const roster = stayRoster(bill.stay)
-  const all = ticketId === undefined ? [] : billPeople(roster, bill.ticket?.lines ?? [], named)
-  const forWho =
-    chosen === undefined ? (all.length === 1 ? all[0] : null) : (all.find((person) => samePerson(person, chosen)) ?? null)
+  const all = onBill ? billPeople(roster, bill.ticket?.lines ?? [], named) : customer ? [customer] : []
+  const forWho = !onBill
+    ? customer
+    : chosen === undefined
+      ? all.length === 1
+        ? all[0]
+        : null
+      : (all.find((person) => samePerson(person, chosen)) ?? null)
 
   /** Somebody with an account named on a room's bill is in the room: their share of the time will need a tab at settle */
   const join = (who: SaleCustomer) => {
@@ -69,8 +77,13 @@ export function useBillPeople(ticketId: number | undefined, bill: ReturnType<typ
     all,
     forWho,
     /** A name tapped: theirs from now on, or nobody's when it was already */
-    pick: (who: SaleCustomer) => setChosen(samePerson(who, forWho) ? null : who),
+    pick: (who: SaleCustomer) => {
+      const next = samePerson(who, forWho) ? null : who
+      if (onBill) setChosen(next)
+      else setCustomer(next)
+    },
     add: (who: SaleCustomer) => {
+      if (!onBill) return setCustomer(who)
       setNamed((known) => [...known, who])
       setChosen(who)
       join(who)

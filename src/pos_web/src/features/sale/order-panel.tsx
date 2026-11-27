@@ -1,9 +1,8 @@
 import { useState, type ElementType, type ReactNode, type RefObject } from 'react'
-import { ChevronRight, Loader2, Plus, Trash2, UserPlus } from 'lucide-react'
+import { ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { SelectedCustomer } from '@/features/customer/selected-customer'
 import { StayStrip } from '@/features/places/stay-strip'
 import { SendingLines } from '@/features/sending/sending-lines'
 import { DiscountDialog } from '@/features/ticket/discount-dialog'
@@ -48,7 +47,6 @@ export function OrderPanel({
   bill,
   customer,
   onFindCustomer,
-  onRemoveCustomer,
   people,
   saleDelivery,
   lines,
@@ -77,8 +75,7 @@ export function OrderPanel({
   /** A new sale's customer: one for the whole sale, and optional */
   customer: SaleCustomer | null
   onFindCustomer: () => void
-  onRemoveCustomer: () => void
-  /** A bill's people, named over its order (use-bill-people) */
+  /** Whose the order is, named over it: a bill's people, or a new sale's customer (use-bill-people) */
   people: BillPeople
   saleDelivery: ReturnType<typeof useSaleDelivery>
   lines: SaleLine[]
@@ -164,18 +161,8 @@ export function OrderPanel({
             onCounter={saleDelivery.remove}
           />
         )}
-        {/* Whose the next items are: the bill's people, a tap each */}
-        {onBill && bill.ticket && !bill.closed && <BillPeopleRow people={people} onAdd={onFindCustomer} />}
-        {/* A new sale is one customer's whole, and optional: always in this one place */}
-        {!onBill &&
-          (customer ? (
-            <SelectedCustomer customer={customer} onRemove={onRemoveCustomer} />
-          ) : (
-            <Button variant='outline' className='text-muted-foreground h-12 w-full gap-2 border-dashed text-base' onClick={onFindCustomer}>
-              <UserPlus className='size-5' />
-              {t('customerOptional')}
-            </Button>
-          ))}
+        {/* Whose the next items are: a bill's people, or a new sale's one customer, the same row either way */}
+        {(!onBill || (bill.ticket && !bill.closed)) && <BillPeopleRow people={people} onAdd={onFindCustomer} />}
         {delivery && (
           <SaleDeliverySummary
             delivery={delivery}

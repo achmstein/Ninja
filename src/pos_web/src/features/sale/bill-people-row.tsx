@@ -8,10 +8,11 @@ import { samePerson, type SaleCustomer } from './cart'
 import type { BillPeople } from './use-bill-people'
 
 /**
- * A bill's people over its order, one row that swipes: a tap and what is rung
- * up next is theirs (their usuals come up, their options are filled in), a
+ * Whose the order is, over it, one row that swipes: a tap and what is rung up
+ * next is theirs (their usuals come up, their options are filled in), a
  * second tap lets go. The way to add one stays at the row's end. Nothing has
- * to be tapped: a round can be nobody's.
+ * to be tapped: a round can be nobody's. A new sale shows its one customer
+ * the same way, so the order reads alike whatever it is rung onto.
  */
 export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: () => void }) {
   const t = useT()

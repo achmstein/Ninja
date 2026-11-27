@@ -400,10 +400,16 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen>
                     )
                   : null,
             ),
-      customer: order.customer,
+      // A bill's people, or a new sale's one customer: tapped they are let go of, another takes their place
       people: onBill
           ? (all: order.people, forWho: order.forWho, onForWho: pickWho, onHold: holdPerson, onAdd: addPerson)
-          : null,
+          : (
+              all: [?order.customer],
+              forWho: order.customer,
+              onForWho: ref.read(saleProvider.notifier).setCustomer,
+              onHold: holdPerson,
+              onAdd: _chooseCustomer,
+            ),
       // A bill clears only what is new on it; a new sale, everything said about it
       onClear: lines.isEmpty && (onBill || (order.customer == null && sale.note.isEmpty && sale.delivery == null))
           ? null
@@ -413,8 +419,6 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen>
             },
       onClose: onClose,
       typingNote: typingNote,
-      onChooseCustomer: _chooseCustomer,
-      onRemoveCustomer: () => ref.read(saleProvider.notifier).setCustomer(null),
       // Counter or delivery, wherever the business delivers: never hidden
       // while the branch's terms are read. Back to the counter drops the delivery
       orderType: order.canDeliver

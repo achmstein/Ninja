@@ -354,7 +354,6 @@ const dictionary = {
   inTheRoom: { en: "In the room", ar: "الموجودون في الغرفة" },
   whoseRound: { en: "Whose round?", ar: "لمن هذا الطلب؟" },
   recentCustomers: { en: "Recent", ar: "الأخيرون" },
-  customerOptional: { en: "Customer (optional)", ar: "عميل (اختياري)" },
   customerSearchPlaceholder: { en: "Search by name…", ar: "ابحث بالاسم…" },
   customerSearchLetters: { en: "Names by first letter", ar: "الأسماء حسب أول حرف" },
   customerSearchEveryone: { en: "Everyone", ar: "الجميع" },

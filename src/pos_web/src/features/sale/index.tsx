@@ -74,7 +74,7 @@ export function SalePad({
   const compact = useTillItems() === 'compact'
   const rail = compact && !isMobile
 
-  const { lines, note, customer, add: addToSale, setQuantity, setNote, setCustomer, setTarget, clear } = useSale()
+  const { lines, note, customer, add: addToSale, setQuantity, setNote, setTarget, clear } = useSale()
   // Before paint, so the cashier never sees another order's lines: the cart
   // empties whenever it is pointed somewhere else, a new sale included
   useLayoutEffect(() => {
@@ -121,7 +121,7 @@ export function SalePad({
 
   /** Adds the line, for whoever is picked on a bill, and brings its row into view */
   const add = (rungUpLine: SaleLine) => {
-    const line = people.forWho ? { ...rungUpLine, who: people.forWho } : rungUpLine
+    const line = onBill && people.forWho ? { ...rungUpLine, who: people.forWho } : rungUpLine
     addToSale(line)
     const key = lineKey(line)
     setRungUp((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }))
@@ -132,7 +132,7 @@ export function SalePad({
   }
   // Whose the items are brings their usuals and how they take them: a new
   // sale's customer, or the name picked on a bill
-  const usualsOf = onBill ? (people.forWho?.id ?? null) : (customer?.id ?? null)
+  const usualsOf = people.forWho?.id ?? null
   const menu = useMenu({ customerId: usualsOf, rail, lines, onAdd: add })
 
   /** What is new goes out, each person's lines as their own round: nothing is asked, every line says whose it is */
@@ -256,7 +256,6 @@ export function SalePad({
       bill={bill}
       customer={customer}
       onFindCustomer={() => setFindingCustomer(true)}
-      onRemoveCustomer={() => setCustomer(null)}
       people={people}
       saleDelivery={saleDelivery}
       lines={lines}
@@ -350,7 +349,7 @@ export function SalePad({
         open={findingCustomer}
         onOpenChange={setFindingCustomer}
         exclude={people.all.flatMap((person) => (person.id ? [person.id] : []))}
-        onPick={onBill ? people.add : setCustomer}
+        onPick={people.add}
       />
       <BillPersonCard people={people} />
       <PhoneDeliveryForm

@@ -112,6 +112,7 @@ mixin BillPeopleState<W extends ConsumerStatefulWidget> on ConsumerState<W> {
       id: id,
       name: who.name,
       phone: who.phone,
+      addedAtCounter: who.addedAtCounter,
       action: stay == null || member == null || member.isOwner
           ? null
           : (

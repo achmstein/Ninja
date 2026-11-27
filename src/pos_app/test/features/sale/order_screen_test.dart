@@ -25,11 +25,11 @@ import 'package:pos_app/features/sale/models/pos_order_request.dart';
 import 'package:pos_app/features/sale/providers/sale_provider.dart';
 import 'package:pos_app/features/sale/screens/sale_pad_screen.dart';
 import 'package:pos_app/features/sale/widgets/cart_line_row.dart';
-import 'package:pos_app/features/sale/widgets/customer_field.dart';
 import 'package:pos_app/features/sale/widgets/item_tile.dart';
 import 'package:pos_app/features/sale/widgets/order_type_switch.dart';
 import 'package:pos_app/features/sale/widgets/part_payment_sheet.dart';
 import 'package:pos_app/features/sale/widgets/pay_who_sheet.dart';
+import 'package:pos_app/features/sale/widgets/bill_people_row.dart';
 import 'package:pos_app/features/sale/widgets/sale_order_panel.dart';
 import 'package:pos_app/core/brand/brand_provider.dart' show compactTillItemsProvider;
 import 'package:pos_app/features/sale/widgets/bill_menu.dart';
@@ -345,8 +345,6 @@ void main() {
 
       // The clock, one line; nobody is asked for a name while ringing up
       expect(inPanel(find.byType(StayStrip)), findsOneWidget);
-      expect(find.byType(ChooseCustomerButton), findsNothing);
-      expect(find.byType(SelectedCustomerChip), findsNothing);
       expect(find.byType(OrderTypeSwitch), findsNothing);
       expect(find.text(l10n.whoseRound), findsNothing);
 
@@ -779,7 +777,8 @@ void main() {
 
     final panel = find.byType(SaleOrderPanel);
     final type = find.descendant(of: panel, matching: find.byType(OrderTypeSwitch));
-    final customer = find.descendant(of: panel, matching: find.byType(ChooseCustomerButton));
+    // The customer is the same row a bill names its people on: with nobody yet, the way to add one
+    final customer = find.descendant(of: panel, matching: find.byType(BillPeopleRow));
     expect(type, findsOneWidget);
     expect(customer, findsOneWidget);
     expect(tester.getRect(type).bottom, lessThanOrEqualTo(tester.getRect(customer).top));
