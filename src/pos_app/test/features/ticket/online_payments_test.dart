@@ -192,6 +192,8 @@ void main() {
     final confirm = tester.widget<MorphButton>(find.byType(MorphButton));
     expect(confirm.onPressed, isNotNull);
     expect(find.textContaining('Take Cash'), findsOneWidget);
+    // As wide as it ever was: only words that need more (a tab's) widen it, never the bar's spare room
+    expect(tester.getSize(find.byType(MorphButton)).width, 300);
   });
 
   testWidgets('a count that is not whole keeps the names in one line on the payment page', (tester) async {

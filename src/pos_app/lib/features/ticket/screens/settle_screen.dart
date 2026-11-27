@@ -531,6 +531,8 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     const tabular = [FontFeature.tabularFigures()];
+    final amountEnd =
+        Directionality.of(context) == TextDirection.rtl ? Alignment.centerLeft : Alignment.centerRight;
     return [
       TenderGrid(tenders: _tenders, selected: _tender, onSelect: _pickTender),
       // Whose tab. Always in view, even when there is only one person to
@@ -550,18 +552,20 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
         ],
       ],
       const SizedBox(height: Sizes.gap),
-      // The amount being typed, always LTR
+      // The amount being typed. Its figures always read left to right; it sits at the end of
+      // its box in the screen's own direction (right in English, left in Arabic), where every
+      // other amount on the page sits. Pinned to the right in both, it was at the start in Arabic
       Directionality(
         textDirection: TextDirection.ltr,
         child: Container(
           height: Sizes.controlLarge,
-          alignment: Alignment.centerRight,
+          alignment: amountEnd,
           padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg),
           decoration: BoxDecoration(color: theme.colors.muted, borderRadius: BorderRadius.circular(Sizes.radius)),
           // Shrinks to fit rather than clip: a phone's larger font setting overflows the box
           child: FittedBox(
             fit: BoxFit.scaleDown,
-            alignment: Alignment.centerRight,
+            alignment: amountEnd,
             // Nothing typed is all that is left, shown quietly until an amount takes its place
             child: Text(
               _amountStr.isNotEmpty
@@ -877,6 +881,16 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
 
     final action = _action;
     final way = tenderLabel(l10n, _tender);
+    final settleLabel = switch (action.kind) {
+      SettleActionKind.settle => l10n.settleAction,
+      SettleActionKind.add => l10n.settleAddPayment(way),
+      _ => l10n.settleTake(way),
+    };
+    final settleAmount = action.kind == SettleActionKind.settle
+        ? ''
+        : ' · ${money(context, action.kind == SettleActionKind.add ? action.amount : _remaining)}';
+    // What the button says, whole: its width follows it where 300 is not enough
+    final settleWords = '$settleLabel$settleAmount';
     final settle = MorphButton(
       phase: _phase,
       solid: _canAct || _phase != MorphPhase.idle,
@@ -892,18 +906,8 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(
-            child: Text(
-              switch (action.kind) {
-                SettleActionKind.settle => l10n.settleAction,
-                SettleActionKind.add => l10n.settleAddPayment(way),
-                _ => l10n.settleTake(way),
-              },
-              overflow: TextOverflow.ellipsis,
-            ),
-          ),
-          if (action.kind != SettleActionKind.settle)
-            Text(' · ${money(context, action.kind == SettleActionKind.add ? action.amount : _remaining)}'),
+          Flexible(child: Text(settleLabel, overflow: TextOverflow.ellipsis)),
+          if (settleAmount.isNotEmpty) Text(settleAmount),
         ],
       ),
     );
@@ -946,26 +950,31 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                 settle,
               ],
             )
-          // The button takes the larger share of the bar, up to a width its longest words sit in
-          // (a tab's: Take On account, with the money): held to 300 they ran past its edges
-          : Row(
-              children: [
-                Expanded(
-                  flex: 2,
-                  child: Align(
-                    alignment: AlignmentDirectional.centerStart,
-                    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures),
-                  ),
-                ),
-                const SizedBox(width: Sizes.gapLg),
-                Expanded(
-                  flex: 3,
-                  child: Align(
-                    alignment: AlignmentDirectional.centerEnd,
-                    child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 460), child: settle),
-                  ),
-                ),
-              ],
+          // The button is 300 wide, and wider only by what its words need (a tab's: Take On
+          // account, with the money, ran past the edges of 300). Never a share of the bar: stretched
+          // across it, the button was far wider than anything it said
+          : LayoutBuilder(
+              builder: (context, constraints) {
+                final words = countColumnWidth(context, [settleWords], theme.type.mainAction, min: 0) + 48;
+                final most = (constraints.maxWidth - Sizes.gapLg - 200).clamp(300.0, double.infinity);
+                return Row(
+                  children: [
+                    Expanded(
+                      child: Align(
+                        alignment: AlignmentDirectional.centerStart,
+                        child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures),
+                      ),
+                    ),
+                    const SizedBox(width: Sizes.gapLg),
+                    AnimatedContainer(
+                      duration: Motion.base,
+                      curve: Motion.enter,
+                      width: words.clamp(300.0, most),
+                      child: settle,
+                    ),
+                  ],
+                );
+              },
             ),
     );
   }

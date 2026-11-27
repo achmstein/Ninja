@@ -581,11 +581,13 @@ export function SettleDialog({
         </div>
       )}
 
-      {/* Nothing typed is all that is left, shown quietly until an amount takes its place */}
+      {/* Nothing typed is all that is left, shown quietly until an amount takes its place.
+          The figures always read left to right; the amount sits at the end of its box in the
+          screen's own direction (right in English, left in Arabic), as every other amount does */}
       <div
         dir='ltr'
         className={cn(
-          'bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums',
+          'bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums rtl:justify-start',
           amountStr === '' && 'text-muted-foreground/60',
         )}
       >

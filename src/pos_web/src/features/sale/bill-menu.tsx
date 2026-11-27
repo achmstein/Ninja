@@ -81,7 +81,7 @@ export function BillMenu({
   const canDiscard = lines.length === 0 && !sending && (ticket.type !== 'Room' || ticket.sessionEndedAt != null)
   const canVoid = !canDiscard && isOwner
 
-  const item = 'h-12 gap-3 px-3 text-base'
+  const item = 'min-h-12 gap-3 px-3 text-base'
   return (
     <>
       <DropdownMenu>
@@ -121,9 +121,14 @@ export function BillMenu({
           {parts.map((p) => (
             <DropdownMenuItem key={String(p.id)} className={item} onSelect={() => setGivingBack(p)}>
               <Undo2 className='size-5' />
-              <span className='min-w-0 flex-1 truncate'>
-                {t('partGiveBack', { amount: money(p.amount) })}
-                {p.payerName ? <bdi> · {p.payerName}</bdi> : null}
+              {/* Who paid it on a line of their own: beside the amount a long name was cut short */}
+              <span className='min-w-0 flex-1'>
+                <span className='block truncate'>{t('partGiveBack', { amount: money(p.amount) })}</span>
+                {p.payerName && (
+                  <span className='text-muted-foreground type-detail block truncate'>
+                    <bdi>{p.payerName}</bdi>
+                  </span>
+                )}
               </span>
             </DropdownMenuItem>
           ))}

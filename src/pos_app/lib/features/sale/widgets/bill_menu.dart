@@ -166,14 +166,19 @@ class _BillMenuState extends ConsumerState<BillMenu> with SingleTickerProviderSt
         for (final part in ticket.partPayments)
           FItem(
             prefix: const Icon(FIcons.undo2, size: Sizes.icon),
-            title: Text(
-              (part.payerName ?? '').isEmpty
-                  ? l10n.partGiveBack(money(context, part.amount))
-                  : '${l10n.partGiveBack(money(context, part.amount))} · ${bidiIsolate(part.payerName!)}',
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: rowStyle,
-            ),
+            title: Text(l10n.partGiveBack(money(context, part.amount)), maxLines: 1, style: rowStyle),
+            // Who paid it, on a line of their own in the name's own script: beside the
+            // amount it was cut to its first letters
+            subtitle: (part.payerName ?? '').isEmpty
+                ? null
+                : Text(
+                    part.payerName!,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    textDirection: textDirectionFor(part.payerName!),
+                    textAlign: textAlignFor(context),
+                    style: theme.type.detail.copyWith(color: theme.colors.mutedForeground),
+                  ),
             onPress: () => _pick(() => _giveBack(part)),
           ),
       if (canDiscard)
