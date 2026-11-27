@@ -26,6 +26,11 @@ const _searchDebounce = Duration(milliseconds: 250);
 /// it. Typing a receipt number finds that one; otherwise the recent ones
 /// show, a page at a time as the cashier scrolls. `/settled` has no total
 /// count, so a full page means "maybe more" and a short page is the end.
+///
+/// On a wide screen a receipt is read where it is picked, as on the web till:
+/// the list keeps its place and the receipt shows beside it (the newest to
+/// begin with). Looking for one bill among a night's meant opening each in a
+/// pop-up and closing it again. A narrow screen still opens it over the list.
 // A receipt row's shape: the number, the type icon, then the place and meta.
 Widget _receiptRowSkeleton(BuildContext context) {
   return SizedBox(
@@ -73,6 +78,12 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   bool _loading = false;
   bool _failed = false;
   int _generation = 0;
+
+  /// The receipt being read beside the list; none until one is picked (the newest shows then)
+  int? _pickedId;
+
+  /// From this width the receipt shows beside the list (pos_web's `md` two columns, on a tablet's landscape)
+  static const double _twoColumns = 900;
 
   @override
   void initState() {
@@ -135,12 +146,13 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     // A branch switch starts the list over
     ref.listen(selectedBranchIdProvider, (_, _) => _load(reset: true));
     final bills = _bills;
+    final wide = MediaQuery.sizeOf(context).width >= _twoColumns;
+    // Beside the list there is always a receipt to read: the one picked while it is still
+    // listed, the newest otherwise
+    final picked = bills?.where((bill) => bill.id == _pickedId).firstOrNull;
+    final shown = picked ?? (wide && bills != null && bills.isNotEmpty ? bills.first : null);
 
-    return Align(
-      alignment: Alignment.topCenter,
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(maxWidth: 768),
-        child: NotificationListener<ScrollNotification>(
+    final list = NotificationListener<ScrollNotification>(
           // Reaching the end of the list pulls the next page
           onNotification: (notification) {
             if (_hasMore && !_loading && notification.metrics.extentAfter < 200) _load();
@@ -212,7 +224,14 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                       children: [
                         for (final (index, bill) in bills.indexed) ...[
                           if (index > 0) Container(height: 1, color: theme.colors.border),
-                          _ReceiptRow(bill: bill, onTap: () => showReceiptPreview(context, bill.id)),
+                          _ReceiptRow(
+                            bill: bill,
+                            reading: wide && bill.id == shown?.id,
+                            opensOver: !wide,
+                            onTap: wide
+                                ? () => setState(() => _pickedId = bill.id)
+                                : () => showReceiptPreview(context, bill.id),
+                          ),
                         ],
                       ],
                     ),
@@ -229,8 +248,41 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
               ],
             ),
           ),
-        ),
-      ),
+        );
+
+    if (!wide) {
+      return Align(
+        alignment: Alignment.topCenter,
+        child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 768), child: list),
+      );
+    }
+    // The whole width of the screen, as the floor's places and open bills take it: the list
+    // keeps a width its rows read well at, and the receipt has the rest
+    return Row(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            SizedBox(width: 448, child: list),
+            // Stays in view while the list scrolls past it
+            Expanded(
+              child: Padding(
+                padding: const EdgeInsetsDirectional.fromSTEB(0, 16, 16, 16),
+                child: Container(
+                  decoration: BoxDecoration(
+                    color: theme.colors.background,
+                    border: Border.all(color: theme.colors.border),
+                    borderRadius: BorderRadius.circular(Sizes.radiusCard),
+                  ),
+                  clipBehavior: Clip.antiAlias,
+                  child: shown == null
+                      ? Center(
+                          child: Text(bills == null || _failed ? '' : l10n.noReceipts,
+                              style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
+                        )
+                      : ReceiptPreview(key: ValueKey(shown.id), ticketId: shown.id, inline: true),
+                ),
+              ),
+            ),
+          ],
     );
   }
 }
@@ -239,7 +291,13 @@ class _ReceiptRow extends StatelessWidget {
   final SettledTicketSummary bill;
   final VoidCallback onTap;
 
-  const _ReceiptRow({required this.bill, required this.onTap});
+  /// The receipt showing beside the list
+  final bool reading;
+
+  /// A tap opens the receipt over the list (a narrow screen): the arrow says so
+  final bool opensOver;
+
+  const _ReceiptRow({required this.bill, required this.onTap, this.reading = false, this.opensOver = true});
 
   @override
   Widget build(BuildContext context) {
@@ -258,7 +316,11 @@ class _ReceiptRow extends StatelessWidget {
       builder: (context, states, child) => Container(
         height: Sizes.header,
         padding: const EdgeInsets.symmetric(horizontal: 12),
-        color: states.contains(FTappableVariant.pressed) ? theme.colors.secondary.withValues(alpha: 0.5) : null,
+        color: reading
+            ? theme.colors.secondary
+            : states.contains(FTappableVariant.pressed)
+                ? theme.colors.secondary.withValues(alpha: 0.5)
+                : null,
         child: child,
       ),
       child: Row(
@@ -289,8 +351,10 @@ class _ReceiptRow extends StatelessWidget {
           const SizedBox(width: 12),
           Text(money(context, bill.total),
               style: theme.type.heading.copyWith(fontFeatures: tabular)),
-          const SizedBox(width: 8),
-          Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),
+          if (opensOver) ...[
+            const SizedBox(width: 8),
+            Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),
+          ],
         ],
       ),
     );

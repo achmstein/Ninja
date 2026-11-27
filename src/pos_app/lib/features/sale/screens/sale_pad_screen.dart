@@ -1295,7 +1295,7 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
     // to spare: its categories are one row of chips, whichever tiles it shows
     final rail = compact && !narrow;
     // The phone's search, opened from the button at the row's end
-    final searching = narrow && _searchOpen;
+    final searching = !rail && _searchOpen;
     final needle = rail || searching ? _search.text.trim().toLowerCase() : '';
     final countIn = <int, int>{};
     for (final item in itemsAsync.value ?? const <CatalogItem>[]) {
@@ -1366,9 +1366,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                     padding: const EdgeInsets.all(8),
                     decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
                     child: Row(
-                      // The search and a phone's one row of chips sit level with the back button;
-                      // rows of chips hang from the top
-                      crossAxisAlignment: rail || narrow ? CrossAxisAlignment.center : CrossAxisAlignment.start,
+                      // The search, or the one row of chips, sits level with the back button
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
                         SizedBox.square(
                           dimension: Sizes.control,
@@ -1407,9 +1406,10 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                             ),
                             ),
                           )
-                        // A phone has no room for rows of chips above the
-                        // menu: there they are one row that swipes
-                        else if (narrow)
+                        // Photo tiles: the categories are one row that swipes, on a tablet as on a
+                        // phone. Wrapped into rows, a long menu's categories took the room the
+                        // items need, and the menu started at a different height on every tablet
+                        else
                           Expanded(
                             child: SingleChildScrollView(
                               scrollDirection: Axis.horizontal,
@@ -1423,14 +1423,9 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                                 ],
                               ),
                             ),
-                          )
-                        // Every category in view: the chips wrap into rows
-                        // rather than scrolling sideways
-                        else
-                          Expanded(child: Wrap(spacing: 8, runSpacing: 8, children: chips)),
-                        // Search is the phone's shortcut past the one-row
-                        // chips; a tablet has every category in view already
-                        if (narrow) ...[
+                          ),
+                        // Search is the shortcut past the one row of chips
+                        if (!rail) ...[
                           const SizedBox(width: 4),
                           SizedBox.square(
                             dimension: Sizes.control,

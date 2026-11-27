@@ -135,11 +135,16 @@ class _BillMenuState extends ConsumerState<BillMenu> with SingleTickerProviderSt
     final canDiscard = lines.isEmpty && !widget.sending && (ticket.sessionId == null || ticket.sessionEndedAt != null);
     final canVoid = !canDiscard && isOwner;
 
+    final canDiscount = lines.isNotEmpty && (ticket.subtotal > 0 || ticket.discount > 0);
     final items = [
       FItem(
         prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),
         title: Text(l10n.discount, style: rowStyle),
-        onPress: lines.isEmpty ? null : () => _pick(() => showDiscountDialog(context, ticket)),
+        // Greyed where there is nothing to take it off (no items, or a bill that comes to
+        // nothing): it did nothing when pressed, and looked as if it would. A bill a discount
+        // already brought to nothing keeps it, to change or take away
+        enabled: canDiscount,
+        onPress: canDiscount ? () => _pick(() => showDiscountDialog(context, ticket)) : null,
       ),
       // The bill on paper before it is paid: the customer looks it over, then says how they pay
       if (lines.isNotEmpty)

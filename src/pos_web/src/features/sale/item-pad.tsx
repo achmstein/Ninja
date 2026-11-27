@@ -148,11 +148,10 @@ export function ItemPad({
             />
           </div>
         ) : (
-          /* A tablet sees every category: the chips wrap into rows rather
-             than scrolling sideways behind a scrollbar. A phone has no room
-             for rows of chips above the menu, so there they are one row that
-             swipes, each chip snapping to the edge. */
-          <div className='no-scrollbar flex min-w-0 flex-1 gap-2 max-md:snap-x max-md:snap-mandatory max-md:scroll-px-1 max-md:overflow-x-auto max-md:px-1 md:flex-wrap'>
+          /* Photo tiles: the categories are one row that swipes, each chip snapping to the
+             edge, on a tablet as on a phone. Wrapped into rows, a long menu's categories took
+             the room the items need. */
+          <div className='no-scrollbar flex min-w-0 flex-1 snap-x snap-mandatory scroll-px-1 gap-2 overflow-x-auto px-1'>
             {menu.hasUsuals && (
               <Button
                 variant={menu.activeCategoryId === USUALS_CATEGORY ? 'default' : 'outline'}
@@ -178,11 +177,11 @@ export function ItemPad({
             })}
           </div>
         )}
-        {/* Search is the phone's shortcut past the one-row chips; a tablet has every category in view already */}
+        {/* Search is the shortcut past the one row of chips; the text tiles' search is always in view */}
         <Button
           variant='ghost'
           size='icon'
-          className='size-11 shrink-0 md:hidden'
+          className={cn('size-11 shrink-0', rail && 'hidden')}
           aria-label={menu.searchOpen ? t('clear') : t('searchItems')}
           onClick={() => (menu.searchOpen ? menu.closeSearch() : menu.openSearch())}
         >

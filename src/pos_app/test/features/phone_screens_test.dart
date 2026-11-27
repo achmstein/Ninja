@@ -4,6 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/services/update_service.dart';
+import 'package:pos_app/core/utils/bidi.dart';
 import 'package:pos_app/core/offline/offline_queue.dart';
 import 'package:pos_app/core/offline/offline_sale.dart';
 import 'package:pos_app/features/availability/screens/availability_screen.dart';
@@ -134,6 +135,51 @@ void main() {
       expectFits(tester);
       await toTheFoot(tester);
       expectFits(tester);
+    });
+
+    testWidgets('on a wide screen a receipt is read beside the list, the newest to begin with ($lang)', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      TicketDetail receipt(int id) => TicketDetail(
+            id: id,
+            type: TicketType.table,
+            status: TicketStatus.settled,
+            receiptNumber: 120482 - id,
+            settledAt: DateTime(2026, 11, 20, 23, 45),
+            total: 60,
+            lines: const [TicketLineView(id: 1, description: LocalizedText(en: 'Latte', ar: 'Latte'), qty: 1, total: 60)],
+            payments: const [PaymentView(id: 1, tender: PaymentTender.cash, amount: 60)],
+          );
+      await tester.pumpWidget(tillApp(
+        const ReceiptsScreen(),
+        locale: locale,
+        overrides: [
+          ticketsRepositoryProvider.overrideWithValue(_Tickets()),
+          for (final id in [1, 3]) ticketProvider(id).overrideWith((ref) async => receipt(id)),
+        ],
+      ));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+
+      // The newest receipt beside the list, with Print and the way to its bill, and nothing to close
+      final pane = find.byType(ReceiptPreview);
+      expect(pane, findsOneWidget);
+      expect(find.descendant(of: pane, matching: find.text(l10n.receiptNumber(120481))), findsWidgets);
+      expect(find.widgetWithText(FButton, l10n.print), findsOneWidget);
+      expect(find.widgetWithText(FButton, l10n.openBill), findsOneWidget);
+      expect(find.widgetWithText(FButton, l10n.close), findsNothing);
+      // The whole width of the screen: the list at the start, the receipt taking the rest to the far edge
+      final rect = tester.getRect(pane);
+      expect(rect.width, greaterThan(700));
+      expect(locale.languageCode == 'ar' ? rect.left : 1280 - rect.right, lessThanOrEqualTo(32));
+
+      // Another receipt is a tap on the list: it shows in the same place, the list staying where it was
+      await tester.tap(find.text(hashNumber(120479)));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      expect(find.byType(ReceiptPreview), findsOneWidget);
+      expect(find.descendant(of: find.byType(ReceiptPreview), matching: find.text(l10n.receiptNumber(120479))), findsWidgets);
     });
 
     testWidgets('a receipt on screen fits a phone, with its three buttons ($lang)', (tester) async {

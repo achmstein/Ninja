@@ -252,8 +252,9 @@ void main() {
       expect(column.width, 379, reason: '380 less the rule that meets the menu');
       expect(column.height, _tablet.height);
       expect(find.descendant(of: find.byType(SaleOrderPanel), matching: find.byIcon(FIcons.x)), findsNothing);
-      // No search button: every category is in view, or listed down the side with its search
-      expect(find.byIcon(FIcons.search), tillItems == 'compact' ? findsOneWidget : findsNothing);
+      // One search either way: the button past the one row of categories over photo tiles,
+      // or the box always in view over the text tiles' list down the side
+      expect(find.byIcon(FIcons.search), findsOneWidget);
       // The note is the sale's: it is asked for once something is rung up
       expect(find.byType(FTextField), findsNWidgets(tillItems == 'compact' ? 1 : 0));
       await tester.tap((tillItems == 'compact' ? find.byType(CompactItemTile) : find.byType(ItemTile)).first);

@@ -30,20 +30,25 @@ Future<void> showReceiptPreview(BuildContext context, int ticketId) {
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      builder: (context) => _ReceiptPreview(ticketId: ticketId),
+      builder: (context) => ReceiptPreview(ticketId: ticketId),
     ),
   );
 }
 
-class _ReceiptPreview extends ConsumerStatefulWidget {
+/// A receipt read on screen, with Print and the way to its bill. The body of
+/// [showReceiptPreview]'s dialog; and [inline], the pane beside the receipts
+/// list on a wide screen, where it fills the height it is given and has no
+/// Close: there is nothing to close, another receipt is a tap on the list.
+class ReceiptPreview extends ConsumerStatefulWidget {
   final int ticketId;
-  const _ReceiptPreview({required this.ticketId});
+  final bool inline;
+  const ReceiptPreview({super.key, required this.ticketId, this.inline = false});
 
   @override
-  ConsumerState<_ReceiptPreview> createState() => _ReceiptPreviewState();
+  ConsumerState<ReceiptPreview> createState() => _ReceiptPreviewState();
 }
 
-class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
+class _ReceiptPreviewState extends ConsumerState<ReceiptPreview> {
   bool _printing = false;
 
   Future<void> _print(TicketDetail ticket) async {
@@ -60,7 +65,7 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
   }
 
   void _openBill() {
-    Navigator.of(context, rootNavigator: true).pop();
+    if (!widget.inline) Navigator.of(context, rootNavigator: true).pop();
     context.go('/ticket/${widget.ticketId}?from=receipts');
   }
 
@@ -99,10 +104,12 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
       ),
     );
 
+    final inline = widget.inline;
+    Widget fitted(Widget sheet) => inline ? Expanded(child: sheet) : Flexible(child: sheet);
     return Padding(
-      padding: const EdgeInsets.all(24),
+      padding: EdgeInsets.all(inline ? 16 : 24),
       child: Column(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: inline ? MainAxisSize.max : MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
           Text(
@@ -112,8 +119,8 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
           const SizedBox(height: 16),
           // The sheet is laid out at paper width and shrunk to the dialog;
           // the paper stays white in dark mode, as paper does
-          Flexible(
-            child: ClipRRect(
+          fitted(
+            ClipRRect(
               borderRadius: BorderRadius.circular(Sizes.radius),
               child: SingleChildScrollView(
                 child: ticket.when(
@@ -151,9 +158,12 @@ class _ReceiptPreviewState extends ConsumerState<_ReceiptPreview> {
             ),
           ),
           const SizedBox(height: 16),
+          // Beside the list there is nothing to close
+          if (inline)
+            Row(children: [openBill, const Spacer(), print])
           // Three across are wider than a phone's dialog: there Print takes
           // the first row and the other two share the next
-          if (context.isCompact) ...[
+          else if (context.isCompact) ...[
             print,
             const SizedBox(height: 8),
             Row(

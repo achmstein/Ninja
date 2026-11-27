@@ -133,7 +133,9 @@ export function Receipts() {
   )
 
   return (
-    <div className='mx-auto grid max-w-6xl items-start gap-4 p-4 md:grid-cols-[minmax(0,26rem)_minmax(0,1fr)]'>
+    // The whole width of the screen, as the floor's places and open bills take it: the list keeps a
+    // width its rows read well at, and the receipt has the rest (pos_app's receipts screen is the same)
+    <div className='grid items-start gap-4 p-4 md:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]'>
     <div className='flex min-w-0 flex-col gap-4'>
       <div className='flex items-center gap-2'>
         <Button asChild variant='ghost' size='icon' className='size-12'>

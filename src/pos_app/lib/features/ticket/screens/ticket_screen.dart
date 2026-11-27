@@ -704,7 +704,11 @@ class _HeaderState extends ConsumerState<TicketHeader> with SingleTickerProvider
               ? Text('−${money(context, ticket.discount)}',
                   style: rowStyle.copyWith(color: AppColors.successColor, fontFeatures: const [FontFeature.tabularFigures()]))
               : null,
-          onPress: widget.canSelect ? () => _pick(widget.onDiscount) : null,
+          // Greyed where there is nothing to take it off
+          enabled: widget.canSelect && (ticket.subtotal > 0 || ticket.discount > 0),
+          onPress: widget.canSelect && (ticket.subtotal > 0 || ticket.discount > 0)
+              ? () => _pick(widget.onDiscount)
+              : null,
         ),
       if (reprint)
         FItem(

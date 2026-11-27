@@ -655,7 +655,7 @@ export function TicketScreen({
               {isOpen && (
                 <DropdownMenuItem
                   className='h-12 gap-3 px-3 text-base'
-                  disabled={lines.length === 0}
+                  disabled={lines.length === 0 || (toNumber(ticket.subtotal) <= 0 && toNumber(ticket.discount) <= 0)}
                   onSelect={() => setDiscountOpen(true)}
                 >
                   <BadgePercent className='size-5' />

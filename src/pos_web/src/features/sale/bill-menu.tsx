@@ -91,7 +91,13 @@ export function BillMenu({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align='end' className='min-w-56'>
-          <DropdownMenuItem className={item} disabled={lines.length === 0} onSelect={() => setDiscountOpen(true)}>
+          {/* Greyed where there is nothing to take it off: no items, or a bill that comes to nothing.
+              A bill a discount already brought to nothing keeps it, to change or take away */}
+          <DropdownMenuItem
+            className={item}
+            disabled={lines.length === 0 || (toNumber(ticket.subtotal) <= 0 && toNumber(ticket.discount) <= 0)}
+            onSelect={() => setDiscountOpen(true)}
+          >
             <BadgePercent className='size-5' />
             <span className='flex-1'>{t('discount')}</span>
           </DropdownMenuItem>
