@@ -1,6 +1,10 @@
 using System.Net;
 using System.Net.Http.Json;
+using Microsoft.Extensions.DependencyInjection;
+using Ninja.Sales.API.Application.IntegrationEvents.EventHandling;
+using Ninja.Sales.API.Application.IntegrationEvents.Events;
 using Ninja.Testing;
+using TicketAggregate = Ninja.Sales.Domain.AggregatesModel.TicketAggregate;
 
 namespace Ninja.Sales.FunctionalTests;
 
@@ -116,6 +120,79 @@ public sealed class PartPaymentScenarios
         Assert.AreEqual(part.Id, settled.Payments.Single(p => p.Tender == "Card").PartPaymentId);
         Assert.IsNull(settled.Payments.Single(p => p.Tender == "Cash").PartPaymentId);
         Assert.AreEqual(0, settled.PartPayments.Count, "a closed bill has payments, not part payments");
+    }
+
+    private static int _nextSession = 880_000;
+
+    /// <summary>A room whose clock has just started: the bill Spaces' event opens, with nothing on it yet.</summary>
+    private static async Task<(int Session, int Ticket)> ARoomAsync(int branch)
+    {
+        var session = Interlocked.Increment(ref _nextSession);
+        using var scope = Suite.Sales.Services.CreateScope();
+        await ActivatorUtilities.CreateInstance<SessionStartedIntegrationEventHandler>(scope.ServiceProvider).Handle(
+            new SessionStartedIntegrationEvent(session, PlaceId: session, PlaceKind: "Room", PlaceName: new("Room 3", "غرفة ٣"), ActualStartTime: DateTime.UtcNow, BranchId: branch));
+        var ticket = await scope.ServiceProvider.GetRequiredService<TicketAggregate.ITicketRepository>().FindOpenBySessionAsync(session);
+        return (session, ticket!.Id);
+    }
+
+    /// <summary>The clock stops: the room's time lands on its bill.</summary>
+    private static async Task TheClockStopsAsync(int branch, int session, decimal cost)
+    {
+        using var scope = Suite.Sales.Services.CreateScope();
+        var now = DateTime.UtcNow;
+        await ActivatorUtilities.CreateInstance<SessionCompletedIntegrationEventHandler>(scope.ServiceProvider).Handle(
+            new SessionCompletedIntegrationEvent(session, CustomerId: null, PlaceId: session, PlaceKind: "Room", PlaceName: new("Room 3", "غرفة ٣"),
+                TotalCost: cost, StartTime: now.AddHours(-2), EndTime: now, Duration: TimeSpan.FromHours(2),
+                Costs: [new("multi", new("Multi", "متعدد"), cost / 2, 2m, cost)], BranchId: branch));
+    }
+
+    [TestMethod]
+    public async Task Someone_leaving_a_room_pays_for_what_they_had_and_something_towards_the_time_while_the_clock_runs()
+    {
+        var branch = NewBranch();
+        var till = TillAt(branch);
+        await OpenShiftAsync(till, 0m);
+        var (session, bill) = await ARoomAsync(branch);
+
+        // Nothing rung up yet, and the time is not on the bill until the clock stops: the money is taken all the same
+        var early = await TakeAsync(till, bill, Cash, 50m, payerName: "Omar");
+        Assert.AreEqual(50m, early.Paid);
+        Assert.AreEqual(0m, early.Remaining, "nothing is left of a bill that holds nothing yet");
+
+        // His latte is 70; he hands over 200, the rest towards the time: past everything the bill holds so far
+        var (added, detail) = await till.RefusedAsync(HttpMethod.Post, Url($"/api/tickets/{bill}/lines"), new { description = new { en = "Latte", ar = "Latte" }, qty = 1m, unitPrice = 70m });
+        Assert.AreEqual(HttpStatusCode.OK, added, detail);
+        var his = (await TicketAsync(till, bill)).Lines.Single().Id;
+        var leaving = await TakeAsync(till, bill, Cash, 200m, payerName: "Ahmed", lineIds: [his]);
+        Assert.AreEqual(250m, leaving.Paid);
+
+        var open = await TicketAsync(till, bill);
+        Assert.AreEqual("Open", open.Status, "his friends play on");
+        Assert.AreEqual(250m, open.PartPaid);
+        Assert.IsTrue(open.Lines.Single().Paid, "his latte is paid for");
+
+        // The clock stops at 300 of time: 370 in all, 250 of it here already, 120 left for those who stayed
+        await TheClockStopsAsync(branch, session, 300m);
+        Assert.AreEqual(370m, (await TicketAsync(till, bill)).Total);
+        var (tooLittle, _) = await till.RefusedAsync(HttpMethod.Post, Url($"/api/tickets/{bill}/settle"), new { payments = new[] { new { tender = Cash, amount = 100m } } });
+        Assert.AreEqual(HttpStatusCode.BadRequest, tooLittle, "the rest is 120, not 100");
+        var receipt = await SettleAsync(till, bill, Cash, 120m);
+        Assert.AreEqual(0m, receipt.Change);
+        Assert.AreEqual("Settled", (await TicketAsync(till, bill)).Status);
+    }
+
+    [TestMethod]
+    public async Task Once_the_clock_has_stopped_a_room_bill_is_paid_in_parts_like_any_other()
+    {
+        var branch = NewBranch();
+        var till = TillAt(branch);
+        var (session, bill) = await ARoomAsync(branch);
+        await TheClockStopsAsync(branch, session, 100m);
+
+        var (whole, why) = await TakeRefusedAsync(till, bill, Cash, 100m);
+        Assert.AreEqual(HttpStatusCode.BadRequest, whole);
+        StringAssert.Contains(why, "settle it instead");
+        Assert.AreEqual(40m, (await TakeAsync(till, bill, Cash, 40m)).Paid);
     }
 
     [TestMethod]

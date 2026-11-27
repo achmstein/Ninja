@@ -18,6 +18,12 @@ public record PartPaymentResult(IReadOnlyList<int> PartPaymentIds, decimal Paid,
 /// (<paramref name="LineIds"/>), or an amount on account. The bill stays open
 /// with less left to pay; settling it later brings only the rest. The money is
 /// the shift's that took it, as a tab payment's is.
+///
+/// A room whose clock is still running owes more than its bill says: the time
+/// lands on it when the clock stops. Someone leaving early pays for what they
+/// had and whatever they choose towards the time, so there the money may come
+/// before the bill does, on a bill with nothing on it yet or past what it
+/// holds so far.
 /// </summary>
 public record TakePartPaymentCommand(
     int TicketId,
@@ -46,7 +52,8 @@ public class TakePartPaymentCommandHandler(
 
         if (ticket.Status != TicketStatus.Open)
             throw new SalesDomainException("This bill is already closed.");
-        if (ticket.Lines.Count == 0)
+        var clockRunning = ticket.HasSession && ticket.SessionEndedAt is null;
+        if (ticket.Lines.Count == 0 && !clockRunning)
             throw new SalesDomainException("There is nothing on this bill yet.");
         // A platform pays its own orders, and a delivery is the rider's to collect: neither is the till's to take in parts
         if (ticket.Platform is not null)
@@ -79,7 +86,7 @@ public class TakePartPaymentCommandHandler(
 
         var bill = ticket.GetBill(await tickets.GetPricingRulesAsync(ticket.BranchId));
         var left = OnlineShares.Money(bill.Total - already.Amount - OnlineShares.Taken(online, now));
-        if (left <= 0)
+        if (left <= 0 && !clockRunning)
             throw new SalesDomainException("This bill is already paid.");
 
         // Whatever the tender, the money belongs to the shift on duty: cash
@@ -96,7 +103,7 @@ public class TakePartPaymentCommandHandler(
             .ToList();
 
         var taking = taken.Sum(p => p.Amount);
-        if (taking >= left)
+        if (taking >= left && !clockRunning)
             throw new SalesDomainException("That pays the bill in full: settle it instead.");
 
         foreach (var payment in taken)
@@ -112,7 +119,7 @@ public class TakePartPaymentCommandHandler(
             "Part payment of {Amount} taken on ticket {TicketId} by {TakenBy} ({Tenders}; shift {ShiftId}); {Remaining} left",
             taking, ticket.Id, command.TakenBy, string.Join("+", taken.Select(p => p.Tender)), shiftId, left - taking);
 
-        return new PartPaymentResult(taken.Select(p => p.Id).ToList(), already.Amount + taking, left - taking);
+        return new PartPaymentResult(taken.Select(p => p.Id).ToList(), already.Amount + taking, Math.Max(0m, left - taking));
     }
 }
 
