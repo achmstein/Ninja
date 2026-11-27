@@ -12,6 +12,7 @@ import '../../../l10n/app_localizations.dart';
 import '../../catalog/models/catalog_item.dart';
 import '../../places/models/place.dart';
 import '../../places/widgets/stay_strip.dart';
+import '../../ticket/dialogs/discount_dialog.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../models/sale_line.dart';
 import 'cart_line_row.dart';
@@ -177,6 +178,7 @@ class SaleOrderPanel extends StatelessWidget {
     final runningStay = bill?.runningStay;
     // Taken already in part payments, on a bill still open
     final partPaid = bill?.ticket?.partPaid ?? 0;
+    final billTicket = bill?.ticket;
 
     // What goes with the order, under its head: each in its one fixed place
     final about = <Widget>[
@@ -375,6 +377,11 @@ class SaleOrderPanel extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                 ],
+                // The discount on the bill and what it takes off, nothing else: a tap changes it or takes it away
+                if (billTicket != null && billTicket.discount > 0) ...[
+                  _DiscountRow(ticket: billTicket),
+                  const SizedBox(height: 8),
+                ],
                 Row(
                   crossAxisAlignment: CrossAxisAlignment.baseline,
                   textBaseline: TextBaseline.alphabetic,
@@ -460,6 +467,56 @@ class _RungUp extends StatelessWidget {
       builder: (context, t, child) =>
           DecoratedBox(decoration: BoxDecoration(color: theme.colors.primary.withValues(alpha: 0.08 * t)), child: child),
       child: child,
+    );
+  }
+}
+
+/// Money off the bill, said over its total where it is taken off: how much
+/// (the percent when it was one), and a tap to change it or take it away.
+/// Why and by whom is the discount pop-up's to say.
+class _DiscountRow extends StatelessWidget {
+  final TicketDetail ticket;
+
+  const _DiscountRow({required this.ticket});
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    final emerald = AppColors.emerald(theme.colors.brightness);
+    final rate = ticket.discountRate;
+    final percent = rate == null ? null : (rate * 10000).round() / 100;
+    final label = percent == null
+        ? l10n.discount
+        : '${l10n.discount} ${percent == percent.roundToDouble() ? percent.toInt() : percent}%';
+    final style = theme.type.detail.copyWith(color: emerald);
+    final row = Container(
+      constraints: const BoxConstraints(minHeight: Sizes.control),
+      padding: const EdgeInsets.symmetric(horizontal: 12),
+      decoration: BoxDecoration(
+        color: emerald.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(Sizes.radius),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(label,
+                maxLines: 1, overflow: TextOverflow.ellipsis, style: style.copyWith(fontWeight: FontWeight.w500)),
+          ),
+          Text('−${money(context, ticket.discount)}',
+              style: style.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
+          if (ticket.isOpen) ...[
+            const SizedBox(width: 8),
+            Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.chevronLeft : FIcons.chevronRight,
+                size: Sizes.iconSmall, color: emerald),
+          ],
+        ],
+      ),
+    );
+    if (!ticket.isOpen) return row;
+    return Semantics(
+      button: true,
+      child: FTappable(onPress: () => showDiscountDialog(context, ticket), child: row),
     );
   }
 }

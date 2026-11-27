@@ -1,11 +1,12 @@
-import type { ElementType, ReactNode, RefObject } from 'react'
-import { Loader2, Plus, Trash2, UserPlus } from 'lucide-react'
+import { useState, type ElementType, type ReactNode, type RefObject } from 'react'
+import { ChevronRight, Loader2, Plus, Trash2, UserPlus } from 'lucide-react'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { SelectedCustomer } from '@/features/customer/selected-customer'
 import { StayStrip } from '@/features/places/stay-strip'
 import { SendingLines } from '@/features/sending/sending-lines'
+import { DiscountDialog } from '@/features/ticket/discount-dialog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -104,6 +105,10 @@ export function OrderPanel({
   const { delivery, delivering } = saleDelivery
   const sent = bill.ticket?.lines ?? []
   const hasSent = sent.length > 0 || bill.mySends.length > 0
+  // Money off the bill is said over its total, where it is taken off: never only inside a menu
+  const discount = toNumber(bill.ticket?.discount)
+  const discountRate = bill.ticket?.discountRate != null ? Math.round(toNumber(bill.ticket.discountRate) * 10000) / 100 : null
+  const [discountOpen, setDiscountOpen] = useState(false)
 
   return (
     <>
@@ -232,6 +237,28 @@ export function OrderPanel({
             <span className='tabular-nums'>{deliveryFee > 0 ? money(deliveryFee) : t('deliveryFree')}</span>
           </div>
         )}
+        {/* The discount on the bill and what it takes off, nothing else: a tap changes it or takes it away */}
+        {onBill && bill.ticket && discount > 0 && (
+          <button
+            type='button'
+            disabled={bill.closed}
+            onClick={() => setDiscountOpen(true)}
+            className='type-detail flex min-h-12 w-full items-center gap-2 rounded-lg bg-emerald-500/10 px-3 text-start text-emerald-700 dark:text-emerald-400'
+          >
+            <span className='min-w-0 flex-1 truncate font-medium'>
+              {t('discount')}
+              {discountRate != null && (
+                <span className='tabular-nums' dir='ltr'>
+                  {' '}
+                  {discountRate}%
+                </span>
+              )}
+            </span>
+            <span className='font-semibold tabular-nums'>−{money(discount)}</span>
+            {!bill.closed && <ChevronRight className='size-4 shrink-0 rtl:rotate-180' aria-hidden />}
+          </button>
+        )}
+        {onBill && bill.ticket && <DiscountDialog ticket={bill.ticket} open={discountOpen} onOpenChange={setDiscountOpen} />}
         <div className='flex items-baseline justify-between'>
           <span className='text-muted-foreground type-detail'>{t('total')}</span>
           <span className='type-figure'>{money(total)}</span>

@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
-import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/widgets/confirm_dialog.dart';
 import 'package:uuid/uuid.dart';
@@ -140,10 +139,6 @@ class _BillMenuState extends ConsumerState<BillMenu> with SingleTickerProviderSt
       FItem(
         prefix: const Icon(FIcons.badgePercent, size: Sizes.icon),
         title: Text(l10n.discount, style: rowStyle),
-        suffix: ticket.discount > 0
-            ? Text('−${money(context, ticket.discount)}',
-                style: rowStyle.copyWith(color: AppColors.successColor, fontFeatures: const [FontFeature.tabularFigures()]))
-            : null,
         onPress: lines.isEmpty ? null : () => _pick(() => showDiscountDialog(context, ticket)),
       ),
       // The bill on paper before it is paid: the customer looks it over, then says how they pay

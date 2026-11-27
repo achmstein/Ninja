@@ -74,7 +74,6 @@ export function BillMenu({
 
   const ticketId = toNumber(ticket.id)
   const lines = ticket.lines ?? []
-  const discount = toNumber(ticket.discount)
   const canReprint = useCanReprintKitchen(lines)
   // The same rules as the bill's own page: an empty bill is anyone's to
   // discard (a room's only once its clock has stopped); with lines on it,
@@ -95,9 +94,6 @@ export function BillMenu({
           <DropdownMenuItem className={item} disabled={lines.length === 0} onSelect={() => setDiscountOpen(true)}>
             <BadgePercent className='size-5' />
             <span className='flex-1'>{t('discount')}</span>
-            {discount > 0 && (
-              <span className='text-emerald-600 tabular-nums dark:text-emerald-400'>−{money(ticket.discount)}</span>
-            )}
           </DropdownMenuItem>
           {lines.length > 0 && (
             <DropdownMenuItem className={item} onSelect={() => void printSheets()}>
