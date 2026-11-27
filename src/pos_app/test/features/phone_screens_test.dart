@@ -4,6 +4,10 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/services/update_service.dart';
+import 'package:pos_app/features/tickets/models/refund.dart';
+import 'package:pos_app/features/receipts/widgets/receipt_pane.dart';
+import 'package:pos_app/core/models/money.dart';
+import 'package:pos_app/core/auth/auth_service.dart';
 import 'package:pos_app/core/utils/bidi.dart';
 import 'package:pos_app/core/offline/offline_queue.dart';
 import 'package:pos_app/core/offline/offline_sale.dart';
@@ -41,8 +45,44 @@ class _Tickets implements TicketsRepository {
           ),
       ];
 
+  final refunded = <({int ticketId, RefundRequest request})>[];
+
+  @override
+  Future<RefundResult> refund(int id, RefundRequest request, {String? requestId}) async {
+    refunded.add((ticketId: id, request: request));
+    return const RefundResult(number: 7, amount: 60);
+  }
+
   @override
   dynamic noSuchMethod(Invocation invocation) => throw UnimplementedError('${invocation.memberName}');
+}
+
+/// A closed bill of two lattes, as the receipts list's rows number them
+TicketDetail _receipt(int id) => TicketDetail(
+      id: id,
+      type: TicketType.table,
+      status: TicketStatus.settled,
+      receiptNumber: 120482 - id,
+      settledAt: DateTime(2026, 11, 20, 23, 45),
+      settledBy: 'Mona',
+      subtotal: 120,
+      total: 120,
+      lines: const [TicketLineView(id: 1, description: LocalizedText(en: 'Latte', ar: 'Latte'), qty: 2, unitPrice: 60, total: 120)],
+      payments: const [PaymentView(id: 1, tender: PaymentTender.cash, amount: 120)],
+    );
+
+class _Owner extends AuthService {
+  @override
+  AuthState build() => const AuthState(
+        isInitializing: false,
+        isAuthenticated: true,
+        mayUseApp: true,
+        userId: 'owner',
+        name: 'Mohamed Abdelrahman',
+        roles: ['Owner'],
+        isOwner: true,
+        branches: [1],
+      );
 }
 
 class _Catalog implements CatalogRepository {
@@ -137,49 +177,95 @@ void main() {
       expectFits(tester);
     });
 
-    testWidgets('on a wide screen a receipt is read beside the list, the newest to begin with ($lang)', (tester) async {
+    testWidgets('on a wide screen a receipt is worked on beside the list, across the whole width ($lang)', (tester) async {
       tester.view.physicalSize = const Size(1280, 800);
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
-      TicketDetail receipt(int id) => TicketDetail(
-            id: id,
-            type: TicketType.table,
-            status: TicketStatus.settled,
-            receiptNumber: 120482 - id,
-            settledAt: DateTime(2026, 11, 20, 23, 45),
-            total: 60,
-            lines: const [TicketLineView(id: 1, description: LocalizedText(en: 'Latte', ar: 'Latte'), qty: 1, total: 60)],
-            payments: const [PaymentView(id: 1, tender: PaymentTender.cash, amount: 60)],
-          );
+      final tickets = _Tickets();
       await tester.pumpWidget(tillApp(
         const ReceiptsScreen(),
         locale: locale,
         overrides: [
-          ticketsRepositoryProvider.overrideWithValue(_Tickets()),
-          for (final id in [1, 3]) ticketProvider(id).overrideWith((ref) async => receipt(id)),
+          ticketsRepositoryProvider.overrideWithValue(tickets),
+          authServiceProvider.overrideWith(_Owner.new),
+          for (final id in [1, 3]) ticketProvider(id).overrideWith((ref) async => _receipt(id)),
         ],
       ));
       await tester.pumpAndSettle();
       expectFits(tester);
 
-      // The newest receipt beside the list, with Print and the way to its bill, and nothing to close
-      final pane = find.byType(ReceiptPreview);
+      // The newest receipt beside the list: what was on it, and what is done to it, in one place
+      final pane = find.byType(ReceiptPane);
+      Finder inPane(Finder what) => find.descendant(of: pane, matching: what);
       expect(pane, findsOneWidget);
-      expect(find.descendant(of: pane, matching: find.text(l10n.receiptNumber(120481))), findsWidgets);
-      expect(find.widgetWithText(FButton, l10n.print), findsOneWidget);
-      expect(find.widgetWithText(FButton, l10n.openBill), findsOneWidget);
-      expect(find.widgetWithText(FButton, l10n.close), findsNothing);
-      // The whole width of the screen: the list at the start, the receipt taking the rest to the far edge
+      expect(inPane(find.text(l10n.receiptNumber(120481))), findsOneWidget);
+      expect(inPane(find.text('Latte')), findsOneWidget);
+      expect(inPane(find.widgetWithText(FButton, l10n.print)), findsOneWidget);
+      expect(inPane(find.widgetWithText(FButton, l10n.refundTicket)), findsOneWidget);
+      // Two panels and nothing else: the list at the start, the receipt across all the rest
       final rect = tester.getRect(pane);
-      expect(rect.width, greaterThan(700));
-      expect(locale.languageCode == 'ar' ? rect.left : 1280 - rect.right, lessThanOrEqualTo(32));
+      final list = 1280 - rect.width;
+      expect(list, inInclusiveRange(320, 448));
+      expect(locale.languageCode == 'ar' ? rect.left : rect.right, locale.languageCode == 'ar' ? 0 : 1280);
+      // Its lines run the pane's width: the amount sits at the pane's far edge, not in a column held to the middle
+      final amount = tester.getRect(inPane(find.text(money(tester.element(pane), 120))).first);
+      expect(locale.languageCode == 'ar' ? amount.left - rect.left : rect.right - amount.right, lessThanOrEqualTo(24));
 
       // Another receipt is a tap on the list: it shows in the same place, the list staying where it was
       await tester.tap(find.text(hashNumber(120479)));
       await tester.pumpAndSettle();
       expectFits(tester);
-      expect(find.byType(ReceiptPreview), findsOneWidget);
-      expect(find.descendant(of: find.byType(ReceiptPreview), matching: find.text(l10n.receiptNumber(120479))), findsWidgets);
+      expect(inPane(find.text(l10n.receiptNumber(120479))), findsOneWidget);
+
+      // A refund is made where the receipt is read: the pane turns to it, and back once it is made
+      await tester.tap(inPane(find.widgetWithText(FButton, l10n.refundTicket)));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      expect(inPane(find.text(l10n.refundTitle(120479))), findsOneWidget);
+      // Nothing picked and no reason yet: nothing to give back
+      Finder confirm() => inPane(find.widgetWithText(FButton, l10n.refundTicket));
+      expect(tester.widget<FButton>(confirm()).onPress, isNull);
+      await tester.tap(inPane(find.byIcon(FIcons.plus)).first);
+      await tester.pump();
+      expect(tester.widget<FButton>(confirm()).onPress, isNull, reason: 'a reason is the audit trail');
+      await tester.tap(inPane(find.widgetWithText(FButton, l10n.refundReasonWrongOrder)));
+      await tester.pump();
+      expect(tester.widget<FButton>(confirm()).onPress, isNotNull);
+      await tester.tap(confirm());
+      await tester.pumpAndSettle();
+
+      expect(tickets.refunded, hasLength(1));
+      expect(tickets.refunded.single.ticketId, 3);
+      expect(tickets.refunded.single.request.reason, l10n.refundReasonWrongOrder);
+      expect(tickets.refunded.single.request.lines.single.qty, 1);
+      // Back on the receipt, the list where it was
+      expect(inPane(find.text(l10n.receiptNumber(120479))), findsOneWidget);
+      expect(find.byType(ReceiptsScreen), findsOneWidget);
+
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 10));
+    });
+
+    testWidgets('a cashier reads and prints a receipt beside the list, and gives nothing back ($lang)', (tester) async {
+      tester.view.physicalSize = const Size(1024, 768);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(tillApp(
+        const ReceiptsScreen(),
+        locale: locale,
+        overrides: [
+          ticketsRepositoryProvider.overrideWithValue(_Tickets()),
+          ticketProvider(1).overrideWith((ref) async => _receipt(1)),
+        ],
+      ));
+      await tester.pumpAndSettle();
+      // A smaller tablet keeps the two panels: the list gives way, never the receipt under it
+      expectFits(tester);
+      final pane = find.byType(ReceiptPane);
+      expect(pane, findsOneWidget);
+      expect(find.descendant(of: pane, matching: find.widgetWithText(FButton, l10n.print)), findsOneWidget);
+      expect(find.descendant(of: pane, matching: find.widgetWithText(FButton, l10n.refundTicket)), findsNothing);
+      await tester.pumpWidget(const SizedBox.shrink());
     });
 
     testWidgets('a receipt on screen fits a phone, with its three buttons ($lang)', (tester) async {

@@ -553,6 +553,21 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refundEverything => 'استرجاع الكل';
 
   @override
+  String get refundReasonWrongOrder => 'طلب خطأ';
+
+  @override
+  String get refundReasonUnhappy => 'العميل غير راضٍ';
+
+  @override
+  String get refundReasonUnavailable => 'صنف غير متوفر';
+
+  @override
+  String get refundReasonOther => 'سبب آخر';
+
+  @override
+  String get refundGoesTo => 'المبلغ يرجع';
+
+  @override
   String get nothingLeftToRefund => 'لم يتبقَّ شيء للاسترجاع على هذا الإيصال';
 
   @override

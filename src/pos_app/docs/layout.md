@@ -72,3 +72,16 @@ There is no `maxWidth`: nothing on the till needs a width between these four.
   screen in the order's details, the place panel, closing a shift, a refund):
   they keep a fixed foot under a scrolling middle and predate `DialogScroll`.
   They stay inside the screen; new pop-ups should not copy them.
+
+## Lists and panels
+
+- **A list is plain rows under thin rules**, edge to edge in its panel: customers, an order's
+  lines, who is paying, receipts. Never a boxed card with rounded corners holding the rows.
+- **The row being read is tinted and marked down its start edge**; nothing else about it moves.
+- **A screen with two parts is two panels divided by a rule**, across the whole width: the
+  sale screen's menu and order, the receipts list and the receipt. Their heads are the same
+  height (8 + 48 + 8), so the rules under them meet in one line.
+- **Content runs the width of its panel.** Nothing is held to a column in the middle of a
+  wide screen: what is left beside it reads as something missing.
+- **What is done to the thing a panel shows is done in that panel**, its actions at the foot:
+  a refund is made where the receipt is read, not on another page.

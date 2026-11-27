@@ -329,6 +329,11 @@
     }
   },
   "refundEverything": "Refund everything",
+  "refundReasonWrongOrder": "Wrong order",
+  "refundReasonUnhappy": "Customer not happy",
+  "refundReasonUnavailable": "Item unavailable",
+  "refundReasonOther": "Another reason",
+  "refundGoesTo": "The money goes back",
   "nothingLeftToRefund": "Nothing is left to refund on this receipt",
   "confirmRefund": "Refund {amount}",
   "@confirmRefund": {

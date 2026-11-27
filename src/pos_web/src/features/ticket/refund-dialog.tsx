@@ -1,7 +1,5 @@
-import { useEffect, useMemo, useState } from 'react'
-import { useMutation, useQueryClient } from '@tanstack/react-query'
+import { useEffect } from 'react'
 import { Banknote, Loader2, Minus, Plus, User } from 'lucide-react'
-import { refundTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail } from '@/api/sales/types.gen'
 import { Button } from '@/components/ui/button'
 import {
@@ -14,13 +12,10 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
-import { API_VERSION } from '@/lib/api-client'
-import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { ACCOUNT_TENDER, BASE_TENDERS } from './tenders'
+import { useRefund } from './use-refund'
 
 type RefundDialogProps = {
   ticket: TicketDetail
@@ -28,139 +23,31 @@ type RefundDialogProps = {
   onOpenChange: (open: boolean) => void
 }
 
-type Holder = { id: string; name: string }
-
 /**
- * Owner-only: issues a credit note against a settled ticket. Lines are
- * picked by quantity — what is left of each after earlier credit notes —
- * and each gives back what the customer paid for it, service and VAT
- * included; the preview mirrors the server's arithmetic, the server's
- * answer is the one printed. Cash comes out of the drawer; a tab that paid
- * can be credited instead. The reason is mandatory: it is the audit trail.
+ * Owner-only: issues a credit note against a settled ticket, from the bill's
+ * own page. What is picked, the preview and the rules are `useRefund`'s, the
+ * same making the receipts page uses beside its list.
  */
 export function RefundDialog({ ticket, open, onOpenChange }: RefundDialogProps) {
   const t = useT()
   const localized = useLocalized()
   const money = useMoney()
-  const queryClient = useQueryClient()
-
-  const [qtyByLine, setQtyByLine] = useState<Record<number, number>>({})
-  const [reason, setReason] = useState('')
-  const [tender, setTender] = useState<'Cash' | 'Account'>('Cash')
-  const [holderId, setHolderId] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!open) {
-      setQtyByLine({})
-      setReason('')
-      setTender('Cash')
-      setHolderId(null)
-    }
-  }, [open])
-
-  // What earlier credit notes already took, per line
-  const refundedQty = useMemo(() => {
-    const map = new Map<number, number>()
-    for (const refund of ticket.refunds ?? []) {
-      for (const line of refund.lines ?? []) {
-        const id = toNumber(line.ticketLineId)
-        map.set(id, (map.get(id) ?? 0) + toNumber(line.qty))
-      }
-    }
-    return map
-  }, [ticket.refunds])
-
-  // Discount lines cannot come back on their own; everything else can, up
-  // to what is left of it
-  const lines = (ticket.lines ?? [])
-    .filter((line) => toNumber(line.total) > 0)
-    .map((line) => {
-      const id = toNumber(line.id)
-      const left = toNumber(line.qty) - (refundedQty.get(id) ?? 0)
-      return { line, id, left: Math.max(0, left), picked: qtyByLine[id] ?? 0 }
-    })
-    .filter((entry) => entry.left > 0)
-
-  const total = toNumber(ticket.total)
-  const subtotal = toNumber(ticket.subtotal)
-  const refundedSoFar = toNumber(ticket.refundedTotal)
-  const remainder = Math.max(0, total - refundedSoFar)
-  const paidPerMenuPound = subtotal > 0 ? total / subtotal : 1
-
-  const everythingPicked =
-    lines.length > 0 && lines.every((entry) => entry.picked >= entry.left)
-  const preview = everythingPicked
-    ? remainder
-    : lines.reduce((sum, entry) => {
-        if (entry.picked <= 0) return sum
-        const menu =
-          (toNumber(entry.line.total) * entry.picked) / toNumber(entry.line.qty)
-        return sum + Math.round(menu * paidPerMenuPound * 100) / 100
-      }, 0)
-
-  // Tabs that paid this ticket are the only ones a refund can go back onto
-  const holders: Holder[] = []
-  for (const payment of ticket.payments ?? []) {
-    if (payment.tender === ACCOUNT_TENDER.name && payment.customerId) {
-      const id = String(payment.customerId)
-      if (!holders.some((h) => h.id === id))
-        holders.push({ id, name: payment.customerName ?? '' })
-    }
+  const making = useRefund(ticket, () => onOpenChange(false))
+  const { lines, remainder, preview, everythingPicked, reason, setReason, tender, setTender, holders, holder, setHolderId, offerAccount, canRefund } = making
+  const pickEverything = making.pickEverything
+  const submit = making.submit
+  const refund = { isPending: making.pending }
+  const setQty = (id: number, _left: number, next: number) => {
+    const entry = lines.find((e) => e.id === id)
+    if (entry) making.step(entry, next > entry.picked ? 1 : -1)
   }
-  const holder = holders.find((h) => h.id === holderId) ?? holders[0]
-  // Back to a tab only where the business runs tabs, or a tab paid this bill (it can still be paid back)
-  const offerAccount = useFeatures().tabs || holders.length > 0
 
-  const refund = useMutation({
-    ...refundTicketMutation(),
-    onSuccess: (result) => {
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getTicket' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
-      queryClient.invalidateQueries({ queryKey: [{ _id: 'getCurrentShift' }] })
-      toast.success(
-        t('ticketRefunded', {
-          number: toNumber(result.number),
-          amount: money(result.amount),
-        })
-      )
-      onOpenChange(false)
-    },
-  })
-
-  const setQty = (id: number, left: number, next: number) =>
-    setQtyByLine((prev) => ({
-      ...prev,
-      [id]: Math.max(0, Math.min(left, next)),
-    }))
-
-  const pickEverything = () =>
-    setQtyByLine(Object.fromEntries(lines.map((entry) => [entry.id, entry.left])))
-
-  const canRefund =
-    preview > 0 &&
-    reason.trim().length > 0 &&
-    (tender === 'Cash' || holder != null) &&
-    !refund.isPending
-
-  const submit = () =>
-    refund.mutate({
-      // A retry on business Wi-Fi must not become a second command
-      headers: { 'x-requestid': crypto.randomUUID() },
-      path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
-      body: {
-        lines: lines
-          .filter((entry) => entry.picked > 0)
-          .map((entry) => ({ lineId: entry.id, qty: entry.picked })),
-        reason: reason.trim(),
-        tender:
-          tender === 'Account'
-            ? ACCOUNT_TENDER.value
-            : BASE_TENDERS[0].value,
-        customerId: tender === 'Account' ? holder?.id : null,
-        customerName: tender === 'Account' ? holder?.name : null,
-      },
-    })
+  // Each opening starts clean
+  const reset = making.reset
+  useEffect(() => {
+    if (!open) reset()
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>

@@ -315,6 +315,11 @@
     }
   },
   "refundEverything": "استرجاع الكل",
+  "refundReasonWrongOrder": "طلب خطأ",
+  "refundReasonUnhappy": "العميل غير راضٍ",
+  "refundReasonUnavailable": "صنف غير متوفر",
+  "refundReasonOther": "سبب آخر",
+  "refundGoesTo": "المبلغ يرجع",
   "nothingLeftToRefund": "لم يتبقَّ شيء للاسترجاع على هذا الإيصال",
   "confirmRefund": "إرجاع {amount}",
   "@confirmRefund": {

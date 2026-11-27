@@ -132,13 +132,11 @@ export function Receipts() {
     />
   )
 
-  return (
-    // The whole width of the screen, as the floor's places and open bills take it: the list keeps a
-    // width its rows read well at, and the receipt has the rest (pos_app's receipts screen is the same)
-    <div className='grid items-start gap-4 p-4 md:grid-cols-[minmax(0,28rem)_minmax(0,1fr)]'>
-    <div className='flex min-w-0 flex-col gap-4'>
-      <div className='flex items-center gap-2'>
-        <Button asChild variant='ghost' size='icon' className='size-12'>
+  const list = (
+    <>
+      {/* Built like the sale screen's heads (8 + 48 + 8), so the rule under it meets the one under the receipt's */}
+      <div className='flex shrink-0 items-center gap-2 border-b px-3 py-2'>
+        <Button asChild variant='ghost' size='icon' className='size-12 shrink-0'>
           <Link to='/' aria-label={t('backToFloor')}>
             <BackIcon className='size-6' />
           </Link>
@@ -146,93 +144,94 @@ export function Receipts() {
         <h1 className='type-title'>{t('receipts')}</h1>
       </div>
 
-      <div className='relative'>
-        <Search className='text-muted-foreground absolute start-3 top-1/2 size-5 -translate-y-1/2' />
-        <Input
-          value={term}
-          onChange={(e) => setTerm(e.target.value)}
-          placeholder={t('searchReceiptNumber')}
-          inputMode='numeric'
-          className='h-12 ps-10 text-base'
-          autoComplete='off'
-        />
+      <div className='shrink-0 border-b p-2'>
+        <div className='relative'>
+          <Search className='text-muted-foreground absolute start-3 top-1/2 size-5 -translate-y-1/2' />
+          <Input
+            value={term}
+            onChange={(e) => setTerm(e.target.value)}
+            placeholder={t('searchReceiptNumber')}
+            inputMode='numeric'
+            className='h-12 ps-10 text-base'
+            autoComplete='off'
+          />
+        </div>
       </div>
 
-      {isLoading ? (
-        <div className='bg-card divide-y overflow-hidden rounded-xl border'>
-          {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className='flex h-16 w-full items-center gap-3 px-3'>
-              {/* number, icon, place + date, total — a receipt row's shape */}
-              <Skeleton className='h-5 w-10 shrink-0' />
-              <Skeleton className='size-5 shrink-0 rounded' />
-              <div className='min-w-0 flex-1 space-y-1.5'>
-                <Skeleton className='h-4 w-1/2' />
-                <Skeleton className='h-3 w-1/3' />
+      {/* Plain rows under thin rules, as the till lists everything else (customers, an order's lines,
+          who is paying): never a boxed card with rounded corners */}
+      <div className='min-h-0 flex-1 md:overflow-y-auto'>
+        {isLoading ? (
+          <div className='divide-y border-b'>
+            {Array.from({ length: 8 }).map((_, i) => (
+              <div key={i} className='flex h-16 w-full items-center gap-3 px-4'>
+                {/* number, icon, place + date, total: a receipt row's shape */}
+                <Skeleton className='h-5 w-10 shrink-0' />
+                <Skeleton className='size-5 shrink-0 rounded' />
+                <div className='min-w-0 flex-1 space-y-1.5'>
+                  <Skeleton className='h-4 w-1/2' />
+                  <Skeleton className='h-3 w-1/3' />
+                </div>
+                <Skeleton className='h-5 w-16 shrink-0' />
               </div>
-              <Skeleton className='h-5 w-16 shrink-0' />
-            </div>
-          ))}
-        </div>
-      ) : bills.length === 0 ? (
-        <p className='text-muted-foreground py-16 text-center'>
-          {t('noReceipts')}
-        </p>
-      ) : (
-        <div className='bg-card divide-y overflow-hidden rounded-xl border'>
-          {bills.map((bill) => {
-            const { delivery, title } = titleOf(bill)
-            const Icon = delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
-            const refunded = toNumber(bill.refundedTotal)
-            const id = toNumber(bill.id)
-            return (
-              <button
-                key={String(bill.id)}
-                type='button'
-                onClick={() => setPickedId(id)}
-                aria-current={id === shownId ? 'true' : undefined}
-                className={cn(
-                  'hover:bg-accent/50 flex h-16 w-full items-center gap-3 px-3 text-start',
-                  id === shownId && 'bg-accent hover:bg-accent'
-                )}
-              >
-                <span className='w-14 shrink-0 type-heading tabular-nums'>
-                  #{toNumber(bill.receiptNumber)}
-                </span>
-                <Icon className='text-muted-foreground size-5 shrink-0' />
-                <span className='min-w-0 flex-1'>
-                  <BillTitle title={title} className='type-heading block truncate' />
-                  <span className='text-muted-foreground type-detail block truncate'>
-                    {bill.settledAt &&
-                      new Intl.DateTimeFormat(locale, {
-                        dateStyle: 'medium',
-                        timeStyle: 'short',
-                      }).format(new Date(bill.settledAt))}
-                    {refunded > 0 && ` · ${t('refundedSoFar')} −${money(refunded)}`}
+            ))}
+          </div>
+        ) : bills.length === 0 ? (
+          <p className='text-muted-foreground py-16 text-center'>{t('noReceipts')}</p>
+        ) : (
+          <div className='divide-y border-b'>
+            {bills.map((bill) => {
+              const { delivery, title } = titleOf(bill)
+              const Icon = delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
+              const refunded = toNumber(bill.refundedTotal)
+              const id = toNumber(bill.id)
+              const reading = id === shownId
+              return (
+                <button
+                  key={String(bill.id)}
+                  type='button'
+                  onClick={() => setPickedId(id)}
+                  aria-current={reading ? 'true' : undefined}
+                  className={cn(
+                    'hover:bg-accent/50 flex min-h-16 w-full items-center gap-3 px-4 py-2 text-start',
+                    // The one being read: tinted, and marked down its start edge
+                    reading && 'bg-accent hover:bg-accent border-primary border-s-[3px] ps-[calc(1rem-3px)]',
+                  )}
+                >
+                  <span className='type-heading w-14 shrink-0 tabular-nums'>#{toNumber(bill.receiptNumber)}</span>
+                  <Icon className='text-muted-foreground size-5 shrink-0' />
+                  <span className='min-w-0 flex-1'>
+                    <BillTitle title={title} className='type-heading block truncate' />
+                    <span className='text-muted-foreground type-detail block truncate'>
+                      {bill.settledAt &&
+                        new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(bill.settledAt))}
+                      {refunded > 0 && <span className='text-destructive'>{` · ${t('refundedSoFar')} −${money(refunded)}`}</span>}
+                    </span>
                   </span>
-                </span>
-                <span className='shrink-0 type-heading tabular-nums'>
-                  {money(bill.total)}
-                </span>
-                <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />
-              </button>
-            )
-          })}
-        </div>
-      )}
+                  <span className='type-heading shrink-0 tabular-nums'>{money(bill.total)}</span>
+                  <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />
+                </button>
+              )
+            })}
+          </div>
+        )}
 
-      {/* Sentinel: reaching it pulls the next page. The spinner shows only
-          while a page is on its way. */}
-      {query.hasNextPage && (
-        <div
-          ref={loadMoreRef}
-          className='text-muted-foreground flex justify-center py-4'
-        >
-          {query.isFetchingNextPage && (
-            <Loader2 className='size-6 animate-spin' />
-          )}
-        </div>
-      )}
-    </div>
+        {/* Sentinel: reaching it pulls the next page. The spinner shows only while a page is on its way. */}
+        {query.hasNextPage && (
+          <div ref={loadMoreRef} className='text-muted-foreground flex justify-center py-4'>
+            {query.isFetchingNextPage && <Loader2 className='size-6 animate-spin' />}
+          </div>
+        )}
+      </div>
+    </>
+  )
+
+  return (
+    // Two panels divided by a rule, across the whole screen, as the sale screen is: the list at a
+    // width its rows read well at (narrower on a small tablet), and the receipt across all the
+    // rest. A phone has the list alone, the receipt in a sheet over it
+    <div className='flex md:h-[calc(100svh-4rem)]'>
+      <div className='flex min-w-0 flex-col max-md:flex-1 md:w-[clamp(20rem,32vw,28rem)] md:shrink-0 md:border-e'>{list}</div>
 
       {isMobile ? (
         <Sheet
@@ -241,20 +240,15 @@ export function Receipts() {
             if (!open) setPickedId(null)
           }}
         >
-          <SheetContent aria-describedby={undefined} className='h-[calc(100svh-2.5rem)]'>
+          <SheetContent aria-describedby={undefined} className='flex h-[calc(100svh-2.5rem)] flex-col'>
             <SheetTitle className='sr-only'>{t('receipts')}</SheetTitle>
             {preview}
           </SheetContent>
         </Sheet>
       ) : (
-        // Stays in view under the header while the list scrolls past it
-        <aside className='bg-card sticky top-20 flex h-[calc(100svh-6rem)] min-w-0 flex-col overflow-hidden rounded-xl border'>
-          {preview || (
-            <p className='text-muted-foreground m-auto p-6 text-center'>
-              {isLoading ? '' : t('noReceipts')}
-            </p>
-          )}
-        </aside>
+        <section className='flex min-w-0 flex-1 flex-col'>
+          {preview || <p className='text-muted-foreground m-auto p-6 text-center'>{isLoading ? '' : t('noReceipts')}</p>}
+        </section>
       )}
     </div>
   )

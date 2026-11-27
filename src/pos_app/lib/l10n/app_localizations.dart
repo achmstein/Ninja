@@ -1010,6 +1010,36 @@ abstract class AppLocalizations {
   /// **'Refund everything'**
   String get refundEverything;
 
+  /// No description provided for @refundReasonWrongOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Wrong order'**
+  String get refundReasonWrongOrder;
+
+  /// No description provided for @refundReasonUnhappy.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer not happy'**
+  String get refundReasonUnhappy;
+
+  /// No description provided for @refundReasonUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Item unavailable'**
+  String get refundReasonUnavailable;
+
+  /// No description provided for @refundReasonOther.
+  ///
+  /// In en, this message translates to:
+  /// **'Another reason'**
+  String get refundReasonOther;
+
+  /// No description provided for @refundGoesTo.
+  ///
+  /// In en, this message translates to:
+  /// **'The money goes back'**
+  String get refundGoesTo;
+
   /// No description provided for @nothingLeftToRefund.
   ///
   /// In en, this message translates to:

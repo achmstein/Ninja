@@ -543,6 +543,21 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refundEverything => 'Refund everything';
 
   @override
+  String get refundReasonWrongOrder => 'Wrong order';
+
+  @override
+  String get refundReasonUnhappy => 'Customer not happy';
+
+  @override
+  String get refundReasonUnavailable => 'Item unavailable';
+
+  @override
+  String get refundReasonOther => 'Another reason';
+
+  @override
+  String get refundGoesTo => 'The money goes back';
+
+  @override
   String get nothingLeftToRefund => 'Nothing is left to refund on this receipt';
 
   @override

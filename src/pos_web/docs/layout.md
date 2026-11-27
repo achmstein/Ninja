@@ -37,3 +37,16 @@ never set by hand (`max-w-*`) on a `DialogContent`: it is given a `size`.
   customer search on the till: a new sale, a round, a new bill, a room's
   people, a reservation and "find customer" all open it.
 - **Taking payment** is a page of its own over the bill.
+
+## Lists and panels
+
+- **A list is plain rows under thin rules**, edge to edge in its panel: customers, an order's
+  lines, who is paying, receipts. Never a boxed card with rounded corners holding the rows.
+- **The row being read is tinted and marked down its start edge**; nothing else about it moves.
+- **A screen with two parts is two panels divided by a rule**, across the whole width: the
+  sale screen's menu and order, the receipts list and the receipt. Their heads are the same
+  height (8 + 48 + 8), so the rules under them meet in one line.
+- **Content runs the width of its panel.** Nothing is held to a column in the middle of a
+  wide screen: what is left beside it reads as something missing.
+- **What is done to the thing a panel shows is done in that panel**, its actions at the foot:
+  a refund is made where the receipt is read, not on another page.
