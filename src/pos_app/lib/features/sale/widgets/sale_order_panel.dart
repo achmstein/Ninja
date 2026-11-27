@@ -15,6 +15,7 @@ import '../../places/widgets/stay_strip.dart';
 import '../../ticket/dialogs/discount_dialog.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../models/sale_line.dart';
+import 'bill_people_row.dart';
 import 'cart_line_row.dart';
 import 'customer_field.dart';
 import 'order_type_switch.dart';
@@ -63,9 +64,10 @@ typedef OrderBill = ({
 ///
 /// Its head says what it is (a new sale, or the table, room or tab it is
 /// rung onto) and carries what goes with that: the room's clock, the counter
-/// or delivery switch, the sale's customer, the delivery's address. Its list
-/// is what is new, then what was sent; nobody is asked for a name while items
-/// are rung up. Its foot is the total and one button: Send what is new, or
+/// or delivery switch, the sale's customer, the delivery's address. A bill
+/// carries the names of its people there: one tapped, and what is rung up
+/// next is theirs; none, and it is nobody's. Its list is what is new, then
+/// what was sent. Its foot is the total and one button: Send what is new, or
 /// take the money.
 ///
 /// It only draws what the sale pad hands it: the pad owns the sale, and the
@@ -77,9 +79,13 @@ class SaleOrderPanel extends StatelessWidget {
   /// The open bill; null for a new sale
   final OrderBill? bill;
 
-  /// A new sale's customer: one for the whole sale, and optional. A bill
-  /// asks at Send
+  /// A new sale's customer: one for the whole sale, and optional
   final SaleCustomer? customer;
+
+  /// A bill's people (the room's, and whoever was rung up for or named on
+  /// it), the one what is rung up next is for, and what a tap, a hold and the
+  /// button at the row's end do; null for a new sale
+  final OrderPeople? people;
 
   /// Empties the sale; null while there is nothing on it to clear
   final VoidCallback? onClear;
@@ -136,6 +142,7 @@ class SaleOrderPanel extends StatelessWidget {
     required this.lines,
     required this.bill,
     required this.customer,
+    this.people,
     required this.onClear,
     this.onClose,
     required this.typingNote,
@@ -187,6 +194,10 @@ class SaleOrderPanel extends StatelessWidget {
       // What kind of order: decided first, and always in sight
       if (orderType != null)
         OrderTypeSwitch(delivering: orderType.delivering, onDelivery: orderType.onDelivery, onCounter: orderType.onCounter),
+      // A bill's people, one row that swipes: a tap and what is rung up next is theirs, a second
+      // tap lets go. The way to add one stays at the row's end. Nothing has to be tapped
+      if (people case final people? when billTicket != null && billTicket.isOpen && !billTicket.isVoided)
+        BillPeopleRow(people: people, height: chipHeight),
       // A new sale is one customer's whole, and optional: always in this one place
       if (!onBill)
         customer != null

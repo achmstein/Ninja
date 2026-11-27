@@ -10,7 +10,8 @@ import { useSecondsClock } from './use-places'
 /**
  * The room's running clock as one line at the top of the order: how long and
  * about how much, always in sight while items are rung up. A tap opens the
- * rest (the rate, the people, the way to end it) under it and closes it again,
+ * rest (the rate, the way to end it) under it and closes it again; the room's
+ * people are the names over the order,
  * so the menu keeps the room the whole panel used to take.
  */
 export function StayStrip({ stay }: { stay: StayViewModel }) {
@@ -33,9 +34,9 @@ export function StayStrip({ stay }: { stay: StayViewModel }) {
         <ChevronDown className={cn('text-muted-foreground size-4 shrink-0 transition-transform', open && 'rotate-180')} aria-hidden />
       </button>
       {open && (
-        // The panel has its own clock line: only the rate, the people and the way to end it are new here
+        // The panel has its own clock line and its people are the names over the order: only the rate and the way to end it are new here
         <div className='border-t p-3'>
-          <StayBar stay={stay} clock={false} />
+          <StayBar stay={stay} clock={false} members={false} />
         </div>
       )}
     </div>

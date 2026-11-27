@@ -10,9 +10,9 @@ import '../../../core/theme/type_roles.dart';
 
 /// The room's running clock as one line at the top of the order: how long
 /// and about how much, always in sight while items are rung up. A tap opens
-/// the rest (the rate, the people, the way to end it) under it and closes it
-/// again, so the menu keeps the room the whole panel used to take. The web
-/// till's StayStrip is the same.
+/// the rest (the rate, the way to end it) under it and closes it again, so
+/// the menu keeps the room the whole panel used to take; the room's people
+/// are the names over the order. The web till's StayStrip is the same.
 class StayStrip extends StatefulWidget {
   final Stay session;
 
@@ -89,7 +89,7 @@ class _StayStripState extends State<StayStrip> {
             // The strip is the clock line: only the rate, the people and the way to end it are new here
             Padding(
               padding: const EdgeInsets.all(12),
-              child: StayBar(session: session, panel: true, clock: false),
+              child: StayBar(session: session, panel: true, clock: false, members: false),
             ),
           ],
         ],

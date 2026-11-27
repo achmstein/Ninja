@@ -25,14 +25,25 @@ import '../../../core/theme/type_roles.dart';
 ///
 /// A customer [addedAtCounter] (by name and phone, not yet claimed) is
 /// marked so, and offers the one-time app link that makes the account theirs.
-Future<void> showCustomerCard(BuildContext context, {required String id, required String name, String? phone, bool addedAtCounter = false}) {
+///
+/// [action] is one more thing to do with them where the card was opened
+/// (taken out of a room): the card closes, then it is done.
+Future<void> showCustomerCard(
+  BuildContext context, {
+  required String id,
+  required String name,
+  String? phone,
+  bool addedAtCounter = false,
+  ({String label, VoidCallback onPress})? action,
+}) {
   return showFDialog<void>(
     context: context,
     useRootNavigator: true,
     builder: (context, style, animation) => DialogPanel(
       style: style,
       animation: animation,
-      builder: (context) => _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter),
+      builder: (context) =>
+          _CustomerCard(customer: CardCustomer(id: id, name: name, phone: phone), addedAtCounter: addedAtCounter, action: action),
     ),
   );
 }
@@ -40,7 +51,8 @@ Future<void> showCustomerCard(BuildContext context, {required String id, require
 class _CustomerCard extends ConsumerWidget {
   final CardCustomer customer;
   final bool addedAtCounter;
-  const _CustomerCard({required this.customer, this.addedAtCounter = false});
+  final ({String label, VoidCallback onPress})? action;
+  const _CustomerCard({required this.customer, this.addedAtCounter = false, this.action});
 
   String _tierLabel(AppLocalizations l10n, String tier) => switch (tier) {
         'Bronze' => l10n.tierBronze,
@@ -227,6 +239,21 @@ class _CustomerCard extends ConsumerWidget {
                 onPress: () => sendAppLink(context, ref, id: customer.id, name: customer.name, phone: customer.phone),
                 prefix: const Icon(FIcons.qrCode, size: Sizes.icon),
                 child: Text(l10n.sendAppLink, style: theme.type.button),
+              ),
+            ),
+            const SizedBox(height: 8),
+          ],
+          if (action case final action?) ...[
+            SizedBox(
+              height: Sizes.control,
+              child: FButton(
+                variant: FButtonVariant.outline,
+                onPress: () {
+                  Navigator.of(context, rootNavigator: true).pop();
+                  action.onPress();
+                },
+                prefix: Icon(FIcons.userMinus, size: Sizes.icon, color: theme.colors.destructive),
+                child: Text(action.label, style: theme.type.button.copyWith(color: theme.colors.destructive)),
               ),
             ),
             const SizedBox(height: 8),

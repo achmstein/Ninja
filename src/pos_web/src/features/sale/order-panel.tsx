@@ -11,10 +11,12 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { BillMenu } from './bill-menu'
+import { BillPeopleRow } from './bill-people-row'
 import { lineKey, type SaleCustomer, type SaleLine } from './cart'
 import { NewLineRow, SectionLabel, SentLines, type LineSelection } from './order-lines'
 import { OrderTypeSwitch } from './order-type-switch'
 import { SaleDeliverySummary } from './sale-delivery-summary'
+import type { BillPeople } from './use-bill-people'
 import type { useOpenBill } from './use-open-bill'
 import type { useSaleDelivery } from './use-sale-delivery'
 
@@ -33,10 +35,11 @@ export type PrimaryAction = {
  *
  * Its head says what it is (a new sale, or the table, room or tab it is rung
  * onto) and carries what goes with that: the room's clock, the counter or
- * delivery switch, the sale's customer, the delivery's address. Its list is
- * what is new, then what was sent; nobody is asked for a name while items are
- * rung up. Its foot is the total and one button: Send what is new, or take
- * the money.
+ * delivery switch, the sale's customer, the delivery's address. A bill
+ * carries the names of its people there: one tapped, and what is rung up next
+ * is theirs; none, and it is nobody's. Its list is what is new, then what was
+ * sent. Its foot is the total and one button: Send what is new, or take the
+ * money.
  */
 export function OrderPanel({
   Heading,
@@ -46,6 +49,7 @@ export function OrderPanel({
   customer,
   onFindCustomer,
   onRemoveCustomer,
+  people,
   saleDelivery,
   lines,
   count,
@@ -74,6 +78,8 @@ export function OrderPanel({
   customer: SaleCustomer | null
   onFindCustomer: () => void
   onRemoveCustomer: () => void
+  /** A bill's people, named over its order (use-bill-people) */
+  people: BillPeople
   saleDelivery: ReturnType<typeof useSaleDelivery>
   lines: SaleLine[]
   count: number
@@ -158,7 +164,9 @@ export function OrderPanel({
             onCounter={saleDelivery.remove}
           />
         )}
-        {/* A new sale is one customer's whole, and optional: always in this one place. A bill asks at Send */}
+        {/* Whose the next items are: the bill's people, a tap each */}
+        {onBill && bill.ticket && !bill.closed && <BillPeopleRow people={people} onAdd={onFindCustomer} />}
+        {/* A new sale is one customer's whole, and optional: always in this one place */}
         {!onBill &&
           (customer ? (
             <SelectedCustomer customer={customer} onRemove={onRemoveCustomer} />

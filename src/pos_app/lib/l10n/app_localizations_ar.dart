@@ -816,17 +816,10 @@ class AppLocalizationsAr extends AppLocalizations {
   String get sentItems => 'أُرسل';
 
   @override
-  String get sendWhoTitle => 'لمن هذا الطلب؟';
+  String get anotherCustomer => 'عميل آخر';
 
   @override
-  String get sendWhoSplitHint =>
-      'لأكثر من شخص: ألغِ علامة أصناف الشخص الآخر، وستبقى للاسم التالي.';
-
-  @override
-  String get sendWhoAnother => 'عميل آخر';
-
-  @override
-  String get sendWhoNobody => 'أرسل دون عميل';
+  String get removeFromRoom => 'إزالة من الغرفة';
 
   @override
   String get orderEmptyHint => 'اضغط على الأصناف لبدء الطلب';

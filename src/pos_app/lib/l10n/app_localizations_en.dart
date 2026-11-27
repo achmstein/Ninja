@@ -801,17 +801,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get sentItems => 'Sent';
 
   @override
-  String get sendWhoTitle => 'Who is this for?';
+  String get anotherCustomer => 'Another customer';
 
   @override
-  String get sendWhoSplitHint =>
-      'For more than one person: untick the items that are someone else\'s. They stay for the next name.';
-
-  @override
-  String get sendWhoAnother => 'Another customer';
-
-  @override
-  String get sendWhoNobody => 'Send without a customer';
+  String get removeFromRoom => 'Remove from room';
 
   @override
   String get orderEmptyHint => 'Tap items on the menu to start the order';

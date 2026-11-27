@@ -5,7 +5,6 @@ import 'package:pos_app/features/sale/bill_people.dart';
 import 'package:pos_app/features/sale/bill_route.dart';
 import 'package:pos_app/features/sale/models/sale_line.dart';
 import 'package:pos_app/features/sale/providers/sale_provider.dart';
-import 'package:pos_app/features/sale/widgets/send_sheet.dart';
 import 'package:pos_app/features/tickets/models/enums.dart';
 import 'package:pos_app/features/tickets/models/pricing.dart';
 import 'package:pos_app/features/tickets/models/ticket_detail.dart';
@@ -122,12 +121,19 @@ void main() {
       await initializeSale();
     });
 
-    test('everything new goes unless it was unticked for the next name', () {
-      final lines = [_line(1), _line(2), _line(3)];
+    test('what is new goes person by person, in the order they first appear', () {
+      const ahmed = SaleCustomer(id: 'a', name: 'Ahmed');
+      const omar = SaleCustomer(name: 'Omar');
+      final lines = [_line(1).forWho(ahmed), _line(2), _line(2).forWho(omar), _line(3).forWho(ahmed), _line(3)];
 
-      expect(linesGoing(lines, const {}), lines);
-      expect([for (final l in linesGoing(lines, {lines[1].key})) l.productId], [1, 3]);
-      expect(linesGoing(lines, {for (final l in lines) l.key}), isEmpty);
+      final rounds = roundsByPerson(lines);
+      expect([for (final round in rounds) '${round.who?.name}: ${[for (final l in round.lines) l.productId]}'],
+          ['Ahmed: [1, 3]', 'null: [2, 3]', 'Omar: [2]']);
+      // The same item for two people is two lines; nobody's is the line it always was
+      expect(_line(2).forWho(omar).key, isNot(_line(2).key));
+      expect(_line(2).forWho(omar).key, isNot(_line(2).forWho(ahmed).key));
+      expect(SaleLine.fromJson(_line(1).forWho(ahmed).toJson()).who?.id, 'a');
+      expect(SaleLine.fromJson(_line(1).toJson()).key, _line(1).key);
     });
 
     test('only what was sent leaves the sale; the rest and the note stay for the next name', () {

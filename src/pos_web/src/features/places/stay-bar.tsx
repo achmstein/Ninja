@@ -32,10 +32,13 @@ import { useSecondsClock, useStayActions } from './use-places'
 export function StayBar({
   stay,
   clock = true,
+  members = true,
 }: {
   stay: StayViewModel
   /** False where the clock is already said above it (the order's one-line strip) */
   clock?: boolean
+  /** False on the order screen, where the room's people are the names over the order */
+  members?: boolean
 }) {
   const t = useT()
   const localized = useLocalized()
@@ -96,12 +99,14 @@ export function StayBar({
           />
         )}
 
-        <div className='flex flex-col gap-2'>
-          <h2 className='text-muted-foreground type-label'>
-            {t('inTheRoom')}
-          </h2>
-          <StayMembers stay={stay} />
-        </div>
+        {members && (
+          <div className='flex flex-col gap-2'>
+            <h2 className='text-muted-foreground type-label'>
+              {t('inTheRoom')}
+            </h2>
+            <StayMembers stay={stay} />
+          </div>
+        )}
 
         <Button
           variant='outline'

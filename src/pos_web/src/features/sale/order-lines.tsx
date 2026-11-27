@@ -42,6 +42,11 @@ export function NewLineRow({
       <div className='min-w-0 flex-1'>
         <div className='type-detail truncate font-medium'>{name}</div>
         {options && <div className='text-muted-foreground type-caption truncate'>{options}</div>}
+        {line.who && (
+          <div className='text-foreground/70 type-caption truncate font-medium'>
+            <bdi>{line.who.name || t('guest')}</bdi>
+          </div>
+        )}
         {line.specialInstructions && (
           <div className='text-muted-foreground type-caption truncate italic'>"{line.specialInstructions}"</div>
         )}

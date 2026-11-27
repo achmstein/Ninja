@@ -33,7 +33,11 @@ class StayBar extends ConsumerStatefulWidget {
   /// one-line strip, which says them already
   final bool clock;
 
-  const StayBar({super.key, required this.session, this.panel = false, this.clock = true});
+  /// The room's people, listed and added here; left off on the order
+  /// screen, where they are the names over the order
+  final bool members;
+
+  const StayBar({super.key, required this.session, this.panel = false, this.clock = true, this.members = true});
 
   @override
   ConsumerState<StayBar> createState() => _StayBarState();
@@ -156,10 +160,12 @@ class _StayBarState extends ConsumerState<StayBar> {
               stacked: true,
             ),
           ],
-          const SizedBox(height: Sizes.gapXl),
-          TypeLabel(l10n.inTheRoom),
-          const SizedBox(height: Sizes.gapSm),
-          StayMembers(session: session),
+          if (widget.members) ...[
+            const SizedBox(height: Sizes.gapXl),
+            TypeLabel(l10n.inTheRoom),
+            const SizedBox(height: Sizes.gapSm),
+            StayMembers(session: session),
+          ],
           const SizedBox(height: Sizes.gapXl),
           SizedBox(
             height: Sizes.control,

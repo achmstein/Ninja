@@ -67,6 +67,11 @@ class SaleLine {
   /// the key: added again by hand it is the same line, and keeps saying so.
   final String? suggestion;
 
+  /// On an open bill: who it was rung up for, the name picked over the order
+  /// when it was added; nobody's when none was. The same item for two people
+  /// is two lines
+  final SaleCustomer? who;
+
   const SaleLine({
     required this.productId,
     required this.nameEn,
@@ -77,13 +82,30 @@ class SaleLine {
     this.specialInstructions,
     this.customizations = const [],
     this.suggestion,
+    this.who,
   });
 
-  /// Same product, same options, same note: the line it merges into
+  /// Same product, same options, same note, same person: the line it merges into
   String get key {
     final options = customizations.map((c) => c.optionId).toList()..sort();
-    return '$productId:${options.join(',')}:${specialInstructions ?? ''}';
+    final who = this.who;
+    final whose = who == null ? '' : '@${(who.id ?? '').isNotEmpty ? who.id : 'name:${who.name.trim()}'}';
+    return '$productId:${options.join(',')}:${specialInstructions ?? ''}$whose';
   }
+
+  /// The same line, rung up for this person
+  SaleLine forWho(SaleCustomer? who) => SaleLine(
+        productId: productId,
+        nameEn: nameEn,
+        nameAr: nameAr,
+        price: price,
+        pictureUrl: pictureUrl,
+        quantity: quantity,
+        specialInstructions: specialInstructions,
+        customizations: customizations,
+        suggestion: suggestion,
+        who: who,
+      );
 
   double get total => price * quantity;
 
@@ -126,6 +148,7 @@ class SaleLine {
         specialInstructions: specialInstructions,
         customizations: customizations,
         suggestion: suggestion,
+        who: who,
       );
 
   /// The same line at another price: another branch's, for an order sent there
@@ -139,6 +162,7 @@ class SaleLine {
         specialInstructions: specialInstructions,
         customizations: customizations,
         suggestion: suggestion,
+        who: who,
       );
 
   /// The same line, rung up from a suggestion
@@ -152,6 +176,7 @@ class SaleLine {
         specialInstructions: specialInstructions,
         customizations: customizations,
         suggestion: 'Till',
+        who: who,
       );
 
   Map<String, dynamic> toJson() => {
@@ -164,6 +189,7 @@ class SaleLine {
         'specialInstructions': specialInstructions,
         'customizations': customizations.map((c) => c.toJson()).toList(),
         'suggestion': suggestion,
+        if (who != null) 'who': who!.toJson(),
       };
 
   factory SaleLine.fromJson(Map<String, dynamic> json) => SaleLine(
@@ -178,6 +204,7 @@ class SaleLine {
             .map((e) => SaleCustomization.fromJson(e as Map<String, dynamic>))
             .toList(),
         suggestion: json['suggestion'] as String?,
+        who: json['who'] is Map<String, dynamic> ? SaleCustomer.fromJson(json['who'] as Map<String, dynamic>) : null,
       );
 }
 

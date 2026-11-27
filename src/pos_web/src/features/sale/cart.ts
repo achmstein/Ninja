@@ -33,6 +33,12 @@ export type SaleLine = {
    * key: added again by hand it is the same line, and keeps saying so.
    */
   suggestion?: 'Till'
+  /**
+   * On an open bill: who it was rung up for, the name picked over the order
+   * when it was added. Nobody's when none was. The same item for two people is
+   * two lines
+   */
+  who?: SaleCustomer | null
 }
 
 /**
@@ -165,13 +171,29 @@ export function samePerson(a: SaleCustomer | null | undefined, b: SaleCustomer |
 }
 
 export function lineKey(
-  line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions'>
+  line: Pick<SaleLine, 'productId' | 'customizations' | 'specialInstructions' | 'who'>
 ): string {
   const options = line.customizations
     .map((c) => c.optionId)
     .sort((a, b) => a - b)
     .join(',')
-  return `${line.productId}:${options}:${line.specialInstructions ?? ''}`
+  const who = line.who ? `@${line.who.id ?? `name:${line.who.name.trim()}`}` : ''
+  return `${line.productId}:${options}:${line.specialInstructions ?? ''}${who}`
+}
+
+/**
+ * What is new on a bill, person by person in the order they first appear: each
+ * goes to the kitchen and onto the bill as that person's round
+ */
+export function roundsByPerson(lines: readonly SaleLine[]): { who: SaleCustomer | null; lines: SaleLine[] }[] {
+  const rounds: { who: SaleCustomer | null; lines: SaleLine[] }[] = []
+  for (const line of lines) {
+    const who = line.who ?? null
+    const round = rounds.find((r) => (who ? samePerson(r.who, who) : r.who === null))
+    if (round) round.lines.push(line)
+    else rounds.push({ who, lines: [line] })
+  }
+  return rounds
 }
 type SaleState = {
   lines: SaleLine[]

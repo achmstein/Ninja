@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 import type { CatalogItemDto } from '@/api/catalog/types.gen'
-import { basePrice, tillSuggestions, type SaleLine } from './cart'
+import { basePrice, lineKey, roundsByPerson, tillSuggestions, type SaleLine } from './cart'
 
 const latte: SaleLine = {
   productId: 1,
@@ -54,5 +54,27 @@ describe('tillSuggestions', () => {
 
   it('offers nothing before an item is rung up', () => {
     expect(tillSuggestions(null, menu, [])).toEqual([])
+  })
+})
+
+describe('whose a line on a bill is', () => {
+  const ahmed = { id: 'a1', name: 'Ahmed' }
+  const omar = { id: null, name: 'Omar' }
+
+  it('keeps the same item for two people as two lines, and one for nobody as it always was', () => {
+    expect(lineKey({ ...latte, who: ahmed })).not.toBe(lineKey({ ...latte, who: omar }))
+    expect(lineKey({ ...latte, who: ahmed })).not.toBe(lineKey(latte))
+    expect(lineKey({ ...latte, who: null })).toBe(lineKey(latte))
+    expect(lineKey({ ...latte, who: { ...ahmed, name: 'Ahmed A.' } })).toBe(lineKey({ ...latte, who: ahmed }))
+  })
+
+  it('sends what is new person by person, in the order they first appear', () => {
+    const tea: SaleLine = { ...latte, productId: 2, customizations: [] }
+    const rounds = roundsByPerson([{ ...latte, who: ahmed }, tea, { ...tea, who: omar }, { ...tea, who: ahmed }, { ...latte, who: null }])
+    expect(rounds.map((round) => [round.who?.name ?? null, round.lines.length])).toEqual([
+      ['Ahmed', 2],
+      [null, 2],
+      ['Omar', 1],
+    ])
   })
 })

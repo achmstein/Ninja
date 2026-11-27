@@ -14,8 +14,8 @@ bool samePerson(SaleCustomer? a, SaleCustomer? b) {
 /// Everyone an open bill already knows, each once, in the order they came:
 /// the room's people, whoever earlier rounds were rung up for (an account,
 /// or a name the till was only told), then anyone named for it since. They
-/// are who Send offers first when it asks whose round this is. The web
-/// till's `billPeople` is the same.
+/// are the names over the order: one tapped, and what is rung up next is
+/// theirs. The web till's `billPeople` is the same.
 List<SaleCustomer> billPeople(
   List<({String id, String name})> roster,
   List<TicketLineView> lines, [
@@ -42,6 +42,22 @@ List<SaleCustomer> billPeople(
     add(person);
   }
   return people;
+}
+
+/// What is new on a bill, person by person in the order they first appear:
+/// each goes to the kitchen and onto the bill as that person's round
+List<({SaleCustomer? who, List<SaleLine> lines})> roundsByPerson(List<SaleLine> lines) {
+  final rounds = <({SaleCustomer? who, List<SaleLine> lines})>[];
+  for (final line in lines) {
+    final who = line.who;
+    final at = rounds.indexWhere((round) => who == null ? round.who == null : samePerson(round.who, who));
+    if (at >= 0) {
+      rounds[at].lines.add(line);
+    } else {
+      rounds.add((who: who, lines: [line]));
+    }
+  }
+  return rounds;
 }
 
 /// What an open bill already holds, as the order screen lists it: the same

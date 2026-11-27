@@ -28,6 +28,7 @@ class CartLineRow extends ConsumerWidget {
 
     final name = line.name.getText(locale);
     final options = line.customizations.map((c) => c.optionName.getText(locale)).join(' · ');
+    final who = line.who;
 
     // In the phone's sheet the steppers are a finger's 48; the tablet's
     // column keeps its tighter rows
@@ -65,6 +66,11 @@ class CartLineRow extends ConsumerWidget {
                 if (line.specialInstructions?.isNotEmpty ?? false)
                   Text('"${line.specialInstructions}"', maxLines: 1, overflow: TextOverflow.ellipsis,
                       style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontStyle: FontStyle.italic)),
+                // Whose it is, as a sent line says it
+                if (who != null)
+                  Text(who.name, maxLines: 1, overflow: TextOverflow.ellipsis,
+                      style: theme.type.caption.copyWith(
+                          fontWeight: FontWeight.w500, color: theme.colors.foreground.withValues(alpha: 0.7))),
                 const SizedBox(height: 6),
                 Row(
                   children: [

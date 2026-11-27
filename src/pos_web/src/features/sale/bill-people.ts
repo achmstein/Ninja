@@ -5,7 +5,7 @@ import { samePerson, type SaleCustomer } from './cart'
  * Everyone an open bill already knows, each once, in the order they came:
  * the room's people, whoever earlier rounds were rung up for (an account, or
  * a name the till was only told), then anyone named for it since. They are
- * who Send offers first when it asks whose round this is.
+ * the names over the order: one tapped, and what is rung up next is theirs.
  */
 export function billPeople(
   roster: readonly { id: string; name: string }[],

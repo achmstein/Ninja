@@ -6,9 +6,6 @@ import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CustomerSearch } from '@/features/customer/customer-search'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
-import { pendingTicketCustomerKey } from '@/features/floor/new-ticket-dialog'
-import { stayRoster } from '@/features/places/status'
-import { useStayActions } from '@/features/places/use-places'
 import { totalWith } from '@/features/sending/bill'
 import { MoveTargetDialog, type MoveTarget } from '@/features/ticket/move-target-dialog'
 import { useIsMobile } from '@/hooks/use-is-mobile'
@@ -18,16 +15,16 @@ import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { BillPayment } from './bill-payment'
-import { billPeople } from './bill-people'
-import { lineKey, saleCount, saleTotal, useSale, type SaleCustomer, type SaleLine } from './cart'
+import { BillPersonCard } from './bill-people-row'
+import { lineKey, roundsByPerson, saleCount, saleTotal, useSale, type SaleLine } from './cart'
 import { CustomizeDialog } from './customize-dialog'
 import { ItemPad } from './item-pad'
 import { OrderPanel, type PrimaryAction } from './order-panel'
 import { PartPaymentSheet, type PartToPay } from './part-payment-sheet'
 import { PayWhoSheet, payersOf, type Payer } from './pay-who-sheet'
 import { PriceReviewDialog } from './price-review-dialog'
-import { SendSheet } from './send-sheet'
 import { useBillLines } from './use-bill-lines'
+import { useBillPeople } from './use-bill-people'
 import { useMenu } from './use-menu'
 import { useOpenBill } from './use-open-bill'
 import { usePlaceOrder } from './use-place-order'
@@ -39,33 +36,21 @@ function oneName(lines: { customerId?: string | null; customerName?: string | nu
   return names.size === 1 && lines[0]?.customerName ? lines[0].customerName : null
 }
 
-/** The customer a tab was opened for (the new-tab dialog): read once, then forgotten */
-function takePendingCustomer(ticketId: number): SaleCustomer | null {
-  try {
-    const key = pendingTicketCustomerKey(ticketId)
-    const raw = localStorage.getItem(key)
-    if (!raw) return null
-    localStorage.removeItem(key)
-    const customer = JSON.parse(raw) as SaleCustomer
-    return customer?.id ? customer : null
-  } catch {
-    return null
-  }
-}
-
 /**
  * The order screen: the menu on one side, the order on the other, for every
  * kind of order.
  *
  * With no `ticketId` it is a new sale: a counter sale (charged, then paid on
  * the spot) or a delivery. Given a `ticketId` it is that open bill (a table,
- * a room, a tab): what is on it already sits under what is being rung up, a
- * round is sent with one button that asks who it is for, and with nothing new
- * the button takes the money.
+ * a room, a tab): what is on it already sits under what is being rung up. Its
+ * people are named over the order: one tapped, and what is rung up next is
+ * theirs, with their usuals offered and their options filled in. A round is
+ * sent with one button, each line already saying whose it is, and with nothing
+ * new the button takes the money.
  *
  * This file only puts the parts together: the menu (`useMenu`, `ItemPad`),
- * the order (`OrderPanel`), the bill it is rung onto (`useOpenBill`) and the
- * ways an order is sent (`usePlaceOrder`).
+ * the order (`OrderPanel`), the bill it is rung onto (`useOpenBill`), its
+ * people (`useBillPeople`) and the ways an order is sent (`usePlaceOrder`).
  */
 export function SalePad({
   ticketId,
@@ -100,7 +85,6 @@ export function SalePad({
   // along the bottom; a tablet keeps it beside the menu
   const [orderOpen, setOrderOpen] = useState(false)
   const [findingCustomer, setFindingCustomer] = useState(false)
-  const [sendOpen, setSendOpen] = useState(false)
   // Taking the money: asked who pays when the bill is more than one person's, then the payment itself
   const [askingWho, setAskingWho] = useState(false)
   const [paying, setPaying] = useState(false)
@@ -127,8 +111,17 @@ export function SalePad({
   // how many times each was rung up here, so its tint starts again on every tap
   const rowRefs = useRef(new Map<string, HTMLDivElement>())
   const [rungUp, setRungUp] = useState<Record<string, number>>({})
-  /** Adds the line and brings its row into view */
-  const add = (line: SaleLine) => {
+  // The bill's people, named over the order: whose the next items are
+  const people = useBillPeople(ticketId, bill)
+  useEffect(() => {
+    setPicked(null)
+    setAskingWho(false)
+    setPaying(false)
+  }, [ticketId])
+
+  /** Adds the line, for whoever is picked on a bill, and brings its row into view */
+  const add = (rungUpLine: SaleLine) => {
+    const line = people.forWho ? { ...rungUpLine, who: people.forWho } : rungUpLine
     addToSale(line)
     const key = lineKey(line)
     setRungUp((r) => ({ ...r, [key]: (r[key] ?? 0) + 1 }))
@@ -137,35 +130,17 @@ export function SalePad({
       requestAnimationFrame(() => rowRefs.current.get(key)?.scrollIntoView({ block: 'nearest', behavior: 'smooth' })),
     )
   }
-  // A new sale's customer brings their usuals; a bill is nobody's until Send
-  const menu = useMenu({ customerId: onBill ? null : (customer?.id ?? null), rail, lines, onAdd: add })
+  // Whose the items are brings their usuals and how they take them: a new
+  // sale's customer, or the name picked on a bill
+  const usualsOf = onBill ? (people.forWho?.id ?? null) : (customer?.id ?? null)
+  const menu = useMenu({ customerId: usualsOf, rail, lines, onAdd: add })
 
-  // Who Send offers for a round: the room's people, whoever earlier rounds
-  // were for, and anyone named since this bill was opened here
-  const [named, setNamed] = useState<SaleCustomer[]>([])
-  useEffect(() => {
-    const opened = ticketId === undefined ? null : takePendingCustomer(ticketId)
-    setNamed(opened ? [opened] : [])
-    setSendOpen(false)
-    setPicked(null)
-    setAskingWho(false)
-    setPaying(false)
-  }, [ticketId])
-  const roster = stayRoster(bill.stay)
-  const people = billPeople(roster, sent, named)
-  const stayActions = useStayActions()
-  /** The ticked part of the round goes for this person; what is left keeps the sheet open for the next name */
-  const sendRound = (part: SaleLine[], who: SaleCustomer | null) => {
-    if (!order.sendRound(part, who)) return
-    if (who) {
-      setNamed((known) => [...known, who])
-      // Somebody new to the room: the cashier is telling us they are there,
-      // and their share of the time will need a tab at settle
-      if (bill.stay && who.id && !roster.some((member) => member.id === who.id)) {
-        stayActions.addMember(toNumber(bill.stay.id), who.id, who.name)
-      }
+  /** What is new goes out, each person's lines as their own round: nothing is asked, every line says whose it is */
+  const sendNew = () => {
+    for (const round of roundsByPerson(lines)) {
+      if (!order.sendRound(round.lines, round.who)) return
+      if (round.who) people.join(round.who)
     }
-    if (part.length === lines.length) setSendOpen(false)
   }
 
   // What is done to lines already on the bill: moved to another bill, or told whose they are
@@ -246,7 +221,7 @@ export function SalePad({
         onClick: order.charge,
       }
     : lines.length > 0
-      ? { label: t('sendNewItems', { count }), amount: itemsTotal, disabled: false, onClick: () => setSendOpen(true) }
+      ? { label: t('sendNewItems', { count }), amount: itemsTotal, disabled: false, onClick: sendNew }
       : {
           label: bill.onTheirWay.length > 0 ? t('confirming') : t('settleAction'),
           busy: bill.onTheirWay.length > 0,
@@ -282,6 +257,7 @@ export function SalePad({
       customer={customer}
       onFindCustomer={() => setFindingCustomer(true)}
       onRemoveCustomer={() => setCustomer(null)}
+      people={people}
       saleDelivery={saleDelivery}
       lines={lines}
       count={count}
@@ -365,13 +341,18 @@ export function SalePad({
 
       <CustomizeDialog
         item={menu.customize.item}
-        customerId={onBill ? null : (customer?.id ?? null)}
+        customerId={usualsOf}
         onOpenChange={(open) => !open && menu.customize.close()}
         onAdd={menu.customize.add}
       />
-      {/* A new sale's customer, found by name; a bill's round asks through the Send sheet */}
-      <CustomerSearch open={findingCustomer} onOpenChange={setFindingCustomer} onPick={setCustomer} />
-      <SendSheet open={sendOpen && lines.length > 0} onOpenChange={setSendOpen} lines={lines} people={people} onSend={sendRound} />
+      {/* Found by name: a new sale's customer, or one more of a bill's people */}
+      <CustomerSearch
+        open={findingCustomer}
+        onOpenChange={setFindingCustomer}
+        exclude={people.all.flatMap((person) => (person.id ? [person.id] : []))}
+        onPick={onBill ? people.add : setCustomer}
+      />
+      <BillPersonCard people={people} />
       <PhoneDeliveryForm
         open={saleDelivery.formOpen}
         onOpenChange={saleDelivery.setFormOpen}
@@ -409,9 +390,7 @@ export function SalePad({
           void billLines.assign(pickedIds, who).then((done) => {
             if (!done) return
             // Somebody with an account named on a room's lines is in the room
-            if (bill.stay && who.id && !roster.some((member) => member.id === who.id)) {
-              stayActions.addMember(toNumber(bill.stay.id), who.id, who.name)
-            }
+            people.join(who)
             stopPicking()
           })
         }}

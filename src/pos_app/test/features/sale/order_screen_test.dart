@@ -33,7 +33,6 @@ import 'package:pos_app/features/sale/widgets/pay_who_sheet.dart';
 import 'package:pos_app/features/sale/widgets/sale_order_panel.dart';
 import 'package:pos_app/core/brand/brand_provider.dart' show compactTillItemsProvider;
 import 'package:pos_app/features/sale/widgets/bill_menu.dart';
-import 'package:pos_app/features/sale/widgets/send_sheet.dart';
 import 'package:pos_app/features/sale/widgets/sent_lines.dart';
 import 'package:pos_app/features/shifts/models/shift.dart';
 import 'package:pos_app/features/shifts/services/shifts_service.dart';
@@ -354,7 +353,7 @@ void main() {
       // What was sent: the same item for the same person is one line, saying whose under it in full
       expect(inPanel(find.byType(SentLines)), findsOneWidget);
       expect(inPanel(find.text('2×')), findsNWidgets(2));
-      final name = inPanel(find.text('Mohamed Abdelrahman Elsayed'));
+      final name = find.descendant(of: find.byType(SentLines), matching: find.text('Mohamed Abdelrahman Elsayed'));
       expect(name, findsOneWidget);
       final item = tester.getRect(inPanel(find.text(_room.lines.first.description!.getText(locale))));
       final whose = tester.getRect(name);
@@ -385,23 +384,44 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('what is new sits on top, and Send asks who it is for ($lang)', (tester) async {
+    testWidgets('a name is tapped first, each new line says whose it is, and Send asks nothing ($lang)', (tester) async {
       _tablet(tester);
       final orders = _Orders();
       await tester.pumpWidget(_screen(_room, locale: locale, orders: orders));
       await _frames(tester);
 
+      final panel = find.byType(SaleOrderPanel);
+      Finder inPanel(Finder what) => find.descendant(of: panel, matching: what);
+      // Everyone the bill knows, by their whole name, over the order; and the way to add one more
+      for (final name in ['Mohamed Abdelrahman Elsayed', 'Karim Mostafa', 'منى عادل']) {
+        expect(inPanel(find.text(name)), findsWidgets);
+      }
+      expect(inPanel(find.widgetWithText(FButton, l10n.anotherCustomer)), findsOneWidget);
+      // The room's people are these names: its details no longer list them
+      await tester.tap(find.byType(StayStrip));
+      await _frames(tester);
+      expect(inPanel(find.text(l10n.inTheRoom.toUpperCase())), findsNothing);
+      await tester.tap(find.byType(StayStrip));
+      await _frames(tester);
+
+      // Nobody tapped: the first item is nobody's
       await tester.tap(find.byType(ItemTile).at(0));
       await tester.pump();
+      // Karim tapped: the next is his, and says so on its line
+      // The names are one row that swipes: his is brought into view, as a finger would
+      await tester.ensureVisible(inPanel(find.text('Karim Mostafa')).first);
+      await tester.pump();
+      await tester.tap(inPanel(find.text('Karim Mostafa')).first);
+      await _frames(tester);
       await tester.tap(find.byType(ItemTile).at(1));
       await _frames(tester);
       expectFits(tester);
 
-      final panel = find.byType(SaleOrderPanel);
-      Finder inPanel(Finder what) => find.descendant(of: panel, matching: what);
       expect(inPanel(find.text(l10n.newItems.toUpperCase())), findsOneWidget);
       expect(inPanel(find.text(l10n.sentItems.toUpperCase())), findsOneWidget);
       expect(inPanel(find.byType(CartLineRow)), findsNWidgets(2));
+      expect(find.descendant(of: inPanel(find.byType(CartLineRow)).first, matching: find.text('Karim Mostafa')), findsNothing);
+      expect(find.descendant(of: inPanel(find.byType(CartLineRow)).last, matching: find.text('Karim Mostafa')), findsOneWidget);
       expect(tester.getRect(inPanel(find.byType(CartLineRow)).last).bottom,
           lessThanOrEqualTo(tester.getRect(inPanel(find.byType(SentLines))).top));
       // The whole bill with what is new: 290 + 41 + 42
@@ -413,43 +433,17 @@ void main() {
       expect(find.descendant(of: send, matching: find.text(money(tester.element(panel), 83))), findsOneWidget);
       await tester.tap(send);
       await _frames(tester);
-      expectFits(tester);
-
-      // Everyone the bill knows, by their whole name; anyone else; and nobody, said outright
-      final sheet = find.byType(SendSheet);
-      expect(sheet, findsOneWidget);
-      for (final name in ['Mohamed Abdelrahman Elsayed', 'Karim Mostafa', 'منى عادل']) {
-        expect(find.descendant(of: sheet, matching: find.widgetWithText(FButton, name)), findsOneWidget);
-      }
-      expect(find.descendant(of: sheet, matching: find.text(l10n.sendWhoAnother)), findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.text(l10n.sendWhoNobody)), findsOneWidget);
-      expect(find.descendant(of: sheet, matching: find.byIcon(FIcons.check)), findsNWidgets(2), reason: 'everything new is ticked');
-
-      // The second item is someone else's: unticked, it stays for the next name
-      await tester.tap(find.descendant(of: sheet, matching: find.text(const LocalizedText(en: 'Item number 2', ar: 'صنف رقم 2').getText(locale))));
-      await tester.pump();
-      await tester.tap(find.descendant(of: sheet, matching: find.widgetWithText(FButton, 'Karim Mostafa')));
       await _frames(tester);
       expectFits(tester);
 
-      expect(orders.placed, hasLength(1));
-      expect(orders.placed.single.ticketId, 1);
-      expect(orders.placed.single.customer?.id, 'b');
-      expect([for (final line in orders.placed.single.lines) line.productId], [1]);
-      // The sheet stays for what is left, and the till stays on this screen
-      expect(find.byType(SendSheet), findsOneWidget);
-      expect(find.byType(SalePadScreen), findsOneWidget);
-      expect(inPanel(find.byType(CartLineRow)), findsOneWidget);
-
-      // The rest for nobody: the round is gone, and so is the sheet
-      await tester.tap(find.descendant(of: find.byType(SendSheet), matching: find.text(l10n.sendWhoNobody)));
-      await _frames(tester);
-      await _frames(tester);
-      expectFits(tester);
+      // Nothing was asked: each person's lines went as their own round, and the till stays on this screen
       expect(orders.placed, hasLength(2));
-      expect(orders.placed.last.customer, isNull);
-      expect([for (final line in orders.placed.last.lines) line.productId], [2]);
-      expect(find.byType(SendSheet), findsNothing);
+      expect(orders.placed.every((order) => order.ticketId == 1), isTrue);
+      final nobodys = orders.placed.singleWhere((order) => order.customer == null);
+      final karims = orders.placed.singleWhere((order) => order.customer?.id == 'b');
+      expect([for (final line in nobodys.lines) line.productId], [1]);
+      expect([for (final line in karims.lines) line.productId], [2]);
+      expect(find.byType(SalePadScreen), findsOneWidget);
       expect(inPanel(find.byType(CartLineRow)), findsNothing);
       // Lines on their way hold the payment
       final foot = inPanel(find.widgetWithText(FButton, l10n.confirming));
@@ -530,7 +524,8 @@ void main() {
       expectFits(tester);
       expect(find.byType(MoveTargetList), findsOneWidget);
       expect(find.text(l10n.moveItemsTitle(1)), findsOneWidget);
-      expect(find.text('Karim Mostafa'), findsOneWidget, reason: 'the open tab they can go to');
+      expect(find.descendant(of: find.byType(MoveTargetList), matching: find.text('Karim Mostafa')), findsOneWidget,
+          reason: 'the open tab they can go to');
       expect(find.text(l10n.moveSecondBillHint), findsNothing, reason: 'a room never gets a second bill');
       expect(find.byType(SalePadScreen), findsOneWidget);
 

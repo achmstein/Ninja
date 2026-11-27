@@ -41,6 +41,8 @@ const tierKey: Record<string, TranslationKey> = {
 type CustomerCardProps = {
   customer: CardCustomer | null
   onOpenChange: (open: boolean) => void
+  /** One more thing to do with them where the card was opened (taken out of a room), above Done */
+  footer?: React.ReactNode
 }
 
 /**
@@ -50,7 +52,7 @@ type CustomerCardProps = {
  * Opened by tapping the customer wherever they already appear; there is no
  * list of everyone — the back office has that.
  */
-export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
+export function CustomerCard({ customer, onOpenChange, footer }: CustomerCardProps) {
   const t = useT()
   const money = useMoney()
   const features = useFeatures()
@@ -200,6 +202,8 @@ export function CustomerCard({ customer, onOpenChange }: CustomerCardProps) {
               {t('sendAppLink')}
             </Button>
           )}
+
+          {footer}
 
           <Button
             variant='outline'

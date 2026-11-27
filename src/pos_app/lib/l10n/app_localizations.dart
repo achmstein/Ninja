@@ -1454,29 +1454,17 @@ abstract class AppLocalizations {
   /// **'Sent'**
   String get sentItems;
 
-  /// No description provided for @sendWhoTitle.
-  ///
-  /// In en, this message translates to:
-  /// **'Who is this for?'**
-  String get sendWhoTitle;
-
-  /// No description provided for @sendWhoSplitHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For more than one person: untick the items that are someone else\'s. They stay for the next name.'**
-  String get sendWhoSplitHint;
-
-  /// No description provided for @sendWhoAnother.
+  /// No description provided for @anotherCustomer.
   ///
   /// In en, this message translates to:
   /// **'Another customer'**
-  String get sendWhoAnother;
+  String get anotherCustomer;
 
-  /// No description provided for @sendWhoNobody.
+  /// No description provided for @removeFromRoom.
   ///
   /// In en, this message translates to:
-  /// **'Send without a customer'**
-  String get sendWhoNobody;
+  /// **'Remove from room'**
+  String get removeFromRoom;
 
   /// No description provided for @orderEmptyHint.
   ///
