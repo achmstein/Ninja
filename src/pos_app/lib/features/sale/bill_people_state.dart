@@ -32,6 +32,9 @@ mixin BillPeopleState<W extends ConsumerStatefulWidget> on ConsumerState<W> {
   /// The open bill; null for a new sale
   int? get billId;
 
+  /// Rung onto an open bill, not a new sale
+  bool get onBill => billId != null;
+
   /// Whose the next items are has changed: what follows from it starts over.
   /// Called inside the setState that changes it
   void whoChanged() {}
