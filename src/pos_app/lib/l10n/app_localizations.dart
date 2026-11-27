@@ -1898,11 +1898,17 @@ abstract class AppLocalizations {
   /// **'Cash'**
   String get cash;
 
-  /// No description provided for @exactCash.
+  /// No description provided for @settleTake.
   ///
   /// In en, this message translates to:
-  /// **'Exact cash'**
-  String get exactCash;
+  /// **'Take {tender}'**
+  String settleTake(String tender);
+
+  /// No description provided for @settleAddPayment.
+  ///
+  /// In en, this message translates to:
+  /// **'Add {tender} payment'**
+  String settleAddPayment(String tender);
 
   /// No description provided for @card.
   ///
@@ -1945,12 +1951,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Amount'**
   String get amount;
-
-  /// No description provided for @addPayment.
-  ///
-  /// In en, this message translates to:
-  /// **'Add payment'**
-  String get addPayment;
 
   /// No description provided for @remaining.
   ///

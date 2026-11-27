@@ -3,11 +3,9 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import * as DialogPrimitive from '@radix-ui/react-dialog'
 import {
   ArrowLeft,
-  Banknote,
   CheckCircle2,
   CloudOff,
   Loader2,
-  Plus,
   Printer,
   Smartphone,
   X,
@@ -34,6 +32,7 @@ import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { PAID_DIM, PaidTag } from './bill-lines'
+import { cashNotes, settleAction } from './settle-action'
 import { canSettleWith, onlineSummary } from './online-payments'
 import {
   ACCOUNT_TENDER,
@@ -154,6 +153,9 @@ type SettleDialogProps = {
  * the money and the Settle across the foot), with what is being paid beside
  * how it is paid on a wide screen. The keypad is the only way to type
  * amounts (no OS keyboard on the till).
+ * One button at the foot does what it says: it takes all that is left in the
+ * way picked and closes the bill, or, with less than that typed, adds one
+ * payment of several.
  * When cash exceeds the remainder, the change due is shown live; the
  * server recomputes it authoritatively on settle.
  */
@@ -253,19 +255,16 @@ export function SettleDialog({
   const paid = payments.reduce((sum, p) => sum + p.amount, 0)
   const remaining = Math.max(0, +(due - paid).toFixed(2))
   const enteredAmount = Number(amountStr || '0')
-  // Live preview: committed payments plus whatever is typed right now
-  const projectedPaid = paid + (Number.isFinite(enteredAmount) ? enteredAmount : 0)
+  // Nothing typed is all that is left: the one-payment happy path is open, tap.
+  // Never for a tab: what goes on account is typed, share by share.
+  const action = settleAction(tender.name, amountStr === '' ? null : enteredAmount, remaining)
+  // Live preview: committed payments plus whatever the tap would take
+  const projectedPaid = paid + (action.kind === 'settle' || action.kind === 'none' ? 0 : action.amount)
   const changeDue = Math.max(0, +(projectedPaid - due).toFixed(2))
 
-  // Prefill the exact remainder whenever the dialog opens or a payment
-  // lands — the one-cash-payment happy path is: open, add payment, settle.
-  // Never for a tab: what goes on account is typed, share by share.
+  // The amount starts afresh whenever the dialog opens or a payment lands
   useEffect(() => {
-    if (open && !result) {
-      setAmountStr(
-        tender.name !== 'Account' && remaining > 0 ? String(remaining) : ''
-      )
-    }
+    if (open && !result) setAmountStr('')
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, paid, due])
 
@@ -285,8 +284,8 @@ export function SettleDialog({
     }
   }, [open])
 
-  // The payments a settle went out with: the exact-cash shortcut sends its
-  // own before the list on screen has caught up
+  // The payments a settle went out with: the button sends the last one with
+  // it, before the list on screen has caught up
   const sentRef = useRef<PendingPayment[]>([])
   const settle = useMutation({
     ...settleTicketMutation(),
@@ -363,7 +362,7 @@ export function SettleDialog({
   const pickTender = (option: (typeof tenders)[number]) => {
     setTender(option)
     if (option.name !== 'Account') {
-      setAmountStr(remaining > 0 ? String(remaining) : '')
+      setAmountStr('')
       return
     }
     setAmountStr(
@@ -374,40 +373,33 @@ export function SettleDialog({
     )
   }
 
-  const addPayment = () => {
-    if (!Number.isFinite(enteredAmount) || enteredAmount <= 0) return
-    // An account payment has to name the tab it charges
-    if (tender.name === 'Account' && !chosenHolder) return
-    // Cash may exceed the remainder (change is given back); card, InstaPay
-    // and account cannot — clamp them to what is actually owed (nobody gets
-    // cash back out of their account tab).
-    const amount =
-      tender.name === 'Cash'
-        ? enteredAmount
-        : Math.min(enteredAmount, remaining)
-    if (amount <= 0) return
-    setPayments((prev) => [
-      ...prev,
-      {
-        tenderValue: tender.value,
-        tenderName: tender.name,
-        amount,
-        customerId: tender.name === 'Account' ? chosenHolder?.id : undefined,
-        customerName: tender.name === 'Account' ? chosenHolder?.name : undefined,
-      },
-    ])
-    setAmountStr('')
-    setAccountHolder(null)
-  }
+  // An account payment has to name the tab it charges
+  const needsHolder = tender.name === 'Account' && !chosenHolder
+  /** The payment the button would take now, in the way picked */
+  const paymentOf = (amount: number): PendingPayment => ({
+    tenderValue: tender.value,
+    tenderName: tender.name,
+    amount,
+    customerId: tender.name === 'Account' ? chosenHolder?.id : undefined,
+    customerName: tender.name === 'Account' ? chosenHolder?.name : undefined,
+  })
 
   const removePayment = (index: number) =>
     setPayments((prev) => prev.filter((_, i) => i !== index))
 
   const [savingOffline, setSavingOffline] = useState(false)
-  const canSettle =
-    canSettleWith(online, paid, payments.length) &&
-    !settle.isPending &&
-    !savingOffline
+  const busyNow = settle.isPending || savingOffline
+  // What the button can do now. Taking the rest closes the bill in the same
+  // tap, so it answers to the same rule as closing it: nobody mid-checkout
+  const canAct =
+    !busyNow &&
+    (action.kind === 'settle'
+      ? canSettleWith(online, paid, payments.length)
+      : action.kind === 'add'
+        ? !needsHolder
+        : action.kind === 'take'
+          ? !needsHolder && canSettleWith(online, paid + action.amount, payments.length + 1)
+          : false)
 
   // A retry on business Wi-Fi must not become a second command: the same
   // payments keep the same request id until the dialog closes
@@ -470,20 +462,27 @@ export function SettleDialog({
   }
 
   const tenderLabel = (name: TenderName) => t(tenderLabelKey[name] ?? 'cash')
-  const busy = settle.isPending || savingOffline
+  const busy = busyNow
 
-  // The one-cash-payment happy path in one tap: what is still owed, in cash,
-  // and settled
-  const cash = tenders.find((option) => option.name === 'Cash')
-  const offersExactCash = payments.length === 0 && remaining > 0 && !!cash && !online.pending
-  const exactCash = () => {
-    if (!cash || remaining <= 0 || busy) return
-    const list: PendingPayment[] = [
-      { tenderValue: cash.value, tenderName: cash.name, amount: remaining },
-    ]
-    setPayments(list)
-    doSettle(list)
+  // The one button: it adds the payment typed, or takes the rest and closes
+  // the bill with it, or closes a bill that has nothing left to take
+  const act = () => {
+    if (!canAct) return
+    if (action.kind === 'settle') return doSettle()
+    if (action.kind === 'add') {
+      setPayments((prev) => [...prev, paymentOf(action.amount)])
+      setAmountStr('')
+      setAccountHolder(null)
+      return
+    }
+    if (action.kind === 'take') {
+      const list = [...payments, paymentOf(action.amount)]
+      setPayments(list)
+      doSettle(list)
+    }
   }
+  // Cash handed over, one tap: exactly what is left, or the note it was paid with
+  const notes = tender.name === 'Cash' ? cashNotes(remaining) : []
 
   const header = (
     <div className='flex h-16 shrink-0 items-center gap-2 border-b px-3'>
@@ -582,24 +581,38 @@ export function SettleDialog({
         </div>
       )}
 
+      {/* Nothing typed is all that is left, shown quietly until an amount takes its place */}
       <div
         dir='ltr'
-        className='bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums'
+        className={cn(
+          'bg-muted flex h-14 items-center justify-end rounded-lg px-4 text-3xl font-bold tabular-nums',
+          amountStr === '' && 'text-muted-foreground/60',
+        )}
       >
-        {amountStr || '0'}
+        {amountStr || (tender.name !== 'Account' && remaining > 0 ? String(remaining) : '0')}
       </div>
 
-      <NumericKeypad value={amountStr} onChange={setAmountStr} />
+      {notes.length > 0 && (
+        <div className='grid grid-cols-4 gap-2'>
+          {notes.map((note) => {
+            const exact = note === remaining
+            const picked = exact ? amountStr === '' : amountStr !== '' && enteredAmount === note
+            return (
+              <Button
+                key={note}
+                variant='outline'
+                className={cn('h-12 px-1 text-base tabular-nums', picked && 'border-primary ring-primary ring-1')}
+                disabled={busy}
+                onClick={() => setAmountStr(exact ? '' : String(note))}
+              >
+                {exact ? t('partPayExact') : note}
+              </Button>
+            )
+          })}
+        </div>
+      )}
 
-      <Button
-        variant='secondary'
-        className='h-12 text-base'
-        disabled={busy || !Number.isFinite(enteredAmount) || enteredAmount <= 0}
-        onClick={addPayment}
-      >
-        <Plus className='size-5' />
-        {t('addPayment')}
-      </Button>
+      <NumericKeypad value={amountStr} onChange={setAmountStr} />
     </div>
   )
 
@@ -611,7 +624,7 @@ export function SettleDialog({
         <div className='divide-y'>
           {(ticket.lines ?? []).map((line) => (
             <div key={String(line.id)} className='flex items-start gap-3 py-2 text-base'>
-              <span className={cn('text-muted-foreground w-10 shrink-0 tabular-nums', line.paid && PAID_DIM)}>
+              <span className={cn('text-muted-foreground min-w-10 shrink-0 whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>
                 {toNumber(line.qty)}×
               </span>
               <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
@@ -719,7 +732,7 @@ export function SettleDialog({
   )
 
   // ----- the bar across the foot, as on the bill: what is left (and the
-  // change) at the start, Settle at the end, exact cash before it -----
+  // change) at the start, the one button at the end -----
   const foot = (
     <div className='flex shrink-0 items-center gap-2 border-t px-4 py-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] max-sm:flex-col max-sm:items-stretch'>
       <div className='grid min-w-0 flex-1 gap-0.5 text-lg sm:max-w-sm'>
@@ -744,25 +757,25 @@ export function SettleDialog({
         )}
       </div>
       <div className='flex gap-2 sm:ms-auto'>
-        {offersExactCash && (
-          <Button
-            variant='outline'
-            className='h-14 gap-2 px-5 text-base max-sm:min-w-0 max-sm:flex-1'
-            disabled={busy}
-            onClick={exactCash}
-          >
-            <Banknote className='size-5' />
-            <span className='truncate'>{t('exactCash')}</span>
-          </Button>
-        )}
+        {/* It says what the tap does: the way picked, and the money it takes */}
         <Button
-          className='h-14 min-w-72 gap-2 px-6 text-lg max-sm:min-w-0 max-sm:flex-[2]'
-          disabled={!canSettle}
-          onClick={() => doSettle()}
+          className='h-14 min-w-72 justify-between gap-4 px-6 text-lg max-sm:min-w-0 max-sm:flex-1'
+          disabled={!canAct}
+          onClick={act}
         >
-          {busy && <Loader2 className='size-5 animate-spin' />}
-          <span className='truncate'>{t('settleAction')}</span>
-          <span className='tabular-nums'>· {money(due)}</span>
+          <span className='flex min-w-0 items-center gap-2'>
+            {busy && <Loader2 className='size-5 shrink-0 animate-spin' />}
+            <span className='truncate'>
+              {action.kind === 'add'
+                ? t('settleAddPayment', { tender: tenderLabel(tender.name) })
+                : action.kind === 'settle'
+                  ? t('settleAction')
+                  : t('settleTake', { tender: tenderLabel(tender.name) })}
+            </span>
+          </span>
+          {action.kind !== 'settle' && (
+            <span className='tabular-nums'>{money(action.kind === 'add' ? action.amount : remaining)}</span>
+          )}
         </Button>
       </div>
     </div>

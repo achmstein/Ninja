@@ -709,7 +709,7 @@ class _DeliveryFormState extends ConsumerState<_DeliveryForm> {
                 child: FButton.icon(
                   variant: FButtonVariant.outline,
                   onPress: () => setState(() => _step = DeliveryStep.who),
-                  child: Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.arrowRight : FIcons.arrowLeft),
+                  child: Icon(FIcons.arrowLeft),
                 ),
               ),
             ),
@@ -933,7 +933,7 @@ String _addressLine(AppLocalizations l10n, String street, String? building, Stri
     ].join(l10n.listSeparator);
 
 /// The arrow that points on to the next step, whichever way the language reads
-IconData _forwardIcon(BuildContext context) => Directionality.of(context) == TextDirection.rtl ? FIcons.arrowLeft : FIcons.arrowRight;
+IconData _forwardIcon(BuildContext context) => FIcons.arrowRight;
 
 /// Where in the three steps the call is, seen at a glance: "Step 1 of 3",
 /// then a bar per step with its icon and name under it. The bars of the step

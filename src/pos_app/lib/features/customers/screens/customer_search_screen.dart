@@ -386,7 +386,7 @@ class _CustomerSearchScreenState extends ConsumerState<CustomerSearchScreen> {
                     variant: FButtonVariant.ghost,
                     onPress: onBack,
                     child: Icon(
-                      Directionality.of(context) == TextDirection.rtl ? FIcons.arrowRight : FIcons.arrowLeft,
+                      FIcons.arrowLeft,
                       size: Sizes.iconNav,
                     ),
                   ),

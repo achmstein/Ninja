@@ -366,8 +366,10 @@ void main() {
       await tester.tap(find.widgetWithText(FButton, tenderLabel(l10n, PaymentTender.cash)));
       await tester.pumpAndSettle();
 
-      // Nothing taken yet: the cash shortcut on a row of its own over Settle
-      expect(tester.getSize(find.widgetWithText(FButton, l10n.exactCash)).width, 360 - 32);
+      // Nothing typed: the one button takes all that is left in cash, and says so
+      expect(find.textContaining(l10n.settleTake(tenderLabel(l10n, PaymentTender.cash))), findsOneWidget);
+      // Cash handed over, one tap each, the same width
+      expect(find.widgetWithText(FButton, l10n.partPayExact), findsOneWidget);
 
       // Every key a finger's size
       for (final key in ['1', '00', '.']) {
@@ -377,18 +379,25 @@ void main() {
       }
 
       // Part of it in cash: the payment's row, and the foot with what is left
-      await tester.tap(find.widgetWithText(FButton, '00'));
-      await tester.pumpAndSettle();
-      await tester.ensureVisible(find.widgetWithText(FButton, l10n.addPayment));
-      await tester.tap(find.widgetWithText(FButton, l10n.addPayment));
+      for (final key in ['1', '00']) {
+        await tester.ensureVisible(find.widgetWithText(FButton, key));
+        await tester.pumpAndSettle();
+        await tester.tap(find.widgetWithText(FButton, key));
+        await tester.pumpAndSettle();
+      }
+      // Less than what is left is typed: the same button adds it as one payment of several
+      final add = find.textContaining(l10n.settleAddPayment(tenderLabel(l10n, PaymentTender.cash)));
+      expect(add, findsOneWidget);
+      await tester.ensureVisible(add);
+      await tester.tap(add);
       await tester.pumpAndSettle();
       expectFits(tester);
       expect(find.text(l10n.noPaymentsYet), findsNothing);
       await tester.drag(find.byType(SingleChildScrollView).first, const Offset(0, -600));
       await tester.pumpAndSettle();
       expectFits(tester);
-      // The cash shortcut is gone once a payment is taken; Settle keeps the bar's width
-      expect(find.text(l10n.exactCash), findsNothing);
+      // With a payment taken the button is back to taking the rest
+      expect(find.textContaining(l10n.settleTake(tenderLabel(l10n, PaymentTender.cash))), findsOneWidget);
     });
   }
 }

@@ -1380,9 +1380,17 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                         ),
                         const SizedBox(width: 8),
                         // Compact: the search, the categories being the list beside the items
+                        // Held to the button's height: left to itself the field is half a pixel
+                        // taller, and the rule under this head then misses the one under the order's
                         if (rail || searching)
                           Expanded(
-                            child: FTextField(
+                            child: SizedBox(
+                              height: Sizes.control,
+                              // The field keeps its own height inside, centred: squeezing it cuts its edge
+                              child: OverflowBox(
+                              minHeight: 0,
+                              maxHeight: double.infinity,
+                              child: FTextField(
                               control: FTextFieldControl.managed(controller: _search),
                               hint: l10n.searchItems,
                               textInputAction: TextInputAction.search,
@@ -1395,6 +1403,8 @@ class _SalePadScreenState extends ConsumerState<SalePadScreen> with WidgetsBindi
                               // The phone's field is closed, and emptied, by the button beside it:
                               // a second cross inside it would be one too many
                               clearable: (value) => !searching && value.text.isNotEmpty,
+                            ),
+                            ),
                             ),
                           )
                         // A phone has no room for rows of chips above the

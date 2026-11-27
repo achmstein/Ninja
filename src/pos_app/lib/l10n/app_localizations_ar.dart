@@ -1078,7 +1078,14 @@ class AppLocalizationsAr extends AppLocalizations {
   String get cash => 'كاش';
 
   @override
-  String get exactCash => 'كاش بالمبلغ كاملًا';
+  String settleTake(String tender) {
+    return 'حصّل $tender';
+  }
+
+  @override
+  String settleAddPayment(String tender) {
+    return 'أضف دفعة $tender';
+  }
 
   @override
   String get card => 'بطاقة';
@@ -1100,9 +1107,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get amount => 'المبلغ';
-
-  @override
-  String get addPayment => 'إضافة دفعة';
 
   @override
   String get remaining => 'المتبقي';

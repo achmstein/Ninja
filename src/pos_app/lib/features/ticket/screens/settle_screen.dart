@@ -29,6 +29,7 @@ import '../../shifts/providers/shifts_provider.dart';
 import '../../tickets/models/ticket_detail.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
+import '../settle_action.dart';
 import '../tenders.dart';
 import '../widgets/tender_grid.dart';
 import '../../../core/theme/type_roles.dart';
@@ -137,7 +138,12 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
   double get _paid => _payments.fold(0, (sum, p) => sum + p.amount);
   double get _remaining => _round2(math.max(0, _due - _paid));
   double get _entered => double.tryParse(_amountStr.isEmpty ? '0' : _amountStr) ?? 0;
-  double get _changeDue => _round2(math.max(0, _paid + _entered - _due));
+
+  // What the one button does now. Nothing typed is all that is left: the
+  // one-payment happy path is open, tap. Never for a tab, whose share is typed
+  SettleAction get _action => settleActionFor(_tender, _amountStr.isEmpty ? null : _entered, _remaining);
+  // Live preview: the payments taken plus whatever the tap would take
+  double get _changeDue => _round2(math.max(0, _paid + _action.amount - _due));
 
   // Account joins when someone on the bill has one — and the tenant runs tabs
   List<PaymentTender> get _tenders => _holders.isNotEmpty && widget.offline == null && ref.read(featuresProvider).tabs
@@ -146,14 +152,6 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
 
   // One account holder needs no choosing
   _AccountHolder? get _chosenHolder => _accountHolder ?? (_holders.length == 1 ? _holders.first : null);
-
-  @override
-  void initState() {
-    super.initState();
-    // Prefill the exact remainder — the one-cash-payment happy path is:
-    // open, add payment, settle
-    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
-  }
 
   // Everyone this bill can go on, with their share. The people in the
   // room come first: a group splits the time between them however they
@@ -355,32 +353,43 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     });
   }
 
-  // Cash, card and InstaPay start from what is still owed; a tab starts
-  // from the chosen person's items
+  // Cash, card and InstaPay start from all that is left, with nothing typed;
+  // a tab starts from the chosen person's items
   void _pickTender(PaymentTender tender) {
     setState(() {
       _tender = tender;
-      _amountStr = tender == PaymentTender.account ? _shareOf(_chosenHolder) : (_remaining > 0 ? _fmt(_remaining) : '');
+      _amountStr = tender == PaymentTender.account ? _shareOf(_chosenHolder) : '';
     });
   }
 
-  void _addPayment() {
-    final entered = _entered;
-    if (entered <= 0) return;
-    // An account payment has to name the tab it charges
-    if (_tender == PaymentTender.account && _chosenHolder == null) return;
-    // Cash may exceed the remainder (change is given back); card, InstaPay
-    // and account cannot — clamp them to what is actually owed
-    final amount = _tender == PaymentTender.cash ? entered : (entered < _remaining ? entered : _remaining);
-    if (amount <= 0) return;
+  // An account payment has to name the tab it charges
+  bool get _needsHolder => _tender == PaymentTender.account && _chosenHolder == null;
+
+  /// What the button can do now. Taking the rest closes the bill in the same tap
+  bool get _canAct => switch (_action.kind) {
+        SettleActionKind.settle => _canSettle,
+        SettleActionKind.add => !_settling && !_needsHolder,
+        SettleActionKind.take => !_settling && !_needsHolder,
+        SettleActionKind.none => false,
+      };
+
+  /// The one button: it adds the payment typed, or takes the rest and closes
+  /// the bill with it, or closes a bill that has nothing left to take
+  void _act() {
+    if (!_canAct) return;
+    final action = _action;
+    if (action.kind == SettleActionKind.settle) {
+      _settle();
+      return;
+    }
     final holder = _tender == PaymentTender.account ? _chosenHolder : null;
     setState(() {
-      _payments.add(SettlePayment(tender: _tender, amount: amount, customerId: holder?.id, customerName: holder?.name));
+      _payments
+          .add(SettlePayment(tender: _tender, amount: action.amount, customerId: holder?.id, customerName: holder?.name));
       _accountHolder = null;
-      // Prefill whatever is still owed for the next payment — never for a
-      // tab: what goes on account is typed, share by share
-      _amountStr = _tender == PaymentTender.account ? '' : (_remaining > 0 ? _fmt(_remaining) : '');
+      _amountStr = '';
     });
+    if (action.kind == SettleActionKind.take) _settle();
   }
 
   Future<void> _settle() async {
@@ -424,17 +433,6 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       if (mounted) setState(() => _settling = false);
     }
   }
-
-  // The one-cash-payment happy path in one tap: what is still owed, in cash,
-  // and settled
-  void _exactCash() {
-    if (_remaining <= 0 || _settling) return;
-    setState(() => _payments.add(SettlePayment(tender: PaymentTender.cash, amount: _remaining)));
-    _settle();
-  }
-
-  bool get _offersExactCash =>
-      _payments.isEmpty && _remaining > 0 && _tenders.contains(PaymentTender.cash) && _phase == MorphPhase.idle;
 
   void _close() => Navigator.of(context, rootNavigator: true).pop(_result);
 
@@ -563,26 +561,57 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
           child: FittedBox(
             fit: BoxFit.scaleDown,
             alignment: Alignment.centerRight,
+            // Nothing typed is all that is left, shown quietly until an amount takes its place
             child: Text(
-              _amountStr.isEmpty ? '0' : _amountStr,
+              _amountStr.isNotEmpty
+                  ? _amountStr
+                  : (_tender != PaymentTender.account && _remaining > 0 ? _fmt(_remaining) : '0'),
               maxLines: 1,
-              style: theme.typography.xl3.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
+              style: theme.typography.xl3.copyWith(
+                fontWeight: FontWeight.w700,
+                fontFeatures: tabular,
+                color: _amountStr.isEmpty ? theme.colors.mutedForeground.withValues(alpha: 0.6) : null,
+              ),
             ),
           ),
         ),
       ),
+      // Cash handed over, one tap: exactly what is left, or the note it was paid with.
+      // Four to a row whatever there are, so each is the same width
+      if (_tender == PaymentTender.cash && _remaining > 0) ...[
+        const SizedBox(height: Sizes.gap),
+        Row(
+          children: [
+            for (final (index, note) in settleCashNotes(_remaining).indexed) ...[
+              if (index > 0) const SizedBox(width: 8),
+              Expanded(
+                child: SizedBox(
+                  height: Sizes.control,
+                  child: FButton(
+                    variant: (note == _remaining ? _amountStr.isEmpty : _amountStr.isNotEmpty && _entered == note)
+                        ? null
+                        : FButtonVariant.outline,
+                    onPress: _settling ? null : () => setState(() => _amountStr = note == _remaining ? '' : _fmt(note)),
+                    child: Flexible(
+                      child: FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(note == _remaining ? l10n.partPayExact : _fmt(note),
+                            maxLines: 1, style: theme.type.button.copyWith(fontFeatures: tabular)),
+                      ),
+                    ),
+                  ),
+                ),
+              ),
+            ],
+            for (var blank = settleCashNotes(_remaining).length; blank < 4; blank++) ...[
+              const SizedBox(width: 8),
+              const Expanded(child: SizedBox.shrink()),
+            ],
+          ],
+        ),
+      ],
       const SizedBox(height: Sizes.gap),
       NumericKeypad(value: _amountStr, onChange: (v) => setState(() => _amountStr = v)),
-      const SizedBox(height: Sizes.gap),
-      SizedBox(
-        height: Sizes.control,
-        child: FButton(
-          variant: FButtonVariant.secondary,
-          onPress: _entered > 0 && !_settling ? _addPayment : null,
-          prefix: const Icon(FIcons.plus, size: Sizes.icon),
-          child: Text(l10n.addPayment, style: theme.type.button),
-        ),
-      ),
     ];
   }
 
@@ -604,11 +633,13 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                SizedBox(
-                  width: 40,
+                ConstrainedBox(
+                  constraints: const BoxConstraints(minWidth: 40),
                   child: PaidDim(
                     paid: line.paid,
                     child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
+                        maxLines: 1,
+                        softWrap: false,
                         style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
                   ),
                 ),
@@ -779,7 +810,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                               ? null
                               : () => setState(() {
                                     _payments.removeAt(index);
-                                    _amountStr = _remaining > 0 ? _fmt(_remaining) : '';
+                                    _amountStr = '';
                                   }),
                           child: const Icon(FIcons.x, size: Sizes.iconSmall),
                         ),
@@ -823,18 +854,21 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
   }
 
   /// The bar across the foot, as on the bill: what is left (and the change)
-  /// at the start, Settle at the end, and the exact-cash shortcut before it
+  /// at the start, the one button at the end. It says what the tap does: the
+  /// way picked, and the money it takes
   Widget _foot(BuildContext context) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final brightness = Theme.of(context).brightness;
     final phone = MediaQuery.sizeOf(context).width < 600;
 
+    final action = _action;
+    final way = tenderLabel(l10n, _tender);
     final settle = MorphButton(
       phase: _phase,
-      solid: _canSettle || _phase != MorphPhase.idle,
+      solid: _canAct || _phase != MorphPhase.idle,
       // Online payments alone may cover the bill: nothing to take here then
-      onPressed: _canSettle ? _settle : null,
+      onPressed: _canAct ? _act : null,
       doneLabel: _doneLabel,
       doneIcon: FIcons.receipt,
       color: theme.colors.primary,
@@ -845,20 +879,19 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       label: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Flexible(child: Text(l10n.settleAction, overflow: TextOverflow.ellipsis)),
-          Text(' · ${money(context, _due)}'),
+          Flexible(
+            child: Text(
+              switch (action.kind) {
+                SettleActionKind.settle => l10n.settleAction,
+                SettleActionKind.add => l10n.settleAddPayment(way),
+                _ => l10n.settleTake(way),
+              },
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          if (action.kind != SettleActionKind.settle)
+            Text(' · ${money(context, action.kind == SettleActionKind.add ? action.amount : _remaining)}'),
         ],
-      ),
-    );
-
-    final exact = SizedBox(
-      height: Sizes.controlLarge,
-      child: FButton(
-        variant: FButtonVariant.outline,
-        mainAxisSize: MainAxisSize.min,
-        onPress: _exactCash,
-        prefix: const Icon(FIcons.banknote, size: Sizes.icon),
-        child: Text(l10n.exactCash, maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.type.button),
       ),
     );
 
@@ -889,9 +922,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: Sizes.gapLg, vertical: Sizes.gap),
       decoration: BoxDecoration(border: Border(top: BorderSide(color: theme.colors.border))),
-      // A phone stacks the figures over the actions; wider, one row. The
-      // exact-cash shortcut gets a row of its own there: beside Settle it had
-      // a third of the bar, less than its words need in either language
+      // A phone stacks the figures over the button; wider, one row
       child: phone
           ? Column(
               mainAxisSize: MainAxisSize.min,
@@ -899,7 +930,6 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
               children: [
                 figures,
                 const SizedBox(height: Sizes.gap),
-                if (_offersExactCash) ...[exact, const SizedBox(height: Sizes.gapSm)],
                 settle,
               ],
             )
@@ -907,7 +937,6 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
               children: [
                 Expanded(child: ConstrainedBox(constraints: const BoxConstraints(maxWidth: 360), child: figures)),
                 const SizedBox(width: Sizes.gapLg),
-                if (_offersExactCash) ...[exact, const SizedBox(width: Sizes.gapSm)],
                 SizedBox(width: 300, child: settle),
               ],
             ),

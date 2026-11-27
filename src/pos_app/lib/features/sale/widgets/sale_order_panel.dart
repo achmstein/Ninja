@@ -507,7 +507,7 @@ class _DiscountRow extends StatelessWidget {
               style: style.copyWith(fontWeight: FontWeight.w600, fontFeatures: const [FontFeature.tabularFigures()])),
           if (ticket.isOpen) ...[
             const SizedBox(width: 8),
-            Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.chevronLeft : FIcons.chevronRight,
+            Icon(FIcons.chevronRight,
                 size: Sizes.iconSmall, color: emerald),
           ],
         ],

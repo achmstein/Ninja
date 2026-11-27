@@ -139,11 +139,15 @@ class _SentRow extends StatelessWidget {
             ),
             const SizedBox(width: 8),
           ],
-          SizedBox(
-            width: 32,
+          // As wide as the count needs, and never under the column the whole counts keep:
+          // a room's hours (1.25) are wider, and were cut onto two lines
+          ConstrainedBox(
+            constraints: const BoxConstraints(minWidth: 32),
             child: PaidDim(
               paid: paid,
               child: Text('${_qty(line.qty)}×',
+                  maxLines: 1,
+                  softWrap: false,
                   style: style.copyWith(
                       color: theme.colors.mutedForeground, fontWeight: FontWeight.w500, fontFeatures: tabular)),
             ),

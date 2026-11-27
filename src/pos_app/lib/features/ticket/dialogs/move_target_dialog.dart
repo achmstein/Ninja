@@ -184,7 +184,7 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
                     style: theme.type.body.copyWith(fontFeatures: const [FontFeature.tabularFigures()])),
               ],
               const SizedBox(width: 8),
-              Icon(Directionality.of(context) == TextDirection.rtl ? FIcons.chevronLeft : FIcons.chevronRight,
+              Icon(FIcons.chevronRight,
                   size: Sizes.iconSmall, color: muted),
             ],
           ),

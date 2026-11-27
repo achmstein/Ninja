@@ -124,7 +124,7 @@ export function SentLines({
                 {picked && <Check className='size-4' />}
               </span>
             )}
-            <span className={cn('w-7 shrink-0 font-medium tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
+            <span className={cn('min-w-7 shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
             <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
               <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
                 {localized(line.description)}

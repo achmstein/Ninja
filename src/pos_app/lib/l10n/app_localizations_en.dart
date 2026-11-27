@@ -1064,7 +1064,14 @@ class AppLocalizationsEn extends AppLocalizations {
   String get cash => 'Cash';
 
   @override
-  String get exactCash => 'Exact cash';
+  String settleTake(String tender) {
+    return 'Take $tender';
+  }
+
+  @override
+  String settleAddPayment(String tender) {
+    return 'Add $tender payment';
+  }
 
   @override
   String get card => 'Card';
@@ -1086,9 +1093,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get amount => 'Amount';
-
-  @override
-  String get addPayment => 'Add payment';
 
   @override
   String get remaining => 'Remaining';

@@ -183,12 +183,13 @@ void main() {
     await tester.tap(find.text('open'));
     await tester.pumpAndSettle();
 
-    // The keypad is prefilled with what is left, not the whole bill
+    // The amount starts from what is left, not the whole bill
     expect(find.text('60'), findsOneWidget);
-    // What is left, in the foot (the Settle button names it too)
+    // What is left, in the foot (the button names it too)
     expect(find.text('60.00 EGP'), findsWidgets);
-    // Nothing added yet: the till still owes the rest
+    // Nothing typed: one tap takes the rest in cash and closes the bill
     final confirm = tester.widget<MorphButton>(find.byType(MorphButton));
-    expect(confirm.onPressed, isNull);
+    expect(confirm.onPressed, isNotNull);
+    expect(find.textContaining('Take Cash'), findsOneWidget);
   });
 }

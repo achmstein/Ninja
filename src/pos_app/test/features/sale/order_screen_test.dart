@@ -31,6 +31,8 @@ import 'package:pos_app/features/sale/widgets/order_type_switch.dart';
 import 'package:pos_app/features/sale/widgets/part_payment_sheet.dart';
 import 'package:pos_app/features/sale/widgets/pay_who_sheet.dart';
 import 'package:pos_app/features/sale/widgets/sale_order_panel.dart';
+import 'package:pos_app/core/brand/brand_provider.dart' show compactTillItemsProvider;
+import 'package:pos_app/features/sale/widgets/bill_menu.dart';
 import 'package:pos_app/features/sale/widgets/send_sheet.dart';
 import 'package:pos_app/features/sale/widgets/sent_lines.dart';
 import 'package:pos_app/features/shifts/models/shift.dart';
@@ -734,6 +736,24 @@ void main() {
 
     await tester.pumpWidget(const SizedBox.shrink());
     await tester.pump(const Duration(seconds: 10));
+  });
+
+  testWidgets('the rule under the head of the menu and the one under the head of the order meet in one line on a bill', (tester) async {
+    _tablet(tester);
+    // Text tiles: the menu's head is the search, always in view
+    await tester.pumpWidget(tillApp(
+      SalePadScreen(ticketId: _room.id),
+      locale: const Locale('ar'),
+      overrides: [..._overrides(_room, tickets: _Tickets()), compactTillItemsProvider.overrideWithValue(true)],
+    ));
+    await _frames(tester);
+    // Each head is a box with a rule under it: the search's on the menu side, the bill's menu's on the order side
+    double headBottom(Finder inside) =>
+        tester.getBottomLeft(find.ancestor(of: inside, matching: find.byType(Container)).first).dy;
+    final menuSide = headBottom(find.byIcon(FIcons.arrowLeft).first);
+    final orderSide = headBottom(find.byType(BillMenu));
+    expect(orderSide, menuSide);
+    await tester.pumpWidget(const SizedBox.shrink());
   });
 
   testWidgets('a new bill starts on the menu, and says how to start', (tester) async {
