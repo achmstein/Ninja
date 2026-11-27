@@ -1565,8 +1565,14 @@ abstract class AppLocalizations {
   /// No description provided for @partPayOther.
   ///
   /// In en, this message translates to:
-  /// **'Other'**
+  /// **'Another amount'**
   String get partPayOther;
+
+  /// No description provided for @partPayItemsOnly.
+  ///
+  /// In en, this message translates to:
+  /// **'Just their items'**
+  String get partPayItemsOnly;
 
   /// No description provided for @partPaySplit.
   ///

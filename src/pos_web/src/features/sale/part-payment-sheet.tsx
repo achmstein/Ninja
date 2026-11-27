@@ -13,7 +13,7 @@ import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { partAmountProblem, partAmounts } from './part-amounts'
+import { partAmountProblem } from './part-amounts'
 
 /**
  * What is being paid apart from the rest of the bill: whose it is, which lines,
@@ -26,7 +26,8 @@ const round2 = (n: number) => Math.round(n * 100) / 100
 
 /**
  * Taking one person's part of a bill, the bill staying open for the rest. The
- * customer says what they pay: exactly what they had, or more, the rest going
+ * customer says what they pay: what they had, as it stands, or any other
+ * amount typed in its place, what is over their items going
  * on account of the bill (a player leaving a room pays towards its time, and
  * how much is theirs to say, never the till's to work out). The amount on the
  * sheet is the amount taken; it goes into this shift's drawer at once.
@@ -111,32 +112,21 @@ export function PartPaymentSheet({
           <div className={cn('type-figure tabular-nums', amount <= 0 && 'text-muted-foreground')}>{money(amount)}</div>
         </div>
 
-        {/* What they pay, one tap: exactly their own, a round sum, or any amount */}
-        <div className='grid grid-cols-4 gap-2'>
-          {partAmounts(items).map((sum) => (
-            <Button
-              key={sum}
-              variant='outline'
-              className={cn('h-12 px-1 text-base tabular-nums', !keypad && amount === sum && 'border-primary ring-primary ring-1')}
-              onClick={() => {
-                setKeypad(false)
-                setTyped(String(sum))
-              }}
-            >
-              {sum === items ? t('partPayExact') : sum}
-            </Button>
-          ))}
+        {/* They pay for what they had unless told otherwise: one button opens the keypad
+            for any other amount, and the same button goes back to just their items.
+            An amount on account has nothing to go back to: its keypad is simply there */}
+        {!onAccount && (
           <Button
             variant='outline'
-            className={cn('h-12 px-1 text-base', keypad && 'border-primary ring-primary ring-1')}
+            className='h-12 w-full text-base'
             onClick={() => {
-              setKeypad(true)
+              setKeypad(!keypad)
               setTyped('')
             }}
           >
-            {t('partPayOther')}
+            {keypad ? t('partPayItemsOnly') : t('partPayOther')}
           </Button>
-        </div>
+        )}
         {keypad && <NumericKeypad value={typed} onChange={setTyped} />}
 
         {/* Said before the tap: what is theirs, and what goes towards the rest of the bill */}

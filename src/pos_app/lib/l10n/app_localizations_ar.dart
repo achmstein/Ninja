@@ -882,6 +882,9 @@ class AppLocalizationsAr extends AppLocalizations {
   String get partPayOther => 'مبلغ آخر';
 
   @override
+  String get partPayItemsOnly => 'أصنافه فقط';
+
+  @override
   String partPaySplit(String items, String extra) {
     return '$items لأصنافه + $extra على حساب الفاتورة';
   }

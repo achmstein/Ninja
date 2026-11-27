@@ -464,6 +464,7 @@
   "partPayPays": "يدفع",
   "partPayExact": "بالضبط",
   "partPayOther": "مبلغ آخر",
+  "partPayItemsOnly": "أصنافه فقط",
   "partPaySplit": "{items} لأصنافه + {extra} على حساب الفاتورة",
   "@partPaySplit": { "placeholders": { "items": { "type": "String" }, "extra": { "type": "String" } } },
   "partPayBelowItems": "أقل من أصنافه ({items})",

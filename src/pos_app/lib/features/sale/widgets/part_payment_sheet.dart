@@ -44,7 +44,8 @@ Future<bool> showPartPayment(
 }
 
 /// Taking one person's part of a bill, the bill staying open for the rest.
-/// The customer says what they pay: exactly what they had, or more, the rest
+/// The customer says what they pay: what they had, as it stands, or any
+/// other amount typed in its place, what is over their items
 /// going on account of the bill (a player leaving a room pays towards its
 /// time, and how much is theirs to say, never the till's to work out). The
 /// amount on the sheet is the amount taken; it goes into this shift's drawer
@@ -145,25 +146,7 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
     final amount = _amount;
     final extra = ((amount - items) * 100).round() / 100;
     final problem = partAmountProblem(amount, items, widget.left, clockRunning: widget.clockRunning);
-    final sums = partAmounts(items);
     final name = widget.part.name ?? widget.title;
-
-    // Four to a row whatever there are, so each is the same width
-    Widget choice({required String label, required bool picked, required VoidCallback onPress}) => Expanded(
-          child: SizedBox(
-            height: Sizes.control,
-            child: FButton(
-              variant: picked ? null : FButtonVariant.outline,
-              onPress: onPress,
-              child: Flexible(
-                child: FittedBox(
-                  fit: BoxFit.scaleDown,
-                  child: Text(label, maxLines: 1, style: theme.type.button.copyWith(fontFeatures: tabular)),
-                ),
-              ),
-            ),
-          ),
-        );
 
     return DialogScroll(
       child: Column(
@@ -186,31 +169,23 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
           Text(l10n.partPayPays, style: muted),
           Text(money(context, amount),
               style: theme.type.figure.copyWith(color: amount <= 0 ? theme.colors.mutedForeground : null)),
-          const SizedBox(height: 12),
-          // What they pay, one tap: exactly their own, a round sum, or any amount
-          Row(
-            children: [
-              for (final sum in sums) ...[
-                choice(
-                  label: sum == items ? l10n.partPayExact : sum.toStringAsFixed(0),
-                  picked: !_keypad && amount == sum,
-                  onPress: () => setState(() {
-                    _keypad = false;
-                    _typed = sum == sum.roundToDouble() ? sum.toStringAsFixed(0) : sum.toString();
-                  }),
-                ),
-                const SizedBox(width: 8),
-              ],
-              choice(
-                label: l10n.partPayOther,
-                picked: _keypad,
+          // They pay for what they had unless told otherwise: one button opens the keypad
+          // for any other amount, and the same button goes back to just their items.
+          // An amount on account has nothing to go back to: its keypad is simply there
+          if (!onAccount) ...[
+            const SizedBox(height: 12),
+            SizedBox(
+              height: Sizes.control,
+              child: FButton(
+                variant: FButtonVariant.outline,
                 onPress: () => setState(() {
-                  _keypad = true;
+                  _keypad = !_keypad;
                   _typed = '';
                 }),
+                child: Text(_keypad ? l10n.partPayItemsOnly : l10n.partPayOther, maxLines: 1, style: theme.type.button),
               ),
-            ],
-          ),
+            ),
+          ],
           if (_keypad) ...[
             const SizedBox(height: 12),
             NumericKeypad(value: _typed, onChange: (value) => setState(() => _typed = value)),

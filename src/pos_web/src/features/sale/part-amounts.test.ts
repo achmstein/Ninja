@@ -1,18 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { partAmountProblem, partAmounts } from './part-amounts'
-
-describe('partAmounts', () => {
-  it('offers exactly their items, then the round sums above it', () => {
-    expect(partAmounts(70)).toEqual([70, 100, 200])
-    expect(partAmounts(130)).toEqual([130, 200])
-    // A round sum of its own is not offered twice
-    expect(partAmounts(100)).toEqual([100, 200])
-  })
-
-  it('offers round sums alone for an amount on account', () => {
-    expect(partAmounts(0)).toEqual([50, 100, 200])
-  })
-})
+import { partAmountProblem } from './part-amounts'
 
 describe('partAmountProblem', () => {
   it('takes their items, or more, while it is less than the bill has left', () => {

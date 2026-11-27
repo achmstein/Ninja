@@ -68,19 +68,6 @@ double billLeftToPay(TicketDetail ticket) {
   return left < 0 ? 0 : left;
 }
 
-/// The amounts one tap offers for a part payment: exactly what their items
-/// come to, then the round sums above it. For an amount on account, the round
-/// sums alone. The web till's `partAmounts` is the same
-List<double> partAmounts(double items) {
-  if (items <= 0) return const [50, 100, 200];
-  final sums = <double>[items];
-  for (final step in const [100, 200]) {
-    final sum = (items / step).floor() * step + step.toDouble();
-    if (!sums.contains(sum)) sums.add(sum);
-  }
-  return sums;
-}
-
 /// What stands in the way of taking an amount as a part payment
 enum PartAmountProblem { none, empty, belowItems, paysAll }
 

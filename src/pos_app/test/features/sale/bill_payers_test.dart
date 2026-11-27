@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
+import 'package:pos_app/core/widgets/numeric_keypad.dart';
 import 'package:pos_app/core/models/money.dart';
 import 'package:pos_app/features/sale/bill_lines.dart';
 import 'package:pos_app/features/sale/bill_payers.dart';
@@ -134,13 +135,6 @@ void main() {
       expect(billLeftToPay(const TicketDetail(id: 1, total: 228, partPaid: 148.2)), 79.8);
       expect(billLeftToPay(const TicketDetail(id: 1, total: 228)), 228);
       expect(billLeftToPay(const TicketDetail(id: 1, total: 50, partPaid: 60)), 0);
-    });
-
-    test('a part is offered exact, then the round sums above it; an amount on account the round sums alone', () {
-      expect(partAmounts(148.2), [148.2, 200]);
-      expect(partAmounts(70), [70, 100, 200]);
-      expect(partAmounts(100), [100, 200]);
-      expect(partAmounts(0), [50, 100, 200]);
     });
 
     test('a part is at least their items and less than the whole, but any amount under a running clock', () {
@@ -384,27 +378,35 @@ void main() {
         for (final label in [l10n.cash, l10n.card, l10n.instapay]) tester.getSize(inSheet(find.widgetWithText(FButton, label))).width,
       };
       expect(widths, hasLength(1));
-      // What they pay: exact, a round sum above it, or any amount, each the same width
-      final sums = [l10n.partPayExact, '200', l10n.partPayOther];
-      expect({for (final sum in sums) tester.getSize(inSheet(find.widgetWithText(FButton, sum))).width}, hasLength(1));
+      // They pay for what they had; nothing else is offered but the way to another amount
       final split = l10n.partPaySplit(money(context, 148.2), money(context, 51.8));
       expect(inSheet(find.text(split)), findsNothing);
-      // More than their items: the amount on the sheet is the amount taken, and the rest is said to be on account
-      await tester.tap(inSheet(find.widgetWithText(FButton, '200')));
-      await tester.pump();
+      expect(inSheet(find.byType(NumericKeypad)), findsNothing);
+      expect(inSheet(find.text(l10n.partPayExact)), findsNothing);
+      Future<void> key(String label) async {
+        final button = inSheet(find.widgetWithText(FButton, label));
+        await tester.ensureVisible(button);
+        await tester.pump();
+        await tester.tap(button);
+        await tester.pump();
+      }
+
+      await key(l10n.partPayOther);
       expectFits(tester);
+      // Under their items is not taken
+      await key('9');
+      expect(inSheet(find.text(l10n.partPayBelowItems(money(context, 148.2)))), findsOneWidget);
+      // More than their items: the amount on the sheet is the amount taken, and the rest is said to be on account
+      await key(l10n.partPayItemsOnly);
+      await key(l10n.partPayOther);
+      await key('2');
+      await key('00');
       expect(inSheet(find.text(split)), findsOneWidget);
       expect(inSheet(find.text(money(context, 200))), findsNWidgets(2));
-      // Any amount is typed on the keypad; under their items is not taken
-      await tester.tap(inSheet(find.widgetWithText(FButton, l10n.partPayOther)));
-      await tester.pump();
-      expectFits(tester);
-      await tester.tap(inSheet(find.widgetWithText(FButton, '9')));
-      await tester.pump();
-      expect(inSheet(find.text(l10n.partPayBelowItems(money(context, 148.2)))), findsOneWidget);
-      await tester.tap(inSheet(find.widgetWithText(FButton, l10n.partPayExact)));
-      await tester.pump();
+      // The same button goes back to just their items, and puts the keypad away
+      await key(l10n.partPayItemsOnly);
       expect(inSheet(find.text(split)), findsNothing);
+      expect(inSheet(find.byType(NumericKeypad)), findsNothing);
 
       await tester.tap(inSheet(find.widgetWithText(FButton, l10n.card)));
       await tester.pump();

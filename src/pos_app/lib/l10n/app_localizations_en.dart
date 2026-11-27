@@ -865,7 +865,10 @@ class AppLocalizationsEn extends AppLocalizations {
   String get partPayExact => 'Exact';
 
   @override
-  String get partPayOther => 'Other';
+  String get partPayOther => 'Another amount';
+
+  @override
+  String get partPayItemsOnly => 'Just their items';
 
   @override
   String partPaySplit(String items, String extra) {
