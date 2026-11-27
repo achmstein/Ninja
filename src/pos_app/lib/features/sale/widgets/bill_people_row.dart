@@ -38,20 +38,34 @@ class BillPeopleRow extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final none = people.all.isEmpty;
-    // At least [height], and as tall as its words need, as a category chip is: held to
-    // the height, the words were cut along their foot
-    final add = ConstrainedBox(
-      constraints: BoxConstraints(minHeight: height),
-      child: FButton(
-        variant: FButtonVariant.outline,
-        mainAxisSize: none ? MainAxisSize.max : MainAxisSize.min,
-        onPress: people.onAdd,
-        suffix: Icon(FIcons.plus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-        child: Text(none ? l10n.customer : l10n.anotherCustomer,
-            style: theme.type.button.copyWith(color: theme.colors.mutedForeground)),
+    // With nobody yet the row is the button that adds a customer, in words. At least
+    // [height], and as tall as its words need, as a category chip is: held to the
+    // height, the words were cut along their foot
+    if (none) {
+      return ConstrainedBox(
+        constraints: BoxConstraints(minHeight: height),
+        child: FButton(
+          variant: FButtonVariant.outline,
+          onPress: people.onAdd,
+          suffix: Icon(FIcons.plus, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+          child: Text(l10n.customer, style: theme.type.button.copyWith(color: theme.colors.mutedForeground)),
+        ),
+      );
+    }
+    // The row is the order panel's width, so it is spent on names: each written by the
+    // first name, and the way to add another a square button at the row's end
+    final names = shortNames([for (final person in people.all) person.name]);
+    final add = Semantics(
+      label: l10n.anotherCustomer,
+      child: SizedBox.square(
+        dimension: Sizes.control,
+        child: FButton.icon(
+          variant: FButtonVariant.outline,
+          onPress: people.onAdd,
+          child: Icon(FIcons.userPlus, size: Sizes.icon, color: theme.colors.mutedForeground),
+        ),
       ),
     );
-    if (none) return add;
     return Row(
       children: [
         Expanded(
@@ -62,7 +76,7 @@ class BillPeopleRow extends StatelessWidget {
                 for (final (index, person) in people.all.indexed) ...[
                   if (index > 0) const SizedBox(width: 8),
                   _PersonChip(
-                    name: person.name.isEmpty ? l10n.guest : person.name,
+                    name: names[index].isEmpty ? l10n.guest : names[index],
                     picked: samePerson(person, people.forWho),
                     height: height,
                     onTap: () => people.onForWho(samePerson(person, people.forWho) ? null : person),

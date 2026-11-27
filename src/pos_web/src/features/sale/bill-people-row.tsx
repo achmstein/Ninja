@@ -1,10 +1,10 @@
 import { useRef } from 'react'
-import { Plus, UserMinus } from 'lucide-react'
+import { Plus, UserMinus, UserPlus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { CustomerCard } from '@/features/customer/customer-card'
 import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
-import { samePerson, type SaleCustomer } from './cart'
+import { shortNames } from './bill-people'
+import { samePerson } from './cart'
 import type { BillPeople } from './use-bill-people'
 
 /**
@@ -13,18 +13,23 @@ import type { BillPeople } from './use-bill-people'
  * second tap lets go. The way to add one stays at the row's end. Nothing has
  * to be tapped: a round can be nobody's. A new sale shows its one customer
  * the same way, so the order reads alike whatever it is rung onto.
+ *
+ * The row is the order panel's width, so it is spent on names: each is
+ * written by the first name (`shortNames`), and once there is one the way to
+ * add another is a square button, its words left to the empty row.
  */
 export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: () => void }) {
   const t = useT()
   const none = people.all.length === 0
+  const names = shortNames(people.all.map((person) => person.name))
   return (
     <div className='flex items-center gap-2'>
       {!none && (
         <div className='no-scrollbar flex min-w-0 flex-1 gap-2 overflow-x-auto'>
-          {people.all.map((person) => (
+          {people.all.map((person, at) => (
             <PersonChip
               key={person.id ?? `name:${person.name}`}
-              person={person}
+              name={names[at] || t('guest')}
               picked={samePerson(person, people.forWho)}
               onTap={() => people.pick(person)}
               onHold={() => people.card.open(person)}
@@ -32,14 +37,23 @@ export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: ()
           ))}
         </div>
       )}
-      <Button
-        variant='outline'
-        className={cn('text-muted-foreground h-11 shrink-0 gap-1.5 border-dashed px-4 text-base', none && 'flex-1')}
-        onClick={onAdd}
-      >
-        {t(none ? 'aCustomer' : 'anotherCustomer')}
-        <Plus className='size-4' />
-      </Button>
+      {none ? (
+        <Button variant='outline' className='text-muted-foreground h-11 flex-1 gap-1.5 border-dashed px-4 text-base' onClick={onAdd}>
+          {t('aCustomer')}
+          <Plus className='size-4' />
+        </Button>
+      ) : (
+        <Button
+          variant='outline'
+          size='icon'
+          className='text-muted-foreground size-11 shrink-0 border-dashed'
+          aria-label={t('anotherCustomer')}
+          title={t('anotherCustomer')}
+          onClick={onAdd}
+        >
+          <UserPlus className='size-5' />
+        </Button>
+      )}
     </div>
   )
 }
@@ -48,8 +62,7 @@ export function BillPeopleRow({ people, onAdd }: { people: BillPeople; onAdd: ()
 const HOLD_MS = 500
 
 /** One of a bill's people. A tap picks them; held for a moment (or a right click) it opens their card */
-function PersonChip({ person, picked, onTap, onHold }: { person: SaleCustomer; picked: boolean; onTap: () => void; onHold: () => void }) {
-  const t = useT()
+function PersonChip({ name, picked, onTap, onHold }: { name: string; picked: boolean; onTap: () => void; onHold: () => void }) {
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null)
   // The hold opened the card: the tap that ends it picks nobody
   const held = useRef(false)
@@ -84,7 +97,7 @@ function PersonChip({ person, picked, onTap, onHold }: { person: SaleCustomer; p
         else onTap()
       }}
     >
-      <bdi className='truncate'>{person.name || t('guest')}</bdi>
+      <bdi className='truncate'>{name}</bdi>
     </Button>
   )
 }

@@ -391,10 +391,14 @@ void main() {
       final panel = find.byType(SaleOrderPanel);
       Finder inPanel(Finder what) => find.descendant(of: panel, matching: what);
       // Everyone the bill knows, by their whole name, over the order; and the way to add one more
-      for (final name in ['Mohamed Abdelrahman Elsayed', 'Karim Mostafa', 'منى عادل']) {
-        expect(inPanel(find.text(name)), findsWidgets);
+      // By their first names, so the row holds them; the whole name stays on the order's lines
+      final row = find.byType(BillPeopleRow);
+      for (final name in ['Mohamed', 'Karim', 'منى']) {
+        expect(find.descendant(of: row, matching: find.text(name)), findsOneWidget);
       }
-      expect(inPanel(find.widgetWithText(FButton, l10n.anotherCustomer)), findsOneWidget);
+      // With names in it, the way to add another is a square button at the row's end
+      expect(find.descendant(of: row, matching: find.byIcon(FIcons.userPlus)), findsOneWidget);
+      expect(find.descendant(of: row, matching: find.text(l10n.anotherCustomer)), findsNothing);
       // The room's people are these names: its details no longer list them
       await tester.tap(find.byType(StayStrip));
       await _frames(tester);
@@ -407,9 +411,9 @@ void main() {
       await tester.pump();
       // Karim tapped: the next is his, and says so on its line
       // The names are one row that swipes: his is brought into view, as a finger would
-      await tester.ensureVisible(inPanel(find.text('Karim Mostafa')).first);
+      await tester.ensureVisible(find.descendant(of: row, matching: find.text('Karim')));
       await tester.pump();
-      await tester.tap(inPanel(find.text('Karim Mostafa')).first);
+      await tester.tap(find.descendant(of: row, matching: find.text('Karim')));
       await _frames(tester);
       await tester.tap(find.byType(ItemTile).at(1));
       await _frames(tester);

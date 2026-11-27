@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { billPeople } from './bill-people'
+import { billPeople, shortNames } from './bill-people'
 
 describe('billPeople', () => {
   it('lists the room first, then whoever earlier rounds were for, each once', () => {
@@ -34,5 +34,14 @@ describe('billPeople', () => {
       { customerId: null, customerName: 'Mona' },
     ])
     expect(people).toHaveLength(2)
+  })
+})
+
+describe('the names over the order', () => {
+  it('writes a first name, and more only for people who share it', () => {
+    expect(shortNames(['Mohamed Abdelrahman Elsayed', 'Karim Mostafa', 'منى عادل'])).toEqual(['Mohamed', 'Karim', 'منى'])
+    expect(shortNames(['Mohamed Abdelrahman Elsayed', 'Mohamed Ali', 'Karim Mostafa'])).toEqual(['Mohamed Abdelrahman', 'Mohamed Ali', 'Karim'])
+    expect(shortNames(['Mohamed Ali Hassan', 'Mohamed Ali Omar', ' Sara '])).toEqual(['Mohamed Ali Hassan', 'Mohamed Ali Omar', 'Sara'])
+    expect(shortNames(['', 'Omar'])).toEqual(['', 'Omar'])
   })
 })

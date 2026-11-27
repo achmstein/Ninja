@@ -197,4 +197,11 @@ void main() {
       expect(isDeliveryBill(null), isFalse);
     });
   });
+
+  test('the names over the order are first names, and more only for people who share one', () {
+    expect(shortNames(['Mohamed Abdelrahman Elsayed', 'Karim Mostafa', 'منى عادل']), ['Mohamed', 'Karim', 'منى']);
+    expect(shortNames(['Mohamed Abdelrahman Elsayed', 'Mohamed Ali', 'Karim Mostafa']), ['Mohamed Abdelrahman', 'Mohamed Ali', 'Karim']);
+    expect(shortNames(['Mohamed Ali Hassan', 'Mohamed Ali Omar', ' Sara ']), ['Mohamed Ali Hassan', 'Mohamed Ali Omar', 'Sara']);
+    expect(shortNames(['', 'Omar']), ['', 'Omar']);
+  });
 }

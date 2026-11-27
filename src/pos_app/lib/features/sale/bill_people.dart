@@ -81,3 +81,27 @@ List<({TicketLineView line, bool paid})> sentLinesByPerson(List<TicketLineView> 
       for (final line in mergeIdenticalLines(theirs)) (line: line, paid: theirs.first.paid),
   ];
 }
+
+/// The names as the row over the order writes them, one for each person in
+/// order: the first name, which is how a cashier calls them and lets four fit
+/// where one whole name did. Two people who share it are written by two
+/// names, and by the whole of it if they still read alike. The whole name
+/// stays on the order's lines and on the customer's card. The web till's
+/// `shortNames` is the same.
+List<String> shortNames(List<String> names) {
+  final words = [for (final name in names) name.trim().split(RegExp(r'\s+')).where((w) => w.isNotEmpty).toList()];
+  List<String> take(int count) => [for (final w in words) w.take(count).join(' ')];
+  final first = take(1);
+  final two = take(2);
+  bool shared(List<String> list, int at) {
+    for (var i = 0; i < list.length; i++) {
+      if (i != at && list[i] == list[at]) return true;
+    }
+    return false;
+  }
+
+  return [
+    for (final (at, name) in names.indexed)
+      !shared(first, at) ? first[at] : (!shared(two, at) ? two[at] : name.trim()),
+  ];
+}
