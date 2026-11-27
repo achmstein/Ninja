@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Check, Minus, Plus, Trash2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Button } from '@/components/ui/button'
-import { mergeIdenticalLines, PaidTag } from '@/features/ticket/bill-lines'
+import { mergeIdenticalLines, PAID_DIM, PaidTag } from '@/features/ticket/bill-lines'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -124,8 +124,8 @@ export function SentLines({
                 {picked && <Check className='size-4' />}
               </span>
             )}
-            <span className='w-7 shrink-0 font-medium tabular-nums'>{toNumber(line.qty)}×</span>
-            <span className='min-w-0 flex-1'>
+            <span className={cn('w-7 shrink-0 font-medium tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
+            <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
               <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
                 {localized(line.description)}
               </span>
@@ -137,7 +137,7 @@ export function SentLines({
               )}
             </span>
             {line.paid && <PaidTag />}
-            <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400')}>
+            <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400', line.paid && PAID_DIM)}>
               {money(line.total)}
             </span>
           </>

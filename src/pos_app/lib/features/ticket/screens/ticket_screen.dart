@@ -940,7 +940,9 @@ class _LineRow extends StatelessWidget {
           const SizedBox(width: 12),
         ],
         Expanded(
-          child: Column(
+          child: PaidDim(
+            paid: line.paid,
+            child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
@@ -969,6 +971,7 @@ class _LineRow extends StatelessWidget {
               ),
             ],
           ),
+          ),
         ),
         const SizedBox(width: 12),
         // Taken earlier as a part payment: on the bill, not in what is left to pay
@@ -976,15 +979,14 @@ class _LineRow extends StatelessWidget {
           const Padding(padding: EdgeInsets.only(top: 3), child: PaidTag()),
           const SizedBox(width: 8),
         ],
-        Text(
-          money(context, line.total),
-          style: theme.type.heading.copyWith(
-            color: negative
-                ? emerald
-                : line.paid
-                    ? theme.colors.mutedForeground
-                    : null,
-            fontFeatures: const [FontFeature.tabularFigures()],
+        PaidDim(
+          paid: line.paid,
+          child: Text(
+            money(context, line.total),
+            style: theme.type.heading.copyWith(
+              color: negative ? emerald : null,
+              fontFeatures: const [FontFeature.tabularFigures()],
+            ),
           ),
         ),
       ],

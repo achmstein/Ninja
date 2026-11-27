@@ -48,6 +48,9 @@ export function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
   return merged
 }
 
+/** A paid line steps back whole (its name, its count, its amount), so what is left to pay is what the eye lands on; its tag stays at full strength */
+export const PAID_DIM = 'opacity-50'
+
 /** Paid for by a part payment while the bill is open: said beside the line, wherever a bill's lines are listed */
 export function PaidTag() {
   const t = useT()
@@ -94,7 +97,7 @@ export function LineRow({
           {selected && <Check className='size-4' />}
         </span>
       )}
-      <div className='min-w-0 flex-1'>
+      <div className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
         <div
           className={cn(
             'truncate type-body font-medium',
@@ -123,7 +126,7 @@ export function LineRow({
         className={cn(
           'shrink-0 type-body font-semibold tabular-nums',
           isNegative && 'text-emerald-600 dark:text-emerald-400',
-          line.paid && 'text-muted-foreground',
+          line.paid && PAID_DIM,
         )}
       >
         {money(line.total)}

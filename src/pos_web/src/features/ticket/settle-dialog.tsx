@@ -33,7 +33,7 @@ import {
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { PaidTag } from './bill-lines'
+import { PAID_DIM, PaidTag } from './bill-lines'
 import { canSettleWith, onlineSummary } from './online-payments'
 import {
   ACCOUNT_TENDER,
@@ -611,10 +611,10 @@ export function SettleDialog({
         <div className='divide-y'>
           {(ticket.lines ?? []).map((line) => (
             <div key={String(line.id)} className='flex items-start gap-3 py-2 text-base'>
-              <span className='text-muted-foreground w-10 shrink-0 tabular-nums'>
+              <span className={cn('text-muted-foreground w-10 shrink-0 tabular-nums', line.paid && PAID_DIM)}>
                 {toNumber(line.qty)}×
               </span>
-              <span className='min-w-0 flex-1'>
+              <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
                 <span className='line-clamp-2'>{localized(line.description)}</span>
                 {line.customerName && (
                   <span className='text-muted-foreground block truncate text-sm'>
@@ -624,7 +624,7 @@ export function SettleDialog({
               </span>
               {/* Taken earlier as a part payment: on the bill, not in what is due now */}
               {line.paid && <PaidTag />}
-              <span className={cn('shrink-0 tabular-nums', line.paid && 'text-muted-foreground')}>
+              <span className={cn('shrink-0 tabular-nums', line.paid && PAID_DIM)}>
                 {money(toNumber(line.total))}
               </span>
             </div>

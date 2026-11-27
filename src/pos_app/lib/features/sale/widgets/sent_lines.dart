@@ -141,13 +141,18 @@ class _SentRow extends StatelessWidget {
           ],
           SizedBox(
             width: 32,
-            child: Text('${_qty(line.qty)}×',
-                style: style.copyWith(
-                    color: theme.colors.mutedForeground, fontWeight: FontWeight.w500, fontFeatures: tabular)),
+            child: PaidDim(
+              paid: paid,
+              child: Text('${_qty(line.qty)}×',
+                  style: style.copyWith(
+                      color: theme.colors.mutedForeground, fontWeight: FontWeight.w500, fontFeatures: tabular)),
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
-            child: Column(
+            child: PaidDim(
+              paid: paid,
+              child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Text(line.description?.localized(context) ?? '', maxLines: 1, overflow: TextOverflow.ellipsis, style: style),
@@ -173,13 +178,14 @@ class _SentRow extends StatelessWidget {
                   ),
               ],
             ),
+            ),
           ),
           if (paid) ...[
             const SizedBox(width: 8),
             const PaidTag(),
           ],
           const SizedBox(width: 8),
-          Text(money(context, line.total), style: style.copyWith(fontFeatures: tabular)),
+          PaidDim(paid: paid, child: Text(money(context, line.total), style: style.copyWith(fontFeatures: tabular))),
         ],
       ),
     );

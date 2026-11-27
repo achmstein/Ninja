@@ -4,6 +4,18 @@ import 'package:ninja_app_core/theme/app_theme.dart';
 import '../../l10n/app_localizations.dart';
 import '../theme/type_roles.dart';
 
+/// A paid line steps back whole (its name, its count, its amount), so what is
+/// left to pay is what the eye lands on; its tag stays at full strength
+class PaidDim extends StatelessWidget {
+  final bool paid;
+  final Widget child;
+
+  const PaidDim({super.key, required this.paid, required this.child});
+
+  @override
+  Widget build(BuildContext context) => paid ? Opacity(opacity: 0.5, child: child) : child;
+}
+
 /// Paid for by a part payment while the bill is open: said beside the line,
 /// wherever a bill's lines are listed (the order, the bill, the payment page)
 class PaidTag extends StatelessWidget {

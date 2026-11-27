@@ -606,18 +606,24 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
               children: [
                 SizedBox(
                   width: 40,
-                  child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
-                      style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                  child: PaidDim(
+                    paid: line.paid,
+                    child: Text(line.qty == line.qty.roundToDouble() ? '${line.qty.toInt()}×' : '${line.qty}×',
+                        style: theme.type.body.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                  ),
                 ),
                 Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(line.description?.localized(context) ?? '',
-                          maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.type.body),
-                      if ((line.customerName ?? '').isNotEmpty)
-                        Text(line.customerName!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
-                    ],
+                  child: PaidDim(
+                    paid: line.paid,
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(line.description?.localized(context) ?? '',
+                            maxLines: 2, overflow: TextOverflow.ellipsis, style: theme.type.body),
+                        if ((line.customerName ?? '').isNotEmpty)
+                          Text(line.customerName!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(width: Sizes.gap),
@@ -626,9 +632,10 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
                   const Padding(padding: EdgeInsets.only(top: 2), child: PaidTag()),
                   const SizedBox(width: 8),
                 ],
-                Text(money(context, line.total),
-                    style: theme.type.body
-                        .copyWith(fontFeatures: tabular, color: line.paid ? theme.colors.mutedForeground : null)),
+                PaidDim(
+                  paid: line.paid,
+                  child: Text(money(context, line.total), style: theme.type.body.copyWith(fontFeatures: tabular)),
+                ),
               ],
             ),
           ),
