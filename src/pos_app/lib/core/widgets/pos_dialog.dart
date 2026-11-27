@@ -238,16 +238,18 @@ class _SheetLayout extends SingleChildLayoutDelegate {
 
 /// Buttons side by side at one width, the widest one's, so the options of
 /// one choice (or a pop-up's answers) stand the same whatever their words.
-/// They sit at the row's end and take no more room than they need.
+/// They sit at the row's end (or wherever [alignment] says) and take no more
+/// room than they need.
 class EqualButtons extends StatelessWidget {
   final List<Widget> children;
+  final AlignmentGeometry alignment;
 
-  const EqualButtons({super.key, required this.children});
+  const EqualButtons({super.key, required this.children, this.alignment = AlignmentDirectional.centerEnd});
 
   @override
   Widget build(BuildContext context) {
     return Align(
-      alignment: AlignmentDirectional.centerEnd,
+      alignment: alignment,
       heightFactor: 1,
       // Each an equal share of a row that is as wide as the widest one needs, times how many there are
       child: IntrinsicWidth(
@@ -275,7 +277,15 @@ class DialogActions extends StatelessWidget {
   /// On a tablet the actions share the dialog's width instead of sitting at its end
   final bool fill;
 
-  const DialogActions({super.key, required this.children, this.fill = false});
+  /// Where they sit on a tablet when they do not fill
+  final AlignmentGeometry alignment;
+
+  const DialogActions({
+    super.key,
+    required this.children,
+    this.fill = false,
+    this.alignment = AlignmentDirectional.centerEnd,
+  });
 
   @override
   Widget build(BuildContext context) {
@@ -291,7 +301,7 @@ class DialogActions extends StatelessWidget {
         ],
       );
     }
-    if (!fill) return EqualButtons(children: children);
+    if (!fill) return EqualButtons(alignment: alignment, children: children);
     return Row(
       children: [
         for (final (index, child) in children.indexed) ...[

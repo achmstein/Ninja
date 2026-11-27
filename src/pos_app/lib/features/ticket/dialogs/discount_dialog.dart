@@ -18,7 +18,7 @@ import '../../../core/theme/type_roles.dart';
 /// its refusal is the only message the till shows. Given again it replaces
 /// the earlier discount; Remove takes it off.
 Future<void> showDiscountDialog(BuildContext context, TicketDetail ticket) =>
-    showPosDialog<void>(context, builder: (context) => _DiscountDialog(ticket: ticket));
+    showPosDialog<void>(context, size: DialogSize.sm, builder: (context) => _DiscountDialog(ticket: ticket));
 
 enum _Kind { percent, amount }
 

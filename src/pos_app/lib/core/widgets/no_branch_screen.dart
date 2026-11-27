@@ -6,6 +6,7 @@ import '../auth/auth_service.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../theme/type_roles.dart';
+import 'pos_dialog.dart';
 
 /// Shown instead of the screens when the signed-in account is assigned to no
 /// branch: membership travels in the token (the `branches` claim), and an
@@ -33,9 +34,20 @@ class NoBranchScreen extends ConsumerWidget {
               const SizedBox(height: 8),
               Text(l10n.noBranchDescription, style: theme.type.body.copyWith(color: muted), textAlign: TextAlign.center),
               const SizedBox(height: 24),
-              Row(
-                mainAxisSize: MainAxisSize.min,
+              // Side by side at one width; a phone has no room for both, so one over the other
+              DialogActions(
+                alignment: Alignment.center,
                 children: [
+                  SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      variant: FButtonVariant.ghost,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: ref.read(authServiceProvider.notifier).signOut,
+                      prefix: const Icon(FIcons.logOut, size: Sizes.icon),
+                      child: Text(l10n.signOut, style: theme.type.button),
+                    ),
+                  ),
                   SizedBox(
                     height: Sizes.control,
                     child: FButton(
@@ -48,17 +60,6 @@ class NoBranchScreen extends ConsumerWidget {
                       },
                       prefix: const Icon(FIcons.refreshCw, size: Sizes.icon),
                       child: Text(l10n.retry, style: theme.type.button),
-                    ),
-                  ),
-                  const SizedBox(width: 12),
-                  SizedBox(
-                    height: Sizes.control,
-                    child: FButton(
-                      variant: FButtonVariant.ghost,
-                      mainAxisSize: MainAxisSize.min,
-                      onPress: ref.read(authServiceProvider.notifier).signOut,
-                      prefix: const Icon(FIcons.logOut, size: Sizes.icon),
-                      child: Text(l10n.signOut, style: theme.type.button),
                     ),
                   ),
                 ],

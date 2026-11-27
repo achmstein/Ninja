@@ -70,6 +70,23 @@ class _SendBlock extends ConsumerWidget {
 
     if (!failed) return _Breathing(child: rows);
 
+    Widget way(String label, IconData icon, VoidCallback onPress, {FButtonVariant? variant}) => Expanded(
+          child: ConstrainedBox(
+            constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
+            child: FButton(
+              variant: variant,
+              onPress: onPress,
+              prefix: Icon(icon, size: Sizes.iconSmall),
+              child: Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(label, maxLines: 1, style: theme.type.buttonSmall),
+                ),
+              ),
+            ),
+          ),
+        );
+
     return Container(
       decoration: BoxDecoration(
         color: theme.colors.destructive.withValues(alpha: 0.05),
@@ -83,41 +100,36 @@ class _SendBlock extends ConsumerWidget {
           Container(height: 1, color: theme.colors.border),
           Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Row(
+            // The two ways on stand under the words, at one width: beside them
+            // they left a narrow order no room for what went wrong
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(l10n.notSent,
-                          style: theme.type.heading.copyWith(color: theme.colors.destructive)),
-                      if ((send.error ?? '').isNotEmpty)
-                        Text(send.error!, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
-                    ],
-                  ),
+                Row(
+                  children: [
+                    Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(l10n.notSent,
+                              style: theme.type.heading.copyWith(color: theme.colors.destructive)),
+                          if ((send.error ?? '').isNotEmpty)
+                            Text(send.error!, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
+                        ],
+                      ),
+                    ),
+                  ],
                 ),
-                const SizedBox(width: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                  child: FButton(
-                    variant: FButtonVariant.outline,
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: () => notifier.drop(send.requestId),
-                    prefix: const Icon(FIcons.trash2, size: Sizes.iconSmall),
-                    child: Text(l10n.remove, style: theme.type.buttonSmall),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
-                  child: FButton(
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: () => notifier.send(send.requestId),
-                    prefix: const Icon(FIcons.refreshCw, size: Sizes.iconSmall),
-                    child: Text(l10n.retrySync, style: theme.type.buttonSmall),
-                  ),
+                const SizedBox(height: 8),
+                // Each a half of the row; the words shrink to their half before they are cut
+                Row(
+                  children: [
+                    way(l10n.remove, FIcons.trash2, () => notifier.drop(send.requestId), variant: FButtonVariant.outline),
+                    const SizedBox(width: 8),
+                    way(l10n.retrySync, FIcons.refreshCw, () => notifier.send(send.requestId)),
+                  ],
                 ),
               ],
             ),

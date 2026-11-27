@@ -5,6 +5,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/brand/brand_service.dart';
 import 'package:ninja_app_core/brand/tenant_brand.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
@@ -63,6 +64,30 @@ Widget tillApp(Widget home, {Locale locale = const Locale('en'), List overrides 
           child: Material(type: MaterialType.transparency, child: FToaster(child: child!)),
         ),
         home: Scaffold(body: home),
+      ),
+    );
+
+/// The same, on the till's router: for a screen that goes on to another one
+Widget tillRouterApp(GoRouter router, {Locale locale = const Locale('en'), List overrides = const []}) => ProviderScope(
+      overrides: [
+        selectedBranchIdProvider.overrideWithValue(1),
+        tenantRepositoryProvider.overrideWithValue(_Tenant()),
+        ...overrides,
+      ],
+      child: MaterialApp.router(
+        routerConfig: router,
+        locale: locale,
+        supportedLocales: AppLocalizations.supportedLocales,
+        localizationsDelegates: const [
+          AppLocalizations.delegate,
+          GlobalMaterialLocalizations.delegate,
+          GlobalWidgetsLocalizations.delegate,
+          GlobalCupertinoLocalizations.delegate,
+        ],
+        builder: (context, child) => FTheme(
+          data: const ThemeState(themeMode: AppThemeMode.light).getForuiTheme(context, locale: locale),
+          child: Material(type: MaterialType.transparency, child: FToaster(child: child!)),
+        ),
       ),
     );
 

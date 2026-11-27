@@ -47,6 +47,7 @@ Future<void> sendAppLink(BuildContext context, WidgetRef ref, {required String i
   final url = link.url(customerOrigin(ref)).toString();
   await showPosDialog<void>(
     context,
+    size: DialogSize.sm,
     builder: (context) => _AppLinkDialog(name: name, phone: phone, url: url, expiresAt: link.expiresAt),
   );
 }

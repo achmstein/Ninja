@@ -46,16 +46,17 @@ Future<bool> showConfirmDialog(
               Row(
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: [
-                  Flexible(
-                    child: SizedBox(
-                      height: Sizes.control,
-                      child: FButton(
-                        variant: FButtonVariant.outline,
-                        mainAxisSize: MainAxisSize.min,
-                        onPress: () => Navigator.of(context, rootNavigator: true).pop(false),
-                        child: Text(cancelLabel,
-                            maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
-                      ),
+                  // The way out is a word or two and keeps its own width; the
+                  // action takes the rest of the row, and only then is cut short.
+                  // Halves would cut an action that names an amount while the
+                  // row still had room beside it
+                  SizedBox(
+                    height: Sizes.control,
+                    child: FButton(
+                      variant: FButtonVariant.outline,
+                      mainAxisSize: MainAxisSize.min,
+                      onPress: () => Navigator.of(context, rootNavigator: true).pop(false),
+                      child: Text(cancelLabel, maxLines: 1, style: theme.typography.body.forButton),
                     ),
                   ),
                   const SizedBox(width: Sizes.gapSm),
@@ -66,10 +67,12 @@ Future<bool> showConfirmDialog(
                         variant: destructive ? FButtonVariant.destructive : null,
                         mainAxisSize: MainAxisSize.min,
                         onPress: () => Navigator.of(context, rootNavigator: true).pop(true),
-                        child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: Sizes.gapSm),
-                          child: Text(actionLabel,
-                              maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+                        child: Flexible(
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: Sizes.gapSm),
+                            child: Text(actionLabel,
+                                maxLines: 1, overflow: TextOverflow.ellipsis, style: theme.typography.body.forButton),
+                          ),
                         ),
                       ),
                     ),

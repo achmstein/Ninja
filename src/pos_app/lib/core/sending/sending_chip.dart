@@ -139,8 +139,7 @@ class _FailedSends extends ConsumerWidget {
                           if ((send.error ?? '').isNotEmpty)
                             Text(send.error!, style: theme.type.detail.copyWith(color: theme.colors.mutedForeground)),
                           const SizedBox(height: 8),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.end,
+                          EqualButtons(
                             children: [
                               ConstrainedBox(
                                 constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
@@ -152,7 +151,6 @@ class _FailedSends extends ConsumerWidget {
                                   child: Text(l10n.remove, style: theme.type.buttonSmall),
                                 ),
                               ),
-                              const SizedBox(width: 8),
                               ConstrainedBox(
                                 constraints: const BoxConstraints(minHeight: Sizes.controlSmall),
                                 child: FButton(

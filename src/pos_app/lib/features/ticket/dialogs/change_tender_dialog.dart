@@ -23,6 +23,7 @@ import '../../../core/theme/type_roles.dart';
 Future<bool?> showChangeTenderDialog(BuildContext context, TicketDetail ticket, PaymentView payment) {
   return showPosDialog<bool>(
     context,
+    size: DialogSize.sm,
     builder: (context) => _ChangeTenderDialog(ticket: ticket, payment: payment),
   );
 }
