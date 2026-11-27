@@ -30,6 +30,7 @@ export type BillLineView = {
     total?: number | string;
     customerName?: null | string;
     isMine?: boolean;
+    paid?: boolean;
 };
 
 export type BillView = {
@@ -59,16 +60,19 @@ export type BillView = {
     vatIncluded?: boolean;
     total?: number | string;
     refundedTotal?: number | string;
+    partPaid?: number | string;
 };
 
 export type BreakdownReport = {
     from?: string;
     to?: string;
     offsetMinutes?: number | string;
+    timeZone?: null | string;
     byHour?: Array<HourTotal>;
     byWeekday?: Array<WeekdayTotal>;
     byCashier?: Array<CashierTotal>;
     byItem?: Array<ItemTotal>;
+    byTaker?: Array<TakerTotal>;
 };
 
 export type CashierTotal = {
@@ -78,6 +82,14 @@ export type CashierTotal = {
     discounts: number | string;
     voids: number | string;
     refunds: number | string;
+    kind?: string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
+    vatAdded?: number | string;
 };
 
 export type CashMovementKind = number;
@@ -114,8 +126,81 @@ export type CashMovementView = {
     categoryId?: null | number | string;
 };
 
+export type ChangePaymentTenderRequest = {
+    tender: string;
+};
+
+export type ChannelTotal = {
+    channel: string;
+    count: number | string;
+    gross: number | string;
+};
+
 export type CloseShiftRequest = {
     closingCount: number | string;
+};
+
+export type CourierBalanceView = {
+    providerId: number | string;
+    provider: string;
+    deliveries: number | string;
+    collected: number | string;
+    fees: number | string;
+    settled: number | string;
+    balance: number | string;
+    shortDeliveries: number | string;
+    lastDeliveryAt: null | string;
+};
+
+export type CourierJobsPage = {
+    items: Array<CourierJobView>;
+    total: number | string;
+    pageIndex: number | string;
+    pageSize: number | string;
+};
+
+export type CourierJobView = {
+    orderId: number | string;
+    branchId: number | string;
+    collected: number | string;
+    fee: number | string;
+    billTotal: null | number | string;
+    outcome: string;
+    ticketId: null | number | string;
+    at: string;
+};
+
+export type CourierPayoutRequest = {
+    amount: number | string;
+    provider: string;
+    paidOn?: null | string;
+    note?: null | string;
+};
+
+export type CourierPayoutView = {
+    id: number | string;
+    amount: number | string;
+    paidOn: string;
+    note: null | string;
+    recordedBy: string;
+    recordedAt: string;
+};
+
+export type DailyReport = {
+    from?: string;
+    to?: string;
+    timeZone?: string;
+    dayStart?: string;
+    days?: Array<DailySales>;
+};
+
+export type DailySales = {
+    date: string;
+    tickets: number | string;
+    grossSales: number | string;
+    refunds: number | string;
+    netSales: number | string;
+    refundCount: number | string;
 };
 
 export type DiscountRequest = {
@@ -132,12 +217,29 @@ export type HourTotal = {
     net: number | string;
 };
 
+export type ItemPair = {
+    catalogItemId: number | string;
+    together: number | string;
+    share: number | string;
+};
+
+export type ItemPairsReport = {
+    catalogItemId: number | string;
+    ticketsWithItem: number | string;
+    pairs: Array<ItemPair>;
+};
+
 export type ItemTotal = {
     description: LocalizedText;
     qty: number | string;
     amount: number | string;
     tickets: number | string;
     catalogItemId?: null | number | string;
+    menuAmount?: number | string;
+    refundedQty?: number | string;
+    refundedAmount?: number | string;
+    netQty?: number | string;
+    netAmount?: number | string;
 };
 
 export type LocalizedText = {
@@ -155,7 +257,6 @@ export type NewTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OnlinePaymentView = {
@@ -183,7 +284,6 @@ export type OpenTicketRequest = {
     type: TicketType;
     label?: null | string;
     placeId?: null | number | string;
-    placeName?: null | LocalizedText;
 };
 
 export type OpenTicketResponse = {
@@ -230,6 +330,34 @@ export type PagedResultOfTicketHistoryRow = {
     totalCount: number | string;
     pageIndex: number | string;
     pageSize: number | string;
+};
+
+export type PartPaymentLine = {
+    tender: PaymentTender;
+    amount: number | string;
+};
+
+export type PartPaymentRequest = {
+    payments: Array<PartPaymentLine>;
+    payerName?: null | string;
+    lineIds?: null | Array<number | string>;
+    shiftId?: null | number | string;
+};
+
+export type PartPaymentResult = {
+    partPaymentIds: Array<number | string>;
+    paid: number | string;
+    remaining: number | string;
+};
+
+export type PartPaymentView = {
+    id: number | string;
+    tender: string;
+    amount: number | string;
+    payerName: null | string;
+    lineIds: Array<number | string>;
+    recordedBy: string;
+    recordedAt: string;
 };
 
 export type PayAheadOptionsView = {
@@ -284,6 +412,7 @@ export type PaymentRow = {
     recordedBy: string;
     recordedAt: string;
     settledAt: string;
+    netAmount?: number | string;
 };
 
 export type PaymentSettingsRequest = {
@@ -344,12 +473,17 @@ export type PaymentStatusView = {
 export type PaymentTender = number;
 
 export type PaymentView = {
+    id?: number | string;
     tender?: string;
     amount?: number | string;
     customerName?: null | string;
     customerId?: null | string;
     recordedBy?: string;
     recordedAt?: string;
+    tenderChangedFrom?: null | string;
+    tenderChangedBy?: null | string;
+    tenderChangedAt?: null | string;
+    partPaymentId?: null | number | string;
 };
 
 export type PayOptionsView = {
@@ -425,13 +559,24 @@ export type RangeReport = {
     to?: string;
     ticketsSettled?: number | string;
     net?: number | string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
     discounts?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
     changeGiven?: number | string;
     tenderTotals?: Array<TenderTotal>;
+    cashTendered?: number | string;
     byType?: Array<TypeTotal>;
+    byChannel?: Array<ChannelTotal>;
     subtotal?: number | string;
     serviceCharge?: number | string;
     vat?: number | string;
+    vatAdded?: number | string;
+    refundVat?: number | string;
+    deliveryFees?: number | string;
     refunds?: number | string;
     refundCount?: number | string;
     tabPayments?: number | string;
@@ -488,6 +633,12 @@ export type ReceiptView = {
     refundedTotal: number | string;
 };
 
+export type RecentCustomer = {
+    customerId: string;
+    customerName: string;
+    lastAt: string;
+};
+
 export type RefundLineRequest = {
     lineId: number | string;
     qty: number | string;
@@ -540,6 +691,10 @@ export type RefundView = {
     lines: Array<RefundLineView>;
 };
 
+export type ReturnPartPaymentRequest = {
+    shiftId?: null | number | string;
+};
+
 export type SettledTicketSummary = {
     id: number | string;
     receiptNumber: number | string;
@@ -563,6 +718,7 @@ export type SettleRequest = {
     payments: Array<SettlePayment>;
     settledAt?: null | string;
     provisionalReceiptNumber?: null | string;
+    shiftId?: null | number | string;
 };
 
 export type SettleResult = {
@@ -585,8 +741,18 @@ export type ShiftView = {
     movements?: Array<CashMovementView>;
     ticketsSettled?: number | string;
     salesTotal?: number | string;
+    grossSales?: number | string;
+    netSales?: number | string;
+    netSalesExVat?: number | string;
+    vat?: number | string;
+    vatAdded?: number | string;
+    refundVat?: number | string;
     discounts?: number | string;
+    billDiscounts?: number | string;
+    lineDiscounts?: number | string;
+    loyaltyAndPromo?: number | string;
     tenderTotals?: Array<TenderTotal>;
+    cashTendered?: number | string;
     changeGiven?: number | string;
     refundsTotal?: number | string;
     cashRefunds?: number | string;
@@ -596,7 +762,14 @@ export type ShiftView = {
     cashTabPayments?: number | string;
     tabPaymentTenderTotals?: Array<TenderTotal>;
     tabPayments?: Array<TabPaymentView>;
+    partPaymentsTotal?: number | string;
+    cashPartPayments?: number | string;
+    partPaymentsReturned?: number | string;
+    cashPartPaymentsReturned?: number | string;
+    partPaymentTenderTotals?: Array<TenderTotal>;
     expectedInDrawer?: number | string;
+    lateCash?: number | string;
+    adjustedOverShort?: null | number | string;
 };
 
 export type SimulateRequest = {
@@ -653,10 +826,17 @@ export type TabPaymentView = {
     shiftId: null | number | string;
 };
 
+export type TakerTotal = {
+    name: string;
+    count: number | string;
+    net: number | string;
+};
+
 export type TenderTotal = {
     tender: string;
     amount: number | string;
     count: number | string;
+    tendered?: number | string;
 };
 
 export type TicketDetail = {
@@ -671,6 +851,8 @@ export type TicketDetail = {
     placeKind?: null | string;
     label?: null | string;
     guestPhone?: null | string;
+    takenBy?: null | string;
+    takenAtBranchId?: null | number | string;
     openedAt?: string;
     lastActivityAt?: string;
     settledAt?: null | string;
@@ -682,6 +864,8 @@ export type TicketDetail = {
     voidReason?: null | string;
     lines?: Array<TicketLineView>;
     payments?: Array<PaymentView>;
+    partPayments?: Array<PartPaymentView>;
+    partPaid?: number | string;
     total?: number | string;
     receiptNumber?: null | number | string;
     provisionalReceiptNumber?: null | string;
@@ -726,6 +910,7 @@ export type TicketLineView = {
     customerName?: null | string;
     customerId?: null | string;
     guestId?: null | string;
+    paid?: boolean;
 };
 
 export type TicketStatus = number;
@@ -796,6 +981,42 @@ export type GetOpenTicketsResponses = {
 };
 
 export type GetOpenTicketsResponse = GetOpenTicketsResponses[keyof GetOpenTicketsResponses];
+
+export type GetRecentCustomersData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * How many, 20 at most
+         */
+        take?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/recent-customers';
+};
+
+export type GetRecentCustomersErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetRecentCustomersResponses = {
+    /**
+     * OK
+     */
+    200: Array<RecentCustomer>;
+};
+
+export type GetRecentCustomersResponse = GetRecentCustomersResponses[keyof GetRecentCustomersResponses];
 
 export type GetSettledTicketsData = {
     body?: never;
@@ -1210,6 +1431,7 @@ export type GetBreakdownReportData = {
         from: string;
         to: string;
         offsetMinutes?: number | string;
+        tz?: string;
         /**
          * The API version, in the format 'major.minor'.
          */
@@ -1243,6 +1465,89 @@ export type GetBreakdownReportResponses = {
 };
 
 export type GetBreakdownReportResponse = GetBreakdownReportResponses[keyof GetBreakdownReportResponses];
+
+export type GetDailyReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        from: string;
+        to: string;
+        tz?: string;
+        dayStart?: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/reports/daily';
+};
+
+export type GetDailyReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetDailyReportError = GetDailyReportErrors[keyof GetDailyReportErrors];
+
+export type GetDailyReportResponses = {
+    /**
+     * OK
+     */
+    200: DailyReport;
+};
+
+export type GetDailyReportResponse = GetDailyReportResponses[keyof GetDailyReportResponses];
+
+export type GetItemPairsReportData = {
+    body?: never;
+    path?: never;
+    query: {
+        itemId: number | string;
+        from: string;
+        to: string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/reports/pairs';
+};
+
+export type GetItemPairsReportErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetItemPairsReportError = GetItemPairsReportErrors[keyof GetItemPairsReportErrors];
+
+export type GetItemPairsReportResponses = {
+    /**
+     * OK
+     */
+    200: ItemPairsReport;
+};
+
+export type GetItemPairsReportResponse = GetItemPairsReportResponses[keyof GetItemPairsReportResponses];
 
 export type GetTicketByOrderData = {
     body?: never;
@@ -1407,6 +1712,93 @@ export type SettleTicketResponses = {
 
 export type SettleTicketResponse = SettleTicketResponses[keyof SettleTicketResponses];
 
+export type TakePartPaymentData = {
+    body: PartPaymentRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/part-payments';
+};
+
+export type TakePartPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type TakePartPaymentError = TakePartPaymentErrors[keyof TakePartPaymentErrors];
+
+export type TakePartPaymentResponses = {
+    /**
+     * OK
+     */
+    200: PartPaymentResult;
+};
+
+export type TakePartPaymentResponse = TakePartPaymentResponses[keyof TakePartPaymentResponses];
+
+export type ReturnPartPaymentData = {
+    body?: null | ReturnPartPaymentRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+        partPaymentId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/part-payments/{partPaymentId}/return';
+};
+
+export type ReturnPartPaymentErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ReturnPartPaymentError = ReturnPartPaymentErrors[keyof ReturnPartPaymentErrors];
+
+export type ReturnPartPaymentResponses = {
+    /**
+     * OK
+     */
+    200: PartPaymentResult;
+};
+
+export type ReturnPartPaymentResponse = ReturnPartPaymentResponses[keyof ReturnPartPaymentResponses];
+
 export type MoveTicketLinesData = {
     body: MoveLinesRequest;
     headers?: {
@@ -1568,6 +1960,48 @@ export type ApplyTicketDiscountErrors = {
 export type ApplyTicketDiscountError = ApplyTicketDiscountErrors[keyof ApplyTicketDiscountErrors];
 
 export type ApplyTicketDiscountResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type ChangePaymentTenderData = {
+    body: ChangePaymentTenderRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+        paymentId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/payments/{paymentId}/tender';
+};
+
+export type ChangePaymentTenderErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ChangePaymentTenderError = ChangePaymentTenderErrors[keyof ChangePaymentTenderErrors];
+
+export type ChangePaymentTenderResponses = {
     /**
      * OK
      */
@@ -2623,3 +3057,145 @@ export type DismissPaymentAttentionResponses = {
 };
 
 export type DismissPaymentAttentionResponse = DismissPaymentAttentionResponses[keyof DismissPaymentAttentionResponses];
+
+export type GetCourierBalancesData = {
+    body?: never;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/balances';
+};
+
+export type GetCourierBalancesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierBalancesResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierBalanceView>;
+};
+
+export type GetCourierBalancesResponse = GetCourierBalancesResponses[keyof GetCourierBalancesResponses];
+
+export type GetCourierJobsData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        pageIndex?: number | string;
+        pageSize?: number | string;
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/jobs';
+};
+
+export type GetCourierJobsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierJobsResponses = {
+    /**
+     * OK
+     */
+    200: CourierJobsPage;
+};
+
+export type GetCourierJobsResponse = GetCourierJobsResponses[keyof GetCourierJobsResponses];
+
+export type GetCourierPayoutsData = {
+    body?: never;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/payouts';
+};
+
+export type GetCourierPayoutsErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type GetCourierPayoutsResponses = {
+    /**
+     * OK
+     */
+    200: Array<CourierPayoutView>;
+};
+
+export type GetCourierPayoutsResponse = GetCourierPayoutsResponses[keyof GetCourierPayoutsResponses];
+
+export type AddCourierPayoutData = {
+    body: CourierPayoutRequest;
+    path: {
+        providerId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/sales/couriers/{providerId}/payouts';
+};
+
+export type AddCourierPayoutErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type AddCourierPayoutError = AddCourierPayoutErrors[keyof AddCourierPayoutErrors];
+
+export type AddCourierPayoutResponses = {
+    /**
+     * OK
+     */
+    200: CourierPayoutView;
+};
+
+export type AddCourierPayoutResponse = AddCourierPayoutResponses[keyof AddCourierPayoutResponses];

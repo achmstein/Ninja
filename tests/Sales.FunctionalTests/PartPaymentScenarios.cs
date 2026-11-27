@@ -195,6 +195,44 @@ public sealed class PartPaymentScenarios
         Assert.AreEqual(40m, (await TakeAsync(till, bill, Cash, 40m)).Paid);
     }
 
+    public record MyBillLineView(int Id, bool IsMine, bool Paid);
+    public record MyBillView(int Id, string Status, decimal Total, decimal PartPaid, List<MyBillLineView> Lines);
+
+    [TestMethod]
+    public async Task The_customer_sees_on_their_own_bill_what_the_till_took_and_which_items_it_paid_for()
+    {
+        var branch = NewBranch();
+        var till = TillAt(branch);
+        var bill = await ABillAsync(till, 60m, 40m);
+        var lines = (await TicketAsync(till, bill)).Lines;
+        var hers = lines.First(l => l.Total == 40m).Id;
+        var (named, why) = await till.RefusedAsync(HttpMethod.Post, Url($"/api/tickets/{bill}/lines/customer"),
+            new { lineIds = lines.Select(l => l.Id).ToArray(), customerId = "user-mona-bill", customerName = "Mona Ali" });
+        Assert.AreEqual(HttpStatusCode.NoContent, named, why);
+        var mona = Suite.Sales.As(Persona.Customer("user-mona-bill"), branch);
+
+        var before = (await mona.GetAsync<List<MyBillView>>(Url("/api/tickets/mine"))).Single(b => b.Id == bill);
+        Assert.AreEqual(0m, before.PartPaid);
+        Assert.IsFalse(before.Lines.Any(l => l.Paid));
+
+        // She pays for one of her items at the till, and leaves ten more towards the rest
+        await TakeAsync(till, bill, Cash, 50m, payerName: "Mona Ali", lineIds: [hers]);
+
+        var after = (await mona.GetAsync<List<MyBillView>>(Url("/api/tickets/mine"))).Single(b => b.Id == bill);
+        Assert.AreEqual("Open", after.Status);
+        Assert.AreEqual(100m, after.Total, "the bill is what it was");
+        Assert.AreEqual(50m, after.PartPaid, "and fifty of it is paid");
+        Assert.IsTrue(after.Lines.Single(l => l.Id == hers).Paid, "the item she paid for says so");
+        Assert.IsFalse(after.Lines.Single(l => l.Id != hers).Paid);
+
+        // Closed, the parts are among the bill's payments: nothing is left to say apart
+        await SettleAsync(till, bill, Cash, 50m);
+        var closed = (await mona.GetAsync<List<MyBillView>>(Url("/api/tickets/mine"))).Single(b => b.Id == bill);
+        Assert.AreEqual("Settled", closed.Status);
+        Assert.AreEqual(0m, closed.PartPaid);
+        Assert.IsFalse(closed.Lines.Any(l => l.Paid));
+    }
+
     [TestMethod]
     public async Task A_part_payment_that_would_pay_the_bill_in_full_is_refused()
     {

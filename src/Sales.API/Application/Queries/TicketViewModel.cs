@@ -159,6 +159,13 @@ public record BillView
     public bool VatIncluded { get; init; }
     public decimal Total { get; init; }
     public decimal RefundedTotal { get; init; }
+
+    /// <summary>
+    /// What the till already took for part of the bill while it is open: somebody paid for what
+    /// they had (and perhaps something towards the rest) and the bill stays open. Off what is
+    /// left to pay. Nothing once the bill has closed: the parts are among its payments then.
+    /// </summary>
+    public decimal PartPaid { get; init; }
 }
 
 public record BillLineView
@@ -177,6 +184,9 @@ public record BillLineView
     public string? CustomerName { get; init; }
     /// <summary>The caller's own line: ordered by them, or their guest device.</summary>
     public bool IsMine { get; init; }
+
+    /// <summary>Paid for already, by a part payment the till took while the bill is open.</summary>
+    public bool Paid { get; init; }
 }
 
 public record ReceiptView(

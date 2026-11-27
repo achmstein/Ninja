@@ -467,6 +467,8 @@
   "onYourTab": "On your tab",
   "back": "Back",
   "refunded": "Refunded",
+  "paidAtTill": "Paid at the till",
+  "leftToPay": "Left to pay",
   "voided": "Voided",
   "receiptShort": "#{number}",
   "@receiptShort": {

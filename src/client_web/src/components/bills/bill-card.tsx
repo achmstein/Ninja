@@ -96,6 +96,17 @@ export function BillCard({
   const service = Number(bill.serviceCharge ?? 0)
   const vat = Number(bill.vat ?? 0)
   const refunded = Number(bill.refundedTotal ?? 0)
+  // What the till already took for part of the bill, and so what is left of it: somebody paid
+  // for what they had at the till and the bill stayed open. Without it, whoever paid saw the
+  // same bill as before they did
+  const partPaid = Number(bill.partPaid ?? 0)
+  const leftToPay = Math.max(0, parts.total - partPaid)
+  const paidSoFar = partPaid > 0 && (
+    <>
+      {t('paidAtTill')} {price(partPaid)} · {t('leftToPay')} {running && '≈ '}
+      {price(leftToPay)}
+    </>
+  )
   // With somebody else's rounds on it, the headline is the customer's own; the bill's total goes under
   const headline = parts.shared ? parts.ownLines : parts.total
   const hasTime = time.length > 0 || running != null
@@ -154,6 +165,10 @@ export function BillCard({
               {running && <span className='me-1 opacity-60'>≈</span>}
               <Odometer value={price(headline)} />
             </span>
+            {/* Under the bill's own total. A shared bill's headline is the customer's rounds: there it goes under the bill's total, with the stack open */}
+            {paidSoFar && !parts.shared && (
+              <span className='text-caption font-medium text-emerald-600 tabular-nums dark:text-emerald-400'>{paidSoFar}</span>
+            )}
           </div>
         </div>
 
@@ -244,6 +259,11 @@ export function BillCard({
                     {running && '≈ '}
                     {price(parts.total)}
                   </span>
+                </div>
+              )}
+              {paidSoFar && parts.shared && (
+                <div className={cn(row, 'text-caption font-medium text-emerald-600 dark:text-emerald-400')}>
+                  <span>{paidSoFar}</span>
                 </div>
               )}
               {refunded > 0 && (
@@ -417,8 +437,14 @@ function LineRow({ line }: { line: BillLineView }) {
         ) : (
           <span className='text-muted-foreground font-semibold tabular-nums'>{qty}×</span>
         )}
-        <span className='min-w-0 flex-1 font-medium'>{localized(line.description)}</span>
-        <span className='shrink-0 tabular-nums'>{price(Number(line.total ?? 0))}</span>
+        <span className={cn('min-w-0 flex-1 font-medium', line.paid && 'opacity-50')}>{localized(line.description)}</span>
+        {/* Paid for at the till already, the bill still open: said on the item, which steps back */}
+        {line.paid && (
+          <span className='shrink-0 self-center rounded-full bg-emerald-500/12 px-2 text-caption font-semibold text-emerald-600 dark:text-emerald-400'>
+            {t('paid')}
+          </span>
+        )}
+        <span className={cn('shrink-0 tabular-nums', line.paid && 'opacity-50')}>{price(Number(line.total ?? 0))}</span>
       </div>
       {isTime ? (
         <p className='text-muted-foreground ms-5 text-caption tabular-nums'>

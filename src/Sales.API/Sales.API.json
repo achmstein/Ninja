@@ -4117,6 +4117,9 @@
           },
           "isMine": {
             "type": "boolean"
+          },
+          "paid": {
+            "type": "boolean"
           }
         }
       },
@@ -4298,6 +4301,14 @@
             "format": "double"
           },
           "refundedTotal": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "partPaid": {
             "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
             "type": [
               "number",

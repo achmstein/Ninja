@@ -418,10 +418,23 @@ public class TicketQueries(SalesContext context) : ITicketQueries
             .Select(g => new { TicketId = g.Key, Amount = g.Sum(r => r.Amount) })
             .ToDictionaryAsync(x => x.TicketId, x => x.Amount);
 
+        // What the till took for part of a bill while it is open: the customer who paid sees their
+        // items as paid, and everyone on the bill sees what is left of it
+        var open = tickets.Where(t => t.Status == TicketStatus.Open).Select(t => t.Id).ToList();
+        var parts = open.Count == 0
+            ? []
+            : (await context.PartPayments
+                .AsNoTracking()
+                .Where(p => open.Contains(p.TicketId) && p.ReturnedAt == null)
+                .ToListAsync())
+                .GroupBy(p => p.TicketId)
+                .ToDictionary(g => g.Key, g => (Amount: g.Sum(p => p.Amount), Lines: g.SelectMany(p => p.LineIds).ToHashSet()));
+
         var bills = new List<BillView>(tickets.Count);
         foreach (var ticket in tickets)
         {
             var bill = ticket.GetBill(await RulesForAsync(ticket.BranchId));
+            var paid = parts.TryGetValue(ticket.Id, out var part) ? part : (Amount: 0m, Lines: []);
             bills.Add(new BillView
             {
                 Id = ticket.Id,
@@ -453,6 +466,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                     CustomerName = l.CustomerName,
                     IsMine = (userId is not null && l.CustomerId == userId)
                         || (guestId is not null && l.GuestId == guestId),
+                    Paid = paid.Lines.Contains(l.Id),
                 }).ToList(),
                 Subtotal = bill.Subtotal,
                 Discount = bill.Discount,
@@ -464,6 +478,7 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 VatIncluded = bill.VatIncluded,
                 Total = bill.Total,
                 RefundedTotal = refunded.TryGetValue(ticket.Id, out var amount) ? amount : 0,
+                PartPaid = paid.Amount,
             });
         }
         return bills;

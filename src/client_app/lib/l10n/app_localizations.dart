@@ -1689,6 +1689,18 @@ abstract class AppLocalizations {
   /// **'Refunded'**
   String get refunded;
 
+  /// No description provided for @paidAtTill.
+  ///
+  /// In en, this message translates to:
+  /// **'Paid at the till'**
+  String get paidAtTill;
+
+  /// No description provided for @leftToPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Left to pay'**
+  String get leftToPay;
+
   /// No description provided for @voided.
   ///
   /// In en, this message translates to:
@@ -1916,6 +1928,72 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Your account is ready'**
   String get claimDone;
+
+  /// No description provided for @shareLocationTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Share your location'**
+  String get shareLocationTitle;
+
+  /// No description provided for @shareLocationAsk.
+  ///
+  /// In en, this message translates to:
+  /// **'Help {name}\'s rider find your door'**
+  String shareLocationAsk(String name);
+
+  /// No description provided for @shareLocationWhy.
+  ///
+  /// In en, this message translates to:
+  /// **'Tap the button and allow your location. It\'s only used for this delivery.'**
+  String get shareLocationWhy;
+
+  /// No description provided for @shareLocationButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Share my location'**
+  String get shareLocationButton;
+
+  /// No description provided for @shareLocationFinding.
+  ///
+  /// In en, this message translates to:
+  /// **'Finding your location…'**
+  String get shareLocationFinding;
+
+  /// No description provided for @shareLocationDone.
+  ///
+  /// In en, this message translates to:
+  /// **'Got it, thanks!'**
+  String get shareLocationDone;
+
+  /// No description provided for @shareLocationDoneHint.
+  ///
+  /// In en, this message translates to:
+  /// **'{name} has your location. You can close this page.'**
+  String shareLocationDoneHint(String name);
+
+  /// No description provided for @shareLocationDenied.
+  ///
+  /// In en, this message translates to:
+  /// **'Location is blocked for this page. Allow it in your browser\'s settings, then try again.'**
+  String get shareLocationDenied;
+
+  /// No description provided for @shareLocationUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'Your phone couldn\'t find where you are. Turn on location and try again.'**
+  String get shareLocationUnavailable;
+
+  /// No description provided for @shareLocationFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'That didn\'t go through. Try again.'**
+  String get shareLocationFailed;
+
+  /// No description provided for @shareLocationExpired.
+  ///
+  /// In en, this message translates to:
+  /// **'This link has run out. Ask {name} to send a new one.'**
+  String shareLocationExpired(String name);
 
   /// No description provided for @claimExpired.
   ///

@@ -137,6 +137,17 @@ class _BillTileState extends ConsumerState<BillTile> {
         final theme = context.theme;
         final c = theme.colors;
         final small = context.localeText(theme.typography.caption.copyWith(color: c.mutedForeground));
+        // What the till already took for part of the bill, and so what is left of it: somebody
+        // paid for what they had at the till and the bill stayed open. Without it, whoever paid
+        // saw the same bill as before they did
+        final left = parts.total - bill.partPaid < 0 ? 0.0 : parts.total - bill.partPaid;
+        final paidSoFar = bill.partPaid > 0
+            ? '${l10n.paidAtTill} ${money(bill.partPaid)} · ${l10n.leftToPay} $approx${money(left)}'
+            : null;
+        final paidStyle = small.copyWith(
+          fontWeight: FontWeight.w500,
+          color: c.brightness == Brightness.dark ? NinjaColors.success : NinjaColors.successInk,
+        );
         // A round's own fill: a touch lighter than the slab, or the page's muted on a light card
         final fill = open ? Color.lerp(c.background, c.foreground, 0.09)! : c.background;
         Widget row(String label, String value, {TextStyle? style}) => Row(
@@ -289,6 +300,9 @@ class _BillTileState extends ConsumerState<BillTile> {
                             decoration: bill.isVoided ? TextDecoration.lineThrough : null,
                           )),
                         ),
+                        // Under the bill's own total. A shared bill's headline is the customer's
+                        // rounds: there it goes under the bill's total, with the stack open
+                        if (paidSoFar != null && !parts.shared) Text(paidSoFar, style: paidStyle),
                       ],
                     ),
                   ),
@@ -349,6 +363,7 @@ class _BillTileState extends ConsumerState<BillTile> {
                             row(l10n.serviceCharge(percent(bill.serviceChargeRate).toString()), money(bill.serviceCharge)),
                           if (!parts.shared && bill.vat > 0 && !bill.vatIncluded) row(l10n.vat(percent(bill.vatRate).toString()), money(bill.vat)),
                           if (parts.shared) row(l10n.billTotal, '$approx${money(parts.total)}'),
+                          if (paidSoFar != null && parts.shared) Text(paidSoFar, style: paidStyle),
                           if (bill.refundedTotal > 0) row(l10n.refunded, '−${money(bill.refundedTotal)}', style: small.copyWith(color: c.destructive)),
                           if (!widget.forming) ...[
                             const SizedBox(height: 8),
@@ -505,12 +520,37 @@ class _BillLine extends ConsumerWidget {
                 AppText('${hoursOf(line.qty)}x', style: TextStyle(fontSize: 14, color: colors.mutedForeground)),
               const SizedBox(width: 4),
               Expanded(
-                child: AppText(line.description.localized(context), style: TextStyle(fontSize: 14, color: ink)),
+                child: Opacity(
+                  opacity: line.paid ? 0.5 : 1,
+                  child: AppText(line.description.localized(context), style: TextStyle(fontSize: 14, color: ink)),
+                ),
               ),
+              // Paid for at the till already, the bill still open: said on the item, which steps back
+              if (line.paid) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: NinjaColors.success.withValues(alpha: 0.12),
+                    borderRadius: BorderRadius.circular(999),
+                  ),
+                  child: AppText(
+                    AppLocalizations.of(context)!.paid,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                      color: colors.brightness == Brightness.dark ? NinjaColors.success : NinjaColors.successInk,
+                    ),
+                  ),
+                ),
+              ],
               const SizedBox(width: 8),
-              AppText(
-                money(line.total),
-                style: TextStyle(fontSize: 14, color: ink, fontFeatures: const [FontFeature.tabularFigures()]),
+              Opacity(
+                opacity: line.paid ? 0.5 : 1,
+                child: AppText(
+                  money(line.total),
+                  style: TextStyle(fontSize: 14, color: ink, fontFeatures: const [FontFeature.tabularFigures()]),
+                ),
               ),
             ],
           ),

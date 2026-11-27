@@ -273,6 +273,8 @@ export const messages = {
   onYourTab: { en: "On your tab", ar: "على حسابك" },
   back: { en: "Back", ar: "رجوع" },
   refunded: { en: "Refunded", ar: "مرتجع" },
+  paidAtTill: { en: "Paid at the till", ar: "مدفوع عند الكاشير" },
+  leftToPay: { en: "Left to pay", ar: "المتبقي" },
   voided: { en: "Voided", ar: "ملغي" },
   receiptShort: { en: "#{number}", ar: "#‏{number}" },
   receipt: { en: "Receipt", ar: "الإيصال" },

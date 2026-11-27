@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CancelOnlinePaymentData, CancelOnlinePaymentErrors, CancelOnlinePaymentResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, DismissPaymentAttentionData, DismissPaymentAttentionErrors, DismissPaymentAttentionResponses, GetBillToPayData, GetBillToPayErrors, GetBillToPayResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOnlinePaymentData, GetOnlinePaymentErrors, GetOnlinePaymentResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetOrderToPayData, GetOrderToPayErrors, GetOrderToPayResponses, GetPayAheadOptionsData, GetPayAheadOptionsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentSettingsData, GetPaymentSettingsErrors, GetPaymentSettingsResponses, GetPaymentsResponses, GetPlaceBillToPayData, GetPlaceBillToPayErrors, GetPlaceBillToPayResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, ListOnlinePaymentsData, ListOnlinePaymentsErrors, ListOnlinePaymentsResponses, ListPaymentsNeedingAttentionData, ListPaymentsNeedingAttentionErrors, ListPaymentsNeedingAttentionResponses, MarkPaymentMoveDoneData, MarkPaymentMoveDoneErrors, MarkPaymentMoveDoneResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundOnlinePaymentData, RefundOnlinePaymentErrors, RefundOnlinePaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, RetryPaymentMoveData, RetryPaymentMoveErrors, RetryPaymentMoveResponses, SavePaymentSettingsData, SavePaymentSettingsErrors, SavePaymentSettingsResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, SimulateOnlinePaymentData, SimulateOnlinePaymentErrors, SimulateOnlinePaymentResponses, StartOnlinePaymentData, StartOnlinePaymentErrors, StartOnlinePaymentResponses, StartOrderPaymentData, StartOrderPaymentErrors, StartOrderPaymentResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
+import type { AddCashMovementData, AddCashMovementErrors, AddCashMovementResponses, AddCourierPayoutData, AddCourierPayoutErrors, AddCourierPayoutResponses, AddTicketLineData, AddTicketLineErrors, AddTicketLineResponses, ApplyTicketDiscountData, ApplyTicketDiscountErrors, ApplyTicketDiscountResponses, AssignTicketLinesCustomerData, AssignTicketLinesCustomerErrors, AssignTicketLinesCustomerResponses, CancelOnlinePaymentData, CancelOnlinePaymentErrors, CancelOnlinePaymentResponses, ChangePaymentTenderData, ChangePaymentTenderErrors, ChangePaymentTenderResponses, CloseShiftData, CloseShiftErrors, CloseShiftResponses, DiscardTicketData, DiscardTicketErrors, DiscardTicketResponses, DismissPaymentAttentionData, DismissPaymentAttentionErrors, DismissPaymentAttentionResponses, GetBillToPayData, GetBillToPayErrors, GetBillToPayResponses, GetBranchPricingData, GetBranchPricingErrors, GetBranchPricingResponses, GetBreakdownReportData, GetBreakdownReportErrors, GetBreakdownReportResponses, GetClosedShiftsData, GetClosedShiftsErrors, GetClosedShiftsResponses, GetCourierBalancesData, GetCourierBalancesErrors, GetCourierBalancesResponses, GetCourierJobsData, GetCourierJobsErrors, GetCourierJobsResponses, GetCourierPayoutsData, GetCourierPayoutsErrors, GetCourierPayoutsResponses, GetCurrentShiftData, GetCurrentShiftErrors, GetCurrentShiftResponses, GetDailyReportData, GetDailyReportErrors, GetDailyReportResponses, GetItemPairsReportData, GetItemPairsReportErrors, GetItemPairsReportResponses, GetMyBillsData, GetMyBillsErrors, GetMyBillsResponses, GetOnlinePaymentData, GetOnlinePaymentErrors, GetOnlinePaymentResponses, GetOpenTicketsData, GetOpenTicketsErrors, GetOpenTicketsResponses, GetOrderToPayData, GetOrderToPayErrors, GetOrderToPayResponses, GetPayAheadOptionsData, GetPayAheadOptionsResponses, GetPaymentsData, GetPaymentsErrors, GetPaymentSettingsData, GetPaymentSettingsErrors, GetPaymentSettingsResponses, GetPaymentsResponses, GetPlaceBillToPayData, GetPlaceBillToPayErrors, GetPlaceBillToPayResponses, GetRangeReportData, GetRangeReportErrors, GetRangeReportResponses, GetRecentCustomersData, GetRecentCustomersErrors, GetRecentCustomersResponses, GetRefundsData, GetRefundsErrors, GetRefundsResponses, GetSettledTicketsData, GetSettledTicketsErrors, GetSettledTicketsResponses, GetShiftData, GetShiftErrors, GetShiftResponses, GetTabPaymentData, GetTabPaymentErrors, GetTabPaymentResponses, GetTabPaymentsData, GetTabPaymentsErrors, GetTabPaymentsResponses, GetTicketByOrderData, GetTicketByOrderErrors, GetTicketByOrderResponses, GetTicketData, GetTicketErrors, GetTicketHistoryData, GetTicketHistoryErrors, GetTicketHistoryResponses, GetTicketReceiptData, GetTicketReceiptErrors, GetTicketReceiptResponses, GetTicketResponses, ListOnlinePaymentsData, ListOnlinePaymentsErrors, ListOnlinePaymentsResponses, ListPaymentsNeedingAttentionData, ListPaymentsNeedingAttentionErrors, ListPaymentsNeedingAttentionResponses, MarkPaymentMoveDoneData, MarkPaymentMoveDoneErrors, MarkPaymentMoveDoneResponses, MoveTicketLinesData, MoveTicketLinesErrors, MoveTicketLinesResponses, OpenShiftData, OpenShiftErrors, OpenShiftResponses, OpenTicketData, OpenTicketErrors, OpenTicketResponses, RecordTabPaymentData, RecordTabPaymentErrors, RecordTabPaymentResponses, RefundOnlinePaymentData, RefundOnlinePaymentErrors, RefundOnlinePaymentResponses, RefundTicketData, RefundTicketErrors, RefundTicketResponses, RemoveTicketDiscountData, RemoveTicketDiscountErrors, RemoveTicketDiscountResponses, RetryPaymentMoveData, RetryPaymentMoveErrors, RetryPaymentMoveResponses, ReturnPartPaymentData, ReturnPartPaymentErrors, ReturnPartPaymentResponses, SavePaymentSettingsData, SavePaymentSettingsErrors, SavePaymentSettingsResponses, SetBranchPricingData, SetBranchPricingErrors, SetBranchPricingResponses, SettleTicketData, SettleTicketErrors, SettleTicketResponses, SimulateOnlinePaymentData, SimulateOnlinePaymentErrors, SimulateOnlinePaymentResponses, StartOnlinePaymentData, StartOnlinePaymentErrors, StartOnlinePaymentResponses, StartOrderPaymentData, StartOrderPaymentErrors, StartOrderPaymentResponses, TakePartPaymentData, TakePartPaymentErrors, TakePartPaymentResponses, VoidTicketData, VoidTicketErrors, VoidTicketResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -24,6 +24,17 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 export const getOpenTickets = <ThrowOnError extends boolean = false>(options: Options<GetOpenTicketsData, ThrowOnError>): RequestResult<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError> => (options.client ?? client).get<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/open',
+    ...options
+});
+
+/**
+ * The customers the branch last rang something up for, latest first
+ *
+ * What the till offers before a name is typed. Read from the branch's latest bills, so every till of the branch offers the same people; a voided bill counts for nobody.
+ */
+export const getRecentCustomers = <ThrowOnError extends boolean = false>(options: Options<GetRecentCustomersData, ThrowOnError>): RequestResult<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError> => (options.client ?? client).get<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/recent-customers',
     ...options
 });
 
@@ -125,7 +136,7 @@ export const getTicket = <ThrowOnError extends boolean = false>(options: Options
 /**
  * Settled sales over a window: tender split, discounts, per-type counts
  *
- * The caller picks the window — pass the branch's business-day bounds for the day report.
+ * The caller picks the window — pass the branch's business-day bounds for the day report. netSales is gross sales less the refunds issued in the window; net (gross) is kept for older screens. Cash in tenderTotals is net of change; tendered and cashTendered keep what was handed over.
  */
 export const getRangeReport = <ThrowOnError extends boolean = false>(options: Options<GetRangeReportData, ThrowOnError>): RequestResult<GetRangeReportResponses, GetRangeReportErrors, ThrowOnError> => (options.client ?? client).get<GetRangeReportResponses, GetRangeReportErrors, ThrowOnError>({
     responseType: 'json',
@@ -136,11 +147,33 @@ export const getRangeReport = <ThrowOnError extends boolean = false>(options: Op
 /**
  * Settled sales in a window by hour, weekday, cashier and item
  *
- * offsetMinutes is how far the caller's clock is ahead of UTC; hours and weekdays come back in it.
+ * tz is the IANA zone the hours and weekdays are read in (each bill at its own moment's offset, so daylight saving is right); offsetMinutes, how far a fixed clock is ahead of UTC, is still read when tz is not given; neither means the business's own zone. Items are valued at what customers paid (Amount) and at menu money (MenuAmount), with the refunds issued in the window netted per item; the delivery fee is not an item.
  */
 export const getBreakdownReport = <ThrowOnError extends boolean = false>(options: Options<GetBreakdownReportData, ThrowOnError>): RequestResult<GetBreakdownReportResponses, GetBreakdownReportErrors, ThrowOnError> => (options.client ?? client).get<GetBreakdownReportResponses, GetBreakdownReportErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/reports/breakdown',
+    ...options
+});
+
+/**
+ * Settled sales per business day: gross, refunds, net and tickets
+ *
+ * A business day starts at dayStart (HH:mm, the branch's day start; 00:00 when not given) in the IANA zone tz (the business's own when not given) and runs to the same time the next day. Every day the window [from, to) touches is listed, empty ones included. Net is gross less the credit notes issued that day, the same net sales as the range report's.
+ */
+export const getDailyReport = <ThrowOnError extends boolean = false>(options: Options<GetDailyReportData, ThrowOnError>): RequestResult<GetDailyReportResponses, GetDailyReportErrors, ThrowOnError> => (options.client ?? client).get<GetDailyReportResponses, GetDailyReportErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/reports/daily',
+    ...options
+});
+
+/**
+ * What an item was bought with, on settled tickets in a window
+ *
+ * Of the settled tickets that had the item, how many also had each other catalog item, most often first (up to 15). The pairing suggester weighs these over its own guesses.
+ */
+export const getItemPairsReport = <ThrowOnError extends boolean = false>(options: Options<GetItemPairsReportData, ThrowOnError>): RequestResult<GetItemPairsReportResponses, GetItemPairsReportErrors, ThrowOnError> => (options.client ?? client).get<GetItemPairsReportResponses, GetItemPairsReportErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/reports/pairs',
     ...options
 });
 
@@ -198,6 +231,36 @@ export const settleTicket = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
+ * Take a payment for part of an open bill
+ *
+ * One of a group pays for what they had (lineIds), or an amount on account of the bill. Cash, card or InstaPay, always less than what is left: an amount that pays the bill in full is a settle. The bill stays open with less left to pay, and settling it later brings only the rest. The money is the open shift's. Returns the part payments made, everything part-paid so far and what remains.
+ */
+export const takePartPayment = <ThrowOnError extends boolean = false>(options: Options<TakePartPaymentData, ThrowOnError>): RequestResult<TakePartPaymentResponses, TakePartPaymentErrors, ThrowOnError> => (options.client ?? client).post<TakePartPaymentResponses, TakePartPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/{id}/part-payments',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Give a part payment back while the bill is open (owner only)
+ *
+ * Taken by mistake, or before the bill is voided. The bill owes the money again; cash leaves the drawer of the shift open now, whichever shift took it.
+ */
+export const returnPartPayment = <ThrowOnError extends boolean = false>(options: Options<ReturnPartPaymentData, ThrowOnError>): RequestResult<ReturnPartPaymentResponses, ReturnPartPaymentErrors, ThrowOnError> => (options.client ?? client).post<ReturnPartPaymentResponses, ReturnPartPaymentErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/tickets/{id}/part-payments/{partPaymentId}/return',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Move lines to another ticket
  *
  * No target: the table-turnover split, a fresh ticket for the same place. A target ticket: onto that open bill — the customer who ordered at a table and then took a room. A new ticket: a fresh counter tab, or a table's bill (opened if the table has none) — the customer who moved tables or went to pay at the counter. Session time never moves; a table or counter ticket left empty is discarded. Returns the ticket the lines ended up on.
@@ -238,6 +301,20 @@ export const removeTicketDiscount = <ThrowOnError extends boolean = false>(optio
  */
 export const applyTicketDiscount = <ThrowOnError extends boolean = false>(options: Options<ApplyTicketDiscountData, ThrowOnError>): RequestResult<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError> => (options.client ?? client).post<ApplyTicketDiscountResponses, ApplyTicketDiscountErrors, ThrowOnError>({
     url: '/api/tickets/{id}/discount',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Change how a paid bill's payment was taken
+ *
+ * Cash pressed and the customer sent InstaPay, or the other way: moves one payment between Cash, Card and InstaPay while the bill's shift is open. Cash that took change becomes the exact due and the change goes with it. Refused once the shift is closed, on a bill with a refund, and for tab, online or Talabat payments. Keeps what it was, who changed it and when.
+ */
+export const changePaymentTender = <ThrowOnError extends boolean = false>(options: Options<ChangePaymentTenderData, ThrowOnError>): RequestResult<ChangePaymentTenderResponses, ChangePaymentTenderErrors, ThrowOnError> => (options.client ?? client).post<ChangePaymentTenderResponses, ChangePaymentTenderErrors, ThrowOnError>({
+    url: '/api/tickets/{id}/payments/{paymentId}/tender',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -558,3 +635,49 @@ export const markPaymentMoveDone = <ThrowOnError extends boolean = false>(option
  * The owner has seen to a payment that disagreed with the provider; it leaves the list
  */
 export const dismissPaymentAttention = <ThrowOnError extends boolean = false>(options: Options<DismissPaymentAttentionData, ThrowOnError>): RequestResult<DismissPaymentAttentionResponses, DismissPaymentAttentionErrors, ThrowOnError> => (options.client ?? client).post<DismissPaymentAttentionResponses, DismissPaymentAttentionErrors, ThrowOnError>({ url: '/api/sales/payments/{key}/dismiss', ...options });
+
+/**
+ * What each courier company owes the business, or is owed (admin)
+ *
+ * Per company: what its couriers collected, its fees, what was settled either way, and the balance (collected less fees less settled; positive, the company owes the business). With the deliveries whose bills are still open because the courier collected short.
+ */
+export const getCourierBalances = <ThrowOnError extends boolean = false>(options: Options<GetCourierBalancesData, ThrowOnError>): RequestResult<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError> => (options.client ?? client).get<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/couriers/balances',
+    ...options
+});
+
+/**
+ * A courier company's deliveries, newest first, a page at a time (admin)
+ *
+ * Each with its branch, what was collected, the fee and what became of the bill.
+ */
+export const getCourierJobs = <ThrowOnError extends boolean = false>(options: Options<GetCourierJobsData, ThrowOnError>): RequestResult<GetCourierJobsResponses, GetCourierJobsErrors, ThrowOnError> => (options.client ?? client).get<GetCourierJobsResponses, GetCourierJobsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/couriers/{providerId}/jobs',
+    ...options
+});
+
+/**
+ * Money settled with a courier company, newest first (admin)
+ */
+export const getCourierPayouts = <ThrowOnError extends boolean = false>(options: Options<GetCourierPayoutsData, ThrowOnError>): RequestResult<GetCourierPayoutsResponses, GetCourierPayoutsErrors, ThrowOnError> => (options.client ?? client).get<GetCourierPayoutsResponses, GetCourierPayoutsErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/couriers/{providerId}/payouts',
+    ...options
+});
+
+/**
+ * Record money settled with a courier company (admin)
+ *
+ * Positive: the company paid the business what its couriers collected. Negative: the business paid the company (fees beyond what it collected).
+ */
+export const addCourierPayout = <ThrowOnError extends boolean = false>(options: Options<AddCourierPayoutData, ThrowOnError>): RequestResult<AddCourierPayoutResponses, AddCourierPayoutErrors, ThrowOnError> => (options.client ?? client).post<AddCourierPayoutResponses, AddCourierPayoutErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/sales/couriers/{providerId}/payouts',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});

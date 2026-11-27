@@ -272,6 +272,8 @@
   "onYourTab": "على حسابك",
   "back": "رجوع",
   "refunded": "مرتجع",
+  "paidAtTill": "مدفوع عند الكاشير",
+  "leftToPay": "المتبقي",
   "voided": "ملغي",
   "receiptShort": "#\u200F{number}",
   "@receiptShort": {

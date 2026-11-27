@@ -138,7 +138,9 @@ class BillSlip extends ConsumerWidget {
                 '${line.isTime ? l10n.hoursShort(tidyHours(line.qty)) : hoursOf(line.qty)} × ${money(line.unitPrice)}'
                 '${line.isTime ? l10n.perHourShort : ''}'
                 '${line.discount > 0 ? ' − ${money(line.discount)} (${l10n.discount})' : ''}'
-                '${line.customerName != null ? ' · ${line.customerName}' : ''}',
+                '${line.customerName != null ? ' · ${line.customerName}' : ''}'
+                // Paid for at the till already, the bill still open
+                '${line.paid ? ' · ${l10n.paid}' : ''}',
                 style: muted.copyWith(fontSize: 10, fontFeatures: tabular),
               ),
               if (line.details != null) AppText(line.details!.localized(context), style: muted.copyWith(fontSize: 10)),
@@ -165,6 +167,14 @@ class BillSlip extends ConsumerWidget {
                 style: base.copyWith(fontSize: 15, fontWeight: FontWeight.w700)),
             if (bill.vat > 0 && bill.vatIncluded)
               row(l10n.vatIncluded(percent(bill.vatRate).toString()), money(bill.vat), style: muted.copyWith(fontSize: 10)),
+            // What the till already took for part of the bill, and so what is left of it
+            if (bill.partPaid > 0) ...[
+              const SizedBox(height: 4),
+              row(l10n.paidAtTill, '−${money(bill.partPaid)}'),
+              row(l10n.leftToPay,
+                  '${running != null ? '≈ ' : ''}${money(total - bill.partPaid < 0 ? 0 : total - bill.partPaid)}',
+                  style: base.copyWith(fontWeight: FontWeight.w700)),
+            ],
             if (bill.isSettled && bill.paidWith != null) ...[
               const SizedBox(height: 8),
               row(tenderLabel(bill.paidWith!, l10n), money(bill.total)),

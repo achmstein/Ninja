@@ -864,6 +864,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String get refunded => 'مرتجع';
 
   @override
+  String get paidAtTill => 'مدفوع عند الكاشير';
+
+  @override
+  String get leftToPay => 'المتبقي';
+
+  @override
   String get voided => 'ملغي';
 
   @override
@@ -1000,6 +1006,48 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get claimDone => 'حسابك جاهز';
+
+  @override
+  String get shareLocationTitle => 'ابعت موقعك';
+
+  @override
+  String shareLocationAsk(String name) {
+    return 'ساعد مندوب $name يوصل لباب بيتك';
+  }
+
+  @override
+  String get shareLocationWhy =>
+      'دوس على الزرار واسمح بالموقع. هيتستخدم للتوصيل ده بس.';
+
+  @override
+  String get shareLocationButton => 'ابعت موقعي';
+
+  @override
+  String get shareLocationFinding => 'بندوّر على موقعك…';
+
+  @override
+  String get shareLocationDone => 'وصل، شكرًا!';
+
+  @override
+  String shareLocationDoneHint(String name) {
+    return '$name وصله موقعك. تقدر تقفل الصفحة دي.';
+  }
+
+  @override
+  String get shareLocationDenied =>
+      'الموقع مقفول للصفحة دي. اسمح بيه من إعدادات المتصفح وجرّب تاني.';
+
+  @override
+  String get shareLocationUnavailable =>
+      'موبايلك معرفش يحدد مكانك. شغّل الموقع وجرّب تاني.';
+
+  @override
+  String get shareLocationFailed => 'محصلش. جرّب تاني.';
+
+  @override
+  String shareLocationExpired(String name) {
+    return 'اللينك ده خلص. اطلب من $name يبعت لينك جديد.';
+  }
 
   @override
   String claimExpired(String name) {
@@ -2629,6 +2677,48 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get claimDone => 'حسابك جاهز';
+
+  @override
+  String get shareLocationTitle => 'شارك موقعك';
+
+  @override
+  String shareLocationAsk(String name) {
+    return 'ساعد مندوب $name في الوصول إلى بابك';
+  }
+
+  @override
+  String get shareLocationWhy =>
+      'اضغط الزر واسمح بالوصول إلى موقعك. يُستخدم لهذا التوصيل فقط.';
+
+  @override
+  String get shareLocationButton => 'شارك موقعي';
+
+  @override
+  String get shareLocationFinding => 'جارٍ تحديد موقعك…';
+
+  @override
+  String get shareLocationDone => 'تم، شكرًا لك!';
+
+  @override
+  String shareLocationDoneHint(String name) {
+    return 'وصل موقعك إلى $name. يمكنك إغلاق هذه الصفحة.';
+  }
+
+  @override
+  String get shareLocationDenied =>
+      'الموقع محظور لهذه الصفحة. اسمح به من إعدادات المتصفح ثم أعد المحاولة.';
+
+  @override
+  String get shareLocationUnavailable =>
+      'تعذّر على هاتفك تحديد موقعك. شغّل خدمة الموقع وأعد المحاولة.';
+
+  @override
+  String get shareLocationFailed => 'لم تتم العملية. أعد المحاولة.';
+
+  @override
+  String shareLocationExpired(String name) {
+    return 'انتهت صلاحية هذا الرابط. اطلب من $name إرسال رابط جديد.';
+  }
 
   @override
   String claimExpired(String name) {

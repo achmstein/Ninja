@@ -873,6 +873,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String get refunded => 'Refunded';
 
   @override
+  String get paidAtTill => 'Paid at the till';
+
+  @override
+  String get leftToPay => 'Left to pay';
+
+  @override
   String get voided => 'Voided';
 
   @override
@@ -1009,6 +1015,48 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get claimDone => 'Your account is ready';
+
+  @override
+  String get shareLocationTitle => 'Share your location';
+
+  @override
+  String shareLocationAsk(String name) {
+    return 'Help $name\'s rider find your door';
+  }
+
+  @override
+  String get shareLocationWhy =>
+      'Tap the button and allow your location. It\'s only used for this delivery.';
+
+  @override
+  String get shareLocationButton => 'Share my location';
+
+  @override
+  String get shareLocationFinding => 'Finding your location…';
+
+  @override
+  String get shareLocationDone => 'Got it, thanks!';
+
+  @override
+  String shareLocationDoneHint(String name) {
+    return '$name has your location. You can close this page.';
+  }
+
+  @override
+  String get shareLocationDenied =>
+      'Location is blocked for this page. Allow it in your browser\'s settings, then try again.';
+
+  @override
+  String get shareLocationUnavailable =>
+      'Your phone couldn\'t find where you are. Turn on location and try again.';
+
+  @override
+  String get shareLocationFailed => 'That didn\'t go through. Try again.';
+
+  @override
+  String shareLocationExpired(String name) {
+    return 'This link has run out. Ask $name to send a new one.';
+  }
 
   @override
   String claimExpired(String name) {

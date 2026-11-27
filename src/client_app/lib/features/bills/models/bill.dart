@@ -41,6 +41,10 @@ class Bill {
   final double total;
   final double refundedTotal;
 
+  /// What the till already took for part of the bill while it is open: off what is left to
+  /// pay. Nothing once the bill has closed, when the parts are among its payments
+  final double partPaid;
+
   const Bill({
     required this.id,
     required this.type,
@@ -68,6 +72,7 @@ class Bill {
     required this.vatIncluded,
     required this.total,
     required this.refundedTotal,
+    this.partPaid = 0,
   });
 
   bool get isOpen => status == 'Open';
@@ -109,6 +114,7 @@ class Bill {
         vatIncluded: json['vatIncluded'] as bool? ?? false,
         total: _num(json['total']),
         refundedTotal: _num(json['refundedTotal']),
+        partPaid: _num(json['partPaid']),
       );
 }
 
@@ -132,6 +138,9 @@ class BillLine {
   /// The customer's own line: ordered by them
   final bool isMine;
 
+  /// Paid for already, by a part payment the till took while the bill is open
+  final bool paid;
+
   const BillLine({
     required this.id,
     required this.source,
@@ -144,6 +153,7 @@ class BillLine {
     required this.total,
     this.customerName,
     required this.isMine,
+    this.paid = false,
   });
 
   /// The place's time, as the till billed it
@@ -170,5 +180,6 @@ class BillLine {
         total: Bill._num(json['total']),
         customerName: json['customerName'] as String?,
         isMine: json['isMine'] as bool? ?? false,
+        paid: json['paid'] as bool? ?? false,
       );
 }
