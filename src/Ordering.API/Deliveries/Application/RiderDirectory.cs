@@ -4,7 +4,8 @@ using Microsoft.Extensions.Options;
 namespace Ninja.Ordering.API.Deliveries;
 
 /// <summary>A rider the till may give a delivery to, as Ordering knows them.</summary>
-public record KnownRider(string UserId, string Name);
+/// <param name="Phone">Their own number, when the business keeps one.</param>
+public record KnownRider(string UserId, string Name, string? Phone = null);
 
 /// <summary>
 /// The branch's riders, from what Ordering keeps itself: the rider accounts
@@ -35,7 +36,7 @@ public class RiderDirectory(OrderingContext context, IOptions<DeliveryOptions> o
         {
             var account = await context.RiderAccounts.AsNoTracking()
                 .FirstOrDefaultAsync(r => r.UserId == riderUserId && r.IsRider && r.Enabled);
-            return account is not null && account.Branches.Contains(branchId) ? new KnownRider(account.UserId, account.Name) : null;
+            return account is not null && account.Branches.Contains(branchId) ? new KnownRider(account.UserId, account.Name, account.Phone) : null;
         }
 
         var status = await context.RiderStatuses.AsNoTracking()

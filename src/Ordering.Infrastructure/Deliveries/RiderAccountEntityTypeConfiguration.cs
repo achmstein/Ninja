@@ -11,5 +11,6 @@ class RiderAccountEntityTypeConfiguration : IEntityTypeConfiguration<RiderAccoun
         builder.HasKey(r => r.UserId);
         builder.Property(r => r.UserId).HasMaxLength(DeliveryLimits.RiderUserId);
         builder.Property(r => r.Name).HasMaxLength(DeliveryLimits.RiderName);
+        builder.Property(r => r.Phone).HasMaxLength(DeliveryLimits.Phone);
     }
 }

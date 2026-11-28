@@ -20,6 +20,13 @@ namespace Ninja.Ordering.API.Deliveries;
 /// <param name="CourierFee">What the courier company charges the business for it.</param>
 /// <param name="CourierCollectedReported">The courier company said what its courier collected: Sales settles the bill to the company.</param>
 /// <param name="CourierCollected">What the courier collected at the door, with <paramref name="CourierCollectedReported"/>; zero when paid online ahead.</param>
+/// <param name="EtaMinutes">About how many minutes are left: the area's in full before it leaves, less as the rider nears; null when unsaid or once it is over.</param>
+/// <param name="RiderPhone">The number the customer may ring (the rider's, or the courier's), only from being given it until it is handed over.</param>
+/// <param name="Progress">0 to 100, the share of the way covered, while on the way; null when it cannot be said.</param>
+/// <param name="Nearby">The rider has been near the door.</param>
+/// <param name="CustomerComing">The customer said they are coming down.</param>
+/// <param name="Note">"Nearby" or "CustomerComing" when this is that news and no step of the delivery; null for a step.</param>
+/// <param name="FailureReason">Why it could not be handed over, with the Failed stage, when the rider said.</param>
 public record OrderDeliveryChangedIntegrationEvent(
     int OrderId,
     int BranchId,
@@ -39,4 +46,11 @@ public record OrderDeliveryChangedIntegrationEvent(
     string? CourierName = null,
     decimal? CourierFee = null,
     bool CourierCollectedReported = false,
-    decimal? CourierCollected = null) : IntegrationEvent;
+    decimal? CourierCollected = null,
+    int? EtaMinutes = null,
+    string? RiderPhone = null,
+    int? Progress = null,
+    bool Nearby = false,
+    bool CustomerComing = false,
+    string? Note = null,
+    string? FailureReason = null) : IntegrationEvent;

@@ -32,6 +32,7 @@ public class OrderingContext : DbContext, IUnitOfWork
     public DbSet<RiderStatus> RiderStatuses { get; set; }
     public DbSet<TenantFeatures> TenantFeatures { get; set; }
     public DbSet<RiderAccount> RiderAccounts { get; set; }
+    public DbSet<RiderSpot> RiderSpots { get; set; }
     public DbSet<DeliveryAssignment> DeliveryAssignments { get; set; }
     public DbSet<CourierCompany> CourierProviders { get; set; }
     public DbSet<CourierCancel> CourierCancels { get; set; }
@@ -78,6 +79,7 @@ public class OrderingContext : DbContext, IUnitOfWork
         modelBuilder.ApplyConfiguration(new RiderStatusEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new TenantFeaturesEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new RiderAccountEntityTypeConfiguration());
+        modelBuilder.ApplyConfiguration(new RiderSpotEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new DeliveryAssignmentEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CourierCompanyEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new CourierCancelEntityTypeConfiguration());

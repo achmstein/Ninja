@@ -14,4 +14,21 @@ public record class OrderDeliveryChangedDomainEvent(
     DeliveryStage Stage,
     string? PreviousRiderUserId = null,
     bool CashHandedIn = false,
-    bool CourierCollected = false) : INotification;
+    bool CourierCollected = false,
+    DeliveryNote Note = DeliveryNote.None) : INotification;
+
+/// <summary>
+/// What a delivery's change is about, when it is not one of its steps. Such a
+/// change is told, and leaves no row in the delivery's history.
+/// </summary>
+public enum DeliveryNote
+{
+    /// <summary>A step: given, out, delivered, failed, brought back, cash in.</summary>
+    None = 0,
+
+    /// <summary>The rider's phone came near the door.</summary>
+    Nearby = 1,
+
+    /// <summary>The customer said they are coming down.</summary>
+    CustomerComing = 2,
+}

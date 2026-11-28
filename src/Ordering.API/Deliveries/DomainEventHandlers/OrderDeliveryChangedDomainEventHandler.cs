@@ -64,9 +64,15 @@ public class OrderDeliveryChangedDomainEventHandler(
             "Order {OrderId} delivery -> {Stage} (version {Version}, cash in {CashIn}, courier {Courier}, courier collected {CourierCollected})",
             order.Id, domainEvent.Stage, delivery.Version, domainEvent.CashHandedIn, delivery.CourierProviderId, domainEvent.CourierCollected);
 
-        // Saved with the order: the step and its history stand or fall together
-        context.DeliveryAssignments.Add(HistoryRow(
-            domainEvent, DateTime.UtcNow, identity.GetUserIdentity(), identity.GetUserName(), identity.RunsTheTill()));
+        // Saved with the order: the step and its history stand or fall together. The rider coming
+        // near and the customer coming down are told, and are no step: the history keeps none
+        if (domainEvent.Note == DeliveryNote.None)
+        {
+            context.DeliveryAssignments.Add(HistoryRow(
+                domainEvent, DateTime.UtcNow, identity.GetUserIdentity(), identity.GetUserName(), identity.RunsTheTill()));
+        }
+
+        var progress = await DeliveryProgressReader.ForAsync(context, order.Id, delivery, cancellationToken);
 
         var buyer = order.BuyerId.HasValue
             ? await buyerRepository.FindByIdAsync(order.BuyerId.Value)
@@ -91,6 +97,13 @@ public class OrderDeliveryChangedDomainEventHandler(
             delivery.CourierName,
             delivery.CourierFee,
             domainEvent.CourierCollected,
-            delivery.CourierCollected));
+            delivery.CourierCollected,
+            DeliveryLiveView.EtaFor(delivery, progress),
+            DeliveryLiveView.PhoneToRing(delivery),
+            progress?.Points,
+            delivery.NearbyAt != null,
+            delivery.CustomerComingAt != null,
+            domainEvent.Note == DeliveryNote.None ? null : domainEvent.Note.ToString(),
+            domainEvent.Stage == DeliveryStage.Failed ? delivery.FailureReason : null));
     }
 }

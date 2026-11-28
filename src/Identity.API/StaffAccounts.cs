@@ -152,7 +152,8 @@ public sealed class StaffAccounts(KeycloakAdmin keycloak, IEventBus eventBus, IL
             var branches = (attributes?["branches"] as JsonArray ?? [])
                 .Select(b => int.TryParse(b?.ToString(), out var id) ? id : 0).Where(id => id > 0).Distinct().Order().ToArray();
             var name = PersonName.Display(user["firstName"]?.GetValue<string>(), user["lastName"]?.GetValue<string>());
-            await SayAsync(new StaffAccountChangedIntegrationEvent(userId, name, roles, branches, enabled));
+            var phone = (attributes?["phoneNumber"] as JsonArray)?.FirstOrDefault()?.ToString();
+            await SayAsync(new StaffAccountChangedIntegrationEvent(userId, name, roles, branches, enabled, string.IsNullOrWhiteSpace(phone) ? null : phone));
         }
         catch (Exception ex) when (ex is HttpRequestException or InvalidOperationException)
         {

@@ -1,3 +1,4 @@
+#nullable enable
 namespace Ninja.Ordering.API.Deliveries;
 
 /// <summary>
@@ -10,9 +11,11 @@ namespace Ninja.Ordering.API.Deliveries;
 /// <param name="Roles">Its realm roles: "Rider" among them for a rider.</param>
 /// <param name="Branches">The branches the owner gave it.</param>
 /// <param name="Enabled">False for an account disabled or removed.</param>
+/// <param name="Phone">Its own number, when the business keeps one; null from an Identity that does not say it yet.</param>
 public record StaffAccountChangedIntegrationEvent(
     string UserId,
     string Name,
     string[] Roles,
     int[] Branches,
-    bool Enabled) : IntegrationEvent;
+    bool Enabled,
+    string? Phone = null) : IntegrationEvent;

@@ -915,12 +915,41 @@ namespace Ordering.Infrastructure.Migrations
                         .HasMaxLength(200)
                         .HasColumnType("character varying(200)");
 
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("character varying(30)");
+
                     b.Property<DateTime>("UpdatedAt")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("UserId");
 
                     b.ToTable("rideraccounts", "delivery");
+                });
+
+            modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.RiderSpot", b =>
+                {
+                    b.Property<string>("RiderUserId")
+                        .HasMaxLength(100)
+                        .HasColumnType("character varying(100)");
+
+                    b.Property<DateTime>("At")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<double>("Latitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<double>("Longitude")
+                        .HasColumnType("double precision");
+
+                    b.Property<string>("Told")
+                        .IsRequired()
+                        .HasMaxLength(2000)
+                        .HasColumnType("character varying(2000)");
+
+                    b.HasKey("RiderUserId");
+
+                    b.ToTable("riderspots", "delivery");
                 });
 
             modelBuilder.Entity("Ninja.Ordering.Infrastructure.Deliveries.RiderStatus", b =>
@@ -1382,6 +1411,9 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasMaxLength(500)
                                 .HasColumnType("character varying(500)");
 
+                            b1.Property<DateTime?>("CustomerComingAt")
+                                .HasColumnType("timestamp with time zone");
+
                             b1.Property<DateTime?>("DeliveredAt")
                                 .HasColumnType("timestamp with time zone");
 
@@ -1430,6 +1462,9 @@ namespace Ordering.Infrastructure.Migrations
                                 .HasPrecision(18, 2)
                                 .HasColumnType("numeric(18,2)");
 
+                            b1.Property<DateTime?>("NearbyAt")
+                                .HasColumnType("timestamp with time zone");
+
                             b1.Property<DateTime?>("OutAt")
                                 .HasColumnType("timestamp with time zone");
 
@@ -1449,6 +1484,10 @@ namespace Ordering.Infrastructure.Migrations
                             b1.Property<string>("RiderName")
                                 .HasMaxLength(200)
                                 .HasColumnType("character varying(200)");
+
+                            b1.Property<string>("RiderPhone")
+                                .HasMaxLength(30)
+                                .HasColumnType("character varying(30)");
 
                             b1.Property<string>("RiderUserId")
                                 .HasMaxLength(100)

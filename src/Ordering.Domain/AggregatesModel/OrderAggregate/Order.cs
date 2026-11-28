@@ -954,13 +954,13 @@ public class Order
     /// Give a confirmed delivery to a rider, or hand it to another before it
     /// leaves. The same rider again is a no-op.
     /// </summary>
-    public void AssignRider(string riderUserId, string riderName, DateTime? at = null)
+    public void AssignRider(string riderUserId, string riderName, DateTime? at = null, string? riderPhone = null)
     {
         var delivery = EnsureDelivering();
         if (delivery.RiderUserId == riderUserId)
             return;
 
-        var previous = delivery.AssignRider(riderUserId, riderName, at ?? DateTime.UtcNow);
+        var previous = delivery.AssignRider(riderUserId, riderName, at ?? DateTime.UtcNow, riderPhone);
         AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, previous));
     }
 
@@ -1038,6 +1038,28 @@ public class Order
             throw new OrderingDomainException("Say what the courier collected.", DeliveryErrors.CourierAmountRequired);
         if (delivery.MarkDelivered(at ?? DateTime.UtcNow, latitude, longitude))
             AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage));
+    }
+
+    /// <summary>
+    /// The rider's phone came near the door: the customer hears "almost there", once. False when it
+    /// was said before or the delivery is no longer on its way, and then nothing is raised.
+    /// </summary>
+    public bool MarkDeliveryNearby(DateTime? at = null)
+    {
+        if (Delivery is not { } delivery || OrderStatus != OrderStatus.Confirmed || VoidedAt != null)
+            return false;
+        if (!delivery.MarkNearby(at ?? DateTime.UtcNow))
+            return false;
+        AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, Note: DeliveryNote.Nearby));
+        return true;
+    }
+
+    /// <summary>The customer said they are coming down to meet the rider: the rider hears it. Only on the way; a repeat is a no-op.</summary>
+    public void MarkCustomerComing(DateTime? at = null)
+    {
+        var delivery = EnsureDelivering();
+        if (delivery.MarkCustomerComing(at ?? DateTime.UtcNow))
+            AddDomainEvent(new OrderDeliveryChangedDomainEvent(this, delivery.Stage, Note: DeliveryNote.CustomerComing));
     }
 
     /// <summary>

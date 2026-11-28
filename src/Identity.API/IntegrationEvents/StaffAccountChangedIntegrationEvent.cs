@@ -12,9 +12,11 @@ namespace Ninja.Identity.API.IntegrationEvents;
 /// </summary>
 /// <param name="Roles">The staff roles it holds (Admin, Owner, Cashier, Kitchen, Rider); empty once it is gone.</param>
 /// <param name="Branches">The branches it may work in; empty for an Owner, who holds them all.</param>
+/// <param name="Phone">Its own number, when the business keeps one: a customer rings their rider on it.</param>
 public record StaffAccountChangedIntegrationEvent(
     string UserId,
     string Name,
     string[] Roles,
     int[] Branches,
-    bool Enabled) : IntegrationEvent;
+    bool Enabled,
+    string? Phone = null) : IntegrationEvent;

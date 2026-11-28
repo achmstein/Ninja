@@ -94,6 +94,12 @@ public record DeliveryView
     /// <summary>"Waiting", "Assigned", "OnTheWay", "Delivered", "Failed" or "Returned".</summary>
     public string Stage { get; init; } = string.Empty;
     public string? RiderName { get; init; }
+    /// <summary>The number to ring whoever is bringing it (the rider's own, or the courier's), from being given it until it is handed over; null otherwise, or when none is kept.</summary>
+    public string? RiderPhone { get; init; }
+    /// <summary>The rider has been near the door.</summary>
+    public bool Nearby { get; init; }
+    /// <summary>The customer said they are coming down to meet the rider.</summary>
+    public bool CustomerComing { get; init; }
     /// <summary>The courier company that has it instead of a rider; null while a rider has it, or nobody.</summary>
     public string? CourierProvider { get; init; }
     /// <summary>The courier the company sent, when it said.</summary>
@@ -126,6 +132,9 @@ public record DeliveryView
         Stage = d.Stage.ToString(),
         // The customer is told who is bringing it: a courier's name stands where a rider's would
         RiderName = d.RiderName ?? d.CourierName,
+        RiderPhone = d.Stage is DeliveryStage.Assigned or DeliveryStage.OnTheWay ? d.RiderPhone ?? d.CourierPhone : null,
+        Nearby = d.NearbyAt != null,
+        CustomerComing = d.CustomerComingAt != null,
         CourierProvider = d.CourierProvider,
         CourierName = d.CourierName,
         AssignedAt = d.AssignedAt,

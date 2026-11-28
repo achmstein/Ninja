@@ -122,9 +122,18 @@ public class Delivery
 
     public string? RiderName { get; private set; }
 
+    /// <summary>The rider's own number, as the business keeps it, when it has one: what the customer rings while it is on the way.</summary>
+    public string? RiderPhone { get; private set; }
+
     public DateTime? AssignedAt { get; private set; }
 
     public DateTime? OutAt { get; private set; }
+
+    /// <summary>The first time the rider's phone was within <see cref="DeliveryProgress.NearMeters"/> of the pin, on the way.</summary>
+    public DateTime? NearbyAt { get; private set; }
+
+    /// <summary>The customer said they are coming down to meet the rider, on the way.</summary>
+    public DateTime? CustomerComingAt { get; private set; }
 
     public DateTime? DeliveredAt { get; private set; }
 
@@ -309,7 +318,7 @@ public class Delivery
     /// Give it to a rider, or to another before it leaves. Returns the
     /// rider it was taken from, if any.
     /// </summary>
-    internal string? AssignRider(string riderUserId, string riderName, DateTime at)
+    internal string? AssignRider(string riderUserId, string riderName, DateTime at, string? riderPhone = null)
     {
         if (OutAt != null)
             throw new OrderingDomainException("The order has left with its rider; it can't be given to another.", DeliveryErrors.AlreadyOut);
@@ -319,6 +328,8 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = Limit(riderUserId, DeliveryLimits.RiderUserId, "rider");
         RiderName = string.IsNullOrWhiteSpace(riderName) ? null : Limit(riderName, DeliveryLimits.RiderName, "rider's name");
+        // A number too long to be one is left out, not refused: the delivery is still theirs
+        RiderPhone = string.IsNullOrWhiteSpace(riderPhone) || riderPhone.Trim().Length > DeliveryLimits.Phone ? null : riderPhone.Trim();
         // One of the business's riders takes it from the courier company that had it
         ClearCourier();
         AssignedAt = at;
@@ -342,6 +353,7 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = null;
         RiderName = null;
+        RiderPhone = null;
         // Another company: the last one's job, link and count are not this one's
         if (CourierProviderId != providerId)
         {
@@ -380,6 +392,7 @@ public class Delivery
         var previous = RiderUserId;
         RiderUserId = null;
         RiderName = null;
+        RiderPhone = null;
         ClearCourier();
         AssignedAt = null;
         Version++;
@@ -393,6 +406,31 @@ public class Delivery
         if (OutAt != null)
             return false;
         OutAt = at;
+        Version++;
+        return true;
+    }
+
+    /// <summary>
+    /// The rider's phone came near the pin. Only on the way, and once: false when it was said before,
+    /// or the delivery is not out (handed over, failed, brought back).
+    /// </summary>
+    internal bool MarkNearby(DateTime at)
+    {
+        if (Stage != DeliveryStage.OnTheWay || NearbyAt != null)
+            return false;
+        NearbyAt = at;
+        Version++;
+        return true;
+    }
+
+    /// <summary>The customer is coming down to meet the rider. Only on the way; a repeat is a no-op.</summary>
+    internal bool MarkCustomerComing(DateTime at)
+    {
+        if (CustomerComingAt != null)
+            return false;
+        if (Stage != DeliveryStage.OnTheWay)
+            throw new OrderingDomainException("The order isn't on its way.", DeliveryErrors.NotOut);
+        CustomerComingAt = at;
         Version++;
         return true;
     }

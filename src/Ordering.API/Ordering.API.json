@@ -2690,6 +2690,161 @@
         ]
       }
     },
+    "/api/orders/riders/me/location": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "Where the rider's phone is, while they have a delivery on the way",
+        "description": "Sent about every 20 seconds while a delivery is out. Kept as the rider's last spot only, never on an order; each customer is told how far along their delivery is when it moved ten points or more, and once when the rider is near. Answers how many deliveries the rider has out: at 0 the phone stops sending.",
+        "operationId": "ReportMyRiderLocation",
+        "parameters": [
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/RiderLocationRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RiderLocationResult"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/coming": {
+      "put": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "The customer is coming down to meet the rider",
+        "description": "For the customer's own delivery (their account, or the X-Guest-Id it was ordered under), only while it is on the way (code delivery.not_out otherwise). The rider is told. A second call changes nothing.",
+        "operationId": "SayComingDown",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "description": "No Content"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
+    "/api/orders/{orderId}/delivery/live": {
+      "get": {
+        "tags": [
+          "Orders"
+        ],
+        "summary": "A delivery as the customer's live card reads it",
+        "description": "For the customer's own delivery (their account, or the X-Guest-Id it was ordered under): its stage, who is bringing it and their number while they are, how far along it is and about how many minutes are left. Never where the rider is.",
+        "operationId": "GetDeliveryLive",
+        "parameters": [
+          {
+            "name": "orderId",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "pattern": "^-?(?:0|[1-9]\\d*)$",
+              "type": "integer",
+              "format": "int32"
+            }
+          },
+          {
+            "name": "api-version",
+            "in": "query",
+            "description": "The API version, in the format 'major.minor'.",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "example": "1.0"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryLiveView"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not Found"
+          },
+          "401": {
+            "description": "Unauthorized"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        },
+        "security": [
+          { }
+        ]
+      }
+    },
     "/api/orders/delivery/location-shares/{token}": {
       "get": {
         "tags": [
@@ -5993,6 +6148,72 @@
           }
         }
       },
+      "DeliveryLiveView": {
+        "type": "object",
+        "properties": {
+          "orderId": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "stage": {
+            "type": "string"
+          },
+          "version": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "riderName": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "riderPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "progress": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "etaMinutes": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "null",
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "nearby": {
+            "type": "boolean"
+          },
+          "customerComing": {
+            "type": "boolean"
+          },
+          "failureReason": {
+            "type": [
+              "null",
+              "string"
+            ]
+          }
+        }
+      },
       "DeliveryOrder": {
         "type": "object",
         "properties": {
@@ -6461,6 +6682,18 @@
               "string"
             ]
           },
+          "riderPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nearby": {
+            "type": "boolean"
+          },
+          "customerComing": {
+            "type": "boolean"
+          },
           "courierProvider": {
             "type": [
               "null",
@@ -6693,6 +6926,18 @@
               "null",
               "string"
             ]
+          },
+          "riderPhone": {
+            "type": [
+              "null",
+              "string"
+            ]
+          },
+          "nearby": {
+            "type": "boolean"
+          },
+          "customerComing": {
+            "type": "boolean"
           },
           "courierProvider": {
             "type": [
@@ -8941,6 +9186,56 @@
               "string"
             ],
             "format": "double"
+          }
+        }
+      },
+      "RiderLocationRequest": {
+        "required": [
+          "latitude",
+          "longitude"
+        ],
+        "type": "object",
+        "properties": {
+          "latitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "longitude": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "number",
+              "string"
+            ],
+            "format": "double"
+          },
+          "accuracyMeters": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?(?:[eE][+-]?\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
+          }
+        }
+      },
+      "RiderLocationResult": {
+        "required": [
+          "out"
+        ],
+        "type": "object",
+        "properties": {
+          "out": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
           }
         }
       },

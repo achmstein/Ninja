@@ -104,6 +104,7 @@ class OrderEntityTypeConfiguration : IEntityTypeConfiguration<Order>
             d.Property(x => x.CashCollected).HasPrecision(18, 2);
             d.Property(x => x.RiderUserId).HasMaxLength(DeliveryLimits.RiderUserId);
             d.Property(x => x.RiderName).HasMaxLength(DeliveryLimits.RiderName);
+            d.Property(x => x.RiderPhone).HasMaxLength(DeliveryLimits.Phone);
             d.Property(x => x.FailureReason).HasMaxLength(DeliveryLimits.FailureReason);
             // The courier company that has it instead of a rider
             d.Property(x => x.CourierProvider).HasMaxLength(DeliveryLimits.CourierProvider);

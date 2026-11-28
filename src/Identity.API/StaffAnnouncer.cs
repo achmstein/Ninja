@@ -56,5 +56,6 @@ public sealed class StaffAnnouncer(UserDirectory directory, IEventBus eventBus, 
             .Select(u => (User: u, Roles: u.RealmRoles.Where(r => RoleNames.Staff.Contains(r, StringComparer.OrdinalIgnoreCase)).ToArray()))
             .Where(s => s.Roles.Length > 0)
             .Select(s => new StaffAccountChangedIntegrationEvent(
-                s.User.Id, PersonName.Display(s.User.FirstName, s.User.LastName), s.Roles, s.User.Branches.ToArray(), s.User.Enabled));
+                s.User.Id, PersonName.Display(s.User.FirstName, s.User.LastName), s.Roles, s.User.Branches.ToArray(), s.User.Enabled,
+                string.IsNullOrWhiteSpace(s.User.PhoneNumber) ? null : s.User.PhoneNumber));
 }

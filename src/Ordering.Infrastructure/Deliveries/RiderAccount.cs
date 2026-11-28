@@ -16,6 +16,9 @@ public class RiderAccount
 
     public string Name { get; set; } = string.Empty;
 
+    /// <summary>The rider's own number, when the business keeps one: the customer rings it while their order is on the way.</summary>
+    public string? Phone { get; set; }
+
     /// <summary>The branches the owner gave it.</summary>
     public List<int> Branches { get; set; } = [];
 

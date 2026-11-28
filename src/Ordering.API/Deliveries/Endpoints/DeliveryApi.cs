@@ -167,6 +167,25 @@ public static partial class DeliveryApi
             .WithDescription("Sent when the rider starts and stops, and now and then while the app is open, so the till knows who it can give a delivery to. Kept only for a rider's own account.")
             .RequireAuthorization("Rider");
 
+        orders.MapPut("/riders/me/location", ReportMyLocationAsync)
+            .WithName("ReportMyRiderLocation")
+            .WithSummary("Where the rider's phone is, while they have a delivery on the way")
+            .WithDescription("Sent about every 20 seconds while a delivery is out. Kept as the rider's last spot only, never on an order; each customer is told how far along their delivery is when it moved ten points or more, and once when the rider is near. Answers how many deliveries the rider has out: at 0 the phone stops sending.")
+            .RequireAuthorization("Rider");
+
+        // The customer following their delivery
+        orders.MapPut("/{orderId:int}/delivery/coming", CustomerComingAsync)
+            .WithName("SayComingDown")
+            .WithSummary("The customer is coming down to meet the rider")
+            .WithDescription("For the customer's own delivery (their account, or the X-Guest-Id it was ordered under), only while it is on the way (code delivery.not_out otherwise). The rider is told. A second call changes nothing.")
+            .AllowAnonymous();
+
+        orders.MapGet("/{orderId:int}/delivery/live", GetDeliveryLiveAsync)
+            .WithName("GetDeliveryLive")
+            .WithSummary("A delivery as the customer's live card reads it")
+            .WithDescription("For the customer's own delivery (their account, or the X-Guest-Id it was ordered under): its stage, who is bringing it and their number while they are, how far along it is and about how many minutes are left. Never where the rider is.")
+            .AllowAnonymous();
+
         // A caller on the phone shares their location through a link the till sends
         orders.MapLocationShareRoutes();
 

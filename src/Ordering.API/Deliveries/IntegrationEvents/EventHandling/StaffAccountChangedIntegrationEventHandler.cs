@@ -51,6 +51,8 @@ public class StaffAccountChangedIntegrationEventHandler(
             var name = @event.Name.Trim();
             row.Name = name.Length <= DeliveryLimits.RiderName ? name : name[..DeliveryLimits.RiderName];
         }
+        var phone = @event.Phone?.Trim();
+        row.Phone = string.IsNullOrEmpty(phone) || phone.Length > DeliveryLimits.Phone ? null : phone;
         row.Branches = (@event.Branches ?? []).Distinct().Order().ToList();
         row.IsRider = isRider;
         row.Enabled = @event.Enabled;

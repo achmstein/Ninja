@@ -115,7 +115,7 @@ public class AssignDeliveryRiderCommandHandler(
     {
         var rider = await riders.FindAsync(command.RiderUserId, command.BranchId)
             ?? throw new OrderingDomainException("That isn't one of this branch's riders.", DeliveryErrors.RiderUnknown);
-        order.AssignRider(rider.UserId, rider.Name);
+        order.AssignRider(rider.UserId, rider.Name, riderPhone: rider.Phone);
     }
 }
 
