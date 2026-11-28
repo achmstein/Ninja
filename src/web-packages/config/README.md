@@ -23,10 +23,10 @@ same commit.
 | App | Cap (2026-11-28) |
 |---|---|
 | admin_web | 73 |
-| pos_web | 86 |
+| pos_web | 84 |
 | client_web | 48 |
 | control_web | 46 |
-| kds_web | 10 |
+| kds_web | 8 |
 | site_web | 0 |
 
 `npm run format` formats an app; `npm run format:check` is what the pull
