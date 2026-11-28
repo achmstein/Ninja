@@ -23,7 +23,9 @@ platform :ios do
     end
   end
 
-  lane :beta do
+  # Signs and builds the app Flutter built (its version and build number are Flutter's); both
+  # lanes below start here
+  private_lane :build do
     # The business's own app and team when the build was stamped for one (tool/stamp_tenant.dart)
     app_id = ENV["APP_ID"] || "com.chillax.client"
     extension_id = "#{app_id}.ChillaxLiveActivity"
@@ -56,10 +58,66 @@ platform :ios do
       export_method: "app-store",
       output_directory: "../build/ios/ipa",
     )
+  end
+
+  lane :beta do
+    build
 
     upload_to_testflight(
       api_key_path: ENV["API_KEY_PATH"],
       skip_waiting_for_build_processing: true,
+    )
+  end
+
+  # The build goes to the App Store with nobody opening App Store Connect: uploaded, waited for
+  # while Apple processes it, sent for review, and released by itself once approved. The app's
+  # page (its words, screenshots, privacy and rating answers) is left exactly as it is; only
+  # What's New is written, since Apple asks for it on every version after the first. A release
+  # still waiting for review is withdrawn first: this one replaces it.
+  lane :release do
+    app_id = ENV["APP_ID"] || "com.chillax.client"
+
+    build
+
+    Spaceship::ConnectAPI.token = Spaceship::ConnectAPI::Token.from(filepath: ENV["API_KEY_PATH"])
+    app = Spaceship::ConnectAPI::App.find(app_id)
+    UI.user_error!("App Store Connect has no app #{app_id}: make it there first (tenants/README.md)") unless app
+    platform = Spaceship::ConnectAPI::Platform::IOS
+
+    if (waiting = app.get_in_progress_review_submission(platform: platform))
+      UI.important("A release is still with App Review: withdrawing it, this build replaces it")
+      waiting.cancel_submission
+      40.times do
+        break unless app.get_in_progress_review_submission(platform: platform)
+        sleep(15)
+      end
+    end
+
+    # A language given here that the page lacks would be added to it, empty, and Apple refuses a
+    # page with an empty language: only the ones it has
+    shown = app.get_edit_app_store_version(platform: platform) || app.get_live_app_store_version(platform: platform)
+    locales = shown ? shown.get_app_store_version_localizations.map(&:locale) : []
+    # What's New is one plain line for every business, in Arabic where the page is
+    notes = locales.to_h { |locale| [locale, locale.start_with?("ar") ? "تحسينات وإصلاحات." : "Improvements and fixes."] }
+
+    deliver(
+      api_key_path: ENV["API_KEY_PATH"],
+      app_identifier: app_id,
+      ipa: lane_context[SharedValues::IPA_OUTPUT_PATH],
+      # An empty folder: nothing of the repo's Chillax listing reaches another business's page
+      metadata_path: Dir.mktmpdir("no-listing"),
+      release_notes: notes,
+      skip_screenshots: true,
+      force: true,
+      submit_for_review: true,
+      automatic_release: true,
+      # A failed precheck skips the submission without failing the run; Apple's review is the check
+      run_precheck_before_submit: false,
+      # HTTPS only, which Apple exempts; no advertising identifier
+      submission_information: {
+        export_compliance_uses_encryption: false,
+        add_id_info_uses_idfa: false,
+      },
     )
   end
 

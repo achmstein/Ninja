@@ -106,7 +106,7 @@ set per business in GitHub. Once per business:
    | Play Console access | The key file of a service account with release rights on its Play account |
    | App Store Connect key | An API key from its account (App Manager): key ID, issuer ID and the .p8 |
    | Icons | 1024x1024 PNG without transparency, and Android's adaptive foreground (the mark inside its middle two thirds); without an icon the build keeps the cup |
-   | Build | Builds it from here (Android to Play's track as a draft, iOS to TestFlight) and follows the run, with the Platform page's GitHub token |
+   | Build | Builds it from here (Android to Play's track as a draft, iOS to TestFlight) and follows the run, with the Platform page's GitHub token. Releasing to customers is the workflow's own switch for now (below) |
    | Firebase | **Link in Firebase** finds or makes its Android and iOS apps in the platform's Firebase project (the service account on the Platform page's Own apps tab, Firebase Admin on the project, which must be the Google Cloud project of the shared Google sign-in client `GOOGLE_SERVER_CLIENT_ID`), gives Android the upload key's SHA-1 and SHA-256 and the record's fingerprints, and keeps both config files |
 
    **Set up** does in one press everything the server can: an upload key if
@@ -146,7 +146,26 @@ set per business in GitHub. Once per business:
    API upload until the app's first bundle went in by hand: take
    `client-app-android-aab` from the run, upload it in Play Console, and the
    next runs upload by themselves (internal track, as a draft).
-8. **Its QR codes opening the app.** The edge answers
+8. **Releasing to customers.** Build and Deploy Mobile Apps with **release**
+   ticked takes the same build on to the stores with nobody opening either
+   console. Android is rolled out on the chosen track instead of left as a
+   draft; on `production` that is what sends it to Google's review. iOS
+   (Fastfile, lane `release`) is uploaded, waited for while Apple processes
+   it, sent for App Store review and released by itself once approved; a
+   release still waiting for review is withdrawn and replaced. Neither touches
+   the listing: its words, screenshots, privacy and rating answers stay as
+   they were written in the consoles, and only What's New is set, one plain
+   line. Left by hand: each store's first release (Play takes only drafts for
+   an app it has never published, and Apple's first version needs its page
+   filled in), an agreement Apple or Google wants accepted again, and a
+   reviewer's question or rejection.
+
+   Every build is a version of its own, `1.1.<build number>`
+   (`tenants/build-version.sh`: pubspec's first two parts and the run's
+   number), because Apple closes a version to new builds once it has approved
+   it. Nothing is bumped for a release; raise pubspec's first two parts when
+   the app itself moves on.
+9. **Its QR codes opening the app.** The edge answers
    `/.well-known/assetlinks.json` and `/.well-known/apple-app-site-association`
    on the business's customer host (`{slug}.{domain}` or its own domain) from
    its record, through the control plane (the `app_links` snippet in
