@@ -129,7 +129,10 @@ class BranchNotifier extends Notifier<BranchState> {
 
     if (ref.read(cartProvider).isEmpty) return;
     try {
-      final menu = await ref.read(menuRepositoryProvider).getMenuItems(branchId: branchId);
+      // Only what can be ordered there: a sold out item leaves the order as one the branch does not serve
+      final menu = (await ref.read(menuRepositoryProvider).getMenuItems(branchId: branchId))
+          .where((item) => item.isAvailable)
+          .toList();
       // Moved again meanwhile: that move carries the order
       if (state.selectedBranchId != branchId) return;
       final move = moveLines(ref.read(cartProvider).items, menu);

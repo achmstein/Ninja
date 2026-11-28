@@ -217,7 +217,8 @@ class SessionNotificationService {
       final menuRepo = _ref.read(menuRepositoryProvider);
       final isArabic = locale == 'ar';
 
-      final items = await menuRepo.getMenuItems();
+      // Nothing sold out is offered from the lock screen
+      final items = (await menuRepo.getMenuItems()).where((item) => item.isAvailable).toList();
       if (items.isEmpty) return [];
 
       // Try favorites first

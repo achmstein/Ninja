@@ -1,6 +1,7 @@
 import 'dart:ui' show Locale;
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_service.dart';
+import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
 import '../../../core/network/api_client.dart';
 import '../../../core/providers/branch_provider.dart';
@@ -31,7 +32,8 @@ class ApiMenuRepository implements MenuRepository {
 
   ApiMenuRepository(this._apiClient);
 
-  /// Get all menu items
+  /// Every item the branch serves, the ones that are off or sold out among them:
+  /// whether the customer sees those is the business's choice ([shownItems])
   @override
   Future<List<MenuItem>> getMenuItems({int? categoryId, int? branchId}) async {
     final queryParams = <String, dynamic>{};
@@ -47,7 +49,6 @@ class ApiMenuRepository implements MenuRepository {
 
     return (response.data ?? [])
         .map((e) => MenuItem.fromJson(e as Map<String, dynamic>))
-        .where((item) => item.isAvailable)
         .toList();
   }
 
@@ -199,6 +200,15 @@ final itemPreferencesProvider = FutureProvider<Map<int, UserItemPreference>>((re
   return {for (final preference in list) preference.catalogItemId: preference};
 });
 
+/// The items the customer is shown: all of them, the sold out ones greyed and
+/// marked, or only what can be ordered when the business hides sold out items
+/// (the Brand page's switch, as the customer's web reads it). Watched, so the
+/// menu follows the switch the next time the brand is read.
+List<MenuItem> shownItems(Ref ref, List<MenuItem> items) =>
+    ref.watch(brandProvider.select((brand) => brand.hideSoldOutItems))
+        ? items.where((item) => item.isAvailable).toList()
+        : items;
+
 /// One item's saved way, or null (none, or not loaded yet); an item rebuilds only when its own changes
 final itemPreferenceProvider = Provider.family<UserItemPreference?, int>((ref, id) => ref.watch(itemPreferencesProvider).value?[id]);
 
@@ -212,7 +222,7 @@ final topMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
   final service = ref.watch(menuRepositoryProvider);
   final ids = await service.getMyTopItems();
   if (ids.isEmpty) return const [];
-  final items = await service.getMenuItems(branchId: branchId);
+  final items = shownItems(ref, await service.getMenuItems(branchId: branchId));
   final byId = {for (final item in items) item.id: item};
   return [
     for (final id in ids)
@@ -227,7 +237,7 @@ final groupedMenuItemsProvider = FutureProvider.family<Map<MenuCategory, List<Me
   final branchId = key.$2;
   final service = ref.watch(menuRepositoryProvider);
   final categories = await service.getCategories(branchId: branchId);
-  final items = await service.getMenuItems(branchId: branchId);
+  final items = shownItems(ref, await service.getMenuItems(branchId: branchId));
 
   final grouped = <MenuCategory, List<MenuItem>>{};
 

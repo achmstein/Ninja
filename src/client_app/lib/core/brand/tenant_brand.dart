@@ -517,6 +517,10 @@ class TenantBrand {
   /// platform's key): the address form shows a search field above the map
   final bool addressSearch;
 
+  /// The menu leaves out an item that is off or sold out; false shows it greyed
+  /// and marked, as the customer's web does (the Brand page's switch)
+  final bool hideSoldOutItems;
+
   const TenantBrand({
     required this.name,
     this.primaryColorHex,
@@ -533,6 +537,7 @@ class TenantBrand {
     this.socialProviders,
     this.businessType,
     this.addressSearch = false,
+    this.hideSoldOutItems = false,
   });
 
   /// A cloud kitchen has no tables: an order is collected or brought, never eaten in
@@ -565,6 +570,7 @@ class TenantBrand {
       socialProviders: _social(json['auth'] is Map ? (json['auth'] as Map)['social'] : null),
       businessType: json['businessType'] as String?,
       addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
+      hideSoldOutItems: json['hideSoldOutItems'] == true,
     );
   }
 
@@ -594,6 +600,7 @@ class TenantBrand {
         socialProviders: json['social'] is List ? {for (final p in json['social'] as List) if (p is String) p} : null,
         businessType: json['businessType'] as String?,
         addressSearch: json['addressSearch'] == true,
+        hideSoldOutItems: json['hideSoldOutItems'] == true,
       );
 
   Map<String, dynamic> toJson() => {
@@ -612,6 +619,7 @@ class TenantBrand {
         'social': socialProviders?.toList(),
         'businessType': businessType,
         'addressSearch': addressSearch,
+        'hideSoldOutItems': hideSoldOutItems,
       };
 
   Color? get primaryColor => _color(primaryColorHex);
@@ -646,10 +654,11 @@ class TenantBrand {
           other.version == version &&
           other.customerUrl == customerUrl &&
           other.businessType == businessType &&
-          other.addressSearch == addressSearch;
+          other.addressSearch == addressSearch &&
+          other.hideSoldOutItems == hideSoldOutItems;
 
   @override
-  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType, addressSearch);
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType, addressSearch, hideSoldOutItems);
 }
 
 String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';

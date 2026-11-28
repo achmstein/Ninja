@@ -22,7 +22,7 @@ final favoriteMenuItemsProvider = FutureProvider<List<MenuItem>>((ref) async {
   }
 
   final service = ref.watch(menuRepositoryProvider);
-  final allItems = await service.getMenuItems(branchId: branchId);
+  final allItems = shownItems(ref, await service.getMenuItems(branchId: branchId));
 
   return allItems.where((item) => favoriteIds.contains(item.id)).toList();
 });
