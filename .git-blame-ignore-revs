@@ -1,0 +1,5 @@
+# Mechanical commits git blame skips (git config blame.ignoreRevsFile .git-blame-ignore-revs;
+# GitHub reads this file by itself)
+
+# The web apps formatted once by the shared Prettier config, 2026-11-28
+4f08cd8ceadb1627d365c43671f36da224805451
