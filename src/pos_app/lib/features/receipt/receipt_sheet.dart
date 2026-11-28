@@ -8,7 +8,7 @@ import '../tickets/models/enums.dart';
 import '../tickets/models/ticket_detail.dart';
 import 'sheet_widgets.dart';
 
-import '../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 export 'sheet_widgets.dart' show receiptWidth;
 
 /// What was paid, as the settle dialog knows it before the refetched

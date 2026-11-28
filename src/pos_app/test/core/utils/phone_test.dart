@@ -1,6 +1,6 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:pos_app/core/utils/name_match.dart';
-import 'package:pos_app/core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import 'package:pos_app/core/utils/whatsapp.dart';
 
 void main() {

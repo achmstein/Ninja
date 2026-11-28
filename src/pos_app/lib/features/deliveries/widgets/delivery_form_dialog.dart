@@ -8,7 +8,7 @@ import '../../../core/services/branch_names.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/utils/whatsapp.dart';
 import '../../../core/widgets/pos_dialog.dart';
 import '../../../l10n/app_localizations.dart';

@@ -1,7 +1,7 @@
 import 'dart:ui' show Brightness, Color, Locale;
 import 'package:flutter/foundation.dart' show mapEquals;
 import 'package:ninja_app_core/models/localized_text.dart';
-import '../utils/phone.dart' as phones;
+import 'package:ninja_app_core/utils/phone.dart' as phones;
 
 /// The switches a tenant can turn off. Every one is on until the brand is
 /// known, so nothing flashes off and back at startup.

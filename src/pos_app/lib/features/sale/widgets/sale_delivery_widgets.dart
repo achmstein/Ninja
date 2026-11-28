@@ -8,7 +8,7 @@ import '../models/sale_delivery.dart';
 import '../../deliveries/widgets/pin_quality.dart';
 import '../../orders/models/order.dart';
 
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/theme/type_roles.dart';
 /// The delivery on the sale: where it goes and the number the rider calls
 /// (its digits alone left to right), whether it has a pin; a tap changes

@@ -10,7 +10,7 @@ import '../../orders/models/order.dart';
 import '../models/delivery_order.dart';
 import 'pin_quality.dart';
 
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/theme/type_roles.dart';
 /// "800 m", "2.4 km" in the app's language
 String distanceLabel(AppLocalizations l10n, int meters) =>

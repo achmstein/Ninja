@@ -15,7 +15,7 @@ import 'order_detail_dialog.dart';
 import 'platform_badge.dart';
 import '../../../core/utils/bidi.dart';
 
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/theme/type_roles.dart';
 /// The queue of customer app orders waiting for a cashier's tap, wherever
 /// it is shown: sideways on the floor, stacked on the ticket they will land

@@ -12,7 +12,7 @@ import '../models/order.dart';
 import '../providers/pending_orders_provider.dart';
 import 'platform_badge.dart';
 
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/theme/type_roles.dart';
 enum OrderDetailAction { confirm, cancel, rejectGuest }
 

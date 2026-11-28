@@ -1,5 +1,5 @@
 import 'package:url_launcher/url_launcher.dart';
-import 'phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 
 /// A WhatsApp link for a phone as customers type it here: a local mobile
 /// gets the business's country code (Egypt when the country is not said), an

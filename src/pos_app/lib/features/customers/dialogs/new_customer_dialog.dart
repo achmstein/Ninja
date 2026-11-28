@@ -6,7 +6,7 @@ import '../../../core/brand/brand_provider.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/utils/name_match.dart';
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/widgets/toast_helpers.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../sale/models/sale_line.dart';

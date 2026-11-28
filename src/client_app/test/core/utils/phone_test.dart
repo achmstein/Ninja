@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ninja_client/core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 
 void main() {
   group('normalizePhone', () {

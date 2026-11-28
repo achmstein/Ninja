@@ -15,7 +15,7 @@ import '../providers/customer_providers.dart';
 import 'app_link_dialog.dart';
 import 'pay_tab_dialog.dart';
 
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/theme/type_roles.dart';
 /// The customer in front of the cashier, at a glance: their points (as
 /// information — points are earned, joined and spent in the customer app,

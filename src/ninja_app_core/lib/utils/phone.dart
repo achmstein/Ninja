@@ -1,8 +1,8 @@
 import 'package:phone_numbers_parser/metadata.dart';
 import 'package:phone_numbers_parser/phone_numbers_parser.dart';
 
-/// Phone numbers as a customer types them or a phone's autofill hands them
-/// over. The same rule as the server's PhoneRules
+/// Phone numbers as a cashier or a customer types them, a phone autofills them or a contact
+/// book saved them. The same rule as the server's PhoneRules
 /// (src/Ninja.ServiceDefaults/PhoneRules.cs), on the same numbering plans
 /// (libphonenumber's, here through phone_numbers_parser): a number is read
 /// against the business's country however it is spelled — Arabic-Indic
@@ -106,3 +106,35 @@ String formatPhone(String? stored, String country) {
   final trunk = metadataByIsoCode[number.isoCode]?.nationalPrefix == '0' ? '0' : '';
   return '$trunk${number.formatNsn()}';
 }
+
+/// The business's country, kept in step with its brand by the app's root: what
+/// a kept number is shown against wherever one is drawn.
+String phoneCountry = 'EG';
+
+/// A kept number as people here write it (see [formatPhone]), for showing.
+/// It comes inside a left-to-right isolate (U+2066 … U+2069): a number is all
+/// digits and spaces, which have no direction of their own, so in an Arabic
+/// line its groups would otherwise swap places (12345678 010). A first-strong
+/// isolate does not do: with no letter to go by it takes the line's direction.
+/// For a field's text or text that is searched use [plainPhone].
+String showPhone(String? stored) {
+  final shown = formatPhone(stored, phoneCountry);
+  return shown.isEmpty ? shown : '\u2066$shown\u2069';
+}
+
+/// The same number bare.
+String plainPhone(String? stored) => formatPhone(stored, phoneCountry);
+
+/// How many digits were typed, whatever the script
+int phoneDigitCount(String input) => _clean(input).replaceAll('+', '').length;
+
+/// Whether the search text reads as a phone number rather than a name
+bool looksLikePhone(String input) {
+  final digits = phoneDigitCount(input);
+  final letters = input.replaceAll(RegExp(r'[\s\-+().]'), '').length;
+  return digits >= 2 && digits >= letters - 1;
+}
+
+/// The digits wa.me wants: the number with its country code, no plus
+String whatsAppNumber(String phone, String country) =>
+    (_read(phone, country)?.international ?? _clean(phone)).replaceAll('+', '');

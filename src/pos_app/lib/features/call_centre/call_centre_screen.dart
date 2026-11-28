@@ -12,7 +12,7 @@ import '../../core/brand/brand_provider.dart';
 import '../../core/config/app_config.dart';
 import '../../core/models/money.dart';
 import '../../core/utils/bidi.dart';
-import '../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../core/widgets/pos_dialog.dart';
 import '../../l10n/app_localizations.dart';
 import '../deliveries/models/delivery_order.dart';

@@ -8,7 +8,7 @@ import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'core/brand/brand_provider.dart';
-import 'core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';
 import 'core/router/app_router.dart';

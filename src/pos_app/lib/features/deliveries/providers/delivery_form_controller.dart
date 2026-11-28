@@ -3,7 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/config/app_config.dart';
 import '../../call_centre/call_centre_mode.dart';
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../customers/services/customer_search_service.dart';
 import '../models/delivery_order.dart';
 import '../services/delivery_service.dart';

@@ -5,7 +5,7 @@ import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../core/utils/highlight.dart';
-import '../../../core/utils/phone.dart';
+import 'package:ninja_app_core/utils/phone.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../l10n/app_localizations.dart';
