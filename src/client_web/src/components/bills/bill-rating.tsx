@@ -4,7 +4,6 @@ import { CircleAlert, Loader2, Star } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { rateOrder, type OrderSummary } from '@ninja/api/ordering'
 import { type BillView } from '@ninja/api/sales'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -144,7 +143,6 @@ function RatingSheet({
           path: { orderId },
           body: { ratingValue: rating, comment: comment.trim() || null },
           headers: { 'x-requestid': crypto.randomUUID() },
-          query: { 'api-version': API_VERSION },
           throwOnError: true,
         })
       }

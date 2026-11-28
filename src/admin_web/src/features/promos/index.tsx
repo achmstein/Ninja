@@ -8,7 +8,6 @@ import {
   listPromosOptions,
   setPromoActiveMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
@@ -42,7 +41,7 @@ export function PromoCodesManagement() {
   const [editing, setEditing] = useState<PromoCodeDto | null>(null)
   const [deleting, setDeleting] = useState<PromoCodeDto | null>(null)
 
-  const promosQuery = useQuery(listPromosOptions({ query: { 'api-version': API_VERSION } }))
+  const promosQuery = useQuery(listPromosOptions())
   const promos = useMemo(() => promosQuery.data ?? [], [promosQuery.data])
 
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromos' }] })
@@ -105,7 +104,6 @@ export function PromoCodesManagement() {
         setActive.mutate({
           path: { id: Number(p.id) },
           body: { isActive },
-          query: { 'api-version': API_VERSION },
         })
       }
     />
@@ -276,7 +274,6 @@ export function PromoCodesManagement() {
           deleting &&
           remove.mutate({
             path: { id: Number(deleting.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
       />

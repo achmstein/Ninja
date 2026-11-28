@@ -442,12 +442,8 @@ export type VarianceRow = {
 export type GetStockItemsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         includeInactive?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/items';
 };
@@ -478,12 +474,7 @@ export type CreateStockItemData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/items';
 };
 
@@ -518,12 +509,7 @@ export type GetStockItemData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/items/{id}';
 };
 
@@ -556,12 +542,7 @@ export type UpdateStockItemData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/items/{id}';
 };
 
@@ -594,12 +575,7 @@ export type SetReorderLevelData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/items/{id}/reorder-level';
 };
 
@@ -632,12 +608,8 @@ export type GetStockItemCostsData = {
     path: {
         id: number;
     };
-    query: {
+    query?: {
         take?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/items/{id}/costs';
 };
@@ -665,13 +637,9 @@ export type GetStockItemCostsResponse = GetStockItemCostsResponses[keyof GetStoc
 export type GetStockLevelsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         low?: boolean;
         includeRetired?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/levels';
 };
@@ -699,17 +667,13 @@ export type GetStockLevelsResponse = GetStockLevelsResponses[keyof GetStockLevel
 export type GetStockMovementsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         stockItemId?: number | string;
         type?: MovementType;
         from?: string;
         to?: string;
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/movements';
 };
@@ -740,12 +704,7 @@ export type PostStockAdjustmentData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/movements';
 };
 
@@ -776,13 +735,9 @@ export type PostStockAdjustmentResponses = {
 export type GetPurchasesData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/purchases';
 };
@@ -813,12 +768,7 @@ export type ReceivePurchaseData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/purchases';
 };
 
@@ -853,12 +803,7 @@ export type GetPurchaseData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/purchases/{id}';
 };
 
@@ -893,12 +838,7 @@ export type ScanReceiptData = {
         languages?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/purchases/scan';
 };
 
@@ -931,13 +871,9 @@ export type ScanReceiptResponse = ScanReceiptResponses[keyof ScanReceiptResponse
 export type GetStockCountsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/counts';
 };
@@ -968,12 +904,7 @@ export type PostStockCountData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/counts';
 };
 
@@ -1008,12 +939,7 @@ export type GetStockCountData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/counts/{id}';
 };
 
@@ -1044,13 +970,9 @@ export type GetStockCountResponse = GetStockCountResponses[keyof GetStockCountRe
 export type GetTransfersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/transfers';
 };
@@ -1080,12 +1002,7 @@ export type GetTransferData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/transfers/{id}';
 };
 
@@ -1121,12 +1038,7 @@ export type TransferStockData = {
     path: {
         branchId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/transfers/to/{branchId}';
 };
 
@@ -1162,10 +1074,6 @@ export type GetUsageReportData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/reports/usage';
 };
@@ -1202,10 +1110,6 @@ export type GetVarianceReportData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/inventory/reports/variance';
 };
@@ -1239,12 +1143,7 @@ export type GetVarianceReportResponse = GetVarianceReportResponses[keyof GetVari
 export type RebuildStockLevelsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/levels/rebuild';
 };
 
@@ -1271,12 +1170,7 @@ export type RebuildStockLevelsResponse = RebuildStockLevelsResponses[keyof Rebui
 export type GetRecipesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes';
 };
 
@@ -1303,12 +1197,7 @@ export type GetRecipesResponse = GetRecipesResponses[keyof GetRecipesResponses];
 export type GetRecipeCostsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/costs';
 };
 
@@ -1335,12 +1224,7 @@ export type GetRecipeCostsResponse = GetRecipeCostsResponses[keyof GetRecipeCost
 export type ProposeRecipesData = {
     body: ProposeRecipesRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/assist/propose';
 };
 
@@ -1373,12 +1257,7 @@ export type ProposeRecipesResponse = ProposeRecipesResponses[keyof ProposeRecipe
 export type AdviseMenuData = {
     body: MenuAdviceRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/assist/menu-advice';
 };
 
@@ -1413,12 +1292,7 @@ export type RemoveRecipeData = {
     path: {
         catalogItemId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/{catalogItemId}';
 };
 
@@ -1451,12 +1325,7 @@ export type GetRecipeData = {
     path: {
         catalogItemId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/{catalogItemId}';
 };
 
@@ -1489,12 +1358,7 @@ export type SetRecipeData = {
     path: {
         catalogItemId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/{catalogItemId}';
 };
 
@@ -1528,12 +1392,7 @@ export type TrackByUnitData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/inventory/recipes/track-by-unit';
 };
 

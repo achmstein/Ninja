@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { type CatalogItemDto } from '@ninja/api/catalog'
 import { type RecipeCostView, type RecipeView } from '@ninja/api/inventory'
 import { getRecipeCostsOptions, getRecipesOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { toNumber } from '@/lib/money'
 import { DEFAULT_FOOD_COST_TARGET } from './menu-cost-rows'
@@ -41,11 +40,11 @@ export function useStockRuleBadges(items: CatalogItemDto[]): Map<number, StockRu
   // Nothing to badge without inventory: the map stays empty
   const { inventory } = useFeatures()
   const recipes = useQuery({
-    ...getRecipesOptions({ query: { 'api-version': API_VERSION } }),
+    ...getRecipesOptions(),
     enabled: inventory,
   })
   const costs = useQuery({
-    ...getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getRecipeCostsOptions(),
     enabled: inventory,
   })
   return useMemo(() => {

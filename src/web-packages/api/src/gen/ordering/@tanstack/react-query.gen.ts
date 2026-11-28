@@ -40,14 +40,14 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const getOrdersByUserQueryKey = (options: Options<GetOrdersByUserData>) => createQueryKey('getOrdersByUser', options);
+export const getOrdersByUserQueryKey = (options?: Options<GetOrdersByUserData>) => createQueryKey('getOrdersByUser', options);
 
 /**
  * Get current user's orders
  *
  * Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.
  */
-export const getOrdersByUserOptions = (options: Options<GetOrdersByUserData>) => queryOptions<GetOrdersByUserResponse, AxiosError<DefaultError>, GetOrdersByUserResponse, ReturnType<typeof getOrdersByUserQueryKey>>({
+export const getOrdersByUserOptions = (options?: Options<GetOrdersByUserData>) => queryOptions<GetOrdersByUserResponse, AxiosError<DefaultError>, GetOrdersByUserResponse, ReturnType<typeof getOrdersByUserQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getOrdersByUser({
             ...options,
@@ -284,12 +284,12 @@ export const getOpenOrdersAtPlaceOptions = (options: Options<GetOpenOrdersAtPlac
     queryKey: getOpenOrdersAtPlaceQueryKey(options)
 });
 
-export const getPendingOrdersQueryKey = (options: Options<GetPendingOrdersData>) => createQueryKey('getPendingOrders', options);
+export const getPendingOrdersQueryKey = (options?: Options<GetPendingOrdersData>) => createQueryKey('getPendingOrders', options);
 
 /**
  * Pending orders for the branch (staff)
  */
-export const getPendingOrdersOptions = (options: Options<GetPendingOrdersData>) => queryOptions<GetPendingOrdersResponse, AxiosError<DefaultError>, GetPendingOrdersResponse, ReturnType<typeof getPendingOrdersQueryKey>>({
+export const getPendingOrdersOptions = (options?: Options<GetPendingOrdersData>) => queryOptions<GetPendingOrdersResponse, AxiosError<DefaultError>, GetPendingOrdersResponse, ReturnType<typeof getPendingOrdersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPendingOrders({
             ...options,
@@ -302,14 +302,14 @@ export const getPendingOrdersOptions = (options: Options<GetPendingOrdersData>) 
     queryKey: getPendingOrdersQueryKey(options)
 });
 
-export const getKitchenOrdersQueryKey = (options: Options<GetKitchenOrdersData>) => createQueryKey('getKitchenOrders', options);
+export const getKitchenOrdersQueryKey = (options?: Options<GetKitchenOrdersData>) => createQueryKey('getKitchenOrders', options);
 
 /**
  * Confirmed orders in the kitchen, for the kitchen display (staff)
  *
  * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.
  */
-export const getKitchenOrdersOptions = (options: Options<GetKitchenOrdersData>) => queryOptions<GetKitchenOrdersResponse, AxiosError<DefaultError>, GetKitchenOrdersResponse, ReturnType<typeof getKitchenOrdersQueryKey>>({
+export const getKitchenOrdersOptions = (options?: Options<GetKitchenOrdersData>) => queryOptions<GetKitchenOrdersResponse, AxiosError<DefaultError>, GetKitchenOrdersResponse, ReturnType<typeof getKitchenOrdersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getKitchenOrders({
             ...options,
@@ -341,12 +341,12 @@ export const setOrderReadyMutation = (options?: Partial<Options<SetOrderReadyDat
     return mutationOptions;
 };
 
-export const getAllOrdersQueryKey = (options: Options<GetAllOrdersData>) => createQueryKey('getAllOrders', options);
+export const getAllOrdersQueryKey = (options?: Options<GetAllOrdersData>) => createQueryKey('getAllOrders', options);
 
 /**
  * Get all orders paginated (admin)
  */
-export const getAllOrdersOptions = (options: Options<GetAllOrdersData>) => queryOptions<GetAllOrdersResponse, AxiosError<DefaultError>, GetAllOrdersResponse, ReturnType<typeof getAllOrdersQueryKey>>({
+export const getAllOrdersOptions = (options?: Options<GetAllOrdersData>) => queryOptions<GetAllOrdersResponse, AxiosError<DefaultError>, GetAllOrdersResponse, ReturnType<typeof getAllOrdersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getAllOrders({
             ...options,
@@ -359,14 +359,14 @@ export const getAllOrdersOptions = (options: Options<GetAllOrdersData>) => query
     queryKey: getAllOrdersQueryKey(options)
 });
 
-export const getGuestsQueryKey = (options: Options<GetGuestsData>) => createQueryKey('getGuests', options);
+export const getGuestsQueryKey = (options?: Options<GetGuestsData>) => createQueryKey('getGuests', options);
 
 /**
  * Guests who ordered without an account (admin)
  *
  * One row per phone number left at guest checkout at the branch, from orders no account has claimed: the latest name and phone, how many orders went ahead and what they came to (cancelled orders left out), and the first and last order time. Most recent first. Search matches a name or the phone. A row's key filters GetAllOrders to that guest's orders.
  */
-export const getGuestsOptions = (options: Options<GetGuestsData>) => queryOptions<GetGuestsResponse, AxiosError<DefaultError>, GetGuestsResponse, ReturnType<typeof getGuestsQueryKey>>({
+export const getGuestsOptions = (options?: Options<GetGuestsData>) => queryOptions<GetGuestsResponse, AxiosError<DefaultError>, GetGuestsResponse, ReturnType<typeof getGuestsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getGuests({
             ...options,
@@ -379,14 +379,14 @@ export const getGuestsOptions = (options: Options<GetGuestsData>) => queryOption
     queryKey: getGuestsQueryKey(options)
 });
 
-export const getCustomerOrderSummariesQueryKey = (options: Options<GetCustomerOrderSummariesData>) => createQueryKey('getCustomerOrderSummaries', options);
+export const getCustomerOrderSummariesQueryKey = (options?: Options<GetCustomerOrderSummariesData>) => createQueryKey('getCustomerOrderSummaries', options);
 
 /**
  * What each customer has ordered, for the customer list (admin)
  *
  * One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.
  */
-export const getCustomerOrderSummariesOptions = (options: Options<GetCustomerOrderSummariesData>) => queryOptions<GetCustomerOrderSummariesResponse, AxiosError<DefaultError>, GetCustomerOrderSummariesResponse, ReturnType<typeof getCustomerOrderSummariesQueryKey>>({
+export const getCustomerOrderSummariesOptions = (options?: Options<GetCustomerOrderSummariesData>) => queryOptions<GetCustomerOrderSummariesResponse, AxiosError<DefaultError>, GetCustomerOrderSummariesResponse, ReturnType<typeof getCustomerOrderSummariesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getCustomerOrderSummaries({
             ...options,
@@ -549,14 +549,14 @@ export const resolveDeliveryBranchOptions = (options: Options<ResolveDeliveryBra
     queryKey: resolveDeliveryBranchQueryKey(options)
 });
 
-export const getDeliveriesQueryKey = (options: Options<GetDeliveriesData>) => createQueryKey('getDeliveries', options);
+export const getDeliveriesQueryKey = (options?: Options<GetDeliveriesData>) => createQueryKey('getDeliveries', options);
 
 /**
  * The branch's deliveries, for the till's board (staff)
  *
  * Confirmed, not voided delivery orders from the last two days: those still open (cash not in, bill not settled), and those finished in the last day. At most a page's worth.
  */
-export const getDeliveriesOptions = (options: Options<GetDeliveriesData>) => queryOptions<GetDeliveriesResponse, AxiosError<DefaultError>, GetDeliveriesResponse, ReturnType<typeof getDeliveriesQueryKey>>({
+export const getDeliveriesOptions = (options?: Options<GetDeliveriesData>) => queryOptions<GetDeliveriesResponse, AxiosError<DefaultError>, GetDeliveriesResponse, ReturnType<typeof getDeliveriesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getDeliveries({
             ...options,
@@ -569,14 +569,14 @@ export const getDeliveriesOptions = (options: Options<GetDeliveriesData>) => que
     queryKey: getDeliveriesQueryKey(options)
 });
 
-export const getRidersQueryKey = (options: Options<GetRidersData>) => createQueryKey('getRiders', options);
+export const getRidersQueryKey = (options?: Options<GetRidersData>) => createQueryKey('getRiders', options);
 
 /**
  * The branch's riders, on duty first (staff)
  *
  * Every enabled rider account given the branch, as Identity announced them, with whether their app has ever checked in (signedIn), whether they are on duty here, when the app was last heard from, and how many deliveries they have out.
  */
-export const getRidersOptions = (options: Options<GetRidersData>) => queryOptions<GetRidersResponse, AxiosError<DefaultError>, GetRidersResponse, ReturnType<typeof getRidersQueryKey>>({
+export const getRidersOptions = (options?: Options<GetRidersData>) => queryOptions<GetRidersResponse, AxiosError<DefaultError>, GetRidersResponse, ReturnType<typeof getRidersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRiders({
             ...options,
@@ -589,14 +589,14 @@ export const getRidersOptions = (options: Options<GetRidersData>) => queryOption
     queryKey: getRidersQueryKey(options)
 });
 
-export const getRidersOverviewQueryKey = (options: Options<GetRidersOverviewData>) => createQueryKey('getRidersOverview', options);
+export const getRidersOverviewQueryKey = (options?: Options<GetRidersOverviewData>) => createQueryKey('getRidersOverview', options);
 
 /**
  * The branch's riders now, with their day so far (admin)
  *
  * Every rider account given the branch (disabled ones said so): Online (on duty here and heard from lately), Quiet (on duty here, not heard from lately) or Off; when last heard from; what they have out; what they delivered, failed and handed in since the start of the caller's day (tzOffsetMinutes as JavaScript's getTimezoneOffset). Online first.
  */
-export const getRidersOverviewOptions = (options: Options<GetRidersOverviewData>) => queryOptions<GetRidersOverviewResponse, AxiosError<DefaultError>, GetRidersOverviewResponse, ReturnType<typeof getRidersOverviewQueryKey>>({
+export const getRidersOverviewOptions = (options?: Options<GetRidersOverviewData>) => queryOptions<GetRidersOverviewResponse, AxiosError<DefaultError>, GetRidersOverviewResponse, ReturnType<typeof getRidersOverviewQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRidersOverview({
             ...options,
@@ -803,14 +803,14 @@ export const markDeliveryReturnedMutation = (options?: Partial<Options<MarkDeliv
     return mutationOptions;
 };
 
-export const getMyDeliveriesQueryKey = (options: Options<GetMyDeliveriesData>) => createQueryKey('getMyDeliveries', options);
+export const getMyDeliveriesQueryKey = (options?: Options<GetMyDeliveriesData>) => createQueryKey('getMyDeliveries', options);
 
 /**
  * The deliveries given to the signed-in rider
  *
  * Those still to go, then those finished in the last day.
  */
-export const getMyDeliveriesOptions = (options: Options<GetMyDeliveriesData>) => queryOptions<GetMyDeliveriesResponse, AxiosError<DefaultError>, GetMyDeliveriesResponse, ReturnType<typeof getMyDeliveriesQueryKey>>({
+export const getMyDeliveriesOptions = (options?: Options<GetMyDeliveriesData>) => queryOptions<GetMyDeliveriesResponse, AxiosError<DefaultError>, GetMyDeliveriesResponse, ReturnType<typeof getMyDeliveriesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getMyDeliveries({
             ...options,
@@ -1016,14 +1016,14 @@ export const getLocationShareStateOptions = (options: Options<GetLocationShareSt
     queryKey: getLocationShareStateQueryKey(options)
 });
 
-export const getCourierProvidersQueryKey = (options: Options<GetCourierProvidersData>) => createQueryKey('getCourierProviders', options);
+export const getCourierProvidersQueryKey = (options?: Options<GetCourierProvidersData>) => createQueryKey('getCourierProviders', options);
 
 /**
  * The courier companies the business lists (staff)
  *
  * Switched-off ones too, last, for the admin to switch back on; the till offers only those switched on, after the branch's riders.
  */
-export const getCourierProvidersOptions = (options: Options<GetCourierProvidersData>) => queryOptions<GetCourierProvidersResponse, AxiosError<DefaultError>, GetCourierProvidersResponse, ReturnType<typeof getCourierProvidersQueryKey>>({
+export const getCourierProvidersOptions = (options?: Options<GetCourierProvidersData>) => queryOptions<GetCourierProvidersResponse, AxiosError<DefaultError>, GetCourierProvidersResponse, ReturnType<typeof getCourierProvidersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getCourierProviders({
             ...options,
@@ -1222,12 +1222,12 @@ export const markCourierDeliveredMutation = (options?: Partial<Options<MarkCouri
     return mutationOptions;
 };
 
-export const getMyAddressesQueryKey = (options: Options<GetMyAddressesData>) => createQueryKey('getMyAddresses', options);
+export const getMyAddressesQueryKey = (options?: Options<GetMyAddressesData>) => createQueryKey('getMyAddresses', options);
 
 /**
  * The signed-in customer's saved delivery addresses, latest first
  */
-export const getMyAddressesOptions = (options: Options<GetMyAddressesData>) => queryOptions<GetMyAddressesResponse, AxiosError<DefaultError>, GetMyAddressesResponse, ReturnType<typeof getMyAddressesQueryKey>>({
+export const getMyAddressesOptions = (options?: Options<GetMyAddressesData>) => queryOptions<GetMyAddressesResponse, AxiosError<DefaultError>, GetMyAddressesResponse, ReturnType<typeof getMyAddressesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getMyAddresses({
             ...options,
@@ -1291,14 +1291,14 @@ export const updateMyAddressMutation = (options?: Partial<Options<UpdateMyAddres
     return mutationOptions;
 };
 
-export const getTillDeliveryQuoteQueryKey = (options: Options<GetTillDeliveryQuoteData>) => createQueryKey('getTillDeliveryQuote', options);
+export const getTillDeliveryQuoteQueryKey = (options?: Options<GetTillDeliveryQuoteData>) => createQueryKey('getTillDeliveryQuote', options);
 
 /**
  * What a delivery the till takes over the phone asks, with or without a pin (staff)
  *
  * The branch's fee, minimum and radius even while customers' orders are paused. With a location the caller shared (a Google Maps link, short or long, or coordinates), the pin read from it, how far it is and whether it is within the radius. Without one, InRange is true: the cashier knows the streets.
  */
-export const getTillDeliveryQuoteOptions = (options: Options<GetTillDeliveryQuoteData>) => queryOptions<GetTillDeliveryQuoteResponse, AxiosError<DefaultError>, GetTillDeliveryQuoteResponse, ReturnType<typeof getTillDeliveryQuoteQueryKey>>({
+export const getTillDeliveryQuoteOptions = (options?: Options<GetTillDeliveryQuoteData>) => queryOptions<GetTillDeliveryQuoteResponse, AxiosError<DefaultError>, GetTillDeliveryQuoteResponse, ReturnType<typeof getTillDeliveryQuoteQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTillDeliveryQuote({
             ...options,
@@ -1311,14 +1311,14 @@ export const getTillDeliveryQuoteOptions = (options: Options<GetTillDeliveryQuot
     queryKey: getTillDeliveryQuoteQueryKey(options)
 });
 
-export const resolveDeliveryBranchForStaffQueryKey = (options: Options<ResolveDeliveryBranchForStaffData>) => createQueryKey('resolveDeliveryBranchForStaff', options);
+export const resolveDeliveryBranchForStaffQueryKey = (options?: Options<ResolveDeliveryBranchForStaffData>) => createQueryKey('resolveDeliveryBranchForStaff', options);
 
 /**
  * Which branches would deliver to a caller, nearest first, paused ones flagged (staff)
  *
  * For the call centre, which answers for no branch: from a location the caller shared (a Google Maps link, short or long, or coordinates) or a latitude and longitude, every branch whose area takes the pin in, nearest first, with how far it is, the fee, the minimum and whether it paused its customers' orders (a phone order may still go there). LocationRead is false when a location was given and no point could be read from it.
  */
-export const resolveDeliveryBranchForStaffOptions = (options: Options<ResolveDeliveryBranchForStaffData>) => queryOptions<ResolveDeliveryBranchForStaffResponse, AxiosError<DefaultError>, ResolveDeliveryBranchForStaffResponse, ReturnType<typeof resolveDeliveryBranchForStaffQueryKey>>({
+export const resolveDeliveryBranchForStaffOptions = (options?: Options<ResolveDeliveryBranchForStaffData>) => queryOptions<ResolveDeliveryBranchForStaffResponse, AxiosError<DefaultError>, ResolveDeliveryBranchForStaffResponse, ReturnType<typeof resolveDeliveryBranchForStaffQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await resolveDeliveryBranchForStaff({
             ...options,
@@ -1331,14 +1331,14 @@ export const resolveDeliveryBranchForStaffOptions = (options: Options<ResolveDel
     queryKey: resolveDeliveryBranchForStaffQueryKey(options)
 });
 
-export const getKnownDeliveryAddressesQueryKey = (options: Options<GetKnownDeliveryAddressesData>) => createQueryKey('getKnownDeliveryAddresses', options);
+export const getKnownDeliveryAddressesQueryKey = (options?: Options<GetKnownDeliveryAddressesData>) => createQueryKey('getKnownDeliveryAddresses', options);
 
 /**
  * Where a caller has asked to be delivered before (staff)
  *
  * A customer account's saved addresses, then the addresses this branch's earlier deliveries went to, for that account or that phone number; latest first, each address once. Every read is logged by who asked; rate limited.
  */
-export const getKnownDeliveryAddressesOptions = (options: Options<GetKnownDeliveryAddressesData>) => queryOptions<GetKnownDeliveryAddressesResponse, AxiosError<DefaultError>, GetKnownDeliveryAddressesResponse, ReturnType<typeof getKnownDeliveryAddressesQueryKey>>({
+export const getKnownDeliveryAddressesOptions = (options?: Options<GetKnownDeliveryAddressesData>) => queryOptions<GetKnownDeliveryAddressesResponse, AxiosError<DefaultError>, GetKnownDeliveryAddressesResponse, ReturnType<typeof getKnownDeliveryAddressesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getKnownDeliveryAddresses({
             ...options,
@@ -1370,14 +1370,14 @@ export const createLocationShareMutation = (options?: Partial<Options<CreateLoca
     return mutationOptions;
 };
 
-export const getKitchenStationsQueryKey = (options: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
+export const getKitchenStationsQueryKey = (options?: Options<GetKitchenStationsData>) => createQueryKey('getKitchenStations', options);
 
 /**
  * The branch's kitchen stations (staff)
  *
  * In display order. A branch that has none gets its default station, which makes everything on one screen.
  */
-export const getKitchenStationsOptions = (options: Options<GetKitchenStationsData>) => queryOptions<GetKitchenStationsResponse, AxiosError<DefaultError>, GetKitchenStationsResponse, ReturnType<typeof getKitchenStationsQueryKey>>({
+export const getKitchenStationsOptions = (options?: Options<GetKitchenStationsData>) => queryOptions<GetKitchenStationsResponse, AxiosError<DefaultError>, GetKitchenStationsResponse, ReturnType<typeof getKitchenStationsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getKitchenStations({
             ...options,
@@ -1464,14 +1464,14 @@ export const testPrintKitchenStationMutation = (options?: Partial<Options<TestPr
     return mutationOptions;
 };
 
-export const getKitchenPrintJobsQueryKey = (options: Options<GetKitchenPrintJobsData>) => createQueryKey('getKitchenPrintJobs', options);
+export const getKitchenPrintJobsQueryKey = (options?: Options<GetKitchenPrintJobsData>) => createQueryKey('getKitchenPrintJobs', options);
 
 /**
  * Tickets waiting for a kitchen printer (staff)
  *
  * The branch's unprinted tickets from the last day, oldest first, each with its printer's address and the lines to print. A ticket with a live claim is being printed by another device.
  */
-export const getKitchenPrintJobsOptions = (options: Options<GetKitchenPrintJobsData>) => queryOptions<GetKitchenPrintJobsResponse, AxiosError<DefaultError>, GetKitchenPrintJobsResponse, ReturnType<typeof getKitchenPrintJobsQueryKey>>({
+export const getKitchenPrintJobsOptions = (options?: Options<GetKitchenPrintJobsData>) => queryOptions<GetKitchenPrintJobsResponse, AxiosError<DefaultError>, GetKitchenPrintJobsResponse, ReturnType<typeof getKitchenPrintJobsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getKitchenPrintJobs({
             ...options,
@@ -1558,14 +1558,14 @@ export const createConnectorPairingMutation = (options?: Partial<Options<CreateC
     return mutationOptions;
 };
 
-export const getPrintConnectorsQueryKey = (options: Options<GetPrintConnectorsData>) => createQueryKey('getPrintConnectors', options);
+export const getPrintConnectorsQueryKey = (options?: Options<GetPrintConnectorsData>) => createQueryKey('getPrintConnectors', options);
 
 /**
  * The print connectors paired with this branch (staff)
  *
  * Each with the printers Windows has on its PC and when it last checked in.
  */
-export const getPrintConnectorsOptions = (options: Options<GetPrintConnectorsData>) => queryOptions<GetPrintConnectorsResponse, AxiosError<DefaultError>, GetPrintConnectorsResponse, ReturnType<typeof getPrintConnectorsQueryKey>>({
+export const getPrintConnectorsOptions = (options?: Options<GetPrintConnectorsData>) => queryOptions<GetPrintConnectorsResponse, AxiosError<DefaultError>, GetPrintConnectorsResponse, ReturnType<typeof getPrintConnectorsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPrintConnectors({
             ...options,
@@ -1633,14 +1633,14 @@ export const printConnectorHeartbeatMutation = (options?: Partial<Options<PrintC
     return mutationOptions;
 };
 
-export const getPrintConnectorJobsQueryKey = (options: Options<GetPrintConnectorJobsData>) => createQueryKey('getPrintConnectorJobs', options);
+export const getPrintConnectorJobsQueryKey = (options?: Options<GetPrintConnectorJobsData>) => createQueryKey('getPrintConnectorJobs', options);
 
 /**
  * Tickets this connector can print (print connector)
  *
  * Its own stations' tickets, and those for network printers any device may print.
  */
-export const getPrintConnectorJobsOptions = (options: Options<GetPrintConnectorJobsData>) => queryOptions<GetPrintConnectorJobsResponse, AxiosError<DefaultError>, GetPrintConnectorJobsResponse, ReturnType<typeof getPrintConnectorJobsQueryKey>>({
+export const getPrintConnectorJobsOptions = (options?: Options<GetPrintConnectorJobsData>) => queryOptions<GetPrintConnectorJobsResponse, AxiosError<DefaultError>, GetPrintConnectorJobsResponse, ReturnType<typeof getPrintConnectorJobsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPrintConnectorJobs({
             ...options,

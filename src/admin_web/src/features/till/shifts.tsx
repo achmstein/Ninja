@@ -6,7 +6,6 @@ import { useTable } from '@tanstack/react-table'
 import { ChevronLeft, ChevronRight } from 'lucide-react'
 import { type ShiftView } from '@ninja/api/sales'
 import { getClosedShiftsOptions, getCurrentShiftOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
@@ -153,7 +152,7 @@ export function TillShifts() {
   // A 404 is the server's normal "no shift open" answer: never retried,
   // never a toast, just the empty line
   const current = useQuery({
-    ...getCurrentShiftOptions({ query: { 'api-version': API_VERSION } }),
+    ...getCurrentShiftOptions(),
     retry: false,
     refetchInterval: 60_000,
   })
@@ -163,7 +162,6 @@ export function TillShifts() {
   const closed = useQuery({
     ...getClosedShiftsOptions({
       query: {
-        'api-version': API_VERSION,
         pageIndex: page - 1,
         pageSize: PAGE_SIZE,
         from: isAll ? undefined : fromIso || undefined,

@@ -28,7 +28,6 @@ import {
   moveTicketLinesMutation,
 } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { orderIdsOn } from '@/lib/stock-disposition'
@@ -137,7 +136,6 @@ export function TicketScreen({
   const ticketQuery = useQuery({
     ...getTicketOptions({
       path: { id: ticketId },
-      query: { 'api-version': API_VERSION },
     }),
     // A discarded or deleted ticket 404s — don't retry that, so the screen
     // learns at once that the bill is gone instead of retrying a dead one
@@ -248,7 +246,6 @@ export function TicketScreen({
         orderIds.map((orderId) =>
           assignCustomer.mutateAsync({
             path: { orderId },
-            query: { 'api-version': API_VERSION },
             // A fresh id per call: the server deduplicates a retried request,
             // and a later assignment is a new one
             headers: { 'x-requestid': crypto.randomUUID() },
@@ -262,7 +259,6 @@ export function TicketScreen({
           // A retry on business Wi-Fi must not become a second command
           headers: { 'x-requestid': crypto.randomUUID() },
           path: { id: ticketId },
-          query: { 'api-version': API_VERSION },
           body: {
             lineIds,
             customerId: customer.id ?? null,
@@ -405,7 +401,6 @@ export function TicketScreen({
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
-      query: { 'api-version': API_VERSION },
       body: {
         lineIds: Array.from(selectedIds),
         targetTicketId: target.kind === 'ticket' ? target.ticketId : null,

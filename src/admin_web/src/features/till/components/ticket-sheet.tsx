@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Ban, ReceiptText, User } from 'lucide-react'
 import { type TicketLineView } from '@ninja/api/sales'
 import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
@@ -119,7 +118,6 @@ export function TicketSheet({ ticketId, onOpenChange }: TicketSheetProps) {
   const { data: ticket, isLoading } = useQuery({
     ...getTicketOptions({
       path: { id: ticketId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: ticketId != null,
   })

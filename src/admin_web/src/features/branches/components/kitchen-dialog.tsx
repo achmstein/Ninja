@@ -15,7 +15,6 @@ import {
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { updateKitchenStation } from '@ninja/api/ordering/sdk.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Badge } from '@/components/ui/badge'
@@ -66,7 +65,6 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   const stationsQuery = useQuery({
     ...getKitchenStationsOptions({
       ...scope,
-      query: { 'api-version': API_VERSION },
     }),
     enabled: branch != null,
   })
@@ -75,7 +73,6 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   const connectorsQuery = useQuery({
     ...getPrintConnectorsOptions({
       ...scope,
-      query: { 'api-version': API_VERSION },
     }),
     enabled: branch != null,
     // Online/offline is worth keeping current while the dialog is open
@@ -83,7 +80,7 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
   })
   const connectors = connectorsQuery.data ?? []
 
-  const categoriesQuery = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
+  const categoriesQuery = useQuery(listCategoriesOptions())
   const categoryName = useMemo(() => {
     const names = new Map<number, string>()
     for (const c of categoriesQuery.data ?? []) {
@@ -110,7 +107,6 @@ export function KitchenDialog({ branch, onOpenChange }: KitchenDialogProps) {
         await updateKitchenStation({
           ...scope,
           path: { stationId: Number(station.id) },
-          query: { 'api-version': API_VERSION },
           body: {
             name: station.name ?? { en: '' },
             categoryIds: station.categoryIds ?? [],
@@ -360,17 +356,14 @@ function StationForm({
       printerName: printsTickets && onConnector ? target.slice(target.indexOf('|') + 1) : null,
       displayOrder: station?.displayOrder ?? stations.length,
     }
-    const query = { 'api-version': API_VERSION }
-
     if (station) {
       update.mutate({
         ...scope,
         path: { stationId: Number(station.id) },
         body,
-        query,
       })
     } else {
-      create.mutate({ ...scope, body, query })
+      create.mutate({ ...scope, body })
     }
   }
 
@@ -493,7 +486,6 @@ function StationForm({
                 testPrint.mutate({
                   ...scope,
                   path: { stationId: Number(station.id) },
-                  query: { 'api-version': API_VERSION },
                 })
               }
             >
@@ -565,7 +557,6 @@ function StationForm({
             remove.mutate({
               ...scope,
               path: { stationId: Number(station.id) },
-              query: { 'api-version': API_VERSION },
             })
           }
         />

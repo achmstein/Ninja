@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { getPayAheadOptionsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import type { OrderDestination } from '@/lib/order-destination'
 import { guestFee, num } from '@/lib/pay'
 
@@ -62,7 +61,7 @@ export function usePayAhead(destination: OrderDestination): PayAhead {
   const setMethod = usePayChoice((s) => s.setMethod)
   const forDoorOrCounter = !destination
   const query = useQuery({
-    ...getPayAheadOptionsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPayAheadOptionsOptions(),
     enabled: forDoorOrCounter,
     staleTime: 5 * 60_000,
   })

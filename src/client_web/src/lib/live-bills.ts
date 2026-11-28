@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { type OrderSummary } from '@ninja/api/ordering'
 import { getOrdersByUserOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { type BillView } from '@ninja/api/sales'
-import { API_VERSION } from '@/lib/api-client'
 import { closedAt, isOpen, useMyBills, useNow } from '@/lib/bills'
 
 /** A round sent but not on its bill yet: the till has still to confirm it, or has and the bill is catching up */
@@ -47,7 +46,7 @@ export function useLiveBills() {
   // The orders are read for what is not on a bill yet (sent and waiting, or turned down) and for the stars on each
   const ordersQuery = useQuery(
     getOrdersByUserOptions({
-      query: { 'api-version': API_VERSION, pageIndex: 0, pageSize: 50, fromDate: dayStart.toISOString() },
+      query: { pageIndex: 0, pageSize: 50, fromDate: dayStart.toISOString() },
     })
   )
   const orders = ordersQuery.data?.items ?? []

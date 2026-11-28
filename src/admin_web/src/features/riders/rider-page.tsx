@@ -7,7 +7,6 @@ import { History, Motorbike, Pencil, Store } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type RiderDeliveryRow } from '@ninja/api/ordering'
 import { getRiderDeliveriesOptions, getRidersOverviewOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -109,7 +108,7 @@ export function RiderPage({ userId }: { userId: string }) {
   const tzOffsetMinutes = useBusinessDayOffset()
   const overview = useQuery({
     ...getRidersOverviewOptions({
-      query: { 'api-version': API_VERSION, tzOffsetMinutes },
+      query: { tzOffsetMinutes },
     }),
     enabled: tzOffsetMinutes !== undefined,
     refetchInterval: 60_000,
@@ -141,7 +140,6 @@ export function RiderPage({ userId }: { userId: string }) {
     ...getRiderDeliveriesOptions({
       path: { userId },
       query: {
-        'api-version': API_VERSION,
         from: nowWindow.from,
         to: nowWindow.to,
         page: 1,
@@ -166,7 +164,6 @@ export function RiderPage({ userId }: { userId: string }) {
     ...getRiderDeliveriesOptions({
       path: { userId },
       query: {
-        'api-version': API_VERSION,
         from: fromIso,
         to: toIso,
         page: pagination.pageIndex + 1,

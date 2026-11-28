@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { UserCheck, UserRound } from 'lucide-react'
 import { getGuestsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { normalizeName, normalizePhone, showPhone } from '@/lib/phone'
@@ -82,7 +81,7 @@ export function AddCustomerDialog({ open, onOpenChange, onOpenCustomer }: AddCus
   // is worth knowing (making them a customer keeps their orders as they are)
   const guests = useQuery({
     ...getGuestsOptions({
-      query: { 'api-version': API_VERSION, search: lookupPhone, pageSize: 5 },
+      query: { search: lookupPhone, pageSize: 5 },
     }),
     enabled: open && lookupPhone.length > 0 && !!current?.phoneValid,
     staleTime: 10_000,

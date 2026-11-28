@@ -9,7 +9,6 @@ import {
   getRecipesOptions,
   proposeRecipesMutation,
 } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -68,7 +67,7 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
   const [editing, setEditing] = useState(false)
   const [stopOpen, setStopOpen] = useState(false)
 
-  const recipes = useQuery(getRecipesOptions({ query: { 'api-version': API_VERSION } }))
+  const recipes = useQuery(getRecipesOptions())
   const stockItems = useQuery(stockItemsQueryOptions())
   const recipe = recipes.data?.find((r) => toNumber(r.catalogItemId) === catalogItemId)
   const menu = useMemo(() => menuOptionsOf(item, localized), [item, localized])
@@ -95,7 +94,6 @@ export function StockRuleSection({ item }: StockRuleSectionProps) {
       setProposal(
         await propose.mutateAsync({
           body: { items: [toMenuItemToTrack(item, brief)], languages },
-          query: { 'api-version': API_VERSION },
         })
       )
       setBriefOpen(false)
@@ -368,7 +366,7 @@ function RecipeEditorForm({
 function CostAndMargin({ item }: { item: CatalogItemDto }) {
   const t = useT()
   const localized = useLocalized()
-  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
+  const costs = useQuery(getRecipeCostsOptions())
   const cost = costs.data?.find((c) => toNumber(c.catalogItemId) === toNumber(item.id))
   if (costs.isLoading) return <Skeleton className='h-24' />
   if (!cost) return null

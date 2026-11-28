@@ -4,7 +4,6 @@ import { Receipt } from 'lucide-react'
 import { type PricingView } from '@ninja/api/sales'
 import { getBranchPricingOptions, setBranchPricingMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -35,7 +34,6 @@ export function PricingDialog({ branch, onOpenChange }: PricingDialogProps) {
   const pricingQuery = useQuery({
     ...getBranchPricingOptions({
       path: { branchId },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: branch != null,
   })
@@ -90,7 +88,6 @@ function PricingForm({ branchId, pricing, onClose }: { branchId: number; pricing
   const submit = () =>
     save.mutate({
       path: { branchId },
-      query: { 'api-version': API_VERSION },
       body: {
         vatRate: Number(vat) / 100,
         pricesIncludeVat: includesVat,

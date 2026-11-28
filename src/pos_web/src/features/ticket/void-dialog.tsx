@@ -3,7 +3,6 @@ import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { voidTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { defaultDispositionFor, type StockDisposition } from '@/lib/stock-disposition'
 import { toast } from '@/lib/toast'
@@ -47,7 +46,6 @@ export function VoidTicketDialog({ ticketId, orderIds, open, onOpenChange }: Voi
     queries: orderIds.map((orderId) => ({
       ...getOrderOptions({
         path: { orderId },
-        query: { 'api-version': API_VERSION },
       }),
       enabled: open,
     })),
@@ -73,7 +71,6 @@ export function VoidTicketDialog({ ticketId, orderIds, open, onOpenChange }: Voi
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
-      query: { 'api-version': API_VERSION },
       body: {
         reason: reason.trim(),
         // Only orders took stock; a bill of manual lines says nothing

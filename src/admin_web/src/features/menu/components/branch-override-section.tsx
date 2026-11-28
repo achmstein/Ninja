@@ -8,7 +8,6 @@ import {
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -44,7 +43,6 @@ export function BranchOverrideSection({ item }: BranchOverrideSectionProps) {
   const overrides = useQuery({
     ...getBranchOverridesOptions({
       path: { branchId: branchId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: branchId != null,
   })
@@ -147,7 +145,6 @@ function OverrideForm({
         isOnOfferOverride: onOffer ? true : null,
         offerPriceOverride: onOffer ? parsedOffer : null,
       },
-      query: { 'api-version': API_VERSION },
     })
   }
 
@@ -193,7 +190,6 @@ function OverrideForm({
             onClick={() =>
               clearOverride.mutate({
                 path: { branchId, itemId: catalogItemId },
-                query: { 'api-version': API_VERSION },
               })
             }
           >

@@ -7,7 +7,6 @@ import {
   createConnectorPairingMutation,
   deletePrintConnectorMutation,
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -77,7 +76,6 @@ export function PrintConnectors({ branchId, connectors }: { branchId: number; co
             pair.mutate({
               ...scope,
               body: { language },
-              query: { 'api-version': API_VERSION },
             })
           }
         >
@@ -149,7 +147,6 @@ export function PrintConnectors({ branchId, connectors }: { branchId: number; co
                   remove.mutate({
                     ...scope,
                     path: { connectorId: Number(connector.id) },
-                    query: { 'api-version': API_VERSION },
                   })
                 }
               >

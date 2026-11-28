@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { type LocalizeRequest, type LocalizeResponse } from '@ninja/api/catalog'
 import { localizeMenuTextMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
@@ -51,7 +50,7 @@ export function useLocalizeAssist() {
       suggestDescription: args.suggestDescription ?? false,
       languages,
     }
-    return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
+    return mutation.mutateAsync({ body })
   }
 
   return { localize, isPending: mutation.isPending, available }

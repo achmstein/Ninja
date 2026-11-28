@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2, Smartphone, Undo2 } from 'lucide-react'
 import { cancelOnlinePaymentMutation, refundOnlinePaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -120,7 +119,6 @@ export function OnlinePaymentsPanel({
                   onClick={() =>
                     release.mutate({
                       path: { key: payment.key },
-                      query: { 'api-version': API_VERSION },
                     })
                   }
                 >
@@ -180,7 +178,6 @@ export function OnlinePaymentsPanel({
           if (!refunding) return
           refund.mutate({
             path: { key: refunding.key },
-            query: { 'api-version': API_VERSION },
           })
         }}
       />

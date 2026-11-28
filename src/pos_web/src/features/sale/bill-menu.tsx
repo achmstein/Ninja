@@ -6,7 +6,6 @@ import { useAuth } from 'react-oidc-context'
 import { returnPartPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PartPaymentView, TicketDetail } from '@ninja/api/sales/types.gen'
 import type { StayViewModel } from '@ninja/api/spaces/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -181,7 +180,6 @@ export function BillMenu({
           if (!givingBack) return
           giveBack.mutate({
             path: { id: ticketId, partPaymentId: toNumber(givingBack.id) },
-            query: { 'api-version': API_VERSION },
             headers: { 'x-requestid': crypto.randomUUID() },
           })
         }}

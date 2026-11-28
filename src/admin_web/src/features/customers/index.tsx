@@ -3,7 +3,6 @@ import { keepPreviousData, useInfiniteQuery, useQuery } from '@tanstack/react-qu
 import { getRouteApi } from '@tanstack/react-router'
 import { ArrowUpDown, Search, UserRound, Users } from 'lucide-react'
 import { getGuests } from '@ninja/api/ordering'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useT, type TranslationKey } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
@@ -123,7 +122,6 @@ export function Customers() {
     queryFn: async ({ pageParam }) => {
       const { data } = await getGuests({
         query: {
-          'api-version': API_VERSION,
           pageIndex: pageParam,
           pageSize: GUESTS_PAGE,
           search: query || undefined,

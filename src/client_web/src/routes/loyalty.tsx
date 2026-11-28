@@ -8,7 +8,6 @@ import {
   getAccountOptions,
   getTransactionsOptions,
 } from '@ninja/api/loyalty/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'
 import { toast } from '@/lib/toast'
@@ -66,7 +65,6 @@ function LoyaltyPage() {
   const accountQuery = useQuery({
     ...getAccountOptions({
       path: { userId },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: !!userId,
     retry: false,
@@ -77,7 +75,7 @@ function LoyaltyPage() {
   const { data: transactions = [] } = useQuery({
     ...getTransactionsOptions({
       path: { userId },
-      query: { 'api-version': API_VERSION, max: 50 },
+      query: { max: 50 },
     }),
     enabled: hasAccount && !!userId,
   })
@@ -112,7 +110,7 @@ function LoyaltyPage() {
             size='lg'
             className='rounded-full px-8'
             disabled={joinProgram.isPending}
-            onClick={() => joinProgram.mutate({ body: { userId }, query: { 'api-version': API_VERSION } })}
+            onClick={() => joinProgram.mutate({ body: { userId } })}
           >
             {joinProgram.isPending && <Loader2 className='size-4 animate-spin' />}
             {t('joinNow')}

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { listOnlinePaymentsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 
 /**
@@ -18,7 +17,6 @@ export function useOnlinePayments(ticketId: number, enabled: boolean) {
   const query = useQuery({
     ...listOnlinePaymentsOptions({
       path: { ticketId },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: enabled && inPlan,
     refetchInterval: (q) => (q.state.data?.some((p) => p.status === 'Pending') ? 5_000 : 20_000),

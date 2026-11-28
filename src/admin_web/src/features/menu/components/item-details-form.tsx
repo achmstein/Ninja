@@ -15,7 +15,6 @@ import {
   updateItemMutation,
   uploadItemPictureMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -286,12 +285,10 @@ export function ItemDetailsForm({ item, categories, defaultCategoryId, onSaved, 
         await updateItem.mutateAsync({
           path: { id: itemId },
           body,
-          query: { 'api-version': API_VERSION },
         })
       } else {
         const created = await createItem.mutateAsync({
           body: { ...body, name: fromLocalizedValue(form.name) },
-          query: { 'api-version': API_VERSION },
         })
         itemId = Number((created as CatalogItemDto | undefined)?.id ?? 0)
       }
@@ -310,7 +307,6 @@ export function ItemDetailsForm({ item, categories, defaultCategoryId, onSaved, 
           await createGroup.mutateAsync({
             path: { id: itemId },
             body: bodyFromDraft(itemId, draft, index),
-            query: { 'api-version': API_VERSION },
           })
         }
         queryClient.invalidateQueries({
@@ -335,12 +331,10 @@ export function ItemDetailsForm({ item, categories, defaultCategoryId, onSaved, 
           await uploadPicture.mutateAsync({
             path: { id: itemId },
             body: { file: picture.file },
-            query: { 'api-version': API_VERSION },
           })
         } else {
           await deletePicture.mutateAsync({
             path: { id: itemId },
-            query: { 'api-version': API_VERSION },
           })
         }
       } catch (error) {

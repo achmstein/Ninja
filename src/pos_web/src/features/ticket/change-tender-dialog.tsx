@@ -1,6 +1,5 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { changePaymentTenderMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -57,7 +56,6 @@ export function ChangeTenderDialog({ ticketId, payment, onOpenChange }: ChangeTe
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId, paymentId: payment.paymentId },
-      query: { 'api-version': API_VERSION },
       body: { tender },
     })
   }

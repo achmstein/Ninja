@@ -9,7 +9,6 @@ import {
 import type { KnownAddressView } from '@ninja/api/ordering/types.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -77,7 +76,6 @@ export function CallCentre() {
     ...getKnownDeliveryAddressesOptions({
       // Any branch's deliveries: the call centre answers for all of them
       query: {
-        'api-version': API_VERSION,
         phone: lookupPhone || undefined,
         everyBranch: true,
       },
@@ -90,7 +88,7 @@ export function CallCentre() {
   const location = form.location.trim()
   const resolution = useQuery({
     ...resolveDeliveryBranchForStaffOptions({
-      query: { 'api-version': API_VERSION, location: location || undefined },
+      query: { location: location || undefined },
     }),
     staleTime: 60_000,
     // The named areas are the same wherever the caller is: the picker keeps them while another point is asked

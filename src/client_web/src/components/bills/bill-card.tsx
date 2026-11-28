@@ -5,7 +5,6 @@ import { AnimatePresence, motion } from 'motion/react'
 import { type OrderSummary } from '@ninja/api/ordering'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { type BillLineView, type BillView } from '@ninja/api/sales'
-import { API_VERSION } from '@/lib/api-client'
 import { billParts, hoursLabel, isSettled, isTimeLine, isUnassigned, percent, runningTime, useNow } from '@/lib/bills'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { FORMING_BILL, type PendingRound, type PendingStage } from '@/lib/live-bills'
@@ -425,7 +424,7 @@ function RoundCard({ round, dark }: { round: Round; dark: boolean }) {
   const t = useT()
   // A round still on its way has no bill lines yet: its order says what is in it
   const detail = useQuery({
-    ...getOrderOptions({ path: { orderId: round.orderId ?? 0 }, query: { 'api-version': API_VERSION } }),
+    ...getOrderOptions({ path: { orderId: round.orderId ?? 0 } }),
     enabled: round.pending != null && round.orderId != null,
   })
   const lines: BillLineView[] = round.pending

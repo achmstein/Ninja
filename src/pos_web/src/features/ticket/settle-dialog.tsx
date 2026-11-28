@@ -4,7 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowLeft, CheckCircle2, CloudOff, Loader2, Printer, Smartphone, X } from 'lucide-react'
 import { assignTicketLinesCustomerMutation, settleTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { OnlinePaymentView, TicketDetail } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -188,7 +187,6 @@ export function SettleDialog({
     nameLine.mutate({
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
       body: { lineIds: [lineId], customerId: holder.id, customerName: holder.name },
     })
 
@@ -387,7 +385,6 @@ export function SettleDialog({
     settle.mutate({
       headers: { 'x-requestid': requestIdRef.current.id },
       path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
       body: {
         payments: list.map((p) => ({
           tender: p.tenderValue,

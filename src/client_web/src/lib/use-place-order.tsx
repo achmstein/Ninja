@@ -7,7 +7,6 @@ import { getUserPreferencesQueryKey, saveUserPreferencesMutation } from '@ninja/
 import { createOrderMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useSelectedBranch } from '@/lib/branch'
 import { brandQueryKey, useBrand } from '@/lib/brand'
 import { cartTotal, useCart } from '@/lib/cart'
@@ -99,7 +98,6 @@ export function usePlaceOrder({
               })),
             })),
           },
-          query: { 'api-version': API_VERSION },
         })
       }
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOrdersByUser' }] })
@@ -174,7 +172,6 @@ export function usePlaceOrder({
         payOnline,
       }),
       headers: { 'x-requestid': requestIdRef.current.id },
-      query: { 'api-version': API_VERSION },
     })
     return true
   }

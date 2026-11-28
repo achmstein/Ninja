@@ -5,7 +5,6 @@ import type { AccountSummaryViewModel } from '@ninja/api/accounts/types.gen'
 import { getAccountOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import type { AccountDto } from '@ninja/api/loyalty/types.gen'
 import { recordTabPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 
 // What the till may know about a customer: their points, as information,
 // and their tab, which it can take money against. Both are read by the
@@ -21,7 +20,6 @@ export function useLoyalty(userId: string | null | undefined, enabled = true) {
   const query = useQuery({
     ...getAccountOptions({
       path: { userId: userId ?? '' },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: enabled && !!userId,
     retry: false,

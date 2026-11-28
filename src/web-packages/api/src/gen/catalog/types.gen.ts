@@ -575,12 +575,7 @@ export type UserPreferenceOptionDto = {
 export type LocalizeMenuTextData = {
     body: LocalizeRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/localize';
 };
 
@@ -613,12 +608,7 @@ export type LocalizeMenuTextResponse = LocalizeMenuTextResponses[keyof LocalizeM
 export type FillFormData = {
     body: FillFormRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/fill';
 };
 
@@ -651,12 +641,7 @@ export type FillFormResponse2 = FillFormResponses[keyof FillFormResponses];
 export type SuggestCustomizationsData = {
     body: SuggestCustomizationsRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/customizations';
 };
 
@@ -689,12 +674,7 @@ export type SuggestCustomizationsResponse2 = SuggestCustomizationsResponses[keyo
 export type SuggestPairingsData = {
     body: SuggestPairingsRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/pairings';
 };
 
@@ -737,12 +717,7 @@ export type ScanMenuData = {
         inOrder?: boolean;
     };
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/menu/scan';
 };
 
@@ -775,12 +750,7 @@ export type ScanMenuResponse = ScanMenuResponses[keyof ScanMenuResponses];
 export type DrawItemPhotoData = {
     body: DrawItemPhotoRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/photo';
 };
 
@@ -814,12 +784,7 @@ export type RestageItemPhotoData = {
         note?: string;
     };
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/photo/restage';
 };
 
@@ -852,10 +817,6 @@ export type QuotePromoData = {
          * The cart's items subtotal
          */
         subtotal: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/promos/quote';
 };
@@ -881,12 +842,7 @@ export type QuotePromoResponse = QuotePromoResponses[keyof QuotePromoResponses];
 export type ListPromosData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promos';
 };
 
@@ -913,12 +869,7 @@ export type ListPromosResponse = ListPromosResponses[keyof ListPromosResponses];
 export type CreatePromoData = {
     body: PromoCodeRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promos';
 };
 
@@ -956,12 +907,7 @@ export type DeletePromoData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promos/{id}';
 };
 
@@ -997,12 +943,7 @@ export type UpdatePromoData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promos/{id}';
 };
 
@@ -1044,12 +985,7 @@ export type SetPromoActiveData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promos/{id}/active';
 };
 
@@ -1085,10 +1021,6 @@ export type GetLivePromotionData = {
          * The branch the customer is at
          */
         branchId?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/promotions/live';
 };
@@ -1123,10 +1055,6 @@ export type GetPromotionPictureData = {
          * The picture's version, as its pictureUri carries it
          */
         v?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/promotions/{id}/pic';
 };
@@ -1157,12 +1085,7 @@ export type UploadPromotionPictureData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promotions/{id}/pic';
 };
 
@@ -1199,12 +1122,7 @@ export type UploadPromotionPictureResponse = UploadPromotionPictureResponses[key
 export type ListPromotionsData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promotions';
 };
 
@@ -1231,12 +1149,7 @@ export type ListPromotionsResponse = ListPromotionsResponses[keyof ListPromotion
 export type CreatePromotionData = {
     body: PromotionRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promotions';
 };
 
@@ -1274,12 +1187,7 @@ export type DeletePromotionData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promotions/{id}';
 };
 
@@ -1315,12 +1223,7 @@ export type UpdatePromotionData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/promotions/{id}';
 };
 
@@ -1371,12 +1274,7 @@ export type DesignPromotionData = {
         logo?: IFormFile;
     };
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/assist/promotion-design';
 };
 
@@ -1409,12 +1307,7 @@ export type DesignPromotionResponse = DesignPromotionResponses[keyof DesignPromo
 export type ImportMenuData = {
     body: MenuImportRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/menu/import';
 };
 
@@ -1450,12 +1343,7 @@ export type ComposeItemData = {
         'x-requestid': string;
     };
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/compose';
 };
 
@@ -1488,12 +1376,7 @@ export type ComposeItemResponse = ComposeItemResponses[keyof ComposeItemResponse
 export type CheckBranchPricesData = {
     body: PriceCheckRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/price-check';
 };
 
@@ -1531,10 +1414,6 @@ export type ListItemsData = {
          * Filter by category
          */
         categoryId?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items';
 };
@@ -1560,12 +1439,7 @@ export type ListItemsResponse = ListItemsResponses[keyof ListItemsResponses];
 export type CreateItemData = {
     body: CatalogItem;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items';
 };
 
@@ -1603,10 +1477,6 @@ export type BatchGetItemsData = {
          * List of ids for menu items to return
          */
         ids: Array<number | string>;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items/by';
 };
@@ -1637,12 +1507,7 @@ export type DeleteItemData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}';
 };
 
@@ -1678,12 +1543,7 @@ export type GetItemData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}';
 };
 
@@ -1717,12 +1577,7 @@ export type UpdateItemData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}';
 };
 
@@ -1771,10 +1626,6 @@ export type GetItemsByNameData = {
          * The index of the page of results to return
          */
         PageIndex?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items/by/{name}';
 };
@@ -1805,12 +1656,7 @@ export type DeleteItemPictureData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/pic';
 };
 
@@ -1855,10 +1701,6 @@ export type GetItemPictureData = {
          * The picture's version, as its pictureUri carries it; the current one makes the answer immutable
          */
         v?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items/{id}/pic';
 };
@@ -1889,12 +1731,7 @@ export type UploadItemPictureData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/pic';
 };
 
@@ -1945,10 +1782,6 @@ export type GetItemsByTypeData = {
          * The index of the page of results to return
          */
         PageIndex?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items/type/{typeId}';
 };
@@ -1979,10 +1812,6 @@ export type GetAvailableItemsData = {
          * Filter by category
          */
         categoryId?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
     };
     url: '/api/catalog/items/available';
 };
@@ -2008,12 +1837,7 @@ export type GetAvailableItemsResponse = GetAvailableItemsResponses[keyof GetAvai
 export type ListCategoriesData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories';
 };
 
@@ -2029,12 +1853,7 @@ export type ListCategoriesResponse = ListCategoriesResponses[keyof ListCategorie
 export type CreateCategoryData = {
     body: CatalogType;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories';
 };
 
@@ -2067,12 +1886,7 @@ export type CreateCategoryResponse = CreateCategoryResponses[keyof CreateCategor
 export type ReorderCategoriesData = {
     body: ReorderRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories/reorder';
 };
 
@@ -2102,12 +1916,7 @@ export type DeleteCategoryData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories/{id}';
 };
 
@@ -2149,12 +1958,7 @@ export type GetCategoryData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories/{id}';
 };
 
@@ -2182,12 +1986,7 @@ export type UpdateCategoryData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/categories/{id}';
 };
 
@@ -2224,12 +2023,7 @@ export type UpdateCategoryResponse = UpdateCategoryResponses[keyof UpdateCategor
 export type ReorderItemsData = {
     body: ReorderRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/reorder';
 };
 
@@ -2259,12 +2053,7 @@ export type ToggleItemAvailabilityData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/availability';
 };
 
@@ -2306,12 +2095,7 @@ export type SetItemOfferData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/offer';
 };
 
@@ -2353,12 +2137,7 @@ export type GetItemCustomizationsData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/customizations';
 };
 
@@ -2386,12 +2165,7 @@ export type CreateCustomizationData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/customizations';
 };
 
@@ -2433,12 +2207,7 @@ export type GetItemPairingsData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/pairings';
 };
 
@@ -2477,12 +2246,7 @@ export type SetItemPairingsData = {
          */
         id: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/pairings';
 };
 
@@ -2528,12 +2292,7 @@ export type DeleteCustomizationData = {
          */
         customizationId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/customizations/{customizationId}';
 };
 
@@ -2573,12 +2332,7 @@ export type UpdateCustomizationData = {
          */
         customizationId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/items/{id}/customizations/{customizationId}';
 };
 
@@ -2620,12 +2374,7 @@ export type GetUserPreferenceData = {
          */
         catalogItemId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/preferences/{catalogItemId}';
 };
 
@@ -2665,12 +2414,7 @@ export type GetUserPreferenceForCustomerData = {
          */
         userId: string;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/preferences/{catalogItemId}/for/{userId}';
 };
 
@@ -2701,12 +2445,7 @@ export type GetUserPreferenceForCustomerResponse = GetUserPreferenceForCustomerR
 export type GetUserPreferencesData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/preferences';
 };
 
@@ -2733,12 +2472,7 @@ export type GetUserPreferencesResponse = GetUserPreferencesResponses[keyof GetUs
 export type SaveUserPreferencesData = {
     body: SaveUserPreferencesRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/preferences';
 };
 
@@ -2763,12 +2497,7 @@ export type SaveUserPreferencesResponses = {
 export type GetUserPreferencesForItemsData = {
     body: Array<number | string>;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/preferences/batch';
 };
 
@@ -2800,12 +2529,7 @@ export type SaveUserPreferencesForCustomerData = {
          */
         userId: string;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/customers/{userId}/preferences';
 };
 
@@ -2830,12 +2554,7 @@ export type SaveUserPreferencesForCustomerResponses = {
 export type GetUserFavoritesData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/favorites';
 };
 
@@ -2867,12 +2586,7 @@ export type RemoveFavoriteData = {
          */
         catalogItemId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/favorites/{catalogItemId}';
 };
 
@@ -2906,12 +2620,7 @@ export type AddFavoriteData = {
          */
         catalogItemId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/favorites/{catalogItemId}';
 };
 
@@ -2940,12 +2649,7 @@ export type AddFavoriteResponses = {
 export type GetMyTopItemsData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/top-items';
 };
 
@@ -2977,12 +2681,7 @@ export type GetCustomerTopItemsData = {
          */
         userId: string;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/customers/{userId}/top-items';
 };
 
@@ -3018,12 +2717,7 @@ export type RemoveBranchItemOverrideData = {
          */
         itemId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/branches/{branchId}/items/{itemId}/override';
 };
 
@@ -3063,12 +2757,7 @@ export type SetBranchItemOverrideData = {
          */
         itemId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/branches/{branchId}/items/{itemId}/override';
 };
 
@@ -3104,12 +2793,7 @@ export type GetBranchOverridesData = {
          */
         branchId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/branches/{branchId}/overrides';
 };
 
@@ -3136,12 +2820,7 @@ export type GetBranchOverridesResponse = GetBranchOverridesResponses[keyof GetBr
 export type GetTalabatData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/talabat';
 };
 
@@ -3168,12 +2847,7 @@ export type GetTalabatResponse = GetTalabatResponses[keyof GetTalabatResponses];
 export type SaveTalabatData = {
     body: TalabatSettingsRequest;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/talabat';
 };
 
@@ -3206,12 +2880,7 @@ export type SaveTalabatResponse = SaveTalabatResponses[keyof SaveTalabatResponse
 export type PushTalabatMenuData = {
     body?: never;
     path?: never;
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/talabat/push';
 };
 
@@ -3244,12 +2913,7 @@ export type PreviewTalabatMenuData = {
     path: {
         branchId: number;
     };
-    query?: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version'?: string;
-    };
+    query?: never;
     url: '/api/catalog/talabat/preview/{branchId}';
 };
 

@@ -4,7 +4,6 @@ import {
   confirmOrderMutation,
   rejectGuestOrderMutation,
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -60,14 +59,12 @@ export function useOrderActions() {
     rejectGuestOrder.mutate({
       path: { orderId: orderNumber },
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
     })
 
   const confirm = (orderNumber: number) =>
     confirmOrder.mutate({
       body: { orderNumber },
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
     })
 
   // A delivery platform's order is turned down there too, for the reason given
@@ -75,7 +72,6 @@ export function useOrderActions() {
     cancelOrder.mutate({
       body: { orderNumber, platformReason },
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
     })
 
   // Only the card being acted on shows busy

@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { openShiftMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -52,7 +51,6 @@ export function OpenShiftDialog({ open, onOpenChange }: OpenShiftDialogProps) {
     openShift.mutate({
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
       body: { openingFloat: amount },
     })
 

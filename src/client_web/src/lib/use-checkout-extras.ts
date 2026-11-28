@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { quotePromoOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getAccountOptions, getPointsValueOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { cartTotal, useCart } from '@/lib/cart'
 import { useT } from '@/lib/i18n'
@@ -35,7 +34,7 @@ export function useCheckoutExtras() {
 
   // Loyalty balance (a customer may not have an account yet; treat as 0)
   const { data: loyaltyAccount } = useQuery({
-    ...getAccountOptions({ path: { userId }, query: { 'api-version': API_VERSION } }),
+    ...getAccountOptions({ path: { userId } }),
     enabled: loyaltyOn && auth.isAuthenticated && !!userId && lines.length > 0,
     retry: false,
   })
@@ -48,12 +47,12 @@ export function useCheckoutExtras() {
   const debouncedPoints = useDebounced(effectivePoints, 300)
 
   const pointsValueQuery = useQuery({
-    ...getPointsValueOptions({ query: { 'api-version': API_VERSION, points: debouncedPoints } }),
+    ...getPointsValueOptions({ query: { points: debouncedPoints } }),
     enabled: debouncedPoints > 0,
   })
 
   const promoQuery = useQuery({
-    ...quotePromoOptions({ query: { 'api-version': API_VERSION, code: promoCode ?? '', subtotal } }),
+    ...quotePromoOptions({ query: { code: promoCode ?? '', subtotal } }),
     enabled: !!promoCode && subtotal > 0,
     retry: false,
   })

@@ -9,7 +9,6 @@ import {
   setRecipeMutation,
   trackByUnitMutation,
 } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { bilingual, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -139,7 +138,6 @@ export function RecipeReviewSheet({ proposals, items, shelf, onOpenChange, onBac
             autoSoldOut: ingredient.autoSoldOut,
           },
           headers: { 'x-requestid': uuidv4() },
-          query: { 'api-version': API_VERSION },
         })
         createdIds.set(ingredient.key, toNumber(created.id))
         updateIngredient(ingredient.key, { createdId: toNumber(created.id) })
@@ -156,13 +154,11 @@ export function RecipeReviewSheet({ proposals, items, shelf, onOpenChange, onBac
               name: { en: item?.name?.en ?? null, ar: item?.name?.ar ?? null },
             },
             headers: { 'x-requestid': uuidv4() },
-            query: { 'api-version': API_VERSION },
           })
         } else {
           await setRecipe.mutateAsync({
             path: { catalogItemId: recipe.catalogItemId },
             body: toApi(withCreatedIds(recipe.draft, createdIds)),
-            query: { 'api-version': API_VERSION },
           })
         }
         updateRecipe(recipe.catalogItemId, { done: true })

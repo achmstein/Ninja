@@ -40,12 +40,12 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const getEmployeesQueryKey = (options: Options<GetEmployeesData>) => createQueryKey('getEmployees', options);
+export const getEmployeesQueryKey = (options?: Options<GetEmployeesData>) => createQueryKey('getEmployees', options);
 
 /**
  * Everyone at the branch, with their current pay terms and what they are owed
  */
-export const getEmployeesOptions = (options: Options<GetEmployeesData>) => queryOptions<GetEmployeesResponse, AxiosError<DefaultError>, GetEmployeesResponse, ReturnType<typeof getEmployeesQueryKey>>({
+export const getEmployeesOptions = (options?: Options<GetEmployeesData>) => queryOptions<GetEmployeesResponse, AxiosError<DefaultError>, GetEmployeesResponse, ReturnType<typeof getEmployeesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getEmployees({
             ...options,
@@ -335,12 +335,12 @@ export const setPayTermsMutation = (options?: Partial<Options<SetPayTermsData>>)
     return mutationOptions;
 };
 
-export const getTillEmployeesQueryKey = (options: Options<GetTillEmployeesData>) => createQueryKey('getTillEmployees', options);
+export const getTillEmployeesQueryKey = (options?: Options<GetTillEmployeesData>) => createQueryKey('getTillEmployees', options);
 
 /**
  * The branch's current employees, for the till's pay-out picker
  */
-export const getTillEmployeesOptions = (options: Options<GetTillEmployeesData>) => queryOptions<GetTillEmployeesResponse, AxiosError<DefaultError>, GetTillEmployeesResponse, ReturnType<typeof getTillEmployeesQueryKey>>({
+export const getTillEmployeesOptions = (options?: Options<GetTillEmployeesData>) => queryOptions<GetTillEmployeesResponse, AxiosError<DefaultError>, GetTillEmployeesResponse, ReturnType<typeof getTillEmployeesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTillEmployees({
             ...options,

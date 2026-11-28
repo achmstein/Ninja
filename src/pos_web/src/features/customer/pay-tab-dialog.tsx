@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
 import { CheckCircle2, Printer } from 'lucide-react'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -60,7 +59,6 @@ export function PayTabDialog({ customer, balance, open, onOpenChange }: PayTabDi
     pay.mutate(
       {
         headers: { 'x-requestid': requestId.current },
-        query: { 'api-version': API_VERSION },
         body: {
           customerId: customer.id,
           customerName: customer.name || null,

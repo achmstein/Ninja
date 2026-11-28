@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { type ReceiptProposal } from '@ninja/api/inventory'
 import { scanReceiptMutation } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
@@ -40,7 +39,6 @@ export function useReceiptScan() {
     try {
       await scan.mutateAsync({
         body: { file: image, languages },
-        query: { 'api-version': API_VERSION },
       })
     } catch {
       // toasted above

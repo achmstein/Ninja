@@ -7,7 +7,6 @@ import { type EmployeeView } from '@ninja/api/payroll'
 import { getEmployeeOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -50,7 +49,6 @@ export function EmployeeSheet({ employeeId, isNew, onClose }: EmployeeSheetProps
   const employee = useQuery({
     ...getEmployeeOptions({
       path: { id: employeeId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: employeeId !== null,
   })

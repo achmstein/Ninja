@@ -23,7 +23,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  *
  * Get all loyalty accounts (Admin only)
  */
-export const listAccounts = <ThrowOnError extends boolean = false>(options: Options<ListAccountsData, ThrowOnError>): RequestResult<ListAccountsResponses, ListAccountsErrors, ThrowOnError> => (options.client ?? client).get<ListAccountsResponses, ListAccountsErrors, ThrowOnError>({
+export const listAccounts = <ThrowOnError extends boolean = false>(options?: Options<ListAccountsData, ThrowOnError>): RequestResult<ListAccountsResponses, ListAccountsErrors, ThrowOnError> => (options?.client ?? client).get<ListAccountsResponses, ListAccountsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/loyalty/accounts',
     ...options
@@ -112,7 +112,7 @@ export const adjustPoints = <ThrowOnError extends boolean = false>(options: Opti
  *
  * Get loyalty tier thresholds and benefits
  */
-export const getTierInfo = <ThrowOnError extends boolean = false>(options: Options<GetTierInfoData, ThrowOnError>): RequestResult<GetTierInfoResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetTierInfoResponses, unknown, ThrowOnError>({
+export const getTierInfo = <ThrowOnError extends boolean = false>(options?: Options<GetTierInfoData, ThrowOnError>): RequestResult<GetTierInfoResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetTierInfoResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/loyalty/tiers',
     ...options
@@ -134,7 +134,7 @@ export const getPointsValue = <ThrowOnError extends boolean = false>(options: Op
  *
  * Get loyalty program statistics (Admin only)
  */
-export const getStats = <ThrowOnError extends boolean = false>(options: Options<GetStatsData, ThrowOnError>): RequestResult<GetStatsResponses, GetStatsErrors, ThrowOnError> => (options.client ?? client).get<GetStatsResponses, GetStatsErrors, ThrowOnError>({
+export const getStats = <ThrowOnError extends boolean = false>(options?: Options<GetStatsData, ThrowOnError>): RequestResult<GetStatsResponses, GetStatsErrors, ThrowOnError> => (options?.client ?? client).get<GetStatsResponses, GetStatsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/loyalty/stats',
     ...options

@@ -17,7 +17,6 @@ import {
   unassignDeliveryRiderMutation,
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@ninja/api/ordering/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { brandQueryKey } from '@/lib/brand'
 import { translate, type TranslationKey } from '@/lib/i18n'
 import { isModuleOff, problemCode, problemMessage } from '@/lib/problem'
@@ -39,7 +38,7 @@ const isDelivery = (order: DeliveryOrder): order is BoardDelivery => order.deliv
  */
 export function useDeliveries() {
   const query = useQuery({
-    ...getDeliveriesOptions({ query: { 'api-version': API_VERSION } }),
+    ...getDeliveriesOptions(),
     select: (orders) => orders.filter(isDelivery),
     refetchInterval: 20_000,
   })
@@ -53,7 +52,7 @@ export function useDeliveries() {
  */
 export function useRiders(enabled: boolean) {
   return useQuery({
-    ...getRidersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getRidersOptions(),
     enabled,
     refetchInterval: enabled ? 30_000 : false,
     select: (riders: RiderView[]) => riders.filter((r): r is RiderView & { userId: string } => !!r.userId),
@@ -66,7 +65,7 @@ export function useRiders(enabled: boolean) {
  */
 export function useCourierProviders(enabled: boolean) {
   return useQuery({
-    ...getCourierProvidersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getCourierProvidersOptions(),
     enabled,
     staleTime: 60_000,
     select: (providers: CourierProviderView[]) => providers.filter((p) => p.isActive),
@@ -85,7 +84,7 @@ export function useTillDeliveryQuote(location = '', enabled = true, zoneId: numb
   const pasted = useDebounced(location.trim(), 400)
   const query = useQuery({
     ...getTillDeliveryQuoteOptions({
-      query: { 'api-version': API_VERSION, location: pasted || undefined, zoneId: zoneId ?? undefined },
+      query: { location: pasted || undefined, zoneId: zoneId ?? undefined },
     }),
     enabled,
     staleTime: 60_000,
@@ -127,11 +126,9 @@ export function useDeliveryActions() {
   // A rider's cash for several deliveries at once: all or nothing on the server
   const cashInMany = useMutation({ ...handInRiderCashMutation(), onSuccess: done(), onError: failed })
 
-  const q = { 'api-version': API_VERSION }
   return {
-    assign: (orderId: number, riderUserId: string) =>
-      assign.mutate({ path: { orderId }, body: { riderUserId }, query: q }),
-    unassign: (orderId: number) => unassign.mutate({ path: { orderId }, query: q }),
+    assign: (orderId: number, riderUserId: string) => assign.mutate({ path: { orderId }, body: { riderUserId } }),
+    unassign: (orderId: number) => unassign.mutate({ path: { orderId } }),
     assignCourier: (
       orderId: number,
       courier: { providerId: number; courierName?: string; courierPhone?: string; fee?: number | null }
@@ -144,19 +141,18 @@ export function useDeliveryActions() {
           courierPhone: courier.courierPhone?.trim() || null,
           fee: courier.fee ?? null,
         },
-        query: q,
       }),
     courierDelivered: (orderId: number, collected: number) =>
-      courierDelivered.mutate({ path: { orderId }, body: { collected }, query: q }),
-    markOut: (orderId: number) => out.mutate({ path: { orderId }, query: q }),
-    markDelivered: (orderId: number) => delivered.mutate({ path: { orderId }, query: q }),
+      courierDelivered.mutate({ path: { orderId }, body: { collected } }),
+    markOut: (orderId: number) => out.mutate({ path: { orderId } }),
+    markDelivered: (orderId: number) => delivered.mutate({ path: { orderId } }),
     markFailed: (orderId: number, reason: string) =>
-      fail.mutate({ path: { orderId }, body: { reason: reason.trim() || null }, query: q }),
-    markReturned: (orderId: number) => returned.mutate({ path: { orderId }, query: q }),
-    cashIn: (orderId: number, amount: number) => cashIn.mutate({ path: { orderId }, body: { amount }, query: q }),
+      fail.mutate({ path: { orderId }, body: { reason: reason.trim() || null } }),
+    markReturned: (orderId: number) => returned.mutate({ path: { orderId } }),
+    cashIn: (orderId: number, amount: number) => cashIn.mutate({ path: { orderId }, body: { amount } }),
     cashInMany: (amounts: Map<number, number>, then?: () => void) =>
       cashInMany.mutate(
-        { body: { items: [...amounts].map(([orderId, amount]) => ({ orderId, amount })) }, query: q },
+        { body: { items: [...amounts].map(([orderId, amount]) => ({ orderId, amount })) } },
         {
           onSuccess: () => {
             toast.success(translate('riderCashTaken', { count: amounts.size }))
@@ -170,7 +166,6 @@ export function useDeliveryActions() {
       cancel.mutate({
         body: { orderNumber: orderId, stockDisposition },
         headers: { 'x-requestid': crypto.randomUUID() },
-        query: q,
       }),
     busy: [
       assign,

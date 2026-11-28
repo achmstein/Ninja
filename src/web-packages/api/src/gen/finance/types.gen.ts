@@ -286,12 +286,8 @@ export type VoidRequest = {
 export type GetExpenseCategoriesData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         includeInactive?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/categories';
 };
@@ -319,12 +315,7 @@ export type GetExpenseCategoriesResponse = GetExpenseCategoriesResponses[keyof G
 export type SaveExpenseCategoryData = {
     body: CategoryRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/categories';
 };
 
@@ -360,10 +351,6 @@ export type GetExpensesData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/expenses';
 };
@@ -394,12 +381,7 @@ export type RecordExpenseData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses';
 };
 
@@ -434,12 +416,7 @@ export type VoidExpenseData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses/{id}/void';
 };
 
@@ -472,12 +449,7 @@ export type RemoveExpenseReceiptData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses/{id}/receipt';
 };
 
@@ -508,12 +480,7 @@ export type GetExpenseReceiptData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses/{id}/receipt';
 };
 
@@ -539,12 +506,7 @@ export type AttachExpenseReceiptData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses/{id}/receipt';
 };
 
@@ -577,12 +539,7 @@ export type ScanBillData = {
         file: IFormFile;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/expenses/scan';
 };
 
@@ -615,12 +572,7 @@ export type ScanBillResponse = ScanBillResponses[keyof ScanBillResponses];
 export type GetRecurringExpensesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/recurring';
 };
 
@@ -647,12 +599,7 @@ export type GetRecurringExpensesResponse = GetRecurringExpensesResponses[keyof G
 export type SaveRecurringExpenseData = {
     body: RecurringExpenseRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/recurring';
 };
 
@@ -685,12 +632,8 @@ export type SaveRecurringExpenseResponse = SaveRecurringExpenseResponses[keyof S
 export type GetSuppliersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         includeInactive?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/suppliers';
 };
@@ -718,12 +661,7 @@ export type GetSuppliersResponse = GetSuppliersResponses[keyof GetSuppliersRespo
 export type SaveSupplierData = {
     body: SupplierRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/suppliers';
 };
 
@@ -758,12 +696,7 @@ export type GetSupplierLedgerData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/suppliers/{id}/ledger';
 };
 
@@ -799,12 +732,7 @@ export type PostSupplierEntryData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/suppliers/{id}/ledger';
 };
 
@@ -837,12 +765,8 @@ export type PostSupplierEntryResponse = PostSupplierEntryResponses[keyof PostSup
 export type GetPartnersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         includeInactive?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/partners';
 };
@@ -870,12 +794,7 @@ export type GetPartnersResponse = GetPartnersResponses[keyof GetPartnersResponse
 export type SavePartnerData = {
     body: PartnerRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/partners';
 };
 
@@ -910,12 +829,7 @@ export type GetPartnerLedgerData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/partners/{id}/ledger';
 };
 
@@ -951,12 +865,7 @@ export type PostPartnerEntryData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/partners/{id}/ledger';
 };
 
@@ -992,10 +901,6 @@ export type GetProfitData = {
     query: {
         year: number | string;
         month: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/profit';
 };
@@ -1023,12 +928,8 @@ export type GetProfitResponse = GetProfitResponses[keyof GetProfitResponses];
 export type GetProfitTrendData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         months?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/finance/profit/trend';
 };
@@ -1056,12 +957,7 @@ export type GetProfitTrendResponse = GetProfitTrendResponses[keyof GetProfitTren
 export type GetTillSuppliersData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/till/suppliers';
 };
 
@@ -1088,12 +984,7 @@ export type GetTillSuppliersResponse = GetTillSuppliersResponses[keyof GetTillSu
 export type GetTillPartnersData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/till/partners';
 };
 
@@ -1120,12 +1011,7 @@ export type GetTillPartnersResponse = GetTillPartnersResponses[keyof GetTillPart
 export type GetTillCategoriesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/finance/till/categories';
 };
 

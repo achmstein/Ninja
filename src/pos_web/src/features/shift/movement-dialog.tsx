@@ -7,7 +7,6 @@ import {
 } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { getTillEmployeesOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
 import { addCashMovementMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, type FeatureKey } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -88,7 +87,7 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
   const picks = kinds.find((k) => k.value === kind)?.picks ?? null
 
   // The lists behind the pickers, loaded only when their kind is picked
-  const version = { query: { 'api-version': API_VERSION } }
+  const version = {}
   const employees = useQuery({
     ...getTillEmployeesOptions(version),
     enabled: open && picks === 'employee',
@@ -196,7 +195,6 @@ export function MovementDialog({ shiftId, direction, open, onOpenChange }: Movem
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: shiftId },
-      query: { 'api-version': API_VERSION },
       body: {
         type: MOVEMENT_TYPE[direction],
         amount,

@@ -9,7 +9,6 @@ import {
   getOnlinePaymentOptions,
   simulateOnlinePaymentMutation,
 } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'
@@ -79,7 +78,6 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
 
   const options = getOnlinePaymentOptions({
     path: { key: payment.key },
-    query: { 'api-version': API_VERSION },
   })
   const simulate = useMutation({
     ...simulateOnlinePaymentMutation(),
@@ -117,7 +115,6 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
     setTimeout(() => {
       simulate.mutate({
         path: { key: payment.key },
-        query: { 'api-version': API_VERSION },
         body: { paid },
       })
     }, 1200)
@@ -321,7 +318,7 @@ export function DemoCheckout({ payment }: { payment: PaymentStatusView }) {
               type='button'
               className='text-muted-foreground text-note h-10 w-full rounded-full font-semibold disabled:opacity-50'
               disabled={busy || cancel.isPending}
-              onClick={() => cancel.mutate({ path: { key: payment.key }, query: { 'api-version': API_VERSION } })}
+              onClick={() => cancel.mutate({ path: { key: payment.key } })}
             >
               {t('demoCancelReturn')}
             </button>

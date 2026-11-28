@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail } from '@ninja/api/sales'
 import { applyTicketDiscountMutation, removeTicketDiscountMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -74,7 +73,6 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
       body: {
         reason: reason.trim(),
         rate: kind === 'percent' ? number / 100 : null,
@@ -85,7 +83,6 @@ export function DiscountDialog({ ticket, open, onOpenChange }: DiscountDialogPro
   const doRemove = () =>
     remove.mutate({
       path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
     })
 
   return (

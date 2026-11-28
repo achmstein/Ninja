@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { getOpenReservationsOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { isOpenReservation } from '@/features/places/status'
 import { serviceRequestsService } from '@/features/requests/service'
@@ -21,7 +20,7 @@ export function useNavGroups(): NavGroup[] {
 
   // Pending-order count badge on Live, kept fresh by SignalR
   const { data: pendingOrders = [] } = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     refetchInterval: 60_000,
   })
 

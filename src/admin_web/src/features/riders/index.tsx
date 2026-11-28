@@ -7,7 +7,6 @@ import { Motorbike, ShieldCheck, UserPlus } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type RiderOverview } from '@ninja/api/ordering'
 import { getRidersOverviewOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -70,7 +69,7 @@ export function Riders() {
   const tzOffsetMinutes = useBusinessDayOffset()
   const overview = useQuery({
     ...getRidersOverviewOptions({
-      query: { 'api-version': API_VERSION, tzOffsetMinutes },
+      query: { tzOffsetMinutes },
     }),
     enabled: tzOffsetMinutes !== undefined,
     refetchInterval: 60_000,

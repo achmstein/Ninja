@@ -3,7 +3,6 @@ import type { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type PromoCodeDto, type PromoCodeRequest } from '@ninja/api/catalog'
 import { createPromoMutation, updatePromoMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
@@ -107,10 +106,9 @@ function PromoForm({ promo, onOpenChange }: { promo: PromoCodeDto | null; onOpen
       update.mutate({
         path: { id: Number(promo.id) },
         body,
-        query: { 'api-version': API_VERSION },
       })
     } else {
-      create.mutate({ body, query: { 'api-version': API_VERSION } })
+      create.mutate({ body })
     }
   }
 

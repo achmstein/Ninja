@@ -3,7 +3,6 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
 import { claimGuestOrders } from '@ninja/api/ordering'
 import { useGuestStore } from '@/stores/guest-store'
-import { API_VERSION } from '@/lib/api-client'
 
 /**
  * A guest who signs in takes their orders with them. The device still
@@ -25,7 +24,6 @@ export function useClaimGuestOrders() {
     claiming.current = true
     claimGuestOrders({
       body: { guestId },
-      query: { 'api-version': API_VERSION },
       throwOnError: true,
     })
       .then(() => {

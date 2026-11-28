@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Check, CircleAlert, MessageSquare, RefreshCw, ShieldQuestion, UserX, X } from 'lucide-react'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { OrderSummary } from '@ninja/api/ordering/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { phoneInText } from '@/lib/phone'
@@ -71,7 +70,6 @@ export function OrderDetailDialog({
   } = useQuery({
     ...getOrderOptions({
       path: { orderId: orderNumber ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: open,
     // A refusal stays a refusal: say so at once rather than retrying it three times

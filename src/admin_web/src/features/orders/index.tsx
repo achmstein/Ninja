@@ -4,7 +4,6 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTable, type SortingState } from '@tanstack/react-table'
 import { Trash2 } from 'lucide-react'
 import { getAllOrdersOptions, getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { type RangeSearch } from '@/lib/search-schemas'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -87,7 +86,6 @@ export function OrdersManagement() {
   const ordersQuery = useQuery({
     ...getAllOrdersOptions({
       query: {
-        'api-version': API_VERSION,
         pageIndex: pagination.pageIndex,
         pageSize: pagination.pageSize,
         status: statusFilter.length > 0 ? statusFilter.join(',') : undefined,
@@ -102,7 +100,7 @@ export function OrdersManagement() {
   })
 
   const { data: pendingOrders = [] } = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     // SignalR is the primary update path; this poll is only a fallback
     refetchInterval: 60_000,
   })

@@ -40,12 +40,12 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const getStockItemsQueryKey = (options: Options<GetStockItemsData>) => createQueryKey('getStockItems', options);
+export const getStockItemsQueryKey = (options?: Options<GetStockItemsData>) => createQueryKey('getStockItems', options);
 
 /**
  * Stock items (ingredients and sellable units), active ones unless asked otherwise
  */
-export const getStockItemsOptions = (options: Options<GetStockItemsData>) => queryOptions<GetStockItemsResponse, AxiosError<DefaultError>, GetStockItemsResponse, ReturnType<typeof getStockItemsQueryKey>>({
+export const getStockItemsOptions = (options?: Options<GetStockItemsData>) => queryOptions<GetStockItemsResponse, AxiosError<DefaultError>, GetStockItemsResponse, ReturnType<typeof getStockItemsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getStockItems({
             ...options,
@@ -142,12 +142,12 @@ export const getStockItemCostsOptions = (options: Options<GetStockItemCostsData>
     queryKey: getStockItemCostsQueryKey(options)
 });
 
-export const getStockLevelsQueryKey = (options: Options<GetStockLevelsData>) => createQueryKey('getStockLevels', options);
+export const getStockLevelsQueryKey = (options?: Options<GetStockLevelsData>) => createQueryKey('getStockLevels', options);
 
 /**
  * Every active stock item with what the branch has on hand
  */
-export const getStockLevelsOptions = (options: Options<GetStockLevelsData>) => queryOptions<GetStockLevelsResponse, AxiosError<DefaultError>, GetStockLevelsResponse, ReturnType<typeof getStockLevelsQueryKey>>({
+export const getStockLevelsOptions = (options?: Options<GetStockLevelsData>) => queryOptions<GetStockLevelsResponse, AxiosError<DefaultError>, GetStockLevelsResponse, ReturnType<typeof getStockLevelsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getStockLevels({
             ...options,
@@ -160,12 +160,12 @@ export const getStockLevelsOptions = (options: Options<GetStockLevelsData>) => q
     queryKey: getStockLevelsQueryKey(options)
 });
 
-export const getStockMovementsQueryKey = (options: Options<GetStockMovementsData>) => createQueryKey('getStockMovements', options);
+export const getStockMovementsQueryKey = (options?: Options<GetStockMovementsData>) => createQueryKey('getStockMovements', options);
 
 /**
  * The branch's ledger, newest first, optionally one item or a date range
  */
-export const getStockMovementsOptions = (options: Options<GetStockMovementsData>) => queryOptions<GetStockMovementsResponse, AxiosError<DefaultError>, GetStockMovementsResponse, ReturnType<typeof getStockMovementsQueryKey>>({
+export const getStockMovementsOptions = (options?: Options<GetStockMovementsData>) => queryOptions<GetStockMovementsResponse, AxiosError<DefaultError>, GetStockMovementsResponse, ReturnType<typeof getStockMovementsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getStockMovements({
             ...options,
@@ -195,12 +195,12 @@ export const postStockAdjustmentMutation = (options?: Partial<Options<PostStockA
     return mutationOptions;
 };
 
-export const getPurchasesQueryKey = (options: Options<GetPurchasesData>) => createQueryKey('getPurchases', options);
+export const getPurchasesQueryKey = (options?: Options<GetPurchasesData>) => createQueryKey('getPurchases', options);
 
 /**
  * Receipts at the branch, newest first
  */
-export const getPurchasesOptions = (options: Options<GetPurchasesData>) => queryOptions<GetPurchasesResponse, AxiosError<DefaultError>, GetPurchasesResponse, ReturnType<typeof getPurchasesQueryKey>>({
+export const getPurchasesOptions = (options?: Options<GetPurchasesData>) => queryOptions<GetPurchasesResponse, AxiosError<DefaultError>, GetPurchasesResponse, ReturnType<typeof getPurchasesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPurchases({
             ...options,
@@ -266,12 +266,12 @@ export const scanReceiptMutation = (options?: Partial<Options<ScanReceiptData>>)
     return mutationOptions;
 };
 
-export const getStockCountsQueryKey = (options: Options<GetStockCountsData>) => createQueryKey('getStockCounts', options);
+export const getStockCountsQueryKey = (options?: Options<GetStockCountsData>) => createQueryKey('getStockCounts', options);
 
 /**
  * Physical counts at the branch, newest first
  */
-export const getStockCountsOptions = (options: Options<GetStockCountsData>) => queryOptions<GetStockCountsResponse, AxiosError<DefaultError>, GetStockCountsResponse, ReturnType<typeof getStockCountsQueryKey>>({
+export const getStockCountsOptions = (options?: Options<GetStockCountsData>) => queryOptions<GetStockCountsResponse, AxiosError<DefaultError>, GetStockCountsResponse, ReturnType<typeof getStockCountsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getStockCounts({
             ...options,
@@ -316,12 +316,12 @@ export const getStockCountOptions = (options: Options<GetStockCountData>) => que
     queryKey: getStockCountQueryKey(options)
 });
 
-export const getTransfersQueryKey = (options: Options<GetTransfersData>) => createQueryKey('getTransfers', options);
+export const getTransfersQueryKey = (options?: Options<GetTransfersData>) => createQueryKey('getTransfers', options);
 
 /**
  * Transfers the branch sent or received, newest first
  */
-export const getTransfersOptions = (options: Options<GetTransfersData>) => queryOptions<GetTransfersResponse, AxiosError<DefaultError>, GetTransfersResponse, ReturnType<typeof getTransfersQueryKey>>({
+export const getTransfersOptions = (options?: Options<GetTransfersData>) => queryOptions<GetTransfersResponse, AxiosError<DefaultError>, GetTransfersResponse, ReturnType<typeof getTransfersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTransfers({
             ...options,
@@ -419,12 +419,12 @@ export const rebuildStockLevelsMutation = (options?: Partial<Options<RebuildStoc
     return mutationOptions;
 };
 
-export const getRecipesQueryKey = (options: Options<GetRecipesData>) => createQueryKey('getRecipes', options);
+export const getRecipesQueryKey = (options?: Options<GetRecipesData>) => createQueryKey('getRecipes', options);
 
 /**
  * Every tracked menu item and what one unit takes
  */
-export const getRecipesOptions = (options: Options<GetRecipesData>) => queryOptions<GetRecipesResponse, AxiosError<DefaultError>, GetRecipesResponse, ReturnType<typeof getRecipesQueryKey>>({
+export const getRecipesOptions = (options?: Options<GetRecipesData>) => queryOptions<GetRecipesResponse, AxiosError<DefaultError>, GetRecipesResponse, ReturnType<typeof getRecipesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRecipes({
             ...options,
@@ -437,12 +437,12 @@ export const getRecipesOptions = (options: Options<GetRecipesData>) => queryOpti
     queryKey: getRecipesQueryKey(options)
 });
 
-export const getRecipeCostsQueryKey = (options: Options<GetRecipeCostsData>) => createQueryKey('getRecipeCosts', options);
+export const getRecipeCostsQueryKey = (options?: Options<GetRecipeCostsData>) => createQueryKey('getRecipeCosts', options);
 
 /**
  * What one sale of each tracked menu item costs at the branch's average ingredient costs
  */
-export const getRecipeCostsOptions = (options: Options<GetRecipeCostsData>) => queryOptions<GetRecipeCostsResponse, AxiosError<DefaultError>, GetRecipeCostsResponse, ReturnType<typeof getRecipeCostsQueryKey>>({
+export const getRecipeCostsOptions = (options?: Options<GetRecipeCostsData>) => queryOptions<GetRecipeCostsResponse, AxiosError<DefaultError>, GetRecipeCostsResponse, ReturnType<typeof getRecipeCostsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRecipeCosts({
             ...options,

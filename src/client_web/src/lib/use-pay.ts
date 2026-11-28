@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { type PayView } from '@ninja/api/sales'
 import { getBillToPayOptions, getPlaceBillToPayOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from './api-client'
 import { offersPay } from './pay'
 
 /** Which bill to pay: one the guest is on, or whatever is open at the
@@ -26,11 +25,10 @@ export function usePayView(source: PaySource | null, { live = true, enabled = tr
   const options = byTicket
     ? getBillToPayOptions({
         path: { ticketId: source.ticketId },
-        query: { 'api-version': API_VERSION },
       })
     : getPlaceBillToPayOptions({
         path: { placeId: source?.placeId ?? 0 },
-        query: { 'api-version': API_VERSION, branchId: source?.branchId ?? 0 },
+        query: { branchId: source?.branchId ?? 0 },
       })
   return useQuery({
     ...(options as ReturnType<typeof getBillToPayOptions>),

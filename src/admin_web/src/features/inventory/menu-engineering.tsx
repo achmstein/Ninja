@@ -6,7 +6,6 @@ import { listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { type ItemAdvice, type LocalizedText } from '@ninja/api/inventory'
 import { adviseMenuMutation, getRecipeCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { getBreakdownReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { businessDateOf, businessDaysWindow } from '@/lib/business-day'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLanguage, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
@@ -81,12 +80,11 @@ export function MenuEngineering() {
     return { from: window.from.toISOString(), to: window.to.toISOString() }
   }, [now, days, hours])
 
-  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
-  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const costs = useQuery(getRecipeCostsOptions())
+  const items = useQuery(listItemsOptions())
   const sales = useQuery({
     ...getBreakdownReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: span?.from ?? '',
         to: span?.to ?? '',
         tz: timeZone,
@@ -139,7 +137,6 @@ export function MenuEngineering() {
         languages,
         note: note.trim() || null,
       },
-      query: { 'api-version': API_VERSION },
     })
   }
 

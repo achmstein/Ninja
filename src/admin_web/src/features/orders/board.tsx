@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, useNavigate } from '@tanstack/react-router'
 import { CheckCircle2, Clock } from 'lucide-react'
 import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { useModules } from '@/lib/modules'
 import { Badge } from '@/components/ui/badge'
@@ -54,7 +53,7 @@ export function OrdersBoard() {
   }, [])
 
   const pendingQuery = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     // SignalR is the primary update path; this poll is only a fallback
     refetchInterval: 60_000,
   })

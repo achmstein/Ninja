@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { createPosOrderMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -223,7 +222,6 @@ export function usePlaceOrder({
       placeOrder.mutate({
         body: as,
         headers: { 'x-requestid': requestId },
-        query: { 'api-version': API_VERSION },
         // A line that has gone quiet answers nothing for minutes: past this,
         // the sale is taken offline (and the same request id keeps a late
         // arrival from becoming a second sale)

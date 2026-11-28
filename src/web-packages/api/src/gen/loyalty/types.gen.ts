@@ -90,13 +90,9 @@ export type TransactionDto = {
 export type ListAccountsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         first?: number | string;
         max?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/loyalty/accounts';
 };
@@ -124,12 +120,7 @@ export type ListAccountsResponse = ListAccountsResponses[keyof ListAccountsRespo
 export type CreateAccountData = {
     body: CreateAccountRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/accounts';
 };
 
@@ -167,12 +158,7 @@ export type GetAccountData = {
          */
         userId: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/accounts/{userId}';
 };
 
@@ -208,12 +194,7 @@ export type GetBalanceData = {
          */
         userId: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/accounts/{userId}/balance';
 };
 
@@ -249,13 +230,9 @@ export type GetTransactionsData = {
          */
         userId: string;
     };
-    query: {
+    query?: {
         first?: number | string;
         max?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/loyalty/transactions/{userId}';
 };
@@ -287,12 +264,7 @@ export type GetTransactionsResponse = GetTransactionsResponses[keyof GetTransact
 export type EarnPointsData = {
     body: EarnPointsRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/transactions/earn';
 };
 
@@ -329,12 +301,7 @@ export type EarnPointsResponse = EarnPointsResponses[keyof EarnPointsResponses];
 export type AdjustPointsData = {
     body: AdjustPointsRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/transactions/adjust';
 };
 
@@ -371,12 +338,7 @@ export type AdjustPointsResponse = AdjustPointsResponses[keyof AdjustPointsRespo
 export type GetTierInfoData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/tiers';
 };
 
@@ -394,10 +356,6 @@ export type GetPointsValueData = {
     path?: never;
     query: {
         points: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/loyalty/points-value';
 };
@@ -414,12 +372,7 @@ export type GetPointsValueResponse = GetPointsValueResponses[keyof GetPointsValu
 export type GetStatsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/loyalty/stats';
 };
 

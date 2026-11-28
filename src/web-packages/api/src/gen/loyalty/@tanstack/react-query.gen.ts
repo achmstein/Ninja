@@ -40,14 +40,14 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const listAccountsQueryKey = (options: Options<ListAccountsData>) => createQueryKey('listAccounts', options);
+export const listAccountsQueryKey = (options?: Options<ListAccountsData>) => createQueryKey('listAccounts', options);
 
 /**
  * List all loyalty accounts
  *
  * Get all loyalty accounts (Admin only)
  */
-export const listAccountsOptions = (options: Options<ListAccountsData>) => queryOptions<ListAccountsResponse, AxiosError<DefaultError>, ListAccountsResponse, ReturnType<typeof listAccountsQueryKey>>({
+export const listAccountsOptions = (options?: Options<ListAccountsData>) => queryOptions<ListAccountsResponse, AxiosError<DefaultError>, ListAccountsResponse, ReturnType<typeof listAccountsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await listAccounts({
             ...options,
@@ -177,14 +177,14 @@ export const adjustPointsMutation = (options?: Partial<Options<AdjustPointsData>
     return mutationOptions;
 };
 
-export const getTierInfoQueryKey = (options: Options<GetTierInfoData>) => createQueryKey('getTierInfo', options);
+export const getTierInfoQueryKey = (options?: Options<GetTierInfoData>) => createQueryKey('getTierInfo', options);
 
 /**
  * Get tier information
  *
  * Get loyalty tier thresholds and benefits
  */
-export const getTierInfoOptions = (options: Options<GetTierInfoData>) => queryOptions<GetTierInfoResponse, AxiosError<DefaultError>, GetTierInfoResponse, ReturnType<typeof getTierInfoQueryKey>>({
+export const getTierInfoOptions = (options?: Options<GetTierInfoData>) => queryOptions<GetTierInfoResponse, AxiosError<DefaultError>, GetTierInfoResponse, ReturnType<typeof getTierInfoQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTierInfo({
             ...options,
@@ -217,14 +217,14 @@ export const getPointsValueOptions = (options: Options<GetPointsValueData>) => q
     queryKey: getPointsValueQueryKey(options)
 });
 
-export const getStatsQueryKey = (options: Options<GetStatsData>) => createQueryKey('getStats', options);
+export const getStatsQueryKey = (options?: Options<GetStatsData>) => createQueryKey('getStats', options);
 
 /**
  * Get loyalty stats
  *
  * Get loyalty program statistics (Admin only)
  */
-export const getStatsOptions = (options: Options<GetStatsData>) => queryOptions<GetStatsResponse, AxiosError<DefaultError>, GetStatsResponse, ReturnType<typeof getStatsQueryKey>>({
+export const getStatsOptions = (options?: Options<GetStatsData>) => queryOptions<GetStatsResponse, AxiosError<DefaultError>, GetStatsResponse, ReturnType<typeof getStatsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getStats({
             ...options,

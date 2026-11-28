@@ -7,7 +7,6 @@ import { ClipboardCheck } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { getProfitOptions } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { getVarianceReportOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -52,7 +51,7 @@ export function Reports() {
 
   const report = useQuery({
     ...getVarianceReportOptions({
-      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+      query: { from: fromIso, to: toIso },
     }),
     enabled: ready,
     placeholderData: keepPreviousData,
@@ -65,7 +64,6 @@ export function Reports() {
   const profit = useQuery({
     ...getProfitOptions({
       query: {
-        'api-version': API_VERSION,
         year: month?.year ?? 0,
         month: month?.month ?? 0,
       },

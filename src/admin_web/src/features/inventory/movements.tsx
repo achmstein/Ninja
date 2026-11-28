@@ -4,7 +4,6 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { X } from 'lucide-react'
 import { getStockMovementsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { type RangeKey } from '@/lib/search-schemas'
@@ -53,7 +52,6 @@ export function Movements() {
   const query = useQuery({
     ...getStockMovementsOptions({
       query: {
-        'api-version': API_VERSION,
         stockItemId: search.stockItemId,
         type: search.type,
         from: isAll ? undefined : fromIso,

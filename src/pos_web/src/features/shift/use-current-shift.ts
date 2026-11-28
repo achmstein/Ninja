@@ -4,7 +4,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getCurrentShiftOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { rememberOpenShift } from './last-open-shift'
 
 /**
@@ -16,7 +15,7 @@ import { rememberOpenShift } from './last-open-shift'
  */
 export function useCurrentShift(options?: { refetchInterval?: number }) {
   const query = useQuery({
-    ...getCurrentShiftOptions({ query: { 'api-version': API_VERSION } }),
+    ...getCurrentShiftOptions(),
     retry: (failureCount, error) => {
       if (error instanceof AxiosError && error.response?.status === 404) {
         return false

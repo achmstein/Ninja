@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { discardTicketMutation, getTicketQueryKey } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -34,7 +33,6 @@ export function DiscardTicketDialog({ ticketId, open, onOpenChange }: DiscardTic
       queryClient.removeQueries({
         queryKey: getTicketQueryKey({
           path: { id: ticketId },
-          query: { 'api-version': API_VERSION },
         }),
       })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'getOpenTickets' }] })
@@ -47,7 +45,6 @@ export function DiscardTicketDialog({ ticketId, open, onOpenChange }: DiscardTic
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
-      query: { 'api-version': API_VERSION },
     })
 
   return (

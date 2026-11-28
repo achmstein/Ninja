@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Printer } from 'lucide-react'
 import { getShiftOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'
@@ -25,7 +24,6 @@ export function ShiftDetail({ shiftId }: { shiftId: number }) {
   const { data: shift, isLoading } = useQuery(
     getShiftOptions({
       path: { id: shiftId },
-      query: { 'api-version': API_VERSION },
     })
   )
 

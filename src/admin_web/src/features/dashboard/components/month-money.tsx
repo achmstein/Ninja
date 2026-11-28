@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, type LinkProps } from '@tanstack/react-router'
 import { getProfitOptions } from '@ninja/api/finance/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { businessDateOf } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
@@ -32,7 +31,7 @@ export function MonthMoney() {
   const monthKey = `${year}-${String(month).padStart(2, '0')}`
   const monthLabel = new Intl.DateTimeFormat(locale, { month: 'long' }).format(localDateOf(today))
 
-  const profit = useQuery(getProfitOptions({ query: { 'api-version': API_VERSION, year, month } }))
+  const profit = useQuery(getProfitOptions({ query: { year, month } }))
 
   if (profit.isError) {
     return <ErrorState error={profit.error} onRetry={profit.refetch} />

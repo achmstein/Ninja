@@ -2,7 +2,6 @@ import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
 import { getKitchenPrintJobsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 
@@ -22,7 +21,7 @@ export function KitchenPrinterBanner() {
   const features = useFeatures()
 
   const { data: waiting = [], dataUpdatedAt } = useQuery({
-    ...getKitchenPrintJobsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getKitchenPrintJobsOptions(),
     enabled: features.kds,
     refetchInterval: 20_000,
   })

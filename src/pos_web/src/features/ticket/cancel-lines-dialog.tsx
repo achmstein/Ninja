@@ -4,7 +4,6 @@ import { Minus, Plus } from 'lucide-react'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { cancelTicketLinesMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useLocalized, useT } from '@/lib/i18n'
@@ -75,7 +74,7 @@ export function CancelLinesDialog({
   const orderIds = orderIdsOn(chosen)
   const orders = useQueries({
     queries: orderIds.map((orderId) => ({
-      ...getOrderOptions({ path: { orderId }, query: { 'api-version': API_VERSION } }),
+      ...getOrderOptions({ path: { orderId } }),
       enabled: open,
     })),
   })
@@ -107,7 +106,6 @@ export function CancelLinesDialog({
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: ticketId },
-      query: { 'api-version': API_VERSION },
       body: {
         lines: chosen.map((line) => ({ lineId: toNumber(line.id), qty: count(line) })),
         reason: reason.trim(),

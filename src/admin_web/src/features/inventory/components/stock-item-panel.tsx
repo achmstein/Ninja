@@ -5,7 +5,6 @@ import { Archive, ArchiveRestore, ArrowLeft, MoreHorizontal, PackagePlus, Pencil
 import { listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getStockMovements, type StockItemView, type StockLevelView } from '@ninja/api/inventory'
 import { getRecipesOptions, getStockItemCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -350,7 +349,7 @@ function CostHistory({ stockItemId, unit }: { stockItemId: number; unit: string 
   const query = useQuery(
     getStockItemCostsOptions({
       path: { id: stockItemId },
-      query: { 'api-version': API_VERSION, take: 12 },
+      query: { take: 12 },
     })
   )
   const rows = query.data ?? []
@@ -406,7 +405,6 @@ function Movements({ stockItemId }: { stockItemId: number }) {
     queryFn: async ({ pageParam, signal }) => {
       const { data } = await getStockMovements({
         query: {
-          'api-version': API_VERSION,
           stockItemId,
           pageIndex: pageParam,
           pageSize: PAGE_SIZE,
@@ -488,8 +486,8 @@ function Movements({ stockItemId }: { stockItemId: number }) {
 function UsedBy({ stockItemId }: { stockItemId: number }) {
   const t = useT()
   const localized = useLocalized()
-  const recipes = useQuery(getRecipesOptions({ query: { 'api-version': API_VERSION } }))
-  const catalog = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const recipes = useQuery(getRecipesOptions())
+  const catalog = useQuery(listItemsOptions())
 
   const users = useMemo(() => {
     const byId = new Map((catalog.data ?? []).map((item) => [toNumber(item.id), item]))

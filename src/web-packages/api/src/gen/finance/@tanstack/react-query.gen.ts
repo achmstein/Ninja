@@ -40,9 +40,9 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const getExpenseCategoriesQueryKey = (options: Options<GetExpenseCategoriesData>) => createQueryKey('getExpenseCategories', options);
+export const getExpenseCategoriesQueryKey = (options?: Options<GetExpenseCategoriesData>) => createQueryKey('getExpenseCategories', options);
 
-export const getExpenseCategoriesOptions = (options: Options<GetExpenseCategoriesData>) => queryOptions<GetExpenseCategoriesResponse, AxiosError<DefaultError>, GetExpenseCategoriesResponse, ReturnType<typeof getExpenseCategoriesQueryKey>>({
+export const getExpenseCategoriesOptions = (options?: Options<GetExpenseCategoriesData>) => queryOptions<GetExpenseCategoriesResponse, AxiosError<DefaultError>, GetExpenseCategoriesResponse, ReturnType<typeof getExpenseCategoriesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getExpenseCategories({
             ...options,
@@ -192,12 +192,12 @@ export const scanBillMutation = (options?: Partial<Options<ScanBillData>>): UseM
     return mutationOptions;
 };
 
-export const getRecurringExpensesQueryKey = (options: Options<GetRecurringExpensesData>) => createQueryKey('getRecurringExpenses', options);
+export const getRecurringExpensesQueryKey = (options?: Options<GetRecurringExpensesData>) => createQueryKey('getRecurringExpenses', options);
 
 /**
  * The branch's monthly bills that post themselves
  */
-export const getRecurringExpensesOptions = (options: Options<GetRecurringExpensesData>) => queryOptions<GetRecurringExpensesResponse, AxiosError<DefaultError>, GetRecurringExpensesResponse, ReturnType<typeof getRecurringExpensesQueryKey>>({
+export const getRecurringExpensesOptions = (options?: Options<GetRecurringExpensesData>) => queryOptions<GetRecurringExpensesResponse, AxiosError<DefaultError>, GetRecurringExpensesResponse, ReturnType<typeof getRecurringExpensesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRecurringExpenses({
             ...options,
@@ -227,12 +227,12 @@ export const saveRecurringExpenseMutation = (options?: Partial<Options<SaveRecur
     return mutationOptions;
 };
 
-export const getSuppliersQueryKey = (options: Options<GetSuppliersData>) => createQueryKey('getSuppliers', options);
+export const getSuppliersQueryKey = (options?: Options<GetSuppliersData>) => createQueryKey('getSuppliers', options);
 
 /**
  * Suppliers with what the branch owes each
  */
-export const getSuppliersOptions = (options: Options<GetSuppliersData>) => queryOptions<GetSuppliersResponse, AxiosError<DefaultError>, GetSuppliersResponse, ReturnType<typeof getSuppliersQueryKey>>({
+export const getSuppliersOptions = (options?: Options<GetSuppliersData>) => queryOptions<GetSuppliersResponse, AxiosError<DefaultError>, GetSuppliersResponse, ReturnType<typeof getSuppliersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getSuppliers({
             ...options,
@@ -294,12 +294,12 @@ export const postSupplierEntryMutation = (options?: Partial<Options<PostSupplier
     return mutationOptions;
 };
 
-export const getPartnersQueryKey = (options: Options<GetPartnersData>) => createQueryKey('getPartners', options);
+export const getPartnersQueryKey = (options?: Options<GetPartnersData>) => createQueryKey('getPartners', options);
 
 /**
  * The branch's partners with what the business holds of theirs
  */
-export const getPartnersOptions = (options: Options<GetPartnersData>) => queryOptions<GetPartnersResponse, AxiosError<DefaultError>, GetPartnersResponse, ReturnType<typeof getPartnersQueryKey>>({
+export const getPartnersOptions = (options?: Options<GetPartnersData>) => queryOptions<GetPartnersResponse, AxiosError<DefaultError>, GetPartnersResponse, ReturnType<typeof getPartnersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPartners({
             ...options,
@@ -379,12 +379,12 @@ export const getProfitOptions = (options: Options<GetProfitData>) => queryOption
     queryKey: getProfitQueryKey(options)
 });
 
-export const getProfitTrendQueryKey = (options: Options<GetProfitTrendData>) => createQueryKey('getProfitTrend', options);
+export const getProfitTrendQueryKey = (options?: Options<GetProfitTrendData>) => createQueryKey('getProfitTrend', options);
 
 /**
  * The last months' headline figures, newest first
  */
-export const getProfitTrendOptions = (options: Options<GetProfitTrendData>) => queryOptions<GetProfitTrendResponse, AxiosError<DefaultError>, GetProfitTrendResponse, ReturnType<typeof getProfitTrendQueryKey>>({
+export const getProfitTrendOptions = (options?: Options<GetProfitTrendData>) => queryOptions<GetProfitTrendResponse, AxiosError<DefaultError>, GetProfitTrendResponse, ReturnType<typeof getProfitTrendQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getProfitTrend({
             ...options,
@@ -397,9 +397,9 @@ export const getProfitTrendOptions = (options: Options<GetProfitTrendData>) => q
     queryKey: getProfitTrendQueryKey(options)
 });
 
-export const getTillSuppliersQueryKey = (options: Options<GetTillSuppliersData>) => createQueryKey('getTillSuppliers', options);
+export const getTillSuppliersQueryKey = (options?: Options<GetTillSuppliersData>) => createQueryKey('getTillSuppliers', options);
 
-export const getTillSuppliersOptions = (options: Options<GetTillSuppliersData>) => queryOptions<GetTillSuppliersResponse, AxiosError<DefaultError>, GetTillSuppliersResponse, ReturnType<typeof getTillSuppliersQueryKey>>({
+export const getTillSuppliersOptions = (options?: Options<GetTillSuppliersData>) => queryOptions<GetTillSuppliersResponse, AxiosError<DefaultError>, GetTillSuppliersResponse, ReturnType<typeof getTillSuppliersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTillSuppliers({
             ...options,
@@ -412,9 +412,9 @@ export const getTillSuppliersOptions = (options: Options<GetTillSuppliersData>) 
     queryKey: getTillSuppliersQueryKey(options)
 });
 
-export const getTillPartnersQueryKey = (options: Options<GetTillPartnersData>) => createQueryKey('getTillPartners', options);
+export const getTillPartnersQueryKey = (options?: Options<GetTillPartnersData>) => createQueryKey('getTillPartners', options);
 
-export const getTillPartnersOptions = (options: Options<GetTillPartnersData>) => queryOptions<GetTillPartnersResponse, AxiosError<DefaultError>, GetTillPartnersResponse, ReturnType<typeof getTillPartnersQueryKey>>({
+export const getTillPartnersOptions = (options?: Options<GetTillPartnersData>) => queryOptions<GetTillPartnersResponse, AxiosError<DefaultError>, GetTillPartnersResponse, ReturnType<typeof getTillPartnersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTillPartners({
             ...options,
@@ -427,9 +427,9 @@ export const getTillPartnersOptions = (options: Options<GetTillPartnersData>) =>
     queryKey: getTillPartnersQueryKey(options)
 });
 
-export const getTillCategoriesQueryKey = (options: Options<GetTillCategoriesData>) => createQueryKey('getTillCategories', options);
+export const getTillCategoriesQueryKey = (options?: Options<GetTillCategoriesData>) => createQueryKey('getTillCategories', options);
 
-export const getTillCategoriesOptions = (options: Options<GetTillCategoriesData>) => queryOptions<GetTillCategoriesResponse, AxiosError<DefaultError>, GetTillCategoriesResponse, ReturnType<typeof getTillCategoriesQueryKey>>({
+export const getTillCategoriesOptions = (options?: Options<GetTillCategoriesData>) => queryOptions<GetTillCategoriesResponse, AxiosError<DefaultError>, GetTillCategoriesResponse, ReturnType<typeof getTillCategoriesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTillCategories({
             ...options,

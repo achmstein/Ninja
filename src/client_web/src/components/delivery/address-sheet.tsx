@@ -23,7 +23,6 @@ import {
 import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 import { useGuestStore } from '@/stores/guest-store'
 import { addressRow, labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
-import { API_VERSION } from '@/lib/api-client'
 import { useSelectedBranch } from '@/lib/branch'
 import { showPhone, useBrand, usePhoneRule } from '@/lib/brand'
 import { addressBody, fromSaved, useMyAddresses } from '@/lib/delivery'
@@ -344,8 +343,8 @@ function AddressForm({
       const body = addressBody(address)
       const savedAddress =
         address.id != null
-          ? await update.mutateAsync({ path: { addressId: address.id }, body, query: { 'api-version': API_VERSION } })
-          : await add.mutateAsync({ body, query: { 'api-version': API_VERSION } })
+          ? await update.mutateAsync({ path: { addressId: address.id }, body })
+          : await add.mutateAsync({ body })
       toast.success(t('deliveryAddressSaved'))
       onDone(fromSaved(savedAddress))
     } catch (error) {
@@ -356,7 +355,7 @@ function AddressForm({
   const forget = async () => {
     if (initial?.id == null) return
     try {
-      await remove.mutateAsync({ path: { addressId: initial.id }, query: { 'api-version': API_VERSION } })
+      await remove.mutateAsync({ path: { addressId: initial.id } })
       const { address, setAddress } = useDeliveryStore.getState()
       if (address?.id === initial.id) setAddress(null)
       toast.success(t('deliveryAddressRemoved'))

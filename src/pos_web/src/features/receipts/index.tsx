@@ -3,7 +3,6 @@ import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, ChevronRight, Loader2, Search } from 'lucide-react'
 import { getSettledTickets } from '@ninja/api/sales/sdk.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { dayKey, friendlyDay, friendlyTime } from '@/lib/friendly-day'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -55,7 +54,6 @@ export function Receipts() {
     queryFn: async ({ pageParam }) => {
       const { data } = await getSettledTickets({
         query: {
-          'api-version': API_VERSION,
           pageIndex: pageParam,
           pageSize: PAGE_SIZE,
           receiptNumber,

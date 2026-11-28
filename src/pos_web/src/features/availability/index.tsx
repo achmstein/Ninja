@@ -9,7 +9,6 @@ import {
   toggleItemAvailabilityMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -48,8 +47,8 @@ export function Availability() {
   const [picked, setPicked] = useState<Picked | null>(null)
   const [term, setTerm] = useState('')
 
-  const { data: categories = [] } = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
-  const { data: items = [], isLoading } = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const { data: categories = [] } = useQuery(listCategoriesOptions())
+  const { data: items = [], isLoading } = useQuery(listItemsOptions())
 
   const sortedCategories = categories.slice().sort((a, b) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0))
   const byOrder = (a: CatalogItemDto, b: CatalogItemDto) => Number(a.displayOrder ?? 0) - Number(b.displayOrder ?? 0)
@@ -78,9 +77,7 @@ export function Availability() {
   const toggleAvailability = useMutation({
     ...toggleItemAvailabilityMutation(),
     onMutate: async (variables) => {
-      const queryKey = listItemsQueryKey({
-        query: { 'api-version': API_VERSION },
-      })
+      const queryKey = listItemsQueryKey()
       await queryClient.cancelQueries({ queryKey })
       const previous = queryClient.getQueryData<CatalogItemDto[]>(queryKey)
       queryClient.setQueryData<CatalogItemDto[]>(queryKey, (old) =>
@@ -103,7 +100,6 @@ export function Availability() {
     toggleAvailability.mutate({
       path: { id: Number(item.id) },
       body: { isAvailable },
-      query: { 'api-version': API_VERSION },
     })
 
   const BackIcon = language === 'ar' ? ArrowRight : ArrowLeft

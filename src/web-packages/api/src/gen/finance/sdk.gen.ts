@@ -18,7 +18,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
     meta?: keyof ClientMeta extends never ? Record<string, unknown> : ClientMeta;
 };
 
-export const getExpenseCategories = <ThrowOnError extends boolean = false>(options: Options<GetExpenseCategoriesData, ThrowOnError>): RequestResult<GetExpenseCategoriesResponses, GetExpenseCategoriesErrors, ThrowOnError> => (options.client ?? client).get<GetExpenseCategoriesResponses, GetExpenseCategoriesErrors, ThrowOnError>({
+export const getExpenseCategories = <ThrowOnError extends boolean = false>(options?: Options<GetExpenseCategoriesData, ThrowOnError>): RequestResult<GetExpenseCategoriesResponses, GetExpenseCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<GetExpenseCategoriesResponses, GetExpenseCategoriesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/categories',
     ...options
@@ -110,7 +110,7 @@ export const scanBill = <ThrowOnError extends boolean = false>(options: Options<
 /**
  * The branch's monthly bills that post themselves
  */
-export const getRecurringExpenses = <ThrowOnError extends boolean = false>(options: Options<GetRecurringExpensesData, ThrowOnError>): RequestResult<GetRecurringExpensesResponses, GetRecurringExpensesErrors, ThrowOnError> => (options.client ?? client).get<GetRecurringExpensesResponses, GetRecurringExpensesErrors, ThrowOnError>({
+export const getRecurringExpenses = <ThrowOnError extends boolean = false>(options?: Options<GetRecurringExpensesData, ThrowOnError>): RequestResult<GetRecurringExpensesResponses, GetRecurringExpensesErrors, ThrowOnError> => (options?.client ?? client).get<GetRecurringExpensesResponses, GetRecurringExpensesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/recurring',
     ...options
@@ -132,7 +132,7 @@ export const saveRecurringExpense = <ThrowOnError extends boolean = false>(optio
 /**
  * Suppliers with what the branch owes each
  */
-export const getSuppliers = <ThrowOnError extends boolean = false>(options: Options<GetSuppliersData, ThrowOnError>): RequestResult<GetSuppliersResponses, GetSuppliersErrors, ThrowOnError> => (options.client ?? client).get<GetSuppliersResponses, GetSuppliersErrors, ThrowOnError>({
+export const getSuppliers = <ThrowOnError extends boolean = false>(options?: Options<GetSuppliersData, ThrowOnError>): RequestResult<GetSuppliersResponses, GetSuppliersErrors, ThrowOnError> => (options?.client ?? client).get<GetSuppliersResponses, GetSuppliersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/suppliers',
     ...options
@@ -173,7 +173,7 @@ export const postSupplierEntry = <ThrowOnError extends boolean = false>(options:
 /**
  * The branch's partners with what the business holds of theirs
  */
-export const getPartners = <ThrowOnError extends boolean = false>(options: Options<GetPartnersData, ThrowOnError>): RequestResult<GetPartnersResponses, GetPartnersErrors, ThrowOnError> => (options.client ?? client).get<GetPartnersResponses, GetPartnersErrors, ThrowOnError>({
+export const getPartners = <ThrowOnError extends boolean = false>(options?: Options<GetPartnersData, ThrowOnError>): RequestResult<GetPartnersResponses, GetPartnersErrors, ThrowOnError> => (options?.client ?? client).get<GetPartnersResponses, GetPartnersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/partners',
     ...options
@@ -223,25 +223,25 @@ export const getProfit = <ThrowOnError extends boolean = false>(options: Options
 /**
  * The last months' headline figures, newest first
  */
-export const getProfitTrend = <ThrowOnError extends boolean = false>(options: Options<GetProfitTrendData, ThrowOnError>): RequestResult<GetProfitTrendResponses, GetProfitTrendErrors, ThrowOnError> => (options.client ?? client).get<GetProfitTrendResponses, GetProfitTrendErrors, ThrowOnError>({
+export const getProfitTrend = <ThrowOnError extends boolean = false>(options?: Options<GetProfitTrendData, ThrowOnError>): RequestResult<GetProfitTrendResponses, GetProfitTrendErrors, ThrowOnError> => (options?.client ?? client).get<GetProfitTrendResponses, GetProfitTrendErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/profit/trend',
     ...options
 });
 
-export const getTillSuppliers = <ThrowOnError extends boolean = false>(options: Options<GetTillSuppliersData, ThrowOnError>): RequestResult<GetTillSuppliersResponses, GetTillSuppliersErrors, ThrowOnError> => (options.client ?? client).get<GetTillSuppliersResponses, GetTillSuppliersErrors, ThrowOnError>({
+export const getTillSuppliers = <ThrowOnError extends boolean = false>(options?: Options<GetTillSuppliersData, ThrowOnError>): RequestResult<GetTillSuppliersResponses, GetTillSuppliersErrors, ThrowOnError> => (options?.client ?? client).get<GetTillSuppliersResponses, GetTillSuppliersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/till/suppliers',
     ...options
 });
 
-export const getTillPartners = <ThrowOnError extends boolean = false>(options: Options<GetTillPartnersData, ThrowOnError>): RequestResult<GetTillPartnersResponses, GetTillPartnersErrors, ThrowOnError> => (options.client ?? client).get<GetTillPartnersResponses, GetTillPartnersErrors, ThrowOnError>({
+export const getTillPartners = <ThrowOnError extends boolean = false>(options?: Options<GetTillPartnersData, ThrowOnError>): RequestResult<GetTillPartnersResponses, GetTillPartnersErrors, ThrowOnError> => (options?.client ?? client).get<GetTillPartnersResponses, GetTillPartnersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/till/partners',
     ...options
 });
 
-export const getTillCategories = <ThrowOnError extends boolean = false>(options: Options<GetTillCategoriesData, ThrowOnError>): RequestResult<GetTillCategoriesResponses, GetTillCategoriesErrors, ThrowOnError> => (options.client ?? client).get<GetTillCategoriesResponses, GetTillCategoriesErrors, ThrowOnError>({
+export const getTillCategories = <ThrowOnError extends boolean = false>(options?: Options<GetTillCategoriesData, ThrowOnError>): RequestResult<GetTillCategoriesResponses, GetTillCategoriesErrors, ThrowOnError> => (options?.client ?? client).get<GetTillCategoriesResponses, GetTillCategoriesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/finance/till/categories',
     ...options

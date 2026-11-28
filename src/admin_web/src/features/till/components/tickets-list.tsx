@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { getOpenTicketsOptions, getTicketHistoryOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
@@ -62,7 +61,6 @@ export function TicketsList({ from = '/_authenticated/till/' }: { from?: Tickets
   const historyQuery = useQuery({
     ...getTicketHistoryOptions({
       query: {
-        'api-version': API_VERSION,
         status: tab === 'voided' ? TICKET_STATUS_VOIDED : TICKET_STATUS_SETTLED,
         // A receipt number names one bill; the window is beside the point
         from: byReceipt ? undefined : fromIso,
@@ -77,7 +75,7 @@ export function TicketsList({ from = '/_authenticated/till/' }: { from?: Tickets
   })
 
   const openQuery = useQuery({
-    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getOpenTicketsOptions(),
     enabled: tab === 'open',
     refetchInterval: 30_000,
   })

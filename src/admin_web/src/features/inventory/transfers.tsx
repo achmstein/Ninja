@@ -5,7 +5,6 @@ import { useTable } from '@tanstack/react-table'
 import { ArrowRight } from 'lucide-react'
 import { getTransfersOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -46,7 +45,6 @@ export function Transfers() {
   const query = useQuery({
     ...getTransfersOptions({
       query: {
-        'api-version': API_VERSION,
         pageIndex: pagination.pageIndex,
         pageSize: pagination.pageSize,
       },

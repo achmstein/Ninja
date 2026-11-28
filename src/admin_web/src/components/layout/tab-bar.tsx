@@ -11,7 +11,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -63,7 +62,7 @@ export function TabBar() {
   const [moreOpen, setMoreOpen] = useState(false)
   const TABS = tabsFor(features.inventory)
   const { data: pending = [] } = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     refetchInterval: 60_000,
   })
   const onTab = TABS.some((tab) => isActive(pathname, tab.to))

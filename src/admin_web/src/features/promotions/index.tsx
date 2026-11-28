@@ -7,7 +7,6 @@ import {
   listPromotionsOptions,
   updatePromotionMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { formatWhen } from '@/lib/when'
@@ -56,7 +55,7 @@ export function PromotionsManagement() {
   const [editing, setEditing] = useState<PromotionDto | null>(null)
   const [deleting, setDeleting] = useState<PromotionDto | null>(null)
 
-  const query = useQuery(listPromotionsOptions({ query: { 'api-version': API_VERSION } }))
+  const query = useQuery(listPromotionsOptions())
   const invalidate = () => queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromotions' }] })
 
   const toggle = useMutation({
@@ -175,7 +174,6 @@ export function PromotionsManagement() {
                       toggle.mutate({
                         path: { id: Number(p.id) },
                         body: asRequest(p, isActive),
-                        query: { 'api-version': API_VERSION },
                       })
                     }
                   />
@@ -209,7 +207,6 @@ export function PromotionsManagement() {
           deleting &&
           remove.mutate({
             path: { id: Number(deleting.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
       />

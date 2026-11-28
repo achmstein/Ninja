@@ -7,7 +7,6 @@ import {
   reprintOrderKitchenTicketsMutation,
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -42,7 +41,7 @@ function ordersOn(lines: TicketLineView[]) {
  */
 export function useCanReprintKitchen(lines: TicketLineView[]) {
   const stations = useQuery({
-    ...getKitchenStationsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getKitchenStationsOptions(),
     staleTime: 60_000,
   })
   const branchPrints = (stations.data ?? []).some((s) => s.printsTickets)
@@ -103,7 +102,6 @@ export function KitchenReprintDialog({
                 onClick={() =>
                   reprint.mutate({
                     path: { orderId },
-                    query: { 'api-version': API_VERSION },
                   })
                 }
               >

@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Stock items (ingredients and sellable units), active ones unless asked otherwise
  */
-export const getStockItems = <ThrowOnError extends boolean = false>(options: Options<GetStockItemsData, ThrowOnError>): RequestResult<GetStockItemsResponses, GetStockItemsErrors, ThrowOnError> => (options.client ?? client).get<GetStockItemsResponses, GetStockItemsErrors, ThrowOnError>({
+export const getStockItems = <ThrowOnError extends boolean = false>(options?: Options<GetStockItemsData, ThrowOnError>): RequestResult<GetStockItemsResponses, GetStockItemsErrors, ThrowOnError> => (options?.client ?? client).get<GetStockItemsResponses, GetStockItemsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/items',
     ...options
@@ -82,7 +82,7 @@ export const getStockItemCosts = <ThrowOnError extends boolean = false>(options:
 /**
  * Every active stock item with what the branch has on hand
  */
-export const getStockLevels = <ThrowOnError extends boolean = false>(options: Options<GetStockLevelsData, ThrowOnError>): RequestResult<GetStockLevelsResponses, GetStockLevelsErrors, ThrowOnError> => (options.client ?? client).get<GetStockLevelsResponses, GetStockLevelsErrors, ThrowOnError>({
+export const getStockLevels = <ThrowOnError extends boolean = false>(options?: Options<GetStockLevelsData, ThrowOnError>): RequestResult<GetStockLevelsResponses, GetStockLevelsErrors, ThrowOnError> => (options?.client ?? client).get<GetStockLevelsResponses, GetStockLevelsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/levels',
     ...options
@@ -91,7 +91,7 @@ export const getStockLevels = <ThrowOnError extends boolean = false>(options: Op
 /**
  * The branch's ledger, newest first, optionally one item or a date range
  */
-export const getStockMovements = <ThrowOnError extends boolean = false>(options: Options<GetStockMovementsData, ThrowOnError>): RequestResult<GetStockMovementsResponses, GetStockMovementsErrors, ThrowOnError> => (options.client ?? client).get<GetStockMovementsResponses, GetStockMovementsErrors, ThrowOnError>({
+export const getStockMovements = <ThrowOnError extends boolean = false>(options?: Options<GetStockMovementsData, ThrowOnError>): RequestResult<GetStockMovementsResponses, GetStockMovementsErrors, ThrowOnError> => (options?.client ?? client).get<GetStockMovementsResponses, GetStockMovementsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/movements',
     ...options
@@ -112,7 +112,7 @@ export const postStockAdjustment = <ThrowOnError extends boolean = false>(option
 /**
  * Receipts at the branch, newest first
  */
-export const getPurchases = <ThrowOnError extends boolean = false>(options: Options<GetPurchasesData, ThrowOnError>): RequestResult<GetPurchasesResponses, GetPurchasesErrors, ThrowOnError> => (options.client ?? client).get<GetPurchasesResponses, GetPurchasesErrors, ThrowOnError>({
+export const getPurchases = <ThrowOnError extends boolean = false>(options?: Options<GetPurchasesData, ThrowOnError>): RequestResult<GetPurchasesResponses, GetPurchasesErrors, ThrowOnError> => (options?.client ?? client).get<GetPurchasesResponses, GetPurchasesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/purchases',
     ...options
@@ -158,7 +158,7 @@ export const scanReceipt = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * Physical counts at the branch, newest first
  */
-export const getStockCounts = <ThrowOnError extends boolean = false>(options: Options<GetStockCountsData, ThrowOnError>): RequestResult<GetStockCountsResponses, GetStockCountsErrors, ThrowOnError> => (options.client ?? client).get<GetStockCountsResponses, GetStockCountsErrors, ThrowOnError>({
+export const getStockCounts = <ThrowOnError extends boolean = false>(options?: Options<GetStockCountsData, ThrowOnError>): RequestResult<GetStockCountsResponses, GetStockCountsErrors, ThrowOnError> => (options?.client ?? client).get<GetStockCountsResponses, GetStockCountsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/counts',
     ...options
@@ -186,7 +186,7 @@ export const getStockCount = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Transfers the branch sent or received, newest first
  */
-export const getTransfers = <ThrowOnError extends boolean = false>(options: Options<GetTransfersData, ThrowOnError>): RequestResult<GetTransfersResponses, GetTransfersErrors, ThrowOnError> => (options.client ?? client).get<GetTransfersResponses, GetTransfersErrors, ThrowOnError>({
+export const getTransfers = <ThrowOnError extends boolean = false>(options?: Options<GetTransfersData, ThrowOnError>): RequestResult<GetTransfersResponses, GetTransfersErrors, ThrowOnError> => (options?.client ?? client).get<GetTransfersResponses, GetTransfersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/transfers',
     ...options
@@ -232,7 +232,7 @@ export const getVarianceReport = <ThrowOnError extends boolean = false>(options:
 /**
  * Recompute the branch's levels from its ledger
  */
-export const rebuildStockLevels = <ThrowOnError extends boolean = false>(options: Options<RebuildStockLevelsData, ThrowOnError>): RequestResult<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError> => (options.client ?? client).post<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError>({
+export const rebuildStockLevels = <ThrowOnError extends boolean = false>(options?: Options<RebuildStockLevelsData, ThrowOnError>): RequestResult<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError> => (options?.client ?? client).post<RebuildStockLevelsResponses, RebuildStockLevelsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/levels/rebuild',
     ...options
@@ -241,7 +241,7 @@ export const rebuildStockLevels = <ThrowOnError extends boolean = false>(options
 /**
  * Every tracked menu item and what one unit takes
  */
-export const getRecipes = <ThrowOnError extends boolean = false>(options: Options<GetRecipesData, ThrowOnError>): RequestResult<GetRecipesResponses, GetRecipesErrors, ThrowOnError> => (options.client ?? client).get<GetRecipesResponses, GetRecipesErrors, ThrowOnError>({
+export const getRecipes = <ThrowOnError extends boolean = false>(options?: Options<GetRecipesData, ThrowOnError>): RequestResult<GetRecipesResponses, GetRecipesErrors, ThrowOnError> => (options?.client ?? client).get<GetRecipesResponses, GetRecipesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/recipes',
     ...options
@@ -250,7 +250,7 @@ export const getRecipes = <ThrowOnError extends boolean = false>(options: Option
 /**
  * What one sale of each tracked menu item costs at the branch's average ingredient costs
  */
-export const getRecipeCosts = <ThrowOnError extends boolean = false>(options: Options<GetRecipeCostsData, ThrowOnError>): RequestResult<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError> => (options.client ?? client).get<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError>({
+export const getRecipeCosts = <ThrowOnError extends boolean = false>(options?: Options<GetRecipeCostsData, ThrowOnError>): RequestResult<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError> => (options?.client ?? client).get<GetRecipeCostsResponses, GetRecipeCostsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/inventory/recipes/costs',
     ...options

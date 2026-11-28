@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Loader2, Star, Tag } from 'lucide-react'
 import { type Order, type OrderSummary } from '@ninja/api/ordering'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { statusDotClass } from '@/lib/order-status'
 import { PlaceIcon, placeKindOf } from '@/lib/places'
@@ -36,7 +35,6 @@ function OrderTile({ order }: { order: OrderSummary }) {
   const detailQuery = useQuery(
     getOrderOptions({
       path: { orderId: Number(order.orderNumber) },
-      query: { 'api-version': API_VERSION },
     })
   )
   const discount = Number(order.loyaltyDiscount ?? 0)

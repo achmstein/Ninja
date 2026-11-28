@@ -3,7 +3,6 @@ import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, CloudOff, Loader2, Pencil, RotateCw } from 'lucide-react'
 import { getTicketByOrderOptions, getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { translate, useLanguage, useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -54,7 +53,6 @@ export function SendingTicket({ requestId }: { requestId: string }) {
   const ticketLookup = useQuery({
     ...getTicketByOrderOptions({
       path: { orderId: orderId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: orderId != null,
     retry: false,
@@ -71,7 +69,6 @@ export function SendingTicket({ requestId }: { requestId: string }) {
     let cancelled = false
     const options = getTicketOptions({
       path: { id: foundTicketId },
-      query: { 'api-version': API_VERSION },
     })
     void queryClient
       .prefetchQuery(options)

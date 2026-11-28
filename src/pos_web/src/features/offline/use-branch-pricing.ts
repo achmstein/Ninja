@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { getBranchPricingOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { toPricingRules, type PricingRules } from './pricing'
 
 /**
@@ -14,7 +13,6 @@ export function useBranchPricing(): PricingRules | null {
   const { data } = useQuery({
     ...getBranchPricingOptions({
       path: { branchId: branchId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: branchId !== null,
     staleTime: 5 * 60_000,

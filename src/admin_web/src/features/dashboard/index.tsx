@@ -5,7 +5,6 @@ import { isOwner } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
 import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { getRangeReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { businessDateOf, businessDayWindow, elapsedOf } from '@/lib/business-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -68,7 +67,7 @@ export function Dashboard() {
   const { branch, hours, timeZone, dayWindow, fromIso, toIso } = useTillWindow({})
 
   const pendingQuery = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     // SignalR is the primary update path; polls are only a fallback
     refetchInterval: 60_000,
   })
@@ -86,7 +85,7 @@ export function Dashboard() {
   const floor = usePlaces()
   const reportQuery = useQuery({
     ...getRangeReportOptions({
-      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+      query: { from: fromIso, to: toIso },
     }),
     enabled: dayWindow !== null,
     refetchInterval: 60_000,
@@ -126,7 +125,6 @@ export function Dashboard() {
   const lastWeekQuery = useQuery({
     ...getRangeReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: lastWeekFrom,
         to: lastWeekTo,
       },

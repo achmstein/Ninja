@@ -3,7 +3,7 @@ import * as DialogPrimitive from '@radix-ui/react-dialog'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { ArrowLeft, Pencil, UserPlus, X } from 'lucide-react'
 import { getRecentCustomersOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION, apiClient } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
 import { Highlight, matchRanges } from '@/lib/highlight'
 import { useLanguage, useT } from '@/lib/i18n'
 import { editablePhone } from '@/lib/phone'
@@ -140,7 +140,7 @@ function SearchBody({
   // till. Until the server answers (offline, or a business not on that release yet) the
   // customers picked on this till stand in
   const lately = useQuery({
-    ...getRecentCustomersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getRecentCustomersOptions(),
     staleTime: 30_000,
     retry: false,
   })

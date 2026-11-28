@@ -20,7 +20,6 @@ import {
   getCourierPayoutsOptions,
 } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type CourierBalanceView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -41,8 +40,6 @@ import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { Section } from '@/components/section'
 import { When } from '@/components/when'
-
-const q = { 'api-version': API_VERSION }
 
 /** The server's own words for a refusal, when it gave some */
 const refusal = (error: unknown) =>
@@ -67,8 +64,8 @@ const outcomeKey: Record<string, TranslationKey> = {
  */
 export function Couriers() {
   const t = useT()
-  const providers = useQuery(getCourierProvidersOptions({ query: q }))
-  const balances = useQuery(getCourierBalancesOptions({ query: q }))
+  const providers = useQuery(getCourierProvidersOptions())
+  const balances = useQuery(getCourierBalancesOptions())
   const [adding, setAdding] = useState(false)
   const [openId, setOpenId] = useState<number | null>(null)
 
@@ -259,9 +256,8 @@ function CourierForm({ provider, onSaved }: { provider: CourierProviderView | nu
       update.mutate({
         path: { providerId: toNumber(provider.id) },
         body,
-        query: q,
       })
-    else add.mutate({ body, query: q })
+    else add.mutate({ body })
   }
 
   return (
@@ -330,7 +326,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
   const t = useT()
   const queryClient = useQueryClient()
   const path = { providerId }
-  const connection = useQuery(getCourierConnectionOptions({ path, query: q }))
+  const connection = useQuery(getCourierConnectionOptions({ path }))
   const [address, setAddress] = useState<string | null>(null)
   const [apiKey, setApiKey] = useState('')
   const [secret, setSecret] = useState<string | null>(null)
@@ -385,7 +381,6 @@ function CourierConnection({ providerId }: { providerId: number }) {
           e.preventDefault()
           save.mutate({
             path,
-            query: q,
             body: {
               apiBaseUrl: shownAddress.trim(),
               apiKey: apiKey.trim() || null,
@@ -432,7 +427,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
               type='button'
               variant='ghost'
               disabled={busy}
-              onClick={() => save.mutate({ path, query: q, body: { apiBaseUrl: '' } })}
+              onClick={() => save.mutate({ path, body: { apiBaseUrl: '' } })}
             >
               {t('courierDisconnect')}
             </Button>
@@ -485,7 +480,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
                 variant='outline'
                 size='sm'
                 disabled={busy}
-                onClick={() => makeSecret.mutate({ path, query: q })}
+                onClick={() => makeSecret.mutate({ path })}
               >
                 {makeSecret.isPending && <Spinner />}
                 {t(view.hasWebhookSecret ? 'courierSigningSecretRenew' : 'courierSigningSecretMake')}
@@ -507,7 +502,7 @@ function CourierConnection({ providerId }: { providerId: number }) {
 function CourierTestKit({ providerId }: { providerId: number }) {
   const t = useT()
   const path = { providerId }
-  const calls = useQuery(getCourierCallsOptions({ path, query: q }))
+  const calls = useQuery(getCourierCallsOptions({ path }))
   const [result, setResult] = useState<CourierTestJobView | null>(null)
   const test = useMutation({
     ...sendCourierTestJobMutation(),
@@ -525,7 +520,7 @@ function CourierTestKit({ providerId }: { providerId: number }) {
           variant='outline'
           size='sm'
           disabled={test.isPending}
-          onClick={() => test.mutate({ path, query: q })}
+          onClick={() => test.mutate({ path })}
         >
           {test.isPending && <Spinner />}
           {t('courierTestSend')}
@@ -625,10 +620,10 @@ function CourierAccount({
   const jobs = useQuery(
     getCourierJobsOptions({
       path: { providerId },
-      query: { ...q, pageSize: 25 },
+      query: { pageSize: 25 },
     })
   )
-  const payouts = useQuery(getCourierPayoutsOptions({ path: { providerId }, query: q }))
+  const payouts = useQuery(getCourierPayoutsOptions({ path: { providerId } }))
   const [direction, setDirection] = useState<'in' | 'out'>('in')
   const [amount, setAmount] = useState('')
   const [note, setNote] = useState('')
@@ -692,7 +687,6 @@ function CourierAccount({
               provider: provider.name ?? '',
               note: note.trim() || null,
             },
-            query: q,
           })
         }}
       >

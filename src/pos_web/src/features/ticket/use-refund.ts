@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail, TicketLineView } from '@ninja/api/sales'
 import { refundTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -130,7 +129,6 @@ export function useRefund(ticket: TicketDetail, onDone: () => void) {
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(ticket.id) },
-      query: { 'api-version': API_VERSION },
       body: {
         lines: lines.filter((entry) => entry.picked > 0).map((entry) => ({ lineId: entry.id, qty: entry.picked })),
         reason: reason.trim(),

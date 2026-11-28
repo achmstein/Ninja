@@ -4,7 +4,6 @@ import { getRouteApi, Link } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type PaymentRow } from '@ninja/api/sales'
 import { getPaymentsOptions, getRangeReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { useModules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -150,7 +149,7 @@ export function PaymentsList() {
   // the filtered tender also took, since the bar above counts both
   const report = useQuery({
     ...getRangeReportOptions({
-      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+      query: { from: fromIso, to: toIso },
     }),
     enabled: dayWindow !== null && tender != null,
   })
@@ -159,7 +158,6 @@ export function PaymentsList() {
   const paymentsQuery = useQuery({
     ...getPaymentsOptions({
       query: {
-        'api-version': API_VERSION,
         from: fromIso,
         to: toIso,
         tender: tender?.value,

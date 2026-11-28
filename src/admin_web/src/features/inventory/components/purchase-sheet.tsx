@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
 import { getPurchaseOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { formatWhen } from '@/lib/when'
@@ -28,7 +27,6 @@ export function PurchaseSheet({ purchaseId, onOpenChange }: PurchaseSheetProps) 
   const { data: purchase, isLoading } = useQuery({
     ...getPurchaseOptions({
       path: { id: purchaseId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: purchaseId != null,
   })

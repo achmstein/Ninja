@@ -8,7 +8,6 @@ import {
   savePaymentSettingsMutation,
 } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PaymentSettingsView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -36,7 +35,7 @@ import {
   type SecretEdit,
 } from './form'
 
-const settingsQuery = { query: { 'api-version': API_VERSION } }
+const settingsQuery = {}
 
 const PROBLEMS: Record<FormProblem, TranslationKey> = {
   currency: 'payProblemCurrency',

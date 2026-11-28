@@ -17,7 +17,6 @@ import {
 } from 'lucide-react'
 import { getOpenTicketsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -105,7 +104,7 @@ export function PlacePanel({ place, stay, reservation, onOpenChange, onStarted, 
 
   // The running stay's bill, for the jump to it
   const { data: tickets } = useQuery({
-    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getOpenTicketsOptions(),
     enabled: open && running,
   })
   const ticket = running ? tickets?.find((candidate) => toNumber(candidate.sessionId) === stayId) : undefined

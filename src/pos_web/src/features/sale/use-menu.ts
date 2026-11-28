@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { listCategoriesOptions, listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
-import { API_VERSION, apiClient } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
 import { tillSuggestions, type SaleLine } from './cart'
 import { itemPictureUrl } from './item-picture'
@@ -41,8 +41,8 @@ export function useMenu({
   const [searchOpen, setSearchOpen] = useState(false)
   const [searchTerm, setSearchTerm] = useState('')
 
-  const { data: categories = [] } = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
-  const { data: items = [], isLoading } = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const { data: categories = [] } = useQuery(listCategoriesOptions())
+  const { data: items = [], isLoading } = useQuery(listItemsOptions())
 
   // The attached customer's most-ordered items, ranked. A walk-in (no id) or a
   // customer without enough history gets nothing; the chip then hides.

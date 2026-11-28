@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { type DeliveryTimelineStep } from '@ninja/api/ordering'
 import { getDeliveryTimelineOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -61,7 +60,6 @@ export function TimelineDialog({
   const timeline = useQuery({
     ...getDeliveryTimelineOptions({
       path: { orderId: orderId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: orderId != null,
   })

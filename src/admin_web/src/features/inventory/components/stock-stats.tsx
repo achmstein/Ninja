@@ -5,7 +5,6 @@ import { type StockLevelView } from '@ninja/api/inventory'
 import { getUsageReportOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useBusinessTimeZone } from '@/lib/business-clock'
 import { businessMonthWindow } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
@@ -49,7 +48,6 @@ export function StockStats({ levels }: StockStatsProps) {
   const report = useQuery({
     ...getUsageReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: monthWindow?.from.toISOString() ?? '',
         to: monthWindow?.to.toISOString() ?? '',
       },

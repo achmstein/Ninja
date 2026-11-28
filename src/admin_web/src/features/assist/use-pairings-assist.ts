@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type SuggestPairingsRequest, type SuggestPairingsResponse } from '@ninja/api/catalog'
 import { suggestPairingsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getItemPairsReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -38,7 +37,6 @@ export function usePairingsAssist(itemId: number) {
       return await queryClient.fetchQuery({
         ...getItemPairsReportOptions({
           query: {
-            'api-version': API_VERSION,
             itemId,
             from: from.toISOString(),
             to: to.toISOString(),
@@ -72,7 +70,6 @@ export function usePairingsAssist(itemId: number) {
       }
       return await mutation.mutateAsync({
         body,
-        query: { 'api-version': API_VERSION },
       })
     } finally {
       setAsking(false)

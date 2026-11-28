@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Everyone at the branch, with their current pay terms and what they are owed
  */
-export const getEmployees = <ThrowOnError extends boolean = false>(options: Options<GetEmployeesData, ThrowOnError>): RequestResult<GetEmployeesResponses, GetEmployeesErrors, ThrowOnError> => (options.client ?? client).get<GetEmployeesResponses, GetEmployeesErrors, ThrowOnError>({
+export const getEmployees = <ThrowOnError extends boolean = false>(options?: Options<GetEmployeesData, ThrowOnError>): RequestResult<GetEmployeesResponses, GetEmployeesErrors, ThrowOnError> => (options?.client ?? client).get<GetEmployeesResponses, GetEmployeesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/payroll/employees',
     ...options
@@ -196,7 +196,7 @@ export const setPayTerms = <ThrowOnError extends boolean = false>(options: Optio
 /**
  * The branch's current employees, for the till's pay-out picker
  */
-export const getTillEmployees = <ThrowOnError extends boolean = false>(options: Options<GetTillEmployeesData, ThrowOnError>): RequestResult<GetTillEmployeesResponses, GetTillEmployeesErrors, ThrowOnError> => (options.client ?? client).get<GetTillEmployeesResponses, GetTillEmployeesErrors, ThrowOnError>({
+export const getTillEmployees = <ThrowOnError extends boolean = false>(options?: Options<GetTillEmployeesData, ThrowOnError>): RequestResult<GetTillEmployeesResponses, GetTillEmployeesErrors, ThrowOnError> => (options?.client ?? client).get<GetTillEmployeesResponses, GetTillEmployeesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/payroll/till/employees',
     ...options

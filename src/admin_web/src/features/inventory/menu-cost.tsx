@@ -9,7 +9,6 @@ import {
   listItemsOptions,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getRecipeCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -45,9 +44,9 @@ export function MenuCost() {
   const navigate = route.useNavigate()
   const target = search.target ?? DEFAULT_FOOD_COST_TARGET
 
-  const costs = useQuery(getRecipeCostsOptions({ query: { 'api-version': API_VERSION } }))
-  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
-  const categories = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
+  const costs = useQuery(getRecipeCostsOptions())
+  const items = useQuery(listItemsOptions())
+  const categories = useQuery(listCategoriesOptions())
 
   // "Edit recipe" on a row opens the item's sheet on its stock section, the
   // same sheet the menu page opens; a delete from there is confirmed here
@@ -224,7 +223,6 @@ export function MenuCost() {
           deleteItem &&
           deleteItemMut.mutate({
             path: { id: Number(deleteItem.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
         isLoading={deleteItemMut.isPending}

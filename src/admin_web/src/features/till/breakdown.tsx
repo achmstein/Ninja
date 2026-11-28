@@ -4,7 +4,6 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Bar, BarChart, Cell, XAxis } from 'recharts'
 import { listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getBreakdownReportOptions, getRangeReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
@@ -45,7 +44,6 @@ export function TillBreakdown() {
   const report = useQuery({
     ...getBreakdownReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: fromIso,
         to: toIso,
         tz: timeZone,
@@ -56,7 +54,7 @@ export function TillBreakdown() {
   // The till report's own query, usually already cached: the delivery fees
   const range = useQuery({
     ...getRangeReportOptions({
-      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+      query: { from: fromIso, to: toIso },
     }),
     enabled: dayWindow !== null,
   })
@@ -65,7 +63,7 @@ export function TillBreakdown() {
   // The category is Catalog's, joined here: Sales names the item on each
   // line, the menu says which category it is in. A line from before the
   // stamp, or an item no longer on the menu, counts as uncategorised.
-  const items = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const items = useQuery(listItemsOptions())
   const soldItems = useMemo(() => itemRows(report.data?.byItem), [report.data])
   const byCategory = useMemo(() => categoryRows(soldItems, items.data), [soldItems, items.data])
 

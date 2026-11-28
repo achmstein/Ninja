@@ -5,7 +5,6 @@ import {
   type SuggestCustomizationsResponse,
 } from '@ninja/api/catalog'
 import { suggestCustomizationsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
@@ -52,7 +51,7 @@ export function useCustomizationsAssist() {
       languages,
       note: args.note?.trim() || null,
     }
-    return mutation.mutateAsync({ body, query: { 'api-version': API_VERSION } })
+    return mutation.mutateAsync({ body })
   }
 
   return { suggest, isPending: mutation.isPending, available }

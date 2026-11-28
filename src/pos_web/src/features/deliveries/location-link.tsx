@@ -2,7 +2,6 @@ import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Loader2, MapPinned, Send } from 'lucide-react'
 import { createLocationShareMutation, getLocationShareOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -40,7 +39,7 @@ export function LocationLink({
   const business = useBrandName()
   const create = useMutation({ ...createLocationShareMutation() })
   const share = useQuery({
-    ...getLocationShareOptions({ path: { token: token ?? '' }, query: { 'api-version': API_VERSION } }),
+    ...getLocationShareOptions({ path: { token: token ?? '' } }),
     enabled: token != null,
     // Asked every few seconds until the caller shares, or the link runs out
     refetchInterval: (query) => (query.state.data?.sharedAt || query.state.data?.expired ? false : 3000),
@@ -64,7 +63,7 @@ export function LocationLink({
     }
     if (existing) return open(existing)
     create.mutate(
-      { query: { 'api-version': API_VERSION } },
+      {},
       {
         onSuccess: (made) => {
           onToken(made.token)

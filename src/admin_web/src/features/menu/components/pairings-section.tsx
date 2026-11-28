@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, Coffee, Link2, X } from 'lucide-react'
 import { type CatalogItemDto, type LocalizedText } from '@ninja/api/catalog'
 import { setItemPairingsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -211,7 +210,6 @@ function PairingsForm({ item, items, saved }: PairingsSectionProps & { saved: nu
             save.mutate({
               path: { id: itemId },
               body: ids,
-              query: { 'api-version': API_VERSION },
             })
           }
         >

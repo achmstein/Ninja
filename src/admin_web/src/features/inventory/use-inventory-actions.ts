@@ -22,7 +22,6 @@ import {
   transferStockMutation,
   updateStockItemMutation,
 } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -157,62 +156,52 @@ export function useInventoryActions() {
       receivePurchase.mutateAsync({
         body,
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
     postCount: (body: StockCountRequest) =>
       postCount.mutateAsync({
         body,
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
     postAdjustment: (body: AdjustmentRequest) =>
       postAdjustment.mutateAsync({
         body,
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
     transferStock: (branchId: number, body: TransferRequest) =>
       transferStock.mutateAsync({
         path: { branchId },
         body,
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
-    rebuildLevels: () => rebuildLevels.mutateAsync({ query: { 'api-version': API_VERSION } }),
+    rebuildLevels: () => rebuildLevels.mutateAsync({}),
     setReorderLevel: (stockItemId: number, reorderLevel: number | null) =>
       setReorderLevel.mutateAsync({
         path: { id: stockItemId },
         body: { reorderLevel },
-        query: { 'api-version': API_VERSION },
       }),
     createItem: (body: StockItemRequest) =>
       createItem.mutateAsync({
         body,
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
     updateItem: (id: number, body: StockItemRequest) =>
       updateItem.mutateAsync({
         path: { id },
         body,
-        query: { 'api-version': API_VERSION },
       }),
     setRecipe: (catalogItemId: number, body: RecipeRequest) =>
       setRecipe.mutateAsync({
         path: { catalogItemId },
         body,
-        query: { 'api-version': API_VERSION },
       }),
     removeRecipe: (catalogItemId: number) =>
       removeRecipe.mutateAsync({
         path: { catalogItemId },
-        query: { 'api-version': API_VERSION },
       }),
     trackByUnit: (catalogItemId: number, name: LocalizedText) =>
       trackByUnit.mutateAsync({
         body: { catalogItemId, name },
         headers: { 'x-requestid': uuidv4() },
-        query: { 'api-version': API_VERSION },
       }),
     isPending:
       receivePurchase.isPending ||

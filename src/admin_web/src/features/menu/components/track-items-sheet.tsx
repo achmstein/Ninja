@@ -5,7 +5,6 @@ import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@ninja/api/catalog'
 import { type RecipesProposal } from '@ninja/api/inventory'
 import { proposeRecipesMutation, trackByUnitMutation } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -108,7 +107,6 @@ export function TrackItemsSheet({ untracked, onOpenChange }: TrackItemsSheetProp
             name: { en: item.name?.en ?? null, ar: item.name?.ar ?? null },
           },
           headers: { 'x-requestid': uuidv4() },
-          query: { 'api-version': API_VERSION },
         })
         setProgress({ done: ++done, total: picked.length })
         setSelected((prev) => {
@@ -149,7 +147,6 @@ export function TrackItemsSheet({ untracked, onOpenChange }: TrackItemsSheetProp
             answers.push(
               await propose.mutateAsync({
                 body,
-                query: { 'api-version': API_VERSION },
               })
             )
             break

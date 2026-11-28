@@ -968,12 +968,7 @@ export type WeekdayTotal = {
 export type GetOpenTicketsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/open';
 };
 
@@ -1000,15 +995,11 @@ export type GetOpenTicketsResponse = GetOpenTicketsResponses[keyof GetOpenTicket
 export type GetRecentCustomersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         /**
          * How many, 20 at most
          */
         take?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/recent-customers';
 };
@@ -1036,14 +1027,10 @@ export type GetRecentCustomersResponse = GetRecentCustomersResponses[keyof GetRe
 export type GetSettledTicketsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
         receiptNumber?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/settled';
 };
@@ -1071,17 +1058,13 @@ export type GetSettledTicketsResponse = GetSettledTicketsResponses[keyof GetSett
 export type GetTicketHistoryData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         status?: TicketStatus;
         from?: string;
         to?: string;
         receiptNumber?: number | string;
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/history';
 };
@@ -1121,10 +1104,6 @@ export type GetPaymentsData = {
         tender?: PaymentTender;
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/payments';
 };
@@ -1163,10 +1142,6 @@ export type GetRefundsData = {
         to: string;
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/refunds';
 };
@@ -1205,10 +1180,6 @@ export type GetTabPaymentsData = {
         to: string;
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/tab-payments';
 };
@@ -1245,12 +1216,7 @@ export type RecordTabPaymentData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/tab-payments';
 };
 
@@ -1285,12 +1251,7 @@ export type GetTabPaymentData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/tab-payments/{id}';
 };
 
@@ -1326,12 +1287,7 @@ export type DiscardTicketData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}';
 };
 
@@ -1366,12 +1322,7 @@ export type GetTicketData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}';
 };
 
@@ -1405,10 +1356,6 @@ export type GetRangeReportData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/reports/range';
 };
@@ -1447,10 +1394,6 @@ export type GetBreakdownReportData = {
         to: string;
         offsetMinutes?: number | string;
         tz?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/reports/breakdown';
 };
@@ -1489,10 +1432,6 @@ export type GetDailyReportData = {
         to: string;
         tz?: string;
         dayStart?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/reports/daily';
 };
@@ -1530,10 +1469,6 @@ export type GetItemPairsReportData = {
         itemId: number | string;
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/reports/pairs';
 };
@@ -1569,12 +1504,7 @@ export type GetTicketByOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/by-order/{orderId}';
 };
 
@@ -1608,12 +1538,7 @@ export type OpenTicketData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets';
 };
 
@@ -1651,12 +1576,7 @@ export type AddTicketLineData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/lines';
 };
 
@@ -1692,12 +1612,7 @@ export type SettleTicketData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/settle';
 };
 
@@ -1735,12 +1650,7 @@ export type TakePartPaymentData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/part-payments';
 };
 
@@ -1779,12 +1689,7 @@ export type ReturnPartPaymentData = {
         id: number;
         partPaymentId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/part-payments/{partPaymentId}/return';
 };
 
@@ -1822,12 +1727,7 @@ export type MoveTicketLinesData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/move-lines';
 };
 
@@ -1865,12 +1765,7 @@ export type AssignTicketLinesCustomerData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/lines/customer';
 };
 
@@ -1905,12 +1800,7 @@ export type RemoveTicketDiscountData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/discount';
 };
 
@@ -1948,12 +1838,7 @@ export type ApplyTicketDiscountData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/discount';
 };
 
@@ -1990,12 +1875,7 @@ export type ChangePaymentTenderData = {
         id: number;
         paymentId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/payments/{paymentId}/tender';
 };
 
@@ -2031,12 +1911,7 @@ export type VoidTicketData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/void';
 };
 
@@ -2072,12 +1947,7 @@ export type CancelTicketLinesData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/lines/cancel';
 };
 
@@ -2113,12 +1983,7 @@ export type RefundTicketData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/refunds';
 };
 
@@ -2153,12 +2018,7 @@ export type GetBranchPricingData = {
     path: {
         branchId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/pricing/{branchId}';
 };
 
@@ -2187,12 +2047,7 @@ export type SetBranchPricingData = {
     path: {
         branchId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/pricing/{branchId}';
 };
 
@@ -2223,15 +2078,11 @@ export type SetBranchPricingResponses = {
 export type GetMyBillsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         /**
          * Only bills settled or voided after this moment (UTC); open bills come regardless
          */
         since?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/tickets/mine';
 };
@@ -2261,12 +2112,7 @@ export type GetTicketReceiptData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/tickets/{id}/receipt';
 };
 
@@ -2300,12 +2146,7 @@ export type OpenShiftData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/shifts/open';
 };
 
@@ -2338,12 +2179,7 @@ export type OpenShiftResponse2 = OpenShiftResponses[keyof OpenShiftResponses];
 export type GetCurrentShiftData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/shifts/current';
 };
 
@@ -2376,12 +2212,7 @@ export type GetShiftData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/shifts/{id}';
 };
 
@@ -2412,15 +2243,11 @@ export type GetShiftResponse = GetShiftResponses[keyof GetShiftResponses];
 export type GetClosedShiftsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
         from?: string;
         to?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/shifts';
 };
@@ -2453,12 +2280,7 @@ export type AddCashMovementData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/shifts/{id}/movements';
 };
 
@@ -2494,12 +2316,7 @@ export type CloseShiftData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/shifts/{id}/close';
 };
 
@@ -2539,10 +2356,6 @@ export type GetPlaceBillToPayData = {
          * The branch the table is in
          */
         branchId: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/sales/payments/places/{placeId}';
 };
@@ -2568,12 +2381,7 @@ export type GetBillToPayData = {
     path: {
         ticketId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/tickets/{ticketId}';
 };
 
@@ -2598,12 +2406,7 @@ export type StartOnlinePaymentData = {
     path: {
         ticketId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/tickets/{ticketId}';
 };
 
@@ -2628,12 +2431,7 @@ export type StartOnlinePaymentResponse = StartOnlinePaymentResponses[keyof Start
 export type GetPayAheadOptionsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/ahead';
 };
 
@@ -2651,12 +2449,7 @@ export type GetOrderToPayData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/orders/{orderId}';
 };
 
@@ -2681,12 +2474,7 @@ export type StartOrderPaymentData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/orders/{orderId}';
 };
 
@@ -2717,12 +2505,7 @@ export type GetOnlinePaymentData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}';
 };
 
@@ -2747,12 +2530,7 @@ export type ListOnlinePaymentsData = {
     path: {
         ticketId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/tickets/{ticketId}/online';
 };
 
@@ -2781,12 +2559,7 @@ export type SimulateOnlinePaymentData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/simulate';
 };
 
@@ -2817,12 +2590,7 @@ export type CancelOnlinePaymentData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/cancel';
 };
 
@@ -2853,12 +2621,7 @@ export type RefundOnlinePaymentData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/refund';
 };
 
@@ -2895,12 +2658,7 @@ export type RefundOnlinePaymentResponse = RefundOnlinePaymentResponses[keyof Ref
 export type GetPaymentSettingsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/settings';
 };
 
@@ -2927,12 +2685,7 @@ export type GetPaymentSettingsResponse = GetPaymentSettingsResponses[keyof GetPa
 export type SavePaymentSettingsData = {
     body: PaymentSettingsRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/settings';
 };
 
@@ -2965,12 +2718,7 @@ export type SavePaymentSettingsResponse = SavePaymentSettingsResponses[keyof Sav
 export type ListPaymentsNeedingAttentionData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/attention';
 };
 
@@ -2999,12 +2747,7 @@ export type RetryPaymentMoveData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/retry';
 };
 
@@ -3039,12 +2782,7 @@ export type MarkPaymentMoveDoneData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/done';
 };
 
@@ -3079,12 +2817,7 @@ export type DismissPaymentAttentionData = {
     path: {
         key: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/payments/{key}/dismiss';
 };
 
@@ -3117,12 +2850,7 @@ export type DismissPaymentAttentionResponse = DismissPaymentAttentionResponses[k
 export type GetCourierBalancesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/couriers/balances';
 };
 
@@ -3151,13 +2879,9 @@ export type GetCourierJobsData = {
     path: {
         providerId: number;
     };
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/sales/couriers/{providerId}/jobs';
 };
@@ -3187,12 +2911,7 @@ export type GetCourierPayoutsData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/couriers/{providerId}/payouts';
 };
 
@@ -3221,12 +2940,7 @@ export type AddCourierPayoutData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/sales/couriers/{providerId}/payouts';
 };
 

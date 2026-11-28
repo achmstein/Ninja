@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { getPurchasesOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { useTableUrlState } from '@/hooks/use-table-url-state'
@@ -36,7 +35,6 @@ export function Purchases() {
   const query = useQuery({
     ...getPurchasesOptions({
       query: {
-        'api-version': API_VERSION,
         pageIndex: pagination.pageIndex,
         pageSize: pagination.pageSize,
       },

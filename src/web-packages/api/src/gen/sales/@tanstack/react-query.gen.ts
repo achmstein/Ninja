@@ -40,12 +40,12 @@ const createQueryKey = <TOptions extends Options>(id: string, options?: TOptions
     return [params];
 };
 
-export const getOpenTicketsQueryKey = (options: Options<GetOpenTicketsData>) => createQueryKey('getOpenTickets', options);
+export const getOpenTicketsQueryKey = (options?: Options<GetOpenTicketsData>) => createQueryKey('getOpenTickets', options);
 
 /**
  * Open tickets for the branch (the POS floor)
  */
-export const getOpenTicketsOptions = (options: Options<GetOpenTicketsData>) => queryOptions<GetOpenTicketsResponse, AxiosError<DefaultError>, GetOpenTicketsResponse, ReturnType<typeof getOpenTicketsQueryKey>>({
+export const getOpenTicketsOptions = (options?: Options<GetOpenTicketsData>) => queryOptions<GetOpenTicketsResponse, AxiosError<DefaultError>, GetOpenTicketsResponse, ReturnType<typeof getOpenTicketsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getOpenTickets({
             ...options,
@@ -58,14 +58,14 @@ export const getOpenTicketsOptions = (options: Options<GetOpenTicketsData>) => q
     queryKey: getOpenTicketsQueryKey(options)
 });
 
-export const getRecentCustomersQueryKey = (options: Options<GetRecentCustomersData>) => createQueryKey('getRecentCustomers', options);
+export const getRecentCustomersQueryKey = (options?: Options<GetRecentCustomersData>) => createQueryKey('getRecentCustomers', options);
 
 /**
  * The customers the branch last rang something up for, latest first
  *
  * What the till offers before a name is typed. Read from the branch's latest bills, so every till of the branch offers the same people; a voided bill counts for nobody.
  */
-export const getRecentCustomersOptions = (options: Options<GetRecentCustomersData>) => queryOptions<GetRecentCustomersResponse, AxiosError<DefaultError>, GetRecentCustomersResponse, ReturnType<typeof getRecentCustomersQueryKey>>({
+export const getRecentCustomersOptions = (options?: Options<GetRecentCustomersData>) => queryOptions<GetRecentCustomersResponse, AxiosError<DefaultError>, GetRecentCustomersResponse, ReturnType<typeof getRecentCustomersQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getRecentCustomers({
             ...options,
@@ -78,14 +78,14 @@ export const getRecentCustomersOptions = (options: Options<GetRecentCustomersDat
     queryKey: getRecentCustomersQueryKey(options)
 });
 
-export const getSettledTicketsQueryKey = (options: Options<GetSettledTicketsData>) => createQueryKey('getSettledTickets', options);
+export const getSettledTicketsQueryKey = (options?: Options<GetSettledTicketsData>) => createQueryKey('getSettledTickets', options);
 
 /**
  * Settled bills for the branch, newest receipt first
  *
  * The receipts screen: the way back to a bill after it closed, to reprint it or refund it. Pass receiptNumber to find one.
  */
-export const getSettledTicketsOptions = (options: Options<GetSettledTicketsData>) => queryOptions<GetSettledTicketsResponse, AxiosError<DefaultError>, GetSettledTicketsResponse, ReturnType<typeof getSettledTicketsQueryKey>>({
+export const getSettledTicketsOptions = (options?: Options<GetSettledTicketsData>) => queryOptions<GetSettledTicketsResponse, AxiosError<DefaultError>, GetSettledTicketsResponse, ReturnType<typeof getSettledTicketsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getSettledTickets({
             ...options,
@@ -98,14 +98,14 @@ export const getSettledTicketsOptions = (options: Options<GetSettledTicketsData>
     queryKey: getSettledTicketsQueryKey(options)
 });
 
-export const getTicketHistoryQueryKey = (options: Options<GetTicketHistoryData>) => createQueryKey('getTicketHistory', options);
+export const getTicketHistoryQueryKey = (options?: Options<GetTicketHistoryData>) => createQueryKey('getTicketHistory', options);
 
 /**
  * Closed tickets — settled or voided — newest first, with the count (the back office)
  *
  * The window is on the moment the ticket closed: settledAt for Settled, voidedAt for Voided. Pass receiptNumber to find one bill regardless of the window. Read-only; the till's own list is /settled.
  */
-export const getTicketHistoryOptions = (options: Options<GetTicketHistoryData>) => queryOptions<GetTicketHistoryResponse, AxiosError<GetTicketHistoryError>, GetTicketHistoryResponse, ReturnType<typeof getTicketHistoryQueryKey>>({
+export const getTicketHistoryOptions = (options?: Options<GetTicketHistoryData>) => queryOptions<GetTicketHistoryResponse, AxiosError<GetTicketHistoryError>, GetTicketHistoryResponse, ReturnType<typeof getTicketHistoryQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getTicketHistory({
             ...options,
@@ -632,14 +632,14 @@ export const setBranchPricingMutation = (options?: Partial<Options<SetBranchPric
     return mutationOptions;
 };
 
-export const getMyBillsQueryKey = (options: Options<GetMyBillsData>) => createQueryKey('getMyBills', options);
+export const getMyBillsQueryKey = (options?: Options<GetMyBillsData>) => createQueryKey('getMyBills', options);
 
 /**
  * The caller's bills: open ones, and those settled since a given time
  *
  * Every ticket the caller is on — sat in the room, ordered a line, or paid a share — with its lines and the till's totals. Open bills always; settled and voided ones since `since` (default: the last 24 hours). Signed in, or a guest by X-Guest-Id.
  */
-export const getMyBillsOptions = (options: Options<GetMyBillsData>) => queryOptions<GetMyBillsResponse, AxiosError<DefaultError>, GetMyBillsResponse, ReturnType<typeof getMyBillsQueryKey>>({
+export const getMyBillsOptions = (options?: Options<GetMyBillsData>) => queryOptions<GetMyBillsResponse, AxiosError<DefaultError>, GetMyBillsResponse, ReturnType<typeof getMyBillsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getMyBills({
             ...options,
@@ -689,12 +689,12 @@ export const openShiftMutation = (options?: Partial<Options<OpenShiftData>>): Us
     return mutationOptions;
 };
 
-export const getCurrentShiftQueryKey = (options: Options<GetCurrentShiftData>) => createQueryKey('getCurrentShift', options);
+export const getCurrentShiftQueryKey = (options?: Options<GetCurrentShiftData>) => createQueryKey('getCurrentShift', options);
 
 /**
  * The branch's open shift as a live X report (404 when none)
  */
-export const getCurrentShiftOptions = (options: Options<GetCurrentShiftData>) => queryOptions<GetCurrentShiftResponse, AxiosError<DefaultError>, GetCurrentShiftResponse, ReturnType<typeof getCurrentShiftQueryKey>>({
+export const getCurrentShiftOptions = (options?: Options<GetCurrentShiftData>) => queryOptions<GetCurrentShiftResponse, AxiosError<DefaultError>, GetCurrentShiftResponse, ReturnType<typeof getCurrentShiftQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getCurrentShift({
             ...options,
@@ -725,12 +725,12 @@ export const getShiftOptions = (options: Options<GetShiftData>) => queryOptions<
     queryKey: getShiftQueryKey(options)
 });
 
-export const getClosedShiftsQueryKey = (options: Options<GetClosedShiftsData>) => createQueryKey('getClosedShifts', options);
+export const getClosedShiftsQueryKey = (options?: Options<GetClosedShiftsData>) => createQueryKey('getClosedShifts', options);
 
 /**
  * Closed shifts, newest first — the Z-report history
  */
-export const getClosedShiftsOptions = (options: Options<GetClosedShiftsData>) => queryOptions<GetClosedShiftsResponse, AxiosError<DefaultError>, GetClosedShiftsResponse, ReturnType<typeof getClosedShiftsQueryKey>>({
+export const getClosedShiftsOptions = (options?: Options<GetClosedShiftsData>) => queryOptions<GetClosedShiftsResponse, AxiosError<DefaultError>, GetClosedShiftsResponse, ReturnType<typeof getClosedShiftsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getClosedShifts({
             ...options,
@@ -836,14 +836,14 @@ export const startOnlinePaymentMutation = (options?: Partial<Options<StartOnline
     return mutationOptions;
 };
 
-export const getPayAheadOptionsQueryKey = (options: Options<GetPayAheadOptionsData>) => createQueryKey('getPayAheadOptions', options);
+export const getPayAheadOptionsQueryKey = (options?: Options<GetPayAheadOptionsData>) => createQueryKey('getPayAheadOptions', options);
 
 /**
  * Whether the customer can pay ahead online here, and the fee they would carry
  *
  * For the checkout to offer "Pay online" for a delivery or an order to collect, before the order exists.
  */
-export const getPayAheadOptionsOptions = (options: Options<GetPayAheadOptionsData>) => queryOptions<GetPayAheadOptionsResponse, AxiosError<DefaultError>, GetPayAheadOptionsResponse, ReturnType<typeof getPayAheadOptionsQueryKey>>({
+export const getPayAheadOptionsOptions = (options?: Options<GetPayAheadOptionsData>) => queryOptions<GetPayAheadOptionsResponse, AxiosError<DefaultError>, GetPayAheadOptionsResponse, ReturnType<typeof getPayAheadOptionsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPayAheadOptions({
             ...options,
@@ -988,12 +988,12 @@ export const refundOnlinePaymentMutation = (options?: Partial<Options<RefundOnli
     return mutationOptions;
 };
 
-export const getPaymentSettingsQueryKey = (options: Options<GetPaymentSettingsData>) => createQueryKey('getPaymentSettings', options);
+export const getPaymentSettingsQueryKey = (options?: Options<GetPaymentSettingsData>) => createQueryKey('getPaymentSettings', options);
 
 /**
  * How the business takes payments at the table; secrets only as whether they are set
  */
-export const getPaymentSettingsOptions = (options: Options<GetPaymentSettingsData>) => queryOptions<GetPaymentSettingsResponse, AxiosError<DefaultError>, GetPaymentSettingsResponse, ReturnType<typeof getPaymentSettingsQueryKey>>({
+export const getPaymentSettingsOptions = (options?: Options<GetPaymentSettingsData>) => queryOptions<GetPaymentSettingsResponse, AxiosError<DefaultError>, GetPaymentSettingsResponse, ReturnType<typeof getPaymentSettingsQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getPaymentSettings({
             ...options,
@@ -1023,12 +1023,12 @@ export const savePaymentSettingsMutation = (options?: Partial<Options<SavePaymen
     return mutationOptions;
 };
 
-export const listPaymentsNeedingAttentionQueryKey = (options: Options<ListPaymentsNeedingAttentionData>) => createQueryKey('listPaymentsNeedingAttention', options);
+export const listPaymentsNeedingAttentionQueryKey = (options?: Options<ListPaymentsNeedingAttentionData>) => createQueryKey('listPaymentsNeedingAttention', options);
 
 /**
  * Online payments waiting on the owner: money the provider would not move, or its records disagreeing with ours
  */
-export const listPaymentsNeedingAttentionOptions = (options: Options<ListPaymentsNeedingAttentionData>) => queryOptions<ListPaymentsNeedingAttentionResponse, AxiosError<DefaultError>, ListPaymentsNeedingAttentionResponse, ReturnType<typeof listPaymentsNeedingAttentionQueryKey>>({
+export const listPaymentsNeedingAttentionOptions = (options?: Options<ListPaymentsNeedingAttentionData>) => queryOptions<ListPaymentsNeedingAttentionResponse, AxiosError<DefaultError>, ListPaymentsNeedingAttentionResponse, ReturnType<typeof listPaymentsNeedingAttentionQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await listPaymentsNeedingAttention({
             ...options,
@@ -1092,14 +1092,14 @@ export const dismissPaymentAttentionMutation = (options?: Partial<Options<Dismis
     return mutationOptions;
 };
 
-export const getCourierBalancesQueryKey = (options: Options<GetCourierBalancesData>) => createQueryKey('getCourierBalances', options);
+export const getCourierBalancesQueryKey = (options?: Options<GetCourierBalancesData>) => createQueryKey('getCourierBalances', options);
 
 /**
  * What each courier company owes the business, or is owed (admin)
  *
  * Per company: what its couriers collected, its fees, what was settled either way, and the balance (collected less fees less settled; positive, the company owes the business). With the deliveries whose bills are still open because the courier collected short.
  */
-export const getCourierBalancesOptions = (options: Options<GetCourierBalancesData>) => queryOptions<GetCourierBalancesResponse, AxiosError<DefaultError>, GetCourierBalancesResponse, ReturnType<typeof getCourierBalancesQueryKey>>({
+export const getCourierBalancesOptions = (options?: Options<GetCourierBalancesData>) => queryOptions<GetCourierBalancesResponse, AxiosError<DefaultError>, GetCourierBalancesResponse, ReturnType<typeof getCourierBalancesQueryKey>>({
     queryFn: async ({ queryKey, signal }) => {
         const { data } = await getCourierBalances({
             ...options,

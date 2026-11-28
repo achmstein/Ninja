@@ -10,7 +10,6 @@ import {
 import type { BranchResponse } from '@ninja/api/tenant'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
-import { API_VERSION } from '@/lib/api-client'
 import { useAtBranch } from '@/lib/at-branch'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { useFeatures } from '@/lib/brand'
@@ -155,7 +154,7 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
 
   const quoteQuery = useQuery({
     ...getDeliveryQuoteOptions({
-      query: { 'api-version': API_VERSION, latitude: address?.latitude ?? 0, longitude: address?.longitude ?? 0 },
+      query: { latitude: address?.latitude ?? 0, longitude: address?.longitude ?? 0 },
     }),
     enabled: active && address != null,
     staleTime: 60_000,
@@ -163,7 +162,7 @@ export function useDelivery(destination: OrderDestination, subtotal: number): De
   // Which branches reach the address, asked of no branch in particular
   const resolveQuery = useQuery({
     ...resolveDeliveryBranchOptions({
-      query: { 'api-version': API_VERSION, latitude: address?.latitude ?? 0, longitude: address?.longitude ?? 0 },
+      query: { latitude: address?.latitude ?? 0, longitude: address?.longitude ?? 0 },
     }),
     enabled: active && address != null,
     staleTime: 60_000,
@@ -223,7 +222,7 @@ export function useMyAddresses() {
   const auth = useAuth()
   const delivers = useFeatures().delivery === true
   return useQuery({
-    ...getMyAddressesOptions({ query: { 'api-version': API_VERSION } }),
+    ...getMyAddressesOptions(),
     enabled: auth.isAuthenticated && delivers,
   })
 }

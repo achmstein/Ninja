@@ -4,7 +4,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Link2Off, Loader2, MapPin } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { getLocationShareStateOptions, shareLocationMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
@@ -79,7 +78,7 @@ function ShareLocationPage() {
   const [locating, setLocating] = useState(false)
 
   const state = useQuery({
-    ...getLocationShareStateOptions({ path: { token }, query: { 'api-version': API_VERSION } }),
+    ...getLocationShareStateOptions({ path: { token } }),
     retry: false,
     staleTime: Infinity,
   })
@@ -92,7 +91,6 @@ function ShareLocationPage() {
       const fix = await locate()
       share.mutate({
         path: { token },
-        query: { 'api-version': API_VERSION },
         body: { latitude: fix.latitude, longitude: fix.longitude, accuracyMeters: Math.round(fix.accuracy) },
       })
     } catch (error) {

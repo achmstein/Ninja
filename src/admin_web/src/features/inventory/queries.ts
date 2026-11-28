@@ -1,6 +1,5 @@
 import { type StockItemView, type StockLevelView } from '@ninja/api/inventory'
 import { getStockItemsOptions, getStockLevelsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { type Translate } from '@/lib/i18n'
 import { type ComboboxOption } from '@/components/combobox'
 import { unitLabel } from './format'
@@ -9,13 +8,12 @@ import { unitLabel } from './format'
 // catalogue and the active branch's levels (which follow X-Branch-Id).
 export const stockItemsQueryOptions = (includeInactive = false) =>
   getStockItemsOptions({
-    query: { 'api-version': API_VERSION, includeInactive },
+    query: { includeInactive },
   })
 
 export const stockLevelsQueryOptions = (options?: { low?: boolean; includeRetired?: boolean }) =>
   getStockLevelsOptions({
     query: {
-      'api-version': API_VERSION,
       low: options?.low || undefined,
       includeRetired: options?.includeRetired || undefined,
     },

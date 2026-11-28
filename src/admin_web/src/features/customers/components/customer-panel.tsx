@@ -6,7 +6,6 @@ import { ArrowLeft, Ban, CircleCheck, Merge, Pencil, MessageCircle, MoreHorizont
 import { useAuth } from 'react-oidc-context'
 import { getCustomerTopItemsOptions, listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getOrdersByUserIdOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -530,10 +529,9 @@ function UsualOrder({ customerId }: { customerId: string }) {
   const top = useQuery(
     getCustomerTopItemsOptions({
       path: { userId: customerId },
-      query: { 'api-version': API_VERSION },
     })
   )
-  const catalog = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const catalog = useQuery(listItemsOptions())
   const names = useMemo(() => {
     const byId = new Map((catalog.data ?? []).map((item) => [toNumber(item.id), item]))
     return (top.data ?? []).map((id) => localized(byId.get(toNumber(id))?.name)).filter(Boolean)
@@ -555,7 +553,7 @@ function RecentOrders({ customerId }: { customerId: string }) {
   const orders = useQuery(
     getOrdersByUserIdOptions({
       path: { userId: customerId },
-      query: { 'api-version': API_VERSION, pageIndex: 0, pageSize: 5 },
+      query: { pageIndex: 0, pageSize: 5 },
     })
   )
   const rows = orders.data?.items ?? []

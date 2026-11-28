@@ -7,7 +7,6 @@ import { useAuth } from 'react-oidc-context'
 import { type PayLineView, type PayView } from '@ninja/api/sales'
 import { startOnlinePaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useGuestStore } from '@/stores/guest-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { blurSwap, springSoft } from '@/lib/motion'
 import {
@@ -190,7 +189,6 @@ function PayForm({ view, start, onRefetch }: { view: PayView; start: PayStart; o
     if (!auth.isAuthenticated) ensureGuestId()
     pay.mutate({
       path: { ticketId: Number(view.ticketId) },
-      query: { 'api-version': API_VERSION },
       body: {
         mode: SPLIT[mode],
         // A line someone took since it was ticked is not asked for

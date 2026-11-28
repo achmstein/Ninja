@@ -1,7 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { setOrderReady, setOrderStationReady } from '@ninja/api/ordering/sdk.gen'
 import type { KitchenOrder } from '@ninja/api/ordering/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { serverNow } from '@/lib/server-clock'
 import { toast } from '@/lib/toast'
@@ -31,7 +30,6 @@ export function useReady() {
       const common = {
         body: { ready },
         headers: { 'x-requestid': crypto.randomUUID() },
-        query: { 'api-version': API_VERSION },
         throwOnError: true,
       } as const
       if (stationId != null) {

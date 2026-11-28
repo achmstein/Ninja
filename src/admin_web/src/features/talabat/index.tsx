@@ -10,7 +10,6 @@ import {
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { TalabatStatusView } from '@ninja/api/catalog/types.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { formatWhen } from '@/lib/when'
@@ -27,7 +26,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 
-const talabatQuery = { query: { 'api-version': API_VERSION } }
+const talabatQuery = {}
 const logo = `${import.meta.env.BASE_URL}platforms/talabat.svg`
 
 const REFUSAL_KINDS: Record<string, TranslationKey> = {

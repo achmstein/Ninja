@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
 import { takePartPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
@@ -169,7 +168,6 @@ export function PartPaymentSheet({
             part &&
             take.mutate({
               path: { id: ticketId },
-              query: { 'api-version': API_VERSION },
               headers: { 'x-requestid': requestId },
               body: {
                 payments: [{ tender: tender.value, amount }],

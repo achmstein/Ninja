@@ -4,7 +4,6 @@ import { useNavigate, useRouterState } from '@tanstack/react-router'
 import { Bike, Check, ChefHat, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
 import { type OrderSummary } from '@ninja/api/ordering'
 import { getOrdersByUserOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { useArabicStyle, useLanguage, useLocalized, usePrice } from '@/lib/i18n'
 import { island, type IslandFace } from '@/lib/island'
@@ -92,7 +91,6 @@ export function OrderPill() {
   const ordersQuery = useQuery({
     ...getOrdersByUserOptions({
       query: {
-        'api-version': API_VERSION,
         pageIndex: 0,
         pageSize: 10,
         fromDate: new Date((placedAt ?? 0) - CLOCK_SLACK_MS).toISOString(),

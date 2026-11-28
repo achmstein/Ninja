@@ -21,7 +21,6 @@ import {
   saveSupplierMutation,
   voidExpenseMutation,
 } from '@ninja/api/finance/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { domainMessage } from '@/features/inventory/format'
@@ -41,7 +40,6 @@ export function useFinanceActions() {
     }
   }
 
-  const version = { 'api-version': API_VERSION }
   const idempotent = () => ({ headers: { 'x-requestid': uuidv4() } })
   const fail = (key: Parameters<typeof t>[0]) => (error: unknown) => toast.error(domainMessage(error, t(key)))
 
@@ -136,37 +134,33 @@ export function useFinanceActions() {
   })
 
   return {
-    saveCategory: (body: CategoryRequest) => saveCategory.mutateAsync({ body, query: version }),
-    recordExpense: (body: ExpenseRequest) => recordExpense.mutateAsync({ body, ...idempotent(), query: version }),
+    saveCategory: (body: CategoryRequest) => saveCategory.mutateAsync({ body }),
+    recordExpense: (body: ExpenseRequest) => recordExpense.mutateAsync({ body, ...idempotent() }),
     voidExpense: (id: number, reason: string) =>
       voidExpense.mutateAsync({
         path: { id },
         body: { reason },
-        query: version,
       }),
     attachReceipt: (id: number, file: File) =>
       attachReceipt.mutateAsync({
         path: { id },
         body: { file },
-        query: version,
       }),
-    removeReceipt: (id: number) => removeReceipt.mutateAsync({ path: { id }, query: version }),
-    saveRecurring: (body: RecurringExpenseRequest) => saveRecurring.mutateAsync({ body, query: version }),
-    saveSupplier: (body: SupplierRequest) => saveSupplier.mutateAsync({ body, query: version }),
+    removeReceipt: (id: number) => removeReceipt.mutateAsync({ path: { id } }),
+    saveRecurring: (body: RecurringExpenseRequest) => saveRecurring.mutateAsync({ body }),
+    saveSupplier: (body: SupplierRequest) => saveSupplier.mutateAsync({ body }),
     postSupplierEntry: (id: number, body: SupplierEntryRequest) =>
       postSupplierEntry.mutateAsync({
         path: { id },
         body,
         ...idempotent(),
-        query: version,
       }),
-    savePartner: (body: PartnerRequest) => savePartner.mutateAsync({ body, query: version }),
+    savePartner: (body: PartnerRequest) => savePartner.mutateAsync({ body }),
     postPartnerEntry: (id: number, body: PartnerEntryRequest) =>
       postPartnerEntry.mutateAsync({
         path: { id },
         body,
         ...idempotent(),
-        query: version,
       }),
     isPending:
       saveCategory.isPending ||

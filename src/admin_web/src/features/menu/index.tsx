@@ -37,7 +37,6 @@ import {
   reorderItemsMutation,
   toggleItemAvailabilityMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { MENU_SCAN_ACCEPT } from '@/lib/image'
@@ -76,10 +75,8 @@ import { useMenuScan } from './use-menu-scan'
 
 const route = getRouteApi('/_authenticated/menu/')
 
-const ITEMS_KEY = listItemsQueryKey({ query: { 'api-version': API_VERSION } })
-const CATEGORIES_KEY = listCategoriesQueryKey({
-  query: { 'api-version': API_VERSION },
-})
+const ITEMS_KEY = listItemsQueryKey()
+const CATEGORIES_KEY = listCategoriesQueryKey()
 
 const NO_ITEMS: CatalogItemDto[] = []
 const NO_CATEGORIES: CatalogTypeDto[] = []
@@ -116,14 +113,14 @@ export function MenuManagement() {
   const scan = useMenuScan()
   const scanInputRef = useRef<HTMLInputElement>(null)
 
-  const itemsQuery = useQuery(listItemsOptions({ query: { 'api-version': API_VERSION } }))
+  const itemsQuery = useQuery(listItemsOptions())
   const items = itemsQuery.data ?? NO_ITEMS
   const features = useFeatures()
   // Which items the storeroom tracks, and what a sale of each costs here
   const stockRules = useStockRuleBadges(items)
   const [trackOpen, setTrackOpen] = useState(false)
   const untracked = useMemo(() => items.filter((item) => !stockRules.has(toNumber(item.id))), [items, stockRules])
-  const categoriesQuery = useQuery(listCategoriesOptions({ query: { 'api-version': API_VERSION } }))
+  const categoriesQuery = useQuery(listCategoriesOptions())
   const categories = categoriesQuery.data ?? NO_CATEGORIES
   const orderedCategories = useMemo(
     () => [...categories].sort((a, b) => toNumber(a.displayOrder) - toNumber(b.displayOrder)),
@@ -238,7 +235,6 @@ export function MenuManagement() {
       body: {
         items: next.map((c) => ({ id: c.id, displayOrder: c.displayOrder })),
       },
-      query: { 'api-version': API_VERSION },
     })
   }
 
@@ -259,7 +255,6 @@ export function MenuManagement() {
       body: {
         items: next.map((i) => ({ id: i.id, displayOrder: i.displayOrder })),
       },
-      query: { 'api-version': API_VERSION },
     })
   }
 
@@ -267,7 +262,6 @@ export function MenuManagement() {
     toggleAvailability.mutate({
       path: { id: Number(item.id) },
       body: { isAvailable },
-      query: { 'api-version': API_VERSION },
     })
 
   const openItem = (item: CatalogItemDto) => setSheet({ mode: 'edit', itemId: toNumber(item.id) })
@@ -589,7 +583,6 @@ export function MenuManagement() {
           deleteItem &&
           deleteItemMut.mutate({
             path: { id: Number(deleteItem.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
         isLoading={deleteItemMut.isPending}
@@ -617,7 +610,6 @@ export function MenuManagement() {
           deleteCategory &&
           deleteCategoryMut.mutate({
             path: { id: Number(deleteCategory.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
       />

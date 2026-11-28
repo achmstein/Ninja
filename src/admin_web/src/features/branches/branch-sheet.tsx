@@ -21,7 +21,6 @@ import { getKitchenStationsOptions } from '@ninja/api/ordering/@tanstack/react-q
 import { getBranchPricingOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
 import { getDeliveryZonesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
@@ -86,14 +85,12 @@ export function BranchSheet({
   const stationsQuery = useQuery({
     ...getKitchenStationsOptions({
       headers: { 'X-Branch-Id': String(branchId) },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: open && branch != null && features.kds,
   })
   const pricingQuery = useQuery({
     ...getBranchPricingOptions({
       path: { branchId },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: open && branch != null,
   })

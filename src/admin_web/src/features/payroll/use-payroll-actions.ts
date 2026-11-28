@@ -22,7 +22,6 @@ import {
   setPayTermsMutation,
   updateEmployeeMutation,
 } from '@ninja/api/payroll/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { domainMessage } from '@/features/inventory/format'
@@ -47,7 +46,6 @@ export function usePayrollActions() {
   const invalidateEmployees = () => refresh('getEmployees', 'getEmployee', 'getEmployeeLedger', 'getPayslips')
   const invalidatePayslips = () => refresh('getPayslips', 'getPayslip', 'getEmployeeLedger', 'getEmployees')
 
-  const version = { 'api-version': API_VERSION }
   const idempotent = () => ({ headers: { 'x-requestid': uuidv4() } })
   const fail = (key: Parameters<typeof t>[0]) => (error: unknown) => toast.error(domainMessage(error, t(key)))
 
@@ -153,27 +151,22 @@ export function usePayrollActions() {
   })
 
   return {
-    hire: (body: HireEmployeeRequest) => hire.mutateAsync({ body, ...idempotent(), query: version }),
-    update: (id: number, body: UpdateEmployeeRequest) => update.mutateAsync({ path: { id }, body, query: version }),
-    setPayTerms: (id: number, body: PayTermsRequest) => setTerms.mutateAsync({ path: { id }, body, query: version }),
-    leave: (id: number, endedOn: string) => leave.mutateAsync({ path: { id }, body: { endedOn }, query: version }),
-    deleteEmployee: (id: number) => removeEmployee.mutateAsync({ path: { id }, query: version }),
-    rehire: (id: number, startedOn: string) =>
-      rehire.mutateAsync({ path: { id }, body: { startedOn }, query: version }),
-    markAttendance: (date: string, body: MarkAttendanceRequest) =>
-      mark.mutateAsync({ path: { date }, body, query: version }),
+    hire: (body: HireEmployeeRequest) => hire.mutateAsync({ body, ...idempotent() }),
+    update: (id: number, body: UpdateEmployeeRequest) => update.mutateAsync({ path: { id }, body }),
+    setPayTerms: (id: number, body: PayTermsRequest) => setTerms.mutateAsync({ path: { id }, body }),
+    leave: (id: number, endedOn: string) => leave.mutateAsync({ path: { id }, body: { endedOn } }),
+    deleteEmployee: (id: number) => removeEmployee.mutateAsync({ path: { id } }),
+    rehire: (id: number, startedOn: string) => rehire.mutateAsync({ path: { id }, body: { startedOn } }),
+    markAttendance: (date: string, body: MarkAttendanceRequest) => mark.mutateAsync({ path: { date }, body }),
     postLedgerEntry: (id: number, body: LedgerEntryRequest) =>
       postEntry.mutateAsync({
         path: { id },
         body,
         ...idempotent(),
-        query: version,
       }),
-    generatePayslips: (body: GeneratePayslipsRequest) =>
-      generate.mutateAsync({ body, ...idempotent(), query: version }),
-    payPayslip: (id: number, body: PayPayslipRequest) =>
-      pay.mutateAsync({ path: { id }, body, ...idempotent(), query: version }),
-    deletePayslip: (id: number) => remove.mutateAsync({ path: { id }, query: version }),
+    generatePayslips: (body: GeneratePayslipsRequest) => generate.mutateAsync({ body, ...idempotent() }),
+    payPayslip: (id: number, body: PayPayslipRequest) => pay.mutateAsync({ path: { id }, body, ...idempotent() }),
+    deletePayslip: (id: number) => remove.mutateAsync({ path: { id } }),
     isPending:
       hire.isPending ||
       update.isPending ||

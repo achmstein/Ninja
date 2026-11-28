@@ -4,7 +4,6 @@ import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, User } from 'lucide-react'
 import { getClosedShiftsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
@@ -69,7 +68,7 @@ export function ShiftHistory() {
 
   const { data: shifts, isLoading } = useQuery({
     ...getClosedShiftsOptions({
-      query: { pageIndex, pageSize: PAGE_SIZE, 'api-version': API_VERSION },
+      query: { pageIndex, pageSize: PAGE_SIZE },
     }),
     placeholderData: keepPreviousData,
   })

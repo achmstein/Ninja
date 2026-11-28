@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { type CatalogTypeDto } from '@ninja/api/catalog'
 import { createCategoryMutation, updateCategoryMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -125,12 +124,10 @@ function CategoryForm({
       updateMutation.mutate({
         path: { id: Number(category.id) },
         body,
-        query: { 'api-version': API_VERSION },
       })
     } else {
       createMutation.mutate({
         body,
-        query: { 'api-version': API_VERSION },
       })
     }
   }

@@ -20,7 +20,6 @@ import { useAuth } from 'react-oidc-context'
 import { getMyAccountOptions } from '@ninja/api/accounts/@tanstack/react-query.gen'
 import { getAccountOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import { useGuestStore } from '@/stores/guest-store'
-import { API_VERSION } from '@/lib/api-client'
 import { closedAt, useMyBills } from '@/lib/bills'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
 import { callHref, showPhone, useBrandName, useBrandWordmark, useFeatures } from '@/lib/brand'
@@ -97,7 +96,6 @@ function ProfilePage() {
   const loyaltyQuery = useQuery({
     ...getAccountOptions({
       path: { userId },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: features.loyalty && auth.isAuthenticated && !!userId,
     retry: false,

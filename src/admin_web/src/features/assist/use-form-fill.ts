@@ -1,7 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
 import { type FormField } from '@ninja/api/catalog'
 import { fillFormMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { type LocalizedValue } from '@/lib/localized-value'
 import { toast } from '@/lib/toast'
@@ -89,7 +88,6 @@ export function useFormFill() {
     }))
     const response = await mutation.mutateAsync({
       body: { form, fields: body, languages },
-      query: { 'api-version': API_VERSION },
     })
     return Object.fromEntries(response.values.map((v) => [v.key, v.value]))
   }

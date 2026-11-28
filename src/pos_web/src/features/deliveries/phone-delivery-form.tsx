@@ -19,7 +19,7 @@ import {
 } from 'lucide-react'
 import { getKnownDeliveryAddressesOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { DeliveryAlternative, KnownAddressView } from '@ninja/api/ordering/types.gen'
-import { apiClient, API_VERSION } from '@/lib/api-client'
+import { apiClient } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -658,7 +658,7 @@ function useKnownAddresses(customerId: string | null, phone: string, country: st
   const lookupPhone = useDebounced(digitCount(phone) >= MIN_PHONE_DIGITS ? normalizePhone(phone, country) : '', 400)
   const known = useQuery({
     ...getKnownDeliveryAddressesOptions({
-      query: { 'api-version': API_VERSION, customerUserId: customerId ?? undefined, phone: lookupPhone || undefined },
+      query: { customerUserId: customerId ?? undefined, phone: lookupPhone || undefined },
     }),
     enabled: !!customerId || lookupPhone !== '',
   })

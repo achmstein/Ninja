@@ -4,7 +4,6 @@ import { useAuth } from 'react-oidc-context'
 import { getTalabatOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getCourierProvidersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { type TenantFeatures } from '@ninja/api/tenant/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 
 /**
@@ -30,7 +29,7 @@ export type Modules = TenantFeatures & {
   couriers: boolean
 }
 
-const q = { query: { 'api-version': API_VERSION } }
+const q = {}
 
 export function useModules(): Modules {
   const features = useFeatures()

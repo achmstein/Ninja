@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { assignOrderCustomerMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { assignTicketLinesCustomerMutation, moveTicketLinesMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
@@ -43,7 +42,6 @@ export function useBillLines(ticket: TicketDetail | undefined) {
         // A retry on business Wi-Fi must not become a second command
         headers: { 'x-requestid': crypto.randomUUID() },
         path: { id: ticketId },
-        query: { 'api-version': API_VERSION },
         body: {
           lineIds,
           targetTicketId: target.kind === 'ticket' ? target.ticketId : null,
@@ -85,7 +83,6 @@ export function useBillLines(ticket: TicketDetail | undefined) {
           wholeOrders.map((orderId) =>
             assignOrder.mutateAsync({
               path: { orderId },
-              query: { 'api-version': API_VERSION },
               // A fresh id per call: the server deduplicates a retried request, and a later naming is a new one
               headers: { 'x-requestid': crypto.randomUUID() },
               body: { customerUserId: customer.id, customerName: customer.name },
@@ -96,7 +93,6 @@ export function useBillLines(ticket: TicketDetail | undefined) {
           await assignLines.mutateAsync({
             headers: { 'x-requestid': crypto.randomUUID() },
             path: { id: ticketId },
-            query: { 'api-version': API_VERSION },
             body: { lineIds: loose, customerId: customer.id ?? null, customerName: customer.name },
           })
         }

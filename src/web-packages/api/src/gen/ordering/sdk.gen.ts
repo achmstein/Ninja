@@ -23,7 +23,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
  *
  * Returns the signed-in customer's orders, or — for an anonymous caller — the orders placed with the X-Guest-Id they send.
  */
-export const getOrdersByUser = <ThrowOnError extends boolean = false>(options: Options<GetOrdersByUserData, ThrowOnError>): RequestResult<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError> => (options.client ?? client).get<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError>({
+export const getOrdersByUser = <ThrowOnError extends boolean = false>(options?: Options<GetOrdersByUserData, ThrowOnError>): RequestResult<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError> => (options?.client ?? client).get<GetOrdersByUserResponses, GetOrdersByUserErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders',
     ...options
@@ -170,7 +170,7 @@ export const getOpenOrdersAtPlace = <ThrowOnError extends boolean = false>(optio
 /**
  * Pending orders for the branch (staff)
  */
-export const getPendingOrders = <ThrowOnError extends boolean = false>(options: Options<GetPendingOrdersData, ThrowOnError>): RequestResult<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError>({
+export const getPendingOrders = <ThrowOnError extends boolean = false>(options?: Options<GetPendingOrdersData, ThrowOnError>): RequestResult<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError> => (options?.client ?? client).get<GetPendingOrdersResponses, GetPendingOrdersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/pending',
     ...options
@@ -181,7 +181,7 @@ export const getPendingOrders = <ThrowOnError extends boolean = false>(options: 
  *
  * Orders confirmed in the last day, ready or not; the screen shows the open ones on the board and the ready ones in its history. With stationId, one station's screen: only orders with a part there, only its lines, and its part's ready time. Without, the pass: whole orders with their parts. Orders made only at printers show on no screen.
  */
-export const getKitchenOrders = <ThrowOnError extends boolean = false>(options: Options<GetKitchenOrdersData, ThrowOnError>): RequestResult<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError>({
+export const getKitchenOrders = <ThrowOnError extends boolean = false>(options?: Options<GetKitchenOrdersData, ThrowOnError>): RequestResult<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError> => (options?.client ?? client).get<GetKitchenOrdersResponses, GetKitchenOrdersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/kitchen',
     ...options
@@ -204,7 +204,7 @@ export const setOrderReady = <ThrowOnError extends boolean = false>(options: Opt
 /**
  * Get all orders paginated (admin)
  */
-export const getAllOrders = <ThrowOnError extends boolean = false>(options: Options<GetAllOrdersData, ThrowOnError>): RequestResult<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError> => (options.client ?? client).get<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError>({
+export const getAllOrders = <ThrowOnError extends boolean = false>(options?: Options<GetAllOrdersData, ThrowOnError>): RequestResult<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError> => (options?.client ?? client).get<GetAllOrdersResponses, GetAllOrdersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/all',
     ...options
@@ -215,7 +215,7 @@ export const getAllOrders = <ThrowOnError extends boolean = false>(options: Opti
  *
  * One row per phone number left at guest checkout at the branch, from orders no account has claimed: the latest name and phone, how many orders went ahead and what they came to (cancelled orders left out), and the first and last order time. Most recent first. Search matches a name or the phone. A row's key filters GetAllOrders to that guest's orders.
  */
-export const getGuests = <ThrowOnError extends boolean = false>(options: Options<GetGuestsData, ThrowOnError>): RequestResult<GetGuestsResponses, GetGuestsErrors, ThrowOnError> => (options.client ?? client).get<GetGuestsResponses, GetGuestsErrors, ThrowOnError>({
+export const getGuests = <ThrowOnError extends boolean = false>(options?: Options<GetGuestsData, ThrowOnError>): RequestResult<GetGuestsResponses, GetGuestsErrors, ThrowOnError> => (options?.client ?? client).get<GetGuestsResponses, GetGuestsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/guests',
     ...options
@@ -226,7 +226,7 @@ export const getGuests = <ThrowOnError extends boolean = false>(options: Options
  *
  * One row per customer account that has ordered, across every branch: how many orders went ahead (confirmed, not voided), what they came to, and the first and last order time. The customer list sorts and labels its rows by it.
  */
-export const getCustomerOrderSummaries = <ThrowOnError extends boolean = false>(options: Options<GetCustomerOrderSummariesData, ThrowOnError>): RequestResult<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError> => (options.client ?? client).get<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError>({
+export const getCustomerOrderSummaries = <ThrowOnError extends boolean = false>(options?: Options<GetCustomerOrderSummariesData, ThrowOnError>): RequestResult<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError> => (options?.client ?? client).get<GetCustomerOrderSummariesResponses, GetCustomerOrderSummariesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/customers/summary',
     ...options
@@ -318,7 +318,7 @@ export const resolveDeliveryBranch = <ThrowOnError extends boolean = false>(opti
  *
  * Confirmed, not voided delivery orders from the last two days: those still open (cash not in, bill not settled), and those finished in the last day. At most a page's worth.
  */
-export const getDeliveries = <ThrowOnError extends boolean = false>(options: Options<GetDeliveriesData, ThrowOnError>): RequestResult<GetDeliveriesResponses, GetDeliveriesErrors, ThrowOnError> => (options.client ?? client).get<GetDeliveriesResponses, GetDeliveriesErrors, ThrowOnError>({
+export const getDeliveries = <ThrowOnError extends boolean = false>(options?: Options<GetDeliveriesData, ThrowOnError>): RequestResult<GetDeliveriesResponses, GetDeliveriesErrors, ThrowOnError> => (options?.client ?? client).get<GetDeliveriesResponses, GetDeliveriesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/deliveries',
     ...options
@@ -329,7 +329,7 @@ export const getDeliveries = <ThrowOnError extends boolean = false>(options: Opt
  *
  * Every enabled rider account given the branch, as Identity announced them, with whether their app has ever checked in (signedIn), whether they are on duty here, when the app was last heard from, and how many deliveries they have out.
  */
-export const getRiders = <ThrowOnError extends boolean = false>(options: Options<GetRidersData, ThrowOnError>): RequestResult<GetRidersResponses, GetRidersErrors, ThrowOnError> => (options.client ?? client).get<GetRidersResponses, GetRidersErrors, ThrowOnError>({
+export const getRiders = <ThrowOnError extends boolean = false>(options?: Options<GetRidersData, ThrowOnError>): RequestResult<GetRidersResponses, GetRidersErrors, ThrowOnError> => (options?.client ?? client).get<GetRidersResponses, GetRidersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/riders',
     ...options
@@ -340,7 +340,7 @@ export const getRiders = <ThrowOnError extends boolean = false>(options: Options
  *
  * Every rider account given the branch (disabled ones said so): Online (on duty here and heard from lately), Quiet (on duty here, not heard from lately) or Off; when last heard from; what they have out; what they delivered, failed and handed in since the start of the caller's day (tzOffsetMinutes as JavaScript's getTimezoneOffset). Online first.
  */
-export const getRidersOverview = <ThrowOnError extends boolean = false>(options: Options<GetRidersOverviewData, ThrowOnError>): RequestResult<GetRidersOverviewResponses, GetRidersOverviewErrors, ThrowOnError> => (options.client ?? client).get<GetRidersOverviewResponses, GetRidersOverviewErrors, ThrowOnError>({
+export const getRidersOverview = <ThrowOnError extends boolean = false>(options?: Options<GetRidersOverviewData, ThrowOnError>): RequestResult<GetRidersOverviewResponses, GetRidersOverviewErrors, ThrowOnError> => (options?.client ?? client).get<GetRidersOverviewResponses, GetRidersOverviewErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/riders/overview',
     ...options
@@ -427,7 +427,7 @@ export const markDeliveryReturned = <ThrowOnError extends boolean = false>(optio
  *
  * Those still to go, then those finished in the last day.
  */
-export const getMyDeliveries = <ThrowOnError extends boolean = false>(options: Options<GetMyDeliveriesData, ThrowOnError>): RequestResult<GetMyDeliveriesResponses, GetMyDeliveriesErrors, ThrowOnError> => (options.client ?? client).get<GetMyDeliveriesResponses, GetMyDeliveriesErrors, ThrowOnError>({
+export const getMyDeliveries = <ThrowOnError extends boolean = false>(options?: Options<GetMyDeliveriesData, ThrowOnError>): RequestResult<GetMyDeliveriesResponses, GetMyDeliveriesErrors, ThrowOnError> => (options?.client ?? client).get<GetMyDeliveriesResponses, GetMyDeliveriesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/deliveries/mine',
     ...options
@@ -557,7 +557,7 @@ export const getLocationShareState = <ThrowOnError extends boolean = false>(opti
  *
  * Switched-off ones too, last, for the admin to switch back on; the till offers only those switched on, after the branch's riders.
  */
-export const getCourierProviders = <ThrowOnError extends boolean = false>(options: Options<GetCourierProvidersData, ThrowOnError>): RequestResult<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError> => (options.client ?? client).get<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError>({
+export const getCourierProviders = <ThrowOnError extends boolean = false>(options?: Options<GetCourierProvidersData, ThrowOnError>): RequestResult<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError> => (options?.client ?? client).get<GetCourierProvidersResponses, GetCourierProvidersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/couriers',
     ...options
@@ -684,7 +684,7 @@ export const markCourierDelivered = <ThrowOnError extends boolean = false>(optio
 /**
  * The signed-in customer's saved delivery addresses, latest first
  */
-export const getMyAddresses = <ThrowOnError extends boolean = false>(options: Options<GetMyAddressesData, ThrowOnError>): RequestResult<GetMyAddressesResponses, GetMyAddressesErrors, ThrowOnError> => (options.client ?? client).get<GetMyAddressesResponses, GetMyAddressesErrors, ThrowOnError>({
+export const getMyAddresses = <ThrowOnError extends boolean = false>(options?: Options<GetMyAddressesData, ThrowOnError>): RequestResult<GetMyAddressesResponses, GetMyAddressesErrors, ThrowOnError> => (options?.client ?? client).get<GetMyAddressesResponses, GetMyAddressesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/addresses',
     ...options
@@ -726,7 +726,7 @@ export const updateMyAddress = <ThrowOnError extends boolean = false>(options: O
  *
  * The branch's fee, minimum and radius even while customers' orders are paused. With a location the caller shared (a Google Maps link, short or long, or coordinates), the pin read from it, how far it is and whether it is within the radius. Without one, InRange is true: the cashier knows the streets.
  */
-export const getTillDeliveryQuote = <ThrowOnError extends boolean = false>(options: Options<GetTillDeliveryQuoteData, ThrowOnError>): RequestResult<GetTillDeliveryQuoteResponses, GetTillDeliveryQuoteErrors, ThrowOnError> => (options.client ?? client).get<GetTillDeliveryQuoteResponses, GetTillDeliveryQuoteErrors, ThrowOnError>({
+export const getTillDeliveryQuote = <ThrowOnError extends boolean = false>(options?: Options<GetTillDeliveryQuoteData, ThrowOnError>): RequestResult<GetTillDeliveryQuoteResponses, GetTillDeliveryQuoteErrors, ThrowOnError> => (options?.client ?? client).get<GetTillDeliveryQuoteResponses, GetTillDeliveryQuoteErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/delivery/till-quote',
     ...options
@@ -737,7 +737,7 @@ export const getTillDeliveryQuote = <ThrowOnError extends boolean = false>(optio
  *
  * For the call centre, which answers for no branch: from a location the caller shared (a Google Maps link, short or long, or coordinates) or a latitude and longitude, every branch whose area takes the pin in, nearest first, with how far it is, the fee, the minimum and whether it paused its customers' orders (a phone order may still go there). LocationRead is false when a location was given and no point could be read from it.
  */
-export const resolveDeliveryBranchForStaff = <ThrowOnError extends boolean = false>(options: Options<ResolveDeliveryBranchForStaffData, ThrowOnError>): RequestResult<ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchForStaffErrors, ThrowOnError> => (options.client ?? client).get<ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchForStaffErrors, ThrowOnError>({
+export const resolveDeliveryBranchForStaff = <ThrowOnError extends boolean = false>(options?: Options<ResolveDeliveryBranchForStaffData, ThrowOnError>): RequestResult<ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchForStaffErrors, ThrowOnError> => (options?.client ?? client).get<ResolveDeliveryBranchForStaffResponses, ResolveDeliveryBranchForStaffErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/delivery/resolve-staff',
     ...options
@@ -748,7 +748,7 @@ export const resolveDeliveryBranchForStaff = <ThrowOnError extends boolean = fal
  *
  * A customer account's saved addresses, then the addresses this branch's earlier deliveries went to, for that account or that phone number; latest first, each address once. Every read is logged by who asked; rate limited.
  */
-export const getKnownDeliveryAddresses = <ThrowOnError extends boolean = false>(options: Options<GetKnownDeliveryAddressesData, ThrowOnError>): RequestResult<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError> => (options.client ?? client).get<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError>({
+export const getKnownDeliveryAddresses = <ThrowOnError extends boolean = false>(options?: Options<GetKnownDeliveryAddressesData, ThrowOnError>): RequestResult<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError> => (options?.client ?? client).get<GetKnownDeliveryAddressesResponses, GetKnownDeliveryAddressesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/delivery/known-addresses',
     ...options
@@ -759,7 +759,7 @@ export const getKnownDeliveryAddresses = <ThrowOnError extends boolean = false>(
  *
  * For the branch in X-Branch-Id; it takes a location for a day. The till puts the token in the link it sends, and in the order it places.
  */
-export const createLocationShare = <ThrowOnError extends boolean = false>(options: Options<CreateLocationShareData, ThrowOnError>): RequestResult<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError> => (options.client ?? client).post<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError>({
+export const createLocationShare = <ThrowOnError extends boolean = false>(options?: Options<CreateLocationShareData, ThrowOnError>): RequestResult<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError> => (options?.client ?? client).post<CreateLocationShareResponses, CreateLocationShareErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/orders/delivery/location-shares',
     ...options
@@ -770,7 +770,7 @@ export const createLocationShare = <ThrowOnError extends boolean = false>(option
  *
  * In display order. A branch that has none gets its default station, which makes everything on one screen.
  */
-export const getKitchenStations = <ThrowOnError extends boolean = false>(options: Options<GetKitchenStationsData, ThrowOnError>): RequestResult<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError>({
+export const getKitchenStations = <ThrowOnError extends boolean = false>(options?: Options<GetKitchenStationsData, ThrowOnError>): RequestResult<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError> => (options?.client ?? client).get<GetKitchenStationsResponses, GetKitchenStationsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/kitchen/stations',
     ...options
@@ -823,7 +823,7 @@ export const testPrintKitchenStation = <ThrowOnError extends boolean = false>(op
  *
  * The branch's unprinted tickets from the last day, oldest first, each with its printer's address and the lines to print. A ticket with a live claim is being printed by another device.
  */
-export const getKitchenPrintJobs = <ThrowOnError extends boolean = false>(options: Options<GetKitchenPrintJobsData, ThrowOnError>): RequestResult<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError> => (options.client ?? client).get<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError>({
+export const getKitchenPrintJobs = <ThrowOnError extends boolean = false>(options?: Options<GetKitchenPrintJobsData, ThrowOnError>): RequestResult<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError> => (options?.client ?? client).get<GetKitchenPrintJobsResponses, GetKitchenPrintJobsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/kitchen/print-jobs',
     ...options
@@ -882,7 +882,7 @@ export const createConnectorPairing = <ThrowOnError extends boolean = false>(opt
  *
  * Each with the printers Windows has on its PC and when it last checked in.
  */
-export const getPrintConnectors = <ThrowOnError extends boolean = false>(options: Options<GetPrintConnectorsData, ThrowOnError>): RequestResult<GetPrintConnectorsResponses, GetPrintConnectorsErrors, ThrowOnError> => (options.client ?? client).get<GetPrintConnectorsResponses, GetPrintConnectorsErrors, ThrowOnError>({
+export const getPrintConnectors = <ThrowOnError extends boolean = false>(options?: Options<GetPrintConnectorsData, ThrowOnError>): RequestResult<GetPrintConnectorsResponses, GetPrintConnectorsErrors, ThrowOnError> => (options?.client ?? client).get<GetPrintConnectorsResponses, GetPrintConnectorsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/kitchen/connectors',
     ...options
@@ -927,7 +927,7 @@ export const printConnectorHeartbeat = <ThrowOnError extends boolean = false>(op
  *
  * Its own stations' tickets, and those for network printers any device may print.
  */
-export const getPrintConnectorJobs = <ThrowOnError extends boolean = false>(options: Options<GetPrintConnectorJobsData, ThrowOnError>): RequestResult<GetPrintConnectorJobsResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetPrintConnectorJobsResponses, unknown, ThrowOnError>({
+export const getPrintConnectorJobs = <ThrowOnError extends boolean = false>(options?: Options<GetPrintConnectorJobsData, ThrowOnError>): RequestResult<GetPrintConnectorJobsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetPrintConnectorJobsResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/kitchen/connector/jobs',
     ...options

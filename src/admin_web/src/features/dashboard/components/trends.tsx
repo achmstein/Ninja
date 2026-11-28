@@ -3,7 +3,6 @@ import { getRouteApi } from '@tanstack/react-router'
 import { Area, AreaChart, CartesianGrid, Line, XAxis, YAxis } from 'recharts'
 import { getBreakdownReportOptions, getDailyReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { getStayStatsOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useNow } from '@/lib/business-clock'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
@@ -73,7 +72,6 @@ export function SalesChart() {
   const current = useQuery({
     ...getDailyReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: windows?.current.from.toISOString() ?? '',
         to: windows?.current.to.toISOString() ?? '',
         tz: timeZone,
@@ -86,7 +84,6 @@ export function SalesChart() {
   const previous = useQuery({
     ...getDailyReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: windows?.previous.from.toISOString() ?? '',
         to: windows?.previous.to.toISOString() ?? '',
         tz: timeZone,
@@ -282,7 +279,6 @@ export function TopLists() {
   const breakdown = useQuery({
     ...getBreakdownReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: from?.toISOString() ?? '',
         to: to?.toISOString() ?? '',
         tz: timeZone,

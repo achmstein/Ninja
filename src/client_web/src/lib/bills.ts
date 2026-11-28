@@ -5,7 +5,6 @@ import { type BillLineView, type BillView } from '@ninja/api/sales'
 import { getMyBillsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type StayViewModel } from '@ninja/api/spaces'
 import { useGuestStore } from '@/stores/guest-store'
-import { API_VERSION } from './api-client'
 import { useSelectedBranch } from './branch'
 import { businessDayStart } from './business-day'
 import { serverNow } from './clock'
@@ -40,7 +39,7 @@ export function useMyBills() {
   const since = new Date(dayStart.getTime() - HISTORY_DAYS * DAY_MS)
   const query = useQuery({
     ...getMyBillsOptions({
-      query: { 'api-version': API_VERSION, since: since.toISOString() },
+      query: { since: since.toISOString() },
     }),
     // Only someone the till could know: signed in, or a guest who has ordered (the id is
     // made at the first guest checkout). Someone only browsing has no bills, and asking

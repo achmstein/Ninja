@@ -1,6 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
 import { checkBranchPricesMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import type { SaleLine } from './cart'
 import { priceCheckLines, reviewPriceCheck, type PriceReview } from './price-check'
 
@@ -18,7 +17,6 @@ export function useBranchPriceCheck() {
     check: async (branchId: number, lines: SaleLine[]): Promise<PriceReview> => {
       const answer = await mutation.mutateAsync({
         body: { branchId, lines: priceCheckLines(lines) },
-        query: { 'api-version': API_VERSION },
       })
       return reviewPriceCheck(lines, answer.lines ?? [])
     },

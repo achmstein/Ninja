@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getTierInfoOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import type { TranslationKey } from '@/lib/i18n'
 
 export const TIER_KEYS: Record<string, TranslationKey> = {
@@ -16,7 +15,7 @@ export const TIER_KEYS: Record<string, TranslationKey> = {
  */
 export function useTierProgress(lifetime: number, enabled: boolean) {
   const { data: tiers = [] } = useQuery({
-    ...getTierInfoOptions({ query: { 'api-version': API_VERSION } }),
+    ...getTierInfoOptions(),
     enabled,
   })
   const nextTier = [...tiers]

@@ -24,7 +24,6 @@ import {
   setPlaceStatusMutation,
   startWalkInMutation,
 } from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { comparePlaces, reservationForPlace, stayForPlace } from './status'
@@ -86,7 +85,7 @@ export function orderIsAt(order: OrderSummary, place: PlaceViewModel): boolean {
  */
 export function usePendingOrders() {
   const query = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     // SignalR order events are the primary update path; this poll is a fallback
     refetchInterval: 60_000,
   })

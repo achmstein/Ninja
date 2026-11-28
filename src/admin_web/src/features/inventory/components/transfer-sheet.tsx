@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight } from 'lucide-react'
 import { getTransferOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { formatWhen } from '@/lib/when'
@@ -24,7 +23,6 @@ export function TransferSheet({ transferId, branchName, onOpenChange }: Transfer
   const { data: transfer, isLoading } = useQuery({
     ...getTransferOptions({
       path: { id: transferId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: transferId != null,
   })

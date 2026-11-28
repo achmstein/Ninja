@@ -895,15 +895,11 @@ export type TillDeliveryQuote = {
 export type GetOrdersByUserData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
         fromDate?: string;
         toDate?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders';
 };
@@ -934,12 +930,7 @@ export type CreateOrderData = {
         'x-requestid': string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders';
 };
 
@@ -969,12 +960,7 @@ export type CreatePosOrderData = {
         'x-requestid': string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/pos';
 };
 
@@ -1004,12 +990,7 @@ export type ConfirmOrderData = {
         'x-requestid': string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/confirm';
 };
 
@@ -1047,12 +1028,7 @@ export type CancelOrderData = {
         'x-requestid': string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/cancel';
 };
 
@@ -1092,12 +1068,7 @@ export type RejectGuestOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/reject-guest';
 };
 
@@ -1139,12 +1110,7 @@ export type AssignOrderCustomerData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/customer';
 };
 
@@ -1181,12 +1147,7 @@ export type AssignOrderCustomerResponse = AssignOrderCustomerResponses[keyof Ass
 export type ClaimGuestOrdersData = {
     body: ClaimGuestOrdersRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/claim-guest';
 };
 
@@ -1221,12 +1182,7 @@ export type DeleteOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}';
 };
 
@@ -1255,12 +1211,7 @@ export type GetOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}';
 };
 
@@ -1296,12 +1247,7 @@ export type RateOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/rating';
 };
 
@@ -1334,12 +1280,7 @@ export type CancelUnpaidOrderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/cancel-unpaid';
 };
 
@@ -1370,12 +1311,7 @@ export type GetOpenOrdersAtPlaceData = {
     path: {
         placeId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/place/{placeId}/open';
 };
 
@@ -1402,12 +1338,7 @@ export type GetOpenOrdersAtPlaceResponse = GetOpenOrdersAtPlaceResponses[keyof G
 export type GetPendingOrdersData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/pending';
 };
 
@@ -1434,12 +1365,8 @@ export type GetPendingOrdersResponse = GetPendingOrdersResponses[keyof GetPendin
 export type GetKitchenOrdersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         stationId?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/kitchen';
 };
@@ -1472,12 +1399,7 @@ export type SetOrderReadyData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/ready';
 };
 
@@ -1514,7 +1436,7 @@ export type SetOrderReadyResponse = SetOrderReadyResponses[keyof SetOrderReadyRe
 export type GetAllOrdersData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
         status?: string;
@@ -1525,10 +1447,6 @@ export type GetAllOrdersData = {
         search?: string;
         sort?: string;
         guest?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/all';
 };
@@ -1556,14 +1474,10 @@ export type GetAllOrdersResponse = GetAllOrdersResponses[keyof GetAllOrdersRespo
 export type GetGuestsData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
         search?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/guests';
 };
@@ -1591,12 +1505,7 @@ export type GetGuestsResponse = GetGuestsResponses[keyof GetGuestsResponses];
 export type GetCustomerOrderSummariesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/customers/summary';
 };
 
@@ -1630,10 +1539,6 @@ export type GetOrderStatsData = {
         tz?: string;
         dayStart?: string;
         top?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/stats';
 };
@@ -1663,13 +1568,9 @@ export type GetOrdersByUserIdData = {
     path: {
         userId: string;
     };
-    query: {
+    query?: {
         pageIndex?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/user/{userId}';
 };
@@ -1697,12 +1598,7 @@ export type GetOrdersByUserIdResponse = GetOrdersByUserIdResponses[keyof GetOrde
 export type CreateOrderDraftData = {
     body: CreateOrderDraftCommand;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/draft';
 };
 
@@ -1735,12 +1631,7 @@ export type SetOrderStationReadyData = {
         orderId: number;
         stationId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/stations/{stationId}/ready';
 };
 
@@ -1779,12 +1670,7 @@ export type ReprintOrderKitchenTicketsData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/reprint';
 };
 
@@ -1828,12 +1714,7 @@ export type ReprintKitchenTicketData = {
         orderId: number;
         stationId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/stations/{stationId}/reprint';
 };
 
@@ -1877,10 +1758,6 @@ export type GetDeliveryQuoteData = {
     query: {
         latitude: number | string;
         longitude: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/delivery/quote';
 };
@@ -1911,10 +1788,6 @@ export type ResolveDeliveryBranchData = {
     query: {
         latitude: number | string;
         longitude: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/delivery/resolve';
 };
@@ -1942,12 +1815,7 @@ export type ResolveDeliveryBranchResponse = ResolveDeliveryBranchResponses[keyof
 export type GetDeliveriesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/deliveries';
 };
 
@@ -1974,12 +1842,7 @@ export type GetDeliveriesResponse = GetDeliveriesResponses[keyof GetDeliveriesRe
 export type GetRidersData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/riders';
 };
 
@@ -2006,12 +1869,8 @@ export type GetRidersResponse = GetRidersResponses[keyof GetRidersResponses];
 export type GetRidersOverviewData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         tzOffsetMinutes?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/riders/overview';
 };
@@ -2041,15 +1900,11 @@ export type GetRiderDeliveriesData = {
     path: {
         userId: string;
     };
-    query: {
+    query?: {
         from?: string;
         to?: string;
         page?: number | string;
         pageSize?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/riders/{userId}/deliveries';
 };
@@ -2079,12 +1934,7 @@ export type GetDeliveryTimelineData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/timeline';
 };
 
@@ -2117,12 +1967,7 @@ export type UnassignDeliveryRiderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/rider';
 };
 
@@ -2151,12 +1996,7 @@ export type AssignDeliveryRiderData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/rider';
 };
 
@@ -2185,12 +2025,7 @@ export type HandInDeliveryCashData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/cash-in';
 };
 
@@ -2217,12 +2052,7 @@ export type HandInDeliveryCashResponse = HandInDeliveryCashResponses[keyof HandI
 export type HandInRiderCashData = {
     body: HandInRiderCashRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/deliveries/cash-in';
 };
 
@@ -2251,12 +2081,7 @@ export type MarkDeliveryReturnedData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/returned';
 };
 
@@ -2283,12 +2108,7 @@ export type MarkDeliveryReturnedResponse = MarkDeliveryReturnedResponses[keyof M
 export type GetMyDeliveriesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/deliveries/mine';
 };
 
@@ -2317,12 +2137,7 @@ export type MarkDeliveryOutData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/out';
 };
 
@@ -2351,12 +2166,7 @@ export type MarkDeliveryDeliveredData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/delivered';
 };
 
@@ -2385,12 +2195,7 @@ export type MarkDeliveryFailedData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/failed';
 };
 
@@ -2417,12 +2222,7 @@ export type MarkDeliveryFailedResponse = MarkDeliveryFailedResponses[keyof MarkD
 export type SetMyRiderStatusData = {
     body: RiderStatusRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/riders/me';
 };
 
@@ -2449,12 +2249,7 @@ export type SetMyRiderStatusResponse = SetMyRiderStatusResponses[keyof SetMyRide
 export type ReportMyRiderLocationData = {
     body: RiderLocationRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/riders/me/location';
 };
 
@@ -2483,12 +2278,7 @@ export type SayComingDownData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/coming';
 };
 
@@ -2517,12 +2307,7 @@ export type GetDeliveryLiveData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/live';
 };
 
@@ -2555,12 +2340,7 @@ export type GetLocationShareData = {
     path: {
         token: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/delivery/location-shares/{token}';
 };
 
@@ -2593,12 +2373,7 @@ export type ShareLocationData = {
     path: {
         token: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/delivery/location-shares/{token}';
 };
 
@@ -2631,12 +2406,7 @@ export type GetLocationShareStateData = {
     path: {
         token: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/delivery/location-shares/{token}/state';
 };
 
@@ -2663,12 +2433,7 @@ export type GetLocationShareStateResponse = GetLocationShareStateResponses[keyof
 export type GetCourierProvidersData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers';
 };
 
@@ -2695,12 +2460,7 @@ export type GetCourierProvidersResponse = GetCourierProvidersResponses[keyof Get
 export type AddCourierProviderData = {
     body: CourierProviderRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers';
 };
 
@@ -2729,12 +2489,7 @@ export type UpdateCourierProviderData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}';
 };
 
@@ -2763,12 +2518,7 @@ export type UnassignDeliveryCourierData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/courier';
 };
 
@@ -2797,12 +2547,7 @@ export type AssignDeliveryCourierData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/courier';
 };
 
@@ -2831,12 +2576,7 @@ export type GetCourierConnectionData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}/connection';
 };
 
@@ -2865,12 +2605,7 @@ export type SetCourierConnectionData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}/connection';
 };
 
@@ -2899,12 +2634,7 @@ export type NewCourierWebhookSecretData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}/webhook-secret';
 };
 
@@ -2933,12 +2663,7 @@ export type SendCourierTestJobData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}/test-job';
 };
 
@@ -2967,12 +2692,7 @@ export type GetCourierCallsData = {
     path: {
         providerId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/couriers/{providerId}/calls';
 };
 
@@ -3001,12 +2721,7 @@ export type MarkCourierDeliveredData = {
     path: {
         orderId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/{orderId}/delivery/courier-delivered';
 };
 
@@ -3033,12 +2748,7 @@ export type MarkCourierDeliveredResponse = MarkCourierDeliveredResponses[keyof M
 export type GetMyAddressesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/addresses';
 };
 
@@ -3065,12 +2775,7 @@ export type GetMyAddressesResponse = GetMyAddressesResponses[keyof GetMyAddresse
 export type AddMyAddressData = {
     body: CustomerAddressRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/addresses';
 };
 
@@ -3099,12 +2804,7 @@ export type DeleteMyAddressData = {
     path: {
         addressId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/addresses/{addressId}';
 };
 
@@ -3133,12 +2833,7 @@ export type UpdateMyAddressData = {
     path: {
         addressId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/addresses/{addressId}';
 };
 
@@ -3165,13 +2860,9 @@ export type UpdateMyAddressResponse = UpdateMyAddressResponses[keyof UpdateMyAdd
 export type GetTillDeliveryQuoteData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         location?: string;
         zoneId?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/delivery/till-quote';
 };
@@ -3199,14 +2890,10 @@ export type GetTillDeliveryQuoteResponse = GetTillDeliveryQuoteResponses[keyof G
 export type ResolveDeliveryBranchForStaffData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         location?: string;
         latitude?: number | string;
         longitude?: number | string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/delivery/resolve-staff';
 };
@@ -3234,14 +2921,10 @@ export type ResolveDeliveryBranchForStaffResponse = ResolveDeliveryBranchForStaf
 export type GetKnownDeliveryAddressesData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         customerUserId?: string;
         phone?: string;
         everyBranch?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/orders/delivery/known-addresses';
 };
@@ -3269,12 +2952,7 @@ export type GetKnownDeliveryAddressesResponse = GetKnownDeliveryAddressesRespons
 export type CreateLocationShareData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/orders/delivery/location-shares';
 };
 
@@ -3301,12 +2979,7 @@ export type CreateLocationShareResponse = CreateLocationShareResponses[keyof Cre
 export type GetKitchenStationsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/stations';
 };
 
@@ -3333,12 +3006,7 @@ export type GetKitchenStationsResponse = GetKitchenStationsResponses[keyof GetKi
 export type CreateKitchenStationData = {
     body: KitchenStationRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/stations';
 };
 
@@ -3377,12 +3045,7 @@ export type DeleteKitchenStationData = {
     path: {
         stationId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/stations/{stationId}';
 };
 
@@ -3421,12 +3084,7 @@ export type UpdateKitchenStationData = {
     path: {
         stationId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/stations/{stationId}';
 };
 
@@ -3465,12 +3123,7 @@ export type TestPrintKitchenStationData = {
     path: {
         stationId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/stations/{stationId}/test-print';
 };
 
@@ -3511,12 +3164,7 @@ export type TestPrintKitchenStationResponse = TestPrintKitchenStationResponses[k
 export type GetKitchenPrintJobsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/print-jobs';
 };
 
@@ -3545,12 +3193,7 @@ export type ClaimKitchenPrintJobData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/print-jobs/{jobId}/claim';
 };
 
@@ -3593,12 +3236,7 @@ export type MarkKitchenPrintJobPrintedData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/print-jobs/{jobId}/printed';
 };
 
@@ -3641,12 +3279,7 @@ export type MarkKitchenPrintJobFailedData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/print-jobs/{jobId}/failed';
 };
 
@@ -3687,12 +3320,7 @@ export type MarkKitchenPrintJobFailedResponse = MarkKitchenPrintJobFailedRespons
 export type CreateConnectorPairingData = {
     body: CreatePairingRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connectors/pairing';
 };
 
@@ -3719,12 +3347,7 @@ export type CreateConnectorPairingResponse = CreateConnectorPairingResponses[key
 export type GetPrintConnectorsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connectors';
 };
 
@@ -3753,12 +3376,7 @@ export type DeletePrintConnectorData = {
     path: {
         connectorId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connectors/{connectorId}';
 };
 
@@ -3795,12 +3413,7 @@ export type DeletePrintConnectorResponse = DeletePrintConnectorResponses[keyof D
 export type PairPrintConnectorData = {
     body: PairConnectorRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/pair';
 };
 
@@ -3825,12 +3438,7 @@ export type PairPrintConnectorResponse = PairPrintConnectorResponses[keyof PairP
 export type PrintConnectorHeartbeatData = {
     body: ConnectorHeartbeatRequest;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/heartbeat';
 };
 
@@ -3846,12 +3454,7 @@ export type PrintConnectorHeartbeatResponse = PrintConnectorHeartbeatResponses[k
 export type GetPrintConnectorJobsData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/jobs';
 };
 
@@ -3869,12 +3472,7 @@ export type ClaimPrintConnectorJobData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/jobs/{jobId}/claim';
 };
 
@@ -3903,12 +3501,7 @@ export type MarkPrintConnectorJobPrintedData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/jobs/{jobId}/printed';
 };
 
@@ -3937,12 +3530,7 @@ export type MarkPrintConnectorJobFailedData = {
     path: {
         jobId: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/kitchen/connector/jobs/{jobId}/failed';
 };
 

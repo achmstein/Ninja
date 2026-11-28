@@ -2,7 +2,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
 import { getProfitOptions, getProfitTrendOptions } from '@ninja/api/finance/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useBusinessTimeZone } from '@/lib/business-clock'
 import { downloadCsv } from '@/lib/csv'
@@ -56,8 +55,8 @@ export function Profit() {
   })
   const share = (value: number) => formatShare(shareOf(value, base), locale)
 
-  const profit = useQuery(getProfitOptions({ query: { 'api-version': API_VERSION, year, month } }))
-  const trend = useQuery(getProfitTrendOptions({ query: { 'api-version': API_VERSION, months: 6 } }))
+  const profit = useQuery(getProfitOptions({ query: { year, month } }))
+  const trend = useQuery(getProfitTrendOptions({ query: { months: 6 } }))
 
   const p = profit.data
   // What profit and every percentage on the page is on: net sales ex VAT

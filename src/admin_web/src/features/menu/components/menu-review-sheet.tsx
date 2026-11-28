@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, X } from 'lucide-react'
 import { type CatalogTypeDto, type MenuProposal } from '@ninja/api/catalog'
 import { importMenuMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -107,7 +106,6 @@ export function MenuReviewSheet({ proposal, categories, onOpenChange }: MenuRevi
     try {
       await importMenu.mutateAsync({
         body: toImportRequest(sections),
-        query: { 'api-version': API_VERSION },
       })
     } catch {
       toast.error(t('failedToSaveItem'))

@@ -10,7 +10,6 @@ import {
   retryPaymentMoveMutation,
 } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PaymentAttentionView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -23,7 +22,7 @@ import { Money } from '@/components/money'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 
-const listQuery = { query: { 'api-version': API_VERSION } }
+const listQuery = {}
 
 const MOVES: Record<string, TranslationKey> = {
   Capture: 'payMoveCapture',

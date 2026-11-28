@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { Search, X } from 'lucide-react'
 import { getRangeReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useNow } from '@/lib/business-clock'
 import { previousWindow } from '@/lib/business-day'
@@ -77,7 +76,7 @@ export function TillReport() {
 
   const report = useQuery({
     ...getRangeReportOptions({
-      query: { 'api-version': API_VERSION, from: fromIso, to: toIso },
+      query: { from: fromIso, to: toIso },
     }),
     enabled: dayWindow !== null,
   })
@@ -98,7 +97,6 @@ export function TillReport() {
   const previousReport = useQuery({
     ...getRangeReportOptions({
       query: {
-        'api-version': API_VERSION,
         from: previous?.from.toISOString() ?? '',
         to: previous?.to.toISOString() ?? '',
       },

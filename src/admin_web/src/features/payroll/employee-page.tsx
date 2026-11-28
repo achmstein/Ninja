@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { getEmployeeOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -33,7 +32,6 @@ export function EmployeePage({ employeeId }: { employeeId: number }) {
   const employee = useQuery(
     getEmployeeOptions({
       path: { id: employeeId },
-      query: { 'api-version': API_VERSION },
     })
   )
   const e = employee.data

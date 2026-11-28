@@ -6,7 +6,6 @@ import {
   deleteOrderMutation,
   rejectGuestOrderMutation,
 } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 
@@ -60,7 +59,6 @@ export function useOrderActions() {
     confirmOrder.mutate({
       body: { orderNumber },
       headers: { 'x-requestid': uuidv4() },
-      query: { 'api-version': API_VERSION },
     })
 
   // A delivery platform's order is turned down there too, for the reason given
@@ -68,21 +66,18 @@ export function useOrderActions() {
     cancelOrder.mutate({
       body: { orderNumber, platformReason },
       headers: { 'x-requestid': uuidv4() },
-      query: { 'api-version': API_VERSION },
     })
 
   const rejectGuest = (orderNumber: number) =>
     rejectGuestOrder.mutate({
       path: { orderId: orderNumber },
       headers: { 'x-requestid': uuidv4() },
-      query: { 'api-version': API_VERSION },
     })
 
   const remove = async (orderNumber: number) => {
     try {
       await deleteOrder.mutateAsync({
         path: { orderId: orderNumber },
-        query: { 'api-version': API_VERSION },
       })
       invalidateOrders()
       toast.success(t('orderDeleted'))
@@ -96,7 +91,6 @@ export function useOrderActions() {
       orderNumbers.map((orderNumber) =>
         deleteOrder.mutateAsync({
           path: { orderId: orderNumber },
-          query: { 'api-version': API_VERSION },
         })
       )
     )

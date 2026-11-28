@@ -8,7 +8,6 @@ import {
   getItemCustomizationsOptions,
   updateCustomizationMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -104,7 +103,6 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
   const { data: groups = [], isLoading } = useQuery({
     ...getItemCustomizationsOptions({
       path: { id: itemId },
-      query: { 'api-version': API_VERSION },
     }),
   })
 
@@ -168,7 +166,6 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
         await createGroup.mutateAsync({
           path: { id: itemId },
           body: bodyFromDraft(itemId, drafts[index], groups.length + k),
-          query: { 'api-version': API_VERSION },
         })
         added.push(index)
       }
@@ -205,7 +202,6 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
           return reorderGroup.mutateAsync({
             path: { id: itemId, customizationId: id },
             body: bodyFromDto(itemId, group, index),
-            query: { 'api-version': API_VERSION },
           })
         })
       )
@@ -485,7 +481,6 @@ export function CustomizationsSection({ item }: CustomizationsSectionProps) {
           deletingGroup &&
           deleteGroup.mutate({
             path: { id: itemId, customizationId: Number(deletingGroup.id) },
-            query: { 'api-version': API_VERSION },
           })
         }
         isLoading={deleteGroup.isPending}
@@ -624,13 +619,11 @@ function GroupEditor({
         await updateGroup.mutateAsync({
           path: { id: itemId, customizationId: Number(group.id) },
           body,
-          query: { 'api-version': API_VERSION },
         })
       } else {
         await createGroup.mutateAsync({
           path: { id: itemId },
           body,
-          query: { 'api-version': API_VERSION },
         })
       }
       onSaved()

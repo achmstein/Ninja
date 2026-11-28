@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { PageTabs } from '@/components/page-tabs'
@@ -16,7 +15,7 @@ export function LiveTabs({ value }: { value: 'orders' | 'calls' }) {
   const t = useT()
   const cloudKitchen = useIsCloudKitchen()
   const { data: pending = [] } = useQuery({
-    ...getPendingOrdersOptions({ query: { 'api-version': API_VERSION } }),
+    ...getPendingOrdersOptions(),
     refetchInterval: 60_000,
   })
   const { data: calls = [] } = useQuery({

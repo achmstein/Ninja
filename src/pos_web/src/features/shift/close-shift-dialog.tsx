@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
 import { closeShiftMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@ninja/api/sales/types.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -77,7 +76,6 @@ export function CloseShiftDialog({ shift, open, onOpenChange }: CloseShiftDialog
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
       path: { id: toNumber(shift.id) },
-      query: { 'api-version': API_VERSION },
       body: { closingCount: amount },
     })
 

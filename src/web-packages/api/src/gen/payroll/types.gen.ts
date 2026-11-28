@@ -187,12 +187,8 @@ export type UpdateEmployeeRequest = {
 export type GetEmployeesData = {
     body?: never;
     path?: never;
-    query: {
+    query?: {
         includeInactive?: boolean;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/payroll/employees';
 };
@@ -223,12 +219,7 @@ export type HireEmployeeData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees';
 };
 
@@ -263,12 +254,7 @@ export type DeleteEmployeeData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}';
 };
 
@@ -305,12 +291,7 @@ export type GetEmployeeData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}';
 };
 
@@ -343,12 +324,7 @@ export type UpdateEmployeeData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}';
 };
 
@@ -381,12 +357,7 @@ export type LeaveEmployeeData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}/leave';
 };
 
@@ -419,12 +390,7 @@ export type RehireEmployeeData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}/rehire';
 };
 
@@ -458,10 +424,6 @@ export type GetAttendanceData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/payroll/attendance';
 };
@@ -491,12 +453,7 @@ export type MarkAttendanceData = {
     path: {
         date: string;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/attendance/{date}';
 };
 
@@ -529,13 +486,9 @@ export type GetEmployeeLedgerData = {
     path: {
         id: number;
     };
-    query: {
+    query?: {
         from?: string;
         to?: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/payroll/employees/{id}/ledger';
 };
@@ -572,12 +525,7 @@ export type PostLedgerEntryData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}/ledger';
 };
 
@@ -613,10 +561,6 @@ export type GetPayslipsData = {
     query: {
         from: string;
         to: string;
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
     };
     url: '/api/payroll/payslips';
 };
@@ -647,12 +591,7 @@ export type GeneratePayslipsData = {
         'x-requestid'?: string;
     };
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/payslips';
 };
 
@@ -687,12 +626,7 @@ export type DeletePayslipData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/payslips/{id}';
 };
 
@@ -729,12 +663,7 @@ export type GetPayslipData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/payslips/{id}';
 };
 
@@ -770,12 +699,7 @@ export type PayPayslipData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/payslips/{id}/pay';
 };
 
@@ -808,12 +732,7 @@ export type SetPayTermsData = {
     path: {
         id: number;
     };
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/employees/{id}/pay-terms';
 };
 
@@ -844,12 +763,7 @@ export type SetPayTermsResponses = {
 export type GetTillEmployeesData = {
     body?: never;
     path?: never;
-    query: {
-        /**
-         * The API version, in the format 'major.minor'.
-         */
-        'api-version': string;
-    };
+    query?: never;
     url: '/api/payroll/till/employees';
 };
 

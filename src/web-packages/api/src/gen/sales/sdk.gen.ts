@@ -21,7 +21,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 /**
  * Open tickets for the branch (the POS floor)
  */
-export const getOpenTickets = <ThrowOnError extends boolean = false>(options: Options<GetOpenTicketsData, ThrowOnError>): RequestResult<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError> => (options.client ?? client).get<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError>({
+export const getOpenTickets = <ThrowOnError extends boolean = false>(options?: Options<GetOpenTicketsData, ThrowOnError>): RequestResult<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError> => (options?.client ?? client).get<GetOpenTicketsResponses, GetOpenTicketsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/open',
     ...options
@@ -32,7 +32,7 @@ export const getOpenTickets = <ThrowOnError extends boolean = false>(options: Op
  *
  * What the till offers before a name is typed. Read from the branch's latest bills, so every till of the branch offers the same people; a voided bill counts for nobody.
  */
-export const getRecentCustomers = <ThrowOnError extends boolean = false>(options: Options<GetRecentCustomersData, ThrowOnError>): RequestResult<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError> => (options.client ?? client).get<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError>({
+export const getRecentCustomers = <ThrowOnError extends boolean = false>(options?: Options<GetRecentCustomersData, ThrowOnError>): RequestResult<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError> => (options?.client ?? client).get<GetRecentCustomersResponses, GetRecentCustomersErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/recent-customers',
     ...options
@@ -43,7 +43,7 @@ export const getRecentCustomers = <ThrowOnError extends boolean = false>(options
  *
  * The receipts screen: the way back to a bill after it closed, to reprint it or refund it. Pass receiptNumber to find one.
  */
-export const getSettledTickets = <ThrowOnError extends boolean = false>(options: Options<GetSettledTicketsData, ThrowOnError>): RequestResult<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError> => (options.client ?? client).get<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError>({
+export const getSettledTickets = <ThrowOnError extends boolean = false>(options?: Options<GetSettledTicketsData, ThrowOnError>): RequestResult<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError> => (options?.client ?? client).get<GetSettledTicketsResponses, GetSettledTicketsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/settled',
     ...options
@@ -54,7 +54,7 @@ export const getSettledTickets = <ThrowOnError extends boolean = false>(options:
  *
  * The window is on the moment the ticket closed: settledAt for Settled, voidedAt for Voided. Pass receiptNumber to find one bill regardless of the window. Read-only; the till's own list is /settled.
  */
-export const getTicketHistory = <ThrowOnError extends boolean = false>(options: Options<GetTicketHistoryData, ThrowOnError>): RequestResult<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError> => (options.client ?? client).get<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError>({
+export const getTicketHistory = <ThrowOnError extends boolean = false>(options?: Options<GetTicketHistoryData, ThrowOnError>): RequestResult<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError> => (options?.client ?? client).get<GetTicketHistoryResponses, GetTicketHistoryErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/history',
     ...options
@@ -393,7 +393,7 @@ export const setBranchPricing = <ThrowOnError extends boolean = false>(options: 
  *
  * Every ticket the caller is on — sat in the room, ordered a line, or paid a share — with its lines and the till's totals. Open bills always; settled and voided ones since `since` (default: the last 24 hours). Signed in, or a guest by X-Guest-Id.
  */
-export const getMyBills = <ThrowOnError extends boolean = false>(options: Options<GetMyBillsData, ThrowOnError>): RequestResult<GetMyBillsResponses, GetMyBillsErrors, ThrowOnError> => (options.client ?? client).get<GetMyBillsResponses, GetMyBillsErrors, ThrowOnError>({
+export const getMyBills = <ThrowOnError extends boolean = false>(options?: Options<GetMyBillsData, ThrowOnError>): RequestResult<GetMyBillsResponses, GetMyBillsErrors, ThrowOnError> => (options?.client ?? client).get<GetMyBillsResponses, GetMyBillsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/tickets/mine',
     ...options
@@ -426,7 +426,7 @@ export const openShift = <ThrowOnError extends boolean = false>(options: Options
 /**
  * The branch's open shift as a live X report (404 when none)
  */
-export const getCurrentShift = <ThrowOnError extends boolean = false>(options: Options<GetCurrentShiftData, ThrowOnError>): RequestResult<GetCurrentShiftResponses, GetCurrentShiftErrors, ThrowOnError> => (options.client ?? client).get<GetCurrentShiftResponses, GetCurrentShiftErrors, ThrowOnError>({
+export const getCurrentShift = <ThrowOnError extends boolean = false>(options?: Options<GetCurrentShiftData, ThrowOnError>): RequestResult<GetCurrentShiftResponses, GetCurrentShiftErrors, ThrowOnError> => (options?.client ?? client).get<GetCurrentShiftResponses, GetCurrentShiftErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/shifts/current',
     ...options
@@ -444,7 +444,7 @@ export const getShift = <ThrowOnError extends boolean = false>(options: Options<
 /**
  * Closed shifts, newest first — the Z-report history
  */
-export const getClosedShifts = <ThrowOnError extends boolean = false>(options: Options<GetClosedShiftsData, ThrowOnError>): RequestResult<GetClosedShiftsResponses, GetClosedShiftsErrors, ThrowOnError> => (options.client ?? client).get<GetClosedShiftsResponses, GetClosedShiftsErrors, ThrowOnError>({
+export const getClosedShifts = <ThrowOnError extends boolean = false>(options?: Options<GetClosedShiftsData, ThrowOnError>): RequestResult<GetClosedShiftsResponses, GetClosedShiftsErrors, ThrowOnError> => (options?.client ?? client).get<GetClosedShiftsResponses, GetClosedShiftsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/shifts',
     ...options
@@ -517,7 +517,7 @@ export const startOnlinePayment = <ThrowOnError extends boolean = false>(options
  *
  * For the checkout to offer "Pay online" for a delivery or an order to collect, before the order exists.
  */
-export const getPayAheadOptions = <ThrowOnError extends boolean = false>(options: Options<GetPayAheadOptionsData, ThrowOnError>): RequestResult<GetPayAheadOptionsResponses, unknown, ThrowOnError> => (options.client ?? client).get<GetPayAheadOptionsResponses, unknown, ThrowOnError>({
+export const getPayAheadOptions = <ThrowOnError extends boolean = false>(options?: Options<GetPayAheadOptionsData, ThrowOnError>): RequestResult<GetPayAheadOptionsResponses, unknown, ThrowOnError> => (options?.client ?? client).get<GetPayAheadOptionsResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/sales/payments/ahead',
     ...options
@@ -603,7 +603,7 @@ export const refundOnlinePayment = <ThrowOnError extends boolean = false>(option
 /**
  * How the business takes payments at the table; secrets only as whether they are set
  */
-export const getPaymentSettings = <ThrowOnError extends boolean = false>(options: Options<GetPaymentSettingsData, ThrowOnError>): RequestResult<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError> => (options.client ?? client).get<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError>({
+export const getPaymentSettings = <ThrowOnError extends boolean = false>(options?: Options<GetPaymentSettingsData, ThrowOnError>): RequestResult<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError> => (options?.client ?? client).get<GetPaymentSettingsResponses, GetPaymentSettingsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/sales/payments/settings',
     ...options
@@ -625,7 +625,7 @@ export const savePaymentSettings = <ThrowOnError extends boolean = false>(option
 /**
  * Online payments waiting on the owner: money the provider would not move, or its records disagreeing with ours
  */
-export const listPaymentsNeedingAttention = <ThrowOnError extends boolean = false>(options: Options<ListPaymentsNeedingAttentionData, ThrowOnError>): RequestResult<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError> => (options.client ?? client).get<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError>({
+export const listPaymentsNeedingAttention = <ThrowOnError extends boolean = false>(options?: Options<ListPaymentsNeedingAttentionData, ThrowOnError>): RequestResult<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError> => (options?.client ?? client).get<ListPaymentsNeedingAttentionResponses, ListPaymentsNeedingAttentionErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/sales/payments/attention',
     ...options
@@ -655,7 +655,7 @@ export const dismissPaymentAttention = <ThrowOnError extends boolean = false>(op
  *
  * Per company: what its couriers collected, its fees, what was settled either way, and the balance (collected less fees less settled; positive, the company owes the business). With the deliveries whose bills are still open because the courier collected short.
  */
-export const getCourierBalances = <ThrowOnError extends boolean = false>(options: Options<GetCourierBalancesData, ThrowOnError>): RequestResult<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError> => (options.client ?? client).get<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError>({
+export const getCourierBalances = <ThrowOnError extends boolean = false>(options?: Options<GetCourierBalancesData, ThrowOnError>): RequestResult<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError> => (options?.client ?? client).get<GetCourierBalancesResponses, GetCourierBalancesErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/sales/couriers/balances',
     ...options

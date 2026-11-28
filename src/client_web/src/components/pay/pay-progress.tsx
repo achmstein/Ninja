@@ -4,7 +4,6 @@ import { Check, CircleAlert, Loader2 } from 'lucide-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { type PayShareView, type PayView } from '@ninja/api/sales'
 import { cancelOnlinePaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'
 import { type PayWhy as Why } from '@/lib/pay'
@@ -156,9 +155,7 @@ export function SharesList({ shares, simulated = false }: { shares: PayShareView
                     type='button'
                     className='text-destructive text-caption flex h-7 items-center rounded-full px-2.5 font-semibold disabled:opacity-50'
                     disabled={cancel.isPending}
-                    onClick={() =>
-                      cancel.mutate({ path: { key: String(share.key) }, query: { 'api-version': API_VERSION } })
-                    }
+                    onClick={() => cancel.mutate({ path: { key: String(share.key) } })}
                   >
                     {t('cancelPayment')}
                   </button>

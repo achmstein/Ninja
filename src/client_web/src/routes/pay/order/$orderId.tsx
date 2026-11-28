@@ -6,7 +6,6 @@ import { useAuth } from 'react-oidc-context'
 import { cancelUnpaidOrderMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { getOrderToPayOptions, startOrderPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useGuestStore } from '@/stores/guest-store'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { formatMoney } from '@/lib/currency'
@@ -53,7 +52,7 @@ function PayOrderPage() {
     return () => clearTimeout(timer)
   }, [])
 
-  const options = getOrderToPayOptions({ path: { orderId: id }, query: { 'api-version': API_VERSION } })
+  const options = getOrderToPayOptions({ path: { orderId: id } })
   const query = useQuery({
     ...options,
     // 404 until Sales has heard of it: asked again rather than given up on
@@ -78,7 +77,6 @@ function PayOrderPage() {
   const startPaying = () =>
     pay.mutate({
       path: { orderId: id },
-      query: { 'api-version': API_VERSION },
       // A guest's name and phone, as given at the checkout; a signed-in customer is known from the token
       body: auth.isAuthenticated ? {} : { payerName: contact?.name ?? null, payerPhone: contact?.phone ?? null },
     })
@@ -155,7 +153,7 @@ function PayOrderPage() {
       </button>
       <button
         type='button'
-        onClick={() => cancel.mutate({ path: { orderId: id }, query: { 'api-version': API_VERSION } })}
+        onClick={() => cancel.mutate({ path: { orderId: id } })}
         disabled={cancel.isPending}
         className={SECONDARY}
       >

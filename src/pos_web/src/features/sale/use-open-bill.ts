@@ -2,7 +2,6 @@ import { useEffect } from 'react'
 import { AxiosError } from 'axios'
 import { useQuery } from '@tanstack/react-query'
 import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
 import { isRunning } from '@/features/places/status'
 import { useStay } from '@/features/places/use-places'
@@ -24,7 +23,6 @@ export function useOpenBill(ticketId: number | undefined) {
   const query = useQuery({
     ...getTicketOptions({
       path: { id: ticketId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: on,
     // A discarded or deleted bill 404s: no point asking again

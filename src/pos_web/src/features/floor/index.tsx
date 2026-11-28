@@ -23,7 +23,6 @@ import { getOpenTicketsOptions, openTicketMutation } from '@ninja/api/sales/@tan
 import type { TicketSummary } from '@ninja/api/sales/types.gen'
 import type { PlaceViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useFreshBills } from '@/stores/fresh-bills'
-import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -185,7 +184,7 @@ export function Floor() {
   const [filter, setFilter] = useState<'all' | 'Room' | 'Table' | 'Counter'>('all')
 
   const { data: tickets = [], isLoading } = useQuery({
-    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getOpenTicketsOptions(),
     // Poll fallback in case the SignalR connection is silently dead; a
     // quick poll while a just-started stay's bill is on its way
     refetchInterval: startedPlaceId != null ? 600 : 20_000,
@@ -292,7 +291,6 @@ export function Floor() {
     openTable.mutate({
       // A retry on business Wi-Fi must not become a second command
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
       body: {
         // Which table, by its id: what it is called is the server's to say
         type: TICKET_TYPE_TABLE,

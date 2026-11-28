@@ -3,7 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, X } from 'lucide-react'
 import { getOpenTicketsOptions, openTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
 import { Button } from '@/components/ui/button'
@@ -74,7 +73,7 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
   // whoever is in a room right now, and whoever a tab was just opened for on
   // this till
   const { data: openTickets = [] } = useQuery({
-    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getOpenTicketsOptions(),
     enabled: open,
   })
   const { stays } = usePlaces({ enabled: open })
@@ -120,7 +119,6 @@ export function NewTicketDialog({ open, onOpenChange }: NewTicketDialogProps) {
     openingFor.current = who
     openTicket.mutate({
       headers: { 'x-requestid': crypto.randomUUID() },
-      query: { 'api-version': API_VERSION },
       body: {
         type: TICKET_TYPE_COUNTER,
         label: who?.name ?? (label.trim() || null),

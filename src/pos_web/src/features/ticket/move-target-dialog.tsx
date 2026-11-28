@@ -4,7 +4,6 @@ import { Armchair, ChevronRight, DoorOpen, Plus, ShoppingBag, Split, X, type Luc
 import { getOpenTicketsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail, TicketSummary } from '@ninja/api/sales/types.gen'
 import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -87,7 +86,7 @@ export function MoveTargetDialog({
 
   const cloudKitchen = useIsCloudKitchen()
   const { data: tickets = [] } = useQuery({
-    ...getOpenTicketsOptions({ query: { 'api-version': API_VERSION } }),
+    ...getOpenTicketsOptions(),
     enabled: open,
   })
   // Places with no clock: lines can move to a free one; a timed place's bill follows its stay.

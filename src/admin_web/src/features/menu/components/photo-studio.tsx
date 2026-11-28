@@ -3,7 +3,6 @@ import { isAxiosError } from 'axios'
 import { Camera, Check, Wand2 } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { drawItemPhoto, restageItemPhoto } from '@ninja/api/catalog'
-import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
@@ -159,7 +158,6 @@ export function PhotoStudio({
       const { data } =
         source === 'photo' && photo
           ? await restageItemPhoto({
-              query: { 'api-version': API_VERSION },
               body: {
                 photo: photo.file as unknown as never,
                 nameEn: item.nameEn || undefined,
@@ -171,7 +169,6 @@ export function PhotoStudio({
               throwOnError: true,
             })
           : await drawItemPhoto({
-              query: { 'api-version': API_VERSION },
               body: {
                 nameEn: item.nameEn || null,
                 nameAr: item.nameAr || null,

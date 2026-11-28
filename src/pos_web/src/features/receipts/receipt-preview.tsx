@@ -5,7 +5,6 @@ import { Banknote, Check, ChevronDown, Loader2, Minus, Plus, Printer, Undo2, Use
 import { useAuth } from 'react-oidc-context'
 import type { TicketDetail } from '@ninja/api/sales'
 import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { friendlyDay, friendlyTime } from '@/lib/friendly-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -47,7 +46,7 @@ export function ReceiptPreview({
   const t = useT()
 
   const query = useQuery({
-    ...getTicketOptions({ path: { id: ticketId }, query: { 'api-version': API_VERSION } }),
+    ...getTicketOptions({ path: { id: ticketId } }),
     // A closed bill changes only by what is done to it here, which refetches it
     staleTime: 60_000,
   })

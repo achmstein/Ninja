@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Bike, Check, Coffee, MessageSquare, X } from 'lucide-react'
 import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { formatAddressLine } from '@/lib/address-line'
-import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
 import { formatWhen } from '@/lib/when'
@@ -35,7 +34,6 @@ export function OrderDetailsSheet({ orderId, onOpenChange, onConfirm, onCancel, 
   const { data: order, isLoading } = useQuery({
     ...getOrderOptions({
       path: { orderId: orderId ?? 0 },
-      query: { 'api-version': API_VERSION },
     }),
     enabled: orderId != null,
   })

@@ -4,7 +4,6 @@ import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type RefundSummary } from '@ninja/api/sales'
 import { getRefundsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useT, type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { dayHeading, dayKey } from '@/lib/when'
@@ -152,7 +151,6 @@ export function RefundsList() {
   const refundsQuery = useQuery({
     ...getRefundsOptions({
       query: {
-        'api-version': API_VERSION,
         from: fromIso,
         to: toIso,
         pageIndex: pagination.pageIndex,

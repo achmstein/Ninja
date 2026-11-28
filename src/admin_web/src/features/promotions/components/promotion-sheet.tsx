@@ -12,7 +12,6 @@ import {
   uploadPromotionPictureMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
-import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { formatDay } from '@/lib/business-day'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -106,11 +105,11 @@ function PromotionForm({
   const [error, setError] = useState('')
 
   const items = useQuery({
-    ...listItemsOptions({ query: { 'api-version': API_VERSION } }),
+    ...listItemsOptions(),
     enabled: form.link === 'Item',
   })
   const categories = useQuery({
-    ...listCategoriesOptions({ query: { 'api-version': API_VERSION } }),
+    ...listCategoriesOptions(),
     enabled: form.link === 'Category',
   })
 
@@ -152,17 +151,14 @@ function PromotionForm({
         ? await update.mutateAsync({
             path: { id: Number(promotion.id) },
             body,
-            query: { 'api-version': API_VERSION },
           })
         : await create.mutateAsync({
             body,
-            query: { 'api-version': API_VERSION },
           })
       if (picture)
         await upload.mutateAsync({
           path: { id: Number(saved.id) },
           body: { file: picture.file },
-          query: { 'api-version': API_VERSION },
         })
       queryClient.invalidateQueries({ queryKey: [{ _id: 'listPromotions' }] })
       toast.success(t('promotionSaved'))
@@ -419,7 +415,6 @@ function PictureStage({
       // The real logo goes on each design as it is; without one the name is written small instead
       const logo = await logoFile(brand?.logoUrl)
       const { data } = await designPromotion({
-        query: { 'api-version': API_VERSION },
         body: {
           photo: photo.file as unknown as never,
           logo: logo as unknown as never,

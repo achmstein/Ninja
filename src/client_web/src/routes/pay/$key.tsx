@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { createFileRoute, Link } from '@tanstack/react-router'
 import { getOnlinePaymentOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
-import { API_VERSION } from '@/lib/api-client'
 import { markAfterPayment, useBackTo } from '@/lib/back-to'
 import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
@@ -46,7 +45,7 @@ function PayReturnPage() {
   }, [])
 
   const query = useQuery({
-    ...getOnlinePaymentOptions({ path: { key }, query: { 'api-version': API_VERSION } }),
+    ...getOnlinePaymentOptions({ path: { key } }),
     retry: 2,
     refetchInterval: (q) => (!gaveUp && (q.state.data == null || q.state.data.status === 'Pending') ? POLL_MS : false),
   })
