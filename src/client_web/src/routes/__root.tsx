@@ -1,3 +1,4 @@
+import { DockPreviewPanel } from '@/lib/dock-preview'
 import { DirectionProvider } from '@radix-ui/react-direction'
 import { type QueryClient } from '@tanstack/react-query'
 import { createRootRouteWithContext, Outlet } from '@tanstack/react-router'
@@ -46,6 +47,8 @@ function RootLayout() {
             <Outlet />
           </main>
           <BottomNav />
+          {/* The preview's own panel: nothing in a production build (lib/dock-preview) */}
+          <DockPreviewPanel />
           {/* The order just placed, live at the top of every page */}
           <OrderPill />
           {/* The offer to install the app, said once or twice by the island */}

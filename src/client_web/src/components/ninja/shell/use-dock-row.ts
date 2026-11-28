@@ -1,5 +1,6 @@
 import { type LiveBills } from '@/lib/live-bills'
 import { useLiveOrder } from '@/lib/live-order'
+import { useDockPreview } from '@/lib/dock-preview'
 import { useActivePlace } from '@/stores/place-store'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill } from '@/components/bills/open-bills'
@@ -9,5 +10,7 @@ export function useDockRowShown(live: LiveBills): boolean {
   const stage = useLiveOrder((s) => s.stage)
   const place = useActivePlace()
   const stay = useActiveStay()
-  return hasLiveBill(live) || stage != null || place != null || stay != null
+  // The preview's own order counts as one on its way (lib/dock-preview)
+  const previewed = useDockPreview((s) => (s.on ? (s.stage ?? (s.usual ? 'usual' : null)) : null))
+  return hasLiveBill(live) || stage != null || previewed != null || place != null || stay != null
 }

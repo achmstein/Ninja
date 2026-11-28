@@ -1,3 +1,4 @@
+import { useDockPreview } from '@/lib/dock-preview'
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
@@ -85,7 +86,8 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
       from = next.from
       if (next.tucked !== useTuck.getState().tucked) {
         quietUntil = performance.now() + SETTLE_MS
-        useTuck.setState({ tucked: next.tucked })
+        // Tried in the preview: the dock stays put while the page scrolls (lib/dock-preview)
+        useTuck.setState({ tucked: useDockPreview.getState().on ? false : next.tucked })
       }
     }
     // The menu's scroller sits over the dock and gets shorter as the tabs come back at its end; read at its

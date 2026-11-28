@@ -1,6 +1,7 @@
+import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from '@tanstack/react-router'
-import { Bike, Check, ChefHat, ChevronUp, CircleHelp, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
+import { Bike, Check, ChefHat, ChevronUp, CircleHelp, Coffee, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { payOrderLink, useLiveOrder } from '@/lib/live-order'
 import { PILL_WORDS, STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
@@ -15,6 +16,7 @@ import { TableView } from '@/components/places/table-view'
 import { RoomView } from '@/components/places/room-view'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { useDockSheet } from '@/lib/dock-sheet'
+import { PREVIEW_MINUTES, PREVIEW_USUAL, STAGE_PROGRESS, useDockPreview } from '@/lib/dock-preview'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { trayOpensAfterDrag } from '@/components/tray/tray-model'
@@ -64,7 +66,22 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const swap = blurSwap(useReducedMotion())
   const open = useDockSheet((s) => s.open)
   const setOpen = useDockSheet((s) => s.setOpen)
-  const { stage, orderNumber } = useLiveOrder()
+  const followed = useLiveOrder()
+  // The proposed row, tried in the preview with an order the panel sets (lib/dock-preview): the stage is the
+  // headline with the minutes left, a line across the top fills as it moves, a waiter asked for is said in
+  // words, and an order on its way stays in sight over an unsent one
+  const preview = useDockPreview()
+  const enhanced = preview.on
+  const stage = enhanced && preview.stage ? preview.stage : followed.stage
+  const orderNumber = enhanced && preview.stage ? 142 : followed.orderNumber
+  // A stage arrived at is said out loud for a few seconds, over the dock: the dock grows only when it has something to say
+  const [announcing, setAnnouncing] = useState(false)
+  useEffect(() => {
+    if (!enhanced || !stage) return
+    setAnnouncing(true)
+    const id = setTimeout(() => setAnnouncing(false), 4000)
+    return () => clearTimeout(id)
+  }, [enhanced, stage])
   const navigate = useNavigate()
   // Waiting for its payment ahead: the row is the way to pay it, not the bill
   const toPay = stage === 'awaitingPayment' && orderNumber != null
@@ -80,36 +97,79 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       : { placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} }
   )
   const asking =
-    (table != null || stay != null) &&
-    ASKED.some((type) => requests.stateOf(type).phase !== 'idle')
+    (enhanced && preview.waiter) ||
+    ((table != null || stay != null) && ASKED.some((type) => requests.stateOf(type).phase !== 'idle'))
   const shown = useDockRowShown(live)
   // The room's clock ticks in the row, so the tab it lived on can go back to booking
   const now = useSecondTick(stay?.startedAt != null)
   if (!shown) return null
 
   const first = live.open[0]?.bill ?? live.forming?.bill
-  const total = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
+  const billed = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
+  // The previewed order comes to something, as a real one would
+  const total = billed > 0 ? billed : enhanced && preview.stage ? 310 : 0
   const place = (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
   // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
   // With nothing on the bill yet the place is the row's one line
   const clock = stay?.startedAt ? formatClock((now - new Date(stay.startedAt).getTime()) / 1000) : null
-  const line = stage
+  const minutes = enhanced && stage ? PREVIEW_MINUTES[stage] : undefined
+  const headline = stage ? `${words(STAGE_LABEL[stage], language, standard)}${minutes ? ` · ${t('dockAboutMinutes', { n: minutes })}` : ''}` : ''
+  const progress = enhanced && stage ? STAGE_PROGRESS[stage] : undefined
+  const line = enhanced && asking && !stage
+    ? t('dockWaiterComing')
+    : stage
     ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
     : total > 0 || clock
       ? place
       : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
   const placeKind = stay ? Number(stay.placeKind) : table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
-  const label = toPay ? words(PILL_WORDS.payNow, language, standard) : t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
+  // Tried in the preview: the end button is the next thing to do. Pay, once there is something to pay and nothing
+  // still on its way (the sheet it opens has the way to pay under the bill)
+  const payNext = enhanced && !toPay && total > 0 && (stage == null || stage === 'delivered')
+  // Nothing going on at all: the row offers the customer's usual, one tap from ordering it again
+  const usual = enhanced && preview.usual && !stage && total === 0 && !table && !stay
+  const label = toPay
+    ? words(PILL_WORDS.payNow, language, standard)
+    : usual
+      ? t('dockUsualAdd')
+      : payNext
+        ? t('dockPay')
+        : t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
 
   return (
     <>
+      <AnimatePresence>
+        {enhanced && stage && (announcing || !trayEmpty) && (
+          <motion.button
+            key='said'
+            type='button'
+            onClick={() => setOpen(true)}
+            initial={{ opacity: 0, y: 12, x: '-50%' }}
+            animate={{ opacity: 1, y: 0, x: '-50%' }}
+            exit={{ opacity: 0, y: 12, x: '-50%' }}
+            className={cn(
+              'slab absolute left-1/2 z-10 flex items-center gap-2 rounded-full font-semibold whitespace-nowrap shadow-(--slab-shadow)',
+              announcing ? '-top-14 h-11 px-5 text-note' : '-top-10 h-8 px-3.5 text-caption',
+            )}
+          >
+            {StageIcon && <StageIcon className={announcing ? 'size-4' : 'size-3.5'} />}
+            {headline}
+          </motion.button>
+        )}
+      </AnimatePresence>
       <AnimatePresence initial={false}>
         {trayEmpty && (
           <motion.button
             key='bill'
             type='button'
-            onClick={() => (toPay ? void navigate(payOrderLink(orderNumber)) : setOpen(true))}
+            onClick={() =>
+              toPay
+                ? void navigate(payOrderLink(orderNumber))
+                : usual
+                  ? void navigate({ to: '/item/$itemId', params: { itemId: String(PREVIEW_USUAL.id) } })
+                  : setOpen(true)
+            }
             // Pulled up by its handle, as the tray's row is, it opens too: it had only the tap, so a pull on
             // the handle it draws did nothing while an order was waiting
             onPanEnd={(_, info) => trayOpensAfterDrag(false, info.offset.y, info.velocity.y) && setOpen(true)}
@@ -124,6 +184,16 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           >
             {/* The dock's grab handle, as on the tray's row: every row of the dock has it */}
             <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
+            {progress != null && (
+              <span aria-hidden className='bg-background/15 absolute inset-x-7 top-0 h-[3px] overflow-hidden rounded-full'>
+                <motion.span
+                  className='block h-full origin-left bg-emerald-400 rtl:origin-right'
+                  initial={false}
+                  animate={{ scaleX: progress }}
+                  transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                />
+              </span>
+            )}
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
@@ -137,9 +207,21 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                       : 'bg-background/12'
               )}
             >
+              {enhanced && stage && (
+                <motion.span
+                  key={`arrived-${stage}`}
+                  aria-hidden
+                  className='absolute inset-0 rounded-full border-2 border-emerald-300'
+                  initial={{ opacity: 0.9, scale: 1 }}
+                  animate={{ opacity: 0, scale: 2 }}
+                  transition={{ duration: 1.1, repeat: 1 }}
+                />
+              )}
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.span key={stage ?? 'place'} {...swap} className='grid place-items-center'>
-                  {StageIcon ? (
+                  {usual ? (
+                    <Coffee className='size-5' />
+                  ) : StageIcon ? (
                     <StageIcon className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')} />
                   ) : table && !confirmed ? (
                     // A table from an earlier session shows as a question until answered
@@ -165,45 +247,69 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 )
               )}
             </span>
-            <span className='flex min-w-0 flex-1 flex-col'>
-              <span className='flex min-w-0 items-center gap-1 text-caption'>
+            {usual ? (
+              <span className='flex min-w-0 flex-1 flex-col'>
+                <span className='truncate text-caption opacity-70'>{t('dockUsual')}</span>
+                <span className='truncate text-name font-bold'>{localized(PREVIEW_USUAL.name)}</span>
+              </span>
+            ) : enhanced && stage ? (
+              <span className='flex min-w-0 flex-1 flex-col'>
                 <AnimatePresence mode='popLayout' initial={false}>
-                  {line && (
-                    <motion.span key={line} {...swap} className='truncate opacity-70'>
-                      {line}
-                    </motion.span>
-                  )}
+                  <motion.span key={headline} {...swap} className='truncate text-name font-bold'>
+                    {headline}
+                  </motion.span>
                 </AnimatePresence>
-                {/* With a bill to show, the room's time rides along the top line */}
-                {/* The dot stands on its own so it sits between the name and the time in either direction;
-                    inside the time's ltr span it ended up after the time in Arabic */}
-                {clock && total > 0 && !stage && (
-                  <>
-                    <span aria-hidden className='shrink-0 opacity-70'>·</span>
-                    <span dir='ltr' className='shrink-0 opacity-70'>
-                      <Odometer value={clock} />
-                    </span>
-                  </>
+                <span className='flex min-w-0 items-center gap-1 text-caption'>
+                  {asking ? <span className='truncate font-semibold text-amber-300'>{t('dockWaiterComing')}</span> : <span className='truncate opacity-70'>{place}</span>}
+                  {total > 0 && (
+                    <>
+                      <span aria-hidden className='shrink-0 opacity-70'>·</span>
+                      <Odometer value={price(total)} className='shrink-0 opacity-70' />
+                    </>
+                  )}
+                </span>
+              </span>
+            ) : (
+              <span className='flex min-w-0 flex-1 flex-col'>
+                <span className='flex min-w-0 items-center gap-1 text-caption'>
+                  <AnimatePresence mode='popLayout' initial={false}>
+                    {line && (
+                      <motion.span key={line} {...swap} className='truncate opacity-70'>
+                        {line}
+                      </motion.span>
+                    )}
+                  </AnimatePresence>
+                  {/* With a bill to show, the room's time rides along the top line */}
+                  {/* The dot stands on its own so it sits between the name and the time in either direction;
+                      inside the time's ltr span it ended up after the time in Arabic */}
+                  {clock && total > 0 && !stage && (
+                    <>
+                      <span aria-hidden className='shrink-0 opacity-70'>·</span>
+                      <span dir='ltr' className='shrink-0 opacity-70'>
+                        <Odometer value={clock} />
+                      </span>
+                    </>
+                  )}
+                </span>
+                {total > 0 ? (
+                  <Odometer value={price(total)} className='text-name font-bold' />
+                ) : clock ? (
+                  <span dir='ltr' className='self-start text-name font-bold'>
+                    <Odometer value={clock} />
+                  </span>
+                ) : (
+                  <span className='truncate text-name font-bold'>{place}</span>
                 )}
               </span>
-              {total > 0 ? (
-                <Odometer value={price(total)} className='text-name font-bold' />
-              ) : clock ? (
-                <span dir='ltr' className='self-start text-name font-bold'>
-                  <Odometer value={clock} />
-                </span>
-              ) : (
-                <span className='truncate text-name font-bold'>{place}</span>
-              )}
-            </span>
+            )}
             <span
               className={cn(
                 'flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold',
-                toPay ? 'bg-background text-foreground pe-4' : 'bg-background/12'
+                toPay || payNext || usual ? 'bg-background text-foreground pe-4' : 'bg-background/12'
               )}
             >
               {label}
-              {!toPay && <ChevronUp className='size-4' />}
+              {!toPay && !payNext && !usual && <ChevronUp className='size-4' />}
             </span>
           </motion.button>
         )}
