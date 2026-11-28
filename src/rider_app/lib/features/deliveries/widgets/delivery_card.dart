@@ -102,6 +102,8 @@ class _DeliveryCardState extends ConsumerState<DeliveryCard> {
     final hasScreens = ref.watch(featuresProvider.select((f) => f.kds));
     final bool kitchenSays = order.kitchenMarksReady ?? hasScreens;
     final (statusText, statusColor) = switch (order.stage) {
+      // The customer said so from their phone: no stairs to climb
+      DeliveryStage.onTheWay when order.customerComing => (l10n.customerComingDown, green),
       DeliveryStage.onTheWay => (l10n.onTheWay, sky),
       DeliveryStage.failed => (l10n.bringItBack, amber),
       _ => ready

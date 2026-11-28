@@ -19,6 +19,7 @@ import 'l10n/app_localizations.dart';
 import 'package:ninja_app_core/theme/app_theme.dart';
 import 'core/auth/auth_service.dart';
 import 'features/deliveries/providers/deliveries_provider.dart';
+import 'features/deliveries/services/way_reporter.dart';
 
 class NinjaRiderApp extends ConsumerStatefulWidget {
   const NinjaRiderApp({super.key});
@@ -49,6 +50,22 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
         _connect();
         ref.read(branchProvider.notifier).loadBranches();
       }
+    });
+
+    // A delivery on the way: the customer's card follows the rider, for as long as one is out
+    ref.listenManual(deliveriesProvider.select((d) => d.value?.anyOut), (previous, out) {
+      if (out == null || out == previous) return;
+      final reporter = ref.read(wayReporterProvider);
+      if (!out) {
+        reporter.stop();
+        return;
+      }
+      final context = rootNavigatorKey.currentContext;
+      final l10n = context == null ? null : AppLocalizations.of(context);
+      reporter.start(WayNotice(
+        title: l10n?.onADelivery ?? 'On a delivery',
+        text: l10n?.onADeliveryHint ?? 'The customer sees how close you are',
+      ));
     });
 
     // The branch decides where the till lists the rider and which deliveries show
@@ -155,6 +172,9 @@ class _NinjaRiderAppState extends ConsumerState<NinjaRiderApp> with WidgetsBindi
         } else if (event.type == 'delivery_ready') {
           ref.read(chimeServiceProvider).play();
           _toast(RiderToastType.success, (l10n) => l10n.deliveryReady(event.orderId));
+        } else if (event.type == 'customer_coming') {
+          ref.read(chimeServiceProvider).play();
+          _toast(RiderToastType.success, (l10n) => l10n.customerComingFor(event.orderId));
         } else if (event.type == 'delivery_unassigned') {
           _toast(RiderToastType.warning, (l10n) => l10n.deliveryTakenBack(event.orderId));
         }

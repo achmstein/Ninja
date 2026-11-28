@@ -491,4 +491,18 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get pinQualityNone => 'بدون موقع: كلّم العميل قبل ما تخرج';
+
+  @override
+  String get customerComingDown => 'العميل نازل إليك';
+
+  @override
+  String customerComingFor(int number) {
+    return 'الطلب #‏$number: العميل نازل إليك';
+  }
+
+  @override
+  String get onADelivery => 'في مهمة توصيل';
+
+  @override
+  String get onADeliveryHint => 'العميل يرى كم اقتربت';
 }

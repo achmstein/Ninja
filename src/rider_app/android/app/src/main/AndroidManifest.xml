@@ -14,6 +14,15 @@
         android:name="android.permission.ACCESS_FINE_LOCATION"/>
     <uses-permission
         android:name="android.permission.ACCESS_COARSE_LOCATION"/>
+    <!-- While a delivery is on the way the phone keeps saying where it is, with Maps in front or the
+         screen off: the customer's card shows how close the rider is. Held by geolocator's own
+         foreground service, with an ongoing notification, and only while a delivery is out -->
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission
+        android:name="android.permission.FOREGROUND_SERVICE_LOCATION"/>
+    <uses-permission
+        android:name="android.permission.WAKE_LOCK"/>
     <uses-feature
         android:name="android.hardware.touchscreen"
         android:required="false"/>

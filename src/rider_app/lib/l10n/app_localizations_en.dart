@@ -491,4 +491,18 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get pinQualityNone => 'No pin: call the customer before leaving';
+
+  @override
+  String get customerComingDown => 'Customer is coming down';
+
+  @override
+  String customerComingFor(int number) {
+    return 'Order #$number: the customer is coming down';
+  }
+
+  @override
+  String get onADelivery => 'On a delivery';
+
+  @override
+  String get onADeliveryHint => 'The customer sees how close you are';
 }

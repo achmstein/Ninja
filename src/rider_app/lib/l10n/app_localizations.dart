@@ -985,6 +985,30 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'No pin: call the customer before leaving'**
   String get pinQualityNone;
+
+  /// No description provided for @customerComingDown.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer is coming down'**
+  String get customerComingDown;
+
+  /// No description provided for @customerComingFor.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{number}: the customer is coming down'**
+  String customerComingFor(int number);
+
+  /// No description provided for @onADelivery.
+  ///
+  /// In en, this message translates to:
+  /// **'On a delivery'**
+  String get onADelivery;
+
+  /// No description provided for @onADeliveryHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The customer sees how close you are'**
+  String get onADeliveryHint;
 }
 
 class _AppLocalizationsDelegate

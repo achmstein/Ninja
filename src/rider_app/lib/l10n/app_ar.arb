@@ -147,5 +147,9 @@
   "pinQualityCustomer": "موقع العميل",
   "pinQualityRider": "المكان الذي وصله مندوب من قبل",
   "pinQualitySearch": "تقريبي: من بحث على الخريطة",
-  "pinQualityNone": "بدون موقع: كلّم العميل قبل ما تخرج"
+  "pinQualityNone": "بدون موقع: كلّم العميل قبل ما تخرج",
+  "customerComingDown": "العميل نازل إليك",
+  "customerComingFor": "الطلب #‏{number}: العميل نازل إليك",
+  "onADelivery": "في مهمة توصيل",
+  "onADeliveryHint": "العميل يرى كم اقتربت"
 }

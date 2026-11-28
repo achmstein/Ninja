@@ -16,6 +16,15 @@ class HandOverFix {
   Map<String, dynamic> toJson() => {'latitude': latitude, 'longitude': longitude, 'accuracyMeters': accuracyMeters};
 }
 
+/// Whether the phone may say where it is: location on, and the rider let the
+/// app (asked once when they have not answered yet).
+Future<bool> locationAllowed() async {
+  if (!await Geolocator.isLocationServiceEnabled()) return false;
+  var permission = await Geolocator.checkPermission();
+  if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
+  return permission == LocationPermission.whileInUse || permission == LocationPermission.always;
+}
+
 /// The phone's position at the door, asked for once as the rider says
 /// Delivered. Ordering keeps it (when it is within 100 m) so the next
 /// delivery to that door finds it. It never holds the step up: no
@@ -28,10 +37,7 @@ class HandOverLocator {
 
   Future<HandOverFix?> current() async {
     try {
-      if (!await Geolocator.isLocationServiceEnabled()) return null;
-      var permission = await Geolocator.checkPermission();
-      if (permission == LocationPermission.denied) permission = await Geolocator.requestPermission();
-      if (permission != LocationPermission.whileInUse && permission != LocationPermission.always) return null;
+      if (!await locationAllowed()) return null;
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(accuracy: LocationAccuracy.best, timeLimit: timeLimit),
       ).timeout(timeLimit + const Duration(seconds: 1));

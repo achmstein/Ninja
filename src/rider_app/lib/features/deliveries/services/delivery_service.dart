@@ -28,6 +28,17 @@ class DeliveryService {
   /// Could not hand it over (after leaving): the bag goes back to the branch
   Future<void> markFailed(int orderId, String reason) => _orders.put<void>('$orderId/delivery/failed', data: {'reason': reason});
 
+  /// Where the phone is while a delivery is on the way: the customer is told how close it is,
+  /// never where. Answers how many deliveries this rider has out; 0 means stop telling.
+  Future<int> reportLocation(double latitude, double longitude, double accuracyMeters) async {
+    final response = await _orders.put<Map<String, dynamic>>(
+      'riders/me/location',
+      data: {'latitude': latitude, 'longitude': longitude, 'accuracyMeters': accuracyMeters},
+    );
+    final out = response.data?['out'];
+    return out is num ? out.toInt() : 1;
+  }
+
   /// On duty or off, at the selected branch; also the heartbeat while the app is in front
   Future<void> setOnDuty(bool onDuty) => _orders.put<void>('riders/me', data: {'onDuty': onDuty});
 }

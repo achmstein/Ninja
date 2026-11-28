@@ -243,5 +243,10 @@
   "pinQualityCustomer": "Customer's location",
   "pinQualityRider": "Where a rider found it before",
   "pinQualitySearch": "Approximate: from a map search",
-  "pinQualityNone": "No pin: call the customer before leaving"
+  "pinQualityNone": "No pin: call the customer before leaving",
+  "customerComingDown": "Customer is coming down",
+  "customerComingFor": "Order #{number}: the customer is coming down",
+  "@customerComingFor": {"placeholders": {"number": {"type": "int"}}},
+  "onADelivery": "On a delivery",
+  "onADeliveryHint": "The customer sees how close you are"
 }

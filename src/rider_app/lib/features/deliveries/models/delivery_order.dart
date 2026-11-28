@@ -130,6 +130,9 @@ class DeliveryOrder {
   /// Where the pin came from
   final PinSource pinSource;
 
+  /// The customer said they are coming down to meet the rider
+  final bool customerComing;
+
   const DeliveryOrder({
     required this.orderNumber,
     this.branchId,
@@ -156,6 +159,7 @@ class DeliveryOrder {
     this.cashHandedInAt,
     this.cashCollected,
     this.pinSource = PinSource.none,
+    this.customerComing = false,
   });
 
   factory DeliveryOrder.fromJson(Map<String, dynamic> json) {
@@ -190,6 +194,7 @@ class DeliveryOrder {
       cashHandedInAt: _time(d['cashHandedInAt']),
       cashCollected: _numOrNull(d['cashCollected']),
       pinSource: PinSource.parse(d['pinSource']),
+      customerComing: d['customerComing'] == true,
     );
   }
 
@@ -198,6 +203,9 @@ class DeliveryOrder {
   bool get isOut => stage == DeliveryStage.onTheWay;
 
   bool get isFailed => stage == DeliveryStage.failed;
+
+  /// On the way, and the customer is on their way down: wait at the door
+  bool get meetAtDoor => isOut && customerComing;
 
   /// Nothing left for the rider: handed over, or the bag is back at the branch
   bool get isDone => stage == DeliveryStage.delivered || stage == DeliveryStage.returned;

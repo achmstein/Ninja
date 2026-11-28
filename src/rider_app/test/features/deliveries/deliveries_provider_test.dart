@@ -54,6 +54,12 @@ class _FakeDeliveries implements DeliveryService {
   Future<void> markFailed(int orderId, String reason) async => calls.add('failed $orderId $reason');
 
   @override
+  Future<int> reportLocation(double latitude, double longitude, double accuracyMeters) async {
+    calls.add('location');
+    return orders.where((o) => o.isOut).length;
+  }
+
+  @override
   Future<void> setOnDuty(bool onDuty) async {
     if (failDuty) throw _down;
     calls.add('duty $onDuty');
