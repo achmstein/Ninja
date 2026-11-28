@@ -1777,6 +1777,15 @@ class AppLocalizationsEn extends AppLocalizations {
       'A landmark, the gate, anything that helps';
 
   @override
+  String get deliveryDetails => 'Details that help the rider';
+
+  @override
+  String get deliveryRiderNote => 'Note for the rider';
+
+  @override
+  String get optional => 'Optional';
+
+  @override
   String get deliveryPhone => 'Phone for the rider';
 
   @override
@@ -1979,6 +1988,12 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderPayNow => 'Pay now';
+
+  @override
+  String get dockPay => 'Pay';
+
+  @override
+  String get dockWaiterComing => 'The waiter is on the way';
 
   @override
   String get orderPaidOnTheWayNote =>

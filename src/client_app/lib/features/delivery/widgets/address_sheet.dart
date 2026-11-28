@@ -9,6 +9,7 @@ import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../models/delivery_address.dart';
 import '../services/delivery_service.dart';
+import 'detail_chips.dart';
 import 'map_picker.dart';
 import 'pin_map_screen.dart';
 
@@ -389,17 +390,18 @@ class _AddressFormState extends ConsumerState<_AddressForm> {
           onChange: (_) => setState(() {}),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(child: NinjaField(controller: _building, hint: l10n.deliveryBuilding)),
-            const SizedBox(width: 8),
-            Expanded(child: NinjaField(controller: _floor, hint: l10n.deliveryFloor, keyboardType: TextInputType.number)),
-            const SizedBox(width: 8),
-            Expanded(child: NinjaField(controller: _apartment, hint: l10n.deliveryApartment)),
+        // The building, floor and apartment as chips, each added only if wanted, and a note for the rider under them
+        DetailChips(
+          title: l10n.deliveryDetails,
+          optional: l10n.optional,
+          details: [
+            AddressDetail(label: l10n.deliveryBuilding, controller: _building),
+            AddressDetail(label: l10n.deliveryFloor, controller: _floor, numeric: true),
+            AddressDetail(label: l10n.deliveryApartment, controller: _apartment),
           ],
+          noteLabel: l10n.deliveryRiderNote,
+          note: _directions,
         ),
-        const SizedBox(height: 8),
-        NinjaField(controller: _directions, hint: l10n.deliveryDirectionsHint, maxLines: 2),
         const SizedBox(height: 8),
         Directionality(
           textDirection: TextDirection.ltr,

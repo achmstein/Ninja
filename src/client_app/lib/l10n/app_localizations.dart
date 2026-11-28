@@ -3165,6 +3165,24 @@ abstract class AppLocalizations {
   /// **'A landmark, the gate, anything that helps'**
   String get deliveryDirectionsHint;
 
+  /// No description provided for @deliveryDetails.
+  ///
+  /// In en, this message translates to:
+  /// **'Details that help the rider'**
+  String get deliveryDetails;
+
+  /// No description provided for @deliveryRiderNote.
+  ///
+  /// In en, this message translates to:
+  /// **'Note for the rider'**
+  String get deliveryRiderNote;
+
+  /// No description provided for @optional.
+  ///
+  /// In en, this message translates to:
+  /// **'Optional'**
+  String get optional;
+
   /// No description provided for @deliveryPhone.
   ///
   /// In en, this message translates to:
@@ -3530,6 +3548,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Pay now'**
   String get orderPayNow;
+
+  /// No description provided for @dockPay.
+  ///
+  /// In en, this message translates to:
+  /// **'Pay'**
+  String get dockPay;
+
+  /// No description provided for @dockWaiterComing.
+  ///
+  /// In en, this message translates to:
+  /// **'The waiter is on the way'**
+  String get dockWaiterComing;
 
   /// No description provided for @orderPaidOnTheWayNote.
   ///

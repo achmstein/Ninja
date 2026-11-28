@@ -1773,6 +1773,15 @@ class AppLocalizationsAr extends AppLocalizations {
   String get deliveryDirectionsHint => 'علامة مميزة، البوابة، أي حاجة تساعد';
 
   @override
+  String get deliveryDetails => 'تفاصيل تساعد المندوب';
+
+  @override
+  String get deliveryRiderNote => 'ملاحظة للمندوب';
+
+  @override
+  String get optional => 'اختياري';
+
+  @override
   String get deliveryPhone => 'رقم للمندوب';
 
   @override
@@ -1971,6 +1980,12 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get orderPayNow => 'ادفع دلوقتي';
+
+  @override
+  String get dockPay => 'ادفع';
+
+  @override
+  String get dockWaiterComing => 'الويتر جاي';
 
   @override
   String get orderPaidOnTheWayNote =>
@@ -3499,6 +3514,15 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
   String get deliveryDirectionsHint => 'معلم قريب، البوابة، أي شيء يساعد';
 
   @override
+  String get deliveryDetails => 'تفاصيل تساعد المندوب';
+
+  @override
+  String get deliveryRiderNote => 'ملاحظة للمندوب';
+
+  @override
+  String get optional => 'اختياري';
+
+  @override
   String get deliveryPhone => 'رقم هاتف للمندوب';
 
   @override
@@ -3699,6 +3723,12 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get orderPayNow => 'ادفع الآن';
+
+  @override
+  String get dockPay => 'ادفع';
+
+  @override
+  String get dockWaiterComing => 'النادل في الطريق';
 
   @override
   String get orderPaidOnTheWayNote =>

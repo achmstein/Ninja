@@ -96,12 +96,19 @@ class DockBill extends ConsumerWidget {
         ? ref.watch(myStaysProvider).value?.where((s) => s.id == destination!.sessionId && s.startedAt != null).firstOrNull
         : null;
     // The order on its way says where it is in the top line; otherwise the line is where the customer is
-    final line = stageWord != null ? '$stageWord${live?.orderId != null ? ' · #${live!.orderId}' : ''}' : (total > 0 || stay != null ? place : null);
     // A dot on the place while the waiter or the bill is asked for, so the answer is one tap away
     final asking = destination != null &&
         ref.watch(myRequestsProvider).any((r) => r.placeId == destination.placeId && r.isOpen && r.requestType != ServiceRequestType.changeOption);
+    // With no order on its way the top line is where the customer is, or, while a waiter or the bill is
+    // asked for, that in words and not only the dot. An order on its way has its own two lines below
+    final line = asking && stageWord == null ? l10n.dockWaiterComing : (total > 0 || stay != null ? place : null);
+    // The end button is the next thing to do: Pay, once there is something to pay and nothing still on its
+    // way (what it opens has the way to pay under the bill)
+    final payNext = !toPay && total > 0 && (stage == null || stage == OrderStage.delivered);
     final label = toPay
         ? l10n.orderPayNow
+        : payNext
+        ? l10n.dockPay
         : destination == null
         ? l10n.ninjaBillOpen
         : destination.isStay
@@ -187,6 +194,28 @@ class DockBill extends ConsumerWidget {
                     mainAxisSize: MainAxisSize.min,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      // An order on its way: where it has got to is the row's headline, the place (or the
+                      // waiter asked for) and the bill quiet under it, as client_web's dock row
+                      if (stageWord != null) ...[
+                        BlurSwap(
+                          child: Text(
+                            stageWord,
+                            key: ValueKey(stageWord),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground)),
+                          ),
+                        ),
+                        Text(
+                          [asking ? l10n.dockWaiterComing : place, if (total > 0) money(total)].join(' · '),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: context.localeText(theme.typography.caption.copyWith(
+                            color: asking ? NinjaColors.warning : c.foreground.withValues(alpha: 0.7),
+                            fontWeight: asking ? FontWeight.w600 : null,
+                          )),
+                        ),
+                      ] else ...[
                       if (line != null)
                         Row(
                           children: [
@@ -238,6 +267,7 @@ class DockBill extends ConsumerWidget {
                           overflow: TextOverflow.ellipsis,
                           style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground)),
                         ),
+                      ],
                     ],
                   ),
                 ),
@@ -245,12 +275,12 @@ class DockBill extends ConsumerWidget {
                   height: 40,
                   padding: const EdgeInsetsDirectional.only(start: 16, end: 12),
                   // Waiting for its payment: the way to pay it, lit
-                  decoration: ShapeDecoration(color: toPay ? c.foreground : c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                  decoration: ShapeDecoration(color: toPay || payNext ? c.foreground : c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
                   child: Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
-                      Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: toPay ? c.background : c.foreground))),
-                      if (!toPay) ...[
+                      Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: toPay || payNext ? c.background : c.foreground))),
+                      if (!toPay && !payNext) ...[
                         const SizedBox(width: 4),
                         Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
                       ],
