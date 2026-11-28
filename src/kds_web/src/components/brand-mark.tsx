@@ -1,7 +1,7 @@
+import { useTheme } from '@ninja/web-core/theme'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLanguage } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { useTheme } from '@/context/theme-provider'
 
 /**
  * The business's mark on a staff surface: its logo when one is uploaded (the

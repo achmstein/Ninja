@@ -2,8 +2,8 @@ import { Link } from '@tanstack/react-router'
 import { authority, loginPageParams } from '@/config/oidc-config'
 import { KeyRound, LogOut, Moon, Settings, ShieldCheck, Sun } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { useTheme } from '@ninja/web-core/theme'
 import { useT } from '@/lib/i18n'
-import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,

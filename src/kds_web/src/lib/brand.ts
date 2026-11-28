@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { useQuery, type QueryClient } from '@tanstack/react-query'
+import { useBusinessTheme } from '@ninja/web-core/theme'
 import { type TenantFeatures, type TenantResponse } from '@/api/tenant'
 import { getTenantOptions } from '@/api/tenant/@tanstack/react-query.gen'
 import { useLanguage, type Language } from '@/lib/i18n'
-import { useBusinessTheme } from '@/context/theme-provider'
 import { applyBrandTheme } from './brand-theme'
 
 /**

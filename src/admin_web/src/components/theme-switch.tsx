@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { Check, Moon, Sun } from 'lucide-react'
+import { useTheme } from '@ninja/web-core/theme'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { useTheme } from '@/context/theme-provider'
 import { Button } from '@/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '@/components/ui/dropdown-menu'
 

@@ -10,7 +10,9 @@
     "./cookies": "./src/cookies.ts",
     "./push": "./src/push.ts",
     "./session": "./src/session.tsx",
-    "./sound": "./src/sound.ts"
+    "./sound": "./src/sound.ts",
+    "./theme": "./src/theme.tsx",
+    "./toast": "./src/toast.ts"
   },
   "scripts": {
     "build": "tsc -p tsconfig.json",
@@ -23,7 +25,9 @@
     "firebase": "*",
     "oidc-client-ts": "*",
     "react": "*",
-    "react-oidc-context": "*"
+    "react-oidc-context": "*",
+    "sileo": "*",
+    "zustand": "*"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
@@ -40,13 +44,18 @@
     "prettier-plugin-tailwindcss": "^0.7.1",
     "react": "19.3.1",
     "react-oidc-context": "3.3.1",
+    "sileo": "0.1.5",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
     "vite": "^7.2.4",
-    "vitest": "^5.0.1"
+    "vitest": "^5.0.1",
+    "zustand": "5.0.15"
   },
   "peerDependenciesMeta": {
     "firebase": {
+      "optional": true
+    },
+    "sileo": {
       "optional": true
     }
   }

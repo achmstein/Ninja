@@ -1,7 +1,7 @@
 import { useState, type ReactNode } from 'react'
+import { useTheme } from '@ninja/web-core/theme'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { cn } from '@/lib/utils'
-import { useTheme } from '@/context/theme-provider'
 import { BrandMark } from '@/components/brand-mark'
 
 type Shape = 'mark' | 'wide' | 'tall'

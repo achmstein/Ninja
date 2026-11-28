@@ -1,9 +1,9 @@
 import { Download, Languages, LogOut, Maximize, Minimize, Moon, Settings, Sun, VolumeX } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { useTheme } from '@ninja/web-core/theme'
 import { useLanguage, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { useInstallPrompt } from '@/lib/use-install-prompt'
-import { useTheme } from '@/context/theme-provider'
 import { useFullscreen } from '@/hooks/use-fullscreen'
 import { Button } from '@/components/ui/button'
 import {

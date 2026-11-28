@@ -3,11 +3,11 @@ import ReactDOM from 'react-dom/client'
 import { AxiosError } from 'axios'
 import { QueryCache, QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { RouterProvider, createRouter } from '@tanstack/react-router'
+import { ThemeProvider } from '@ninja/web-core/theme'
 import { bootBrand } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
 import { AuthProvider } from './context/auth-provider'
 import { DirectionProvider } from './context/direction-provider'
-import { ThemeProvider } from './context/theme-provider'
 // Generated Routes
 import { routeTree } from './routeTree.gen'
 // Styles
