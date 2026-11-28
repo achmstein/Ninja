@@ -50,8 +50,8 @@ export function formatAddressLine(parts: AddressParts, words: AddressWords, loca
  * and over nothing when it has none of them: the street was once said on
  * both lines, the row reading "Abu Dahshan St / Abu Dahshan St".
  */
-export function addressRow(parts: AddressParts, name: string, words: AddressWords, locale: string): { title: string; line: string } {
-  if (name.trim()) return { title: name.trim(), line: formatAddressLine(parts, words, locale) }
+export function addressRow(parts: AddressParts, name: string | null | undefined, words: AddressWords, locale: string): { title: string; line: string } {
+  if (name?.trim()) return { title: name.trim(), line: formatAddressLine(parts, words, locale) }
   return { title: parts.address?.trim() ?? '', line: formatAddressLine({ ...parts, address: '' }, words, locale) }
 }
 
