@@ -1,21 +1,18 @@
-# Ignore everything
+# Prettier formats the app's source and its config files only
 /*
-
-# Except these files & folders
 !/src
 !index.html
 !package.json
-!tailwind.config.js
-!tsconfig.json
-!tsconfig.node.json
+!tsconfig*.json
 !vite.config.ts
-!.prettierrc
-!README.md
+!vitest.config.ts
 !eslint.config.js
-!postcss.config.js
+!prettier.config.js
+!README.md
 
-# Ignore auto generated routeTree.gen.ts
-/src/routeTree.gen.ts
-
-# Ignore generated API clients
+# Generated: never hand-formatted
 /src/api
+/src/routeTree.gen.ts
+/src/**/*.gen.ts
+# shadcn primitives stay byte-identical across the staff apps
+/src/components/ui

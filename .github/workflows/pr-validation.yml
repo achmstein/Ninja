@@ -96,7 +96,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        app: [admin_web, pos_web, kds_web, client_web, control_web]
+        app: [admin_web, pos_web, kds_web, client_web, control_web, site_web]
     defaults:
       run:
         working-directory: src/${{ matrix.app }}
@@ -108,11 +108,17 @@ jobs:
           cache: npm
           cache-dependency-path: src/${{ matrix.app }}/package-lock.json
       - run: npm ci
-      # tsc -b then vite build: a type error fails the PR
-      - run: npm run build
-      - name: Lint
+      # tsc -b then vite build: a type error fails the PR. The site's build
+      # also builds four apps into its demo, so it is only type-checked here
+      - name: Build
         run: |
-          if npm run | grep -q '^  lint$'; then npm run lint; else echo "no lint script"; fi
+          if [ "${{ matrix.app }}" = site_web ]; then npx tsc -b; else npm run build; fi
+      # The shared config in src/web-config; each app's script caps its
+      # warnings at today's count (--max-warnings), so the count only falls
+      - name: Lint
+        run: npm run lint
+      - name: Formatting
+        run: npm run format:check
       - name: Unit tests
         run: |
           if npm run | grep -q '^  test$'; then npm test; else echo "no test script"; fi
