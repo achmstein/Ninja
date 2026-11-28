@@ -1,6 +1,6 @@
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from '@tanstack/react-router'
-import { Bike, Check, ChefHat, ChevronUp, CircleHelp, Coffee, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
+import { Bike, Check, ChefHat, ChevronUp, CircleHelp, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
 import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { payOrderLink, useLiveOrder } from '@/lib/live-order'
 import { PILL_WORDS, STAGE_LABEL, words, type PillStage } from '@/lib/order-pill'
@@ -15,7 +15,7 @@ import { TableView } from '@/components/places/table-view'
 import { RoomView } from '@/components/places/room-view'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { useDockSheet } from '@/lib/dock-sheet'
-import { PREVIEW_MINUTES, PREVIEW_USUAL, STAGE_PROGRESS, useDockPreview } from '@/lib/dock-preview'
+import { PREVIEW_MINUTES, STAGE_PROGRESS, useDockPreview } from '@/lib/dock-preview'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { trayOpensAfterDrag } from '@/components/tray/tray-model'
@@ -118,15 +118,11 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   // Tried in the preview: the end button is the next thing to do. Pay, once there is something to pay and nothing
   // still on its way (the sheet it opens has the way to pay under the bill)
   const payNext = enhanced && !toPay && total > 0 && (stage == null || stage === 'delivered')
-  // Nothing going on at all: the row offers the customer's usual, one tap from ordering it again
-  const usual = enhanced && preview.usual && !stage && total === 0 && !table && !stay
   const label = toPay
     ? words(PILL_WORDS.payNow, language, standard)
-    : usual
-      ? t('dockUsualAdd')
-      : payNext
-        ? t('dockPay')
-        : t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
+    : payNext
+      ? t('dockPay')
+      : t(stay ? 'ninjaRoomOpen' : table ? 'ninjaTableOpen' : 'ninjaBillOpen')
 
   return (
     <>
@@ -151,13 +147,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           <motion.button
             key='bill'
             type='button'
-            onClick={() =>
-              toPay
-                ? void navigate(payOrderLink(orderNumber))
-                : usual
-                  ? void navigate({ to: '/item/$itemId', params: { itemId: String(PREVIEW_USUAL.id) } })
-                  : setOpen(true)
-            }
+            onClick={() => (toPay ? void navigate(payOrderLink(orderNumber)) : setOpen(true))}
             // Pulled up by its handle, as the tray's row is, it opens too: it had only the tap, so a pull on
             // the handle it draws did nothing while an order was waiting
             onPanEnd={(_, info) => trayOpensAfterDrag(false, info.offset.y, info.velocity.y) && setOpen(true)}
@@ -207,9 +197,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
               )}
               <AnimatePresence mode='popLayout' initial={false}>
                 <motion.span key={stage ?? 'place'} {...swap} className='grid place-items-center'>
-                  {usual ? (
-                    <Coffee className='size-5' />
-                  ) : StageIcon ? (
+                  {StageIcon ? (
                     <StageIcon className={cn('size-5', stage === 'sent' && 'animate-pulse motion-reduce:animate-none')} />
                   ) : table && !confirmed ? (
                     // A table from an earlier session shows as a question until answered
@@ -235,12 +223,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 )
               )}
             </span>
-            {usual ? (
-              <span className='flex min-w-0 flex-1 flex-col'>
-                <span className='truncate text-caption opacity-70'>{t('dockUsual')}</span>
-                <span className='truncate text-name font-bold'>{localized(PREVIEW_USUAL.name)}</span>
-              </span>
-            ) : enhanced && stage ? (
+            {enhanced && stage ? (
               <span className='flex min-w-0 flex-1 flex-col'>
                 <AnimatePresence mode='popLayout' initial={false}>
                   <motion.span key={headline} {...swap} className='truncate text-name font-bold'>
@@ -293,11 +276,11 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             <span
               className={cn(
                 'flex h-10 shrink-0 items-center gap-1 rounded-full ps-4 pe-3 text-note font-semibold',
-                toPay || payNext || usual ? 'bg-background text-foreground pe-4' : 'bg-background/12'
+                toPay || payNext ? 'bg-background text-foreground pe-4' : 'bg-background/12'
               )}
             >
               {label}
-              {!toPay && !payNext && !usual && <ChevronUp className='size-4' />}
+              {!toPay && !payNext && <ChevronUp className='size-4' />}
             </span>
           </motion.button>
         )}

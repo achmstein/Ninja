@@ -9,7 +9,8 @@ import { cn } from '@/lib/utils'
  * Its states come from a small panel in the page's corner instead of a real
  * order, so each can be looked at without placing one: an order moving
  * through its stages, with or without an unsent order in the tray, and a
- * waiter asked for. A production build never has any of it.
+ * waiter asked for. (Offering the customer's usual on an idle dock was tried
+ * and dropped: the owner's view is that they already know what they have.) A production build never has any of it.
  */
 export const useDockPreview = create<{
   on: boolean
@@ -17,12 +18,7 @@ export const useDockPreview = create<{
   stage: PillStage | null
   /** The waiter was asked for */
   waiter: boolean
-  /** With nothing going on, the row offers the customer's usual */
-  usual: boolean
-}>(() => ({ on: accountPreview(), stage: null, waiter: false, usual: false }))
-
-/** The usual the preview offers: one of Cove's own items */
-export const PREVIEW_USUAL = { id: 7, name: { en: 'Spanish Latte', ar: 'سبانيش لاتيه' } }
+}>(() => ({ on: accountPreview(), stage: null, waiter: false }))
 
 /** About how many minutes are left at each stage, for the row's headline */
 export const PREVIEW_MINUTES: Partial<Record<PillStage, number>> = { confirmed: 12, preparing: 8, onTheWay: 4 }
@@ -48,7 +44,7 @@ const STAGES: Array<[PillStage | null, string]> = [
 
 /** The panel that sets the dock's state in the preview: not part of the app's own screens */
 export function DockPreviewPanel() {
-  const { on, stage, waiter, usual } = useDockPreview()
+  const { on, stage, waiter } = useDockPreview()
   if (!on) return null
   const chip = 'rounded-full px-2.5 py-1 text-[11px] font-semibold'
   return (
@@ -68,9 +64,6 @@ export function DockPreviewPanel() {
       </div>
       <button type='button' onClick={() => useDockPreview.setState({ waiter: !waiter })} className={cn(chip, 'self-start', waiter ? 'bg-amber-900 text-amber-50' : 'bg-amber-200')}>
         Waiter asked for
-      </button>
-      <button type='button' onClick={() => useDockPreview.setState({ usual: !usual, stage: null })} className={cn(chip, 'self-start', usual ? 'bg-amber-900 text-amber-50' : 'bg-amber-200')}>
-        Nothing going on: offer the usual
       </button>
     </div>
   )

@@ -11,6 +11,6 @@ export function useDockRowShown(live: LiveBills): boolean {
   const place = useActivePlace()
   const stay = useActiveStay()
   // The preview's own order counts as one on its way (lib/dock-preview)
-  const previewed = useDockPreview((s) => (s.on ? (s.stage ?? (s.usual ? 'usual' : null)) : null))
+  const previewed = useDockPreview((s) => (s.on ? s.stage : null))
   return hasLiveBill(live) || stage != null || previewed != null || place != null || stay != null
 }

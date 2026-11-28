@@ -16,7 +16,7 @@ import { TrayExtras } from './tray-extras'
 import { TrayNudge } from './tray-nudge'
 import type { StoredPlace } from '@/stores/place-store'
 import { ScanTableButton } from '@/components/places/table-scanner'
-import { DeliveryChoice, PickupFrom } from '@/components/delivery/delivery-choice'
+import { DeliveryChoice, PickupFrom, showDeliveryNote } from '@/components/delivery/delivery-choice'
 import { PayChoice } from '@/components/pay/pay-choice'
 import type { PayAhead } from '@/lib/pay-ahead'
 import { StillHereCard } from '@/components/places/still-here'
@@ -307,8 +307,10 @@ export function Tray({
         onPlace={() => void order.submit()}
         busy={order.isPending}
         online={order.payAhead.online}
-        disabled={order.tableUnconfirmed || (order.delivery.active && !order.delivery.ready)}
-        short={order.delivery.active && order.delivery.problem === 'minimum' ? order.delivery.short : 0}
+        disabled={order.tableUnconfirmed}
+        // A delivery short of something: the button stays pressable, and a press shows what is missing
+        blocked={order.delivery.active && !order.delivery.ready}
+        onBlocked={showDeliveryNote}
       />
     )
   })()
@@ -734,7 +736,8 @@ function OrderButton({
   busy,
   online = false,
   disabled,
-  short = 0,
+  blocked = false,
+  onBlocked,
 }: {
   open: boolean
   onOpen: () => void
@@ -745,30 +748,31 @@ function OrderButton({
   /** The order cannot go yet (the table is still to be confirmed in the sheet) */
   disabled?: boolean
   /**
-   * How much the items are short of the delivery minimum: said on the button
-   * itself, where the customer is looking, rather than only further up the
-   * order where they may never scroll
+   * The order cannot go yet for a reason written further up the order (a delivery short of its minimum, out of
+   * range, with no address). The button looks held but takes a press, and the press brings that reason into
+   * sight: a dead button left the customer hunting through a long order for why
    */
-  short?: number
+  blocked?: boolean
+  onBlocked?: () => void
 }) {
   const t = useT()
-  const price = usePrice()
   const swap = blurSwap(useReducedMotion())
   // Said once the order is open, in place of Place order; shut, the button only opens it
-  const state = busy ? 'busy' : open ? (short > 0 ? 'short' : 'place') : 'order'
+  const state = busy ? 'busy' : open ? 'place' : 'order'
   return (
     <motion.button
       type='button'
       layout
       transition={SPRING}
       disabled={open && (disabled || busy)}
+      aria-disabled={open && blocked ? true : undefined}
       aria-busy={busy}
-      onClick={open ? onPlace : onOpen}
+      onClick={open ? (blocked ? onBlocked : onPlace) : onOpen}
       style={{ borderRadius: 24 }}
       className={cn(
         'bg-primary text-primary-foreground text-body flex h-12 items-center gap-2 overflow-hidden px-5 font-bold whitespace-nowrap shadow-[0_8px_20px_-10px_rgb(0_0_0/0.45)] transition-[opacity,scale] active:scale-[0.97] disabled:opacity-60 motion-reduce:transform-none @max-[21rem]:h-11 @max-[21rem]:px-4',
-        // What is missing is said in full where there is room, and cut short only on the narrowest phone
-        state === 'short' ? 'min-w-0 shrink' : 'shrink-0',
+        'shrink-0',
+        open && blocked && 'opacity-60',
       )}
     >
       <AnimatePresence mode='popLayout' initial={false}>
@@ -777,11 +781,6 @@ function OrderButton({
             <>
               <Loader2 className='size-4 animate-spin' />
               {t('ninjaSending')}
-            </>
-          ) : state === 'short' ? (
-            <>
-              <Plus className='size-4' strokeWidth={3} />
-              <span className='truncate'>{t('deliveryAddMore', { amount: price(short) })}</span>
             </>
           ) : state === 'place' ? (
             <>

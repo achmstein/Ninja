@@ -16,6 +16,20 @@ import { AddressSheet } from './address-sheet'
 const SPRING = { type: 'spring', stiffness: 420, damping: 40 } as const
 
 /**
+ * Brings what stands in the way of the delivery into sight: the lines under
+ * the address (short of the minimum, out of range, no address yet), scrolled
+ * to the middle of the order and nudged once so the eye finds them. Called
+ * when the order button is pressed while the order cannot be sent.
+ */
+export function showDeliveryNote() {
+  const note = document.querySelector<HTMLElement>('[data-delivery-note]')
+  if (!note) return
+  const calm = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  note.scrollIntoView({ block: 'center', behavior: calm ? 'auto' : 'smooth' })
+  if (!calm) note.animate([{ transform: 'scale(1)' }, { transform: 'scale(1.05)' }, { transform: 'scale(1)' }], { duration: 450, delay: 250, easing: 'ease-out' })
+}
+
+/**
  * In the open order, where the branch delivers and the customer is not at a
  * table: collect it or have it brought. Brought, the address is a tap away,
  * and under it what the branch says about it — the fee (with the named
@@ -125,7 +139,9 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
             <ChevronRight className='size-4 shrink-0 opacity-60 rtl:rotate-180' />
           </button>
 
-          <div className='flex flex-col gap-1 px-1 text-caption'>
+          {/* What stands in the way of the delivery is said here, as text. The order button, pressed while it
+              cannot send, brings these lines into sight (showDeliveryNote), however long the order is */}
+          <div data-delivery-note className='flex flex-col gap-1 px-1 text-caption'>
             {delivery.problem === 'checking' && (
               <span className='flex items-center gap-2 opacity-70'>
                 <Loader2 className='size-3.5 animate-spin' />
