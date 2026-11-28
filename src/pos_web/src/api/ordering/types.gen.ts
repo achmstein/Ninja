@@ -235,6 +235,19 @@ export type DeliveryFailedRequest = {
     reason?: null | string;
 };
 
+export type DeliveryLiveView = {
+    orderId?: number | string;
+    stage?: string;
+    version?: number | string;
+    riderName?: null | string;
+    riderPhone?: null | string;
+    progress?: null | number | string;
+    etaMinutes?: null | number | string;
+    nearby?: boolean;
+    customerComing?: boolean;
+    failureReason?: null | string;
+};
+
 export type DeliveryOrder = {
     orderNumber?: number | string;
     branchId?: number | string;
@@ -314,6 +327,9 @@ export type DeliveryStaffView = {
     etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
+    riderPhone?: null | string;
+    nearby?: boolean;
+    customerComing?: boolean;
     courierProvider?: null | string;
     courierName?: null | string;
     assignedAt?: null | string;
@@ -356,6 +372,9 @@ export type DeliveryView = {
     etaMinutes?: null | number | string;
     stage?: string;
     riderName?: null | string;
+    riderPhone?: null | string;
+    nearby?: boolean;
+    customerComing?: boolean;
     courierProvider?: null | string;
     courierName?: null | string;
     assignedAt?: null | string;
@@ -417,6 +436,8 @@ export type KitchenOrderItem = {
     customizationsDescription?: null | LocalizedText;
     specialInstructions?: null | string;
     stationId?: null | number | string;
+    cancelledUnits?: number | string;
+    cancelReason?: null | string;
 };
 
 export type KitchenOrderPart = {
@@ -467,6 +488,8 @@ export type KitchenTicket = {
     lastError?: null | string;
     isReprint?: boolean;
     isTest?: boolean;
+    isCancellation?: boolean;
+    cancelReason?: null | string;
     orderNumber?: null | number | string;
     confirmedAt?: null | string;
     source?: null | string;
@@ -768,6 +791,16 @@ export type RiderHistorySummary = {
     cashCollected: number | string;
     cashDifferenceTotal: number | string;
     averageMinutesOutToDelivered: null | number | string;
+};
+
+export type RiderLocationRequest = {
+    latitude: number | string;
+    longitude: number | string;
+    accuracyMeters?: null | number | string;
+};
+
+export type RiderLocationResult = {
+    out: number | string;
 };
 
 export type RiderOverview = {
@@ -2412,6 +2445,110 @@ export type SetMyRiderStatusResponses = {
 };
 
 export type SetMyRiderStatusResponse = SetMyRiderStatusResponses[keyof SetMyRiderStatusResponses];
+
+export type ReportMyRiderLocationData = {
+    body: RiderLocationRequest;
+    path?: never;
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/riders/me/location';
+};
+
+export type ReportMyRiderLocationErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type ReportMyRiderLocationResponses = {
+    /**
+     * OK
+     */
+    200: RiderLocationResult;
+};
+
+export type ReportMyRiderLocationResponse = ReportMyRiderLocationResponses[keyof ReportMyRiderLocationResponses];
+
+export type SayComingDownData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/coming';
+};
+
+export type SayComingDownErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type SayComingDownResponses = {
+    /**
+     * No Content
+     */
+    204: void;
+};
+
+export type SayComingDownResponse = SayComingDownResponses[keyof SayComingDownResponses];
+
+export type GetDeliveryLiveData = {
+    body?: never;
+    path: {
+        orderId: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/orders/{orderId}/delivery/live';
+};
+
+export type GetDeliveryLiveErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetDeliveryLiveResponses = {
+    /**
+     * OK
+     */
+    200: DeliveryLiveView;
+};
+
+export type GetDeliveryLiveResponse = GetDeliveryLiveResponses[keyof GetDeliveryLiveResponses];
 
 export type GetLocationShareData = {
     body?: never;

@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 import { Check, Minus, Plus, Trash2 } from 'lucide-react'
 import type { TicketLineView } from '@/api/sales/types.gen'
 import { Button } from '@/components/ui/button'
-import { mergeIdenticalLines, PAID_DIM, PaidTag } from '@/features/ticket/bill-lines'
+import { CancelledNote, mergeIdenticalLines, PAID_DIM, PaidTag } from '@/features/ticket/bill-lines'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -117,7 +117,10 @@ export function SentLines({
       {shown.map((line) => {
         const id = toNumber(line.id)
         const negative = toNumber(line.total) < 0
-        const pickable = !!selection && line.source !== 'SessionTime' && !line.paid
+        // What was cancelled of it at the till: a line cancelled whole stays, struck
+        const cancelled = toNumber(line.cancelledQty)
+        const gone = cancelled > 0 && toNumber(line.qty) === 0
+        const pickable = !!selection && line.source !== 'SessionTime' && !line.paid && !gone
         const picked = pickable && selection.chosen.has(id)
         const body = (
           <>
@@ -133,9 +136,11 @@ export function SentLines({
                 {picked && <Check className='size-4' />}
               </span>
             )}
-            <span style={{ width: countWidth }} className={cn('shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM)}>{toNumber(line.qty)}×</span>
+            <span style={{ width: countWidth }} className={cn('shrink-0 font-medium whitespace-nowrap tabular-nums', line.paid && PAID_DIM, gone && 'font-normal line-through opacity-60')}>
+              {gone ? cancelled : toNumber(line.qty)}×
+            </span>
             <span className={cn('min-w-0 flex-1', line.paid && PAID_DIM)}>
-              <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400')}>
+              <span className={cn('block truncate', negative && 'text-emerald-600 dark:text-emerald-400', gone && 'line-through opacity-60')}>
                 {localized(line.description)}
               </span>
               {localized(line.details) && <span className='type-caption block truncate'>{localized(line.details)}</span>}
@@ -144,10 +149,11 @@ export function SentLines({
                   <bdi>{line.customerName}</bdi>
                 </span>
               )}
+              {cancelled > 0 && <CancelledNote line={line} />}
             </span>
             {line.paid && <PaidTag />}
-            <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400', line.paid && PAID_DIM)}>
-              {money(line.total)}
+            <span className={cn('w-20 shrink-0 text-end tabular-nums', negative && 'text-emerald-600 dark:text-emerald-400', line.paid && PAID_DIM, gone && 'line-through opacity-60')}>
+              {money(gone ? toNumber(line.cancelledQty) * toNumber(line.unitPrice) : line.total)}
             </span>
           </>
         )

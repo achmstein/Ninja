@@ -1,12 +1,15 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRightLeft, Loader2, UserPlus } from 'lucide-react'
+import { ArrowRightLeft, Loader2, UserPlus, X } from 'lucide-react'
+import { useAuth } from 'react-oidc-context'
+import { getRealmRoles } from '@/config/oidc-config'
 import { Button } from '@/components/ui/button'
 import { Sheet, SheetContent, SheetTitle } from '@/components/ui/sheet'
 import { CustomerSearch } from '@/features/customer/customer-search'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { PhoneDeliveryForm } from '@/features/deliveries/phone-delivery-form'
 import { totalWith } from '@/features/sending/bill'
+import { CancelLinesDialog, isCancellable } from '@/features/ticket/cancel-lines-dialog'
 import { MoveTargetDialog, type MoveTarget } from '@/features/ticket/move-target-dialog'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { useTillItems } from '@/lib/brand'
@@ -68,6 +71,7 @@ export function SalePad({
   const localized = useLocalized()
   const money = useMoney()
   const navigate = useNavigate()
+  const auth = useAuth()
   const isMobile = useIsMobile()
   // The owner's choice in admin: photo tiles, or text tiles for a long menu,
   // which on a tablet lists its categories down the side
@@ -92,6 +96,7 @@ export function SalePad({
   const [picked, setPicked] = useState<ReadonlySet<number> | null>(null)
   const [moving, setMoving] = useState(false)
   const [naming, setNaming] = useState(false)
+  const [cancelling, setCancelling] = useState(false)
   // A new sale can go out with a rider instead (use-sale-delivery)
   const saleDelivery = useSaleDelivery(onBill)
   const order = usePlaceOrder({ ticketId, saleDelivery, onBeforeCharge: () => setOrderOpen(false) })
@@ -151,7 +156,12 @@ export function SalePad({
     setPicked(null)
     setMoving(false)
     setNaming(false)
+    setCancelling(false)
   }
+  // An owner may cancel what the kitchen already has, as an owner may void the bill
+  const isOwner = getRealmRoles(auth.user).includes('Owner')
+  const pickedLines = sent.filter((line) => picked?.has(toNumber(line.id)))
+  const canCancel = pickedLines.length > 0 && pickedLines.every(isCancellable)
   /** The picked lines go to another bill; the till follows them there */
   const movePicked = async (target: MoveTarget) => {
     try {
@@ -295,6 +305,18 @@ export function SalePad({
                 {t('moveItems')}
               </Button>
             </div>
+            {isOwner && (
+              <Button
+                variant='outline'
+                className='text-destructive hover:text-destructive h-14 min-w-0 gap-2 text-base'
+                disabled={!canCancel}
+                title={picked.size > 0 && !canCancel ? t('cancelNotItems') : undefined}
+                onClick={() => setCancelling(true)}
+              >
+                <X className='size-5 shrink-0' />
+                {picked.size > 0 ? t('cancelItemsCount', { count: pickedLines.reduce((n, line) => n + toNumber(line.qty), 0) }) : t('cancelItems')}
+              </Button>
+            )}
           </div>
         )
       }
@@ -380,6 +402,16 @@ export function SalePad({
           suggestedName={oneName(sent.filter((line) => picked?.has(toNumber(line.id))))}
           isPending={billLines.moving}
           onPick={movePicked}
+        />
+      )}
+      {bill.ticket && (
+        <CancelLinesDialog
+          ticketId={toNumber(bill.ticket.id)}
+          place={title}
+          lines={pickedLines}
+          open={cancelling}
+          onOpenChange={setCancelling}
+          onDone={stopPicking}
         />
       )}
       <CustomerSearch

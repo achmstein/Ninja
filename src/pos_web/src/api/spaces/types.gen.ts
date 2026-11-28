@@ -312,6 +312,10 @@ export type ListPlacesData = {
          * Only timed (true) or order-only (false) places
          */
         timed?: boolean;
+        /**
+         * Only the places a customer can book: in service and taking bookings (the customer apps' Book tab)
+         */
+        bookable?: boolean;
     };
     url: '/api/places';
 };

@@ -30,6 +30,7 @@ export type BillLineView = {
     total?: number | string;
     customerName?: null | string;
     isMine?: boolean;
+    paid?: boolean;
 };
 
 export type BillView = {
@@ -59,6 +60,7 @@ export type BillView = {
     vatIncluded?: boolean;
     total?: number | string;
     refundedTotal?: number | string;
+    partPaid?: number | string;
 };
 
 export type BreakdownReport = {
@@ -71,6 +73,17 @@ export type BreakdownReport = {
     byCashier?: Array<CashierTotal>;
     byItem?: Array<ItemTotal>;
     byTaker?: Array<TakerTotal>;
+};
+
+export type CancelLineRequest = {
+    lineId: number | string;
+    qty: number | string;
+};
+
+export type CancelLinesRequest = {
+    lines: Array<CancelLineRequest>;
+    reason: string;
+    stockDisposition?: null | string;
 };
 
 export type CashierTotal = {
@@ -909,6 +922,10 @@ export type TicketLineView = {
     customerId?: null | string;
     guestId?: null | string;
     paid?: boolean;
+    cancelledQty?: number | string;
+    cancelReason?: null | string;
+    cancelledBy?: null | string;
+    cancelledAt?: null | string;
 };
 
 export type TicketStatus = number;
@@ -2041,6 +2058,47 @@ export type VoidTicketErrors = {
 export type VoidTicketError = VoidTicketErrors[keyof VoidTicketErrors];
 
 export type VoidTicketResponses = {
+    /**
+     * OK
+     */
+    200: unknown;
+};
+
+export type CancelTicketLinesData = {
+    body: CancelLinesRequest;
+    headers?: {
+        'x-requestid'?: string;
+    };
+    path: {
+        id: number;
+    };
+    query: {
+        /**
+         * The API version, in the format 'major.minor'.
+         */
+        'api-version': string;
+    };
+    url: '/api/tickets/{id}/lines/cancel';
+};
+
+export type CancelTicketLinesErrors = {
+    /**
+     * Bad Request
+     */
+    400: string;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+};
+
+export type CancelTicketLinesError = CancelTicketLinesErrors[keyof CancelTicketLinesErrors];
+
+export type CancelTicketLinesResponses = {
     /**
      * OK
      */

@@ -28,6 +28,8 @@ export function mergeIdenticalLines(lines: TicketLineView[]): TicketLineView[] {
       line.unitPrice,
       line.discount,
       line.paid ?? false,
+      // A line something was cancelled from says so on its own
+      toNumber(line.cancelledQty) > 0 ? String(line.id) : '',
     ])
 
     const at = seen.get(key)
@@ -61,6 +63,22 @@ export function PaidTag() {
   )
 }
 
+/**
+ * What was cancelled of a line at the till, in red under its name: "Cancelled"
+ * when it all went, else how many of how many, and why.
+ */
+export function CancelledNote({ line }: { line: TicketLineView }) {
+  const t = useT()
+  const cancelled = toNumber(line.cancelledQty)
+  const left = toNumber(line.qty)
+  const what = left === 0 ? t('cancelledLine') : t('cancelledSomeOf', { count: cancelled, total: cancelled + left })
+  return (
+    <span className='text-destructive type-caption block truncate font-medium'>
+      {[what, line.cancelReason].filter(Boolean).join(' · ')}
+    </span>
+  )
+}
+
 export function LineRow({
   line,
   selecting,
@@ -82,7 +100,10 @@ export function LineRow({
   const isNegative = toNumber(line.total) < 0
   const discount = toNumber(line.discount)
   // Session time belongs to the session, and what a part payment paid for is done: neither is offered for a move
-  const selectable = selecting && line.source !== 'SessionTime' && !line.paid
+  // Cancelled at the till: a line that all went stays on the bill, struck, and is not offered for anything
+  const cancelled = toNumber(line.cancelledQty)
+  const gone = cancelled > 0 && toNumber(line.qty) === 0
+  const selectable = selecting && line.source !== 'SessionTime' && !line.paid && !gone
 
   const content = (
     <>
@@ -102,6 +123,7 @@ export function LineRow({
           className={cn(
             'truncate type-body font-medium',
             isNegative && 'text-emerald-600 dark:text-emerald-400',
+            gone && 'text-muted-foreground font-normal line-through',
           )}
         >
           {localized(line.description)}
@@ -111,8 +133,9 @@ export function LineRow({
             {localized(line.details)}
           </div>
         )}
-        <div className='text-muted-foreground type-detail tabular-nums'>
-          {toNumber(line.qty)} × {money(line.unitPrice)}
+        {cancelled > 0 && <CancelledNote line={line} />}
+        <div className={cn('text-muted-foreground type-detail tabular-nums', gone && 'line-through')}>
+          {gone ? cancelled : toNumber(line.qty)} × {money(line.unitPrice)}
           {discount > 0 && (
             <span>
               {' '}
@@ -127,9 +150,10 @@ export function LineRow({
           'shrink-0 type-body font-semibold tabular-nums',
           isNegative && 'text-emerald-600 dark:text-emerald-400',
           line.paid && PAID_DIM,
+          gone && 'text-muted-foreground font-normal line-through',
         )}
       >
-        {money(line.total)}
+        {money(gone ? cancelled * toNumber(line.unitPrice) : line.total)}
       </div>
     </>
   )

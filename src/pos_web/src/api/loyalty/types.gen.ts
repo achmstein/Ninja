@@ -49,6 +49,13 @@ export type LoyaltyStatsDto = {
     pointsIssuedToday: number | string;
     pointsIssuedThisWeek: number | string;
     pointsIssuedThisMonth: number | string;
+    pointsRedeemedToday?: number | string;
+    pointsRedeemedThisWeek?: number | string;
+    pointsRedeemedThisMonth?: number | string;
+    pointsOutstanding?: number | string;
+    todayStartsAt?: null | string;
+    weekStartsAt?: null | string;
+    monthStartsAt?: null | string;
 };
 
 export type PointsValueDto = {

@@ -4,8 +4,8 @@ import { type DefaultError, queryOptions, type UseMutationOptions } from '@tanst
 import type { AxiosError } from 'axios';
 
 import { client } from '../client.gen';
-import { deletePayslip, generatePayslips, getAttendance, getEmployee, getEmployeeLedger, getEmployees, getPayslip, getPayslips, getTillEmployees, hireEmployee, leaveEmployee, markAttendance, type Options, payPayslip, postLedgerEntry, rehireEmployee, setPayTerms, updateEmployee } from '../sdk.gen';
-import type { DeletePayslipData, DeletePayslipError, GeneratePayslipsData, GeneratePayslipsError, GeneratePayslipsResponse, GetAttendanceData, GetAttendanceResponse, GetEmployeeData, GetEmployeeLedgerData, GetEmployeeLedgerResponse, GetEmployeeResponse, GetEmployeesData, GetEmployeesResponse, GetPayslipData, GetPayslipResponse, GetPayslipsData, GetPayslipsResponse, GetTillEmployeesData, GetTillEmployeesResponse, HireEmployeeData, HireEmployeeError, HireEmployeeResponse, LeaveEmployeeData, LeaveEmployeeError, MarkAttendanceData, MarkAttendanceError, PayPayslipData, PayPayslipError, PostLedgerEntryData, PostLedgerEntryError, PostLedgerEntryResponse, RehireEmployeeData, RehireEmployeeError, SetPayTermsData, SetPayTermsError, UpdateEmployeeData, UpdateEmployeeError } from '../types.gen';
+import { deleteEmployee, deletePayslip, generatePayslips, getAttendance, getEmployee, getEmployeeLedger, getEmployees, getPayslip, getPayslips, getTillEmployees, hireEmployee, leaveEmployee, markAttendance, type Options, payPayslip, postLedgerEntry, rehireEmployee, setPayTerms, updateEmployee } from '../sdk.gen';
+import type { DeleteEmployeeData, DeleteEmployeeError, DeletePayslipData, DeletePayslipError, GeneratePayslipsData, GeneratePayslipsError, GeneratePayslipsResponse, GetAttendanceData, GetAttendanceResponse, GetEmployeeData, GetEmployeeLedgerData, GetEmployeeLedgerResponse, GetEmployeeResponse, GetEmployeesData, GetEmployeesResponse, GetPayslipData, GetPayslipResponse, GetPayslipsData, GetPayslipsResponse, GetTillEmployeesData, GetTillEmployeesResponse, HireEmployeeData, HireEmployeeError, HireEmployeeResponse, LeaveEmployeeData, LeaveEmployeeError, MarkAttendanceData, MarkAttendanceError, PayPayslipData, PayPayslipError, PostLedgerEntryData, PostLedgerEntryError, PostLedgerEntryResponse, RehireEmployeeData, RehireEmployeeError, SetPayTermsData, SetPayTermsError, UpdateEmployeeData, UpdateEmployeeError } from '../types.gen';
 
 export type QueryKey<TOptions extends Options> = [
     Pick<TOptions, 'baseURL' | 'body' | 'headers' | 'path' | 'query'> & {
@@ -75,6 +75,23 @@ export const hireEmployeeMutation = (options?: Partial<Options<HireEmployeeData>
     return mutationOptions;
 };
 
+/**
+ * Remove someone added by mistake; refused once money has been recorded for them
+ */
+export const deleteEmployeeMutation = (options?: Partial<Options<DeleteEmployeeData>>): UseMutationOptions<unknown, AxiosError<DeleteEmployeeError>, Options<DeleteEmployeeData>> => {
+    const mutationOptions: UseMutationOptions<unknown, AxiosError<DeleteEmployeeError>, Options<DeleteEmployeeData>> = {
+        mutationFn: async (fnOptions) => {
+            const { data } = await deleteEmployee({
+                ...options,
+                ...fnOptions,
+                throwOnError: true
+            });
+            return data;
+        }
+    };
+    return mutationOptions;
+};
+
 export const getEmployeeQueryKey = (options: Options<GetEmployeeData>) => createQueryKey('getEmployee', options);
 
 /**
@@ -94,7 +111,7 @@ export const getEmployeeOptions = (options: Options<GetEmployeeData>) => queryOp
 });
 
 /**
- * Edit name, job, phone, branch or the linked login
+ * Edit name, job, phone, branch or the linked login, or put a wrong start date right
  */
 export const updateEmployeeMutation = (options?: Partial<Options<UpdateEmployeeData>>): UseMutationOptions<unknown, AxiosError<UpdateEmployeeError>, Options<UpdateEmployeeData>> => {
     const mutationOptions: UseMutationOptions<unknown, AxiosError<UpdateEmployeeError>, Options<UpdateEmployeeData>> = {

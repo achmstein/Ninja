@@ -2,7 +2,7 @@
 
 import type { Client, ClientMeta, Options as Options2, RequestResult, TDataShape } from './client';
 import { client } from './client.gen';
-import type { DeletePayslipData, DeletePayslipErrors, DeletePayslipResponses, GeneratePayslipsData, GeneratePayslipsErrors, GeneratePayslipsResponses, GetAttendanceData, GetAttendanceErrors, GetAttendanceResponses, GetEmployeeData, GetEmployeeErrors, GetEmployeeLedgerData, GetEmployeeLedgerErrors, GetEmployeeLedgerResponses, GetEmployeeResponses, GetEmployeesData, GetEmployeesErrors, GetEmployeesResponses, GetPayslipData, GetPayslipErrors, GetPayslipResponses, GetPayslipsData, GetPayslipsErrors, GetPayslipsResponses, GetTillEmployeesData, GetTillEmployeesErrors, GetTillEmployeesResponses, HireEmployeeData, HireEmployeeErrors, HireEmployeeResponses, LeaveEmployeeData, LeaveEmployeeErrors, LeaveEmployeeResponses, MarkAttendanceData, MarkAttendanceErrors, MarkAttendanceResponses, PayPayslipData, PayPayslipErrors, PayPayslipResponses, PostLedgerEntryData, PostLedgerEntryErrors, PostLedgerEntryResponses, RehireEmployeeData, RehireEmployeeErrors, RehireEmployeeResponses, SetPayTermsData, SetPayTermsErrors, SetPayTermsResponses, UpdateEmployeeData, UpdateEmployeeErrors, UpdateEmployeeResponses } from './types.gen';
+import type { DeleteEmployeeData, DeleteEmployeeErrors, DeleteEmployeeResponses, DeletePayslipData, DeletePayslipErrors, DeletePayslipResponses, GeneratePayslipsData, GeneratePayslipsErrors, GeneratePayslipsResponses, GetAttendanceData, GetAttendanceErrors, GetAttendanceResponses, GetEmployeeData, GetEmployeeErrors, GetEmployeeLedgerData, GetEmployeeLedgerErrors, GetEmployeeLedgerResponses, GetEmployeeResponses, GetEmployeesData, GetEmployeesErrors, GetEmployeesResponses, GetPayslipData, GetPayslipErrors, GetPayslipResponses, GetPayslipsData, GetPayslipsErrors, GetPayslipsResponses, GetTillEmployeesData, GetTillEmployeesErrors, GetTillEmployeesResponses, HireEmployeeData, HireEmployeeErrors, HireEmployeeResponses, LeaveEmployeeData, LeaveEmployeeErrors, LeaveEmployeeResponses, MarkAttendanceData, MarkAttendanceErrors, MarkAttendanceResponses, PayPayslipData, PayPayslipErrors, PayPayslipResponses, PostLedgerEntryData, PostLedgerEntryErrors, PostLedgerEntryResponses, RehireEmployeeData, RehireEmployeeErrors, RehireEmployeeResponses, SetPayTermsData, SetPayTermsErrors, SetPayTermsResponses, UpdateEmployeeData, UpdateEmployeeErrors, UpdateEmployeeResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -41,6 +41,11 @@ export const hireEmployee = <ThrowOnError extends boolean = false>(options: Opti
 });
 
 /**
+ * Remove someone added by mistake; refused once money has been recorded for them
+ */
+export const deleteEmployee = <ThrowOnError extends boolean = false>(options: Options<DeleteEmployeeData, ThrowOnError>): RequestResult<DeleteEmployeeResponses, DeleteEmployeeErrors, ThrowOnError> => (options.client ?? client).delete<DeleteEmployeeResponses, DeleteEmployeeErrors, ThrowOnError>({ url: '/api/payroll/employees/{id}', ...options });
+
+/**
  * One employee with their pay history
  */
 export const getEmployee = <ThrowOnError extends boolean = false>(options: Options<GetEmployeeData, ThrowOnError>): RequestResult<GetEmployeeResponses, GetEmployeeErrors, ThrowOnError> => (options.client ?? client).get<GetEmployeeResponses, GetEmployeeErrors, ThrowOnError>({
@@ -50,7 +55,7 @@ export const getEmployee = <ThrowOnError extends boolean = false>(options: Optio
 });
 
 /**
- * Edit name, job, phone, branch or the linked login
+ * Edit name, job, phone, branch or the linked login, or put a wrong start date right
  */
 export const updateEmployee = <ThrowOnError extends boolean = false>(options: Options<UpdateEmployeeData, ThrowOnError>): RequestResult<UpdateEmployeeResponses, UpdateEmployeeErrors, ThrowOnError> => (options.client ?? client).put<UpdateEmployeeResponses, UpdateEmployeeErrors, ThrowOnError>({
     url: '/api/payroll/employees/{id}',
