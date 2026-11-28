@@ -2,10 +2,10 @@ import { useState, type KeyboardEvent } from 'react'
 import { motion } from 'motion/react'
 import { Bike, ChevronRight, Loader2, LogIn, MapPin, ShoppingBag, Store } from 'lucide-react'
 import { GuestSignInChoices } from '@/components/auth/sign-in-options'
-import { shownLabel } from '@/lib/address-line'
+import { addressRow, shownLabel } from '@/lib/address-line'
 import { useAtBranch } from '@/lib/at-branch'
 import { useBranches, useSelectedBranch } from '@/lib/branch'
-import { addressLine, type DeliveryState } from '@/lib/delivery'
+import { type DeliveryState } from '@/lib/delivery'
 import { useDistance } from '@/lib/geo'
 import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
 import { useBranchesByDistance, useBranchSwitch } from '@/lib/use-branch-switch'
@@ -47,6 +47,10 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
   const { address } = delivery
   const modes = ['pickup', 'delivery'] as const
   const words = { building: t('deliveryBuilding'), floor: t('deliveryFloor'), apartment: t('deliveryApartment') }
+  // The address as its row says it: its name over the whole address, or its street over the rest of it
+  const row = address
+    ? addressRow(address, shownLabel(address.label, { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }), words, language)
+    : null
   const area = localized(delivery.zoneName)
   const off = delivery.problem === 'areaOff'
   // The area and about how long it takes, whichever the branch said: "Maadi Degla · about 45 min"
@@ -125,12 +129,11 @@ export function DeliveryChoice({ delivery, cloudKitchen }: { delivery: DeliveryS
           >
             <MapPin className='size-5 shrink-0' />
             <span className='min-w-0 flex-1'>
-              {address ? (
+              {row ? (
                 <>
-                  <span className='block truncate text-note font-semibold'>
-                    {shownLabel(address.label, { home: t('deliveryLabelHome'), work: t('deliveryLabelWork') }) || address.address}
-                  </span>
-                  <span className='block truncate text-caption opacity-70'>{addressLine(address, words, language)}</span>
+                  <span className='block truncate text-note font-semibold'>{row.title}</span>
+                  {/* Only when there is more to say than the line above already does */}
+                  {row.line && <span className='block truncate text-caption opacity-70'>{row.line}</span>}
                 </>
               ) : (
                 <span className='block text-note font-semibold'>{t('deliveryAddAddress')}</span>

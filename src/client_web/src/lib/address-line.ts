@@ -44,6 +44,18 @@ export function formatAddressLine(parts: AddressParts, words: AddressWords, loca
 }
 
 /**
+ * An address as a row shows it: a name over a line. A named address (Home,
+ * Work, the customer's own word) is that name over the whole address. One
+ * with no name is its street over the building, floor and apartment alone,
+ * and over nothing when it has none of them: the street was once said on
+ * both lines, the row reading "Abu Dahshan St / Abu Dahshan St".
+ */
+export function addressRow(parts: AddressParts, name: string, words: AddressWords, locale: string): { title: string; line: string } {
+  if (name.trim()) return { title: name.trim(), line: formatAddressLine(parts, words, locale) }
+  return { title: parts.address?.trim() ?? '', line: formatAddressLine({ ...parts, address: '' }, words, locale) }
+}
+
+/**
  * What a saved address is called. Home and Work are kept as the words "home"
  * and "work", whatever the language, so switching language never loses which
  * is which; anything else is the customer's own name for it. Labels saved

@@ -8,11 +8,11 @@ import {
   updateMyAddressMutation,
 } from '@/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
-import { labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
+import { addressRow, labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'
 import { showPhone, useBrand, usePhoneRule } from '@/lib/brand'
 import { formatPhone, isValidPhone, normalizePhone } from '@/lib/phone'
 import { useSelectedBranch } from '@/lib/branch'
-import { addressBody, addressLine, fromSaved, useMyAddresses } from '@/lib/delivery'
+import { addressBody, fromSaved, useMyAddresses } from '@/lib/delivery'
 import { pointOf, useLocationPermission, useMyLocation, type LatLng } from '@/lib/geo'
 import { useLanguage, useT } from '@/lib/i18n'
 import { problemMessage } from '@/lib/problem'
@@ -108,6 +108,7 @@ export function AddressSheet({
             ) : (
               list.map((address) => {
                 const on = !manage && chosen != null && sameAddress(chosen, address)
+                const row = addressRow(address, shownLabel(address.label, labels), words, language)
                 return (
                   <button
                     key={address.id ?? `device-${address.latitude},${address.longitude}`}
@@ -127,8 +128,9 @@ export function AddressSheet({
                       <LabelIcon kind={labelKind(address.label)} />
                     </span>
                     <span className='flex min-w-0 flex-1 flex-col'>
-                      <span className='truncate text-body font-semibold'>{shownLabel(address.label, labels) || address.address}</span>
-                      <span className='text-muted-foreground line-clamp-2 text-caption'>{addressLine(address, words, language)}</span>
+                      <span className='truncate text-body font-semibold'>{row.title}</span>
+                      {/* Only when there is more to say than the line above already does */}
+                      {row.line && <span className='text-muted-foreground line-clamp-2 text-caption'>{row.line}</span>}
                     </span>
                     {on ? <Check className='size-5 shrink-0' /> : manage && <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' />}
                   </button>

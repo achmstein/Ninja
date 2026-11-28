@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { formatAddressLine, labelKind, listSeparator, shownLabel, storedLabel } from './address-line'
+import { addressRow, formatAddressLine, labelKind, listSeparator, shownLabel, storedLabel } from './address-line'
 
 const words = { building: 'Bldg', floor: 'Floor', apartment: 'Apt' }
 
@@ -36,5 +36,18 @@ describe('labels', () => {
     expect(shownLabel('home', { home: 'البيت', work: 'الشغل' })).toBe('البيت')
     expect(shownLabel('Home', { home: 'البيت', work: 'الشغل' })).toBe('البيت')
     expect(shownLabel('Mum’s', { home: 'Home', work: 'Work' })).toBe('Mum’s')
+  })
+})
+
+describe('addressRow', () => {
+  const words = { building: 'Bldg', floor: 'Floor', apartment: 'Apt' }
+
+  it('a named address is its name over the whole address', () => {
+    expect(addressRow({ address: 'Road 9', building: '12' }, 'Home', words, 'en')).toEqual({ title: 'Home', line: 'Road 9 · Bldg 12' })
+  })
+
+  it('an address with no name never says its street twice', () => {
+    expect(addressRow({ address: 'Road 9', building: '12', floor: '3' }, '', words, 'en')).toEqual({ title: 'Road 9', line: 'Bldg 12, Floor 3' })
+    expect(addressRow({ address: 'Road 9' }, '', words, 'en')).toEqual({ title: 'Road 9', line: '' })
   })
 })
