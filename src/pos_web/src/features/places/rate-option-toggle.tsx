@@ -8,7 +8,8 @@ import { cn } from '@/lib/utils'
  * the tills always had, now one button per option, sized for a thumb.
  * `rates` prints each option's hourly price after its name, so the cashier
  * sees them all while choosing. Renders nothing for a one-rate tariff:
- * there is nothing to pick. `stacked` puts one option a row, the name at
+ * there is nothing to pick. Side by side, a rate goes under its option's
+ * name, so two options fit a phone. `stacked` puts one option a row, the name at
  * the start and the rate at the end: for a narrow column (the bill's
  * panel), where side by side they overflow.
  */
@@ -99,26 +100,33 @@ export function RateOptionToggle({
             disabled={disabled}
             onClick={() => onChange(code)}
             className={cn(
-              'flex h-12 items-center justify-center gap-2 rounded-lg border text-base font-medium transition-colors disabled:opacity-50',
+              // min-w-0: a column never grows past its share, so a long name
+              // or rate is cut inside its button, never pushed off a phone
+              'flex min-w-0 items-center justify-center gap-2 rounded-lg border px-2 text-base font-medium transition-colors disabled:opacity-50',
+              rates ? 'h-14' : 'h-12',
               selected
                 ? 'border-primary bg-primary text-primary-foreground'
                 : 'hover:bg-muted',
             )}
           >
-            <Icon className='size-5' />
-            {localized(option.name)}
-            {rates?.[code] && (
-              <span
-                className={cn(
-                  'type-detail tabular-nums',
-                  selected
-                    ? 'text-primary-foreground/80'
-                    : 'text-muted-foreground',
-                )}
-              >
-                · {rates[code]}
-              </span>
-            )}
+            <Icon className='size-5 shrink-0' />
+            {/* The rate sits under the name, not beside it: side by side the
+                two buttons were wider than a phone */}
+            <span className='flex min-w-0 flex-col items-start leading-5'>
+              <span className='max-w-full truncate'>{localized(option.name)}</span>
+              {rates?.[code] && (
+                <span
+                  className={cn(
+                    'type-caption max-w-full truncate tabular-nums',
+                    selected
+                      ? 'text-primary-foreground/80'
+                      : 'text-muted-foreground',
+                  )}
+                >
+                  {rates[code]}
+                </span>
+              )}
+            </span>
           </button>
         )
       })}

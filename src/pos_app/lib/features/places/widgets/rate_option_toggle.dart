@@ -8,7 +8,8 @@ import '../../../core/theme/type_roles.dart';
 /// Segmented picker over a tariff's rate options — the Single/Multi toggle
 /// the tills always had, now one button per option, sized for a thumb.
 /// [rates] prints each option's hourly price after its name, so the
-/// cashier sees them all while choosing. Renders nothing for a one-rate
+/// cashier sees them all while choosing; side by side, the rate goes under
+/// the name so two options fit a phone. Renders nothing for a one-rate
 /// tariff: there is nothing to pick.
 class RateOptionToggle extends StatelessWidget {
   final List<RateOption> options;
@@ -86,29 +87,49 @@ class RateOptionToggle extends StatelessWidget {
         for (final (index, option) in options.indexed) ...[
           if (index > 0) const SizedBox(width: 8),
           Expanded(
-            child: SizedBox(
-              height: Sizes.control,
-              child: FButton(
-                variant: value == option.code ? null : FButtonVariant.outline,
-                onPress: disabled ? null : () => onChange(option.code),
-                // The first option is the base rate, the rest the upgrades
-                prefix: Icon(index == 0 ? FIcons.user : FIcons.users, size: Sizes.icon),
-                child: Text.rich(
-                  TextSpan(
-                    text: option.name.localized(context),
-                    style: theme.type.button,
-                    children: [
-                      if (rates?[option.code] case final rate?)
-                        TextSpan(
-                          text: ' · $rate',
-                          style: theme.type.detail.copyWith(
-                            color: value == option.code
-                                ? theme.colors.primaryForeground.withValues(alpha: 0.8)
-                                : theme.colors.mutedForeground,
-                            fontFeatures: const [FontFeature.tabularFigures()],
+            // The button lays its child out as wide as it asks, so the name and
+            // rate are held to the button's own width here: side by side on one
+            // line, two options were wider than a phone
+            child: LayoutBuilder(
+              builder: (context, box) => SizedBox(
+                // Taller with a rate: it sits under the name, not beside it
+                height: rates == null ? Sizes.control : Sizes.control + 12,
+                child: FButton(
+                  variant: value == option.code ? null : FButtonVariant.outline,
+                  onPress: disabled ? null : () => onChange(option.code),
+                  child: SizedBox(
+                    width: (box.maxWidth - 34).clamp(0, double.infinity),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        // The first option is the base rate, the rest the upgrades
+                        Icon(index == 0 ? FIcons.user : FIcons.users, size: Sizes.icon),
+                        const SizedBox(width: Sizes.gapSm),
+                        Flexible(
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(option.name.localized(context),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: theme.type.button.copyWith(height: 20 / 16)),
+                              if (rates?[option.code] case final rate?)
+                                Text(rate,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: theme.type.caption.copyWith(
+                                      height: 16 / 12,
+                                      color: value == option.code
+                                          ? theme.colors.primaryForeground.withValues(alpha: 0.8)
+                                          : theme.colors.mutedForeground,
+                                      fontFeatures: const [FontFeature.tabularFigures()],
+                                    )),
+                            ],
                           ),
                         ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
               ),
