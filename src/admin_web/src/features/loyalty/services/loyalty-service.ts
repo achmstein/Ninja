@@ -1,12 +1,25 @@
-import { apiClient } from '@/lib/api-client'
+import {
+  adjustPoints,
+  createAccount,
+  earnPoints,
+  getAccount,
+  getStats,
+  getTierInfo,
+  getTransactions,
+  listAccounts,
+} from '@ninja/api/loyalty/sdk.gen'
 import type {
+  AdjustPointsRequest,
+  EarnPointsRequest,
   LoyaltyAccount,
   LoyaltyStats,
-  TierInfo,
   PointsTransaction,
-  EarnPointsRequest,
-  AdjustPointsRequest,
+  TierInfo,
 } from '../types'
+
+// The generated client types decimals loosely (number | string) where these
+// screens' own types say number; the API sends numbers, so they are read as
+// the screens' types here, at the edge.
 
 // The API reports enum names ("Bronze", "Purchase"); the UI works in
 // lowercase throughout, so normalize at the edge.
@@ -17,67 +30,60 @@ function normalizeAccount(account: LoyaltyAccount): LoyaltyAccount {
   }
 }
 
+/** The back office's loyalty calls, on the generated Loyalty client */
 export const loyaltyService = {
-  // Get paginated list of loyalty accounts
+  // Paginated list of loyalty accounts
   async getAccounts(first = 0, max = 50): Promise<LoyaltyAccount[]> {
-    const params = new URLSearchParams({
-      first: String(first),
-      max: String(max),
-      'api-version': '1.0',
-    })
-    const response = await apiClient.get<LoyaltyAccount[]>(`/api/loyalty/accounts?${params}`)
-    return response.data.map(normalizeAccount)
+    const { data } = await listAccounts({ query: { first, max }, throwOnError: true })
+    return (data as unknown as LoyaltyAccount[]).map(normalizeAccount)
   },
 
-  // Get a single loyalty account by user ID
+  // A single loyalty account by user ID
   async getAccount(userId: string): Promise<LoyaltyAccount> {
-    const response = await apiClient.get<LoyaltyAccount>(`/api/loyalty/accounts/${userId}?api-version=1.0`)
-    return normalizeAccount(response.data)
+    const { data } = await getAccount({ path: { userId }, throwOnError: true })
+    return normalizeAccount(data as unknown as LoyaltyAccount)
   },
 
-  // Get loyalty program statistics
+  // Loyalty program statistics
   async getStats(): Promise<LoyaltyStats> {
-    const response = await apiClient.get<LoyaltyStats>('/api/loyalty/stats?api-version=1.0')
+    const { data } = await getStats({ throwOnError: true })
+    const stats = data as unknown as LoyaltyStats
     return {
-      ...response.data,
+      ...stats,
       accountsByTier: Object.fromEntries(
-        Object.entries(response.data.accountsByTier ?? {}).map(([tier, count]) => [tier.toLowerCase(), count])
+        Object.entries(stats.accountsByTier ?? {}).map(([tier, count]) => [tier.toLowerCase(), count])
       ),
     }
   },
 
-  // Get tier information
+  // Tier information
   async getTiers(): Promise<TierInfo[]> {
-    const response = await apiClient.get<TierInfo[]>('/api/loyalty/tiers?api-version=1.0')
-    return response.data
+    const { data } = await getTierInfo({ throwOnError: true })
+    return data as unknown as TierInfo[]
   },
 
-  // Get transaction history for a user
+  // Transaction history for a user
   async getTransactions(userId: string, max = 50): Promise<PointsTransaction[]> {
-    const params = new URLSearchParams({
-      max: String(max),
-      'api-version': '1.0',
-    })
-    const response = await apiClient.get<PointsTransaction[]>(`/api/loyalty/transactions/${userId}?${params}`)
-    return response.data.map((transaction) => ({
+    const { data } = await getTransactions({ path: { userId }, query: { max }, throwOnError: true })
+    return (data as unknown as PointsTransaction[]).map((transaction) => ({
       ...transaction,
       type: transaction.type?.toLowerCase() ?? '',
     }))
   },
 
   // Earn points for a user
-  async earnPoints(data: EarnPointsRequest): Promise<void> {
-    await apiClient.post('/api/loyalty/transactions/earn?api-version=1.0', data)
+  async earnPoints(body: EarnPointsRequest): Promise<void> {
+    await earnPoints({ body, throwOnError: true })
   },
 
   // Adjust points for a user (admin only)
-  async adjustPoints(data: AdjustPointsRequest): Promise<void> {
-    await apiClient.post('/api/loyalty/transactions/adjust?api-version=1.0', data)
+  async adjustPoints(body: AdjustPointsRequest): Promise<void> {
+    await adjustPoints({ body, throwOnError: true })
   },
 
   // Create a new loyalty account
   async createAccount(userId: string): Promise<LoyaltyAccount> {
-    const response = await apiClient.post<LoyaltyAccount>('/api/loyalty/accounts?api-version=1.0', { userId })
-    return response.data
+    const { data } = await createAccount({ body: { userId }, throwOnError: true })
+    return data as unknown as LoyaltyAccount
   },
 }
