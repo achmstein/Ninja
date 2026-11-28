@@ -68,7 +68,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const followed = useLiveOrder()
   // The proposed row, tried in the preview with an order the panel sets (lib/dock-preview): the stage is the
   // headline with the minutes left, a waiter asked for is said in
-  // words, and an order on its way stays in sight over an unsent one
+  // words
   const preview = useDockPreview()
   const enhanced = preview.on
   const stage = enhanced && preview.stage ? preview.stage : followed.stage
@@ -125,22 +125,6 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
 
   return (
     <>
-      <AnimatePresence>
-        {enhanced && stage && !trayEmpty && (
-          <motion.button
-            key='said'
-            type='button'
-            onClick={() => setOpen(true)}
-            initial={{ opacity: 0, y: 12, x: '-50%' }}
-            animate={{ opacity: 1, y: 0, x: '-50%' }}
-            exit={{ opacity: 0, y: 12, x: '-50%' }}
-            className='slab absolute -top-10 left-1/2 z-10 flex h-8 items-center gap-2 rounded-full px-3.5 text-caption font-semibold whitespace-nowrap shadow-(--slab-shadow)'
-          >
-            {StageIcon && <StageIcon className='size-3.5' />}
-            {headline}
-          </motion.button>
-        )}
-      </AnimatePresence>
       <AnimatePresence initial={false}>
         {trayEmpty && (
           <motion.button
