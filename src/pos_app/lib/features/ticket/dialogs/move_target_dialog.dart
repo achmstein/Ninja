@@ -19,14 +19,18 @@ import '../../tickets/models/ticket_summary.dart';
 import '../../tickets/providers/tickets_provider.dart';
 import '../../../core/theme/type_roles.dart';
 
-/// Moving the picked lines: one list of every place they can go, one tap
-/// each. A bill already on the floor (the customer who ordered at a table and
-/// then took a room). A new tab by name, for whoever is paying on their own.
-/// A second bill for the same place, when an order landed on the previous
-/// group's bill. A free table, opened and filled in one step. A room's own
-/// bill follows its stay, so a room never gets a second one. The box on the
-/// top row narrows the list by a bill's or a table's name. Resolves to the
-/// pick. The web till's MoveTargetDialog is the same.
+/// Moving the picked lines: every place they can go, one tap each. First a
+/// bill in someone's name, for whoever is paying on their own: the people
+/// already on this bill are names to tap (the one the picked lines are for
+/// comes first, lit), and a new name is typed in the box on the top row and
+/// taken with the keyboard's done or a tap. Naming a bill used to be a row,
+/// then a field, then Create. Then a bill already on the floor (the customer
+/// who ordered at a table and then took a room), a second bill for the same
+/// place (an order landed on the previous group's bill), and a free table,
+/// opened and filled in one step. A room's own bill follows its stay, so a
+/// room never gets a second one. What is typed in the box also narrows the
+/// bills and the tables by name. Resolves to the pick. The web till's
+/// MoveTargetDialog is the same.
 Future<MoveTarget?> showMoveTargetDialog(
   BuildContext context, {
   required TicketDetail ticket,
@@ -37,7 +41,7 @@ Future<MoveTarget?> showMoveTargetDialog(
   /// Every movable line is picked: a same-place split would just be a rename
   required bool allSelected,
 
-  /// The one customer every picked line is for: the new tab's name, ready to take or change
+  /// The one customer every picked line is for: the first name offered for a bill of their own
   String? suggestedName,
 }) {
   return showPosDialog<MoveTarget>(
@@ -63,12 +67,7 @@ class MoveTargetList extends ConsumerStatefulWidget {
 
 class _MoveTargetListState extends ConsumerState<MoveTargetList> {
   final _search = TextEditingController();
-
-  // The picked lines' one customer, already there: one tap names the tab for them
-  late final _label = TextEditingController(text: widget.suggestedName ?? '');
-
-  /// The new tab's name is asked only once that row is tapped: a step replaces the row
-  bool _naming = false;
+  final _searchFocus = FocusNode();
 
   @override
   void initState() {
@@ -79,16 +78,14 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
   @override
   void dispose() {
     _search.dispose();
-    _label.dispose();
+    _searchFocus.dispose();
     super.dispose();
   }
 
   void _pick(MoveTarget target) => Navigator.of(context, rootNavigator: true).pop(target);
 
-  void _createTab() {
-    final name = _label.text.trim();
-    _pick(MoveToCounter(name.isEmpty ? null : name));
-  }
+  /// A bill of their own, in that name
+  void _named(String name) => _pick(MoveToCounter(name));
 
   @override
   Widget build(BuildContext context) {
@@ -127,8 +124,15 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
     final canSplit = ticket.sessionId == null && !widget.allSelected;
     final placeName = ticket.locationName?.localized(context) ?? '';
     final place = placeName.isNotEmpty ? placeName : ((ticket.label ?? '').isNotEmpty ? ticket.label! : l10n.counter);
-    // A new bill's rows are for when nothing is being searched for by name
-    final offersNew = q.isEmpty;
+    // Who is on this bill: each a name to give a bill of their own, the picked lines' one customer first
+    final suggested = (widget.suggestedName ?? '').trim();
+    final people = <String>[];
+    for (final name in [suggested, for (final line in ticket.lines) (line.customerName ?? '').trim()]) {
+      if (name.isNotEmpty && !people.contains(name) && (q.isEmpty || has(name))) people.add(name);
+    }
+    // What is typed is a new name unless it is one of theirs already
+    final typed = _search.text.trim();
+    final fresh = typed.isNotEmpty && !people.any((name) => name.toLowerCase() == q);
     final muted = theme.colors.mutedForeground;
     final rule = Container(height: 1, color: theme.colors.border);
 
@@ -190,7 +194,74 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
           ),
         );
 
+    // A name to give a bill to: one tap. Lit for the likeliest, or the new one being typed
+    Widget name(String text, {String? note, bool lit = false, bool dashed = false, IconData? icon, required VoidCallback onPress}) {
+      final ink = lit ? theme.colors.primaryForeground : (dashed ? muted : theme.colors.foreground);
+      return FTappable(
+        onPress: onPress,
+        builder: (context, states, child) => DottedOrSolid(
+          dashed: dashed,
+          color: lit ? theme.colors.primary : theme.colors.border,
+          fill: lit
+              ? theme.colors.primary
+              : states.contains(FTappableVariant.pressed)
+                  ? theme.colors.secondary
+                  : null,
+          child: child!,
+        ),
+        child: ConstrainedBox(
+          constraints: const BoxConstraints(minHeight: 52),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                if (icon != null) ...[Icon(icon, size: Sizes.iconSmall, color: ink), const SizedBox(width: 8)],
+                Flexible(
+                  child: Text(text,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: theme.type.heading.copyWith(color: ink, fontWeight: dashed ? FontWeight.w500 : null)),
+                ),
+                if (note != null) ...[
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(note,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: theme.type.caption.copyWith(color: ink.withValues(alpha: 0.75))),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
     final rows = <Widget>[
+      caption(l10n.moveNamedBill),
+      Container(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 12),
+        decoration: BoxDecoration(border: Border(bottom: BorderSide(color: theme.colors.border))),
+        child: Wrap(
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (fresh) name(l10n.moveNewNamed(bidiIsolate(typed)), lit: true, onPress: () => _named(typed)),
+            for (final (index, person) in people.indexed)
+              name(
+                bidiIsolate(person),
+                // The picked lines' own customer is the likeliest: lit, and said why
+                note: person == suggested ? l10n.moveNamedTheirs : null,
+                lit: person == suggested && index == 0 && !fresh,
+                onPress: () => _named(person),
+              ),
+            if (typed.isEmpty)
+              name(l10n.moveAnotherName, dashed: true, icon: FIcons.plus, onPress: _searchFocus.requestFocus),
+          ],
+        ),
+      ),
       if (others.isNotEmpty) caption(l10n.moveOpenBills),
       for (final target in others)
         row(
@@ -200,52 +271,13 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
           amount: money(context, target.total),
           onPress: () => _pick(MoveToTicket(target.id)),
         ),
-      if (offersNew) ...[
-        caption(l10n.moveNewBill),
-        if (_naming)
-          Padding(
-            padding: const EdgeInsets.fromLTRB(16, 8, 16, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.end,
-              children: [
-                Expanded(
-                  child: FTextField(
-                    control: FTextFieldControl.managed(controller: _label),
-                    label: Text(l10n.tabName),
-                    maxLines: 1,
-                    // Asked for by the tap on its row: it is what is typed into next
-                    autofocus: true,
-                    textInputAction: TextInputAction.done,
-                    onSubmit: (_) => _createTab(),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                ConstrainedBox(
-                  constraints: const BoxConstraints(minWidth: 96, minHeight: Sizes.control),
-                  child: FButton(
-                    mainAxisSize: MainAxisSize.min,
-                    onPress: _createTab,
-                    child: Text(l10n.moveCreate, style: theme.type.button),
-                  ),
-                ),
-              ],
-            ),
-          )
-        else
-          row(
-            icon: FIcons.receiptText,
-            title: l10n.moveTabWithName,
-            detail: l10n.moveTabWithNameHint,
-            onPress: () => setState(() => _naming = true),
-          ),
-        if (canSplit)
-          row(
-            icon: FIcons.split,
-            title: l10n.moveSecondBill(place),
-            detail: l10n.moveSecondBillHint,
-            onPress: () => _pick(const MoveToSplit()),
-          ),
-      ],
+      if (q.isEmpty && canSplit)
+        row(
+          icon: FIcons.split,
+          title: l10n.moveSecondBill(place),
+          detail: l10n.moveSecondBillHint,
+          onPress: () => _pick(const MoveToSplit()),
+        ),
       if (freeTables.isNotEmpty) ...[
         caption(l10n.moveFreeTable),
         // Tiles in a grid, all the same size: a few to choose between, one tap each
@@ -268,11 +300,6 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
           ),
         ),
       ],
-      if (others.isEmpty && freeTables.isEmpty && !offersNew)
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 32),
-          child: Text(l10n.moveNothing, textAlign: TextAlign.center, style: theme.type.body.copyWith(color: muted)),
-        ),
     ];
 
     return ConstrainedBox(
@@ -288,9 +315,14 @@ class _MoveTargetListState extends ConsumerState<MoveTargetList> {
             const SizedBox(height: 12),
             FTextField(
               control: FTextFieldControl.managed(controller: _search),
+              focusNode: _searchFocus,
               hint: l10n.moveFind,
               maxLines: 1,
-              textInputAction: TextInputAction.search,
+              // Done takes what is typed as the new bill's name
+              textInputAction: TextInputAction.done,
+              onSubmit: (value) {
+                if (value.trim().isNotEmpty) _named(value.trim());
+              },
               clearable: (value) => value.text.isNotEmpty,
             ),
             const SizedBox(height: 12),
@@ -355,4 +387,52 @@ class _TableTile extends StatelessWidget {
       ),
     );
   }
+}
+
+/// A name chip's outline: solid, or dashed for the one that asks for another name
+class DottedOrSolid extends StatelessWidget {
+  final bool dashed;
+  final Color color;
+  final Color? fill;
+  final Widget child;
+
+  const DottedOrSolid({super.key, required this.dashed, required this.color, required this.child, this.fill});
+
+  @override
+  Widget build(BuildContext context) {
+    if (!dashed) {
+      return DecoratedBox(
+        decoration: BoxDecoration(
+          color: fill,
+          border: Border.all(color: color),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: child,
+      );
+    }
+    return CustomPaint(painter: _Dashes(color), child: child);
+  }
+}
+
+class _Dashes extends CustomPainter {
+  final Color color;
+  const _Dashes(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1;
+    final outline = Path()
+      ..addRRect(RRect.fromRectAndRadius((Offset.zero & size).deflate(0.5), const Radius.circular(12)));
+    for (final metric in outline.computeMetrics()) {
+      for (var at = 0.0; at < metric.length; at += 8) {
+        canvas.drawPath(metric.extractPath(at, at + 4), paint);
+      }
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Dashes old) => old.color != color;
 }

@@ -946,19 +946,10 @@ class AppLocalizationsEn extends AppLocalizations {
   }
 
   @override
-  String get moveFind => 'Find a bill or a table…';
+  String get moveFind => 'Search, or type a new bill\'s name';
 
   @override
   String get moveOpenBills => 'Open bills';
-
-  @override
-  String get moveNewBill => 'A new bill';
-
-  @override
-  String get moveTabWithName => 'A tab with a name';
-
-  @override
-  String get moveTabWithNameHint => 'For someone paying on their own';
 
   @override
   String moveSecondBill(String place) {
@@ -970,12 +961,6 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get moveFreeTable => 'A free table';
-
-  @override
-  String get moveCreate => 'Create';
-
-  @override
-  String get moveNothing => 'Nothing by that name';
 
   @override
   String get noItemsInCategory => 'No items in this category';
@@ -3070,4 +3055,38 @@ class AppLocalizationsEn extends AppLocalizations {
   String tenderWas(String from) {
     return 'Was $from';
   }
+
+  @override
+  String get moveNamedBill => 'A bill in the name of';
+
+  @override
+  String moveNewNamed(String name) {
+    return 'New bill for “$name”';
+  }
+
+  @override
+  String get moveNamedTheirs => 'the picked items are theirs';
+
+  @override
+  String get moveAnotherName => 'Another name';
+
+  @override
+  String get availabilityOffNow => 'Not available now';
+
+  @override
+  String availabilityOffCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count unavailable',
+      one: '1 unavailable',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get availabilityAllOn => 'Everything is available';
+
+  @override
+  String get searchResults => 'Search results';
 }

@@ -83,7 +83,7 @@ void main() {
       return () => picked;
     }
 
-    testWidgets('every place the lines can go is one list: open bills, a new bill, a free table ($lang)', (tester) async {
+    testWidgets('every place the lines can go is one list: a bill by name, open bills, a free table ($lang)', (tester) async {
       final picked = await open(tester);
       final dialog = find.byType(MoveTargetList);
       final context = tester.element(dialog);
@@ -98,7 +98,7 @@ void main() {
       expect(FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<FTextField>(), isNull);
 
       // The parts, in their order
-      final captions = [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable].map(labelCase).toList();
+      final captions = [l10n.moveNamedBill, l10n.moveOpenBills, l10n.moveFreeTable].map(labelCase).toList();
       final tops = [for (final caption in captions) tester.getRect(find.text(caption)).top];
       expect(tops, [...tops]..sort());
       expect(tester.getRect(search).bottom, lessThanOrEqualTo(tops.first));
@@ -111,9 +111,8 @@ void main() {
       expect(find.text('${l10n.counter} · ${hashNumber(1044)}'), findsOneWidget);
       expect(find.text('${l10n.table} · ${hashNumber(7)}'), findsNothing, reason: 'not the bill they are on');
 
-      // A new bill: a tab by name, or a second bill for the same place
-      expect(find.text(l10n.moveTabWithName), findsOneWidget);
-      expect(find.text(l10n.moveTabWithNameHint), findsOneWidget);
+      // A bill by name: nobody is on this one yet, so only the way to another name; and a second bill for the same place
+      expect(find.text(l10n.moveAnotherName), findsOneWidget);
       expect(find.text(l10n.moveSecondBill(_table.locationName!.getText(locale))), findsOneWidget);
       expect(find.text(l10n.moveSecondBillHint), findsOneWidget);
 
@@ -124,7 +123,6 @@ void main() {
         for (final name in free) tester.getSize(find.ancestor(of: find.text(name), matching: find.byWidgetPredicate((w) => w is FTappable)).first),
       ];
       expect(tiles.toSet(), hasLength(1));
-      expect(find.text(l10n.moveNothing), findsNothing);
 
       // One tap moves
       await tester.tap(find.text(_roomName.getText(locale)));
@@ -134,7 +132,7 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('searching narrows the bills and tables, and hides the new bill ($lang)', (tester) async {
+    testWidgets('what is typed narrows the bills and tables, and is offered as a new bill\'s name ($lang)', (tester) async {
       final picked = await open(tester);
       final garden = const LocalizedText(en: 'Garden', ar: 'الحديقة').getText(locale);
       await tester.enterText(find.byType(FTextField), garden);
@@ -143,8 +141,8 @@ void main() {
       // The bill on Garden 2 and the free Garden 1; nothing else
       expect(find.text('${l10n.table} · ${hashNumber(1045)}'), findsOneWidget);
       expect(find.text(_roomName.getText(locale)), findsNothing);
-      expect(find.text(labelCase(l10n.moveNewBill)), findsNothing);
-      expect(find.text(l10n.moveTabWithName), findsNothing);
+      expect(find.text(l10n.moveNewNamed(bidiIsolate(garden))), findsOneWidget);
+      expect(find.text(l10n.moveAnotherName), findsNothing);
       expect(find.text(l10n.moveSecondBillHint), findsNothing);
       expect(find.text(labelCase(l10n.moveFreeTable)), findsOneWidget);
       final free = const LocalizedText(en: 'Garden 1', ar: 'الحديقة ١').getText(locale);
@@ -158,7 +156,7 @@ void main() {
 
       await tester.enterText(find.byType(FTextField), 'zzzz');
       await tester.pumpAndSettle();
-      expect(find.text(l10n.moveNothing), findsOneWidget);
+      expect(find.text(l10n.moveNewNamed(bidiIsolate('zzzz'))), findsOneWidget);
       expect(find.text(labelCase(l10n.moveOpenBills)), findsNothing);
 
       // Back to a free table: one tap moves there
@@ -170,24 +168,36 @@ void main() {
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
-    testWidgets('a new tab asks its name once its row is tapped, the lines\' customer already in it ($lang)', (tester) async {
+    testWidgets('the lines\' own customer is a name to tap for a bill of their own ($lang)', (tester) async {
       final picked = await open(tester, name: 'Karim Mostafa');
-      expect(find.text('Karim Mostafa'), findsNothing);
-      await tester.tap(find.text(l10n.moveTabWithName));
+      expect(find.text(bidiIsolate('Karim Mostafa')), findsOneWidget);
+      expect(find.text(l10n.moveNamedTheirs), findsOneWidget);
+      await tester.tap(find.text(bidiIsolate('Karim Mostafa')));
+      await tester.pumpAndSettle();
+      expect(find.byType(MoveTargetList), findsNothing);
+      expect(picked(), isA<MoveToCounter>().having((t) => t.label, 'label', 'Karim Mostafa'));
+      await tester.pumpWidget(const SizedBox.shrink());
+    });
+
+    testWidgets('a new name is typed in the box and taken with one tap ($lang)', (tester) async {
+      final picked = await open(tester, name: 'Karim Mostafa');
+      // Another name: the box is what is typed into next
+      await tester.tap(find.text(l10n.moveAnotherName));
+      await tester.pumpAndSettle();
+      expect(FocusManager.instance.primaryFocus?.context?.findAncestorWidgetOfExactType<FTextField>(), isNotNull);
+      await tester.enterText(find.byType(FTextField), 'Nour');
       await tester.pumpAndSettle();
       expectFits(tester);
-      expect(find.text(l10n.moveTabWithName), findsNothing, reason: 'the step takes the row\'s place');
-      expect(find.text(l10n.tabName), findsOneWidget);
-      expect(find.text('Karim Mostafa'), findsOneWidget);
-      await tester.tap(find.widgetWithText(FButton, l10n.moveCreate));
+      expect(find.text(bidiIsolate('Karim Mostafa')), findsNothing, reason: 'narrowed by what is typed');
+      await tester.tap(find.text(l10n.moveNewNamed(bidiIsolate('Nour'))));
       await tester.pumpAndSettle();
-      expect(picked(), isA<MoveToCounter>().having((t) => t.label, 'label', 'Karim Mostafa'));
+      expect(picked(), isA<MoveToCounter>().having((t) => t.label, 'label', 'Nour'));
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
     testWidgets('a room never gets a second bill, nor a bill whose every line is picked ($lang)', (tester) async {
       await open(tester, ticket: _room);
-      expect(find.text(l10n.moveTabWithName), findsOneWidget);
+      expect(find.text(l10n.moveAnotherName), findsOneWidget);
       expect(find.text(l10n.moveSecondBillHint), findsNothing);
       await tester.pumpWidget(const SizedBox.shrink());
 

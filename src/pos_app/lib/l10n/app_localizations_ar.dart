@@ -960,19 +960,10 @@ class AppLocalizationsAr extends AppLocalizations {
   }
 
   @override
-  String get moveFind => 'ابحث عن فاتورة أو طاولة…';
+  String get moveFind => 'ابحث، أو اكتب اسم الحساب الجديد';
 
   @override
   String get moveOpenBills => 'فواتير مفتوحة';
-
-  @override
-  String get moveNewBill => 'فاتورة جديدة';
-
-  @override
-  String get moveTabWithName => 'حساب باسم';
-
-  @override
-  String get moveTabWithNameHint => 'لمن يدفع وحده';
 
   @override
   String moveSecondBill(String place) {
@@ -984,12 +975,6 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get moveFreeTable => 'طاولة فارغة';
-
-  @override
-  String get moveCreate => 'أنشئ';
-
-  @override
-  String get moveNothing => 'لا يوجد شيء بهذا الاسم';
 
   @override
   String get noItemsInCategory => 'لا توجد أصناف في هذا القسم';
@@ -3081,4 +3066,40 @@ class AppLocalizationsAr extends AppLocalizations {
   String tenderWas(String from) {
     return 'كانت $from';
   }
+
+  @override
+  String get moveNamedBill => 'حساب باسم';
+
+  @override
+  String moveNewNamed(String name) {
+    return 'حساب جديد باسم «$name»';
+  }
+
+  @override
+  String get moveNamedTheirs => 'الأصناف المختارة باسمه';
+
+  @override
+  String get moveAnotherName => 'اسم آخر';
+
+  @override
+  String get availabilityOffNow => 'غير متاح الآن';
+
+  @override
+  String availabilityOffCount(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: '$count غير متاح',
+      few: '$count غير متاحة',
+      two: 'اثنان غير متاحين',
+      one: 'واحد غير متاح',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get availabilityAllOn => 'كل الأصناف متاحة';
+
+  @override
+  String get searchResults => 'نتائج البحث';
 }

@@ -1679,7 +1679,7 @@ abstract class AppLocalizations {
   /// No description provided for @moveFind.
   ///
   /// In en, this message translates to:
-  /// **'Find a bill or a table…'**
+  /// **'Search, or type a new bill\'s name'**
   String get moveFind;
 
   /// No description provided for @moveOpenBills.
@@ -1687,24 +1687,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open bills'**
   String get moveOpenBills;
-
-  /// No description provided for @moveNewBill.
-  ///
-  /// In en, this message translates to:
-  /// **'A new bill'**
-  String get moveNewBill;
-
-  /// No description provided for @moveTabWithName.
-  ///
-  /// In en, this message translates to:
-  /// **'A tab with a name'**
-  String get moveTabWithName;
-
-  /// No description provided for @moveTabWithNameHint.
-  ///
-  /// In en, this message translates to:
-  /// **'For someone paying on their own'**
-  String get moveTabWithNameHint;
 
   /// No description provided for @moveSecondBill.
   ///
@@ -1723,18 +1705,6 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'A free table'**
   String get moveFreeTable;
-
-  /// No description provided for @moveCreate.
-  ///
-  /// In en, this message translates to:
-  /// **'Create'**
-  String get moveCreate;
-
-  /// No description provided for @moveNothing.
-  ///
-  /// In en, this message translates to:
-  /// **'Nothing by that name'**
-  String get moveNothing;
 
   /// No description provided for @noItemsInCategory.
   ///
@@ -5275,6 +5245,54 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Was {from}'**
   String tenderWas(String from);
+
+  /// No description provided for @moveNamedBill.
+  ///
+  /// In en, this message translates to:
+  /// **'A bill in the name of'**
+  String get moveNamedBill;
+
+  /// No description provided for @moveNewNamed.
+  ///
+  /// In en, this message translates to:
+  /// **'New bill for “{name}”'**
+  String moveNewNamed(String name);
+
+  /// No description provided for @moveNamedTheirs.
+  ///
+  /// In en, this message translates to:
+  /// **'the picked items are theirs'**
+  String get moveNamedTheirs;
+
+  /// No description provided for @moveAnotherName.
+  ///
+  /// In en, this message translates to:
+  /// **'Another name'**
+  String get moveAnotherName;
+
+  /// No description provided for @availabilityOffNow.
+  ///
+  /// In en, this message translates to:
+  /// **'Not available now'**
+  String get availabilityOffNow;
+
+  /// No description provided for @availabilityOffCount.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{1 unavailable} other{{count} unavailable}}'**
+  String availabilityOffCount(int count);
+
+  /// No description provided for @availabilityAllOn.
+  ///
+  /// In en, this message translates to:
+  /// **'Everything is available'**
+  String get availabilityAllOn;
+
+  /// No description provided for @searchResults.
+  ///
+  /// In en, this message translates to:
+  /// **'Search results'**
+  String get searchResults;
 }
 
 class _AppLocalizationsDelegate

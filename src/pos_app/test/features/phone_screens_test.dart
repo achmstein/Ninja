@@ -326,6 +326,34 @@ void main() {
       expectFits(tester);
     });
 
+    testWidgets('on a wide screen the categories go down the side, what is off first ($lang)', (tester) async {
+      tester.view.physicalSize = const Size(1280, 800);
+      tester.view.devicePixelRatio = 1;
+      addTearDown(tester.view.reset);
+      await tester.pumpWidget(tillApp(
+        const AvailabilityScreen(),
+        locale: locale,
+        overrides: [catalogRepositoryProvider.overrideWithValue(_Catalog())],
+      ));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      // Opened on what is off: three of the six, and how many said once at the head's end
+      expect(find.text(l10n.availabilityOffNow), findsNWidgets(2), reason: 'the entry, and the head over its items');
+      expect(find.text(l10n.availabilityOffCount(3)), findsOneWidget);
+      expect(find.byType(FSwitch), findsNWidgets(3));
+      expect(find.text(l10n.soldOut), findsNWidgets(3));
+      // A category is a tap: all of its items, two to a row
+      final burgers = const LocalizedText(en: 'Burgers and sandwiches', ar: 'برجر وساندوتشات').getText(locale);
+      await tester.tap(find.text(burgers));
+      await tester.pumpAndSettle();
+      expectFits(tester);
+      final switches = find.byType(FSwitch);
+      expect(switches, findsNWidgets(6));
+      expect(tester.getRect(switches.at(0)).top, tester.getRect(switches.at(1)).top);
+      await tester.pumpWidget(const SizedBox.shrink());
+      await tester.pump(const Duration(seconds: 10));
+    });
+
     testWidgets('the settings fit a phone: the printers, the update, the offline sales ($lang)', (tester) async {
       await usePhone(tester);
       await tester.pumpWidget(tillApp(

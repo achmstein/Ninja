@@ -294,12 +294,14 @@ void main() {
       await tester.pumpAndSettle();
       expectFits(tester);
       expect(find.text(l10n.moveItemsTitle(2)), findsOneWidget);
-      for (final caption in [l10n.moveOpenBills, l10n.moveNewBill, l10n.moveFreeTable]) {
+      for (final caption in [l10n.moveNamedBill, l10n.moveOpenBills, l10n.moveFreeTable]) {
         expect(find.text(labelCase(caption)), findsOneWidget);
       }
       // An open bill is a row: its kind and number under its name
       expect(find.text('${l10n.room} · ${hashNumber(1041)}'), findsOneWidget);
-      expect(find.text(l10n.moveTabWithName), findsOneWidget);
+      // The lines' one customer is a name to tap, said why
+      expect(find.text(bidiIsolate('Mohamed Abdelrahman')), findsOneWidget);
+      expect(find.text(l10n.moveNamedTheirs), findsOneWidget);
       // Free tables are tiles of one size, two across on a phone
       Rect tile(int n) => tester.getRect(find
           .ancestor(
@@ -312,14 +314,11 @@ void main() {
       expect(first.size, second.size);
       expect((first.left - second.left).abs(), closeTo((360 - 48 - 2 - 32 - 8) / 2 + 8, 40));
 
-      // The new tab's name is asked only once its row is tapped, the lines' one customer already in it
-      await tester.ensureVisible(find.text(l10n.moveTabWithName));
-      await tester.tap(find.text(l10n.moveTabWithName));
+      // A new name is typed in the box, and offered as a bill at once
+      await tester.enterText(find.byType(FTextField), 'Nour El Din Abdelrahman');
       await tester.pumpAndSettle();
       expectFits(tester);
-      expect(find.text(l10n.moveTabWithName), findsNothing);
-      expect(find.text('Mohamed Abdelrahman'), findsWidgets);
-      expect(find.widgetWithText(FButton, l10n.moveCreate), findsOneWidget);
+      expect(find.text(l10n.moveNewNamed(bidiIsolate('Nour El Din Abdelrahman'))), findsOneWidget);
       await tester.pumpWidget(const SizedBox.shrink());
     });
 
