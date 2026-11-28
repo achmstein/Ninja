@@ -683,6 +683,13 @@ packages:
       relative: true
     source: path
     version: "1.0.0"
+  ninja_staff_ui:
+    dependency: "direct main"
+    description:
+      path: "../ninja_staff_ui"
+      relative: true
+    source: path
+    version: "1.0.0"
   nitrogen_types:
     dependency: transitive
     description:

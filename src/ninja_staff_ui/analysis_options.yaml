@@ -1,0 +1,2 @@
+# The strict set every Flutter package shares
+include: ../ninja_app_core/analysis_options_strict.yaml

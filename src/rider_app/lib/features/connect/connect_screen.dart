@@ -3,7 +3,7 @@ import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_native_splash/flutter_native_splash.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
 
-import '../../core/brand/brand_mark.dart';
+import 'package:ninja_staff_ui/brand_mark.dart';
 import '../../core/config/app_config.dart';
 import 'package:ninja_app_core/tenant_connection.dart';
 import 'package:ninja_app_core/providers/locale_provider.dart';

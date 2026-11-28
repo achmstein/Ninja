@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
-import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
 
 /// The platform, as the vendor line names it. Every staff surface carries
@@ -127,14 +126,17 @@ class PoweredBy extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
     return Directionality(
       textDirection: TextDirection.ltr,
       child: Text(
-        '${l10n.poweredBy} $platformName',
+        '${_poweredBy(context)} $platformName',
         textAlign: TextAlign.center,
         style: theme.typography.xs.copyWith(color: theme.colors.mutedForeground),
       ),
     );
   }
 }
+
+/// "Powered by", in the app's language (the staff apps' ARBs say the same)
+String _poweredBy(BuildContext context) =>
+    Localizations.localeOf(context).languageCode == 'ar' ? 'بدعم من' : 'Powered by';

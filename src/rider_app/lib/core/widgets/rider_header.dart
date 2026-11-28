@@ -5,7 +5,7 @@ import 'package:ninja_app_core/brand/brand_provider.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
-import '../brand/brand_mark.dart';
+import 'package:ninja_staff_ui/brand_mark.dart';
 
 /// The top bar: the business's mark and name, and nothing to switch. A rider
 /// works for the business, not a branch: on duty is on duty at every branch

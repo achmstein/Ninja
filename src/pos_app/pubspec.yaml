@@ -16,6 +16,8 @@ dependencies:
   # client, the hub, the brand, the branch, self-update, motion, a few widgets
   ninja_app_core:
     path: ../ninja_app_core
+  ninja_staff_ui:
+    path: ../ninja_staff_ui
   flutter_localizations:
     sdk: flutter
 

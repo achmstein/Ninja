@@ -147,6 +147,9 @@ jobs:
           # strict lint set all six packages include
           - app: ninja_app_core
             codegen: false
+          # What the till, kitchen and rider apps shared by copying
+          - app: ninja_staff_ui
+            codegen: false
     defaults:
       run:
         working-directory: src/${{ matrix.app }}

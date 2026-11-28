@@ -4,7 +4,7 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
-import '../../../core/brand/brand_mark.dart';
+import 'package:ninja_staff_ui/brand_mark.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:ninja_app_core/widgets/app_text.dart';
 import '../../../core/widgets/connection_foot.dart';

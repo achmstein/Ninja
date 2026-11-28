@@ -63,6 +63,8 @@ dependencies:
   # What the platform's Android apps share (src/ninja_app_core)
   ninja_app_core:
     path: ../ninja_app_core
+  ninja_staff_ui:
+    path: ../ninja_staff_ui
 
 dev_dependencies:
   flutter_test:

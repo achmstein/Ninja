@@ -3,7 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import '../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/brand/brand_provider.dart';
-import '../brand/brand_mark.dart';
+import 'package:ninja_staff_ui/brand_mark.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
