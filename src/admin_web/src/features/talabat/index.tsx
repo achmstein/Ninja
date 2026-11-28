@@ -1,13 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ChevronDown, Send } from 'lucide-react'
-import {
-  getTalabatOptions,
-  getTalabatQueryKey,
-  previewTalabatMenuOptions,
-  pushTalabatMenuMutation,
-  saveTalabatMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { TalabatStatusView } from '@ninja/api/catalog/types.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
@@ -25,6 +18,8 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
+import { pushTalabatMenuMutation, saveTalabatMutation } from './api/mutations'
+import { getTalabatOptions, getTalabatQueryKey, previewTalabatMenuOptions } from './api/queries'
 
 const talabatQuery = {}
 const logo = `${import.meta.env.BASE_URL}platforms/talabat.svg`

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { listOnlinePaymentsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useBrand } from '@/lib/brand'
+import { listOnlinePaymentsOptions } from './api/queries'
 
 /**
  * What guests paid on this bill from their phones. The SignalR ticket nudge

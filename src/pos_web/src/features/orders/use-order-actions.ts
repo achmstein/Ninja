@@ -1,12 +1,8 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import {
-  cancelOrderMutation,
-  confirmOrderMutation,
-  rejectGuestOrderMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { cancelOrderMutation, confirmOrderMutation, rejectGuestOrderMutation } from './api/mutations'
 
 /**
  * Confirm / cancel a pending order, the same two calls the admin board

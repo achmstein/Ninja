@@ -1,13 +1,13 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { v4 as uuidv4 } from 'uuid'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import {
   cancelOrderMutation,
   confirmOrderMutation,
   deleteOrderMutation,
   rejectGuestOrderMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
+} from './api/mutations'
 
 // Confirm/cancel with idempotency keys + query invalidation, shared by the
 // orders table, the live board, and the detail sheet.

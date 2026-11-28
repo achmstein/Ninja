@@ -2,16 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ChevronsUpDown, Pencil, Plus, Trash2, Zap } from 'lucide-react'
 import type { AiProviderDto, AiRoleDto, AiSettingsDto, AiTestResult } from '@ninja/api/control'
-import {
-  deleteAiProviderMutation,
-  getAiSettingsOptions,
-  getAiSettingsQueryKey,
-  getAiUsageOptions,
-  listAiProviderModelsOptions,
-  saveAiProviderMutation,
-  saveAiRolesMutation,
-  testAiRoleMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
@@ -37,6 +27,18 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ProviderLogo } from '@/components/provider-logo'
+import {
+  deleteAiProviderMutation,
+  saveAiProviderMutation,
+  saveAiRolesMutation,
+  testAiRoleMutation,
+} from './api/mutations'
+import {
+  getAiSettingsOptions,
+  getAiSettingsQueryKey,
+  getAiUsageOptions,
+  listAiProviderModelsOptions,
+} from './api/queries'
 
 /** The roles the services ask for, in the order they matter, with what each is for */
 const ROLES: { role: string; label: TranslationKey; hint: TranslationKey }[] = [

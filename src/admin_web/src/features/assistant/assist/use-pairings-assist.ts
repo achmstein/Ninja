@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { type SuggestPairingsRequest, type SuggestPairingsResponse } from '@ninja/api/catalog'
-import { suggestPairingsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { getItemPairsReportOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { suggestPairingsMutation } from '../api/mutations'
+import { getItemPairsReportOptions } from '../api/queries'
 import { assistErrorMessage } from './errors'
 import { useAiAvailable } from './use-ai-available'
 

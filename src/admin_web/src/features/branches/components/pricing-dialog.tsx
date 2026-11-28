@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Receipt } from 'lucide-react'
 import { type PricingView } from '@ninja/api/sales'
-import { getBranchPricingOptions, setBranchPricingMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -12,6 +11,8 @@ import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Field, FieldGrid, SwitchRow } from '@/components/field'
+import { setBranchPricingMutation } from '../api/mutations'
+import { getBranchPricingOptions } from '../api/queries'
 
 interface PricingDialogProps {
   branch: BranchResponse | null

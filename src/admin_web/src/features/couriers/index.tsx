@@ -2,23 +2,7 @@ import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Copy, Plug, Plus, Truck } from 'lucide-react'
-import {
-  addCourierProviderMutation,
-  getCourierCallsOptions,
-  getCourierConnectionOptions,
-  getCourierProvidersOptions,
-  newCourierWebhookSecretMutation,
-  sendCourierTestJobMutation,
-  setCourierConnectionMutation,
-  updateCourierProviderMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { type CourierProviderView, type CourierTestJobView } from '@ninja/api/ordering/types.gen'
-import {
-  addCourierPayoutMutation,
-  getCourierBalancesOptions,
-  getCourierJobsOptions,
-  getCourierPayoutsOptions,
-} from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type CourierBalanceView } from '@ninja/api/sales/types.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -40,6 +24,16 @@ import { Money } from '@/components/money'
 import { PageHeader } from '@/components/page-header'
 import { Section } from '@/components/section'
 import { When } from '@/components/when'
+import {
+  addCourierProviderMutation,
+  newCourierWebhookSecretMutation,
+  sendCourierTestJobMutation,
+  setCourierConnectionMutation,
+  updateCourierProviderMutation,
+} from './api/mutations'
+import { addCourierPayoutMutation } from './api/mutations'
+import { getCourierCallsOptions, getCourierConnectionOptions, getCourierProvidersOptions } from './api/queries'
+import { getCourierBalancesOptions, getCourierJobsOptions, getCourierPayoutsOptions } from './api/queries'
 
 /** The server's own words for a refusal, when it gave some */
 const refusal = (error: unknown) =>

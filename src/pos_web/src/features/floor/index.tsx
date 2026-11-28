@@ -19,7 +19,6 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { TimerReset } from 'lucide-react'
-import { getOpenTicketsOptions, openTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketSummary } from '@ninja/api/sales/types.gen'
 import type { PlaceViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useFreshBills } from '@/stores/fresh-bills'
@@ -54,6 +53,8 @@ import {
 import { usePlaces, useSecondsClock } from '@/features/places/use-places'
 import { ServiceRequestsStrip } from '@/features/requests/service-requests-strip'
 import { useSale } from '@/features/sale/cart'
+import { openTicketMutation } from './api/mutations'
+import { getOpenTicketsOptions } from './api/queries'
 import { NewTicketDialog } from './new-ticket-dialog'
 import { PlaceList, PlaceSearch } from './place-list'
 

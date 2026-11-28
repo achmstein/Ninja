@@ -2,11 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Cloud, CloudOff, Download } from 'lucide-react'
 import type { BackupInfo } from '@ninja/api/control'
-import {
-  createPlatformBackupMutation,
-  getPlatformBackupsOptions,
-  getPlatformBackupsQueryKey,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
@@ -18,6 +13,8 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { createPlatformBackupMutation } from './api/mutations'
+import { getPlatformBackupsOptions, getPlatformBackupsQueryKey } from './api/queries'
 
 /**
  * The platform's own backups: controldb and keycloak, nightly before the

@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { listCategoriesOptions, listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { apiClient } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
+import { listCategoriesOptions, listItemsOptions } from './api/queries'
 import { tillSuggestions, type SaleLine } from './cart'
 import { itemPictureUrl } from './item-picture'
 

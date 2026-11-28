@@ -3,7 +3,6 @@ import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type ReservationViewModel } from '@ninja/api/spaces'
-import { getReservationHistoryOptions, listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useNow } from '@/lib/business-clock'
 import { presetWindow } from '@/lib/business-day'
 import { useLanguage, useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
@@ -17,6 +16,7 @@ import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
 import { useTillWindow } from '@/features/till/use-till-window'
+import { getReservationHistoryOptions, listPlacesOptions } from './api/queries'
 import {
   comparePlaces,
   RESERVATION_CANCELLED,

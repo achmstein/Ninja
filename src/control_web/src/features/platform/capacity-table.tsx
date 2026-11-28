@@ -2,7 +2,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { RefreshCw } from 'lucide-react'
 import type { CapacityResponse } from '@ninja/api/control'
-import { getPlatformCapacityOptions, getPlatformCapacityQueryKey } from '@ninja/api/control/@tanstack/react-query.gen'
 import { megabytes, percent, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
@@ -11,6 +10,7 @@ import { Button } from '@/components/ui/button'
 import { Progress } from '@/components/ui/progress'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { getPlatformCapacityOptions, getPlatformCapacityQueryKey } from './api/queries'
 
 type CapacityTableProps = {
   capacity: CapacityResponse | undefined

@@ -1,8 +1,9 @@
 import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type OrderSummary } from '@ninja/api/ordering'
-import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@ninja/api/spaces'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
 import {
   addStayMemberMutation,
   assignReservationCustomerMutation,
@@ -14,18 +15,15 @@ import {
   confirmReservationMutation,
   deletePlaceMutation,
   endStayMutation,
-  getOpenReservationsOptions,
-  getOpenStaysOptions,
-  listPlacesOptions,
   removeStayMemberMutation,
   reservePlaceMutation,
   seatReservationMutation,
   setPlaceActiveMutation,
   setPlaceStatusMutation,
   startWalkInMutation,
-} from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
+} from './api/mutations'
+import { getPendingOrdersOptions } from './api/queries'
+import { getOpenReservationsOptions, getOpenStaysOptions, listPlacesOptions } from './api/queries'
 import { comparePlaces, reservationForPlace, stayForPlace } from './status'
 
 const NO_PLACES: PlaceViewModel[] = []

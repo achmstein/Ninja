@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Store } from 'lucide-react'
-import { getAllBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -20,6 +19,7 @@ import { Switch } from '@/components/ui/switch'
 import { SwitchRow } from '@/components/field'
 import { customersService } from '@/features/customers/services/customers-service'
 import { type Customer, getCustomerDisplayName } from '@/features/customers/types'
+import { getAllBranchesOptions } from '../api/queries'
 
 interface ManageBranchesDialogProps {
   user: Customer | null

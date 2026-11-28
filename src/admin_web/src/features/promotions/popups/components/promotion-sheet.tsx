@@ -4,13 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ImageUp, RotateCcw } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { designPromotion, type PromotionDto, type PromotionRequest } from '@ninja/api/catalog'
-import {
-  createPromotionMutation,
-  listCategoriesOptions,
-  listItemsOptions,
-  updatePromotionMutation,
-  uploadPromotionPictureMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBrand } from '@/lib/brand'
 import { formatDay } from '@/lib/business-day'
@@ -31,6 +24,8 @@ import { ToggleChip } from '@/components/toggle-chip'
 import { assistErrorMessage } from '@/features/assistant/assist/errors'
 import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
 import { promotionPictureUrl } from '@/features/menu/pictures'
+import { createPromotionMutation, updatePromotionMutation, uploadPromotionPictureMutation } from '../../api/mutations'
+import { listCategoriesOptions, listItemsOptions } from '../../api/queries'
 
 type Link = 'None' | 'Item' | 'Category' | 'Book'
 

@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { PageTabs } from '@/components/page-tabs'
 import { serviceRequestsService } from '@/features/requests/service'
+import { getPendingOrdersOptions } from '../api/queries'
 
 /**
  * Live: everything that needs someone right now, on one screen of two tabs:

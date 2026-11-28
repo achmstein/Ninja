@@ -1,9 +1,10 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
-import { getBranchesOptions, updateBranchSettingsMutation } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useFeatures } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
+import { updateBranchSettingsMutation } from './api/mutations'
+import { listPlacesOptions } from './api/queries'
+import { getBranchesOptions } from './api/queries'
 
 /**
  * The branch's two customer-facing switches, taking orders and taking

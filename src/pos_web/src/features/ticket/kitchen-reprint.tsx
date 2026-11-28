@@ -2,10 +2,6 @@ import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Printer } from 'lucide-react'
-import {
-  getKitchenStationsOptions,
-  reprintOrderKitchenTicketsMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -19,6 +15,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { reprintOrderKitchenTicketsMutation } from './api/mutations'
+import { getKitchenStationsOptions } from './api/queries'
 
 /** Ordering refuses a reprint with the reason as a bare string. */
 const refusal = (error: unknown) =>

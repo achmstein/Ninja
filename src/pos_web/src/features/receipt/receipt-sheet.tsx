@@ -1,7 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import type { TicketDetail } from '@ninja/api/sales/types.gen'
-import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBrand, useBrandName } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -9,6 +8,7 @@ import { useMoney, toNumber } from '@/lib/money'
 import { showPhone } from '@/lib/phone'
 import { useTakenByText } from '@/features/branch/use-branch-name'
 import { tenderLabelKey } from '@/features/ticket/tenders'
+import { getBranchesOptions } from './api/queries'
 
 export type ReceiptPayment = {
   tender: string

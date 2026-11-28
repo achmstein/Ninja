@@ -2,11 +2,6 @@ import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, Server } from 'lucide-react'
 import type { TenantDetail } from '@ninja/api/control'
-import {
-  getTenantContainersOptions,
-  getTenantHealthOptions,
-  getTenantLogsOptions,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { isStamped, tenantStatus } from '@/lib/tenant'
 import { cn } from '@/lib/utils'
@@ -20,6 +15,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
+import { getTenantContainersOptions, getTenantHealthOptions, getTenantLogsOptions } from '../api/queries'
 
 const ALL = '__all__'
 const TAILS = [100, 500, 2000] as const

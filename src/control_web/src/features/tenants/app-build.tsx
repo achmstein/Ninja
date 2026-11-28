@@ -2,11 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, ExternalLink, Hammer, Loader2, XCircle } from 'lucide-react'
 import type { BuildJob, BuildRun } from '@ninja/api/control'
-import {
-  getAppBuildOptions,
-  getAppBuildQueryKey,
-  startAppBuildMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
@@ -15,6 +10,8 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
+import { startAppBuildMutation } from './api/mutations'
+import { getAppBuildOptions, getAppBuildQueryKey } from './api/queries'
 
 export const BUILD_PLATFORMS = ['all', 'android', 'ios'] as const
 export const BUILD_TRACKS = ['internal', 'alpha', 'beta', 'production'] as const

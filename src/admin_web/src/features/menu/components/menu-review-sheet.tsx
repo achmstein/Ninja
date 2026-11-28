@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, X } from 'lucide-react'
 import { type CatalogTypeDto, type MenuProposal } from '@ninja/api/catalog'
-import { importMenuMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
@@ -15,6 +14,7 @@ import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet } from '@/components/entity-sheet'
 import { LocalizedFields, LocalizedInput } from '@/components/localized-input'
 import { hasText } from '@/features/assistant/assist/helpers'
+import { importMenuMutation } from '../api/mutations'
 import {
   isReviewCategoryReady,
   isReviewItemReady,

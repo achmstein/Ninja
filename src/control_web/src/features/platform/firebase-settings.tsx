@@ -1,12 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { FirebaseTestResult } from '@ninja/api/control'
-import {
-  getFirebaseSettingsOptions,
-  getFirebaseSettingsQueryKey,
-  saveFirebaseSettingsMutation,
-  testFirebaseMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { readFileText } from '@/lib/files'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
@@ -20,6 +14,8 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
+import { saveFirebaseSettingsMutation, testFirebaseMutation } from './api/mutations'
+import { getFirebaseSettingsOptions, getFirebaseSettingsQueryKey } from './api/queries'
 import { AppBuildsSettings } from './app-builds-settings'
 
 /**

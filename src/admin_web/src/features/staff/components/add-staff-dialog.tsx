@@ -1,6 +1,5 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { getAllBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -13,6 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spinner } from '@/components/ui/spinner'
 import { Field, SwitchRow } from '@/components/field'
 import { customersService, type StaffRole } from '@/features/customers/services/customers-service'
+import { getAllBranchesOptions } from '../api/queries'
 import { staffError } from '../staff-errors'
 
 interface AddStaffDialogProps {

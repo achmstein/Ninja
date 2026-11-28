@@ -17,10 +17,7 @@ import {
   Ruler,
   UserCheck,
 } from 'lucide-react'
-import { getKitchenStationsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { getBranchPricingOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
-import { getDeliveryZonesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
@@ -32,6 +29,9 @@ import { Switch } from '@/components/ui/switch'
 import { EntitySheet } from '@/components/entity-sheet'
 import { InfoTip } from '@/components/info-tip'
 import { StatusChip } from '@/components/status-chip'
+import { getKitchenStationsOptions } from './api/queries'
+import { getBranchPricingOptions } from './api/queries'
+import { getDeliveryZonesOptions } from './api/queries'
 
 export type BranchSetting =
   | 'isOrderingEnabled'

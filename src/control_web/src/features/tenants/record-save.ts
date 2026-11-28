@@ -1,13 +1,10 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TenantDetail, UpdateTenantRequest } from '@ninja/api/control'
-import {
-  getTenantQueryKey,
-  listTenantsQueryKey,
-  updateTenantMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
+import { updateTenantMutation } from './api/mutations'
+import { getTenantQueryKey, listTenantsQueryKey } from './api/queries'
 
 /**
  * The record as it stands, in the shape PUT /tenants/{slug} takes: what the

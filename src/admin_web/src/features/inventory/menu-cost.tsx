@@ -3,12 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
 import { type CatalogItemDto } from '@ninja/api/catalog'
-import {
-  deleteItemMutation,
-  listCategoriesOptions,
-  listItemsOptions,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
-import { getRecipeCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -24,6 +18,9 @@ import { PageHeader } from '@/components/page-header'
 import { Stat, StatStrip } from '@/components/stat-strip'
 import { StatusChip } from '@/components/status-chip'
 import { ItemSheet, type ItemSheetState } from '@/features/menu/components/item-sheet'
+import { deleteItemMutation } from './api/mutations'
+import { listCategoriesOptions, listItemsOptions } from './api/queries'
+import { getRecipeCostsOptions } from './api/queries'
 import { getMenuCostColumns } from './menu-cost-columns'
 import { DEFAULT_FOOD_COST_TARGET, summarize, toMenuCostRows } from './menu-cost-rows'
 import { StockTabs } from './stock-tabs'

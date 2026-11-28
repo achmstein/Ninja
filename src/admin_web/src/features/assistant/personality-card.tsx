@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { setTenantAssistantMutation } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { brandQueryKey, useBrand, type Brand } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -13,6 +12,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Field } from '@/components/field'
 import { SettingRow, SettingsCard } from '@/components/kit'
+import { setTenantAssistantMutation } from './api/mutations'
 import {
   LANGUAGES,
   NOTES_MAX,

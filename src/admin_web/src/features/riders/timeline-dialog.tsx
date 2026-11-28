@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { type DeliveryTimelineStep } from '@ninja/api/ordering'
-import { getDeliveryTimelineOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -9,6 +8,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EmptyState } from '@/components/empty-state'
 import { ErrorState } from '@/components/error-state'
 import { When } from '@/components/when'
+import { getDeliveryTimelineOptions } from './api/queries'
 import { actionLabel } from './format'
 
 const actionDot: Record<string, string> = {

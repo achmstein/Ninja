@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search, X } from 'lucide-react'
 import type { MapsKeyDto, MapsSettingsDto, MapsTestResult, SaveMapsSettingsRequest } from '@ninja/api/control'
-import {
-  getMapsSettingsOptions,
-  getMapsSettingsQueryKey,
-  getPlatformOptions,
-  saveMapsSettingsMutation,
-  testMapsSearchMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
@@ -22,6 +15,8 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { saveMapsSettingsMutation, testMapsSearchMutation } from './api/mutations'
+import { getMapsSettingsOptions, getMapsSettingsQueryKey, getPlatformOptions } from './api/queries'
 
 type KeyName = 'server' | 'browser' | 'android' | 'ios'
 

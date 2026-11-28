@@ -2,11 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Megaphone, Plus, Trash2 } from 'lucide-react'
 import { type PromotionDto, type PromotionRequest } from '@ninja/api/catalog'
-import {
-  deletePromotionMutation,
-  listPromotionsOptions,
-  updatePromotionMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { formatWhen } from '@/lib/when'
@@ -21,6 +16,8 @@ import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
 import { MenuTabs } from '@/features/menu/menu-tabs'
 import { promotionPictureUrl } from '@/features/menu/pictures'
+import { deletePromotionMutation, updatePromotionMutation } from '../api/mutations'
+import { listPromotionsOptions } from '../api/queries'
 import { PromotionSheet } from './components/promotion-sheet'
 
 /** The request that saves a promotion as it is, with only its switch changed */

@@ -2,12 +2,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Check, Image, MessageCircle, MoreHorizontal, Plus, Trash2, Undo2, X } from 'lucide-react'
 import type { LeadDto, LeadStatus } from '@ninja/api/control'
-import {
-  deleteLeadMutation,
-  listLeadsOptions,
-  listLeadsQueryKey,
-  updateLeadMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { leadOrigin, whatsappNumber } from '@/lib/lead'
@@ -26,6 +20,8 @@ import {
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from '@/components/ui/empty'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { deleteLeadMutation, updateLeadMutation } from './api/mutations'
+import { listLeadsOptions, listLeadsQueryKey } from './api/queries'
 
 const STATUS: Record<LeadStatus, { label: TranslationKey; className: string }> = {
   New: { label: 'leadNew', className: 'bg-sky-500/15 text-sky-700 dark:text-sky-400' },

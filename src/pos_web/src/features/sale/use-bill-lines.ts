@@ -1,13 +1,13 @@
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { assignOrderCustomerMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { assignTicketLinesCustomerMutation, moveTicketLinesMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { TICKET_TYPE_COUNTER, TICKET_TYPE_TABLE } from '@/lib/ticket-types'
 import { toast } from '@/lib/toast'
 import type { MoveTarget } from '@/features/ticket/move-target-dialog'
+import { assignOrderCustomerMutation } from './api/mutations'
+import { assignTicketLinesCustomerMutation, moveTicketLinesMutation } from './api/mutations'
 import type { SaleCustomer } from './cart'
 
 /**

@@ -1,11 +1,11 @@
 import { useQuery } from '@tanstack/react-query'
 import { ArrowRight } from 'lucide-react'
-import { getTransferOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { formatWhen } from '@/lib/when'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EntitySheet } from '@/components/entity-sheet'
+import { getTransferOptions } from '../api/queries'
 import { formatQuantity } from '../format'
 
 type TransferSheetProps = {

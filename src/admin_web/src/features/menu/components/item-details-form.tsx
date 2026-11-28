@@ -8,13 +8,6 @@ import {
   type LocalizeResponse,
   type UpdateCatalogItemRequest,
 } from '@ninja/api/catalog'
-import {
-  createCustomizationMutation,
-  createItemMutation,
-  deleteItemPictureMutation,
-  updateItemMutation,
-  uploadItemPictureMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -43,6 +36,13 @@ import { ToggleChip } from '@/components/toggle-chip'
 import { halfFilled, hasText } from '@/features/assistant/assist/helpers'
 import { useCustomizationsAssist } from '@/features/assistant/assist/use-customizations-assist'
 import { LOCALIZE_MENU_ITEM, useLocalizeAssist } from '@/features/assistant/assist/use-localize-assist'
+import {
+  createCustomizationMutation,
+  createItemMutation,
+  deleteItemPictureMutation,
+  updateItemMutation,
+  uploadItemPictureMutation,
+} from '../api/mutations'
 import { itemPictureUrl } from '../pictures'
 import { bodyFromDraft, DraftCard, fromProposal, type DraftGroup } from './customization-draft'
 import { PhotoStudio } from './photo-studio'

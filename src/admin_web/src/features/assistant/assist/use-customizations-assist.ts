@@ -4,10 +4,10 @@ import {
   type SuggestCustomizationsRequest,
   type SuggestCustomizationsResponse,
 } from '@ninja/api/catalog'
-import { suggestCustomizationsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'
 import { type LocalizedValue } from '@/components/localized-input'
+import { suggestCustomizationsMutation } from '../api/mutations'
 import { assistErrorMessage } from './errors'
 import { hasText, toSide } from './helpers'
 import { useAiAvailable } from './use-ai-available'

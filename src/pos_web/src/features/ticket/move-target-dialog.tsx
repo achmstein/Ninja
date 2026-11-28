@@ -1,15 +1,15 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Armchair, ChevronRight, DoorOpen, Plus, ShoppingBag, Split, X, type LucideIcon } from 'lucide-react'
-import { getOpenTicketsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail, TicketSummary } from '@ninja/api/sales/types.gen'
-import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
+import { getOpenTicketsOptions } from './api/queries'
+import { listPlacesOptions } from './api/queries'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,

@@ -2,12 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
 import { type PlaceViewModel, type TariffRequest } from '@ninja/api/spaces'
-import {
-  createPlaceMutation,
-  setPlaceReservableMutation,
-  setPlaceTariffMutation,
-  updatePlaceMutation,
-} from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -28,6 +22,12 @@ import {
 } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
 import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
+import {
+  createPlaceMutation,
+  setPlaceReservableMutation,
+  setPlaceTariffMutation,
+  updatePlaceMutation,
+} from '../api/mutations'
 import { PLACE_ROOM, placeKindKey, placeKinds, tariffOptions } from '../status'
 import { problemDetail } from '../use-places'
 import { PlaceKindIcon } from './place-kind-icon'

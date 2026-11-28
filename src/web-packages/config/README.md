@@ -27,10 +27,10 @@ count (it found 109 imports in the back office, 56 in the till, 26 in the consol
 
 | App | Cap (2026-11-28) |
 |---|---|
-| admin_web | 182 |
-| pos_web | 140 |
+| admin_web | 90 |
+| pos_web | 90 |
 | client_web | 59 |
-| control_web | 72 |
+| control_web | 46 |
 | kds_web | 8 |
 | site_web | 0 |
 

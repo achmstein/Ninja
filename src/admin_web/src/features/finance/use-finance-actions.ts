@@ -9,6 +9,9 @@ import {
   type SupplierEntryRequest,
   type SupplierRequest,
 } from '@ninja/api/finance'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { domainMessage } from '@/features/inventory/format'
 import {
   attachExpenseReceiptMutation,
   postPartnerEntryMutation,
@@ -20,10 +23,7 @@ import {
   savePartnerMutation,
   saveSupplierMutation,
   voidExpenseMutation,
-} from '@ninja/api/finance/@tanstack/react-query.gen'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
-import { domainMessage } from '@/features/inventory/format'
+} from './api/mutations'
 
 /**
  * Every write to Finance.API: idempotency keys on the posts, query

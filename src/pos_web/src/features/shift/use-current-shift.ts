@@ -1,9 +1,9 @@
 import { useEffect } from 'react'
 import { AxiosError } from 'axios'
 import { useQuery } from '@tanstack/react-query'
-import { getCurrentShiftOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
+import { getCurrentShiftOptions } from './api/queries'
 import { rememberOpenShift } from './last-open-shift'
 
 /**

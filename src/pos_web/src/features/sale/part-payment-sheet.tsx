@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Loader2 } from 'lucide-react'
-import { takePartPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { handleServerError } from '@/lib/handle-server-error'
 import { useT } from '@/lib/i18n'
 import { useMoney } from '@/lib/money'
@@ -12,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { NumericKeypad } from '@/components/numeric-keypad'
 import { openCashDrawer } from '@/features/printing/print-sheets'
 import { BASE_TENDERS } from '@/features/ticket/tenders'
+import { takePartPaymentMutation } from './api/mutations'
 import { partAmountProblem } from './part-amounts'
 
 /**

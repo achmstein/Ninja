@@ -9,6 +9,9 @@ import {
   type StockItemRequest,
   type TransferRequest,
 } from '@ninja/api/inventory'
+import { useT } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import {
   createStockItemMutation,
   postStockAdjustmentMutation,
@@ -21,10 +24,7 @@ import {
   trackByUnitMutation,
   transferStockMutation,
   updateStockItemMutation,
-} from '@ninja/api/inventory/@tanstack/react-query.gen'
-import { useT } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
+} from './api/mutations'
 import { domainMessage } from './format'
 
 /**

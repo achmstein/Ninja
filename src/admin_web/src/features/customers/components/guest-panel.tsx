@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ArrowLeft, MessageCircle } from 'lucide-react'
 import { type GuestSummary } from '@ninja/api/ordering'
-import { getAllOrdersOptions, getGuestsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useLocale, useT } from '@/lib/i18n'
 import { showPhone, whatsAppLink } from '@/lib/phone'
 import { formatWhen } from '@/lib/when'
@@ -16,6 +15,7 @@ import { When } from '@/components/when'
 import { OrderDetailsSheet } from '@/features/orders/components/order-details-sheet'
 import { formatEgp, getOrderStatus, relativeTime } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
+import { getAllOrdersOptions, getGuestsOptions } from '../api/queries'
 
 type GuestPanelProps = {
   guestKey: string

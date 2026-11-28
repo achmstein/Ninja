@@ -4,7 +4,6 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { Banknote, Check, ChevronDown, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import type { TicketDetail } from '@ninja/api/sales'
-import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { friendlyDay, friendlyTime } from '@/lib/friendly-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -18,6 +17,7 @@ import { ReceiptSheet } from '@/features/receipt/receipt-sheet'
 import { ChangeTenderDialog, CORRECTABLE_TENDERS, type TenderFix } from '@/features/ticket/change-tender-dialog'
 import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useRefund } from '@/features/ticket/use-refund'
+import { getTicketOptions } from './api/queries'
 
 const percent = (rate: number | string | undefined) => Math.round(toNumber(rate) * 10000) / 100
 

@@ -1,7 +1,7 @@
 import { type StockItemView, type StockLevelView } from '@ninja/api/inventory'
-import { getStockItemsOptions, getStockLevelsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { type Translate } from '@/lib/i18n'
 import { type ComboboxOption } from '@/components/combobox'
+import { getStockItemsOptions, getStockLevelsOptions } from './api/queries'
 import { unitLabel } from './format'
 
 // The two lists every inventory screen reaches for: the global item

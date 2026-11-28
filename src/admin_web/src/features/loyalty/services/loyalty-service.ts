@@ -7,7 +7,7 @@ import {
   getTierInfo,
   getTransactions,
   listAccounts,
-} from '@ninja/api/loyalty/sdk.gen'
+} from '../api/mutations'
 import type {
   AdjustPointsRequest,
   EarnPointsRequest,

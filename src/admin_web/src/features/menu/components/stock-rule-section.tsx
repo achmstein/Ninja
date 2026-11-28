@@ -4,11 +4,6 @@ import { Link } from '@tanstack/react-router'
 import { AlertTriangle, CookingPot, Info, MoreHorizontal, Package, X } from 'lucide-react'
 import { type CatalogItemDto } from '@ninja/api/catalog'
 import { type RecipesProposal, type RecipeView, type StockItemView } from '@ninja/api/inventory'
-import {
-  getRecipeCostsOptions,
-  getRecipesOptions,
-  proposeRecipesMutation,
-} from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
@@ -38,6 +33,8 @@ import { choiceDeltas, standardBreakdown, standardChoiceNames, standardCost } fr
 import { draftLines, fromApi, toApi, validateDraft, type RecipeDraft } from '@/features/inventory/recipe-model'
 import { isUnitRecipe } from '@/features/inventory/stock-rules'
 import { useInventoryActions } from '@/features/inventory/use-inventory-actions'
+import { proposeRecipesMutation } from '../api/mutations'
+import { getRecipeCostsOptions, getRecipesOptions } from '../api/queries'
 import { menuOptionsOf, type MenuOptions } from '../menu-options'
 import { toMenuItemToTrack } from '../track-items'
 import { RecipeBriefSheet } from './recipe-brief-sheet'

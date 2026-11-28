@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
-import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useCustomerOrigin } from '@/lib/brand'
 import { bilingual, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'
 import { QrSheet } from '@/components/qr-sheet'
+import { listPlacesOptions } from './api/queries'
 import { comparePlaces } from './status'
 
 /** One printed card per place: rooms, then tables, then stations. */

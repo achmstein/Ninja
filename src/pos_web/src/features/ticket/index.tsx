@@ -21,12 +21,6 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { assignOrderCustomerMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import {
-  assignTicketLinesCustomerMutation,
-  getTicketOptions,
-  moveTicketLinesMutation,
-} from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -58,6 +52,9 @@ import { saleTotal, type SaleCustomer } from '@/features/sale/cart'
 import { totalWith } from '@/features/sending/bill'
 import { landSend, sendsFor, useSending } from '@/features/sending/sending'
 import { SendingLines } from '@/features/sending/sending-lines'
+import { assignOrderCustomerMutation } from './api/mutations'
+import { assignTicketLinesCustomerMutation, moveTicketLinesMutation } from './api/mutations'
+import { getTicketOptions } from './api/queries'
 import { LineRow, mergeIdenticalLines } from './bill-lines'
 import { BreakdownDialog } from './breakdown-dialog'
 import { ChangeTenderDialog, CORRECTABLE_TENDERS, type TenderFix } from './change-tender-dialog'

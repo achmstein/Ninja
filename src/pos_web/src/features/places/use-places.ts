@@ -1,5 +1,9 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
+import { useT, type TranslationKey } from '@/lib/i18n'
+import { toNumber } from '@/lib/money'
+import { toast } from '@/lib/toast'
 import {
   addStayMemberMutation,
   assignReservationCustomerMutation,
@@ -10,19 +14,12 @@ import {
   changeStayOptionMutation,
   confirmReservationMutation,
   endStayMutation,
-  getOpenReservationsOptions,
-  getOpenStaysOptions,
-  getStayOptions,
-  listPlacesOptions,
   removeStayMemberMutation,
   reservePlaceMutation,
   seatReservationMutation,
   startWalkInMutation,
-} from '@ninja/api/spaces/@tanstack/react-query.gen'
-import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
-import { useT, type TranslationKey } from '@/lib/i18n'
-import { toNumber } from '@/lib/money'
-import { toast } from '@/lib/toast'
+} from './api/mutations'
+import { getOpenReservationsOptions, getOpenStaysOptions, getStayOptions, listPlacesOptions } from './api/queries'
 import { isOpenReservation, PLACE_ROOM, STAY_RUNNING } from './status'
 
 /**

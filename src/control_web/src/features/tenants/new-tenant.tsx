@@ -4,18 +4,6 @@ import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, TriangleAlert } from 'lucide-react'
 import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@ninja/api/control'
 import type { BusinessType } from '@ninja/api/control'
-import {
-  createTenantMutation,
-  getLeadOptions,
-  getPlansOptions,
-  getPlatformCapacityOptions,
-  getPlatformOptions,
-  listTenantsQueryKey,
-  listLeadsQueryKey,
-  putTenantSeedMenuMutation,
-  updateLeadMutation,
-  uploadTenantSeedImageMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { IMAGE_SLOTS, type ImageSlot } from '@/lib/brand-slots'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'
@@ -61,6 +49,20 @@ import { MapsField } from '@/components/brand/maps-field'
 import { SocialField } from '@/components/brand/social-field'
 import { LocalizedInput, fromLocalizedValue, isBlank, type LocalizedValue } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
+import {
+  createTenantMutation,
+  putTenantSeedMenuMutation,
+  updateLeadMutation,
+  uploadTenantSeedImageMutation,
+} from './api/mutations'
+import {
+  getLeadOptions,
+  getPlansOptions,
+  getPlatformCapacityOptions,
+  getPlatformOptions,
+  listTenantsQueryKey,
+  listLeadsQueryKey,
+} from './api/queries'
 import { MenuDrop } from './menu-drop'
 import { includedCount, toImportRequest, type DropCategory } from './menu-review'
 import {

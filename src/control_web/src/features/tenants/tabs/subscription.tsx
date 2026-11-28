@@ -2,17 +2,6 @@ import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ban, CreditCard, Play, Receipt } from 'lucide-react'
 import type { Module, TenantDetail, TenantPlan } from '@ninja/api/control'
-import {
-  getPlansOptions,
-  getTenantQueryKey,
-  getTenantSubscriptionOptions,
-  getTenantSubscriptionQueryKey,
-  listTenantsQueryKey,
-  recordTenantPaymentMutation,
-  resumeTenantMutation,
-  suspendTenantMutation,
-  updateTenantSubscriptionMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
@@ -41,6 +30,19 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { SubscriptionBadge } from '@/components/tenant-badges'
+import {
+  recordTenantPaymentMutation,
+  resumeTenantMutation,
+  suspendTenantMutation,
+  updateTenantSubscriptionMutation,
+} from '../api/mutations'
+import {
+  getPlansOptions,
+  getTenantQueryKey,
+  getTenantSubscriptionOptions,
+  getTenantSubscriptionQueryKey,
+  listTenantsQueryKey,
+} from '../api/queries'
 import { RecordPaymentDialog, SuspendDialog } from '../dialogs'
 import { FeatureSwitchesCard } from '../feature-switches'
 

@@ -1,8 +1,8 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
+import { getBranchesOptions } from '../api/queries'
 
 /**
  * Who rang a till order up: "Taken by Sara", or "Taken by Sara at Downtown"

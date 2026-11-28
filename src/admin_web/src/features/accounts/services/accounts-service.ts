@@ -1,11 +1,5 @@
-import {
-  addCharge,
-  getAccountByCustomerId,
-  getAllAccounts,
-  recordPayment,
-  searchAccounts,
-} from '@ninja/api/accounts/sdk.gen'
 import { apiClient } from '@/lib/api-client'
+import { addCharge, getAccountByCustomerId, getAllAccounts, recordPayment, searchAccounts } from '../api/mutations'
 import type { AccountSummary, AddChargeRequest, CustomerAccount, KeycloakUser, RecordPaymentRequest } from '../types'
 
 // The generated client types decimals loosely (number | string) where these

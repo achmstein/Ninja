@@ -4,11 +4,6 @@ import { AlertTriangle, ArrowLeft, Check } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
 import { type CatalogItemDto } from '@ninja/api/catalog'
 import { type RecipesProposal, type StockItemView } from '@ninja/api/inventory'
-import {
-  createStockItemMutation,
-  setRecipeMutation,
-  trackByUnitMutation,
-} from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { bilingual, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
@@ -26,6 +21,7 @@ import { InfoTip } from '@/components/info-tip'
 import { fromLocalizedValue, isBlank, LocalizedFields, LocalizedInput } from '@/components/localized-input'
 import { unitLabel } from '@/features/inventory/format'
 import { toApi } from '@/features/inventory/recipe-model'
+import { createStockItemMutation, setRecipeMutation, trackByUnitMutation } from '../api/mutations'
 import { menuOptionsOf } from '../menu-options'
 import {
   isRecipeReady,

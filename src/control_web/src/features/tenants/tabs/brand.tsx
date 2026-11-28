@@ -3,13 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Info } from 'lucide-react'
 import type { BrandDto, TenantDetail } from '@ninja/api/control'
 import {
-  deleteTenantBrandImageMutation,
-  getTenantBrandOptions,
-  getTenantBrandQueryKey,
-  updateTenantBrandMutation,
-  uploadTenantBrandImageMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
-import {
   ARABIC_FONT_CATALOG,
   ARABIC_FONTS,
   ensureFontPreviews,
@@ -42,6 +35,12 @@ import { LivePreview } from '@/components/brand/live-preview'
 import { useLogoCleanup } from '@/components/brand/logo-cleanup'
 import { PhonePreview, PreviewToggles, usePreviewState, type PreviewDraft } from '@/components/brand/phone-preview'
 import { fromLocalizedValue, isBlank, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
+import {
+  deleteTenantBrandImageMutation,
+  updateTenantBrandMutation,
+  uploadTenantBrandImageMutation,
+} from '../api/mutations'
+import { getTenantBrandOptions, getTenantBrandQueryKey } from '../api/queries'
 import { DefaultThemeField, type DefaultTheme } from '../new-tenant-business'
 import { RecordBrandForm } from '../record-brand-form'
 

@@ -1,13 +1,14 @@
 import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Loader2, MapPinned, Send } from 'lucide-react'
-import { createLocationShareMutation, getLocationShareOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { whatsAppLink } from '@/lib/phone'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
+import { createLocationShareMutation } from './api/mutations'
+import { getLocationShareOptions } from './api/queries'
 
 /** The page on the business's customer site a caller opens to share where they are */
 export function locationLinkUrl(customerOrigin: string, token: string): string {

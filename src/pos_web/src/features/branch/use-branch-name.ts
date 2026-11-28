@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
+import { getBranchesOptions } from './api/queries'
 
 /**
  * Any of the business's branches by name, in the till's language, off the

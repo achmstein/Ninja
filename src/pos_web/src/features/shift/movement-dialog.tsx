@@ -1,12 +1,5 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import {
-  getTillCategoriesOptions,
-  getTillPartnersOptions,
-  getTillSuppliersOptions,
-} from '@ninja/api/finance/@tanstack/react-query.gen'
-import { getTillEmployeesOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
-import { addCashMovementMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useFeatures, type FeatureKey } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
@@ -17,6 +10,9 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { NumericKeypad } from '@/components/numeric-keypad'
+import { addCashMovementMutation } from './api/mutations'
+import { getTillCategoriesOptions, getTillPartnersOptions, getTillSuppliersOptions } from './api/queries'
+import { getTillEmployeesOptions } from './api/queries'
 
 // CashMovementType enum values (Sales.Domain: PayIn=0, PayOut=1)
 const MOVEMENT_TYPE = { in: 0, out: 1 } as const

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { Link, type LinkProps } from '@tanstack/react-router'
-import { getProfitOptions } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { businessDateOf } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
@@ -12,6 +11,7 @@ import { ErrorState } from '@/components/error-state'
 import { Money } from '@/components/money'
 import { formatShare, profitBase, shareOf } from '@/features/finance/profit-math'
 import { useTillWindow } from '@/features/till/use-till-window'
+import { getProfitOptions } from '../api/queries'
 
 /**
  * The month so far, in money: what came in, what it cost, what is left.

@@ -2,7 +2,6 @@ import { useEffect, useState, useRef } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Loader2, ShoppingBag, X } from 'lucide-react'
-import { getOpenTicketsOptions, openTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { TICKET_TYPE_COUNTER } from '@/lib/ticket-types'
 import { Button } from '@/components/ui/button'
@@ -15,6 +14,8 @@ import { billLabel } from '@/features/deliveries/delivery-format'
 import { STAY_RUNNING } from '@/features/places/status'
 import { usePlaces } from '@/features/places/use-places'
 import type { SaleCustomer } from '@/features/sale/cart'
+import { openTicketMutation } from './api/mutations'
+import { getOpenTicketsOptions } from './api/queries'
 
 type NewTicketDialogProps = {
   open: boolean

@@ -3,16 +3,13 @@ import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Copy, Download, MonitorSmartphone, Plus, Trash2 } from 'lucide-react'
 import type { PrintConnectorView } from '@ninja/api/ordering'
-import {
-  createConnectorPairingMutation,
-  deletePrintConnectorMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
 import { formatWhen } from '@/lib/when'
 import { Button } from '@/components/ui/button'
+import { createConnectorPairingMutation, deletePrintConnectorMutation } from '../api/mutations'
 
 /** The installer every business downloads; pairing is what makes it theirs. */
 export const CONNECTOR_FILE = 'ninja-print-connector.exe'

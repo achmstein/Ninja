@@ -15,11 +15,6 @@ import {
   UserCheck,
 } from 'lucide-react'
 import { type BranchResponse } from '@ninja/api/tenant'
-import {
-  getAllBranchesOptions,
-  updateBranchMutation,
-  updateBranchSettingsMutation,
-} from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -34,6 +29,8 @@ import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { RowActions } from '@/components/row-actions'
 import { StatusChip } from '@/components/status-chip'
+import { updateBranchMutation, updateBranchSettingsMutation } from './api/mutations'
+import { getAllBranchesOptions } from './api/queries'
 import { BranchSheet, type BranchSetting } from './branch-sheet'
 import { BranchDialog } from './components/branch-dialog'
 import { DeliveryDialog } from './components/delivery-dialog'

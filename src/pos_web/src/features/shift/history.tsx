@@ -2,12 +2,12 @@ import { useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
 import { Link, useNavigate } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, User } from 'lucide-react'
-import { getClosedShiftsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getClosedShiftsOptions } from './api/queries'
 import { OverShortBadge } from './shift-report'
 
 const PAGE_SIZE = 20

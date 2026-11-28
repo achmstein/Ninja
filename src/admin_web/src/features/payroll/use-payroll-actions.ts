@@ -9,6 +9,9 @@ import {
   type PayTermsRequest,
   type UpdateEmployeeRequest,
 } from '@ninja/api/payroll'
+import { useT } from '@/lib/i18n'
+import { toast } from '@/lib/toast'
+import { domainMessage } from '@/features/inventory/format'
 import {
   deleteEmployeeMutation,
   deletePayslipMutation,
@@ -21,10 +24,7 @@ import {
   rehireEmployeeMutation,
   setPayTermsMutation,
   updateEmployeeMutation,
-} from '@ninja/api/payroll/@tanstack/react-query.gen'
-import { useT } from '@/lib/i18n'
-import { toast } from '@/lib/toast'
-import { domainMessage } from '@/features/inventory/format'
+} from './api/mutations'
 
 /**
  * Every write to Payroll.API: idempotency keys on the posts, query

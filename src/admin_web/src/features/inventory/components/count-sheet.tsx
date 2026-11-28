@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CircleCheck, TriangleAlert } from 'lucide-react'
-import { getStockCountOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -10,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EntitySheet } from '@/components/entity-sheet'
+import { getStockCountOptions } from '../api/queries'
 import { formatQuantity, formatSignedQuantity } from '../format'
 
 type CountSheetProps = {

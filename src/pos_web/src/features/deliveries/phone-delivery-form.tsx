@@ -17,7 +17,6 @@ import {
   Store,
   UserRound,
 } from 'lucide-react'
-import { getKnownDeliveryAddressesOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { DeliveryAlternative, KnownAddressView } from '@ninja/api/ordering/types.gen'
 import { apiClient } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
@@ -52,6 +51,7 @@ import {
   zoneIn,
 } from '@/features/sale/sale-delivery'
 import { AddressSearchField } from './address-search-field'
+import { getKnownDeliveryAddressesOptions } from './api/queries'
 import { AreaChoice } from './area-picker'
 import { useAddressLine, useDistanceText } from './delivery-details'
 import { outOfRangeKey } from './delivery-format'

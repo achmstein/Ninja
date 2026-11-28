@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import type { BrandDto, BrandFeatures, TenantDetail } from '@ninja/api/control'
-import {
-  getTenantBrandOptions,
-  getTenantBrandQueryKey,
-  updateTenantBrandMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { tenantStatus } from '@/lib/tenant'
@@ -17,6 +12,8 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
+import { updateTenantBrandMutation } from './api/mutations'
+import { getTenantBrandOptions, getTenantBrandQueryKey } from './api/queries'
 
 const FEATURES: { key: keyof BrandFeatures; label: TranslationKey }[] = [
   { key: 'reservations', label: 'featureReservations' },

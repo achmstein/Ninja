@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc -b && vite build",
-    "lint": "eslint . --max-warnings 182",
+    "lint": "eslint . --max-warnings 90",
     "test": "vitest run",
     "preview": "vite preview",
     "generate:i18n": "node scripts/generate-i18n.mjs",

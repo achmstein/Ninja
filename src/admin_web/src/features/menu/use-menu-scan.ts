@@ -1,7 +1,6 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { type MenuProposal } from '@ninja/api/catalog'
-import { scanMenuMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
@@ -9,6 +8,7 @@ import { isPdf, pdfToImages } from '@/lib/pdf-pages'
 import { toast } from '@/lib/toast'
 import { assistErrorMessage } from '@/features/assistant/assist/errors'
 import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
+import { scanMenuMutation } from './api/mutations'
 
 /** Pages per scan, the server's own cap (MenuScanner.MaxPages) */
 export const MENU_SCAN_MAX_PAGES = 8

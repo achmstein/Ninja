@@ -2,20 +2,6 @@ import { useEffect, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Circle, KeyRound, ShieldCheck, Smartphone, Sparkles, XCircle } from 'lucide-react'
 import type { AppCheck, TenantAppStatus, TenantDetail } from '@ninja/api/control'
-import {
-  checkTenantAppMutation,
-  generateAndroidKeyMutation,
-  getTenantAppOptions,
-  getTenantAppQueryKey,
-  importAndroidKeyMutation,
-  linkFirebaseAppsMutation,
-  setAppIconsFromBrandMutation,
-  setAppIconsMutation,
-  setAppleKeyMutation,
-  setAppGoogleSignInMutation,
-  setPlayKeyMutation,
-  setUpTenantAppMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { readFileBase64, readFileText } from '@/lib/files'
 import { useFormat } from '@/lib/format'
@@ -40,6 +26,19 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { CopyButton } from '@/components/copy-button'
+import {
+  checkTenantAppMutation,
+  generateAndroidKeyMutation,
+  importAndroidKeyMutation,
+  linkFirebaseAppsMutation,
+  setAppIconsFromBrandMutation,
+  setAppIconsMutation,
+  setAppleKeyMutation,
+  setAppGoogleSignInMutation,
+  setPlayKeyMutation,
+  setUpTenantAppMutation,
+} from '../api/mutations'
+import { getTenantAppOptions, getTenantAppQueryKey } from '../api/queries'
 import { AppBuildCard } from '../app-build'
 import { GiveOwnApp, OwnAppRecord } from './app-record'
 

@@ -21,30 +21,6 @@ import {
   DatabaseZap,
   ImagePlus,
 } from 'lucide-react'
-import {
-  bringBackTenantMutation,
-  convertTenantMutation,
-  destroyTenantMutation,
-  forgetTenantMutation,
-  dismissTenantErrorMutation,
-  extendDemoMutation,
-  fillDemoDataMutation,
-  generateItemPhotosMutation,
-  getTenantOptions,
-  getTenantQueryKey,
-  impersonateOwnerMutation,
-  listTenantsQueryKey,
-  provisionTenantMutation,
-  resendWelcomeEmailMutation,
-  resumeTenantMutation,
-  rollbackTenantMutation,
-  moveTenantMutation,
-  listNodesOptions,
-  secureTenantMutation,
-  startTenantMutation,
-  stopTenantMutation,
-  upgradeTenantMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {
@@ -82,6 +58,27 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { JobLabel } from '@/features/platform/queue-table'
+import {
+  bringBackTenantMutation,
+  convertTenantMutation,
+  destroyTenantMutation,
+  forgetTenantMutation,
+  dismissTenantErrorMutation,
+  extendDemoMutation,
+  fillDemoDataMutation,
+  generateItemPhotosMutation,
+  impersonateOwnerMutation,
+  provisionTenantMutation,
+  resendWelcomeEmailMutation,
+  resumeTenantMutation,
+  rollbackTenantMutation,
+  moveTenantMutation,
+  secureTenantMutation,
+  startTenantMutation,
+  stopTenantMutation,
+  upgradeTenantMutation,
+} from './api/mutations'
+import { getTenantOptions, getTenantQueryKey, listTenantsQueryKey, listNodesOptions } from './api/queries'
 import {
   BringBackDialog,
   ConvertDialog,

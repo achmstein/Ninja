@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle } from 'lucide-react'
-import {
-  dismissPaymentAttentionMutation,
-  listPaymentsNeedingAttentionOptions,
-  listPaymentsNeedingAttentionQueryKey,
-  markPaymentMoveDoneMutation,
-  retryPaymentMoveMutation,
-} from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PaymentAttentionView } from '@ninja/api/sales/types.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -21,6 +14,8 @@ import { Dot, ListRow } from '@/components/list-row'
 import { Money } from '@/components/money'
 import { StatusChip } from '@/components/status-chip'
 import { When } from '@/components/when'
+import { dismissPaymentAttentionMutation, markPaymentMoveDoneMutation, retryPaymentMoveMutation } from './api/mutations'
+import { listPaymentsNeedingAttentionOptions, listPaymentsNeedingAttentionQueryKey } from './api/queries'
 
 const listQuery = {}
 

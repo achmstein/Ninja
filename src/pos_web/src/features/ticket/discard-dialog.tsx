@@ -1,10 +1,11 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { discardTicketMutation, getTicketQueryKey } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { discardTicketMutation } from './api/mutations'
+import { getTicketQueryKey } from './api/queries'
 
 type DiscardTicketDialogProps = {
   ticketId: number

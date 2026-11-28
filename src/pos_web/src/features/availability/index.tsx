@@ -2,12 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, ArrowRight, Search } from 'lucide-react'
-import {
-  listCategoriesOptions,
-  listItemsOptions,
-  listItemsQueryKey,
-  toggleItemAvailabilityMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -17,6 +11,8 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Switch } from '@/components/ui/switch'
+import { toggleItemAvailabilityMutation } from './api/mutations'
+import { listCategoriesOptions, listItemsOptions, listItemsQueryKey } from './api/queries'
 
 /** The list's first entry: everything that is off now, whatever its category */
 const OFF = 'off' as const

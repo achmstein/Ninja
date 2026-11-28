@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ChevronRight, Copy, Download, ExternalLink, Link2, Printer } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { getAllBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { defaultApiOrigin, useBrand, useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -12,6 +11,7 @@ import { EntitySheet } from '@/components/entity-sheet'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { CONNECTOR_FILE } from '@/features/branches/components/print-connectors'
+import { getAllBranchesOptions } from './api/queries'
 
 /**
  * The native till, kitchen display and rider app, and the kitchen's printer

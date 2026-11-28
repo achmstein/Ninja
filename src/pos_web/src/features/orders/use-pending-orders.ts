@@ -1,8 +1,8 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { OrderSummary } from '@ninja/api/ordering/types.gen'
 import { toNumber } from '@/lib/money'
+import { getPendingOrdersOptions } from './api/queries'
 
 /**
  * Customer app orders waiting for a cashier to accept them, oldest first —

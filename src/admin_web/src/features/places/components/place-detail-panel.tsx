@@ -19,10 +19,6 @@ import {
 } from 'lucide-react'
 import { type OrderSummary } from '@ninja/api/ordering'
 import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@ninja/api/spaces'
-import {
-  getPlaceReservationHistoryOptions,
-  getPlaceStayHistoryOptions,
-} from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useCustomerOrigin, useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'
@@ -39,6 +35,7 @@ import type { KeycloakUser } from '@/features/accounts/types'
 import { PendingOrderCard } from '@/features/orders/components/pending-order-card'
 import { formatEgp } from '@/features/orders/status'
 import { useOrderActions } from '@/features/orders/use-order-actions'
+import { getPlaceReservationHistoryOptions, getPlaceStayHistoryOptions } from '../api/queries'
 import { ReservationOutcome } from '../reservations-history'
 import {
   elapsedSeconds,

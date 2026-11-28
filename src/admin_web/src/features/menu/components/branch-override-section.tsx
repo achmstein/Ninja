@@ -1,11 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { type CatalogItemDto } from '@ninja/api/catalog'
-import {
-  getBranchOverridesOptions,
-  removeBranchItemOverrideMutation,
-  setBranchItemOverrideMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { useCurrencyLabel } from '@/lib/currency'
@@ -19,6 +14,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { Switch } from '@/components/ui/switch'
 import { SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid } from '@/components/field'
+import { removeBranchItemOverrideMutation, setBranchItemOverrideMutation } from '../api/mutations'
+import { getBranchOverridesOptions } from '../api/queries'
 
 /** The footer's Save sits outside the form and submits it by this id */
 const FORM_ID = 'branch-override-form'

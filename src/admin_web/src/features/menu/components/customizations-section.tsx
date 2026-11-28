@@ -2,12 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { GripVertical, Pencil, Plus, SlidersHorizontal, Trash2, X } from 'lucide-react'
 import { type CatalogItemDto, type ItemCustomization, type ItemCustomizationDto } from '@ninja/api/catalog'
-import {
-  createCustomizationMutation,
-  deleteCustomizationMutation,
-  getItemCustomizationsOptions,
-  updateCustomizationMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -33,6 +27,8 @@ import {
 } from '@/components/localized-input'
 import { NinjaMark } from '@/components/ninja-mark'
 import { useCustomizationsAssist } from '@/features/assistant/assist/use-customizations-assist'
+import { createCustomizationMutation, deleteCustomizationMutation, updateCustomizationMutation } from '../api/mutations'
+import { getItemCustomizationsOptions } from '../api/queries'
 import {
   bodyFromDraft,
   ChoiceGlyph,

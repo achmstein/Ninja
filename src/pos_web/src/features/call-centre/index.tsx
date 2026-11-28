@@ -2,10 +2,6 @@ import { useId, useState } from 'react'
 import { keepPreviousData, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store, X } from 'lucide-react'
-import {
-  getKnownDeliveryAddressesOptions,
-  resolveDeliveryBranchForStaffOptions,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { KnownAddressView } from '@ninja/api/ordering/types.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
@@ -25,6 +21,7 @@ import { useAddressLine, useDistanceText } from '@/features/deliveries/delivery-
 import { PinQualityLabel } from '@/features/deliveries/pin-quality'
 import { emptyDelivery, useSale, type PinSource, type SaleDelivery } from '@/features/sale/cart'
 import { DELIVERY_LIMITS, MIN_PHONE_DIGITS, toSaleZone, validatePhoneDelivery } from '@/features/sale/sale-delivery'
+import { getKnownDeliveryAddressesOptions, resolveDeliveryBranchForStaffOptions } from './api/queries'
 import { branchOffers, callerDelivery, chosenArea, offeredBranch, pinArea } from './call-centre'
 
 /**

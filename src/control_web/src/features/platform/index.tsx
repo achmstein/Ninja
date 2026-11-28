@@ -3,17 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { AlertTriangle, ArrowUpCircle, Mail, MailX, Plus } from 'lucide-react'
 import type { TenantSummary, TenantUsage } from '@ninja/api/control'
-import {
-  fleetUpgradeMutation,
-  getPlatformBackupsOptions,
-  getPlatformCapacityOptions,
-  getPlatformJobsOptions,
-  getPlatformMailOptions,
-  getPlatformOptions,
-  listLeadsOptions,
-  listTenantsOptions,
-  listTenantsQueryKey,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { megabytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
@@ -34,6 +23,17 @@ import { PageHeader } from '@/components/page-header'
 import { KindBadge, StatusBadge, SubscriptionBadge, UpdateBadge } from '@/components/tenant-badges'
 import { FleetUpgradeDialog } from '@/features/tenants/dialogs'
 import { AiSettings } from './ai-settings'
+import { fleetUpgradeMutation } from './api/mutations'
+import {
+  getPlatformBackupsOptions,
+  getPlatformCapacityOptions,
+  getPlatformJobsOptions,
+  getPlatformMailOptions,
+  getPlatformOptions,
+  listLeadsOptions,
+  listTenantsOptions,
+  listTenantsQueryKey,
+} from './api/queries'
 import { AuditTable } from './audit-table'
 import { CapacityStrip } from './capacity-strip'
 import { CapacityTable } from './capacity-table'

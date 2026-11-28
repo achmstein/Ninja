@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useMutation } from '@tanstack/react-query'
 import { type ReceiptProposal } from '@ninja/api/inventory'
-import { scanReceiptMutation } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { toast } from '@/lib/toast'
 import { assistErrorMessage } from '@/features/assistant/assist/errors'
 import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
+import { scanReceiptMutation } from './api/mutations'
 
 /**
  * Pick a photo, shrink it, send it, keep the proposal for the review

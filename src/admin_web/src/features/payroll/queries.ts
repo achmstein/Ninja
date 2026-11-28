@@ -1,9 +1,4 @@
-import {
-  getAttendanceOptions,
-  getEmployeeLedgerOptions,
-  getEmployeesOptions,
-  getPayslipsOptions,
-} from '@ninja/api/payroll/@tanstack/react-query.gen'
+import { getAttendanceOptions, getEmployeeLedgerOptions, getEmployeesOptions, getPayslipsOptions } from './api/queries'
 
 // Every payroll list follows the active branch (X-Branch-Id)
 export const employeesQueryOptions = (includeInactive = false) =>

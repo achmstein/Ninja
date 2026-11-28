@@ -4,11 +4,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Lock, X } from 'lucide-react'
 import { type TenantFeatures, type TenantThemeDto } from '@ninja/api/tenant'
 import {
-  deleteTenantImageMutation,
-  updateTenantMutation,
-  uploadTenantImageMutation,
-} from '@ninja/api/tenant/@tanstack/react-query.gen'
-import {
   ARABIC_FONT_CATALOG,
   ARABIC_FONTS,
   ensureFontPreviews,
@@ -55,6 +50,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { PageHeader } from '@/components/page-header'
+import { deleteTenantImageMutation, updateTenantMutation, uploadTenantImageMutation } from './api/mutations'
 
 const FEATURE_ROWS: {
   key: keyof TenantFeatures

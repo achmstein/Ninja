@@ -2,9 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useInfiniteQuery, useQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Archive, ArchiveRestore, ArrowLeft, MoreHorizontal, PackagePlus, Pencil } from 'lucide-react'
-import { listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { getStockMovements, type StockItemView, type StockLevelView } from '@ninja/api/inventory'
-import { getRecipesOptions, getStockItemCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -25,6 +23,8 @@ import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { SectionCard } from '@/components/section-card'
 import { When } from '@/components/when'
+import { listItemsOptions } from '../api/queries'
+import { getRecipesOptions, getStockItemCostsOptions } from '../api/queries'
 import {
   costChange,
   formatQuantity,

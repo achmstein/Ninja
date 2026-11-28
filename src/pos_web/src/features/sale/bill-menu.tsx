@@ -3,7 +3,6 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { getRealmRoles } from '@/config/oidc-config'
 import { BadgePercent, Ban, Ellipsis, ListChecks, Printer, Trash2, Undo2 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { returnPartPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PartPaymentView, TicketDetail } from '@ninja/api/sales/types.gen'
 import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -21,6 +20,7 @@ import { DiscardTicketDialog } from '@/features/ticket/discard-dialog'
 import { DiscountDialog } from '@/features/ticket/discount-dialog'
 import { KitchenReprintDialog, useCanReprintKitchen } from '@/features/ticket/kitchen-reprint'
 import { VoidTicketDialog } from '@/features/ticket/void-dialog'
+import { returnPartPaymentMutation } from './api/mutations'
 
 /**
  * The rest a bill can do, from the sale screen it is rung up on: a discount,

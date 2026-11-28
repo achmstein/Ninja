@@ -2,7 +2,6 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { ChevronDown } from 'lucide-react'
 import { type StockLevelView } from '@ninja/api/inventory'
-import { getUsageReportOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBusinessTimeZone } from '@/lib/business-clock'
@@ -13,6 +12,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible'
 import { Skeleton } from '@/components/ui/skeleton'
+import { getUsageReportOptions } from '../api/queries'
 
 type StockStatsProps = {
   levels: StockLevelView[]

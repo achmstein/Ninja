@@ -3,17 +3,7 @@ import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ChefHat, Monitor, Pencil, Plus, Printer, Trash2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
-import { listCategoriesOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { type KitchenStationView, type PrintConnectorView } from '@ninja/api/ordering'
-import {
-  createKitchenStationMutation,
-  deleteKitchenStationMutation,
-  getKitchenStationsOptions,
-  getPrintConnectorsOptions,
-  testPrintKitchenStationMutation,
-  updateKitchenStationMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { updateKitchenStation } from '@ninja/api/ordering/sdk.gen'
 import { type BranchResponse } from '@ninja/api/tenant'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -36,6 +26,15 @@ import {
 } from '@/components/localized-input'
 import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
 import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
+import {
+  createKitchenStationMutation,
+  deleteKitchenStationMutation,
+  testPrintKitchenStationMutation,
+  updateKitchenStationMutation,
+} from '../api/mutations'
+import { updateKitchenStation } from '../api/mutations'
+import { listCategoriesOptions } from '../api/queries'
+import { getKitchenStationsOptions, getPrintConnectorsOptions } from '../api/queries'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {

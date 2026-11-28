@@ -1,10 +1,10 @@
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { getAccountBalanceOptions } from '@ninja/api/accounts/@tanstack/react-query.gen'
 import type { AccountSummaryViewModel } from '@ninja/api/accounts/types.gen'
-import { getAccountOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import type { AccountDto } from '@ninja/api/loyalty/types.gen'
-import { recordTabPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
+import { recordTabPaymentMutation } from './api/mutations'
+import { getAccountBalanceOptions } from './api/queries'
+import { getAccountOptions } from './api/queries'
 
 // What the till may know about a customer: their points, as information,
 // and their tab, which it can take money against. Both are read by the

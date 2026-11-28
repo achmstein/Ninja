@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail } from '@ninja/api/sales'
-import { applyTicketDiscountMutation, removeTicketDiscountMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
@@ -9,6 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { applyTicketDiscountMutation, removeTicketDiscountMutation } from './api/mutations'
 
 type DiscountDialogProps = {
   ticket: TicketDetail

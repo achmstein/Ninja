@@ -1,6 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBusinessTimeZone } from '@/lib/business-clock'
 import {
@@ -11,6 +10,7 @@ import {
   type DayWindow,
 } from '@/lib/business-day'
 import { type RangeKey, type RangeSearch } from '@/lib/search-schemas'
+import { getBranchesOptions } from './api/queries'
 
 type Options = {
   /** What an absent `range` means (reports: today; history tables: all) */

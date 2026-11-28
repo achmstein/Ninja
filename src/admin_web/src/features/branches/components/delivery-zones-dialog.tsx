@@ -2,7 +2,6 @@ import { lazy, Suspense, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ChevronDown, MapPinned, PenLine, Plus, Trash2 } from 'lucide-react'
 import { type BranchResponse, type DeliveryZoneResponse } from '@ninja/api/tenant'
-import { getDeliveryZonesOptions, setDeliveryZonesMutation } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { areaOf, type DeliveryArea, type LatLng } from '@/lib/maps'
@@ -26,6 +25,8 @@ import { ConfirmDialog } from '@/components/confirm-dialog'
 import { ErrorState } from '@/components/error-state'
 import { Field, FieldGrid } from '@/components/field'
 import { isBlank, LocalizedFields, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
+import { setDeliveryZonesMutation } from '../api/mutations'
+import { getDeliveryZonesOptions } from '../api/queries'
 import {
   MAX_ZONES,
   parseDeliveryZones,

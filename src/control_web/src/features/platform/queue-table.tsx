@@ -3,12 +3,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ListChecks, X } from 'lucide-react'
 import type { JobDto, LaneStatus } from '@ninja/api/control'
-import {
-  cancelPlatformJobMutation,
-  getPlatformJobsOptions,
-  getPlatformJobsQueryKey,
-  getTenantQueryKey,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { duration, useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
@@ -30,6 +24,8 @@ import { Empty, EmptyHeader, EmptyMedia, EmptyTitle } from '@/components/ui/empt
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { cancelPlatformJobMutation } from './api/mutations'
+import { getPlatformJobsOptions, getPlatformJobsQueryKey, getTenantQueryKey } from './api/queries'
 
 /** The verb a job carries, in the admin's language. */
 export const jobActionKey: Record<string, TranslationKey> = {

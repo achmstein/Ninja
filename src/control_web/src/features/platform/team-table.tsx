@@ -2,16 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound, LogOut, MoreHorizontal, ShieldOff, UserCheck, UserPlus, UserX } from 'lucide-react'
 import type { OperatorResponse } from '@ninja/api/control'
-import {
-  disableOperatorMutation,
-  enableOperatorMutation,
-  inviteOperatorMutation,
-  listOperatorsOptions,
-  listOperatorsQueryKey,
-  resetOperatorAuthenticatorMutation,
-  resetOperatorPasswordMutation,
-  signOutOperatorMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
@@ -50,6 +40,15 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { CopyButton } from '@/components/copy-button'
+import {
+  disableOperatorMutation,
+  enableOperatorMutation,
+  inviteOperatorMutation,
+  resetOperatorAuthenticatorMutation,
+  resetOperatorPasswordMutation,
+  signOutOperatorMutation,
+} from './api/mutations'
+import { listOperatorsOptions, listOperatorsQueryKey } from './api/queries'
 
 /** A password to hand over: shown once, right after it was made. */
 type Handover = { email: string; password: string; invited: boolean }

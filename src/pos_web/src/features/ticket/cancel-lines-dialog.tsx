@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { Minus, Plus } from 'lucide-react'
-import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { cancelTicketLinesMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { useFeatures } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'
@@ -21,6 +19,8 @@ import {
 } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
 import { StockDispositionChoice } from '@/components/stock-disposition-choice'
+import { cancelTicketLinesMutation } from './api/mutations'
+import { getOrderOptions } from './api/queries'
 import { isCancellable } from './cancel-lines'
 
 export { isCancellable }

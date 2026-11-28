@@ -1,11 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import type { TenantUpdate } from '@ninja/api/control'
-import {
-  getPlatformUpdatesOptions,
-  listArchivedBackupsOptions,
-  listNodesOptions,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'
@@ -35,6 +30,7 @@ import { Label } from '@/components/ui/label'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Spinner } from '@/components/ui/spinner'
 import { DatePicker } from '@/components/date-picker'
+import { getPlatformUpdatesOptions, listArchivedBackupsOptions, listNodesOptions } from './api/queries'
 import { isValidTag, TagPicker } from './tag-picker'
 
 type DialogProps = {

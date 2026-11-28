@@ -1,11 +1,11 @@
 import { useEffect } from 'react'
 import { AxiosError } from 'axios'
 import { useQuery } from '@tanstack/react-query'
-import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { toNumber } from '@/lib/money'
 import { isRunning } from '@/features/places/status'
 import { useStay } from '@/features/places/use-places'
 import { landSend, sendsFor, useSending } from '@/features/sending/sending'
+import { getTicketOptions } from './api/queries'
 
 /**
  * The open bill the sale pad is rung onto, read here so the pad is the bill:

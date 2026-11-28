@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQueries, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
-import { voidTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { defaultDispositionFor, type StockDisposition } from '@/lib/stock-disposition'
 import { toast } from '@/lib/toast'
@@ -11,6 +9,8 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { StockDispositionChoice } from '@/components/stock-disposition-choice'
+import { voidTicketMutation } from './api/mutations'
+import { getOrderOptions } from './api/queries'
 
 type VoidTicketDialogProps = {
   ticketId: number

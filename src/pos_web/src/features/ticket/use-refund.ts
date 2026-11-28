@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import type { TicketDetail, TicketLineView } from '@ninja/api/sales'
-import { refundTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
+import { refundTicketMutation } from './api/mutations'
 import { ACCOUNT_TENDER, BASE_TENDERS } from './tenders'
 
 export type RefundHolder = { id: string; name: string }

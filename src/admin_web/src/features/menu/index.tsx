@@ -26,17 +26,6 @@ import {
   List,
 } from 'lucide-react'
 import { type CatalogItemDto, type CatalogTypeDto } from '@ninja/api/catalog'
-import {
-  deleteCategoryMutation,
-  deleteItemMutation,
-  listCategoriesOptions,
-  listCategoriesQueryKey,
-  listItemsOptions,
-  listItemsQueryKey,
-  reorderCategoriesMutation,
-  reorderItemsMutation,
-  toggleItemAvailabilityMutation,
-} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { MENU_SCAN_ACCEPT } from '@/lib/image'
@@ -65,6 +54,14 @@ import { InfoBadge } from '@/components/info-badge'
 import { Grip, Sortable } from '@/components/sortable'
 import { DEFAULT_FOOD_COST_TARGET } from '@/features/inventory/menu-cost-rows'
 import { type StockRuleBadge, useStockRuleBadges } from '@/features/inventory/stock-rules'
+import {
+  deleteCategoryMutation,
+  deleteItemMutation,
+  reorderCategoriesMutation,
+  reorderItemsMutation,
+  toggleItemAvailabilityMutation,
+} from './api/mutations'
+import { listCategoriesOptions, listCategoriesQueryKey, listItemsOptions, listItemsQueryKey } from './api/queries'
 import { CategoryDialog } from './components/category-dialog'
 import { ItemSheet, type ItemSheetState } from './components/item-sheet'
 import { MenuReviewSheet } from './components/menu-review-sheet'

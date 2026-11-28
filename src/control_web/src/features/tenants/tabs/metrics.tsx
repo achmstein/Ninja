@@ -3,7 +3,6 @@ import { useQuery } from '@tanstack/react-query'
 import { BarChart3 } from 'lucide-react'
 import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from 'recharts'
 import type { TenantDetail } from '@ninja/api/control'
-import { getTenantMetricsOptions } from '@ninja/api/control/@tanstack/react-query.gen'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatMoney } from '@/lib/locale'
 import { statusLabelKey, tenantStatus } from '@/lib/tenant'
@@ -13,6 +12,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { Stat, StatStrip } from '@/components/stat-strip'
+import { getTenantMetricsOptions } from '../api/queries'
 
 const RANGES = [7, 30, 90] as const
 

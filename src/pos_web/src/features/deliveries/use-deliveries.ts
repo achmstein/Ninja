@@ -1,12 +1,15 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@ninja/api/ordering/types.gen'
+import { brandQueryKey } from '@/lib/brand'
+import { translate, type TranslationKey } from '@/lib/i18n'
+import { isModuleOff, problemCode, problemMessage } from '@/lib/problem'
+import type { StockDisposition } from '@/lib/stock-disposition'
+import { toast } from '@/lib/toast'
+import { useDebounced } from '@/lib/use-debounced'
 import {
   assignDeliveryCourierMutation,
   assignDeliveryRiderMutation,
   cancelOrderMutation,
-  getCourierProvidersOptions,
-  getDeliveriesOptions,
-  getRidersOptions,
-  getTillDeliveryQuoteOptions,
   handInDeliveryCashMutation,
   handInRiderCashMutation,
   markCourierDeliveredMutation,
@@ -15,14 +18,13 @@ import {
   markDeliveryOutMutation,
   markDeliveryReturnedMutation,
   unassignDeliveryRiderMutation,
-} from '@ninja/api/ordering/@tanstack/react-query.gen'
-import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@ninja/api/ordering/types.gen'
-import { brandQueryKey } from '@/lib/brand'
-import { translate, type TranslationKey } from '@/lib/i18n'
-import { isModuleOff, problemCode, problemMessage } from '@/lib/problem'
-import type { StockDisposition } from '@/lib/stock-disposition'
-import { toast } from '@/lib/toast'
-import { useDebounced } from '@/lib/use-debounced'
+} from './api/mutations'
+import {
+  getCourierProvidersOptions,
+  getDeliveriesOptions,
+  getRidersOptions,
+  getTillDeliveryQuoteOptions,
+} from './api/queries'
 
 export { laneOf, type DeliveryLane } from './delivery-format'
 

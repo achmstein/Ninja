@@ -2,13 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Hammer } from 'lucide-react'
 import type { AppBuildTestResult, BuildAllResult } from '@ninja/api/control'
-import {
-  buildAllOwnAppsMutation,
-  getAppBuildSettingsOptions,
-  getAppBuildSettingsQueryKey,
-  saveAppBuildSettingsMutation,
-  testAppBuildSettingsMutation,
-} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'
@@ -29,6 +22,8 @@ import { Label } from '@/components/ui/label'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Spinner } from '@/components/ui/spinner'
 import { BuildChoice } from '@/features/tenants/app-build'
+import { buildAllOwnAppsMutation, saveAppBuildSettingsMutation, testAppBuildSettingsMutation } from './api/mutations'
+import { getAppBuildSettingsOptions, getAppBuildSettingsQueryKey } from './api/queries'
 
 /**
  * How the own apps are built from the control app: a GitHub token allowed to

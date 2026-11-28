@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Check, CircleAlert, MessageSquare, RefreshCw, ShieldQuestion, UserX, X } from 'lucide-react'
-import { getOrderOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import type { OrderSummary } from '@ninja/api/ordering/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
@@ -19,6 +18,7 @@ import {
 import { Separator } from '@/components/ui/separator'
 import { Skeleton } from '@/components/ui/skeleton'
 import { DeliveryDetails, DeliveryFeeRow } from '@/features/deliveries/delivery-details'
+import { getOrderOptions } from './api/queries'
 import { PlatformBadge, PlatformHandover, platformRejectReasons } from './platform-badge'
 
 type OrderDetailDialogProps = {

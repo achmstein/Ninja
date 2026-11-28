@@ -15,7 +15,6 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { getOpenTicketsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
@@ -28,6 +27,7 @@ import { Separator } from '@/components/ui/separator'
 import { ConfirmDialog } from '@/components/confirm-dialog'
 import { CustomerCard, type CardCustomer } from '@/features/customer/customer-card'
 import { CustomerSearch } from '@/features/customer/customer-search'
+import { getOpenTicketsOptions } from './api/queries'
 import { RateOptionToggle } from './rate-option-toggle'
 import { StartStayDialog } from './start-stay-dialog'
 import {

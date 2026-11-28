@@ -2,7 +2,6 @@ import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { createPortal } from 'react-dom'
 import { type CatalogTypeDto } from '@ninja/api/catalog'
-import { createCategoryMutation, updateCategoryMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -21,6 +20,7 @@ import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
 import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
 import { LOCALIZE_CATEGORY } from '@/features/assistant/assist/use-localize-assist'
 import { useNameAssist } from '@/features/assistant/assist/use-name-assist'
+import { createCategoryMutation, updateCategoryMutation } from '../api/mutations'
 
 interface CategoryDialogProps {
   open: boolean

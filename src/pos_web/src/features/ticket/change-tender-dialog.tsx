@@ -1,5 +1,4 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { changePaymentTenderMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'
@@ -11,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
+import { changePaymentTenderMutation } from './api/mutations'
 import { BASE_TENDERS, tenderLabelKey } from './tenders'
 
 /** The payment being put right; null keeps the dialog closed. */

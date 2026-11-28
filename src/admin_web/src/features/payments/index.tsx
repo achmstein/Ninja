@@ -2,11 +2,6 @@ import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, Copy, FlaskConical } from 'lucide-react'
-import {
-  getPaymentSettingsOptions,
-  getPaymentSettingsQueryKey,
-  savePaymentSettingsMutation,
-} from '@ninja/api/sales/@tanstack/react-query.gen'
 import type { PaymentSettingsView } from '@ninja/api/sales/types.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
@@ -24,6 +19,8 @@ import { SettingRow, SettingsCard } from '@/components/kit'
 import { Main } from '@/components/layout/main'
 import { PageHeader } from '@/components/page-header'
 import { StatusChip } from '@/components/status-chip'
+import { savePaymentSettingsMutation } from './api/mutations'
+import { getPaymentSettingsOptions, getPaymentSettingsQueryKey } from './api/queries'
 import { PaymentsAttention } from './attention'
 import {
   FEE_BUSINESS,

@@ -1,6 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
-import { getPurchaseOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { formatWhen } from '@/lib/when'
@@ -8,6 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Table, TableBody, TableCell, TableFooter, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { EntitySheet } from '@/components/entity-sheet'
+import { getPurchaseOptions } from '../api/queries'
 import { formatQuantity } from '../format'
 
 type PurchaseSheetProps = {

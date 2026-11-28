@@ -6,7 +6,6 @@ import { getRealmRoles } from '@/config/oidc-config'
 import { History, Motorbike, Pencil, Store } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type RiderDeliveryRow } from '@ninja/api/ordering'
-import { getRiderDeliveriesOptions, getRidersOverviewOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useLanguage, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -28,6 +27,7 @@ import { When } from '@/components/when'
 import { customersService } from '@/features/customers/services/customers-service'
 import { ManageBranchesDialog } from '@/features/staff/components/manage-branches-dialog'
 import { useBusinessDayOffset, useTillWindow } from '@/features/till/use-till-window'
+import { getRiderDeliveriesOptions, getRidersOverviewOptions } from './api/queries'
 import {
   addressLine,
   cashDifferenceTone,
