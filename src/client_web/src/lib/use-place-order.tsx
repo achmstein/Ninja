@@ -20,8 +20,7 @@ import { useOrderFollowsAddress } from '@/lib/use-branch-switch'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { useGuestGate } from '@/components/auth/guest-gate'
-import { accountPreview, usePhoneGate } from '@/components/auth/phone-gate'
-import { useDockPreview } from '@/lib/dock-preview'
+import { phoneAccountOn, usePhoneGate } from '@/components/auth/phone-gate'
 import { useProfileGate } from '@/components/auth/profile-gate'
 
 /**
@@ -51,7 +50,7 @@ export function usePlaceOrder({
   const tableUnconfirmed = destination?.kind === 'place' && activePlace != null && !placeConfirmed
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
   const { ensureGuestDetails, guestGateDialog } = useGuestGate()
-  const { ensurePhoneAccount, phoneGateDialog } = usePhoneGate()
+  const { signInByPhone, phoneGateDialog } = usePhoneGate()
   const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
   const isGuest = !auth.isAuthenticated
   const { lines, clear } = useCart()
@@ -137,22 +136,17 @@ export function usePlaceOrder({
     if (delivery.active && !delivery.ready) return false
     // A delivery already carries the number to call: the guest is not asked for it twice
     const orderKnows = { phone: (delivery.active && delivery.address?.phone) || undefined }
-    // The account-by-phone flow, tried in a development build only: the number is proved with a code
-    // and nothing is placed, since no server takes such an account yet (components/auth/phone-gate)
-    const previewing = isGuest && accountPreview()
-    const guestContact = !isGuest
-      ? null
-      : previewing
-        ? await ensurePhoneAccount({ ...orderKnows, name: useGuestStore.getState().contact?.name || undefined })
-        : await ensureGuestDetails(orderKnows)
-    if (isGuest && !guestContact) return false
-    if (previewing) {
-      // What a customer sees once an order is in: no alert, the dock says Sent (lib/dock-preview stands in for the order)
-      useDockPreview.setState({ stage: 'sent' })
-      if (onPlaced) onPlaced(clear)
-      else clear()
-      return true
+    // The account by phone, where a visit has it on (components/auth/phone-gate): the customer goes to
+    // prove their number and comes back signed in, their order open as they left it. Nothing is sent now
+    if (isGuest && phoneAccountOn()) {
+      signInByPhone({
+        ...orderKnows,
+        name: useGuestStore.getState().contact?.name || undefined,
+      })
+      return false
     }
+    const guestContact = !isGuest ? null : await ensureGuestDetails(orderKnows)
+    if (isGuest && !guestContact) return false
     if (!isGuest && !(await ensureProfileComplete())) return false
 
     // Minted on the first order that needs it; set before the request so the interceptor sends it

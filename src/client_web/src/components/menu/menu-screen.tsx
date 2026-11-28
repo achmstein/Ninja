@@ -7,6 +7,7 @@ import type { CatalogItemDto, PromotionDto } from '@/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart, type CartLine } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
+import { takeOrderResume } from '@/components/auth/phone-gate'
 import { useLiveBills } from '@/lib/live-bills'
 import { useOrderPill } from '@/lib/order-pill'
 import { toast } from '@/lib/toast'
@@ -633,6 +634,13 @@ const MenuDock = memo(function MenuDock({
       finish()
     },
   })
+
+  // Back from proving their number (components/auth/phone-gate): the order they were sending is open again
+  useEffect(() => {
+    if (takeOrderResume() && !trayEmpty) setExpanded(true)
+    // Asked once, as the menu comes up
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
 
   return (
     <>
