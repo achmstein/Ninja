@@ -4,8 +4,8 @@ import { scanBillMutation } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { toast } from '@/lib/toast'
-import { assistErrorMessage } from '@/features/assist/errors'
-import { useAiAvailable } from '@/features/assist/use-ai-available'
+import { assistErrorMessage } from '@/features/assistant/assist/errors'
+import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
 
 /**
  * The sparkle on a bill attached to an expense: shrink the photo, send it,

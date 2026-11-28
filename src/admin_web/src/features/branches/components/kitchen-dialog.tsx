@@ -34,8 +34,8 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { FormFillButton } from '@/features/assist/form-fill-button'
-import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
+import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
+import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
 import { PrintConnectors } from './print-connectors'
 
 interface KitchenDialogProps {

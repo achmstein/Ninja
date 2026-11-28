@@ -13,7 +13,7 @@ import {
 import { Label } from '@/components/ui/label'
 import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group'
 import { NinjaMark } from '@/components/ninja-mark'
-import { localizedFields, mergeLocalized, useFormFill } from '@/features/assist/use-form-fill'
+import { localizedFields, mergeLocalized, useFormFill } from '@/features/assistant/assist/use-form-fill'
 
 // The pure helpers live with the value's type, so logic that only shapes
 // text needs no component; re-exported here for the forms

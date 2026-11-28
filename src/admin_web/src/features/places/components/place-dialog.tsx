@@ -26,8 +26,8 @@ import {
   toLocalizedValue,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { FormFillButton } from '@/features/assist/form-fill-button'
-import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
+import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
+import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
 import { PLACE_ROOM, placeKindKey, placeKinds, tariffOptions } from '../status'
 import { problemDetail } from '../use-places'
 import { PlaceKindIcon } from './place-kind-icon'

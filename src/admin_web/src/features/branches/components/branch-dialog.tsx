@@ -16,8 +16,8 @@ import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet, SheetActions } from '@/components/entity-sheet'
 import { Field, FieldGrid, SwitchGroup, SwitchRow } from '@/components/field'
 import { fromLocalizedValue, isBlank, LocalizedInput, toLocalizedValue } from '@/components/localized-input'
-import { FormFillButton } from '@/features/assist/form-fill-button'
-import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
+import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
+import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
 import { BranchMap } from './branch-map'
 
 interface BranchDialogProps {

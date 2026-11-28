@@ -7,8 +7,8 @@ import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { isPdf, pdfToImages } from '@/lib/pdf-pages'
 import { toast } from '@/lib/toast'
-import { assistErrorMessage } from '@/features/assist/errors'
-import { useAiAvailable } from '@/features/assist/use-ai-available'
+import { assistErrorMessage } from '@/features/assistant/assist/errors'
+import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
 
 /** Pages per scan, the server's own cap (MenuScanner.MaxPages) */
 export const MENU_SCAN_MAX_PAGES = 8

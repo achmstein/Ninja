@@ -6,8 +6,8 @@ import { useContentLanguages } from '@/lib/content-languages'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'
 import { toast } from '@/lib/toast'
-import { assistErrorMessage } from '@/features/assist/errors'
-import { useAiAvailable } from '@/features/assist/use-ai-available'
+import { assistErrorMessage } from '@/features/assistant/assist/errors'
+import { useAiAvailable } from '@/features/assistant/assist/use-ai-available'
 
 /**
  * Pick a photo, shrink it, send it, keep the proposal for the review

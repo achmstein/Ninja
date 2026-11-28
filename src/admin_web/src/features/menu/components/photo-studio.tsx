@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Textarea } from '@/components/ui/textarea'
 import { NinjaMark } from '@/components/ninja-mark'
-import { assistErrorMessage } from '@/features/assist/errors'
+import { assistErrorMessage } from '@/features/assistant/assist/errors'
 
 export type StudioItem = {
   nameEn?: string

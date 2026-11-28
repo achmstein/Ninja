@@ -15,7 +15,7 @@ import { Combobox } from '@/components/combobox'
 import { EmptyState } from '@/components/empty-state'
 import { SheetActions } from '@/components/entity-sheet'
 import { ImageWithFallback } from '@/components/image-fallback'
-import { usePairingsAssist } from '@/features/assist/use-pairings-assist'
+import { usePairingsAssist } from '@/features/assistant/assist/use-pairings-assist'
 import { itemPictureUrl } from '../pictures'
 
 /** Catalog refuses more; a handful is a suggestion, more is the menu again. */

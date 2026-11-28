@@ -18,10 +18,10 @@ import {
   type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { FormFillButton } from '@/features/assist/form-fill-button'
-import { localizedFields, mergeLocalized, type FillField } from '@/features/assist/use-form-fill'
-import { LOCALIZE_STOCK_ITEM } from '@/features/assist/use-localize-assist'
-import { useNameAssist } from '@/features/assist/use-name-assist'
+import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
+import { localizedFields, mergeLocalized, type FillField } from '@/features/assistant/assist/use-form-fill'
+import { LOCALIZE_STOCK_ITEM } from '@/features/assistant/assist/use-localize-assist'
+import { useNameAssist } from '@/features/assistant/assist/use-name-assist'
 import { CUSTOM_UNIT, UNITS, unitLabel } from '../format'
 import { useInventoryActions } from '../use-inventory-actions'
 

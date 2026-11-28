@@ -17,10 +17,10 @@ import {
   type Lang,
   type LocalizedValue,
 } from '@/components/localized-input'
-import { FormFillButton } from '@/features/assist/form-fill-button'
-import { localizedFields, mergeLocalized } from '@/features/assist/use-form-fill'
-import { LOCALIZE_CATEGORY } from '@/features/assist/use-localize-assist'
-import { useNameAssist } from '@/features/assist/use-name-assist'
+import { FormFillButton } from '@/features/assistant/assist/form-fill-button'
+import { localizedFields, mergeLocalized } from '@/features/assistant/assist/use-form-fill'
+import { LOCALIZE_CATEGORY } from '@/features/assistant/assist/use-localize-assist'
+import { useNameAssist } from '@/features/assistant/assist/use-name-assist'
 
 interface CategoryDialogProps {
   open: boolean

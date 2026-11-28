@@ -14,7 +14,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Spinner } from '@/components/ui/spinner'
 import { EntitySheet } from '@/components/entity-sheet'
 import { LocalizedFields, LocalizedInput } from '@/components/localized-input'
-import { hasText } from '@/features/assist/helpers'
+import { hasText } from '@/features/assistant/assist/helpers'
 import {
   isReviewCategoryReady,
   isReviewItemReady,

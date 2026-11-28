@@ -32,7 +32,7 @@ import {
   type LocalizedValue,
 } from '@/components/localized-input'
 import { NinjaMark } from '@/components/ninja-mark'
-import { useCustomizationsAssist } from '@/features/assist/use-customizations-assist'
+import { useCustomizationsAssist } from '@/features/assistant/assist/use-customizations-assist'
 import {
   bodyFromDraft,
   ChoiceGlyph,
