@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getKitchenStationsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useStationStore } from '@/stores/station-store'
+import { boardQueries } from './api/queries'
 
 /**
  * The branch's stations that show on a screen — the ones a kitchen display
@@ -15,11 +15,7 @@ export function useStation() {
   const picked = useStationStore((s) => (branchId == null ? null : (s.byBranch[branchId] ?? null)))
   const setStation = useStationStore((s) => s.setStation)
 
-  const query = useQuery({
-    ...getKitchenStationsOptions(),
-    enabled: branchId != null,
-    staleTime: 60_000,
-  })
+  const query = useQuery({ ...boardQueries.stations(), enabled: branchId != null })
 
   const screens = useMemo(() => (query.data ?? []).filter((s) => s.showsOnScreen), [query.data])
 

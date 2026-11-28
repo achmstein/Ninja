@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getKitchenOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { serverNow } from '@/lib/server-clock'
+import { boardQueries } from './api/queries'
 import { useStation } from './use-station'
 
 /**
@@ -15,14 +15,7 @@ import { useStation } from './use-station'
  */
 export function useKitchenOrders() {
   const { stationId } = useStation()
-  const query = useQuery({
-    ...getKitchenOrdersOptions({
-      query: {
-        ...(stationId != null && { stationId }),
-      },
-    }),
-    refetchInterval: 20_000,
-  })
+  const query = useQuery(boardQueries.orders(stationId))
 
   const orders = useMemo(
     () =>

@@ -1,20 +1,16 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { setOrderReady, setOrderStationReady } from '@ninja/api/ordering/sdk.gen'
 import type { KitchenOrder } from '@ninja/api/ordering/types.gen'
 import { useT } from '@/lib/i18n'
 import { serverNow } from '@/lib/server-clock'
 import { toast } from '@/lib/toast'
+import { sendReady } from './api/mutations'
+import { BOARD_KEY } from './api/queries'
 import { useStation } from './use-station'
-
-const BOARD_KEY = [{ _id: 'getKitchenOrders' }]
 
 type ReadyVariables = { orderNumber: number; ready: boolean }
 
 /**
- * Ready / Bring back, the one call the kitchen makes: for this station's
- * part on a station's screen, for the whole order on the pass. Each
- * carries a fresh idempotency key: a double tap on a slow connection must not turn into two
- * commands (the backend treats a repeat as a no-op anyway).
+ * Ready / Bring back, the one call the kitchen makes (api/mutations.ts).
  *
  * The card leaves the board the instant it is tapped — optimistic, because
  * a barista with a hot cup in one hand does not wait for a round trip — and
@@ -26,18 +22,7 @@ export function useReady() {
   const { stationId } = useStation()
 
   const mutation = useMutation({
-    mutationFn: async ({ orderNumber, ready }: ReadyVariables) => {
-      const common = {
-        body: { ready },
-        headers: { 'x-requestid': crypto.randomUUID() },
-        throwOnError: true,
-      } as const
-      if (stationId != null) {
-        await setOrderStationReady({ ...common, path: { orderId: orderNumber, stationId } })
-      } else {
-        await setOrderReady({ ...common, path: { orderId: orderNumber } })
-      }
-    },
+    mutationFn: ({ orderNumber, ready }: ReadyVariables) => sendReady(orderNumber, ready, stationId),
     onMutate: async ({ orderNumber, ready }) => {
       await queryClient.cancelQueries({ queryKey: BOARD_KEY })
       const previous = queryClient.getQueriesData<KitchenOrder[]>({
