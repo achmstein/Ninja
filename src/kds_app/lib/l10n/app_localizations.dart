@@ -655,6 +655,18 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Order #{orderId} was cancelled'**
   String orderCancelledToast(int orderId);
+
+  /// No description provided for @itemCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get itemCancelled;
+
+  /// No description provided for @itemPartCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} cancelled'**
+  String itemPartCancelled(int count);
 }
 
 class _AppLocalizationsDelegate

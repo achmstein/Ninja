@@ -313,4 +313,12 @@ class AppLocalizationsAr extends AppLocalizations {
   String orderCancelledToast(int orderId) {
     return 'أُلغي الطلب #$orderId';
   }
+
+  @override
+  String get itemCancelled => 'اتلغى';
+
+  @override
+  String itemPartCancelled(int count) {
+    return '$count اتلغى';
+  }
 }

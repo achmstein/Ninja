@@ -66,7 +66,8 @@ class OrderCard extends StatelessWidget {
     final isReady = order.isReady;
     // Its bill was voided at the till after the kitchen had it. The card
     // stays, saying so, until whoever was making it clears it: one that just
-    // vanished went unnoticed, and the order went on being made
+    // vanished went unnoticed, and the order went on being made. One whose
+    // every item was cancelled one by one reads the same way
     final isCancelled = order.isCancelled;
 
     // The clock runs from confirmation; a ready order shows when it was
@@ -124,7 +125,6 @@ class OrderCard extends StatelessWidget {
       CardTone.fresh => (theme.colors.mutedForeground.withValues(alpha: 0.4), theme.colors.foreground),
     };
     const inset = EdgeInsets.symmetric(horizontal: 16);
-    final struck = isCancelled ? TextDecoration.lineThrough : null;
     // Every size on the ticket is one of the kitchen's roles (core/theme/kitchen_type.dart)
     final type = theme.kitchen;
     final quiet = type.quiet.copyWith(color: theme.colors.mutedForeground);
@@ -233,22 +233,39 @@ class OrderCard extends StatelessWidget {
                 children: [
                   for (final (index, item) in order.items.indexed) ...[
                     if (index > 0) Container(height: 1, color: theme.colors.border),
-                    // A tap strikes the item through while it is being worked
+                    // A tap strikes the item through while it is being worked.
+                    // One cancelled at the till after the kitchen had it is
+                    // struck and muted when none of it is left to make;
+                    // otherwise its count is what is still to make. Either way
+                    // one red line says so, and why
                     ItemLine(
                       orderNumber: order.orderNumber,
                       index: index,
-                      enabled: onReady != null && !isCancelled,
-                      units: '${item.units}×',
+                      enabled: onReady != null && !isCancelled && !item.isCancelled,
+                      units: '${item.isCancelled ? item.units : item.unitsToMake}×',
                       unitsStyle: type.item.copyWith(
-                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w700, decoration: struck, fontFeatures: tabular),
+                          fontWeight: isCancelled || item.isCancelled ? FontWeight.w500 : FontWeight.w700,
+                          decoration: isCancelled || item.isCancelled ? TextDecoration.lineThrough : null,
+                          color: item.isCancelled ? theme.colors.mutedForeground : null,
+                          fontFeatures: tabular),
                       name: item.productName.localized(context),
                       nameStyle: type.item.copyWith(
-                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w600, decoration: struck, color: theme.colors.foreground),
+                          fontWeight: isCancelled || item.isCancelled ? FontWeight.w500 : FontWeight.w600,
+                          decoration: isCancelled || item.isCancelled ? TextDecoration.lineThrough : null,
+                          color: item.isCancelled ? theme.colors.mutedForeground : theme.colors.foreground),
                       details: [
-                        if (item.customizationsDescription != null)
+                        if (item.isCancelled || item.isPartlyCancelled)
+                          Text(
+                            [
+                              item.isCancelled ? l10n.itemCancelled : l10n.itemPartCancelled(item.cancelledUnits),
+                              if (item.cancelReason != null) item.cancelReason!,
+                            ].join(' · '),
+                            style: type.detail.copyWith(fontWeight: FontWeight.w500, color: theme.colors.destructive),
+                          ),
+                        if (!item.isCancelled && item.customizationsDescription != null)
                           Text(item.customizationsDescription!.localized(context),
                               style: type.detail.copyWith(color: theme.colors.mutedForeground)),
-                        if (item.specialInstructions != null)
+                        if (!item.isCancelled && item.specialInstructions != null)
                           Text(item.specialInstructions!,
                               style: type.detail.copyWith(fontWeight: FontWeight.w600, color: amber)),
                       ],

@@ -66,6 +66,8 @@ const dictionary = {
   platformCancelled: { en: "Cancelled on Talabat", ar: "أُلغي على طلبات" },
   orderCancelled: { en: "Cancelled. Stop making it.", ar: "أُلغي الطلب. توقف عن تحضيره." },
   cancelledRemove: { en: "OK, remove", ar: "تم، أزِله" },
+  itemCancelled: { en: "Cancelled", ar: "اتلغى" },
+  itemPartCancelled: { en: "{count} cancelled", ar: "{count} اتلغى" },
   orderCancelledToast: { en: "Order #{orderId} was cancelled", ar: "أُلغي الطلب #‏{orderId}" },
   soundBanner: { en: "Enable sound", ar: "شغّل الصوت" },
 

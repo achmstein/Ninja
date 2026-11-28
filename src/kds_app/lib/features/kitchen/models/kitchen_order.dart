@@ -8,18 +8,37 @@ class KitchenOrderItem {
   final LocalizedText? customizationsDescription;
   final String? specialInstructions;
 
+  /// How many of [units] the till cancelled after the kitchen had it; 0 when none
+  final int cancelledUnits;
+
+  /// Why, as the till gave it
+  final String? cancelReason;
+
   const KitchenOrderItem({
     required this.productName,
     required this.units,
     this.customizationsDescription,
     this.specialInstructions,
+    this.cancelledUnits = 0,
+    this.cancelReason,
   });
+
+  /// What is still to make: what was rung up less what was cancelled
+  int get unitsToMake => units > cancelledUnits ? units - cancelledUnits : 0;
+
+  /// None of it is left to make
+  bool get isCancelled => cancelledUnits > 0 && unitsToMake == 0;
+
+  /// Some of it was cancelled, some is still to make
+  bool get isPartlyCancelled => cancelledUnits > 0 && unitsToMake > 0;
 
   factory KitchenOrderItem.fromJson(Map<String, dynamic> json) => KitchenOrderItem(
         productName: LocalizedText.parse(json['productName']),
         units: readInt(json['units']),
         customizationsDescription: LocalizedText.parseNullable(json['customizationsDescription']),
         specialInstructions: _text(json['specialInstructions']),
+        cancelledUnits: readInt(json['cancelledUnits']),
+        cancelReason: _text(json['cancelReason']),
       );
 }
 
@@ -133,7 +152,11 @@ class KitchenOrder {
   DateTime get since => confirmedAt ?? date;
   bool get isPos => source == 'Pos';
   bool get isReady => readyAt != null;
-  bool get isCancelled => cancelledAt != null && !isReady;
+  /// Every item on it (on a station's screen, the station's part) was
+  /// cancelled one by one at the till: nothing is left to make either
+  bool get allItemsCancelled => items.isNotEmpty && items.every((item) => item.isCancelled);
+
+  bool get isCancelled => (cancelledAt != null || allItemsCancelled) && !isReady;
 
   /// The same order marked ready at [readyAt], or back on the board for null
   KitchenOrder withReadyAt(DateTime? readyAt) => KitchenOrder(

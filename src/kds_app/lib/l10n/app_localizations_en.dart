@@ -314,4 +314,12 @@ class AppLocalizationsEn extends AppLocalizations {
   String orderCancelledToast(int orderId) {
     return 'Order #$orderId was cancelled';
   }
+
+  @override
+  String get itemCancelled => 'Cancelled';
+
+  @override
+  String itemPartCancelled(int count) {
+    return '$count cancelled';
+  }
 }

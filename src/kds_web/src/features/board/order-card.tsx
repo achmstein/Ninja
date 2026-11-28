@@ -4,7 +4,17 @@ import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatElapsed, orderUrgency, toneBarClass, toneClockClass, type CardTone } from './status'
+import {
+  allItemsCancelled,
+  formatElapsed,
+  isItemCancelled,
+  isPartlyCancelled,
+  orderUrgency,
+  toneBarClass,
+  toneClockClass,
+  unitsToMake,
+  type CardTone,
+} from './status'
 
 /** The delivery platforms whose own mark we show; anything else falls back to its name. */
 const platformLogos: Record<string, string> = {
@@ -55,7 +65,8 @@ export function OrderCard({
   // Its bill was voided at the till after the kitchen had it. The card
   // stays, saying so, until whoever was making it clears it: one that just
   // vanished went unnoticed, and the order went on being made
-  const isCancelled = order.cancelledAt != null && !isReady
+  // Every item on it cancelled one by one at the till reads the same way
+  const isCancelled = (order.cancelledAt != null || allItemsCancelled(order.items)) && !isReady
   const isPos = order.source === 'Pos'
 
   // The clock runs from confirmation — the moment the order reached the
@@ -168,28 +179,52 @@ export function OrderCard({
       )}
 
       <ul className={cn('divide-border divide-y border-t px-3.5', isCancelled && 'opacity-55')}>
-        {(order.items ?? []).map((item, index) => (
-          <li key={index} className='flex gap-2.5 py-2'>
-            <span className={cn('type-item w-7 shrink-0 font-semibold tabular-nums', isCancelled && 'font-medium line-through')}>
-              {item.units}×
-            </span>
-            <div className='min-w-0 flex-1'>
-              <div className={cn('type-item', isCancelled && 'font-medium line-through')}>
-                {localized(item.productName)}
+        {(order.items ?? []).map((item, index) => {
+          // An item cancelled at the till after the kitchen had it: struck
+          // and muted when none of it is left to make, otherwise the count is
+          // what is still to make. Either way one red line says so, and why
+          const gone = isItemCancelled(item)
+          const struck = isCancelled || gone
+          const cancelNote = gone
+            ? t('itemCancelled')
+            : isPartlyCancelled(item)
+              ? t('itemPartCancelled', { count: Number(item.cancelledUnits) })
+              : null
+          return (
+            <li key={index} className='flex gap-2.5 py-2'>
+              <span
+                className={cn(
+                  'type-item w-7 shrink-0 font-semibold tabular-nums',
+                  struck && 'font-medium line-through',
+                  gone && 'text-muted-foreground',
+                )}
+              >
+                {gone ? item.units : unitsToMake(item)}×
+              </span>
+              <div className='min-w-0 flex-1'>
+                <div className={cn('type-item', struck && 'font-medium line-through', gone && 'text-muted-foreground')}>
+                  {localized(item.productName)}
+                </div>
+                {cancelNote && (
+                  <div className='text-destructive type-detail font-medium'>
+                    {cancelNote}
+                    {item.cancelReason && <> · {item.cancelReason}</>}
+                  </div>
+                )}
+                {!gone && item.customizationsDescription && (
+                  <div className='text-muted-foreground type-detail'>
+                    {localized(item.customizationsDescription)}
+                  </div>
+                )}
+                {!gone && item.specialInstructions && (
+                  <div className='type-detail font-semibold text-amber-700 dark:text-amber-400'>
+                    {item.specialInstructions}
+                  </div>
+                )}
               </div>
-              {item.customizationsDescription && (
-                <div className='text-muted-foreground type-detail'>
-                  {localized(item.customizationsDescription)}
-                </div>
-              )}
-              {item.specialInstructions && (
-                <div className='type-detail font-semibold text-amber-700 dark:text-amber-400'>
-                  {item.specialInstructions}
-                </div>
-              )}
-            </div>
-          </li>
-        ))}
+            </li>
+          )
+        })}
       </ul>
 
       {order.customerNote && (

@@ -1,6 +1,6 @@
 import { useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
-import { orderUrgency } from './status'
+import { allItemsCancelled, orderUrgency } from './status'
 import { useKitchenOrders, useNowMs } from './use-kitchen-orders'
 
 /**
@@ -13,7 +13,10 @@ export function BoardTally() {
   // The count changes by the minute, not the second
   const nowMs = useNowMs(10_000)
   const { orders } = useKitchenOrders()
-  const open = orders.filter((order) => order.readyAt == null && order.cancelledAt == null)
+  // One whose every item was cancelled has nothing left to make either
+  const open = orders.filter(
+    (order) => order.readyAt == null && order.cancelledAt == null && !allItemsCancelled(order.items),
+  )
   const late = open.filter((order) => orderUrgency(order.confirmedAt ?? order.date, nowMs) === 'delayed').length
 
   return (

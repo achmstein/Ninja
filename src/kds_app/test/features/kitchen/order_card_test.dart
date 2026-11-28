@@ -100,4 +100,67 @@ void main() {
 
     expect(find.text('Shisha'), findsNothing);
   });
+
+  KitchenOrder withCancels(List<Map<String, dynamic>> items) => KitchenOrder.fromJson({
+        'orderNumber': 3125,
+        'date': '2026-09-05T19:50:00Z',
+        'confirmedAt': '2026-09-05T19:52:00Z',
+        'source': 'Pos',
+        'items': items,
+      });
+
+  testWidgets('an item cancelled whole is struck and muted, a part-cancelled one shows what is left to make', (tester) async {
+    final order = withCancels([
+      {
+        'productName': {'en': 'Latte', 'ar': 'لاتيه'},
+        'units': 3,
+        'cancelledUnits': 1,
+        'cancelReason': 'Too slow',
+      },
+      {
+        'productName': {'en': 'Cheesecake', 'ar': 'تشيز كيك'},
+        'units': 1,
+        'cancelledUnits': 1,
+        'cancelReason': 'Out of stock',
+        'specialInstructions': 'Warm',
+      },
+    ]);
+    await tester.pumpWidget(_card(order, width: 400));
+    await tester.pumpAndSettle();
+
+    final colors = tester.element(find.byType(OrderCard)).theme.colors;
+
+    // Part cancelled: the count is what is still to make, the name is not struck
+    expect(find.text('2×'), findsOneWidget);
+    expect(find.text('3×'), findsNothing);
+    expect(tester.widget<Text>(find.text('Latte')).style?.decoration, isNot(TextDecoration.lineThrough));
+    final partNote = tester.widget<Text>(find.text('1 cancelled · Too slow'));
+    expect(partNote.style?.color, colors.destructive);
+
+    // Cancelled whole: struck and muted, with the red line under it and nothing left of how to make it
+    final cake = tester.widget<Text>(find.text('Cheesecake'));
+    expect(cake.style?.decoration, TextDecoration.lineThrough);
+    expect(cake.style?.color, colors.mutedForeground);
+    expect(tester.widget<Text>(find.text('1×')).style?.decoration, TextDecoration.lineThrough);
+    expect(tester.widget<Text>(find.text('Cancelled · Out of stock')).style?.color, colors.destructive);
+    expect(find.text('Warm'), findsNothing);
+
+    // Something is still to make: the ticket is not cancelled
+    expect(find.text('Cancelled. Stop making it.'), findsNothing);
+  });
+
+  testWidgets('a ticket whose every item was cancelled reads as cancelled', (tester) async {
+    final order = withCancels([
+      {
+        'productName': {'en': 'Latte', 'ar': 'لاتيه'},
+        'units': 2,
+        'cancelledUnits': 2,
+      },
+    ]);
+    await tester.pumpWidget(_card(order, width: 400));
+    await tester.pumpAndSettle();
+
+    expect(find.text('Cancelled. Stop making it.'), findsOneWidget);
+    expect(find.text('Cancelled'), findsOneWidget, reason: 'the item says so too, without a reason when none was given');
+  });
 }

@@ -65,6 +65,63 @@ void main() {
     expect(readUtc(''), isNull);
   });
 
+  test('items cancelled at the till count only what is still to make', () {
+    final order = KitchenOrder.fromJson({
+      'orderNumber': 3123,
+      'date': '2026-09-05T19:50:00Z',
+      'source': 'Pos',
+      'items': [
+        {
+          'productName': {'en': 'Latte', 'ar': 'لاتيه'},
+          'units': 3,
+          'cancelledUnits': 1,
+          'cancelReason': 'Customer changed mind',
+        },
+        {
+          'productName': {'en': 'Cheesecake', 'ar': 'تشيز كيك'},
+          'units': 1,
+          'cancelledUnits': '1',
+          'cancelReason': null,
+        },
+        {
+          'productName': {'en': 'Water', 'ar': 'مياه'},
+          'units': 1,
+        },
+      ],
+    });
+
+    final [latte, cake, water] = order.items;
+    expect(latte.unitsToMake, 2);
+    expect(latte.isPartlyCancelled, isTrue);
+    expect(latte.isCancelled, isFalse);
+    expect(latte.cancelReason, 'Customer changed mind');
+    expect(cake.unitsToMake, 0);
+    expect(cake.isCancelled, isTrue);
+    expect(cake.cancelReason, isNull);
+    expect(water.cancelledUnits, 0);
+    expect(water.isCancelled || water.isPartlyCancelled, isFalse);
+    expect(order.allItemsCancelled, isFalse);
+    expect(order.isCancelled, isFalse);
+  });
+
+  test('an order whose every item was cancelled reads as cancelled until it is ready', () {
+    final order = KitchenOrder.fromJson({
+      'orderNumber': 3124,
+      'date': '2026-09-05T19:50:00Z',
+      'source': 'Pos',
+      'items': [
+        {
+          'productName': {'en': 'Latte', 'ar': 'لاتيه'},
+          'units': 2,
+          'cancelledUnits': 2,
+        },
+      ],
+    });
+    expect(order.allItemsCancelled, isTrue);
+    expect(order.isCancelled, isTrue);
+    expect(order.withReadyAt(DateTime.utc(2026, 9, 5, 20)).isCancelled, isFalse);
+  });
+
   test('a ready order is one with a ready time, and withReadyAt sets or clears it', () {
     final open = KitchenOrder(orderNumber: 1, date: DateTime.utc(2026, 9, 5));
     expect(open.isReady, isFalse);

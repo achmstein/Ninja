@@ -52,6 +52,26 @@ export type CreateBranchRequest = {
     deliveryArea?: null | Array<Array<number | string>>;
 };
 
+export type DeliveryZoneRequest = {
+    id: null | number | string;
+    name: null | LocalizedText;
+    fee: number | string;
+    minimumOrder?: null | number | string;
+    etaMinutes?: null | number | string;
+    isOn?: boolean;
+    shape?: null | Array<Array<number | string>>;
+};
+
+export type DeliveryZoneResponse = {
+    id: number | string;
+    name: LocalizedText;
+    fee: number | string;
+    minimumOrder: null | number | string;
+    etaMinutes: null | number | string;
+    isOn: boolean;
+    shape: null | Array<Array<number | string>>;
+};
+
 export type FeatureSwitches = {
     reservations?: null | boolean;
     timeBilling?: null | boolean;
@@ -172,6 +192,8 @@ export type TenantResponse = {
     cover?: null | TenantWordmark;
     assistant?: null | AssistantDto;
     maps?: null | TenantMaps;
+    tillItems?: string;
+    hideSoldOutItems?: boolean;
 };
 
 export type TenantSocialProvider = {
@@ -250,6 +272,8 @@ export type UpdateTenantRequest = {
     locale?: null | TenantLocaleDto;
     businessType?: null | string;
     guestOrdersAnywhere?: null | boolean;
+    tillItems?: null | string;
+    hideSoldOutItems?: null | boolean;
 };
 
 export type GetBranchesData = {
@@ -411,6 +435,84 @@ export type UpdateBranchSettingsResponses = {
 };
 
 export type UpdateBranchSettingsResponse = UpdateBranchSettingsResponses[keyof UpdateBranchSettingsResponses];
+
+export type GetDeliveryZonesData = {
+    body?: never;
+    path: {
+        /**
+         * The branch ID
+         */
+        branchId: number;
+    };
+    query?: never;
+    url: '/api/branches/{branchId}/delivery-zones';
+};
+
+export type GetDeliveryZonesErrors = {
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type GetDeliveryZonesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DeliveryZoneResponse>;
+};
+
+export type GetDeliveryZonesResponse = GetDeliveryZonesResponses[keyof GetDeliveryZonesResponses];
+
+export type SetDeliveryZonesData = {
+    body: Array<DeliveryZoneRequest>;
+    path: {
+        /**
+         * The branch ID
+         */
+        branchId: number;
+    };
+    query?: never;
+    url: '/api/branches/{branchId}/delivery-zones';
+};
+
+export type SetDeliveryZonesErrors = {
+    /**
+     * Bad Request
+     */
+    400: ProblemDetails;
+    /**
+     * Unauthorized
+     */
+    401: unknown;
+    /**
+     * Forbidden
+     */
+    403: unknown;
+    /**
+     * Not Found
+     */
+    404: unknown;
+};
+
+export type SetDeliveryZonesError = SetDeliveryZonesErrors[keyof SetDeliveryZonesErrors];
+
+export type SetDeliveryZonesResponses = {
+    /**
+     * OK
+     */
+    200: Array<DeliveryZoneResponse>;
+};
+
+export type SetDeliveryZonesResponse = SetDeliveryZonesResponses[keyof SetDeliveryZonesResponses];
 
 export type GetTenantData = {
     body?: never;

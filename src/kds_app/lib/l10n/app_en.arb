@@ -115,5 +115,8 @@
   "orderCancelled": "Cancelled. Stop making it.",
   "cancelledRemove": "OK, remove",
   "orderCancelledToast": "Order #{orderId} was cancelled",
-  "@orderCancelledToast": { "placeholders": { "orderId": { "type": "int" } } }
+  "@orderCancelledToast": { "placeholders": { "orderId": { "type": "int" } } },
+  "itemCancelled": "Cancelled",
+  "itemPartCancelled": "{count} cancelled",
+  "@itemPartCancelled": { "placeholders": { "count": { "type": "int" } } }
 }

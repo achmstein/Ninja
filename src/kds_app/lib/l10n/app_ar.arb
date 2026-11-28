@@ -109,5 +109,7 @@
   "platformCancelled": "أُلغي على طلبات",
   "orderCancelled": "أُلغي الطلب. توقف عن تحضيره.",
   "cancelledRemove": "تم، أزِله",
-  "orderCancelledToast": "أُلغي الطلب #{orderId}"
+  "orderCancelledToast": "أُلغي الطلب #{orderId}",
+  "itemCancelled": "اتلغى",
+  "itemPartCancelled": "{count} اتلغى"
 }

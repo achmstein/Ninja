@@ -2,7 +2,7 @@
 
 import { type Client, type ClientMeta, formDataBodySerializer, type Options as Options2, type RequestResult, type TDataShape } from './client';
 import { client } from './client.gen';
-import type { AutocompletePlacesData, AutocompletePlacesResponses, CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetPlaceData, GetPlaceErrors, GetPlaceResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantLoginCssData, GetTenantLoginCssResponses, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
+import type { AutocompletePlacesData, AutocompletePlacesResponses, CreateBranchData, CreateBranchErrors, CreateBranchResponses, DeleteTenantImageData, DeleteTenantImageErrors, DeleteTenantImageResponses, GetAllBranchesData, GetAllBranchesErrors, GetAllBranchesResponses, GetBranchesData, GetBranchesResponses, GetDeliveryZonesData, GetDeliveryZonesErrors, GetDeliveryZonesResponses, GetPlaceData, GetPlaceErrors, GetPlaceResponses, GetTenantData, GetTenantIconData, GetTenantIconErrors, GetTenantImageData, GetTenantImageErrors, GetTenantLoginCssData, GetTenantLoginCssResponses, GetTenantManifestData, GetTenantManifestErrors, GetTenantResponses, SetDeliveryZonesData, SetDeliveryZonesErrors, SetDeliveryZonesResponses, SetTenantAssistantData, SetTenantAssistantErrors, SetTenantAssistantResponses, SetTenantEntitlementsData, SetTenantEntitlementsErrors, SetTenantEntitlementsResponses, UpdateBranchData, UpdateBranchErrors, UpdateBranchResponses, UpdateBranchSettingsData, UpdateBranchSettingsErrors, UpdateBranchSettingsResponses, UpdateTenantData, UpdateTenantErrors, UpdateTenantResponses, UploadTenantImageData, UploadTenantImageErrors, UploadTenantImageResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -68,6 +68,30 @@ export const updateBranch = <ThrowOnError extends boolean = false>(options: Opti
 export const updateBranchSettings = <ThrowOnError extends boolean = false>(options: Options<UpdateBranchSettingsData, ThrowOnError>): RequestResult<UpdateBranchSettingsResponses, UpdateBranchSettingsErrors, ThrowOnError> => (options.client ?? client).patch<UpdateBranchSettingsResponses, UpdateBranchSettingsErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/branches/{branchId}/settings',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * A branch's named delivery areas, in the owner's order
+ */
+export const getDeliveryZones = <ThrowOnError extends boolean = false>(options: Options<GetDeliveryZonesData, ThrowOnError>): RequestResult<GetDeliveryZonesResponses, GetDeliveryZonesErrors, ThrowOnError> => (options.client ?? client).get<GetDeliveryZonesResponses, GetDeliveryZonesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/branches/{branchId}/delivery-zones',
+    ...options
+});
+
+/**
+ * Replace a branch's named delivery areas with this list
+ *
+ * The whole list, in order: an entry with an id keeps that area, one without is new, and an area left out is removed. Orders already placed keep the area and the fee they were placed with.
+ */
+export const setDeliveryZones = <ThrowOnError extends boolean = false>(options: Options<SetDeliveryZonesData, ThrowOnError>): RequestResult<SetDeliveryZonesResponses, SetDeliveryZonesErrors, ThrowOnError> => (options.client ?? client).put<SetDeliveryZonesResponses, SetDeliveryZonesErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/branches/{branchId}/delivery-zones',
     ...options,
     headers: {
         'Content-Type': 'application/json',

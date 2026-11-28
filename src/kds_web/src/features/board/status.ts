@@ -59,6 +59,37 @@ export function toneClockClass(tone: CardTone): string {
   }
 }
 
+type CancellableItem = {
+  units?: number | string
+  cancelledUnits?: number | string
+}
+
+/**
+ * How many of an item are still to be made: what was rung up less what the
+ * till has since cancelled. Only these count as something to make.
+ */
+export function unitsToMake(item: CancellableItem): number {
+  return Math.max(0, Number(item.units ?? 0) - Number(item.cancelledUnits ?? 0))
+}
+
+/** Some of the item was cancelled at the till after the kitchen had it. */
+export function isPartlyCancelled(item: CancellableItem): boolean {
+  return Number(item.cancelledUnits ?? 0) > 0 && unitsToMake(item) > 0
+}
+
+/** All of the item was cancelled: nothing of it is left to make. */
+export function isItemCancelled(item: CancellableItem): boolean {
+  return Number(item.cancelledUnits ?? 0) > 0 && unitsToMake(item) === 0
+}
+
+/**
+ * Every item on the ticket (on a station's screen, the station's part) was
+ * cancelled one by one: the ticket reads as cancelled, as a voided one does.
+ */
+export function allItemsCancelled(items: CancellableItem[] | null | undefined): boolean {
+  return (items ?? []).length > 0 && items!.every(isItemCancelled)
+}
+
 /**
  * Elapsed time as a kitchen clock: `4:12` under an hour, `1h 05m` past it.
  * Seconds matter on a board that is glanced at, not read.
