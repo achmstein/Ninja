@@ -66,6 +66,13 @@ namespace Ninja.Notification.API.Migrations
                     b.Property<Guid>("LastEventId")
                         .HasColumnType("uuid");
 
+                    b.Property<int>("LastProgress")
+                        .HasColumnType("integer");
+
+                    b.Property<string>("LastStage")
+                        .HasMaxLength(20)
+                        .HasColumnType("character varying(20)");
+
                     b.Property<int>("LastVersion")
                         .HasColumnType("integer");
 
@@ -127,6 +134,10 @@ namespace Ninja.Notification.API.Migrations
                     b.Property<string>("FcmToken")
                         .IsRequired()
                         .HasColumnType("text");
+
+                    b.Property<string>("Platform")
+                        .HasMaxLength(10)
+                        .HasColumnType("character varying(10)");
 
                     b.Property<string>("PreferredLanguage")
                         .IsRequired()

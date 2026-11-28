@@ -16,6 +16,12 @@ public class DeliveryNotice
     /// <summary>The last event told, for an Ordering that sends no count: the same event twice is still told once.</summary>
     public Guid LastEventId { get; set; }
 
+    /// <summary>The stage at the last move told, by Ordering's name: a step that leaves it where it was rings nobody again for it. Null from before it was kept.</summary>
+    public string? LastStage { get; set; }
+
+    /// <summary>The progress last told the customer while on the way, 0 to 100: told only forwards.</summary>
+    public int LastProgress { get; set; }
+
     public DateTime UpdatedAt { get; set; }
 }
 

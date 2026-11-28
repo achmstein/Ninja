@@ -20,6 +20,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.Property(e => e.FcmToken).IsRequired();
             entity.Property(e => e.Type).IsRequired();
             entity.Property(e => e.PreferredLanguage).HasMaxLength(5).HasDefaultValue("en");
+            entity.Property(e => e.Platform).HasMaxLength(10);
             entity.Property(e => e.CreatedAt).IsRequired();
             entity.Property(e => e.UpdatedAt).IsRequired();
 
@@ -49,6 +50,7 @@ public class NotificationContext(DbContextOptions<NotificationContext> options) 
             entity.ToTable("DeliveryNotices");
             entity.HasKey(e => e.OrderId);
             entity.Property(e => e.OrderId).ValueGeneratedNever();
+            entity.Property(e => e.LastStage).HasMaxLength(20);
         });
 
         modelBuilder.Entity<ServiceRequest>(entity =>

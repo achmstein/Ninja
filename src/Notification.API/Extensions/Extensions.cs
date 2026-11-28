@@ -61,6 +61,8 @@ public static class Extensions
             .AddSubscription<CatalogItemAvailabilityChangedIntegrationEvent, CatalogItemAvailabilityChangedIntegrationEventHandler>()
             .AddSubscription<OrderReadyChangedIntegrationEvent, OrderReadyChangedIntegrationEventHandler>()
             .AddSubscription<OrderDeliveryChangedIntegrationEvent, OrderDeliveryChangedIntegrationEventHandler>()
+            // A delivery on its way got closer: the customer's card moves
+            .AddSubscription<DeliveryProgressedIntegrationEvent, DeliveryProgressedIntegrationEventHandler>()
             // A rider on duty or off: the till's riders follow
             .AddSubscription<RiderStatusChangedIntegrationEvent, RiderStatusChangedIntegrationEventHandler>()
             .AddSubscription<KitchenTicketQueuedIntegrationEvent, KitchenTicketQueuedIntegrationEventHandler>()
@@ -79,6 +81,7 @@ public static class Extensions
 [JsonSerializable(typeof(PlaceUpdatedIntegrationEvent))]
 [JsonSerializable(typeof(OrderReadyChangedIntegrationEvent))]
 [JsonSerializable(typeof(OrderDeliveryChangedIntegrationEvent))]
+[JsonSerializable(typeof(DeliveryProgressedIntegrationEvent))]
 [JsonSerializable(typeof(KitchenTicketQueuedIntegrationEvent))]
 [JsonSerializable(typeof(PlaceBecameAvailableIntegrationEvent))]
 [JsonSerializable(typeof(OrderStatusChangedToSubmittedIntegrationEvent))]

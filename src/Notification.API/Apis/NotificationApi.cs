@@ -503,6 +503,8 @@ public static class NotificationApi
             // Always update token, language, and timestamp
             existing.FcmToken = request.FcmToken;
             existing.PreferredLanguage = request.PreferredLanguage ?? "en";
+            // As this build says: an older build installed over a newer one goes back to plain pushes
+            existing.Platform = DeliveryCard.PlatformOf(request.Platform);
             existing.UpdatedAt = DateTime.UtcNow;
             await context.SaveChangesAsync();
             return TypedResults.Ok(new SubscriptionResponse(existing.Id, existing.Type, existing.CreatedAt));
@@ -514,6 +516,7 @@ public static class NotificationApi
             FcmToken = request.FcmToken,
             Type = SubscriptionType.UserOrderNotification,
             PreferredLanguage = request.PreferredLanguage ?? "en",
+            Platform = DeliveryCard.PlatformOf(request.Platform),
             CreatedAt = DateTime.UtcNow
         };
 
@@ -1074,7 +1077,8 @@ public static class NotificationApi
 public record SubscribeRequest(
     [property: Description("The FCM token from the mobile device")] string FcmToken,
     [property: Description("Preferred language for notifications (en or ar)")] string? PreferredLanguage = "en",
-    [property: Description("Branch ID for branch-scoped notifications (admin only)")] int? BranchId = null
+    [property: Description("Branch ID for branch-scoped notifications (admin only)")] int? BranchId = null,
+    [property: Description("The phone's platform, android or ios. A customer's app that says it draws the live delivery card itself and is sent its data; one that says nothing gets plain pushes")] string? Platform = null
 );
 
 public record SubscriptionResponse(

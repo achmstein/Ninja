@@ -8,6 +8,12 @@ public class NotificationSubscription
     public SubscriptionType Type { get; set; }
     public int? BranchId { get; set; }
     public string PreferredLanguage { get; set; } = "en";
+
+    /// <summary>
+    /// "android" or "ios", as the app said when it registered; null from a build that does not say.
+    /// A phone that says draws the customer's live delivery card itself and is sent its data.
+    /// </summary>
+    public string? Platform { get; set; }
     public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
     public DateTime UpdatedAt { get; set; } = DateTime.UtcNow;
 }

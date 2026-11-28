@@ -116,6 +116,10 @@ public static class NotificationMessages
     public static LocalizedText DeliveryTakenBackBody(int orderId) =>
         new($"Order #{orderId} was given to someone else", $"أُسند الطلب #{orderId} إلى مندوب آخر");
 
+    public static readonly LocalizedText CustomerComingTitle = new("Customer is coming down", "العميل في طريقه إليك");
+    public static LocalizedText CustomerComingBody(int orderId) =>
+        new($"Order #{orderId}: wait at the door, they are coming down to you", $"الطلب #{orderId}: انتظر عند الباب، العميل نازل إليك");
+
     public static readonly LocalizedText DeliveryFailedTitle = new("Couldn't be delivered", "تعذّر التوصيل");
     public static LocalizedText DeliveryFailedBody(int orderId) =>
         new($"Order #{orderId} couldn't be delivered. Bring it back to the branch.", $"تعذّر توصيل الطلب #{orderId}. أعِده إلى الفرع.");
