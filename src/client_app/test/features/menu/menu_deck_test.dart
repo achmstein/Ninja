@@ -113,6 +113,9 @@ Future<void> _pinch(WidgetTester tester, {required double from, required double 
 }
 
 void main() {
+  // The app no longer teaches its gestures or tucks its dock; these tests are of those two things themselves
+  HintBook.teaches = true;
+  DockTuck.tucks = true;
   setUp(() {
     hintBook.reset();
     cueOnScreen.value = null;

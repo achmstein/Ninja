@@ -26,6 +26,19 @@ String addressLineOf(BuildContext context, DeliveryAddress address) {
   );
 }
 
+/// The address as a row shows it: its name over the whole address, or its
+/// street over the rest of it, never the street twice ([DeliveryAddress.row])
+({String title, String line}) addressRowOf(BuildContext context, DeliveryAddress address) {
+  final l10n = AppLocalizations.of(context)!;
+  return address.row(
+    name: shownLabel(address.label, home: l10n.deliveryLabelHome, work: l10n.deliveryLabelWork),
+    building: l10n.deliveryBuildingShort,
+    floor: l10n.deliveryFloorShort,
+    apartment: l10n.deliveryApartmentShort,
+    separator: listSeparator(context),
+  );
+}
+
 /// Where the order is brought: the customer's saved addresses, one tap to
 /// pick (client_web's address-sheet.tsx). A new one is the delivery apps'
 /// way: the whole screen a map to put the pin on the door ([pickPinOnMap]),
@@ -182,13 +195,12 @@ class _AddressRow extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = context.theme;
-    final l10n = AppLocalizations.of(context)!;
     final icon = switch (labelKind(address.label)) {
       LabelKind.home => LucideIcons.house,
       LabelKind.work => LucideIcons.briefcase,
       LabelKind.other => LucideIcons.mapPin,
     };
-    final name = shownLabel(address.label, home: l10n.deliveryLabelHome, work: l10n.deliveryLabelWork) ?? address.address;
+    final row = addressRowOf(context, address);
     return Semantics(
       selected: selected,
       button: true,
@@ -213,17 +225,19 @@ class _AddressRow extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     AppText(
-                      name,
+                      row.title,
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: context.localeText(theme.typography.body.copyWith(fontWeight: FontWeight.w600, color: theme.colors.foreground)),
                     ),
-                    AppText(
-                      addressLineOf(context, address),
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.localeText(theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
-                    ),
+                    // Only when there is more to say than the line above already does
+                    if (row.line.isNotEmpty)
+                      AppText(
+                        row.line,
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.localeText(theme.typography.caption.copyWith(color: theme.colors.mutedForeground)),
+                      ),
                   ],
                 ),
               ),

@@ -36,8 +36,14 @@ class DockTuck extends Notifier<bool> {
   @override
   bool build() => false;
 
+  /// Whether scrolling down tucks the dock away at all. It does not: the dock is the app's main controls, and
+  /// it used to fold its tabs away, or leave the screen altogether, on the way down (as client_web's
+  /// use-tuck). What decides a tuck is kept ([tuckAt]) should the dock ever shrink instead.
+  static bool tucks = false;
+
   void set(bool tucked) {
-    if (state != tucked) state = tucked;
+    final next = tucks && tucked;
+    if (state != next) state = next;
   }
 }
 

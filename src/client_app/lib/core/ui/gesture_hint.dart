@@ -50,7 +50,13 @@ class HintBook {
     }
   }();
 
-  bool seen(HintKey key) => _session.contains(key.name) || (_stored?.contains(key.name) ?? false);
+  /// Whether the app teaches its gestures on a first visit at all. It does not: the owner found the cues
+  /// useless (a fingertip showing the swipe, the pinch, the hold and the tray's pull, one after another).
+  /// Every cue counts as seen, so none shows and nothing waits on one; the gestures are unchanged. A test
+  /// of the cues themselves turns it on.
+  static bool teaches = false;
+
+  bool seen(HintKey key) => !teaches || _session.contains(key.name) || (_stored?.contains(key.name) ?? false);
 
   void markSeen(HintKey key) {
     _session.add(key.name);

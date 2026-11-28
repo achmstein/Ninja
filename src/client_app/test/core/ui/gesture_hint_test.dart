@@ -7,6 +7,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 /// gesture-timing.ts): each shown once on a device, one at a time, for as
 /// long as its demo runs.
 void main() {
+  // The app no longer teaches its gestures or tucks its dock; these tests are of those two things themselves
+  HintBook.teaches = true;
   setUp(() {
     SharedPreferences.setMockInitialValues({});
     hintBook.reset();

@@ -454,10 +454,6 @@ class OrderButton extends ConsumerWidget {
     final held = ref.watch(deliveryStateProvider.select((d) => d.active && !d.ready));
     // Paid ahead: the button goes on to paying
     final online = ref.watch(payAheadProvider.select((p) => p.online));
-    // Under the delivery minimum: what is missing is said on the button itself, where the customer
-    // is looking, not only further up the order where they may never scroll
-    final short = ref.watch(deliveryStateProvider.select((d) => d.active && d.problem == DeliveryProblem.minimum ? d.short : 0.0));
-    final money = ref.watch(moneyProvider);
     return ListenableBuilder(
       listenable: motion,
       builder: (context, _) {
@@ -466,13 +462,17 @@ class OrderButton extends ConsumerWidget {
         final state = busy
             ? 'busy'
             : open
-            ? (short > 0 ? 'short' : 'place')
+            ? 'place'
             : 'order';
         final ink = c.primaryForeground;
         final label = context.localeText(theme.typography.body.copyWith(color: ink, fontWeight: FontWeight.w700));
         return Pressable(
-          onTap: busy || (open && held)
+          // Held (a delivery short of its minimum, out of range, with no address): the button still takes a
+          // press, and the press brings what is missing into sight, said once under the address
+          onTap: busy
               ? null
+              : open && held
+              ? showDeliveryNote
               : open
               ? () async {
                   HapticFeedback.mediumImpact();
@@ -501,13 +501,6 @@ class OrderButton extends ConsumerWidget {
                       SizedBox.square(dimension: 16, child: CircularProgressIndicator(strokeWidth: 2, color: ink)),
                       const SizedBox(width: 8),
                       Text(l10n.ninjaSending, style: label),
-                    ],
-                    'short' => [
-                      Icon(LucideIcons.plus, size: 16, color: ink),
-                      const SizedBox(width: 8),
-                      Flexible(
-                        child: Text(l10n.deliveryAddMore(money(short)), style: label, maxLines: 1, overflow: TextOverflow.ellipsis),
-                      ),
                     ],
                     'place' => [
                       Icon(online ? LucideIcons.creditCard : LucideIcons.check, size: 16, color: ink),

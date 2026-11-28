@@ -83,6 +83,25 @@ class DeliveryAddress {
     if (details.isEmpty) return street;
     return street.isEmpty ? details.join(separator) : '$street · ${details.join(separator)}';
   }
+
+  /// The address as a row shows it: a name over a line. A named address
+  /// (Home, Work, the customer's own word) is that name over the whole
+  /// address. One with no name is its street over the building, floor and
+  /// apartment alone, and over nothing when it has none of them: the street
+  /// was once said on both lines.
+  ({String title, String line}) row({
+    required String? name,
+    required String building,
+    required String floor,
+    required String apartment,
+    required String separator,
+  }) {
+    final whole = line(building: building, floor: floor, apartment: apartment, separator: separator);
+    if (name != null && name.trim().isNotEmpty) return (title: name.trim(), line: whole);
+    final street = address.trim();
+    final rest = whole.startsWith('$street · ') ? whole.substring(street.length + 3) : (whole == street ? '' : whole);
+    return (title: street, line: rest);
+  }
 }
 
 /// What a saved address is called. Home and Work are kept as the words

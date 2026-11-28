@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/localized_text.dart';
+import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/branch_switch.dart';
 import '../../../core/services/location_service.dart';
@@ -11,7 +12,6 @@ import '../../../core/utils/money.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../core/widgets/branch_switcher.dart';
 import '../../../l10n/app_localizations.dart';
-import '../models/delivery_address.dart';
 import '../services/delivery_service.dart';
 import 'address_sheet.dart';
 
@@ -23,6 +23,18 @@ import 'address_sheet.dart';
 /// address is in and about how long it takes there, when the branch says),
 /// how much more the items must come to, that no branch goes that far, or
 /// that it is not delivering to that area right now.
+/// The lines under the address that say what stands in the way of the
+/// delivery (short of the minimum, out of range, no address yet)
+final deliveryNoteKey = GlobalKey(debugLabel: 'delivery-note');
+
+/// Brings those lines into sight, however long the order is: called when the
+/// order button is pressed while the order cannot be sent
+void showDeliveryNote() {
+  final note = deliveryNoteKey.currentContext;
+  if (note == null) return;
+  Scrollable.ensureVisible(note, alignment: 0.5, duration: Motion.base, curve: Motion.enter);
+}
+
 class DeliveryChoiceView extends ConsumerWidget {
   const DeliveryChoiceView({super.key});
 
@@ -122,12 +134,14 @@ class DeliveryChoiceView extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               AppText(
-                                shownLabel(address.label, home: l10n.deliveryLabelHome, work: l10n.deliveryLabelWork) ?? address.address,
+                                addressRowOf(context, address).title,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
                                 style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: ink)),
                               ),
-                              AppText(addressLineOf(context, address), maxLines: 1, overflow: TextOverflow.ellipsis, style: note),
+                              // Only when there is more to say than the line above already does
+                              if (addressRowOf(context, address).line.isNotEmpty)
+                                AppText(addressRowOf(context, address).line, maxLines: 1, overflow: TextOverflow.ellipsis, style: note),
                             ],
                           ),
                   ),
@@ -138,6 +152,8 @@ class DeliveryChoiceView extends ConsumerWidget {
           ),
           const SizedBox(height: 6),
           Padding(
+            // What stands in the way of the delivery is said here; the held order button brings it into sight
+            key: deliveryNoteKey,
             padding: const EdgeInsets.symmetric(horizontal: 4),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,

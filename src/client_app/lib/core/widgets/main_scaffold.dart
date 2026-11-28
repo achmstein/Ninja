@@ -302,9 +302,12 @@ class _MainScaffoldState extends ConsumerState<MainScaffold> with TickerProvider
     );
 
     // The order sheet: rising out of the dock, clipped at the row's top so it seems to come from inside it
-    final sheetClipHeight = math.min(media.size.height * 0.68, 544.0);
     // The row's top: on the bottom edge (stuck), the dock stands on the phone's inset under the row
     final sheetBottom = dockBottom + (stuck ? safeBottom : 0) + tabsHeight + metrics.row - DockMetrics.tuck;
+    // As tall as the order needs, up to nearly the whole screen: the dock under it and a strip of the menu
+    // over it. It was held to two thirds of the screen (544 at most), so five or six items scrolled inside
+    // a sheet with room to spare above it
+    final sheetClipHeight = math.max(240.0, media.size.height - sheetBottom - media.viewPadding.top - 72);
 
     return Scaffold(
       resizeToAvoidBottomInset: false,
