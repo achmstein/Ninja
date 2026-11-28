@@ -21,12 +21,17 @@ class ApiClient {
           },
           queryParameters: {'api-version': '1.0'},
         )) {
-    // Add logging interceptor for debugging
-    _dio.interceptors.add(LogInterceptor(
-      requestBody: true,
-      responseBody: true,
-      logPrint: (obj) => debugPrint('[Dio] $obj'),
-    ));
+    // Requests are logged in a debug build only, and never their headers: the sign-in token rides in
+    // one, and a release build's log can be read off a phone
+    if (kDebugMode) {
+      _dio.interceptors.add(LogInterceptor(
+        requestHeader: false,
+        responseHeader: false,
+        requestBody: true,
+        responseBody: true,
+        logPrint: (obj) => debugPrint('[Dio] $obj'),
+      ));
+    }
 
     _dio.interceptors.add(InterceptorsWrapper(
       onRequest: (options, handler) async {
