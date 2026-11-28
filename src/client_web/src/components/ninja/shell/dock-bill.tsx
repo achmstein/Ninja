@@ -165,7 +165,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             {progress != null && (
               <span aria-hidden className='bg-background/15 absolute inset-x-7 top-0 h-[3px] overflow-hidden rounded-full'>
                 <motion.span
-                  className='block h-full origin-left bg-emerald-400 rtl:origin-right'
+                  // The dock's own ink, not a green: it reads on whatever colour the business made its dock
+                  className='bg-background block h-full origin-left rtl:origin-right'
                   initial={false}
                   animate={{ scaleX: progress }}
                   transition={{ type: 'spring', stiffness: 120, damping: 20 }}
@@ -189,7 +190,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 <motion.span
                   key={`arrived-${stage}`}
                   aria-hidden
-                  className='absolute inset-0 rounded-full border-2 border-emerald-300'
+                  className='border-background/70 absolute inset-0 rounded-full border-2'
                   initial={{ opacity: 0.9, scale: 1 }}
                   animate={{ opacity: 0, scale: 2 }}
                   transition={{ duration: 1.1, repeat: 1 }}

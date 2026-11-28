@@ -24,6 +24,7 @@ import { Odometer } from '../ninja/odometer'
 import { ItemPhoto } from '../menu/item-photo'
 import { HintBubble } from '../ninja/gestures/hint-bubble'
 import { DOCK_H, swipeRemoves, traySummary, trayOpensAfterDrag } from './tray-model'
+import { DOCK_INSET, TABS_H } from '@/components/ninja/shell/chrome'
 import { useHint, useTimeout } from '../ninja/gestures/use-hint'
 
 /** How long the first item's line about the order stays up, ms */
@@ -334,7 +335,10 @@ export function Tray({
       {sheetOn && !empty && (
         <div
           className='pointer-events-none absolute inset-x-0 overflow-hidden rounded-t-[1.75rem]'
-          style={{ bottom: DOCK_H - TUCK, height: 'min(68svh, 34rem)' }}
+          // As tall as the order needs, up to nearly the whole screen: the dock and its tabs stay under it and a
+          // strip of the menu over it. It was held to two thirds of the screen, so an order of five or six
+          // items scrolled inside a sheet with room to spare above it
+          style={{ bottom: DOCK_H - TUCK, height: `calc(100svh - ${DOCK_H + TABS_H + DOCK_INSET}px - env(safe-area-inset-bottom) - 4.5rem)` }}
         >
           <motion.div
             ref={sheetRef}
@@ -556,9 +560,21 @@ function OrderSheet({ order, extras, cloudKitchen, canOrder }: { order: TrayOrde
       </div>
       {/* pb-3: the sheet's own padding already clears the dock it tucks under */}
       <div className='no-scrollbar min-h-0 flex-1 overflow-y-auto overscroll-contain px-3 pb-3'>
-        {lines.map((line) => (
-          <SwipeLine key={lineKey(line)} line={line} />
-        ))}
+        {/* A line added while the order is open grows into place, and the sheet grows with it, rather than
+            the whole sheet jumping a row taller; the lines it opens with are simply there */}
+        <AnimatePresence initial={false}>
+          {lines.map((line) => (
+            <motion.div
+              key={lineKey(line)}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              transition={{ duration: 0.26, ease: 'easeOut' }}
+              className='overflow-hidden'
+            >
+              <SwipeLine line={line} />
+            </motion.div>
+          ))}
+        </AnimatePresence>
         {/* What goes well with what is in it: one suggestion, waved away or added in a tap */}
         {canOrder && <TrayNudge />}
         {/* The note, a code, points: small pills under the items, each opening only when wanted */}
