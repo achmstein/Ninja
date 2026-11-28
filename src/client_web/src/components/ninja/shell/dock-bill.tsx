@@ -66,13 +66,12 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const open = useDockSheet((s) => s.open)
   const setOpen = useDockSheet((s) => s.setOpen)
   const followed = useLiveOrder()
-  // The proposed row, tried in the preview with an order the panel sets (lib/dock-preview): the stage is the
-  // headline with the minutes left, a waiter asked for is said in
-  // words
+  // In a development preview a small panel can stand in for an order (lib/dock-preview), so each of the row's
+  // states is looked at without placing one
   const preview = useDockPreview()
-  const enhanced = preview.on
-  const stage = enhanced && preview.stage ? preview.stage : followed.stage
-  const orderNumber = enhanced && preview.stage ? 142 : followed.orderNumber
+  const previewed = preview.on && preview.stage != null
+  const stage = previewed ? preview.stage : followed.stage
+  const orderNumber = previewed ? 142 : followed.orderNumber
   const navigate = useNavigate()
   // Waiting for its payment ahead: the row is the way to pay it, not the bill
   const toPay = stage === 'awaitingPayment' && orderNumber != null
@@ -88,7 +87,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       : { placeId: table?.id ?? 0, placeKind: table?.kind ?? 0, placeName: table?.name ?? {} }
   )
   const asking =
-    (enhanced && preview.waiter) ||
+    (preview.on && preview.waiter) ||
     ((table != null || stay != null) && ASKED.some((type) => requests.stateOf(type).phase !== 'idle'))
   const shown = useDockRowShown(live)
   // The room's clock ticks in the row, so the tab it lived on can go back to booking
@@ -98,14 +97,16 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const first = live.open[0]?.bill ?? live.forming?.bill
   const billed = live.open.reduce((sum, { bill }) => sum + Number(bill.total ?? 0), 0) + Number(live.forming?.bill.total ?? 0)
   // The previewed order comes to something, as a real one would
-  const total = billed > 0 ? billed : enhanced && preview.stage ? 310 : 0
+  const total = billed > 0 ? billed : previewed ? 310 : 0
   const place = (stay ? localized(stay.placeName) : table ? localized(table.name) : localized(first?.locationName)) || t('atTheCounter')
   // The order on its way says where it is in the row's top line; otherwise the line is where the customer is
   // With nothing on the bill yet the place is the row's one line
   const clock = stay?.startedAt ? formatClock((now - new Date(stay.startedAt).getTime()) / 1000) : null
-  const minutes = enhanced && stage ? PREVIEW_MINUTES[stage] : undefined
+  // About how long is left is the preview's own figure for now: the server says it for a delivery, and this row does not read that yet
+  const minutes = previewed && stage ? PREVIEW_MINUTES[stage] : undefined
   const headline = stage ? `${words(STAGE_LABEL[stage], language, standard)}${minutes ? ` · ${t('dockAboutMinutes', { n: minutes })}` : ''}` : ''
-  const line = enhanced && asking && !stage
+  // A waiter or the bill asked for is said in words, not only by the dot
+  const line = asking && !stage
     ? t('dockWaiterComing')
     : stage
     ? `${words(STAGE_LABEL[stage], language, standard)}${orderNumber != null ? ` · #${orderNumber}` : ''}`
@@ -114,9 +115,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
       : null
   const StageIcon = stage ? STAGE_ICONS[stage] : null
   const placeKind = stay ? Number(stay.placeKind) : table ? table.kind : first?.placeId != null ? placeKindOf(first.placeKind) : null
-  // Tried in the preview: the end button is the next thing to do. Pay, once there is something to pay and nothing
+  // The end button is the next thing to do. Pay, once there is something to pay and nothing
   // still on its way (the sheet it opens has the way to pay under the bill)
-  const payNext = enhanced && !toPay && total > 0 && (stage == null || stage === 'delivered')
+  const payNext = !toPay && total > 0 && (stage == null || stage === 'delivered')
   const label = toPay
     ? words(PILL_WORDS.payNow, language, standard)
     : payNext
@@ -186,7 +187,8 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                 )
               )}
             </span>
-            {enhanced && stage ? (
+            {/* An order on its way: where it has got to is the row's headline, the place and the bill quiet under it */}
+            {stage ? (
               <span className='flex min-w-0 flex-1 flex-col'>
                 <AnimatePresence mode='popLayout' initial={false}>
                   <motion.span key={headline} {...swap} className='truncate text-name font-bold'>

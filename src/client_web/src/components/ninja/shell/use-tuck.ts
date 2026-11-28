@@ -1,4 +1,3 @@
-import { useDockPreview } from '@/lib/dock-preview'
 import { useEffect } from 'react'
 import { create } from 'zustand'
 
@@ -9,6 +8,9 @@ import { create } from 'zustand'
  * page has come to rest at its end. One flag for the whole app, set by whichever scroller is
  * the page's.
  */
+/** Whether scrolling down tucks the dock away at all */
+const DOCK_TUCKS = false
+
 export const useTuck = create<{ tucked: boolean }>(() => ({ tucked: false }))
 
 /** How far from the top a scroll down starts to tuck, px: the top bar's worth, so a nudge does not */
@@ -86,8 +88,10 @@ export function useTuckOnScroll(target: HTMLElement | null | undefined, enabled 
       from = next.from
       if (next.tucked !== useTuck.getState().tucked) {
         quietUntil = performance.now() + SETTLE_MS
-        // Tried in the preview: the dock stays put while the page scrolls (lib/dock-preview)
-        useTuck.setState({ tucked: useDockPreview.getState().on ? false : next.tucked })
+        // The dock stays put while the page scrolls: it is the app's main controls, and it used to fold its tabs
+        // away, or leave the screen altogether, on the way down. What decides a tuck is kept (tuckAt) should the
+        // dock ever shrink instead
+        useTuck.setState({ tucked: DOCK_TUCKS ? next.tucked : false })
       }
     }
     // The menu's scroller sits over the dock and gets shorter as the tabs come back at its end; read at its
