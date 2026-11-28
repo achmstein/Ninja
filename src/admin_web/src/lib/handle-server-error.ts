@@ -1,8 +1,6 @@
-import { AxiosError } from 'axios'
+import { problemReason } from '@ninja/web-core/problem'
 import { translate } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
-
-type ProblemDetails = { detail?: string; title?: string }
 
 export function handleServerError(error: unknown) {
   if (import.meta.env.DEV) {
@@ -17,10 +15,7 @@ export function handleServerError(error: unknown) {
   }
 
   // A ProblemDetails body names the cause; anything else keeps the generic line
-  if (error instanceof AxiosError) {
-    const data = error.response?.data as ProblemDetails | undefined
-    errMsg = data?.detail || data?.title || errMsg
-  }
+  errMsg = problemReason(error) || errMsg
 
   toast.error(errMsg)
 }
