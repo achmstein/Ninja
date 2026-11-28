@@ -1,3 +1,5 @@
+import '../widgets/phone_sign_in.dart';
+import '../../../core/config/app_config.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_svg/flutter_svg.dart';
@@ -163,6 +165,16 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 const SizedBox(height: 24),
                 NinjaButton(lifted: true, busy: _isLoading, onPress: busy ? null : _handleSignIn, child: AppText(l10n.signIn)),
+                // No password, no email: the number and a code sent to it (widgets/phone_sign_in.dart)
+                if (AppConfig.phoneSignIn) ...[
+                  const SizedBox(height: 12),
+                  NinjaButton(
+                    variant: NinjaButtonVariant.outline,
+                    onPress: busy ? null : () => showPhoneSignIn(context),
+                    prefix: const Icon(LucideIcons.smartphone, size: 18),
+                    child: AppText(l10n.phoneSignInButton),
+                  ),
+                ],
                 if (google || apple) ...[
                   const SizedBox(height: 28),
                   Row(

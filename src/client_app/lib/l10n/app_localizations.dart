@@ -3788,6 +3788,120 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'about {n} min'**
   String dockAboutMinutes(int n);
+
+  /// No description provided for @phoneSignInButton.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue with my phone number'**
+  String get phoneSignInButton;
+
+  /// No description provided for @phoneSignInTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Your mobile number?'**
+  String get phoneSignInTitle;
+
+  /// No description provided for @phoneSignInHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We\'ll text you a code. No password, no email.'**
+  String get phoneSignInHint;
+
+  /// No description provided for @phoneSignInSend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send the code'**
+  String get phoneSignInSend;
+
+  /// No description provided for @phoneSignInCodeTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'Enter the code'**
+  String get phoneSignInCodeTitle;
+
+  /// No description provided for @phoneSignInCodeHint.
+  ///
+  /// In en, this message translates to:
+  /// **'We sent it to'**
+  String get phoneSignInCodeHint;
+
+  /// No description provided for @phoneSignInContinue.
+  ///
+  /// In en, this message translates to:
+  /// **'Continue'**
+  String get phoneSignInContinue;
+
+  /// No description provided for @phoneSignInResend.
+  ///
+  /// In en, this message translates to:
+  /// **'Send another code'**
+  String get phoneSignInResend;
+
+  /// No description provided for @phoneSignInChange.
+  ///
+  /// In en, this message translates to:
+  /// **'Change the number'**
+  String get phoneSignInChange;
+
+  /// No description provided for @phoneSignInNameTitle.
+  ///
+  /// In en, this message translates to:
+  /// **'What\'s your name?'**
+  String get phoneSignInNameTitle;
+
+  /// No description provided for @phoneSignInNameHint.
+  ///
+  /// In en, this message translates to:
+  /// **'So we can call you when your order is ready.'**
+  String get phoneSignInNameHint;
+
+  /// No description provided for @phoneSignInNameMissing.
+  ///
+  /// In en, this message translates to:
+  /// **'Write your first and last name.'**
+  String get phoneSignInNameMissing;
+
+  /// No description provided for @phoneSignInUnavailable.
+  ///
+  /// In en, this message translates to:
+  /// **'We can\'t send a code to this number yet. Sign in another way.'**
+  String get phoneSignInUnavailable;
+
+  /// No description provided for @phoneSignInInvalid.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t a mobile number here.'**
+  String get phoneSignInInvalid;
+
+  /// No description provided for @phoneSignInTooSoon.
+  ///
+  /// In en, this message translates to:
+  /// **'A code went out a moment ago. Wait a minute before asking for another.'**
+  String get phoneSignInTooSoon;
+
+  /// No description provided for @phoneSignInTooMany.
+  ///
+  /// In en, this message translates to:
+  /// **'Too many codes were sent to this number. Try again in an hour.'**
+  String get phoneSignInTooMany;
+
+  /// No description provided for @phoneSignInCodeWrong.
+  ///
+  /// In en, this message translates to:
+  /// **'That isn\'t the code. Try again.'**
+  String get phoneSignInCodeWrong;
+
+  /// No description provided for @phoneSignInCodeGone.
+  ///
+  /// In en, this message translates to:
+  /// **'That code is no longer good. Ask for another.'**
+  String get phoneSignInCodeGone;
+
+  /// No description provided for @phoneSignInFailed.
+  ///
+  /// In en, this message translates to:
+  /// **'Couldn\'t sign you in. Try again.'**
+  String get phoneSignInFailed;
 }
 
 class _AppLocalizationsDelegate

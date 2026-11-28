@@ -94,6 +94,11 @@ class AppConfig {
   static String? get googleServerClientId =>
       _googleServerClientId.isEmpty ? null : _googleServerClientId;
 
+  /// Whether the sign-in screen offers an account by phone number. Off until the business's
+  /// sign-in can really send codes (src/keycloak-phone has only its test sender yet): a build
+  /// turns it on with --dart-define=PHONE_SIGN_IN=true, to try it with a test number
+  static const bool phoneSignIn = bool.fromEnvironment('PHONE_SIGN_IN');
+
   // Google's map, through the native Maps SDK (no charge per load): the
   // record's keys, given only when the business has Google Maps on. Android
   // reads its key from the manifest (android/app/build.gradle.kts puts it

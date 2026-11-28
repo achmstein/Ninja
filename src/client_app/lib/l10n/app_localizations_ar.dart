@@ -2119,6 +2119,67 @@ class AppLocalizationsAr extends AppLocalizations {
   String dockAboutMinutes(int n) {
     return 'حوالي $n د';
   }
+
+  @override
+  String get phoneSignInButton => 'كمّل برقم موبايلي';
+
+  @override
+  String get phoneSignInTitle => 'رقم موبايلك؟';
+
+  @override
+  String get phoneSignInHint =>
+      'هنبعتلك كود في رسالة. من غير باسورد ولا إيميل.';
+
+  @override
+  String get phoneSignInSend => 'ابعت الكود';
+
+  @override
+  String get phoneSignInCodeTitle => 'اكتب الكود';
+
+  @override
+  String get phoneSignInCodeHint => 'بعتناه على';
+
+  @override
+  String get phoneSignInContinue => 'كمّل';
+
+  @override
+  String get phoneSignInResend => 'ابعت كود تاني';
+
+  @override
+  String get phoneSignInChange => 'غيّر الرقم';
+
+  @override
+  String get phoneSignInNameTitle => 'اسمك إيه؟';
+
+  @override
+  String get phoneSignInNameHint => 'عشان نناديك لما طلبك يجهز.';
+
+  @override
+  String get phoneSignInNameMissing => 'اكتب اسمك الأول والأخير.';
+
+  @override
+  String get phoneSignInUnavailable =>
+      'مش هنقدر نبعت كود للرقم ده دلوقتي. سجّل الدخول بطريقة تانية.';
+
+  @override
+  String get phoneSignInInvalid => 'ده مش رقم موبايل هنا.';
+
+  @override
+  String get phoneSignInTooSoon =>
+      'لسه باعتين كود. استنى دقيقة قبل ما تطلب واحد تاني.';
+
+  @override
+  String get phoneSignInTooMany =>
+      'اتبعت أكواد كتير على الرقم ده. جرّب بعد ساعة.';
+
+  @override
+  String get phoneSignInCodeWrong => 'الكود مش صح. جرب تاني.';
+
+  @override
+  String get phoneSignInCodeGone => 'الكود ده خلص. اطلب كود تاني.';
+
+  @override
+  String get phoneSignInFailed => 'مقدرناش نسجّل دخولك. جرب تاني.';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).

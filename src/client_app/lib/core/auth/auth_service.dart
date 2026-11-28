@@ -14,6 +14,32 @@ import '../services/signalr_service.dart';
 /// Supported social login providers
 enum SocialProvider { google, apple }
 
+/// What the business's sign-in answered to a phone number or its code (src/keycloak-phone)
+enum PhoneAnswer {
+  signedIn,
+
+  /// A code is on its way to the number
+  codeSent,
+
+  /// No code can be sent to this number here
+  unavailable,
+  invalid,
+
+  /// A code went out a moment ago
+  tooSoon,
+
+  /// Too many codes went to the number this hour
+  tooMany,
+  codeWrong,
+
+  /// Used, run out, or out of tries: another must be sent
+  codeGone,
+
+  /// The code is right and the number is new: its owner's name is needed, with the same code
+  nameNeeded,
+  failed,
+}
+
 /// A sign-in with Google or Apple that is not kept yet: the provider's token, and the access
 /// token it was traded for (the claim screen's proof of who signed in)
 class SocialSignIn {
@@ -301,6 +327,60 @@ class AuthService extends Notifier<AuthState> {
     state = state.copyWith(name: name, firstName: firstName, lastName: lastName, phoneNumber: phoneNumber);
     _storage.write(key: _nameKey, value: name);
     _storage.write(key: _phoneKey, value: phoneNumber);
+  }
+
+  /// Asks for a code to be sent to [phone] (the international form): the account by phone's first step
+  Future<PhoneAnswer> requestPhoneCode(String phone) => _phoneGrant({'phone': phone});
+
+  /// Signs in to the number's account with the code that went to it; a number that is new gives
+  /// its owner's name too, which makes the account
+  Future<PhoneAnswer> signInWithPhone(String phone, String code, {String? firstName, String? lastName}) => _phoneGrant({
+        'phone': phone,
+        'code': code,
+        'first_name': ?firstName,
+        'last_name': ?lastName,
+      });
+
+  /// One request of the phone's sign-in: Keycloak's direct grant, with the phone's own fields.
+  /// Anything but tokens comes back as an OAuth error whose description says which
+  Future<PhoneAnswer> _phoneGrant(Map<String, String> fields) async {
+    try {
+      final response = await _dio.post(
+        _tokenEndpoint,
+        data: {
+          'grant_type': 'password',
+          'client_id': AppConfig.clientId,
+          'scope': AppConfig.scopes.join(' '),
+          ...fields,
+        },
+        options: Options(contentType: Headers.formUrlEncodedContentType),
+      );
+      final data = response.data;
+      if (response.statusCode != 200 || data is! Map || data['access_token'] == null) return PhoneAnswer.failed;
+      await _saveTokens(
+        accessToken: data['access_token'],
+        refreshToken: data['refresh_token'],
+        idToken: data['id_token'],
+      );
+      _loadProfile();
+      return PhoneAnswer.signedIn;
+    } on DioException catch (e) {
+      final body = e.response?.data;
+      return switch (body is Map ? body['error_description'] : null) {
+        'phone_code_sent' => PhoneAnswer.codeSent,
+        'phone_unavailable' => PhoneAnswer.unavailable,
+        'phone_invalid' => PhoneAnswer.invalid,
+        'phone_too_soon' => PhoneAnswer.tooSoon,
+        'phone_too_many' => PhoneAnswer.tooMany,
+        'phone_code_wrong' => PhoneAnswer.codeWrong,
+        'phone_code_gone' => PhoneAnswer.codeGone,
+        'phone_name_needed' => PhoneAnswer.nameNeeded,
+        _ => PhoneAnswer.failed,
+      };
+    } catch (e) {
+      debugPrint('Phone sign-in failed: $e');
+      return PhoneAnswer.failed;
+    }
   }
 
   /// Sign in with username and password using Resource Owner Password Credentials grant

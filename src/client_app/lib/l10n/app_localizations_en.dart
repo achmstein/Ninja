@@ -2128,4 +2128,67 @@ class AppLocalizationsEn extends AppLocalizations {
   String dockAboutMinutes(int n) {
     return 'about $n min';
   }
+
+  @override
+  String get phoneSignInButton => 'Continue with my phone number';
+
+  @override
+  String get phoneSignInTitle => 'Your mobile number?';
+
+  @override
+  String get phoneSignInHint =>
+      'We\'ll text you a code. No password, no email.';
+
+  @override
+  String get phoneSignInSend => 'Send the code';
+
+  @override
+  String get phoneSignInCodeTitle => 'Enter the code';
+
+  @override
+  String get phoneSignInCodeHint => 'We sent it to';
+
+  @override
+  String get phoneSignInContinue => 'Continue';
+
+  @override
+  String get phoneSignInResend => 'Send another code';
+
+  @override
+  String get phoneSignInChange => 'Change the number';
+
+  @override
+  String get phoneSignInNameTitle => 'What\'s your name?';
+
+  @override
+  String get phoneSignInNameHint =>
+      'So we can call you when your order is ready.';
+
+  @override
+  String get phoneSignInNameMissing => 'Write your first and last name.';
+
+  @override
+  String get phoneSignInUnavailable =>
+      'We can\'t send a code to this number yet. Sign in another way.';
+
+  @override
+  String get phoneSignInInvalid => 'That isn\'t a mobile number here.';
+
+  @override
+  String get phoneSignInTooSoon =>
+      'A code went out a moment ago. Wait a minute before asking for another.';
+
+  @override
+  String get phoneSignInTooMany =>
+      'Too many codes were sent to this number. Try again in an hour.';
+
+  @override
+  String get phoneSignInCodeWrong => 'That isn\'t the code. Try again.';
+
+  @override
+  String get phoneSignInCodeGone =>
+      'That code is no longer good. Ask for another.';
+
+  @override
+  String get phoneSignInFailed => 'Couldn\'t sign you in. Try again.';
 }
