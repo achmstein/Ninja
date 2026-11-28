@@ -32,13 +32,16 @@ export function DetailChips({ title, optional, details }: { title: string; optio
         <span className='text-note font-semibold'>{title}</span>
         <span className='text-muted-foreground text-caption'>{optional}</span>
       </div>
-      <div className='flex flex-wrap gap-2'>
+      {/* One row, however narrow the phone: it scrolls sideways, as the menu's categories do, and never stacks */}
+      <div className='no-scrollbar -mx-5 flex gap-2 overflow-x-auto px-5'>
         {details.map((detail, index) =>
           editing === detail.key ? (
-            <label key={detail.key} className='border-primary text-note flex h-11 items-center gap-2 rounded-full border-2 ps-4 pe-3'>
+            <label key={detail.key} className='border-primary text-note flex h-11 shrink-0 items-center gap-2 rounded-full border-2 ps-4 pe-3'>
               <span className='text-muted-foreground shrink-0'>{detail.label}</span>
               <input
                 autoFocus
+                // The chip being typed in is brought into the row's view
+                onFocus={(e) => e.currentTarget.scrollIntoView({ block: 'nearest', inline: 'nearest' })}
                 value={detail.value}
                 onChange={(e) => detail.onChange(e.target.value)}
                 onBlur={() => setEditing(null)}
@@ -60,9 +63,9 @@ export function DetailChips({ title, optional, details }: { title: string; optio
               key={detail.key}
               type='button'
               onClick={() => setEditing(detail.key)}
-              className='bg-primary text-primary-foreground text-note flex h-11 max-w-full items-center gap-1.5 rounded-full px-4 font-semibold'
+              className='bg-primary text-primary-foreground text-note flex h-11 max-w-[70%] shrink-0 items-center gap-1.5 rounded-full px-4 font-semibold'
             >
-              <span className='opacity-80'>{detail.label}</span>
+              <span className='shrink-0 opacity-80'>{detail.label}</span>
               <bdi className='truncate'>{detail.value}</bdi>
             </button>
           ) : (
@@ -70,7 +73,7 @@ export function DetailChips({ title, optional, details }: { title: string; optio
               key={detail.key}
               type='button'
               onClick={() => setEditing(detail.key)}
-              className='border-border text-muted-foreground text-note flex h-11 items-center gap-1.5 rounded-full border border-dashed px-4'
+              className='border-border text-muted-foreground text-note flex h-11 shrink-0 items-center gap-1.5 rounded-full border border-dashed px-4 whitespace-nowrap'
             >
               <Plus className='size-3.5' />
               {detail.label}
