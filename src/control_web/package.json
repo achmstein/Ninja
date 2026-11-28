@@ -8,7 +8,7 @@
     "build": "tsc -b && vite build",
     "preview": "vite preview",
     "test": "vitest run",
-    "lint": "eslint . --max-warnings 46",
+    "lint": "eslint . --max-warnings 72",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
   },

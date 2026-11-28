@@ -114,6 +114,27 @@ export function ninjaEslint(appUrl, options = {}) {
       },
     },
     {
+      // Rule 2 (the data layer): a feature talks to the server only through its
+      // api/ folder (queries.ts, mutations.ts); screens, hooks and routes never
+      // name a generated function
+      files: ['src/features/**/*.{ts,tsx}', 'src/routes/**/*.{ts,tsx}'],
+      ignores: ['src/features/*/api/**'],
+      rules: {
+        'no-restricted-imports': [
+          'warn',
+          {
+            patterns: [
+              {
+                group: ['@ninja/api/*/sdk.gen', '@ninja/api/*/@tanstack/react-query.gen'],
+                message:
+                  "Talk to the server from the feature's api/ folder (queries.ts, mutations.ts), and use those here.",
+              },
+            ],
+          },
+        ],
+      },
+    },
+    {
       // Rule 1: shared code never imports a feature.
       files: SHARED_DIRS.map((d) => `${d}/*.{ts,tsx}`),
       rules: {

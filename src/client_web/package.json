@@ -7,7 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "test": "vitest run",
-    "lint": "eslint . --max-warnings 48",
+    "lint": "eslint . --max-warnings 59",
     "preview": "vite preview",
     "generate:i18n": "node scripts/generate-i18n.mjs",
     "generate": "npm run generate:i18n",
