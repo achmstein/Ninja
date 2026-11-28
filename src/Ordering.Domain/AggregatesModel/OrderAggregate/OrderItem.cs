@@ -56,6 +56,21 @@ public class OrderItem
     /// <summary>Whether the line was added from a suggestion, and which.</summary>
     public SuggestionSource Suggestion { get; private set; }
 
+    /// <summary>
+    /// How many of the line were cancelled after the kitchen had it (the
+    /// bill's own line was cancelled at the till): the kitchen shows them
+    /// struck. <see cref="Units"/> stays as it was rung up.
+    /// </summary>
+    public int CancelledUnits { get; private set; }
+
+    /// <summary>Why, as the till said at the last cancellation.</summary>
+    public string? CancelReason { get; private set; }
+
+    public DateTime? CancelledAt { get; private set; }
+
+    /// <summary>What is still to be made.</summary>
+    public int UnitsLeft => Units - CancelledUnits;
+
     protected OrderItem() { }
 
     public OrderItem(int productId, LocalizedText productName, decimal unitPrice, decimal discount, string? pictureUrl, int units = 1, LocalizedText? customizationsDescription = null, string? specialInstructions = null, IEnumerable<int>? optionIds = null, SuggestionSource suggestion = SuggestionSource.None)
@@ -107,6 +122,21 @@ public class OrderItem
         }
 
         UnitPrice = unitPrice;
+    }
+
+    /// <summary>Strike up to <paramref name="units"/> of what is still to be made; returns how many were.</summary>
+    public int Cancel(int units, string? reason, DateTime at)
+    {
+        var taken = Math.Min(Math.Max(0, units), UnitsLeft);
+        if (taken == 0)
+        {
+            return 0;
+        }
+
+        CancelledUnits += taken;
+        CancelReason = string.IsNullOrWhiteSpace(reason) ? CancelReason : reason.Trim();
+        CancelledAt = at;
+        return taken;
     }
 
     public void SetCategory(int? categoryId) => CategoryId = categoryId;

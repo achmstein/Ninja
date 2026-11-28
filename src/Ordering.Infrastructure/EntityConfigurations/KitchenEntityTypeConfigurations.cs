@@ -99,6 +99,9 @@ class KitchenPrintJobEntityTypeConfiguration : IEntityTypeConfiguration<KitchenP
         builder.Property(j => j.LastError)
             .HasMaxLength(300);
 
+        // A cancellation slip's lines, kept with the job that prints them
+        builder.OwnsMany(j => j.CancelledItems, b => b.ToJson());
+
         // The print host asks for the branch's unprinted tickets
         builder.HasIndex(j => new { j.BranchId, j.PrintedAt });
     }

@@ -195,7 +195,7 @@ public static class KitchenApi
     public static async Task<Ok<List<KitchenTicket>>> GetPrintJobsAsync(
         HttpContext httpContext,
         IKitchenQueries queries)
-        => TypedResults.Ok(await queries.GetPendingTicketsAsync(httpContext.GetRequiredBranchId()));
+        => TypedResults.Ok(await queries.GetPendingTicketsAsync(httpContext.GetRequiredBranchId(), KitchenSlips.PrintsCancellations(httpContext)));
 
     public static async Task<Results<NoContent, BadRequest<string>, NotFound, Conflict>> ClaimPrintJobAsync(
         int jobId,

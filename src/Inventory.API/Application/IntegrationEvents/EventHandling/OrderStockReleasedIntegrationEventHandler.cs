@@ -44,7 +44,9 @@ public class OrderStockReleasedIntegrationEventHandler(
         }
 
         var lastCounted = await ledger.GetLastCountedAtAsync(@event.BranchId, sale.Select(m => m.StockItemId));
-        var drafts = SaleRelease.BuildDrafts(@event.OrderId, @event.Disposition, sale, lastCounted);
+        // Items cancelled earlier at the till already gave their stock back
+        var givenBack = await ledger.GetByReferencePrefixAsync(SaleRelease.PartPrefixFor(@event.OrderId));
+        var drafts = SaleRelease.BuildDrafts(@event.OrderId, @event.Disposition, sale, lastCounted, givenBack);
 
         if (drafts.Count == 0)
         {

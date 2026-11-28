@@ -172,6 +172,9 @@ namespace Ordering.Infrastructure.Migrations
                     b.Property<DateTime>("CreatedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<bool>("IsCancellation")
+                        .HasColumnType("boolean");
+
                     b.Property<bool>("IsReprint")
                         .HasColumnType("boolean");
 
@@ -465,6 +468,15 @@ namespace Ordering.Infrastructure.Migrations
                         .HasColumnType("integer");
 
                     NpgsqlPropertyBuilderExtensions.UseHiLo(b.Property<int>("Id"), "orderitemseq");
+
+                    b.Property<string>("CancelReason")
+                        .HasColumnType("text");
+
+                    b.Property<DateTime?>("CancelledAt")
+                        .HasColumnType("timestamp with time zone");
+
+                    b.Property<int>("CancelledUnits")
+                        .HasColumnType("integer");
 
                     b.Property<int?>("CategoryId")
                         .HasColumnType("integer");
@@ -1314,6 +1326,40 @@ namespace Ordering.Infrastructure.Migrations
                     b.HasKey("TicketId");
 
                     b.ToTable("ticketplaces", "ordering");
+                });
+
+            modelBuilder.Entity("Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate.KitchenPrintJob", b =>
+                {
+                    b.OwnsMany("Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate.KitchenCancelledItem", "CancelledItems", b1 =>
+                        {
+                            b1.Property<int>("KitchenPrintJobId");
+
+                            b1.Property<int>("__synthesizedOrdinal")
+                                .ValueGeneratedOnAdd();
+
+                            b1.Property<string>("DetailsAr");
+
+                            b1.Property<string>("DetailsEn");
+
+                            b1.Property<string>("NameAr");
+
+                            b1.Property<string>("NameEn");
+
+                            b1.Property<string>("Reason");
+
+                            b1.Property<int>("Units");
+
+                            b1.HasKey("KitchenPrintJobId", "__synthesizedOrdinal");
+
+                            b1.ToTable("kitchenprintjobs", "ordering");
+
+                            b1.ToJson("CancelledItems");
+
+                            b1.WithOwner()
+                                .HasForeignKey("KitchenPrintJobId");
+                        });
+
+                    b.Navigation("CancelledItems");
                 });
 
             modelBuilder.Entity("Ninja.Ordering.Domain.AggregatesModel.KitchenAggregate.KitchenStation", b =>

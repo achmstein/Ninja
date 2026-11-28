@@ -270,6 +270,19 @@ public record TicketLineView
 
     /// <summary>Paid for by a part payment while the bill is open: not to be paid again, nor moved.</summary>
     public bool Paid { get; init; }
+
+    /// <summary>
+    /// How many were cancelled after the kitchen had them; <see cref="Qty"/> is what is still
+    /// sold, so a line cancelled whole has Qty 0 and stays on the bill struck. Zero when none.
+    /// </summary>
+    public decimal CancelledQty { get; init; }
+
+    /// <summary>Why, as the last cancellation of the line said.</summary>
+    public string? CancelReason { get; init; }
+
+    public string? CancelledBy { get; init; }
+
+    public DateTime? CancelledAt { get; init; }
 }
 
 /// <summary>Money the till took for part of an open bill.</summary>

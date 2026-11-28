@@ -56,6 +56,10 @@ public record KitchenTicket
     public string? LastError { get; init; }
     public bool IsReprint { get; init; }
     public bool IsTest { get; init; }
+    /// <summary>A slip saying the <see cref="Items"/> were cancelled (their units as many as were), not the order's ticket.</summary>
+    public bool IsCancellation { get; init; }
+    /// <summary>Why they were cancelled, on a cancellation slip.</summary>
+    public string? CancelReason { get; init; }
     /// <summary>The order the ticket is for; null on a test page.</summary>
     public int? OrderNumber { get; init; }
     public DateTime? ConfirmedAt { get; init; }
@@ -68,15 +72,31 @@ public record KitchenTicket
     public List<KitchenOrderItem> Items { get; init; } = new();
 }
 
+/// <summary>How a print host says which slips it can print beyond tickets and test pages.</summary>
+public static class KitchenSlips
+{
+    /// <summary>Sent by a print host whose paper says CANCELLED on a cancellation slip.</summary>
+    public const string Header = "X-Kitchen-Slips";
+
+    public const string Cancellation = "cancellation";
+
+    public static bool PrintsCancellations(HttpContext httpContext)
+        => httpContext.Request.Headers[Header].ToString().Contains(Cancellation, StringComparison.OrdinalIgnoreCase);
+}
+
 public interface IKitchenQueries
 {
-    /// <summary>The branch's unprinted tickets from the last day, oldest first.</summary>
-    Task<List<KitchenTicket>> GetPendingTicketsAsync(int branchId);
+    /// <summary>
+    /// The branch's unprinted tickets from the last day, oldest first. Cancellation slips only to a
+    /// printer that says it prints them (<see cref="KitchenSlips.Header"/>): an older one would print
+    /// the cancelled items as an order to make.
+    /// </summary>
+    Task<List<KitchenTicket>> GetPendingTicketsAsync(int branchId, bool withCancellations = false);
 }
 
 public class KitchenQueries(OrderingContext context) : IKitchenQueries
 {
-    public async Task<List<KitchenTicket>> GetPendingTicketsAsync(int branchId)
+    public async Task<List<KitchenTicket>> GetPendingTicketsAsync(int branchId, bool withCancellations = false)
     {
         // Paper nobody printed in a day is not worth printing now
         var since = DateTime.UtcNow.AddHours(-24);
@@ -84,6 +104,7 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
         var jobs = await context.KitchenPrintJobs
             .AsNoTracking()
             .Where(j => j.BranchId == branchId && j.PrintedAt == null && j.CreatedAt >= since)
+            .Where(j => withCancellations || !j.IsCancellation)
             .OrderBy(j => j.CreatedAt)
             .ToListAsync();
 
@@ -118,7 +139,9 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                     Units = oi.Units,
                     CustomizationsDescription = oi.CustomizationsDescription,
                     SpecialInstructions = oi.SpecialInstructions,
-                    StationId = oi.StationId
+                    StationId = oi.StationId,
+                    CancelledUnits = oi.CancelledUnits,
+                    CancelReason = oi.CancelReason
                 }).ToList()
             })
             .ToDictionaryAsync(o => o.Id);
@@ -155,6 +178,8 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                 LastError = job.LastError,
                 IsReprint = job.IsReprint,
                 IsTest = job.IsTest,
+                IsCancellation = job.IsCancellation,
+                CancelReason = job.IsCancellation ? job.CancelledItems.Select(i => i.Reason).FirstOrDefault(r => r != null) : null,
                 OrderNumber = order?.Id,
                 ConfirmedAt = order?.ConfirmedAt,
                 Source = order?.Source,
@@ -164,7 +189,16 @@ public class KitchenQueries(OrderingContext context) : IKitchenQueries
                 PlaceName = order is { IsDelivery: true } ? KitchenWords.Delivery : order?.PlaceName,
                 CustomerName = order?.CustomerName,
                 CustomerNote = order?.CustomerNote,
-                Items = order?.Items.Where(i => i.StationId == station.Id).ToList() ?? [],
+                // A cancellation slip lists what was cancelled, as many as were; a ticket the station's lines
+                Items = job.IsCancellation
+                    ? job.CancelledItems.Select(i => new KitchenOrderItem
+                    {
+                        ProductName = new LocalizedText(i.NameEn, i.NameAr),
+                        Units = i.Units,
+                        CustomizationsDescription = LocalizedText.From(i.DetailsEn, i.DetailsAr),
+                        StationId = station.Id,
+                    }).ToList()
+                    : order?.Items.Where(i => i.StationId == station.Id).ToList() ?? [],
             });
         }
 

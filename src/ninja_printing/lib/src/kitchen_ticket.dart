@@ -56,6 +56,12 @@ class KitchenTicket {
   final String? lastError;
   final bool isReprint;
   final bool isTest;
+
+  /// A slip saying [lines] were cancelled (as many as were), not the order's ticket
+  final bool isCancellation;
+
+  /// Why, on a cancellation slip
+  final String? cancelReason;
   final int? orderNumber;
 
   /// What prints where the order number goes, when it is not one: a sale
@@ -83,6 +89,8 @@ class KitchenTicket {
     this.lastError,
     this.isReprint = false,
     this.isTest = false,
+    this.isCancellation = false,
+    this.cancelReason,
     this.orderNumber,
     this.numberLabel,
     this.confirmedAt,
@@ -111,6 +119,8 @@ class KitchenTicket {
         lastError: _text(json['lastError']),
         isReprint: json['isReprint'] == true,
         isTest: json['isTest'] == true,
+        isCancellation: json['isCancellation'] == true,
+        cancelReason: _text(json['cancelReason']),
         orderNumber: json['orderNumber'] == null ? null : _int(json['orderNumber']),
         confirmedAt: _utc(json['confirmedAt']),
         source: _text(json['source']),

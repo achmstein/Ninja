@@ -65,9 +65,12 @@ public static class TicketRenderer
             => blocks.Add(new TextBlock(text, font, align, Height(text, font, inner - (boxed ? 20 : 0)) + (inverted || boxed ? 16 : 4), inverted, boxed));
 
         if (ticket.IsTest) Text(labels.Test, F(30, true), StringAlignment.Center, inverted: true);
+        else if (ticket.IsCancellation) Text(labels.Cancelled, F(30, true), StringAlignment.Center, inverted: true);
         else if (ticket.IsReprint) Text(labels.Reprint, F(30, true), StringAlignment.Center, inverted: true);
 
         Text(ticket.StationName.Pick(language), F(40, true), StringAlignment.Center);
+        if (ticket.IsCancellation && !string.IsNullOrWhiteSpace(ticket.CancelReason))
+            Text(ticket.CancelReason, F(26), StringAlignment.Center);
 
         if (ticket.IsTest)
         {
@@ -164,10 +167,10 @@ public static class TicketRenderer
     }
 
     /// <summary>The words a ticket prints, in the connector's language.</summary>
-    public sealed record Labels(string Counter, string Pickup, string Reprint, string Test, string TestBody)
+    public sealed record Labels(string Counter, string Pickup, string Reprint, string Test, string TestBody, string Cancelled)
     {
         public static Labels For(string language) => language == "ar"
-            ? new("الكاونتر", "استلام", "إعادة طباعة", "تجربة", "طابعة هذه المحطة تعمل")
-            : new("Counter", "Pickup", "REPRINT", "TEST", "This station's printer works");
+            ? new("الكاونتر", "استلام", "إعادة طباعة", "تجربة", "طابعة هذه المحطة تعمل", "ملغي")
+            : new("Counter", "Pickup", "REPRINT", "TEST", "This station's printer works", "CANCELLED");
     }
 }

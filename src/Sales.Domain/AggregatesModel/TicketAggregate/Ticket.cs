@@ -806,6 +806,94 @@ public class Ticket : Entity, IAggregateRoot
     }
 
     /// <summary>
+    /// Cancel some of what an open bill carries after the kitchen had it — the
+    /// customer changed their mind, it was rung up wrong, the kitchen ran out.
+    /// Each line stays on the bill, struck as far as it was cancelled, and the
+    /// bill is worth that much less. The reason is the audit trail, as a
+    /// void's is; Ordering hears of it (the kitchen strikes the item, the stock
+    /// goes as <paramref name="stockDisposition"/> says) and so does Loyalty
+    /// (the points those items earned go back). Only what was sold can be
+    /// cancelled: an item or a manual line, never the room's time, a delivery
+    /// fee or a money-off line. Cancelling everything left is a void.
+    /// </summary>
+    public void CancelLines(
+        IReadOnlyCollection<LineCancel> cancels,
+        string reason,
+        string cancelledBy,
+        string? stockDisposition = null)
+    {
+        EnsureOpen();
+
+        if (string.IsNullOrWhiteSpace(reason))
+            throw new SalesDomainException("Cancelling an item needs a reason — that is the audit trail.");
+
+        if (reason.Trim().Length > TicketLine.CancelReasonLength)
+            throw new SalesDomainException($"Keep the reason under {TicketLine.CancelReasonLength} characters.");
+
+        if (string.IsNullOrWhiteSpace(cancelledBy))
+            throw new SalesDomainException("Cancelling an item needs the person doing it.");
+
+        // The same line asked for twice is one request for the sum
+        var wanted = cancels
+            .GroupBy(c => c.LineId)
+            .Select(g => new LineCancel(g.Key, g.Sum(c => c.Qty)))
+            .ToList();
+
+        if (wanted.Count == 0)
+            throw new SalesDomainException("Pick at least one item to cancel.");
+
+        var lines = new List<(TicketLine Line, decimal Qty)>();
+        foreach (var cancel in wanted)
+        {
+            var line = _lines.FirstOrDefault(l => l.Id == cancel.LineId)
+                ?? throw new SalesDomainException($"Line {cancel.LineId} is not on this bill.");
+
+            if (line.Source is not (TicketLineSource.Order or TicketLineSource.Manual) || line.UnitPrice <= 0)
+                throw new SalesDomainException("Only an item can be cancelled: not the time, a delivery fee or money off.");
+
+            lines.Add((line, cancel.Qty));
+        }
+
+        // What is left once these go: nothing sold at all is the whole bill, which is a void
+        var leftAfter = _lines
+            .Where(l => l.Total > 0 && l.Source is TicketLineSource.Order or TicketLineSource.Manual)
+            .Sum(l => l.Qty - (wanted.FirstOrDefault(w => w.LineId == l.Id)?.Qty ?? 0));
+        var otherSold = _lines.Any(l => l.Total > 0 && l.Source is not (TicketLineSource.Order or TicketLineSource.Manual));
+        if (leftAfter <= 0.0001m && !otherSold)
+            throw new SalesDomainException("That is everything on the bill — void the bill instead.");
+
+        // Each order's worth before anything of this cancel came off, for
+        // Loyalty to take back the right share of the points it earned
+        var originalByOrder = GetOriginalAmountByOrder();
+
+        var at = DateTime.UtcNow;
+        var cancelled = lines
+            .Select(x => new CancelledLine(x.Line, x.Qty, x.Line.Cancel(x.Qty, reason.Trim(), cancelledBy, at)))
+            .ToList();
+
+        // The money-off lines of an order (its points, its promo) never leave
+        // the bill worth less than nothing
+        if (GetSubtotal() < 0)
+            throw new SalesDomainException("That would leave the bill worth less than nothing — void the bill instead.");
+
+        Touch();
+        AddDomainEvent(new TicketLinesCancelledDomainEvent(this, cancelled, reason.Trim(), cancelledBy, stockDisposition, originalByOrder));
+    }
+
+    /// <summary>
+    /// Each order's menu money on this ticket as it was rung up, before any of
+    /// its items were cancelled: what Loyalty divides by when part of an order
+    /// comes back, so a cancel, then a void or a refund, never take back more
+    /// than the order earned. The same as <see cref="GetAmountByOrder"/> while
+    /// nothing was cancelled.
+    /// </summary>
+    public IReadOnlyDictionary<int, decimal> GetOriginalAmountByOrder()
+        => _lines
+            .Where(l => l.OrderId is not null)
+            .GroupBy(l => l.OrderId!.Value)
+            .ToDictionary(g => g.Key, g => g.Sum(l => l.Total + l.CancelledAmount));
+
+    /// <summary>
     /// Throw away an open ticket nothing ever landed on — a counter sale
     /// opened for a walk-in who changed their mind, a table bill started for
     /// a group that never ordered. Lines only accumulate — a move that empties

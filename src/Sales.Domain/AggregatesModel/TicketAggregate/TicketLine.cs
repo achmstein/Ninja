@@ -66,6 +66,30 @@ public class TicketLine : Entity
 
     public decimal Total => Qty * UnitPrice - Discount;
 
+    /// <summary>
+    /// How many of the line were cancelled after the kitchen had it: <see cref="Qty"/>
+    /// is what is still sold, so every total, refund and report reads the line
+    /// as it now stands; this keeps what was taken off, for the bill and the
+    /// kitchen to show struck. Zero on a line nothing was cancelled from.
+    /// </summary>
+    public decimal CancelledQty { get; private set; }
+
+    /// <summary>The menu money the cancellations took off the line, at its own price and discount.</summary>
+    public decimal CancelledAmount { get; private set; }
+
+    /// <summary>Why, as the last cancellation said: the audit trail, as a void's reason is.</summary>
+    public string? CancelReason { get; private set; }
+
+    /// <summary>The longest a cancel reason is kept, as the column is made.</summary>
+    public const int CancelReasonLength = 200;
+
+    public string? CancelledBy { get; private set; }
+
+    public DateTime? CancelledAt { get; private set; }
+
+    /// <summary>The line as it was rung up, before anything was cancelled.</summary>
+    public decimal OriginalQty => Qty + CancelledQty;
+
     /// <summary>The delivery's fee: billed with the order, but not a thing sold.</summary>
     public bool IsDeliveryFee => Source == TicketLineSource.DeliveryFee;
 
@@ -108,6 +132,33 @@ public class TicketLine : Entity
         AddedBy = addedBy;
         CatalogItemId = catalogItemId;
         Suggestion = suggestion;
+    }
+
+    /// <summary>
+    /// Take <paramref name="qty"/> off the line: it stays on the bill, struck
+    /// as far as it was cancelled, and its discount shrinks with it. Returns
+    /// the menu money that came off.
+    /// </summary>
+    internal decimal Cancel(decimal qty, string reason, string by, DateTime at)
+    {
+        if (qty <= 0)
+            throw new SalesDomainException("A cancelled quantity must be positive.");
+
+        if (qty > Qty + 0.0001m)
+            throw new SalesDomainException($"Only {Qty:0.##} of \"{Description.Primary}\" is left to cancel.");
+
+        var before = Total;
+        var left = Math.Max(0m, Qty - qty);
+        Discount = Qty == 0 ? 0 : Math.Round(Discount * left / Qty, 2, MidpointRounding.AwayFromZero);
+        Qty = left;
+
+        var amount = before - Total;
+        CancelledQty += qty;
+        CancelledAmount += amount;
+        CancelReason = reason;
+        CancelledBy = by;
+        CancelledAt = at;
+        return amount;
     }
 
     /// <summary>

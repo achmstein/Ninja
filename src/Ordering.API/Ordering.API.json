@@ -7252,6 +7252,20 @@
               "string"
             ],
             "format": "int32"
+          },
+          "cancelledUnits": {
+            "pattern": "^-?(?:0|[1-9]\\d*)$",
+            "type": [
+              "integer",
+              "string"
+            ],
+            "format": "int32"
+          },
+          "cancelReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           }
         }
       },
@@ -7513,6 +7527,15 @@
           },
           "isTest": {
             "type": "boolean"
+          },
+          "isCancellation": {
+            "type": "boolean"
+          },
+          "cancelReason": {
+            "type": [
+              "null",
+              "string"
+            ]
           },
           "orderNumber": {
             "pattern": "^-?(?:0|[1-9]\\d*)$",

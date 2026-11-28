@@ -301,6 +301,10 @@ public record KitchenOrderItem
     public string? SpecialInstructions { get; init; }
     /// <summary>The station that makes it; null on orders from before stations.</summary>
     public int? StationId { get; init; }
+    /// <summary>How many of <see cref="Units"/> were cancelled at the till after the kitchen had them: shown struck. Zero when none.</summary>
+    public int CancelledUnits { get; init; }
+    /// <summary>Why, as the till said.</summary>
+    public string? CancelReason { get; init; }
 }
 
 /// <summary>One station's share of an order, as the pass shows it.</summary>

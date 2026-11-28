@@ -37,6 +37,14 @@ public class KitchenPrintJob : Entity, IAggregateRoot
 
     public bool IsTest { get; private set; }
 
+    /// <summary>
+    /// A slip saying items of the order were cancelled, not its ticket: what
+    /// it lists is <see cref="CancelledItems"/>, the station's share of the cancel.
+    /// </summary>
+    public bool IsCancellation { get; private set; }
+
+    public List<KitchenCancelledItem> CancelledItems { get; private set; } = [];
+
     public bool IsPrinted => PrintedAt != null;
 
     protected KitchenPrintJob() { }
@@ -56,6 +64,10 @@ public class KitchenPrintJob : Entity, IAggregateRoot
     public static KitchenPrintJob Reprint(int branchId, int orderId, int stationId) => new(branchId, orderId, stationId, true, false);
 
     public static KitchenPrintJob Test(int branchId, int stationId) => new(branchId, null, stationId, false, true);
+
+    /// <summary>A slip for the station that makes these items: they were cancelled, stop or bin them.</summary>
+    public static KitchenPrintJob Cancellation(int branchId, int orderId, int stationId, IEnumerable<KitchenCancelledItem> items)
+        => new(branchId, orderId, stationId, false, false) { IsCancellation = true, CancelledItems = [.. items] };
 
     /// <summary>
     /// The device that claimed it printed it. Another device's word is taken

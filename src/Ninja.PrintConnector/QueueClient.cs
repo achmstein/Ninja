@@ -37,7 +37,9 @@ public sealed record KitchenTicket(
     TicketText? PlaceName,
     string? CustomerName,
     string? CustomerNote,
-    List<TicketLine> Items);
+    List<TicketLine> Items,
+    bool IsCancellation = false,
+    string? CancelReason = null);
 
 public sealed record Paired(int ConnectorId, string Key, int BranchId, string Language);
 
@@ -73,6 +75,8 @@ public sealed class QueueClient(HttpClient http, string? key)
     public async Task<List<KitchenTicket>> JobsAsync(CancellationToken ct)
     {
         using var request = Signed(HttpMethod.Get, "api/kitchen/connector/jobs");
+        // This connector prints a cancellation slip as one; the queue keeps them from older ones
+        request.Headers.Add("X-Kitchen-Slips", "cancellation");
         using var response = await http.SendAsync(request, ct);
         if (response.StatusCode == HttpStatusCode.Unauthorized)
             throw new UnauthorizedAccessException("This connector was unpaired in admin. Pair it again.");

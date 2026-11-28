@@ -150,6 +150,7 @@ public static class Extensions
 [JsonSerializable(typeof(TicketCustomersMovedToSessionIntegrationEvent))]
 [JsonSerializable(typeof(TicketSettledIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
+[JsonSerializable(typeof(TicketLinesCancelledIntegrationEvent))]
 [JsonSerializable(typeof(TicketRefundedIntegrationEvent))]
 [JsonSerializable(typeof(TabPaymentRecordedIntegrationEvent))]
 [JsonSerializable(typeof(UserProfileUpdatedIntegrationEvent))]

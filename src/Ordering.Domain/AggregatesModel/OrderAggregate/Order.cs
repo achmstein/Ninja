@@ -1152,6 +1152,62 @@ public class Order
         ReleaseStock(stockDisposition, StockReleaseReason.Voided, at);
     }
 
+    /// <summary>
+    /// Some of this order's items were cancelled at the till after the
+    /// kitchen had them. Each is found by what it was — the catalog item and
+    /// its options as described, or its name when the bill's line did not say
+    /// the item — and struck for as many as asked, across lines alike. The
+    /// kitchen hears of it, and the stock those items took goes back to the
+    /// shelf or out as waste, as the till said (left unsaid: waste once the
+    /// kitchen marked the order ready). Nothing is released twice: an order
+    /// whose whole stock already went releases nothing more.
+    /// </summary>
+    /// <param name="key">The cancel's own id: what the stock's release is filed under.</param>
+    /// <returns>Whether anything was struck.</returns>
+    public bool CancelItems(IReadOnlyCollection<ItemCancel> cancels, string? reason, DateTime at, StockDisposition? stockDisposition, Guid key)
+    {
+        var struck = new List<CancelledOrderItem>();
+
+        foreach (var cancel in cancels)
+        {
+            var wanted = cancel.Units;
+            var alike = _orderItems
+                .Where(i => cancel.ProductId is { } productId
+                    ? i.ProductId == productId && i.CustomizationsDescription == cancel.Details
+                    : i.ProductName == cancel.ProductName && i.CustomizationsDescription == cancel.Details)
+                .Where(i => i.UnitsLeft > 0)
+                .OrderBy(i => i.Id)
+                .ToList();
+
+            foreach (var item in alike)
+            {
+                if (wanted <= 0)
+                {
+                    break;
+                }
+
+                var taken = item.Cancel(wanted, reason, at);
+                wanted -= taken;
+                if (taken > 0)
+                {
+                    struck.Add(new CancelledOrderItem(item.ProductId, item.ProductName, item.CustomizationsDescription, taken, item.OptionIds, item.StationId));
+                }
+            }
+        }
+
+        if (struck.Count == 0)
+        {
+            return false;
+        }
+
+        // Stock moves only for an order whose confirmation took it, and whose whole stock still stands
+        var releasesStock = ConfirmedAt is not null && StockReleasedAt is null;
+        var disposition = stockDisposition ?? (WasPrepared ? AggregatesModel.OrderAggregate.StockDisposition.Waste : AggregatesModel.OrderAggregate.StockDisposition.Restock);
+
+        AddDomainEvent(new OrderItemsCancelledDomainEvent(Id, BranchId, struck, releasesStock ? disposition : null, reason, key));
+        return true;
+    }
+
     /// <summary>A credit note gave part of this order back; never more than it cost.</summary>
     public void RecordRefund(decimal amount)
     {

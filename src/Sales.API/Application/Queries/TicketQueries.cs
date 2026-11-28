@@ -452,7 +452,8 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 VoidedAt = ticket.VoidedAt,
                 ReceiptNumber = receipts.TryGetValue(ticket.Id, out var number) ? number : null,
                 PaidWith = ticket.SettledAt is null ? null : Payment.DescribeTenders(ticket.Payments),
-                Lines = ticket.Lines.Select(l => new BillLineView
+                // A line cancelled whole is the till's record, not the customer's bill
+                Lines = ticket.Lines.Where(l => l.Qty != 0).Select(l => new BillLineView
                 {
                     Id = l.Id,
                     Source = l.Source.ToString(),
@@ -557,6 +558,10 @@ public class TicketQueries(SalesContext context) : ITicketQueries
                 CustomerId = l.CustomerId,
                 GuestId = l.GuestId,
                 Paid = paidLines.Contains(l.Id),
+                CancelledQty = l.CancelledQty,
+                CancelReason = l.CancelReason,
+                CancelledBy = l.CancelledBy,
+                CancelledAt = l.CancelledAt,
             }).ToList(),
             PartPayments = partPayments
                 .Select(p => new PartPaymentView(p.Id, p.Tender.ToString(), p.Amount, p.PayerName, p.LineIds, p.RecordedBy, p.RecordedAt))

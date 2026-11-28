@@ -124,6 +124,7 @@ internal static class Extensions
         eventBus.AddSubscription<TicketSettledIntegrationEvent, TicketSettledIntegrationEventHandler>();
         eventBus.AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>();
         eventBus.AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
+        eventBus.AddSubscription<TicketLinesCancelledIntegrationEvent, TicketLinesCancelledIntegrationEventHandler>();
 
         // An order paid ahead online: Sales took the customer's payment, and the order goes to the till
         eventBus.AddSubscription<OrderPaidOnlineIntegrationEvent, OrderPaidOnlineIntegrationEventHandler>();

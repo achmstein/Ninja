@@ -33,7 +33,8 @@ public static class Extensions
                .AddSubscription<UserProfileUpdatedIntegrationEvent, UserProfileUpdatedIntegrationEventHandler>()
                .AddSubscription<CustomersMergedIntegrationEvent, CustomersMergedIntegrationEventHandler>()
                .AddSubscription<TicketRefundedIntegrationEvent, TicketRefundedIntegrationEventHandler>()
-               .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>();
+               .AddSubscription<TicketVoidedIntegrationEvent, TicketVoidedIntegrationEventHandler>()
+               .AddSubscription<TicketLinesCancelledIntegrationEvent, TicketLinesCancelledIntegrationEventHandler>();
     }
 }
 
@@ -42,6 +43,7 @@ public static class Extensions
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderCustomerAssignedIntegrationEvent))]
 [JsonSerializable(typeof(TicketVoidedIntegrationEvent))]
+[JsonSerializable(typeof(TicketLinesCancelledIntegrationEvent))]
 partial class LoyaltyIntegrationEventContext : JsonSerializerContext
 {
 }

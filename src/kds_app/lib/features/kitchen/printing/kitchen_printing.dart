@@ -55,7 +55,7 @@ class ApiKitchenPrintQueue implements KitchenPrintQueue {
 
   @override
   Future<List<KitchenTicket>> pending() async {
-    final response = await _api.get<List<dynamic>>('print-jobs');
+    final response = await _api.get<List<dynamic>>('print-jobs', headers: const {'X-Kitchen-Slips': 'cancellation'});
     return [
       for (final ticket in response.data ?? const []) KitchenTicket.fromJson(ticket as Map<String, dynamic>),
     ];

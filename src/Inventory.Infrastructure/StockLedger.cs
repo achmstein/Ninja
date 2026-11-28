@@ -84,6 +84,9 @@ public class StockLedger(InventoryContext context) : IStockLedger
     public async Task<IReadOnlyList<StockMovement>> GetByReferenceAsync(string reference)
         => await context.StockMovements.AsNoTracking().Where(m => m.Reference == reference).ToListAsync();
 
+    public async Task<IReadOnlyList<StockMovement>> GetByReferencePrefixAsync(string prefix)
+        => await context.StockMovements.AsNoTracking().Where(m => m.Reference != null && m.Reference.StartsWith(prefix)).ToListAsync();
+
     public async Task<Dictionary<int, decimal>> GetOnHandAsync(int branchId, IEnumerable<int> stockItemIds)
     {
         var ids = stockItemIds.Distinct().ToList();

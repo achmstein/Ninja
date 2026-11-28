@@ -171,7 +171,7 @@ public static class PrintConnectorApi
         connector.Seen(null, DateTime.UtcNow);
         await connectors.UnitOfWork.SaveChangesAsync();
 
-        var tickets = await queries.GetPendingTicketsAsync(connector.BranchId);
+        var tickets = await queries.GetPendingTicketsAsync(connector.BranchId, KitchenSlips.PrintsCancellations(httpContext));
         return TypedResults.Ok(tickets
             .Where(t => t.ConnectorId == connector.Id || (t.ConnectorId is null && t.PrinterHost is not null))
             .ToList());

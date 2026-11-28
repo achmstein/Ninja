@@ -167,6 +167,12 @@ public static class TicketsApi
             .WithDescription("A mistake, a comp, a walked group. The reason is the audit trail. Settled tickets cannot be voided.")
             .RequireAuthorization("Owner");
 
+        api.MapPost("/{id:int}/lines/cancel", CancelLines)
+            .WithName("CancelTicketLines")
+            .WithSummary("Cancel items of an open bill the kitchen already has (owner only)")
+            .WithDescription("By line and quantity: the line stays on the bill, struck as far as it was cancelled, and the bill is that much less. The reason is mandatory, as for a void. The kitchen's screens strike the item and a slip prints where its tickets print; the stock goes back to the shelf or is written off as the stock disposition says (left out: waste once the kitchen marked it ready, otherwise back on the shelf); loyalty points the items earned go back. Only items and manual lines; cancelling everything left is a void. A settled bill is refunded instead.")
+            .RequireAuthorization("Owner");
+
         api.MapPost("/{id:int}/refunds", RefundTicket)
             .WithName("RefundTicket")
             .WithSummary("Refund lines of a settled ticket as a numbered credit note (owner only)")
@@ -377,7 +383,7 @@ public static class TicketsApi
             detail.Type,
             detail.LocationName,
             detail.SettledAt.Value,
-            detail.Lines.Select(l => new ReceiptLineView(l.Description, l.Details, l.Qty, l.UnitPrice, l.Discount, l.Total, l.CustomerName)).ToList(),
+            detail.Lines.Where(l => l.Qty != 0).Select(l => new ReceiptLineView(l.Description, l.Details, l.Qty, l.UnitPrice, l.Discount, l.Total, l.CustomerName)).ToList(),
             detail.Subtotal,
             detail.Discount,
             detail.DiscountRate,
@@ -715,6 +721,34 @@ public static class TicketsApi
         }
     }
 
+    public static async Task<Results<Ok, BadRequest<string>>> CancelLines(
+        int id,
+        CancelLinesRequest request,
+        HttpContext httpContext,
+        [FromHeader(Name = "x-requestid")] Guid? requestId,
+        [FromServices] IMediator mediator)
+    {
+        try
+        {
+            if (request.StockDisposition is { } disposition && !StockDispositions.IsKnown(disposition))
+            {
+                return TypedResults.BadRequest("Stock disposition is Waste or Restock.");
+            }
+
+            await mediator.SendIdentified<CancelTicketLinesCommand, bool>(requestId, new CancelTicketLinesCommand(
+                id,
+                (request.Lines ?? []).Select(l => new LineCancel(l.LineId, l.Qty)).ToList(),
+                request.Reason,
+                httpContext.GetActor(),
+                request.StockDisposition));
+            return TypedResults.Ok();
+        }
+        catch (SalesDomainException ex)
+        {
+            return TypedResults.BadRequest(ex.Message);
+        }
+    }
+
     public static async Task<Results<Ok<RefundResult>, BadRequest<string>>> RefundTicket(
         int id,
         RefundRequest request,
@@ -879,6 +913,11 @@ public record DiscountRequest(string? Reason = null, decimal? Rate = null, decim
 public record RefundRequest(List<RefundLineRequest> Lines, string Reason, PaymentTender Tender, string? CustomerId = null, string? CustomerName = null);
 
 public record RefundLineRequest(int LineId, decimal Qty);
+
+/// <summary>Items of an open bill to cancel, why, and what becomes of the food ("Waste" or "Restock").</summary>
+public record CancelLinesRequest(List<CancelLineRequest> Lines, string Reason, string? StockDisposition = null);
+
+public record CancelLineRequest(int LineId, decimal Qty);
 
 /// <summary>Money taken against a customer's tab; the amount is what the customer handed over.</summary>
 public record TabPaymentRequest(string CustomerId, string? CustomerName, PaymentTender Tender, decimal Amount);

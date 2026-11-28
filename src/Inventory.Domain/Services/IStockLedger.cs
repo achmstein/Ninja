@@ -40,6 +40,9 @@ public interface IStockLedger
     /// <summary>The movements a document posted (an order's sale, one per ingredient).</summary>
     Task<IReadOnlyList<StockMovement>> GetByReferenceAsync(string reference);
 
+    /// <summary>Every movement filed under a reference that starts so: an order's partial releases, all of them.</summary>
+    Task<IReadOnlyList<StockMovement>> GetByReferencePrefixAsync(string prefix);
+
     /// <summary>The branch's current on-hand figures for these items (0 when never moved).</summary>
     Task<Dictionary<int, decimal>> GetOnHandAsync(int branchId, IEnumerable<int> stockItemIds);
 

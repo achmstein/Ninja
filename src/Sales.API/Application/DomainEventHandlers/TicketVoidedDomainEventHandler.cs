@@ -17,11 +17,13 @@ public class TicketVoidedDomainEventHandler(
     {
         var ticket = notification.Ticket;
 
-        // Everything the order is worth on this ticket comes back: the same
-        // denominator a refund reports, and here the numerator too
+        // Everything the order is still worth on this ticket comes back,
+        // against what it was worth as rung up: the same denominator a refund
+        // and a cancel report, so items cancelled earlier are not taken back twice
+        var original = ticket.GetOriginalAmountByOrder();
         var reversals = ticket.GetAmountByOrder()
             .Where(o => o.Value > 0)
-            .Select(o => new RefundOrderReversal(o.Key, o.Value, o.Value))
+            .Select(o => new RefundOrderReversal(o.Key, o.Value, Math.Max(o.Value, original.GetValueOrDefault(o.Key))))
             .ToList();
 
         logger.LogInformation(

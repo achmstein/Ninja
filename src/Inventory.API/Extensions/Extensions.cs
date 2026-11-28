@@ -85,6 +85,7 @@ public static class Extensions
         builder.AddRabbitMqEventBus("eventbus")
             .AddSubscription<OrderStatusChangedToConfirmedIntegrationEvent, OrderStatusChangedToConfirmedIntegrationEventHandler>()
             .AddSubscription<OrderStockReleasedIntegrationEvent, OrderStockReleasedIntegrationEventHandler>()
+            .AddSubscription<OrderItemsStockReleasedIntegrationEvent, OrderItemsStockReleasedIntegrationEventHandler>()
             .ConfigureJsonOptions(options =>
                 options.TypeInfoResolverChain.Add(InventoryIntegrationEventContext.Default));
     }
@@ -92,6 +93,7 @@ public static class Extensions
 
 [JsonSerializable(typeof(OrderStatusChangedToConfirmedIntegrationEvent))]
 [JsonSerializable(typeof(OrderStockReleasedIntegrationEvent))]
+[JsonSerializable(typeof(OrderItemsStockReleasedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogItemStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(CatalogOptionStockChangedIntegrationEvent))]
 [JsonSerializable(typeof(StockLowIntegrationEvent))]

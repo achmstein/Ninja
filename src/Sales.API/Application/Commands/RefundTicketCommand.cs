@@ -78,7 +78,8 @@ public class RefundTicketCommandHandler(
                 // proportion; the order's full menu value on this ticket is
                 // the denominator Loyalty divides by — the figure a void
                 // reverses outright
-                var amountByOrder = ticket.GetAmountByOrder();
+                // As rung up, before any item was cancelled: a cancel took its own share already
+                var amountByOrder = ticket.GetOriginalAmountByOrder();
                 var reversals = refund.RefundedByOrder()
                     .Select(r => new RefundOrderReversal(
                         r.OrderId,

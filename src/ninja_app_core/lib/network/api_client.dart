@@ -91,8 +91,8 @@ class ApiClient {
       requestId == null ? null : Options(headers: {'x-requestid': requestId});
 
   Future<Response<T>> get<T>(String path,
-      {Map<String, dynamic>? queryParameters}) {
-    return _dio.get<T>(path, queryParameters: queryParameters);
+      {Map<String, dynamic>? queryParameters, Map<String, dynamic>? headers}) {
+    return _dio.get<T>(path, queryParameters: queryParameters, options: headers == null ? null : Options(headers: headers));
   }
 
   Future<Response<T>> post<T>(String path, {dynamic data, String? requestId}) {

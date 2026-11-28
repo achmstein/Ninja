@@ -33,6 +33,13 @@ class TicketLineEntityTypeConfiguration : IEntityTypeConfiguration<TicketLine>
 
         builder.Property(l => l.AddedBy).HasMaxLength(64);
 
+        // What was cancelled of it after the kitchen had it
+        builder.Ignore(l => l.OriginalQty);
+        builder.Property(l => l.CancelledQty).HasPrecision(18, 2).HasDefaultValue(0m);
+        builder.Property(l => l.CancelledAmount).HasPrecision(18, 2).HasDefaultValue(0m);
+        builder.Property(l => l.CancelReason).HasMaxLength(TicketLine.CancelReasonLength);
+        builder.Property(l => l.CancelledBy).HasMaxLength(64);
+
         // Whose items these are on a shared table bill
         builder.Property(l => l.CustomerName).HasMaxLength(128);
         builder.Property(l => l.CustomerId).HasMaxLength(64);

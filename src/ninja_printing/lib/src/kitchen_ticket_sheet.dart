@@ -17,20 +17,27 @@ class KitchenTicketLabels {
   /// What a test page says under the station's name
   final String testBody;
 
+  /// What stands above a slip of cancelled items; left out, the ticket's language decides
+  final String? cancelled;
+
   const KitchenTicketLabels({
     required this.counter,
     required this.pickup,
     required this.reprint,
     required this.test,
     required this.testBody,
+    this.cancelled,
   });
+
+  String cancelledIn(String lang) => cancelled ?? (lang == 'ar' ? 'ملغي' : 'CANCELLED');
 }
 
 /// A station's part of an order on paper, the way a kitchen reads one: the
 /// station on top so the ticket goes to the right hands, then the order
 /// number, where it goes and the time in large type, then each line as
 /// quantity × product with how to make it underneath, and the customer's
-/// note. REPRINT or TEST stands above everything when it is one. Nothing
+/// note. REPRINT, TEST or CANCELLED stands above everything when it is one;
+/// a cancellation slip lists what was cancelled, and why. Nothing
 /// about money. White paper, black ink, the language's direction.
 class KitchenTicketSheet extends StatelessWidget {
   final KitchenTicket ticket;
@@ -82,8 +89,15 @@ class KitchenTicketSheet extends StatelessWidget {
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                if (ticket.isTest) banner(labels.test) else if (ticket.isReprint) banner(labels.reprint),
+                if (ticket.isTest)
+                  banner(labels.test)
+                else if (ticket.isCancellation)
+                  banner(labels.cancelledIn(lang))
+                else if (ticket.isReprint)
+                  banner(labels.reprint),
                 Text(ticket.stationName.pick(lang), textAlign: TextAlign.center, style: style(40, weight: FontWeight.w700)),
+                if (ticket.isCancellation && ticket.cancelReason != null)
+                  Text(ticket.cancelReason!, textAlign: TextAlign.center, style: style(26)),
                 if (ticket.isTest) ...[
                   const SizedBox(height: 12),
                   Text(labels.testBody, textAlign: TextAlign.center, style: style(26)),

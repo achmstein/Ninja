@@ -216,7 +216,9 @@ public class OrderQueries(OrderingContext context) : IOrderQueries
                         Units = oi.Units,
                         CustomizationsDescription = oi.CustomizationsDescription,
                         SpecialInstructions = oi.SpecialInstructions,
-                        StationId = oi.StationId
+                        StationId = oi.StationId,
+                        CancelledUnits = oi.CancelledUnits,
+                        CancelReason = oi.CancelReason
                     }).ToList(),
                 Parts = o.StationParts
                     .OrderBy(p => p.Id)
