@@ -1,5 +1,5 @@
 // How long an order has been in the kitchen decides the colour of its
-// header band and clock: amber once it has waited longer than a drink
+// top bar and clock: amber once it has waited longer than a drink
 // should take, red once it is the order someone is about to ask about.
 // Slower tiers than the till's pending queue (2/3 min): that one measures
 // a cashier's tap, this one measures actually making the thing.
@@ -8,7 +8,7 @@ export const DELAYED_AFTER_MINUTES = 10
 
 export type OrderUrgency = 'fresh' | 'warning' | 'delayed'
 
-/** What the card's header band is saying: how late the order is, that it is done, or that it is off. */
+/** What the ticket's bar and clock are saying: how late the order is, that it is done, or that it is off. */
 export type CardTone = OrderUrgency | 'ready' | 'cancelled'
 
 export function orderUrgency(
@@ -23,31 +23,31 @@ export function orderUrgency(
 }
 
 /**
- * The header band is the one place colour means something on the board:
- * the whole strip tints with the clock, the way every kitchen display does
- * it, so a late ticket is read across the room and not from a thin border.
+ * How late a ticket is shows in two places only: a thin bar across its top
+ * and the colour of its clock. The ticket itself stays white, as everything
+ * on the till does; a tinted band on every card made the board one wash of
+ * colour. A cancelled ticket's bar is hatched: it is not late, it is off.
  */
-export function toneBandClass(tone: CardTone): string {
+export function toneBarClass(tone: CardTone): string {
   switch (tone) {
-    // Solid, where a late card is only tinted: this one says stop
     case 'cancelled':
-      return 'bg-destructive text-white'
+      return 'bg-[repeating-linear-gradient(135deg,var(--destructive)_0_8px,transparent_8px_16px)]'
     case 'delayed':
-      return 'bg-destructive/10 dark:bg-destructive/20'
+      return 'bg-destructive'
     case 'warning':
-      return 'bg-amber-500/15 dark:bg-amber-500/20'
+      return 'bg-amber-500'
     case 'ready':
-      return 'bg-emerald-500/15 dark:bg-emerald-500/20'
+      return 'bg-emerald-500'
     default:
-      return 'bg-muted/50'
+      return 'bg-muted-foreground/40'
   }
 }
 
-/** The clock on the band, in the band's colour. */
+/** The clock, in the bar's colour. */
 export function toneClockClass(tone: CardTone): string {
   switch (tone) {
     case 'cancelled':
-      return 'text-white'
+      return 'text-muted-foreground'
     case 'delayed':
       return 'text-destructive'
     case 'warning':
@@ -56,22 +56,6 @@ export function toneClockClass(tone: CardTone): string {
       return 'text-emerald-700 dark:text-emerald-400'
     default:
       return 'text-foreground'
-  }
-}
-
-/** A late card's outline picks up the band's colour too, faintly. */
-export function toneBorderClass(tone: CardTone): string {
-  switch (tone) {
-    case 'cancelled':
-      return 'border-destructive'
-    case 'delayed':
-      return 'border-destructive/40'
-    case 'warning':
-      return 'border-amber-500/40'
-    case 'ready':
-      return 'border-emerald-500/40'
-    default:
-      return ''
   }
 }
 

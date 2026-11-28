@@ -104,7 +104,13 @@ class _BoardScreenState extends ConsumerState<BoardScreen> {
         exit: (context, key, child, exit) => key is ValueKey<int>
             ? BumpExit(exit: exit, label: '${l10n.ready} ${hashNumber(key.value)}', child: child)
             : FadeTransition(opacity: ReverseAnimation(exit), child: child),
-        builder: (context, children) => OrderGrid(children: children),
+        // A quiet ground under the tickets, as kds_web's board
+        builder: (context, children) => ColoredBox(
+          color: context.theme.colors.brightness == Brightness.dark
+              ? context.theme.colors.background
+              : context.theme.colors.muted.withValues(alpha: 0.6),
+          child: OrderGrid(children: children),
+        ),
         children: [
           if (isLoading)
             for (final (i, items) in const [2, 3, 1, 2].indexed) _CardSkeleton(key: ValueKey('skeleton-$i'), items: items),
@@ -162,7 +168,7 @@ class _NotInPlan extends StatelessWidget {
 }
 
 /// A card-shaped placeholder while the first board loads, the same outline
-/// kds_web draws: the header band with the number, the place and the clock,
+/// kds_web draws: the bar, where it goes with its number under it and the clock,
 /// a few item lines and the Ready bar
 class _CardSkeleton extends StatelessWidget {
   final int items;
@@ -179,9 +185,9 @@ class _CardSkeleton extends StatelessWidget {
     );
     return Container(
       decoration: BoxDecoration(
-        color: theme.colors.card,
+        color: theme.colors.background,
         border: Border.all(color: theme.colors.border),
-        borderRadius: BorderRadius.circular(Sizes.radius),
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
       ),
       clipBehavior: Clip.antiAlias,
       child: Shimmer.fromColors(
@@ -190,10 +196,19 @@ class _CardSkeleton extends StatelessWidget {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
+            Container(height: 5, color: theme.colors.muted),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+              padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
               child: Row(
-                children: [bar(width: 40), const SizedBox(width: 8), bar(width: 80, height: 24, radius: 6), const Spacer(), bar(width: 48, height: 20)],
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [bar(width: 112, height: 24, radius: 6), const SizedBox(height: 8), bar(width: 80)],
+                  ),
+                  const Spacer(),
+                  bar(width: 56, height: 28, radius: 6),
+                ],
               ),
             ),
             Container(height: 1, color: theme.colors.border),

@@ -54,6 +54,9 @@ const dictionary = {
   ready: { en: "Ready", ar: "جاهز" },
   counter: { en: "Counter", ar: "الكاشير" },
   pickup: { en: "Pickup", ar: "استلام" },
+  delivery: { en: "Delivery", ar: "توصيل" },
+  tallyOrders: { en: "orders", ar: "طلبات" },
+  tallyLate: { en: "late", ar: "متأخر" },
   walkIn: { en: "Walk-in", ar: "زبون" },
   // A delivery platform's order: the bag goes to its rider by the code
   sourceTalabat: { en: "Talabat", ar: "طلبات" },

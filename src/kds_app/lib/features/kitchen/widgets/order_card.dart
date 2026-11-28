@@ -14,22 +14,24 @@ import 'elapsed_ring.dart';
 /// The delivery platforms whose own mark we show; anything else falls back to its name
 const _platformLogos = {'Talabat': 'assets/images/talabat.png'};
 
-/// One order as a kitchen ticket, as kds_web's order-card and the way every
-/// kitchen display lays one out:
+/// One order as a kitchen ticket, as kds_web's order-card, in the till's own
+/// manner: a flat ticket under a thin rule, text in sizes and weights,
+/// colour only where it means something.
 ///
-/// - a header band tinted by how late the order is, carrying the clock as
-///   the loudest thing on the card, the ticket number small (it is what the
-///   till says, not what the kitchen shouts), a chip for where the order
-///   goes, and the customer's name on its own line when there is someone
-///   to call;
-/// - the lines, big enough to read at arm's length, quantity in its own
-///   column, modifiers under the product, special instructions in amber;
-/// - on the pass, the stations it is split between, each ticked when done
-///   (or marked printed, where a printer took it and nobody taps);
-/// - the one tap that moves it along — Ready on the board, Bring back in
-///   the history.
+/// - a thin bar across the top and the clock's colour say how late it is;
+/// - where it goes is the biggest line (the kitchen sends it there), with
+///   the ticket's number and who to call quiet under it, and the clock
+///   opposite;
+/// - the lines, big enough to read at arm's length, the count in its own
+///   column, options under the item, what the customer asked for in amber;
+/// - the order's note behind an amber rule, and on the pass the stations it
+///   is split between, in words;
+/// - the one tap that moves it along: Ready on the board, Bring back in the
+///   history.
 ///
-/// Nothing about money.
+/// An order cancelled at the till goes quiet (no fill, its lines struck
+/// through and faded, a hatched bar) and says so once, in red; it does not
+/// turn the whole ticket red. Nothing about money.
 class OrderCard extends StatelessWidget {
   final KitchenOrder order;
   final DateTime now;
@@ -57,7 +59,6 @@ class OrderCard extends StatelessWidget {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
     final brightness = theme.colors.brightness;
-    final dark = brightness == Brightness.dark;
     final amber = AppColors.amber(brightness);
     const tabular = [FontFeature.tabularFigures()];
 
@@ -86,12 +87,6 @@ class OrderCard extends StatelessWidget {
         : order.isPos
             ? l10n.counter
             : l10n.pickup;
-    final placeIcon = place.isNotEmpty
-        ? (order.placeKind == 'Room' ? FIcons.doorOpen : FIcons.armchair)
-        : order.isPos
-            ? FIcons.store
-            : FIcons.shoppingBag;
-
     // Who it is for: the name to call out. A counter sale or a table order
     // without a name needs nobody called, so the line is left out; an app
     // pickup without a name is a guest.
@@ -118,317 +113,284 @@ class OrderCard extends StatelessWidget {
     // One station is the whole order; the split is only worth showing past that
     final parts = showParts && order.parts.length > 1 ? order.parts : const <KitchenOrderPart>[];
 
-    // The band is the one place colour means something on the board: the
-    // whole strip tints with the clock, so a late ticket is read across the
-    // room and not from a thin border. The outline picks it up faintly.
-    final (Color band, Color clockColor, Color? outline) = switch (tone) {
-      // Heavier than a late card's tint, with a full outline: this one says stop
-      CardTone.cancelled => (
-          theme.colors.destructive.withValues(alpha: dark ? 0.4 : 0.25),
-          theme.colors.destructive,
-          theme.colors.destructive,
-        ),
-      CardTone.delayed => (
-          theme.colors.destructive.withValues(alpha: dark ? 0.2 : 0.1),
-          theme.colors.destructive,
-          theme.colors.destructive.withValues(alpha: 0.4),
-        ),
-      CardTone.warning => (
-          AppColors.amber500.withValues(alpha: dark ? 0.2 : 0.15),
-          amber,
-          AppColors.amber500.withValues(alpha: 0.4),
-        ),
-      CardTone.ready => (
-          AppColors.emerald500.withValues(alpha: dark ? 0.2 : 0.15),
-          AppColors.emerald(brightness),
-          AppColors.emerald500.withValues(alpha: 0.4),
-        ),
-      CardTone.fresh => (
-          theme.colors.muted.withValues(alpha: 0.5),
-          theme.colors.foreground,
-          null,
-        ),
+    // How late it is shows in two places only: the bar across the top and the
+    // clock's colour. The ticket itself stays plain, as everything on the till is
+    final (Color bar, Color clockColor) = switch (tone) {
+      CardTone.cancelled => (theme.colors.destructive, theme.colors.mutedForeground),
+      CardTone.delayed => (theme.colors.destructive, theme.colors.destructive),
+      CardTone.warning => (AppColors.amber500, amber),
+      CardTone.ready => (AppColors.emerald500, AppColors.emerald(brightness)),
+      CardTone.fresh => (theme.colors.mutedForeground.withValues(alpha: 0.4), theme.colors.foreground),
     };
+    const inset = EdgeInsets.symmetric(horizontal: 16);
+    final struck = isCancelled ? TextDecoration.lineThrough : null;
+    final quiet = theme.typography.sm.copyWith(color: theme.colors.mutedForeground, height: 20 / 14);
 
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: theme.colors.background,
-        borderRadius: BorderRadius.circular(Sizes.radius),
-        border: Border.all(color: outline ?? theme.colors.border),
+        color: isCancelled ? null : theme.colors.background,
+        borderRadius: BorderRadius.circular(Sizes.radiusCard),
+        border: Border.all(color: theme.colors.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Container(
-            color: band,
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
+          // A cancelled ticket's bar is hatched: it is not late, it is off
+          SizedBox(
+            height: 5,
+            child: isCancelled ? CustomPaint(painter: _Hatch(bar)) : ColoredBox(color: bar),
+          ),
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      hashNumber(order.orderNumber),
-                      style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.mutedForeground, fontFeatures: tabular),
-                    ),
-                    const SizedBox(width: 8),
-                    // All the free width is the chip's to use (kds_web's ms-auto on the clock); a Flexible next to a
-                    // Spacer split it in half and cut even "Table 1" short
-                    Expanded(
-                      child: LayoutBuilder(
-                        // No room for even the chip's icon (a clock run to hundreds of hours on a narrow card): the
-                        // number and the clock keep the row
-                        builder: (context, constraints) => constraints.maxWidth < 48
-                            ? const SizedBox.shrink()
-                            : Align(
-                                alignment: AlignmentDirectional.centerStart,
-                                child: platform != null
-                                    ? _platformChip(theme, platform)
-                                    : _chip(theme, icon: placeIcon, label: channel),
-                              ),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      if (platform != null)
+                        _platformLine(theme, platform)
+                      else
+                        Text(
+                          channel,
+                          style: theme.typography.xl.copyWith(
+                            fontSize: 22,
+                            height: 28 / 22,
+                            fontWeight: FontWeight.w700,
+                            color: isCancelled ? theme.colors.mutedForeground : theme.colors.foreground,
+                          ),
+                        ),
+                      Text(
+                        who.isEmpty ? hashNumber(order.orderNumber) : '${hashNumber(order.orderNumber)} · $who',
+                        style: quiet.copyWith(fontFeatures: tabular),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
                       ),
-                    ),
-                    const SizedBox(width: 8),
-                    // How far through its time, filling toward late; a
-                    // finished order has no clock to run
-                    if (!isReady) ...[
-                      ElapsedRing(since: order.since, now: now),
-                      const SizedBox(width: 8),
                     ],
-                    Text(
-                      clock,
-                      style: theme.typography.xl.copyWith(fontWeight: FontWeight.w700, color: clockColor, fontFeatures: tabular, height: 1),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                // How far through its time, filling toward late; a finished or
+                // cancelled order has no clock to run
+                if (!isReady && !isCancelled) ...[
+                  Padding(padding: const EdgeInsets.only(top: 4), child: ElapsedRing(since: order.since, now: now)),
+                  const SizedBox(width: 8),
+                ],
+                Text(
+                  clock,
+                  style: theme.typography.xl.copyWith(
+                      fontSize: 26, height: 28 / 26, fontWeight: FontWeight.w700, color: clockColor, fontFeatures: tabular),
+                ),
+              ],
+            ),
+          ),
+          if (isCancelled)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Row(
+                children: [
+                  Icon(FIcons.x, size: Sizes.icon, color: theme.colors.destructive),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(l10n.orderCancelled,
+                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive, height: 24 / 18)),
+                  ),
+                ],
+              ),
+            ),
+          if (handover != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Row(
+                children: [
+                  Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike,
+                      size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+                  const SizedBox(width: 6),
+                  Expanded(child: Text(handover, style: theme.typography.sm.copyWith(fontSize: 15, fontWeight: FontWeight.w500))),
+                ],
+              ),
+            ),
+          if (platform?.cancelledAt != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Row(
+                children: [
+                  Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(l10n.platformCancelled,
+                        style: theme.typography.sm.copyWith(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+                  ),
+                ],
+              ),
+            ),
+          Container(height: 1, color: theme.colors.border),
+          Opacity(
+            opacity: isCancelled ? 0.55 : 1,
+            child: Padding(
+              padding: inset,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  for (final (index, item) in order.items.indexed) ...[
+                    if (index > 0) Container(height: 1, color: theme.colors.border),
+                    // A tap strikes the item through while it is being worked
+                    ItemLine(
+                      orderNumber: order.orderNumber,
+                      index: index,
+                      enabled: onReady != null && !isCancelled,
+                      units: '${item.units}×',
+                      unitsStyle: theme.typography.xl.copyWith(
+                          fontSize: 20,
+                          height: 26 / 20,
+                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w700,
+                          decoration: struck,
+                          fontFeatures: tabular),
+                      name: item.productName.localized(context),
+                      nameStyle: theme.typography.lg.copyWith(
+                          fontSize: 19,
+                          height: 26 / 19,
+                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w600,
+                          decoration: struck,
+                          color: theme.colors.foreground),
+                      details: [
+                        if (item.customizationsDescription != null)
+                          Text(item.customizationsDescription!.localized(context),
+                              style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, color: theme.colors.mutedForeground)),
+                        if (item.specialInstructions != null)
+                          Text(item.specialInstructions!,
+                              style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: amber)),
+                      ],
                     ),
                   ],
-                ),
-                if (isCancelled) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(FIcons.triangleAlert, size: Sizes.icon, color: theme.colors.destructive),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(l10n.orderCancelled,
-                            style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive, height: 1.25)),
-                      ),
-                    ],
-                  ),
                 ],
-                if (who.isNotEmpty) ...[
-                  const SizedBox(height: 4),
-                  Text(
-                    who,
-                    style: theme.typography.lg.copyWith(fontWeight: FontWeight.w600, height: 1.25),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ],
-                if (handover != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike, size: Sizes.iconSmall, color: theme.colors.foreground),
-                      const SizedBox(width: 6),
-                      Expanded(child: Text(handover, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500))),
-                    ],
-                  ),
-                ],
-                if (platform?.cancelledAt != null) ...[
-                  const SizedBox(height: 4),
-                  Row(
-                    children: [
-                      Icon(FIcons.triangleAlert, size: Sizes.iconSmall, color: theme.colors.destructive),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(l10n.platformCancelled,
-                            style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
-                      ),
-                    ],
-                  ),
-                ],
-                if (parts.isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Wrap(
-                    spacing: 4,
-                    runSpacing: 4,
-                    children: [
-                      for (final part in parts)
-                        _partChip(
-                          theme,
-                          icon: part.showsOnScreen ? (part.isReady ? FIcons.check : null) : FIcons.printer,
-                          label: part.stationName.localized(context),
-                          done: part.isReady,
-                        ),
-                    ],
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
-          Container(height: 1, color: theme.colors.border),
-          Padding(
-            padding: const EdgeInsets.fromLTRB(12, 4, 12, 12),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                for (final (index, item) in order.items.indexed) ...[
-                  if (index > 0) Container(height: 1, color: theme.colors.border),
-                  // A tap strikes the item through while it is being worked
-                  ItemLine(
-                    orderNumber: order.orderNumber,
-                    index: index,
-                    enabled: onReady != null,
-                    units: '${item.units}×',
-                    unitsStyle: theme.typography.base.copyWith(fontWeight: FontWeight.w700, fontFeatures: tabular),
-                    name: item.productName.localized(context),
-                    nameStyle: theme.typography.base.copyWith(fontWeight: FontWeight.w600, height: 1.25, color: theme.colors.foreground),
-                    details: [
-                      if (item.customizationsDescription != null) ...[
-                        const SizedBox(height: 2),
-                        Text(item.customizationsDescription!.localized(context), style: theme.typography.sm.copyWith(color: theme.colors.mutedForeground, height: 1.35)),
-                      ],
-                      if (item.specialInstructions != null) ...[
-                        const SizedBox(height: 2),
-                        Text(item.specialInstructions!, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: amber, height: 1.35)),
-                      ],
-                    ],
-                  ),
-                ],
-                if (order.customerNote != null) ...[
-                  const SizedBox(height: 4),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-                    decoration: BoxDecoration(
-                      color: AppColors.amber500.withValues(alpha: 0.10),
-                      border: Border.all(color: AppColors.amber500.withValues(alpha: 0.4)),
-                      borderRadius: BorderRadius.circular(Sizes.radius),
-                    ),
-                    child: Row(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+          if (order.customerNote != null)
+            // The order's note: plain words behind an amber rule, not a boxed alert
+            Container(
+              margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: theme.colors.muted.withValues(alpha: 0.6),
+                border: const BorderDirectional(start: BorderSide(color: AppColors.amber500, width: 3)),
+              ),
+              child: Text(order.customerNote!,
+                  style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w500, color: theme.colors.foreground)),
+            ),
+          if (parts.isNotEmpty)
+            // The stations it is split between, in words: the ones still making
+            // it stand out, a done one is ticked, a printer's shows the printer
+            Padding(
+              padding: const EdgeInsets.fromLTRB(16, 0, 16, 10),
+              child: Wrap(
+                spacing: 6,
+                runSpacing: 2,
+                crossAxisAlignment: WrapCrossAlignment.center,
+                children: [
+                  for (final (index, part) in parts.indexed)
+                    Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        Icon(FIcons.messageSquareText, size: Sizes.iconSmall, color: amber),
-                        const SizedBox(width: 8),
-                        Expanded(child: Text(order.customerNote!, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: amber))),
+                        if (index > 0) ...[Text('·', style: quiet), const SizedBox(width: 6)],
+                        Flexible(
+                          child: Text(
+                            part.stationName.localized(context),
+                            overflow: TextOverflow.ellipsis,
+                            style: !part.isReady && part.showsOnScreen
+                                ? quiet.copyWith(color: theme.colors.foreground, fontWeight: FontWeight.w600)
+                                : quiet,
+                          ),
+                        ),
+                        if (!part.showsOnScreen || part.isReady) ...[
+                          const SizedBox(width: 4),
+                          Icon(part.showsOnScreen ? FIcons.check : FIcons.printer, size: 14, color: theme.colors.mutedForeground),
+                        ],
                       ],
                     ),
-                  ),
                 ],
-                if (onReady != null || onBringBack != null) ...[
-                  const SizedBox(height: 8),
-                  if (onBringBack != null)
-                    _button(theme, variant: FButtonVariant.outline, icon: FIcons.undo2, label: l10n.bringBack, onPress: onBringBack!)
-                  else if (isCancelled)
-                    // The same call as Ready: it takes the card off this screen
-                    _button(theme, variant: FButtonVariant.destructive, icon: FIcons.x, label: l10n.cancelledRemove, onPress: onReady!)
-                  else
-                    _button(theme, variant: null, icon: FIcons.check, label: l10n.ready, onPress: onReady!),
-                ],
-              ],
+              ),
             ),
-          ),
+          if (onReady != null || onBringBack != null)
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 0, 12, 12),
+              child: onBringBack != null
+                  ? _button(theme, variant: FButtonVariant.outline, icon: FIcons.undo2, label: l10n.bringBack, onPress: onBringBack!)
+                  : isCancelled
+                      // The same call as Ready: it takes the ticket off this screen. Plain, as the ticket is: nothing left to shout
+                      ? _button(theme, variant: FButtonVariant.outline, label: l10n.cancelledRemove, onPress: onReady!)
+                      : _button(theme, variant: null, label: l10n.ready, onPress: onReady!),
+            ),
         ],
       ),
     );
   }
 
-  /// The where-it-goes chip: an outline badge on the band, filled so it
-  /// reads as a chip on the tint, at a size the kitchen can read
-  Widget _chip(FThemeData theme, {required IconData icon, required String label}) {
-    return FBadge.raw(
-      variant: FBadgeVariant.outline,
-      style: FBadgeStyleDelta.delta(decoration: BoxDecorationDelta.delta(color: theme.colors.background)),
-      builder: (context, style) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
-            const SizedBox(width: 4),
-            Flexible(
-              child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: theme.colors.foreground), overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// A delivery platform's chip: its own logo, then the code large, as the
-  /// rider will say it
-  Widget _platformChip(FThemeData theme, KitchenPlatform platform) {
+  /// A delivery platform's order leads with its own logo and the code the
+  /// rider asks for, as big as a place's name
+  Widget _platformLine(FThemeData theme, KitchenPlatform platform) {
     final logo = _platformLogos[platform.name];
-    return FBadge.raw(
-      variant: FBadgeVariant.outline,
-      style: FBadgeStyleDelta.delta(decoration: BoxDecorationDelta.delta(color: theme.colors.background)),
-      builder: (context, style) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (logo != null)
-              Image.asset(logo, height: 16, semanticLabel: platform.name)
-            else
-              Text(platform.name, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w600)),
-            const SizedBox(width: 8),
-            Flexible(
-              child: Directionality(
-                textDirection: TextDirection.ltr,
-                child: Text(
-                  platform.code,
-                  overflow: TextOverflow.ellipsis,
-                  style: theme.typography.lg.copyWith(
-                    fontWeight: FontWeight.w700,
-                    color: theme.colors.foreground,
-                    fontFamily: 'monospace',
-                    fontFeatures: const [FontFeature.tabularFigures()],
-                    height: 1.2,
-                  ),
-                ),
+    return Row(
+      children: [
+        if (logo != null)
+          Image.asset(logo, height: 20, semanticLabel: platform.name)
+        else
+          Text(platform.name, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Directionality(
+            textDirection: TextDirection.ltr,
+            child: Text(
+              platform.code,
+              overflow: TextOverflow.ellipsis,
+              style: theme.typography.xl.copyWith(
+                fontSize: 22,
+                height: 28 / 22,
+                fontWeight: FontWeight.w700,
+                color: theme.colors.foreground,
+                fontFamily: 'monospace',
+                fontFeatures: const [FontFeature.tabularFigures()],
               ),
             ),
-          ],
+          ),
         ),
-      ),
+      ],
     );
   }
 
-  /// A station's share of the order on the pass: filled once its screen
-  /// marked it done; a printer's shows the printer, since nobody marks it
-  Widget _partChip(FThemeData theme, {required IconData? icon, required String label, required bool done}) {
-    final ink = done ? theme.colors.primaryForeground : theme.colors.foreground;
-    return FBadge.raw(
-      // No variant is the filled, primary badge
-      variant: done ? null : FBadgeVariant.outline,
-      style: done ? const FBadgeStyleDelta.context() : FBadgeStyleDelta.delta(decoration: BoxDecorationDelta.delta(color: theme.colors.background)),
-      builder: (context, style) => Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            if (icon != null) ...[
-              Icon(icon, size: Sizes.iconSmall, color: done ? ink : theme.colors.mutedForeground),
-              const SizedBox(width: 4),
-            ],
-            Flexible(
-              child: Text(label, style: theme.typography.sm.copyWith(fontWeight: FontWeight.w500, color: ink), overflow: TextOverflow.ellipsis),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  /// The card's main action across its whole width — tapped with a wet finger
-  Widget _button(FThemeData theme, {required FButtonVariant? variant, required IconData icon, required String label, required VoidCallback onPress}) {
+  /// The ticket's main action across its whole width, tapped with a wet finger
+  Widget _button(FThemeData theme, {required FButtonVariant? variant, IconData? icon, required String label, required VoidCallback onPress}) {
     return SizedBox(
       height: Sizes.controlLarge,
       child: FButton(
         variant: variant,
         onPress: acting ? null : onPress,
-        prefix: Icon(icon, size: Sizes.icon),
-        child: Text(label, style: theme.typography.base.forButton),
+        prefix: icon == null ? null : Icon(icon, size: Sizes.icon),
+        child: Text(label, style: theme.typography.lg.forButton.copyWith(fontWeight: FontWeight.w600)),
       ),
     );
   }
+}
+
+/// Diagonal stripes across a cancelled ticket's bar
+class _Hatch extends CustomPainter {
+  final Color color;
+  const _Hatch(this.color);
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = color
+      ..strokeWidth = 5;
+    canvas.clipRect(Offset.zero & size);
+    for (var x = -size.height; x < size.width + size.height; x += 14) {
+      canvas.drawLine(Offset(x, size.height), Offset(x + size.height, 0), paint);
+    }
+  }
+
+  @override
+  bool shouldRepaint(_Hatch old) => old.color != color;
 }

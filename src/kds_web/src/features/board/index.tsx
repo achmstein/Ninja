@@ -29,28 +29,29 @@ export function Board() {
   return (
     // The header is 4rem; the rest of the viewport is the board, which
     // scrolls on its own so the header never leaves the screen
-    <div className='flex h-[calc(100svh-4rem)] flex-col'>
+    // A quiet ground under white tickets
+    <div className='bg-muted/60 dark:bg-background flex h-[calc(100svh-4rem)] flex-col'>
       {!isLoading && open.length === 0 ? (
         <div className='text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center'>
           <ChefHat className='size-16 opacity-40' />
           <p className='text-2xl font-semibold'>{t('noOrders')}</p>
         </div>
       ) : (
-        <div className='min-h-0 flex-1 overflow-y-auto p-3'>
+        <div className='min-h-0 flex-1 overflow-y-auto p-4'>
           {/* Columns, not a grid: cards are as tall as their own order, and a
               grid would pad every row out to its tallest card, leaving holes
               under the short ones */}
-          <div className='columns-[16rem] gap-3'>
+          <div className='columns-[18.75rem] gap-4'>
             {isLoading &&
               [2, 3, 1, 2].map((items, i) => (
-                <div key={i} className='mb-3 break-inside-avoid'>
+                <div key={i} className='mb-4 break-inside-avoid'>
                   <OrderCardSkeleton items={items} />
                 </div>
               ))}
             {open.map((order) => {
               const id = Number(order.orderNumber)
               return (
-                <div key={id} className='mb-3 break-inside-avoid'>
+                <div key={id} className='mb-4 break-inside-avoid'>
                   <OrderCard
                     order={order}
                     nowMs={nowMs}

@@ -18,9 +18,9 @@ class OrderGrid extends StatelessWidget {
   const OrderGrid({
     super.key,
     required this.children,
-    this.minCardWidth = 256,
-    this.gap = 12,
-    this.padding = const EdgeInsets.all(12),
+    this.minCardWidth = 300,
+    this.gap = 16,
+    this.padding = const EdgeInsets.all(16),
   });
 
   @override

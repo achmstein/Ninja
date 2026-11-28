@@ -20,6 +20,7 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { BranchSwitcher } from '@/components/layout/branch-switcher'
 import { StationSwitcher } from '@/components/layout/station-switcher'
+import { BoardTally } from '@/features/board/board-tally'
 import { HistoryDialog } from '@/features/board/history-dialog'
 import { useSoundUnlock } from '@/features/board/use-sound-unlock'
 import { useFullscreen } from '@/hooks/use-fullscreen'
@@ -63,6 +64,7 @@ export function KitchenHeader() {
       <BranchSwitcher />
       <StationSwitcher />
       <div className='ms-auto flex items-center gap-1'>
+        <BoardTally />
         {/* Browsers keep audio muted until a tap; the crossed speaker is
             that tap, and it leaves once sound is unlocked */}
         {!soundUnlocked && (
