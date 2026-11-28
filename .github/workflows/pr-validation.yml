@@ -97,7 +97,7 @@ jobs:
       fail-fast: false
       matrix:
         # The six apps and the shared packages that hold code of their own
-        app: [admin_web, pos_web, kds_web, client_web, control_web, site_web, web-packages/web-core]
+        app: [admin_web, pos_web, kds_web, client_web, control_web, site_web, web-packages/web-core, web-packages/ui]
     defaults:
       run:
         working-directory: src/${{ matrix.app }}

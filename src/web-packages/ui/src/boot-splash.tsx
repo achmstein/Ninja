@@ -1,4 +1,4 @@
-import { NinjaWordmark } from '@/components/ninja-wordmark'
+import { NinjaWordmark } from './ninja-wordmark'
 
 /**
  * The loading screen: the platform's wordmark on the dark tile colour and a

@@ -1,6 +1,8 @@
 @import 'tailwindcss';
 @import 'tw-animate-css';
 @import './theme.css';
+/* The shared components' classes (@ninja/ui) */
+@source '../../../web-packages/ui/src';
 
 @custom-variant dark (&:is(.dark *));
 

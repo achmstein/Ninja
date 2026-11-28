@@ -1,6 +1,6 @@
-import { PLATFORM_NAME } from '@/lib/brand'
-import { useT } from '@/lib/i18n'
-import { cn } from '@/lib/utils'
+import { cn } from '@ninja/web-core/cn'
+import { useT } from './i18n'
+import { PLATFORM_NAME } from './platform'
 
 /**
  * The platform's wordmark as one path (its display face traced, so no

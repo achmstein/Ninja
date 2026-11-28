@@ -1,7 +1,7 @@
+import { PoweredBy } from '@ninja/ui/ninja-wordmark'
 import { useBrandName } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { BrandMark } from '@/components/brand-mark'
-import { PoweredBy } from '@/components/ninja-wordmark'
 
 type AuthLayoutProps = {
   children: React.ReactNode

@@ -42,7 +42,7 @@ export function createLanguageStore({
     document.documentElement.lang = language
     if (followDirection) document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
   }
-  return create<LanguageState>()(
+  const store = create<LanguageState>()(
     persist(
       (set) => ({
         language: 'en',
@@ -59,6 +59,16 @@ export function createLanguageStore({
       }
     )
   )
+  appLanguage = store
+  return store
+}
+
+// The language store the app made: the shared components (@ninja/ui) speak in it
+let appLanguage: LanguageStore | null = null
+
+function theAppLanguage(): LanguageStore {
+  if (!appLanguage) throw new Error('No language store yet: the app calls createLanguageStore in its lib/i18n.ts')
+  return appLanguage
 }
 
 // CLDR plural category per language ("few" = 3–10 in Arabic, etc.), so plural
@@ -83,19 +93,25 @@ export function formatMessage(entry: Message, language: Language, params?: Trans
   return template.replace(/\{(\w+)\}/g, (whole, name) => (name in params ? String(params[name]) : whole))
 }
 
-/** The translate functions over one dictionary, in the language `useLanguage` holds */
-export function createI18n<D extends Record<string, Message>>(dictionary: D, useLanguage: LanguageStore) {
+/**
+ * The translate functions over one dictionary, in the language `languageStore`
+ * holds; without one, in the app's own (for a shared package's dictionary).
+ */
+export function createI18n<D extends Record<string, Message>>(dictionary: D, languageStore?: LanguageStore) {
   type Key = keyof D & string
+  // Looked up at call time: a package's dictionary is made before the app's store
+  const store = () => languageStore ?? theAppLanguage()
+  const useLanguageNow = () => store()((s) => s.language)
 
   /** The `t` of a component: re-renders when the language changes */
   function useT() {
-    const language = useLanguage((s) => s.language)
+    const language = useLanguageNow()
     return (key: Key, params?: TranslateParams) => formatMessage(dictionary[key], language, params)
   }
 
   /** For code outside the React tree (query-cache error handlers, the toast) */
   function translate(key: Key, params?: TranslateParams): string {
-    return formatMessage(dictionary[key], useLanguage.getState().language, params)
+    return formatMessage(dictionary[key], store().getState().language, params)
   }
 
   /**
@@ -108,7 +124,7 @@ export function createI18n<D extends Record<string, Message>>(dictionary: D, use
 
   /** Picks the right side of a LocalizedText for the active language */
   function useLocalized() {
-    const language = useLanguage((s) => s.language)
+    const language = useLanguageNow()
     return (text: LocalizedTextLike | undefined): string =>
       (language === 'ar' ? text?.ar : text?.en) || text?.en || text?.ar || ''
   }
@@ -120,7 +136,7 @@ export function createI18n<D extends Record<string, Message>>(dictionary: D, use
    * same in both languages (owner's call).
    */
   function useLocale(): string {
-    const language = useLanguage((s) => s.language)
+    const language = useLanguageNow()
     return language === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'
   }
 

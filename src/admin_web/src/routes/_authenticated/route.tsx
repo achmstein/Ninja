@@ -1,9 +1,9 @@
 import { createFileRoute, Navigate, useLocation } from '@tanstack/react-router'
 import { getRealmRoles } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
+import { BootSplash } from '@ninja/ui/boot-splash'
 import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
-import { BootSplash } from '@/components/boot-splash'
 import { ErrorState } from '@/components/error-state'
 import { AuthenticatedLayout } from '@/components/layout/authenticated-layout'
 

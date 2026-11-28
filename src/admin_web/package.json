@@ -22,6 +22,7 @@
     "@dnd-kit/utilities": "3.2.2",
     "@mapbox/mapbox-gl-rtl-text": "0.3.0",
     "@microsoft/signalr": "10.0.11",
+    "@ninja/ui": "*",
     "@ninja/web-core": "*",
     "@radix-ui/react-alert-dialog": "1.1.23",
     "@radix-ui/react-avatar": "1.2.6",

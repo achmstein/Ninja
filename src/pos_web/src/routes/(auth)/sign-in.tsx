@@ -4,6 +4,7 @@ import { createFileRoute, useNavigate, useSearch } from '@tanstack/react-router'
 import { loginPageParams } from '@/config/oidc-config'
 import { Loader2, RefreshCw } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { PoweredBy } from '@ninja/ui/ninja-wordmark'
 import { useTheme } from '@ninja/web-core/theme'
 import { useBrandName } from '@/lib/brand'
 import { useLanguage } from '@/lib/i18n'
@@ -11,7 +12,6 @@ import { useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { BrandMark } from '@/components/brand-mark'
-import { PoweredBy } from '@/components/ninja-wordmark'
 
 const searchSchema = z.object({
   redirect: z.string().optional(),
