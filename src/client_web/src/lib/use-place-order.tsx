@@ -21,6 +21,7 @@ import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { useGuestGate } from '@/components/auth/guest-gate'
 import { accountPreview, usePhoneGate } from '@/components/auth/phone-gate'
+import { useDockPreview } from '@/lib/dock-preview'
 import { useProfileGate } from '@/components/auth/profile-gate'
 
 /**
@@ -146,7 +147,8 @@ export function usePlaceOrder({
         : await ensureGuestDetails(orderKnows)
     if (isGuest && !guestContact) return false
     if (previewing) {
-      toast.success(t('phoneGatePreviewSent', { name: guestContact?.name ?? '' }))
+      // What a customer sees once an order is in: no alert, the dock says Sent (lib/dock-preview stands in for the order)
+      useDockPreview.setState({ stage: 'sent' })
       if (onPlaced) onPlaced(clear)
       else clear()
       return true

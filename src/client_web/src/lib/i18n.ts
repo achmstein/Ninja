@@ -513,7 +513,6 @@ const webExtras = {
   phoneGateNameTitle: { en: "What's your name?", ar: 'اسمك إيه؟' },
   phoneGateNameHint: { en: 'So we can call you when your order is ready.', ar: 'عشان نناديك لما طلبك يجهز.' },
   phoneGateDone: { en: 'Send my order', ar: 'ابعت طلبي' },
-  phoneGatePreviewSent: { en: 'Preview: welcome {name}. The order was not sent.', ar: 'معاينة: أهلاً {name}. الطلب متبعتش.' },
   deliveryNeedsAccount: { en: 'Sign in to order delivery from here', ar: 'سجّل دخول عشان تطلب توصيل من هنا' },
   deliveryNeedName: { en: 'Your name, so the rider knows whom to ask for', ar: 'اسمك، عشان المندوب يعرف يسأل على مين' },
   guestDetailsHint: {
