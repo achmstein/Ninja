@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { Plus } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { Input } from '@/components/ui/input'
 
 export type AddressDetail = {
   key: string
@@ -9,22 +10,34 @@ export type AddressDetail = {
   onChange: (value: string) => void
   /** A number is typed (a floor) */
   numeric?: boolean
-  /** Words are typed (a note): a wider field */
-  wide?: boolean
   maxLength?: number
 }
 
 /**
  * What helps the rider find the door, each added only if the customer wants
- * to: the building, the floor, the apartment, a word for the rider (the street's
- * own box already takes a landmark, so this is never a second one). Three empty boxes
+ * to: the building, the floor, the apartment. Three empty boxes
  * under the street read as three things owed; a row of small "+ Building"
  * chips reads as nothing owed at all. A tap turns a chip into its field,
  * Enter goes on to the next one not yet given, and a given one shows what
  * was typed and opens again on a tap.
+ *
+ * A note for the rider is a sentence, not a number, so it is not a chip: a
+ * quiet line under the row that opens a field across the sheet, and folds
+ * back when left empty.
  */
-export function DetailChips({ title, optional, details }: { title: string; optional: string; details: AddressDetail[] }) {
+export function DetailChips({
+  title,
+  optional,
+  details,
+  note,
+}: {
+  title: string
+  optional: string
+  details: AddressDetail[]
+  note?: { label: string; value: string; onChange: (value: string) => void; maxLength?: number }
+}) {
   const [editing, setEditing] = useState<string | null>(null)
+  const [noting, setNoting] = useState(false)
 
   return (
     <div className='flex flex-col gap-2'>
@@ -55,7 +68,7 @@ export function DetailChips({ title, optional, details }: { title: string; optio
                 maxLength={detail.maxLength}
                 aria-label={detail.label}
                 // At least 16px, or iOS zooms the page into the field
-                className={cn('min-w-0 bg-transparent text-base font-semibold outline-none', detail.wide ? 'w-44' : 'w-16')}
+                className={cn('w-16 min-w-0 bg-transparent text-base font-semibold outline-none')}
               />
             </label>
           ) : detail.value.trim() ? (
@@ -81,6 +94,23 @@ export function DetailChips({ title, optional, details }: { title: string; optio
           ),
         )}
       </div>
+      {note &&
+        (noting || note.value.trim() ? (
+          <Input
+            autoFocus={noting}
+            value={note.value}
+            onChange={(e) => note.onChange(e.target.value)}
+            onBlur={() => setNoting(false)}
+            placeholder={note.label}
+            aria-label={note.label}
+            maxLength={note.maxLength}
+          />
+        ) : (
+          <button type='button' onClick={() => setNoting(true)} className='text-muted-foreground text-note flex min-h-11 items-center gap-1.5 self-start px-1'>
+            <Plus className='size-3.5' />
+            {note.label}
+          </button>
+        ))}
     </div>
   )
 }
