@@ -3,6 +3,9 @@
     <StartupCommand>npm run dev</StartupCommand>
     <!-- Keep `dotnet build` fast; the production bundle is built by npm/CI, not MSBuild -->
     <ShouldRunBuildScript>false</ShouldRunBuildScript>
+    <!-- The web apps are one npm workspace at src/, installed once (npm ci there);
+         five projects installing into it in parallel would corrupt it -->
+    <ShouldRunNpmInstall>false</ShouldRunNpmInstall>
     <BuildOutputFolder>$(MSBuildProjectDirectory)\dist</BuildOutputFolder>
   </PropertyGroup>
 </Project>
