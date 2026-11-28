@@ -20,6 +20,7 @@ import { useOrderFollowsAddress } from '@/lib/use-branch-switch'
 import { useGuestStore } from '@/stores/guest-store'
 import { useActivePlace, useActivePlaceConfirmed } from '@/stores/place-store'
 import { useGuestGate } from '@/components/auth/guest-gate'
+import { accountPreview, usePhoneGate } from '@/components/auth/phone-gate'
 import { useProfileGate } from '@/components/auth/profile-gate'
 
 /**
@@ -49,6 +50,7 @@ export function usePlaceOrder({
   const tableUnconfirmed = destination?.kind === 'place' && activePlace != null && !placeConfirmed
   const { ensureProfileComplete, profileGateDialog } = useProfileGate()
   const { ensureGuestDetails, guestGateDialog } = useGuestGate()
+  const { ensurePhoneAccount, phoneGateDialog } = usePhoneGate()
   const ensureGuestId = useGuestStore((s) => s.ensureGuestId)
   const isGuest = !auth.isAuthenticated
   const { lines, clear } = useCart()
@@ -133,8 +135,22 @@ export function usePlaceOrder({
     // The tray says what stands in the way and holds the button; this is the last word
     if (delivery.active && !delivery.ready) return false
     // A delivery already carries the number to call: the guest is not asked for it twice
-    const guestContact = isGuest ? await ensureGuestDetails({ phone: (delivery.active && delivery.address?.phone) || undefined }) : null
+    const orderKnows = { phone: (delivery.active && delivery.address?.phone) || undefined }
+    // The account-by-phone flow, tried in a development build only: the number is proved with a code
+    // and nothing is placed, since no server takes such an account yet (components/auth/phone-gate)
+    const previewing = isGuest && accountPreview()
+    const guestContact = !isGuest
+      ? null
+      : previewing
+        ? await ensurePhoneAccount({ ...orderKnows, name: useGuestStore.getState().contact?.name || undefined })
+        : await ensureGuestDetails(orderKnows)
     if (isGuest && !guestContact) return false
+    if (previewing) {
+      toast.success(t('phoneGatePreviewSent', { name: guestContact?.name ?? '' }))
+      if (onPlaced) onPlaced(clear)
+      else clear()
+      return true
+    }
     if (!isGuest && !(await ensureProfileComplete())) return false
 
     // Minted on the first order that needs it; set before the request so the interceptor sends it
@@ -170,6 +186,7 @@ export function usePlaceOrder({
       <>
         {profileGateDialog}
         {guestGateDialog}
+        {phoneGateDialog}
       </>
     ),
   }
