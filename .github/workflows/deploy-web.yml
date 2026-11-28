@@ -36,6 +36,10 @@ jobs:
         with:
           node-version: '22'
 
+      # One npm workspace at src/: installed once for every app
+      - name: Install web workspace
+        run: cd src && npm ci
+
       - name: Build admin_web
         if: ${{ github.event.inputs.app == 'both' || github.event.inputs.app == 'admin' }}
         env:
@@ -57,7 +61,6 @@ jobs:
           VITE_FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_WEB_VAPID_KEY }}
         run: |
           cd src/admin_web
-          npm ci
           npm run build
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/admin-web
@@ -77,7 +80,6 @@ jobs:
           VITE_FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_WEB_VAPID_KEY }}
         run: |
           cd src/client_web
-          npm ci
           npm run build
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/client-web
@@ -89,7 +91,6 @@ jobs:
           VITE_KEYCLOAK_REALM: chillax
         run: |
           cd src/pos_web
-          npm ci
           npm run build
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/pos-web
@@ -101,7 +102,6 @@ jobs:
           VITE_KEYCLOAK_REALM: chillax
         run: |
           cd src/kds_web
-          npm ci
           npm run build
           mkdir -p ../../web-artifacts
           cp -r dist ../../web-artifacts/kds-web

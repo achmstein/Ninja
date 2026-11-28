@@ -1,1 +1,1 @@
-export { default } from '../web-config/prettier.js'
+export { default } from '@ninja/config/prettier'

@@ -96,17 +96,19 @@ jobs:
         run: |
           set -e
           mkdir -p web-artifacts
+          # One npm workspace at src/: installed once for every app
+          (cd src && npm ci)
           for app in admin_web client_web pos_web kds_web control_web; do
             name="${app%_web}-web"
             echo "::group::$name"
-            (cd "src/$app" && npm ci && npm run build)
+            (cd "src/$app" && npm run build)
             cp -r "src/$app/dist" "web-artifacts/$name"
             echo "::endgroup::"
           done
           # The platform's own site at the bare domain: the home page in English and
           # Arabic, each rendered to HTML by its build, with privacy, terms and support
           echo "::group::site"
-          (cd src/site_web && npm ci && npm run build)
+          (cd src/site_web && npm run build)
           cp -r src/site_web/dist web-artifacts/site
           echo "::endgroup::"
 

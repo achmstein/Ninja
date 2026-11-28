@@ -1,0 +1,19 @@
+{
+  "name": "ninja-web",
+  "private": true,
+  "description": "npm workspace of the web apps and their shared packages (docs/frontend-architecture-plan.md, step 1). Install once here: npm ci. Build or test an app from its folder as before, or here with -w <app>.",
+  "workspaces": [
+    "web-packages/*",
+    "admin_web",
+    "pos_web",
+    "client_web",
+    "control_web",
+    "kds_web",
+    "site_web"
+  ],
+  "scripts": {
+    "lint": "npm run lint --workspaces --if-present",
+    "format:check": "npm run format:check --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present"
+  }
+}

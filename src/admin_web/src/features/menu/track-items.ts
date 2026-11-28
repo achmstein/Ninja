@@ -116,11 +116,7 @@ function draftOf(recipe: ProposedRecipe, item: CatalogItemDto | undefined): Reci
 
 /** A name folded for matching: case, spacing and Arabic marks do not count */
 const foldName = (text: string | null | undefined): string =>
-  (text ?? '')
-    .replace(/[ً-ْـ]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase()
+  (text ?? '').replace(/[ً-ْـ]/g, '').replace(/\s+/g, ' ').trim().toLowerCase()
 
 /** The draft with every "new:<alias>" pointed at the ingredient it was merged into */
 function remapNew(draft: RecipeDraft, aliases: Map<string, string>): RecipeDraft {

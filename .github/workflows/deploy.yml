@@ -53,17 +53,16 @@ jobs:
           VITE_FIREBASE_APP_ID: ${{ secrets.FIREBASE_WEB_APP_ID }}
           VITE_FIREBASE_VAPID_KEY: ${{ secrets.FIREBASE_WEB_VAPID_KEY }}
         run: |
-          cd src/admin_web
+          # One npm workspace at src/: installed once for every app
+          cd src
           npm ci
+          cd admin_web
           npm run build
           cd ../client_web
-          npm ci
           npm run build
           cd ../pos_web
-          npm ci
           npm run build
           cd ../kds_web
-          npm ci
           npm run build
 
       - name: Generate Docker Compose artifacts

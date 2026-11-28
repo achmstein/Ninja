@@ -1,6 +1,6 @@
 // One Prettier config for the six web apps. Each app's prettier.config.js:
 //
-//   export { default } from '../web-config/prettier.js'
+//   export { default } from '@ninja/config/prettier'
 //
 // Plugins are resolved from the folder Prettier runs in, so each app lists
 // prettier, @trivago/prettier-plugin-sort-imports and

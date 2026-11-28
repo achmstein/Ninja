@@ -1,6 +1,0 @@
-{
-  "name": "@ninja/config",
-  "private": true,
-  "type": "module",
-  "description": "ESLint and Prettier configs shared by the six web apps; becomes a workspace package in step 1 of docs/frontend-architecture-plan.md"
-}

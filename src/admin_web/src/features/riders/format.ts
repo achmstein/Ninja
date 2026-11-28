@@ -9,14 +9,7 @@ export type RiderStage = 'Assigned' | 'OnTheWay' | 'Delivered' | 'Failed' | 'Ret
 
 /** One step of a delivery's history */
 export type DeliveryAction =
-  | 'Assigned'
-  | 'Unassigned'
-  | 'Reassigned'
-  | 'Out'
-  | 'Delivered'
-  | 'Failed'
-  | 'Returned'
-  | 'CashIn'
+  'Assigned' | 'Unassigned' | 'Reassigned' | 'Out' | 'Delivered' | 'Failed' | 'Returned' | 'CashIn'
 
 /** The widest window the history endpoint takes, in days */
 export const MAX_HISTORY_DAYS = 93

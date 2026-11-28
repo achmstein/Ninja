@@ -51,12 +51,17 @@ if ($all -or $Images -or $Only) {
 
 if ($all -or $Web) {
     $env:VITE_KEYCLOAK_URL = 'https://auth.localhost'
+    # One npm workspace at src/ holds every web app: installed once
+    if (-not (Test-Path (Join-Path $root 'src
+ode_modules'))) {
+        Push-Location (Join-Path $root 'src')
+        try { npm ci --no-audit --no-fund | Out-Null } finally { Pop-Location }
+    }
     foreach ($app in @('admin_web', 'client_web', 'pos_web', 'kds_web', 'control_web')) {
         $name = $app.Replace('_web', '-web')
         Write-Host "web    $name"
         Push-Location (Join-Path $root "src\$app")
         try {
-            if (-not (Test-Path node_modules)) { npm ci --no-audit --no-fund | Out-Null }
             $ErrorActionPreference = 'Continue'
             & npx.cmd vite build --logLevel error 2>&1 | Out-Host
             $code = $LASTEXITCODE
@@ -72,7 +77,6 @@ if ($all -or $Web) {
     Write-Host "web    site"
     Push-Location (Join-Path $root 'src\site_web')
     try {
-        if (-not (Test-Path node_modules)) { npm ci --no-audit --no-fund | Out-Null }
         $ErrorActionPreference = 'Continue'
         & npm.cmd run build --silent 2>&1 | Out-Host
         $code = $LASTEXITCODE

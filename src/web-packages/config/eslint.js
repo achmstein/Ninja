@@ -1,11 +1,10 @@
 // One ESLint config for the six web apps (docs/frontend-architecture-plan.md,
 // step 0). Each app's eslint.config.js is two lines:
 //
-//   import { ninjaEslint } from '../web-config/eslint.js'
+//   import { ninjaEslint } from '@ninja/config/eslint'
 //   export default ninjaEslint(import.meta.url, { ... })
 //
-// The plugins are loaded from the calling app's node_modules (this folder has
-// none until the npm workspace of step 1 makes it @ninja/config).
+// The plugins are loaded as the calling app resolves them (its devDependencies).
 //
 // Severity: rules an app already passed stay errors. Everything new is a
 // warning, and each app's lint script caps warnings with --max-warnings at

@@ -1,9 +1,9 @@
-# web-config
+# @ninja/config
 
 The lint and format rules the six web apps share (step 0 of
-`docs/frontend-architecture-plan.md`). In step 1 this folder becomes the
-`@ninja/config` workspace package; until then each app imports it by path and
-keeps the plugins in its own `devDependencies`.
+`docs/frontend-architecture-plan.md`), a package of the npm workspace rooted
+at `src/`. Each app lists `"@ninja/config": "*"` and keeps the ESLint and
+Prettier plugins in its own `devDependencies`.
 
 - `eslint.js`: `ninjaEslint(import.meta.url, options)`. Rules an app already
   passed are errors; the plan's new rules (files over 400 lines, shared code
@@ -22,7 +22,7 @@ same commit.
 
 | App | Cap (2026-11-28) |
 |---|---|
-| admin_web | 79 |
+| admin_web | 75 |
 | pos_web | 88 |
 | client_web | 48 |
 | control_web | 47 |

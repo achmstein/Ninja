@@ -1,4 +1,4 @@
-import { ninjaEslint } from '../web-config/eslint.js'
+import { ninjaEslint } from '@ninja/config/eslint'
 
 export default ninjaEslint(import.meta.url, {
   rules: {

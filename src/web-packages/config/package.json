@@ -1,0 +1,11 @@
+{
+  "name": "@ninja/config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ESLint and Prettier configs shared by the six web apps",
+  "exports": {
+    "./eslint": "./eslint.js",
+    "./prettier": "./prettier.js"
+  }
+}
