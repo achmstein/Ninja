@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CheckCircle2, Loader2, Play } from 'lucide-react'
-import { type ReservationViewModel, type TariffViewModel } from '@/api/spaces'
+import { type ReservationViewModel, type TariffViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {

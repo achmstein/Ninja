@@ -3,12 +3,12 @@ import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { CreditCard, FlaskConical, Lock, Smartphone } from 'lucide-react'
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
-import { type PaymentStatusView } from '@/api/sales'
+import { type PaymentStatusView } from '@ninja/api/sales'
 import {
   cancelOnlinePaymentMutation,
   getOnlinePaymentOptions,
   simulateOnlinePaymentMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
+} from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'

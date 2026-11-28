@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { totalWith } from './bill'
 
 const ticket = (over: Partial<TicketDetail>): TicketDetail => ({

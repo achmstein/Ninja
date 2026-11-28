@@ -1,6 +1,6 @@
 import { Flame } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 

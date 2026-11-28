@@ -1,4 +1,4 @@
-import type { BranchResponse } from '@/api/tenant'
+import type { BranchResponse } from '@ninja/api/tenant'
 import { dayStartHour } from './branch'
 
 /**

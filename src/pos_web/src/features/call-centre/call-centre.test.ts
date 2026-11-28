@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { DeliveryAlternative, StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import { emptyDelivery } from '@/features/sale/cart'
 import { areaById, branchOffers, callerDelivery, chosenArea, offeredBranch, pinArea } from './call-centre'
 

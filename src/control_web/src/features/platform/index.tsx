@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { AlertTriangle, ArrowUpCircle, Mail, MailX, Plus } from 'lucide-react'
-import type { TenantSummary, TenantUsage } from '@/api/control'
+import type { TenantSummary, TenantUsage } from '@ninja/api/control'
 import {
   fleetUpgradeMutation,
   getPlatformBackupsOptions,
@@ -13,7 +13,7 @@ import {
   listLeadsOptions,
   listTenantsOptions,
   listTenantsQueryKey,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { megabytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

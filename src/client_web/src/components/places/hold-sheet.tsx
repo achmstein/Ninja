@@ -1,4 +1,4 @@
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { PlaceIcon } from '@/lib/places'
 import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet'

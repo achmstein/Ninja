@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import { moveLines } from '@/lib/order-move'
 

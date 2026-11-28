@@ -9,9 +9,8 @@
     "lint": "eslint . --max-warnings 73",
     "test": "vitest run",
     "preview": "vite preview",
-    "generate:api": "node scripts/generate-api.mjs",
     "generate:i18n": "node scripts/generate-i18n.mjs",
-    "generate": "npm run generate:api && npm run generate:i18n",
+    "generate": "npm run generate:i18n",
     "format:check": "prettier --check .",
     "format": "prettier --write .",
     "knip": "knip"
@@ -22,6 +21,7 @@
     "@dnd-kit/utilities": "3.2.2",
     "@mapbox/mapbox-gl-rtl-text": "0.3.0",
     "@microsoft/signalr": "10.0.11",
+    "@ninja/api": "*",
     "@ninja/ui": "*",
     "@ninja/web-core": "*",
     "@radix-ui/react-alert-dialog": "1.1.23",
@@ -80,7 +80,6 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@hey-api/openapi-ts": "^0.99.0",
     "@ninja/config": "*",
     "@tanstack/eslint-plugin-query": "^5.91.2",
     "@tanstack/react-query-devtools": "5.103.1",

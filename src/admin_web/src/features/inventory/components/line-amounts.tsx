@@ -1,4 +1,4 @@
-import { type LocalizedText } from '@/api/inventory'
+import { type LocalizedText } from '@ninja/api/inventory'
 import { useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

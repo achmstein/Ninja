@@ -15,8 +15,8 @@ import {
   markDeliveryOutMutation,
   markDeliveryReturnedMutation,
   unassignDeliveryRiderMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
-import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@/api/ordering/types.gen'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { CourierProviderView, DeliveryOrder, DeliveryStaffView, RiderView } from '@ninja/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { brandQueryKey } from '@/lib/brand'
 import { translate, type TranslationKey } from '@/lib/i18n'

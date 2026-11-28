@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ChevronDown, Timer } from 'lucide-react'
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { elapsedSeconds, estimateStayCost, formatClock } from './status'

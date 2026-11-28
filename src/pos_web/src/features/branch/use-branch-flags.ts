@@ -1,6 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { getBranchesOptions, updateBranchSettingsMutation } from '@/api/tenant/@tanstack/react-query.gen'
+import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
+import { getBranchesOptions, updateBranchSettingsMutation } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useFeatures } from '@/lib/brand'
 import { handleServerError } from '@/lib/handle-server-error'

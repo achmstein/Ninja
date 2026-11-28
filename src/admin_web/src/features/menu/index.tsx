@@ -25,7 +25,7 @@ import {
   LayoutGrid,
   List,
 } from 'lucide-react'
-import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
+import { type CatalogItemDto, type CatalogTypeDto } from '@ninja/api/catalog'
 import {
   deleteCategoryMutation,
   deleteItemMutation,
@@ -36,7 +36,7 @@ import {
   reorderCategoriesMutation,
   reorderItemsMutation,
   toggleItemAvailabilityMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'

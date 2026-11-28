@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Plus, Search, X } from 'lucide-react'
-import type { MapsKeyDto, MapsSettingsDto, MapsTestResult, SaveMapsSettingsRequest } from '@/api/control'
+import type { MapsKeyDto, MapsSettingsDto, MapsTestResult, SaveMapsSettingsRequest } from '@ninja/api/control'
 import {
   getMapsSettingsOptions,
   getMapsSettingsQueryKey,
   getPlatformOptions,
   saveMapsSettingsMutation,
   testMapsSearchMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'

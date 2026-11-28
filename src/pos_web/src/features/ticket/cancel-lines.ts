@@ -1,4 +1,4 @@
-import type { TicketLineView } from '@/api/sales/types.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { toNumber } from '@/lib/money'
 
 /**

@@ -6,7 +6,7 @@ import {
   type ReservationViewModel,
   type StayViewModel,
   type TariffViewModel,
-} from '@/api/spaces'
+} from '@ninja/api/spaces'
 import { type TranslationKey } from '@/lib/i18n'
 
 // PlaceKind, as Spaces.API serialises it

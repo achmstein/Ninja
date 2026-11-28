@@ -1,4 +1,4 @@
-import { type TenantFeatures } from '@/api/tenant'
+import { type TenantFeatures } from '@ninja/api/tenant'
 
 /**
  * The customer list's narrowed views: two belong to a module, and the

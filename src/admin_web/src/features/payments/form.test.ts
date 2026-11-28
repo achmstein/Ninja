@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { PaymentSettingsView } from '@/api/sales/types.gen'
+import type { PaymentSettingsView } from '@ninja/api/sales/types.gen'
 import { FEE_GUEST, secretValue, toForm, toRequest, type PaymentsForm } from './form'
 
 const view: PaymentSettingsView = {

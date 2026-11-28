@@ -1,4 +1,4 @@
-import type { BasketItem } from '@/api/ordering/types.gen'
+import type { BasketItem } from '@ninja/api/ordering/types.gen'
 import { basePrice, type SaleLine } from './cart'
 
 /**

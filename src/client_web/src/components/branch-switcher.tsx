@@ -1,6 +1,6 @@
 import { Check, LocateFixed, Loader2, MapPin, Navigation } from 'lucide-react'
 import { motion } from 'motion/react'
-import { type BranchResponse } from '@/api/tenant'
+import { type BranchResponse } from '@ninja/api/tenant'
 import { useBranchStore } from '@/stores/branch-store'
 import { branchState, type BranchState } from '@/lib/branch'
 import { directionsUrl, pointOf, useDistance, type useMyLocation } from '@/lib/geo'

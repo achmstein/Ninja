@@ -1,4 +1,4 @@
-import type { DeliveryAlternative, PosDeliveryRequest, StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, PosDeliveryRequest, StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import { toNumber } from '@/lib/money'
 import { digitCount } from '@/lib/phone'
 import type { SaleDelivery, SaleSendTo, SaleZone } from './cart'

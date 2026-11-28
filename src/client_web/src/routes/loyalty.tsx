@@ -7,7 +7,7 @@ import {
   createAccountMutation,
   getAccountOptions,
   getTransactionsOptions,
-} from '@/api/loyalty/@tanstack/react-query.gen'
+} from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useT, type TranslationKey } from '@/lib/i18n'
 import { TIER_KEYS, useTierProgress } from '@/lib/loyalty'

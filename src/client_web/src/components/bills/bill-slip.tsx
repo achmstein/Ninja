@@ -1,7 +1,7 @@
 import { type ReactNode } from 'react'
 import { Timer } from 'lucide-react'
 import { motion } from 'motion/react'
-import { type BillLineView, type BillView } from '@/api/sales'
+import { type BillLineView, type BillView } from '@ninja/api/sales'
 import { closedAt, hoursLabel, isSettled, percent, runningTime, useNow, type RunningTime } from '@/lib/bills'
 import { useLanguage, useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'
 import { springSoft } from '@/lib/motion'

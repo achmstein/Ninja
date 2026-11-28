@@ -1,7 +1,7 @@
 import { useRef } from 'react'
 import { Plus } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@ninja/api/spaces'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { spring, springOpen, springSoft } from '@/lib/motion'
 import { canHold, hasOptions, PlaceIcon, placeCardId, placeNameId, placeStatusMeta, tariffOptions } from '@/lib/places'

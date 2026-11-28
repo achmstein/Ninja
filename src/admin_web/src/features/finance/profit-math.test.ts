@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type ProfitView } from '@/api/finance'
+import { type ProfitView } from '@ninja/api/finance'
 import { remainingShare, shareFits } from './partner-shares'
 import { formatShare, oldestFirst, profitAddsUp, profitBase, profitStatement, shareOf } from './profit-math'
 

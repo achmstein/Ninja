@@ -1,14 +1,14 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Hammer } from 'lucide-react'
-import type { AppBuildTestResult, BuildAllResult } from '@/api/control'
+import type { AppBuildTestResult, BuildAllResult } from '@ninja/api/control'
 import {
   buildAllOwnAppsMutation,
   getAppBuildSettingsOptions,
   getAppBuildSettingsQueryKey,
   saveAppBuildSettingsMutation,
   testAppBuildSettingsMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { toast } from '@/lib/toast'

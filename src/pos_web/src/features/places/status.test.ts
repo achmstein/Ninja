@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { PlaceViewModel, ReservationViewModel, StayViewModel, TariffViewModel } from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel, TariffViewModel } from '@ninja/api/spaces/types.gen'
 import {
   elapsedSeconds,
   estimateStayCost,

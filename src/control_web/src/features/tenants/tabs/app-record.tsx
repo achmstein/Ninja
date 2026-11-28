@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Download } from 'lucide-react'
-import type { TenantDetail } from '@/api/control'
+import type { TenantDetail } from '@ninja/api/control'
 import { apiClient } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

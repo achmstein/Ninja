@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { getMyReservationsOptions, getMyStaysOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { getMyReservationsOptions, getMyStaysOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { RESERVATION_CONFIRMED, RESERVATION_REQUESTED, RESERVATION_SEATED, STAY_RUNNING } from '@/lib/places'
 
 export { STAY_RUNNING } from '@/lib/places'

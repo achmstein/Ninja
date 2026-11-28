@@ -1,4 +1,4 @@
-import { type CashierTotal, type ItemTotal, type LocalizedText } from '@/api/sales'
+import { type CashierTotal, type ItemTotal, type LocalizedText } from '@ninja/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 

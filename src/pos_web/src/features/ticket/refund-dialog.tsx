@@ -1,6 +1,6 @@
 import { useEffect } from 'react'
 import { Banknote, Loader2, Minus, Plus, User } from 'lucide-react'
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Pencil } from 'lucide-react'
-import { type StockLevelView } from '@/api/inventory'
+import { type StockLevelView } from '@ninja/api/inventory'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'

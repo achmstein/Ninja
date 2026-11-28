@@ -1,8 +1,8 @@
 import { useMemo } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type OrderSummary } from '@/api/ordering'
-import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@/api/spaces'
+import { type OrderSummary } from '@ninja/api/ordering'
+import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@ninja/api/spaces'
 import {
   addStayMemberMutation,
   assignReservationCustomerMutation,
@@ -23,7 +23,7 @@ import {
   setPlaceActiveMutation,
   setPlaceStatusMutation,
   startWalkInMutation,
-} from '@/api/spaces/@tanstack/react-query.gen'
+} from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

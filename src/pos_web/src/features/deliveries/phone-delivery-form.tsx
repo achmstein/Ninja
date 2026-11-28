@@ -17,8 +17,8 @@ import {
   Store,
   UserRound,
 } from 'lucide-react'
-import { getKnownDeliveryAddressesOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import type { DeliveryAlternative, KnownAddressView } from '@/api/ordering/types.gen'
+import { getKnownDeliveryAddressesOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { DeliveryAlternative, KnownAddressView } from '@ninja/api/ordering/types.gen'
 import { apiClient, API_VERSION } from '@/lib/api-client'
 import { useBrand, useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'

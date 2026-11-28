@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import { listCategoriesOptions, listItemsOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useBranchScope, useSelectedBranch } from '@/lib/branch'
 import { useBrand } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'

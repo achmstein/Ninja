@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { BranchResponse } from '@/api/tenant'
+import type { BranchResponse } from '@ninja/api/tenant'
 import { businessDayDate, businessDayStart } from './business-day'
 
 const opensAt = (hour: string) => ({ dayStartTime: `${hour}:00` }) as BranchResponse

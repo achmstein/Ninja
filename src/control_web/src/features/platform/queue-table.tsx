@@ -2,13 +2,13 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { ListChecks, X } from 'lucide-react'
-import type { JobDto, LaneStatus } from '@/api/control'
+import type { JobDto, LaneStatus } from '@ninja/api/control'
 import {
   cancelPlatformJobMutation,
   getPlatformJobsOptions,
   getPlatformJobsQueryKey,
   getTenantQueryKey,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { duration, useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

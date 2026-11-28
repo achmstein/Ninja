@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, Truck } from 'lucide-react'
-import type { CourierProviderView } from '@/api/ordering/types.gen'
+import type { CourierProviderView } from '@ninja/api/ordering/types.gen'
 import { useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'

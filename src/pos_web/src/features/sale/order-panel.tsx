@@ -1,6 +1,6 @@
 import { useState, type ElementType, type ReactNode, type RefObject } from 'react'
 import { ChevronRight, Loader2, Plus, Trash2 } from 'lucide-react'
-import type { CatalogItemDto } from '@/api/catalog/types.gen'
+import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

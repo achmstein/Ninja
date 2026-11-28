@@ -11,6 +11,8 @@ import { routeTree } from './routeTree.gen'
 // Styles
 import 'sileo/styles.css'
 import './styles/index.css'
+// Registers the axios instance every generated client sends through (@ninja/api)
+import '@/lib/api-client'
 
 const queryClient = new QueryClient({
   defaultOptions: {

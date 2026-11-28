@@ -1,5 +1,5 @@
-import { type OrderSummary } from '@/api/ordering'
-import { type BillView } from '@/api/sales'
+import { type OrderSummary } from '@ninja/api/ordering'
+import { type BillView } from '@ninja/api/sales'
 import { closedAt } from '@/lib/bills'
 import { isSettled } from '@/lib/bills'
 import { useSelectedBranch } from '@/lib/branch'

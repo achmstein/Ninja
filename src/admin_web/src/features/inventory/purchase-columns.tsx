@@ -1,4 +1,4 @@
-import { type PurchaseView } from '@/api/inventory'
+import { type PurchaseView } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { createAppColumnHelper } from '@/components/data-table'

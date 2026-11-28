@@ -3722,6 +3722,15 @@
               "string"
             ],
             "format": "date-time"
+          },
+          "dailyUse": {
+            "pattern": "^-?(?:0|[1-9]\\d*)(?:\\.\\d+)?$",
+            "type": [
+              "null",
+              "number",
+              "string"
+            ],
+            "format": "double"
           }
         }
       },

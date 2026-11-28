@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react'
 import { Check, Minus, Plus, Trash2 } from 'lucide-react'
-import type { TicketLineView } from '@/api/sales/types.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

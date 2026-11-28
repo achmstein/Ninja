@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
-import { type BillLineView, type BillView } from '@/api/sales'
-import { type StayViewModel } from '@/api/spaces'
+import { type BillLineView, type BillView } from '@ninja/api/sales'
+import { type StayViewModel } from '@ninja/api/spaces'
 import {
   billParts,
   closedAt,

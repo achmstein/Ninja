@@ -10,7 +10,7 @@ import {
   Warehouse,
   type LucideIcon,
 } from 'lucide-react'
-import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useT, type TranslationKey } from '@/lib/i18n'

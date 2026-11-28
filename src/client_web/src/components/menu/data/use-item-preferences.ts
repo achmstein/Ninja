@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { UserItemPreferenceDto } from '@/api/catalog'
-import { getUserPreferencesOptions } from '@/api/catalog/@tanstack/react-query.gen'
+import type { UserItemPreferenceDto } from '@ninja/api/catalog'
+import { getUserPreferencesOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
 
 const none = new Map<number, UserItemPreferenceDto>()
 // Kept out of the hook so the map is built once per answer, not once per item per render

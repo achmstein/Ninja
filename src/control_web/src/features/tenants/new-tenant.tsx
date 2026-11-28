@@ -2,8 +2,8 @@ import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi, Link, useNavigate } from '@tanstack/react-router'
 import { ChevronDown, TriangleAlert } from 'lucide-react'
-import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@/api/control'
-import type { BusinessType } from '@/api/control'
+import { getLeadPhoto, type CreateTenantRequest, type LeadDto } from '@ninja/api/control'
+import type { BusinessType } from '@ninja/api/control'
 import {
   createTenantMutation,
   getLeadOptions,
@@ -15,7 +15,7 @@ import {
   putTenantSeedMenuMutation,
   updateLeadMutation,
   uploadTenantSeedImageMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { IMAGE_SLOTS, type ImageSlot } from '@/lib/brand-slots'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'

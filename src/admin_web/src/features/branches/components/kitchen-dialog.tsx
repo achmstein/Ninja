@@ -3,8 +3,8 @@ import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ArrowDown, ArrowUp, ChefHat, Monitor, Pencil, Plus, Printer, Trash2 } from 'lucide-react'
 import { createPortal } from 'react-dom'
-import { listCategoriesOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { type KitchenStationView, type PrintConnectorView } from '@/api/ordering'
+import { listCategoriesOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
+import { type KitchenStationView, type PrintConnectorView } from '@ninja/api/ordering'
 import {
   createKitchenStationMutation,
   deleteKitchenStationMutation,
@@ -12,9 +12,9 @@ import {
   getPrintConnectorsOptions,
   testPrintKitchenStationMutation,
   updateKitchenStationMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
-import { updateKitchenStation } from '@/api/ordering/sdk.gen'
-import { type BranchResponse } from '@/api/tenant'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { updateKitchenStation } from '@ninja/api/ordering/sdk.gen'
+import { type BranchResponse } from '@ninja/api/tenant'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

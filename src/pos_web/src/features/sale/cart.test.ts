@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItemDto } from '@/api/catalog/types.gen'
+import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { basePrice, lineKey, roundsByPerson, tillSuggestions, type SaleLine } from './cart'
 
 const latte: SaleLine = {

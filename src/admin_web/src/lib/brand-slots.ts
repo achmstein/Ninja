@@ -1,4 +1,4 @@
-import type { TenantResponse, TenantWordmark } from '@/api/tenant'
+import type { TenantResponse, TenantWordmark } from '@ninja/api/tenant'
 import type { Language } from '@/lib/i18n'
 
 /**

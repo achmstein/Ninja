@@ -7,8 +7,8 @@ import {
   previewTalabatMenuOptions,
   pushTalabatMenuMutation,
   saveTalabatMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
-import type { TalabatStatusView } from '@/api/catalog/types.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
+import type { TalabatStatusView } from '@ninja/api/catalog/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

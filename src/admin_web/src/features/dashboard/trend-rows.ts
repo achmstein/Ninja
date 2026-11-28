@@ -1,4 +1,4 @@
-import { type DailySales } from '@/api/sales'
+import { type DailySales } from '@ninja/api/sales'
 import {
   businessDateOf,
   businessDaysWindow,

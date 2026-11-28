@@ -1,5 +1,5 @@
 import { useMemo, useState, type ReactNode } from 'react'
-import type { BusinessType, TenantDetail } from '@/api/control'
+import type { BusinessType, TenantDetail } from '@ninja/api/control'
 import { useT } from '@/lib/i18n'
 import { allTimeZones, COUNTRIES, countryOf, CURRENCIES } from '@/lib/locale'
 import { seedLabelKey } from '@/lib/tenant'

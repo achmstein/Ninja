@@ -2,6 +2,12 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Lock, X } from 'lucide-react'
+import { type TenantFeatures, type TenantThemeDto } from '@ninja/api/tenant'
+import {
+  deleteTenantImageMutation,
+  updateTenantMutation,
+  uploadTenantImageMutation,
+} from '@ninja/api/tenant/@tanstack/react-query.gen'
 import {
   ARABIC_FONT_CATALOG,
   ARABIC_FONTS,
@@ -11,12 +17,6 @@ import {
   LATIN_FONTS,
   type BrandFont,
 } from '@ninja/web-core/brand-fonts'
-import { type TenantFeatures, type TenantThemeDto } from '@/api/tenant'
-import {
-  deleteTenantImageMutation,
-  updateTenantMutation,
-  uploadTenantImageMutation,
-} from '@/api/tenant/@tanstack/react-query.gen'
 import {
   brandQueryKey,
   defaultCustomerOrigin,

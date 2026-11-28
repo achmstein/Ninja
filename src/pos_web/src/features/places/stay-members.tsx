@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Star, User, UserPlus, X } from 'lucide-react'
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Badge } from '@/components/ui/badge'

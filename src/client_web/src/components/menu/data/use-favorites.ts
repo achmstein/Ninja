@@ -5,7 +5,7 @@ import {
   getUserFavoritesOptions,
   getUserFavoritesQueryKey,
   removeFavoriteMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 
 // Server-backed favorites with optimistic toggling; anonymous visitors get
 // an empty set and no toggle.

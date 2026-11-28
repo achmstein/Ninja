@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getTierInfoOptions } from '@/api/loyalty/@tanstack/react-query.gen'
+import { getTierInfoOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import type { TranslationKey } from '@/lib/i18n'
 

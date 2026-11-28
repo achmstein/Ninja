@@ -1,4 +1,4 @@
-import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@/api/catalog'
+import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@ninja/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { posterTone, type MenuSectionData, type PosterTone, type SectionKind } from '@/components/menu/data/sections'
 import {

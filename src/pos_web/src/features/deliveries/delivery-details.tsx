@@ -1,5 +1,5 @@
 import { Bike, MapPin, Navigation, Phone } from 'lucide-react'
-import type { DeliveryView } from '@/api/ordering/types.gen'
+import type { DeliveryView } from '@ninja/api/ordering/types.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { showPhone } from '@/lib/phone'

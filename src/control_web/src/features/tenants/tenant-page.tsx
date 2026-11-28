@@ -44,7 +44,7 @@ import {
   startTenantMutation,
   stopTenantMutation,
   upgradeTenantMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import {

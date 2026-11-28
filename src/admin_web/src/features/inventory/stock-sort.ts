@@ -1,4 +1,4 @@
-import { type StockLevelView } from '@/api/inventory'
+import { type StockLevelView } from '@ninja/api/inventory'
 import { toNumber } from '@/lib/money'
 
 /** What the stock list can be sorted by. */

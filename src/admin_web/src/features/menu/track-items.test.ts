@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type RecipesProposal } from '@/api/inventory'
+import { type RecipesProposal } from '@ninja/api/inventory'
 import { NEW_PREFIX, toReview } from './track-items'
 
 const ingredient = (key: string, en: string, ar: string) => ({

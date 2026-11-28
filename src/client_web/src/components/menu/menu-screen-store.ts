@@ -1,5 +1,5 @@
 import { createStore, type StoreApi } from 'zustand'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import type { Flight } from './flights'
 

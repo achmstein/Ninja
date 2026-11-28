@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { ExternalLink } from 'lucide-react'
-import type { TenantDetail } from '@/api/control'
+import type { TenantDetail } from '@ninja/api/control'
 import { useT } from '@/lib/i18n'
 import { tenantStatus } from '@/lib/tenant'
 import { Input } from '@/components/ui/input'

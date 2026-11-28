@@ -8,7 +8,7 @@ import {
   type PayPayslipRequest,
   type PayTermsRequest,
   type UpdateEmployeeRequest,
-} from '@/api/payroll'
+} from '@ninja/api/payroll'
 import {
   deleteEmployeeMutation,
   deletePayslipMutation,
@@ -21,7 +21,7 @@ import {
   rehireEmployeeMutation,
   setPayTermsMutation,
   updateEmployeeMutation,
-} from '@/api/payroll/@tanstack/react-query.gen'
+} from '@ninja/api/payroll/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

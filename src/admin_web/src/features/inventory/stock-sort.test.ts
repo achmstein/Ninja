@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type StockLevelView } from '@/api/inventory'
+import { type StockLevelView } from '@ninja/api/inventory'
 import { daysLeft, sortLevels } from './stock-sort'
 
 const level = (name: string, over: Partial<StockLevelView> = {}): StockLevelView => ({

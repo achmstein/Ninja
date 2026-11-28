@@ -1,5 +1,5 @@
 import { useMutation } from '@tanstack/react-query'
-import { checkBranchPricesMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { checkBranchPricesMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import type { SaleLine } from './cart'
 import { priceCheckLines, reviewPriceCheck, type PriceReview } from './price-check'

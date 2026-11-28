@@ -1,6 +1,6 @@
 import { memo, useRef, useState } from 'react'
 import { Plus } from 'lucide-react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureUrl } from '@/components/menu/item-picture'

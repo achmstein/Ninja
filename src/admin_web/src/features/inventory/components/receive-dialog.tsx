@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
-import { type StockItemView } from '@/api/inventory'
+import { type StockItemView } from '@ninja/api/inventory'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { SCAN_ACCEPT } from '@/lib/image'

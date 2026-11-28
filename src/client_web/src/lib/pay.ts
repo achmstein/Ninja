@@ -1,4 +1,4 @@
-import { type PayLineView, type PayOptionsView } from '@/api/sales'
+import { type PayLineView, type PayOptionsView } from '@ninja/api/sales'
 
 /**
  * Online payments (docs/online-payments-plan.md), the arithmetic the guest's

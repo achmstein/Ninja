@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@ninja/api/spaces'
 import { PLACE_ROOM, PLACE_TABLE } from '@/lib/places'
 import { bookablePlaces, seatOf, visitTabVisible } from './visit'
 

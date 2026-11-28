@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { type RangeReport } from '@/api/sales'
+import { type RangeReport } from '@ninja/api/sales'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Skeleton } from '@/components/ui/skeleton'

@@ -1,4 +1,4 @@
-import { type LocalizedText } from '@/api/catalog'
+import { type LocalizedText } from '@ninja/api/catalog'
 
 export type Lang = 'en' | 'ar'
 

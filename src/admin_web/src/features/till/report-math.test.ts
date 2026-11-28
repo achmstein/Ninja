@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type RangeReport } from '@/api/sales'
+import { type RangeReport } from '@ninja/api/sales'
 import { netStatement, statementAddsUp, tenderSeries } from './report-math'
 
 // A day at a table-service branch with VAT added on top: two bills.

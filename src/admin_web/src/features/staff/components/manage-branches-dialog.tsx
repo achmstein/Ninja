@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Store } from 'lucide-react'
-import { getAllBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getAllBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

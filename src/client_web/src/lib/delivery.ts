@@ -1,13 +1,13 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { CustomerAddressView, DeliveringBranch, DeliveryView, LocalizedText } from '@/api/ordering'
+import type { CustomerAddressView, DeliveringBranch, DeliveryView, LocalizedText } from '@ninja/api/ordering'
 import {
   getDeliveryQuoteOptions,
   getMyAddressesOptions,
   resolveDeliveryBranchOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
-import type { BranchResponse } from '@/api/tenant'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { BranchResponse } from '@ninja/api/tenant'
 import { GUEST_OWNER, useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 import { formatAddressLine, type AddressParts, type AddressWords } from '@/lib/address-line'
 import { API_VERSION } from '@/lib/api-client'

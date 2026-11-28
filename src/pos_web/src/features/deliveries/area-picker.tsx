@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Check, MapPinned, X } from 'lucide-react'
-import type { StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'

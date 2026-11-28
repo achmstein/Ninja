@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type MenuProposal } from '@/api/catalog'
+import { type MenuProposal } from '@ninja/api/catalog'
 import { isReviewItemReady, NEW_CATEGORY, reviewItemPrice, toImportRequest, toReviewCategories } from './menu-scan'
 
 const proposal: MenuProposal = {

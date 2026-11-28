@@ -1,4 +1,4 @@
-import type { ShiftView } from '@/api/sales/types.gen'
+import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { toNumber } from '@/lib/money'
 
 /** One term of the drawer sum: added (+1) or taken away (−1) */

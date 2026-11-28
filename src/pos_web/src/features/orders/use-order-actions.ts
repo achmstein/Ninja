@@ -3,7 +3,7 @@ import {
   cancelOrderMutation,
   confirmOrderMutation,
   rejectGuestOrderMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

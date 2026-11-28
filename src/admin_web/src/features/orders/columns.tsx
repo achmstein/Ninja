@@ -1,5 +1,5 @@
 import { Star, Trash2 } from 'lucide-react'
-import { type OrderSummary } from '@/api/ordering'
+import { type OrderSummary } from '@ninja/api/ordering'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'

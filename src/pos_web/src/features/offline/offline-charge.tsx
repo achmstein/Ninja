@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react'
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { printSheets, takesCash } from '@/features/printing/print-sheets'
 import { KitchenChitSheet } from '@/features/receipt/kitchen-chit-sheet'

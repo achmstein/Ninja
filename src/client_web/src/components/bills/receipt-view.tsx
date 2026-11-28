@@ -1,5 +1,5 @@
 import { ReceiptText } from 'lucide-react'
-import type { BillView, ReceiptView } from '@/api/sales'
+import type { BillView, ReceiptView } from '@ninja/api/sales'
 import { useBranches } from '@/lib/branch'
 import { showPhone } from '@/lib/brand'
 import { useLanguage, useLocalized, usePrice, useT, type TranslationKey } from '@/lib/i18n'

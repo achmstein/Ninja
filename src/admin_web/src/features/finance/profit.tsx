@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { Download } from 'lucide-react'
-import { getProfitOptions, getProfitTrendOptions } from '@/api/finance/@tanstack/react-query.gen'
+import { getProfitOptions, getProfitTrendOptions } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useBusinessTimeZone } from '@/lib/business-clock'

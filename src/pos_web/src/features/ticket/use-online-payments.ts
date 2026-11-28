@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { listOnlinePaymentsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { listOnlinePaymentsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 

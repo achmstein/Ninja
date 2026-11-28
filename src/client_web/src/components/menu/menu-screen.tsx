@@ -25,7 +25,7 @@ import {
   useTransform,
 } from 'motion/react'
 import { useStore } from 'zustand'
-import type { CatalogItemDto, PromotionDto } from '@/api/catalog'
+import type { CatalogItemDto, PromotionDto } from '@ninja/api/catalog'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useCart, type CartLine } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'

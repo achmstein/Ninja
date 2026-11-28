@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
-import { type PlaceViewModel, type TariffRequest } from '@/api/spaces'
+import { type PlaceViewModel, type TariffRequest } from '@ninja/api/spaces'
 import {
   createPlaceMutation,
   setPlaceReservableMutation,
   setPlaceTariffMutation,
   updatePlaceMutation,
-} from '@/api/spaces/@tanstack/react-query.gen'
+} from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useFeatures } from '@/lib/brand'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

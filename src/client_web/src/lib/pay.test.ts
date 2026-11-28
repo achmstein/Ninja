@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { type PayLineView, type PayOptionsView } from '@/api/sales'
+import { type PayLineView, type PayOptionsView } from '@ninja/api/sales'
 import {
   customShare,
   defaultParts,

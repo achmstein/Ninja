@@ -18,8 +18,8 @@ import {
   reservePlaceMutation,
   seatReservationMutation,
   startWalkInMutation,
-} from '@/api/spaces/@tanstack/react-query.gen'
-import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@/api/spaces/types.gen'
+} from '@ninja/api/spaces/@tanstack/react-query.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'

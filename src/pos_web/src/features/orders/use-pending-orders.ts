@@ -1,7 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import type { OrderSummary } from '@/api/ordering/types.gen'
+import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { OrderSummary } from '@ninja/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
 

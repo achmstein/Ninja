@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Ban, CreditCard, Play, Receipt } from 'lucide-react'
-import type { Module, TenantDetail, TenantPlan } from '@/api/control'
+import type { Module, TenantDetail, TenantPlan } from '@ninja/api/control'
 import {
   getPlansOptions,
   getTenantQueryKey,
@@ -12,7 +12,7 @@ import {
   resumeTenantMutation,
   suspendTenantMutation,
   updateTenantSubscriptionMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

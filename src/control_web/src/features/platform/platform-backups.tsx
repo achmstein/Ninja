@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Archive, Cloud, CloudOff, Download } from 'lucide-react'
-import type { BackupInfo } from '@/api/control'
+import type { BackupInfo } from '@ninja/api/control'
 import {
   createPlatformBackupMutation,
   getPlatformBackupsOptions,
   getPlatformBackupsQueryKey,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'

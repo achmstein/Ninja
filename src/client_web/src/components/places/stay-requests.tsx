@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { ArrowLeftRight, Bell, Check, Gamepad2, Hourglass, Receipt } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { type StayViewModel } from '@/api/spaces'
+import { type StayViewModel } from '@ninja/api/spaces'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'
 import { hasOptions, stayTakesControllerRequests, tariffOptions } from '@/lib/places'

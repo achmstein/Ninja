@@ -1,7 +1,7 @@
 import { useMemo, useRef, useState } from 'react'
 import { ArrowLeft, Search, X } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import type { MenuSectionData } from './data/use-menu'

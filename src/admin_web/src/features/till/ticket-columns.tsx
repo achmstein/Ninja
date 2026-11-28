@@ -1,4 +1,4 @@
-import { type TicketHistoryRow, type TicketSummary } from '@/api/sales'
+import { type TicketHistoryRow, type TicketSummary } from '@ninja/api/sales'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

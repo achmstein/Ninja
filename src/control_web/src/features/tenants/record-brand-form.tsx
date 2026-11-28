@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import type { TenantDetail } from '@/api/control'
+import type { TenantDetail } from '@ninja/api/control'
 import { useT } from '@/lib/i18n'
 import { isHexColor } from '@/lib/tenant'
 import { ColorField } from '@/components/brand/color-field'

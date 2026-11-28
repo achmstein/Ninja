@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { PriceCheckResult } from '@/api/catalog/types.gen'
+import type { PriceCheckResult } from '@ninja/api/catalog/types.gen'
 import type { SaleLine } from './cart'
 import { priceCheckLines, reviewPriceCheck } from './price-check'
 

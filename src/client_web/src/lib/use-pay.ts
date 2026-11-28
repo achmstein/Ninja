@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { type PayView } from '@/api/sales'
-import { getBillToPayOptions, getPlaceBillToPayOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { type PayView } from '@ninja/api/sales'
+import { getBillToPayOptions, getPlaceBillToPayOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from './api-client'
 import { offersPay } from './pay'
 

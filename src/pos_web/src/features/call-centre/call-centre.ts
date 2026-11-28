@@ -1,7 +1,7 @@
 // The pure parts of the call centre: which branch a caller's delivery goes to,
 // and what the sale is made of once it is chosen. Kept apart from the screens
 // so they can be tested.
-import type { DeliveryAlternative, StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { DeliveryAlternative, StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import { toNumber } from '@/lib/money'
 import type { SaleDelivery } from '@/features/sale/cart'
 

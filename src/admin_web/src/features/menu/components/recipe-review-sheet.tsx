@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { AlertTriangle, ArrowLeft, Check } from 'lucide-react'
 import { v4 as uuidv4 } from 'uuid'
-import { type CatalogItemDto } from '@/api/catalog'
-import { type RecipesProposal, type StockItemView } from '@/api/inventory'
+import { type CatalogItemDto } from '@ninja/api/catalog'
+import { type RecipesProposal, type StockItemView } from '@ninja/api/inventory'
 import {
   createStockItemMutation,
   setRecipeMutation,
   trackByUnitMutation,
-} from '@/api/inventory/@tanstack/react-query.gen'
+} from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { bilingual, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

@@ -1,4 +1,4 @@
-import type { TenantMaps } from '@/api/tenant'
+import type { TenantMaps } from '@ninja/api/tenant'
 
 /** A point on the map, in degrees */
 export type LatLng = { lat: number; lng: number }

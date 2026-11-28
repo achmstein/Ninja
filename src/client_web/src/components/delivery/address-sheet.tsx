@@ -19,7 +19,7 @@ import {
   addMyAddressMutation,
   deleteMyAddressMutation,
   updateMyAddressMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useDeliveryStore, type DeliveryAddress } from '@/stores/delivery-store'
 import { useGuestStore } from '@/stores/guest-store'
 import { addressRow, labelKind, shownLabel, storedLabel, type LabelKind } from '@/lib/address-line'

@@ -1,4 +1,4 @@
-import type { LeadDto } from '@/api/control'
+import type { LeadDto } from '@ninja/api/control'
 
 type Origin = Pick<LeadDto, 'ref' | 'source' | 'medium' | 'campaign' | 'referrer'>
 

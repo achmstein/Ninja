@@ -1,4 +1,4 @@
-import { type PayslipView } from '@/api/payroll'
+import { type PayslipView } from '@ninja/api/payroll'
 import { formatDay, parseDay } from '@/lib/business-day'
 import { type Translate, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'

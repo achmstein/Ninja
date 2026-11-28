@@ -1,4 +1,4 @@
-import { type ProfitMonthView, type ProfitView } from '@/api/finance'
+import { type ProfitMonthView, type ProfitView } from '@ninja/api/finance'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 

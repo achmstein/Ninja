@@ -15,8 +15,8 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
-import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import { getOpenTicketsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
+import type { PlaceViewModel, ReservationViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'

@@ -1,5 +1,5 @@
 import { CircleCheck, TriangleAlert } from 'lucide-react'
-import { type StockCountView } from '@/api/inventory'
+import { type StockCountView } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

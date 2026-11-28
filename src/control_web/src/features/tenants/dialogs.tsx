@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import type { TenantUpdate } from '@/api/control'
+import type { TenantUpdate } from '@ninja/api/control'
 import {
   getPlatformUpdatesOptions,
   listArchivedBackupsOptions,
   listNodesOptions,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { planLabelKey, TENANT_PLANS, type TenantPlanName } from '@/lib/tenant'

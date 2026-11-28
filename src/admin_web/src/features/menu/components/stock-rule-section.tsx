@@ -2,13 +2,13 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { AlertTriangle, CookingPot, Info, MoreHorizontal, Package, X } from 'lucide-react'
-import { type CatalogItemDto } from '@/api/catalog'
-import { type RecipesProposal, type RecipeView, type StockItemView } from '@/api/inventory'
+import { type CatalogItemDto } from '@ninja/api/catalog'
+import { type RecipesProposal, type RecipeView, type StockItemView } from '@ninja/api/inventory'
 import {
   getRecipeCostsOptions,
   getRecipesOptions,
   proposeRecipesMutation,
-} from '@/api/inventory/@tanstack/react-query.gen'
+} from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { useLocalized, useT } from '@/lib/i18n'

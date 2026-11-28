@@ -1,5 +1,5 @@
 import { createPortal } from 'react-dom'
-import type { ShiftView } from '@/api/sales/types.gen'
+import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { useBrandName } from '@/lib/brand'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Armchair, Bike, Check, Clock, DoorOpen, ShieldQuestion, User } from 'lucide-react'
-import type { OrderSummary } from '@/api/ordering/types.gen'
+import type { OrderSummary } from '@ninja/api/ordering/types.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { phoneInText } from '@/lib/phone'

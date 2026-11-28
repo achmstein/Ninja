@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { Gamepad2 } from 'lucide-react'
-import { type StayViewModel } from '@/api/spaces'
+import { type StayViewModel } from '@ninja/api/spaces'
 import { useSelectedBranch } from '@/lib/branch'
 import { businessDayDate } from '@/lib/business-day'
 import { useLanguage, useT } from '@/lib/i18n'

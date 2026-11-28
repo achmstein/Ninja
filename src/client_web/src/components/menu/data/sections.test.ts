@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { buildSections, coverItem, pickHero, posterTone, tileSections } from './sections'
 
 const item = (id: number, x: Partial<CatalogItemDto> = {}): CatalogItemDto =>

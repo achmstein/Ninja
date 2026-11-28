@@ -1,4 +1,4 @@
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { elapsedSeconds, formatClock, optionSeconds, tariffOptions } from './status'
 

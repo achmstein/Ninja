@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBranchPricingOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { getBranchPricingOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { toPricingRules, type PricingRules } from './pricing'

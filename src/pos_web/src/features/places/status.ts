@@ -5,7 +5,7 @@ import type {
   ReservationViewModel,
   StayViewModel,
   TariffViewModel,
-} from '@/api/spaces/types.gen'
+} from '@ninja/api/spaces/types.gen'
 import type { useT } from '@/lib/i18n'
 
 type Translate = ReturnType<typeof useT>

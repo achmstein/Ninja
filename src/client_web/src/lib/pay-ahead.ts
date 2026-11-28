@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import { getPayAheadOptionsOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { getPayAheadOptionsOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import type { OrderDestination } from '@/lib/order-destination'
 import { guestFee, num } from '@/lib/pay'

@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

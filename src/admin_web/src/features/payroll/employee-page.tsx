@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { getEmployeeOptions } from '@/api/payroll/@tanstack/react-query.gen'
+import { getEmployeeOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

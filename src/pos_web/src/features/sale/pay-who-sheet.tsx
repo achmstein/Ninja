@@ -1,5 +1,5 @@
 import { ChevronRight } from 'lucide-react'
-import type { TicketLineView } from '@/api/sales/types.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'

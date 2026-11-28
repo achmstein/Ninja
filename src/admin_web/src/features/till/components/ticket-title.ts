@@ -1,4 +1,4 @@
-import { type LocalizedText } from '@/api/sales'
+import { type LocalizedText } from '@ninja/api/sales'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { ticketTypeKey } from './tender'
 

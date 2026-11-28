@@ -1,4 +1,4 @@
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useMoney } from '@/lib/money'
 import { estimateStayCost } from './status'
 import { useSecondsClock } from './use-places'

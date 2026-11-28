@@ -1,4 +1,4 @@
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

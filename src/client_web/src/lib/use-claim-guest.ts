@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { claimGuestOrders } from '@/api/ordering'
+import { claimGuestOrders } from '@ninja/api/ordering'
 import { useGuestStore } from '@/stores/guest-store'
 import { API_VERSION } from '@/lib/api-client'
 

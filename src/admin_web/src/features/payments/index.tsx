@@ -6,8 +6,8 @@ import {
   getPaymentSettingsOptions,
   getPaymentSettingsQueryKey,
   savePaymentSettingsMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
-import type { PaymentSettingsView } from '@/api/sales/types.gen'
+} from '@ninja/api/sales/@tanstack/react-query.gen'
+import type { PaymentSettingsView } from '@ninja/api/sales/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

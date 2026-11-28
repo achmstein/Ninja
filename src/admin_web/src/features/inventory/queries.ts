@@ -1,5 +1,5 @@
-import { type StockItemView, type StockLevelView } from '@/api/inventory'
-import { getStockItemsOptions, getStockLevelsOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { type StockItemView, type StockLevelView } from '@ninja/api/inventory'
+import { getStockItemsOptions, getStockLevelsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { type Translate } from '@/lib/i18n'
 import { type ComboboxOption } from '@/components/combobox'

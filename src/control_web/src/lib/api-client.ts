@@ -1,5 +1,6 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
+import { registerApiClient } from '@ninja/api/runtime'
 
 // Single axios instance. Every request goes through the same origin:
 // proxied to Control.API by the Vite dev server in development (see
@@ -8,6 +9,9 @@ import { getStoredUser } from '@/config/oidc-config'
 // its own, and a global default would override the multipart boundary on
 // the logo upload (FormData puts then fail with 415).
 export const apiClient = axios.create()
+
+// Every generated client (@ninja/api) sends through this instance
+registerApiClient(apiClient)
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react'
-import { type LocalizedText } from '@/api/spaces'
+import { type LocalizedText } from '@ninja/api/spaces'
 import { useBranchStore } from '@/stores/branch-store'
 import { useActivePlace, usePlaceStore } from '@/stores/place-store'
 import { PLACE_ROOM, PLACE_TABLE } from '@/lib/places'

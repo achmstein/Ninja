@@ -1,4 +1,4 @@
-import type { ShiftView } from '@/api/sales/types.gen'
+import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { useLocale, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

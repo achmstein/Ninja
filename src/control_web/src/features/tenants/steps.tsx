@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { ChevronRight } from 'lucide-react'
-import type { StepDto } from '@/api/control'
+import type { StepDto } from '@ninja/api/control'
 import { duration } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { stepLabelKey, stepStatus, type StepStatusName } from '@/lib/tenant'

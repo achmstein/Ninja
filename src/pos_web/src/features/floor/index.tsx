@@ -19,9 +19,9 @@ import {
   type LucideIcon,
 } from 'lucide-react'
 import { TimerReset } from 'lucide-react'
-import { getOpenTicketsOptions, openTicketMutation } from '@/api/sales/@tanstack/react-query.gen'
-import type { TicketSummary } from '@/api/sales/types.gen'
-import type { PlaceViewModel, StayViewModel } from '@/api/spaces/types.gen'
+import { getOpenTicketsOptions, openTicketMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
+import type { TicketSummary } from '@ninja/api/sales/types.gen'
+import type { PlaceViewModel, StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useFreshBills } from '@/stores/fresh-bills'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'

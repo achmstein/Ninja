@@ -1,13 +1,13 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
 import { Check, Image, MessageCircle, MoreHorizontal, Plus, Trash2, Undo2, X } from 'lucide-react'
-import type { LeadDto, LeadStatus } from '@/api/control'
+import type { LeadDto, LeadStatus } from '@ninja/api/control'
 import {
   deleteLeadMutation,
   listLeadsOptions,
   listLeadsQueryKey,
   updateLeadMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { leadOrigin, whatsappNumber } from '@/lib/lead'

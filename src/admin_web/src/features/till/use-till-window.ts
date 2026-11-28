@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getBranchesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getBranchesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBusinessTimeZone } from '@/lib/business-clock'
 import {

@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from '@tanstack/react-router'
 import { ArrowLeft, Search, Sparkles, X } from 'lucide-react'
-import type { CatalogItemDto } from '@/api/catalog/types.gen'
+import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { cn } from '@/lib/utils'

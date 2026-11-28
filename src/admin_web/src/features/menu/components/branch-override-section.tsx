@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { type CatalogItemDto } from '@/api/catalog'
+import { type CatalogItemDto } from '@ninja/api/catalog'
 import {
   getBranchOverridesOptions,
   removeBranchItemOverrideMutation,
   setBranchItemOverrideMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'

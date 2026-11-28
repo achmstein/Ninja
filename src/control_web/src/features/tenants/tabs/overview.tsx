@@ -1,6 +1,6 @@
 import { Link } from '@tanstack/react-router'
 import { CalendarPlus, ChevronRight, ExternalLink } from 'lucide-react'
-import type { TenantDetail } from '@/api/control'
+import type { TenantDetail } from '@ninja/api/control'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { countryOf } from '@/lib/locale'

@@ -17,10 +17,10 @@ import {
   Ruler,
   UserCheck,
 } from 'lucide-react'
-import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { getBranchPricingOptions } from '@/api/sales/@tanstack/react-query.gen'
-import { type BranchResponse } from '@/api/tenant'
-import { getDeliveryZonesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getKitchenStationsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { getBranchPricingOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
+import { type BranchResponse } from '@ninja/api/tenant'
+import { getDeliveryZonesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'

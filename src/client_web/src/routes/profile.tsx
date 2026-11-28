@@ -17,8 +17,8 @@ import {
   Wallet,
 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { getMyAccountOptions } from '@/api/accounts/@tanstack/react-query.gen'
-import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
+import { getMyAccountOptions } from '@ninja/api/accounts/@tanstack/react-query.gen'
+import { getAccountOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
 import { useGuestStore } from '@/stores/guest-store'
 import { API_VERSION } from '@/lib/api-client'
 import { closedAt, useMyBills } from '@/lib/bills'

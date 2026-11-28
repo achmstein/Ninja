@@ -1,5 +1,5 @@
 import { User, Users } from 'lucide-react'
-import { type RateOptionViewModel } from '@/api/spaces'
+import { type RateOptionViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { formatRate } from '../status'

@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CreditCard, Split } from 'lucide-react'
-import { type BillView } from '@/api/sales'
+import { type BillView } from '@ninja/api/sales'
 import { isOpen } from '@/lib/bills'
 import { useFeatures } from '@/lib/brand'
 import { usePrice, useT } from '@/lib/i18n'

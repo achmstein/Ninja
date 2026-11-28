@@ -1,4 +1,4 @@
-import { type StayViewModel } from '@/api/spaces'
+import { type StayViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { hasOptions, PlaceIcon } from '@/lib/places'
 import { cn } from '@/lib/utils'

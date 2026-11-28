@@ -1,4 +1,4 @@
-import type { PriceCheckLine, PriceCheckResult } from '@/api/catalog/types.gen'
+import type { PriceCheckLine, PriceCheckResult } from '@ninja/api/catalog/types.gen'
 import { toNumber } from '@/lib/money'
 import { lineKey, type SaleLine } from './cart'
 

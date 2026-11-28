@@ -1,4 +1,4 @@
-import type { OnlinePaymentView } from '@/api/sales/types.gen'
+import type { OnlinePaymentView } from '@ninja/api/sales/types.gen'
 import { toNumber } from '@/lib/money'
 
 /**

@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Megaphone, Plus, Trash2 } from 'lucide-react'
-import { type PromotionDto, type PromotionRequest } from '@/api/catalog'
+import { type PromotionDto, type PromotionRequest } from '@ninja/api/catalog'
 import {
   deletePromotionMutation,
   listPromotionsOptions,
   updatePromotionMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

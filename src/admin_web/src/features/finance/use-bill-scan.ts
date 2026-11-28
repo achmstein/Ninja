@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { type BillProposal } from '@/api/finance'
-import { scanBillMutation } from '@/api/finance/@tanstack/react-query.gen'
+import { type BillProposal } from '@ninja/api/finance'
+import { scanBillMutation } from '@ninja/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { downscaleImage, SCAN_MAX_BYTES } from '@/lib/image'

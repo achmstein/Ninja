@@ -1,7 +1,7 @@
 import { useEffect } from 'react'
 import { AxiosError } from 'axios'
 import { useQuery } from '@tanstack/react-query'
-import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
+import { getTicketOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { toNumber } from '@/lib/money'
 import { isRunning } from '@/features/places/status'

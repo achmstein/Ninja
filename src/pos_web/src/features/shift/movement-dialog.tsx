@@ -4,9 +4,9 @@ import {
   getTillCategoriesOptions,
   getTillPartnersOptions,
   getTillSuppliersOptions,
-} from '@/api/finance/@tanstack/react-query.gen'
-import { getTillEmployeesOptions } from '@/api/payroll/@tanstack/react-query.gen'
-import { addCashMovementMutation } from '@/api/sales/@tanstack/react-query.gen'
+} from '@ninja/api/finance/@tanstack/react-query.gen'
+import { getTillEmployeesOptions } from '@ninja/api/payroll/@tanstack/react-query.gen'
+import { addCashMovementMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, type FeatureKey } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'

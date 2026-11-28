@@ -2,8 +2,11 @@ import { useMemo, useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Printer } from 'lucide-react'
-import { getKitchenStationsOptions, reprintOrderKitchenTicketsMutation } from '@/api/ordering/@tanstack/react-query.gen'
-import type { TicketLineView } from '@/api/sales/types.gen'
+import {
+  getKitchenStationsOptions,
+  reprintOrderKitchenTicketsMutation,
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

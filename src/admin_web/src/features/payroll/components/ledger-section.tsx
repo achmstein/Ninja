@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus } from 'lucide-react'
-import { type EmployeeView } from '@/api/payroll'
+import { type EmployeeView } from '@ninja/api/payroll'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'

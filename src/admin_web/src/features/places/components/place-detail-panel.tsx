@@ -17,9 +17,12 @@ import {
   Wrench,
   X,
 } from 'lucide-react'
-import { type OrderSummary } from '@/api/ordering'
-import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@/api/spaces'
-import { getPlaceReservationHistoryOptions, getPlaceStayHistoryOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { type OrderSummary } from '@ninja/api/ordering'
+import { type PlaceViewModel, type ReservationViewModel, type StayViewModel } from '@ninja/api/spaces'
+import {
+  getPlaceReservationHistoryOptions,
+  getPlaceStayHistoryOptions,
+} from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useCustomerOrigin, useFeatures } from '@/lib/brand'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'

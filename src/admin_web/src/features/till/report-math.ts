@@ -1,4 +1,4 @@
-import { type RangeReport, type TenderTotal } from '@/api/sales'
+import { type RangeReport, type TenderTotal } from '@ninja/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { TENDERS, tendersFor, type TenderModules, type TenderName } from './components/tender'

@@ -1,6 +1,12 @@
 import { createElement } from 'react'
 import { Armchair, Gamepad2, Trophy } from 'lucide-react'
-import type { LocalizedText, PlaceScanViewModel, PlaceViewModel, StayViewModel, TariffViewModel } from '@/api/spaces'
+import type {
+  LocalizedText,
+  PlaceScanViewModel,
+  PlaceViewModel,
+  StayViewModel,
+  TariffViewModel,
+} from '@ninja/api/spaces'
 import type { TranslationKey } from '@/lib/i18n'
 
 // PlaceKind, as Spaces.API serialises it

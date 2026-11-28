@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Loader2, Play } from 'lucide-react'
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { Button } from '@/components/ui/button'
 import {

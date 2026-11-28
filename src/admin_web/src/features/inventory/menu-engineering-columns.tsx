@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { type ItemAdvice } from '@/api/inventory'
+import { type ItemAdvice } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'
 import { cn } from '@/lib/utils'

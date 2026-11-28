@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react'
 import { Clock, Loader2, Play, ReceiptText } from 'lucide-react'
-import type { PlaceViewModel, ReservationViewModel } from '@/api/spaces/types.gen'
+import type { PlaceViewModel, ReservationViewModel } from '@ninja/api/spaces/types.gen'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'

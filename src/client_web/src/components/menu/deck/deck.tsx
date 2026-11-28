@@ -1,7 +1,7 @@
 import { memo, useCallback, useEffect, useLayoutEffect, useRef, useState, type MutableRefObject } from 'react'
 import { ArrowRight, Plus, Repeat2 } from 'lucide-react'
 import { motion, useReducedMotion } from 'motion/react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { itemPictureSrcSet, itemPictureUrl } from '@/components/menu/item-picture'

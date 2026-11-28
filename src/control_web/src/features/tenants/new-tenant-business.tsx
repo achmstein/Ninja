@@ -1,5 +1,5 @@
 import { ChefHat, Coffee, Gamepad2, Store, UtensilsCrossed, type LucideIcon } from 'lucide-react'
-import type { BusinessType } from '@/api/control'
+import type { BusinessType } from '@ninja/api/control'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import type { ModuleName } from '@/lib/tenant'
 import { Label } from '@/components/ui/label'

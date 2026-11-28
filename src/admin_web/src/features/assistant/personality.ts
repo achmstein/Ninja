@@ -1,4 +1,4 @@
-import type { AssistantDto } from '@/api/tenant'
+import type { AssistantDto } from '@ninja/api/tenant'
 
 export const NOTES_MAX = 1000
 

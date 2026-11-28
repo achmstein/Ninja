@@ -1,4 +1,4 @@
-import { type PartnerView } from '@/api/finance'
+import { type PartnerView } from '@ninja/api/finance'
 import { toNumber } from '@/lib/money'
 
 /**

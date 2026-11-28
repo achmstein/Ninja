@@ -1,4 +1,4 @@
-import { type ItemTotal } from '@/api/sales'
+import { type ItemTotal } from '@ninja/api/sales'
 import { toNumber } from '@/lib/money'
 import { type MenuCostRow } from './menu-cost-rows'
 

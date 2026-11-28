@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { CatalogItemDto } from '@/api/catalog/types.gen'
+import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 
 // The counter-sale cart, ported from client_web/src/lib/cart.ts.
 

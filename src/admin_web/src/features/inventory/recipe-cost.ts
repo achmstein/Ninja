@@ -1,5 +1,5 @@
-import { type CatalogItemDto, type LocalizedText } from '@/api/catalog'
-import { type RecipeCostView } from '@/api/inventory'
+import { type CatalogItemDto, type LocalizedText } from '@ninja/api/catalog'
+import { type RecipeCostView } from '@ninja/api/inventory'
 import { toNumber } from '@/lib/money'
 import { resolve } from './recipe-model'
 

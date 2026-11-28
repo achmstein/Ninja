@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { type DeliveryTimelineStep } from '@/api/ordering'
-import { getDeliveryTimelineOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { type DeliveryTimelineStep } from '@ninja/api/ordering'
+import { getDeliveryTimelineOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'

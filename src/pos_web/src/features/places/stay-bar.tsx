@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Square } from 'lucide-react'
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

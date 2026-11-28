@@ -1,7 +1,7 @@
 import { type ComponentType, type ReactNode } from 'react'
 import { CircleAlert, Clock, CreditCard, Loader2 } from 'lucide-react'
 import { AnimatePresence, motion, MotionConfig, useReducedMotion } from 'motion/react'
-import { type PaymentStatusView } from '@/api/sales'
+import { type PaymentStatusView } from '@ninja/api/sales'
 import { useBrandName, useBrandWordmark } from '@/lib/brand'
 import { formatMoney } from '@/lib/currency'
 import { useLanguage, useT } from '@/lib/i18n'

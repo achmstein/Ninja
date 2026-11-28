@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useT } from '@/lib/i18n'

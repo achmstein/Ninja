@@ -1,5 +1,6 @@
 import axios, { type InternalAxiosRequestConfig } from 'axios'
 import { getStoredUser } from '@/config/oidc-config'
+import { registerApiClient } from '@ninja/api/runtime'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { noteServerDate } from './server-clock'
 
@@ -16,6 +17,9 @@ export const API_VERSION = '1.0'
 export const apiClient = axios.create({
   params: { 'api-version': API_VERSION },
 })
+
+// Every generated client (@ninja/api) sends through this instance
+registerApiClient(apiClient)
 
 apiClient.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {

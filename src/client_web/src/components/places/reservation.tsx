@@ -1,6 +1,6 @@
 import { type CSSProperties } from 'react'
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReservationViewModel } from '@/api/spaces'
+import { type ReservationViewModel } from '@ninja/api/spaces'
 import { useLocalized } from '@/lib/i18n'
 import { useLiveBills } from '@/lib/live-bills'
 import { ease, springOpen } from '@/lib/motion'

@@ -7,8 +7,8 @@ import {
   listItemsOptions,
   listItemsQueryKey,
   toggleItemAvailabilityMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
-import type { CatalogItemDto } from '@/api/catalog/types.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
+import type { CatalogItemDto } from '@ninja/api/catalog/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

@@ -11,15 +11,15 @@ import {
   sendCourierTestJobMutation,
   setCourierConnectionMutation,
   updateCourierProviderMutation,
-} from '@/api/ordering/@tanstack/react-query.gen'
-import { type CourierProviderView, type CourierTestJobView } from '@/api/ordering/types.gen'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { type CourierProviderView, type CourierTestJobView } from '@ninja/api/ordering/types.gen'
 import {
   addCourierPayoutMutation,
   getCourierBalancesOptions,
   getCourierJobsOptions,
   getCourierPayoutsOptions,
-} from '@/api/sales/@tanstack/react-query.gen'
-import { type CourierBalanceView } from '@/api/sales/types.gen'
+} from '@ninja/api/sales/@tanstack/react-query.gen'
+import { type CourierBalanceView } from '@ninja/api/sales/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'

@@ -1,5 +1,5 @@
 import { Check, MessageSquare, MoreHorizontal, Phone, ShieldQuestion, User, UserX, X } from 'lucide-react'
-import { type OrderSummary } from '@/api/ordering'
+import { type OrderSummary } from '@ninja/api/ordering'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { showPhone } from '@/lib/phone'
 import { cn } from '@/lib/utils'

@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
 import { Printer } from 'lucide-react'
-import { getPurchaseOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { getPurchaseOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'

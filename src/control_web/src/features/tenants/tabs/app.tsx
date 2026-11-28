@@ -1,7 +1,7 @@
 import { useEffect, useState, type ReactNode } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { CheckCircle2, Circle, KeyRound, ShieldCheck, Smartphone, Sparkles, XCircle } from 'lucide-react'
-import type { AppCheck, TenantAppStatus, TenantDetail } from '@/api/control'
+import type { AppCheck, TenantAppStatus, TenantDetail } from '@ninja/api/control'
 import {
   checkTenantAppMutation,
   generateAndroidKeyMutation,
@@ -15,7 +15,7 @@ import {
   setAppGoogleSignInMutation,
   setPlayKeyMutation,
   setUpTenantAppMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { readFileBase64, readFileText } from '@/lib/files'
 import { useFormat } from '@/lib/format'

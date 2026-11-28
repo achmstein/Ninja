@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Minus, Plus, Sparkles } from 'lucide-react'
-import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@/api/catalog/types.gen'
+import type { CatalogItemDto, ItemCustomizationDto, UserItemPreferenceDto } from '@ninja/api/catalog/types.gen'
 import { apiClient } from '@/lib/api-client'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'

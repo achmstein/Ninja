@@ -5,8 +5,8 @@ import { Bike, Headset, History, Loader2, MapPin, ShoppingBag, Store, X } from '
 import {
   getKnownDeliveryAddressesOptions,
   resolveDeliveryBranchForStaffOptions,
-} from '@/api/ordering/@tanstack/react-query.gen'
-import type { KnownAddressView } from '@/api/ordering/types.gen'
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
+import type { KnownAddressView } from '@ninja/api/ordering/types.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'

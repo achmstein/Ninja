@@ -1,6 +1,6 @@
 import { memo, useEffect, useLayoutEffect, useRef, type ReactNode } from 'react'
 import { motion, useScroll } from 'motion/react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { useHandler } from '@/lib/use-handler'
 import { PageTitle } from '@/components/ninja/page/page'
 import { TABS_H } from '@/components/ninja/shell/chrome'

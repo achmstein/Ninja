@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import { matchAreas } from './area-match'
 
 const area = (zoneId: number, en: string | null, ar: string | null, branchId = 1): StaffDeliveryZone => ({

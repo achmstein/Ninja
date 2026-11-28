@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useMutation, useQuery } from '@tanstack/react-query'
 import { Check, Loader2, MapPinned, Send } from 'lucide-react'
-import { createLocationShareMutation, getLocationShareOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { createLocationShareMutation, getLocationShareOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrandName, useCustomerOrigin } from '@/lib/brand'
 import { useT } from '@/lib/i18n'

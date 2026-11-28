@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getKitchenOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getKitchenOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { serverNow } from '@/lib/server-clock'
 import { useStation } from './use-station'

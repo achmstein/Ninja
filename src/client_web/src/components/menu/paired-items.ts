@@ -1,4 +1,4 @@
-import type { CatalogItemDto, UserItemPreferenceDto } from '@/api/catalog'
+import type { CatalogItemDto, UserItemPreferenceDto } from '@ninja/api/catalog'
 import type { CartLine } from '@/lib/cart'
 import { canQuickAdd } from './deck/deck-model'
 

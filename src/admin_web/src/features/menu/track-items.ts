@@ -1,10 +1,10 @@
-import { type CatalogItemDto } from '@/api/catalog'
+import { type CatalogItemDto } from '@ninja/api/catalog'
 import {
   type MenuItemToTrack,
   type ProposedRecipe,
   type ProposedRecipeLine,
   type RecipesProposal,
-} from '@/api/inventory'
+} from '@ninja/api/inventory'
 import { primaryText, toLocalizedValue, type LocalizedValue } from '@/lib/localized-value'
 import { toNumber } from '@/lib/money'
 import { draftKey, validateDraft, type RecipeDraft, type SlotDraft } from '@/features/inventory/recipe-model'

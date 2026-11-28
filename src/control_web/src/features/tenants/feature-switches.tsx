@@ -1,11 +1,11 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { BrandDto, BrandFeatures, TenantDetail } from '@/api/control'
+import type { BrandDto, BrandFeatures, TenantDetail } from '@ninja/api/control'
 import {
   getTenantBrandOptions,
   getTenantBrandQueryKey,
   updateTenantBrandMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'
 import { tenantStatus } from '@/lib/tenant'

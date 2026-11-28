@@ -3,14 +3,14 @@ import { isAxiosError, type AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Check, ImageUp, RotateCcw } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { designPromotion, type PromotionDto, type PromotionRequest } from '@/api/catalog'
+import { designPromotion, type PromotionDto, type PromotionRequest } from '@ninja/api/catalog'
 import {
   createPromotionMutation,
   listCategoriesOptions,
   listItemsOptions,
   updatePromotionMutation,
   uploadPromotionPictureMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { formatDay } from '@/lib/business-day'

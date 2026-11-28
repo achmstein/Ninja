@@ -1,4 +1,4 @@
-import type { BrandWordmark } from '@/api/control'
+import type { BrandWordmark } from '@ninja/api/control'
 import type { Language } from '@/lib/language'
 
 /**

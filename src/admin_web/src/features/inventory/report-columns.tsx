@@ -1,4 +1,4 @@
-import { type VarianceRow } from '@/api/inventory'
+import { type VarianceRow } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

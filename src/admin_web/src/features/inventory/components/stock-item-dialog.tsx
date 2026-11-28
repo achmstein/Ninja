@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { createPortal } from 'react-dom'
-import { type StockItemView } from '@/api/inventory'
+import { type StockItemView } from '@ninja/api/inventory'
 import { bilingual, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { Button } from '@/components/ui/button'

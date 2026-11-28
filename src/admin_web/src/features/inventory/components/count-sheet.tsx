@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { CircleCheck, TriangleAlert } from 'lucide-react'
-import { getStockCountOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { getStockCountOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
-import type { TicketDetail } from '@/api/sales/types.gen'
-import type { StayViewModel } from '@/api/spaces/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
+import type { StayViewModel } from '@ninja/api/spaces/types.gen'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 import { ConfirmDialog } from '@/components/confirm-dialog'

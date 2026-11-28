@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { isOnOffer, offerPercent } from './offer'
 
 const item = (price: number, offerPrice: number | null, isOnOffer = true) =>

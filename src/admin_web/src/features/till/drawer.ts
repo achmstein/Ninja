@@ -1,4 +1,4 @@
-import { type ShiftView } from '@/api/sales'
+import { type ShiftView } from '@ninja/api/sales'
 import { type TranslationKey } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'
 

@@ -1,7 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { BillView } from '@/api/sales'
-import { getTicketReceiptOptions } from '@/api/sales/@tanstack/react-query.gen'
+import type { BillView } from '@ninja/api/sales'
+import { getTicketReceiptOptions } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { isSettled } from '@/lib/bills'
 

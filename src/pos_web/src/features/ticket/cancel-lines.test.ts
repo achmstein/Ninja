@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { TicketLineView } from '@/api/sales/types.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { isCancellable } from './cancel-lines'
 
 const line = (over: Partial<TicketLineView>): TicketLineView =>

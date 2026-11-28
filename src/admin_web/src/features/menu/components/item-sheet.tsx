@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { Trash2 } from 'lucide-react'
-import { type CatalogItemDto, type CatalogTypeDto } from '@/api/catalog'
+import { type CatalogItemDto, type CatalogTypeDto } from '@ninja/api/catalog'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

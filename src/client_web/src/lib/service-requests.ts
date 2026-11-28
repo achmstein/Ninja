@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { isAxiosError } from 'axios'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import type { LocalizedText } from '@/api/spaces'
+import type { LocalizedText } from '@ninja/api/spaces'
 import { getGuestId, useGuestStore } from '@/stores/guest-store'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import {

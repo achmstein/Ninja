@@ -2,9 +2,13 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { getRouteApi } from '@tanstack/react-router'
 import { useTable } from '@tanstack/react-table'
-import { type CatalogItemDto } from '@/api/catalog'
-import { deleteItemMutation, listCategoriesOptions, listItemsOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { getRecipeCostsOptions } from '@/api/inventory/@tanstack/react-query.gen'
+import { type CatalogItemDto } from '@ninja/api/catalog'
+import {
+  deleteItemMutation,
+  listCategoriesOptions,
+  listItemsOptions,
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
+import { getRecipeCostsOptions } from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocalized, useT } from '@/lib/i18n'
 import { formatEgp } from '@/lib/money'

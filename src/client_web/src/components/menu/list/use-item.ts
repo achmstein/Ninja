@@ -1,5 +1,5 @@
 import { useState, type RefObject } from 'react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { springSoft } from '@/lib/motion'
 import { usePress } from '@/components/ninja/gestures/use-press'
 import { useItemPreference } from '../data/use-item-preferences'

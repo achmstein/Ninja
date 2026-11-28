@@ -1,4 +1,4 @@
-import type { CapacityResponse } from '@/api/control'
+import type { CapacityResponse } from '@ninja/api/control'
 import { megabytes, percent } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { Progress } from '@/components/ui/progress'

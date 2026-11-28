@@ -3,7 +3,7 @@ import {
   getEmployeeLedgerOptions,
   getEmployeesOptions,
   getPayslipsOptions,
-} from '@/api/payroll/@tanstack/react-query.gen'
+} from '@ninja/api/payroll/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 
 // Every payroll list follows the active branch (X-Branch-Id)

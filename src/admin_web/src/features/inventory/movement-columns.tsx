@@ -1,4 +1,4 @@
-import { type MovementView } from '@/api/inventory'
+import { type MovementView } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'

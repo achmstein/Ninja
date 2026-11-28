@@ -1,6 +1,6 @@
 import { useQuery } from '@tanstack/react-query'
-import { getPendingOrdersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { getOpenReservationsOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { getPendingOrdersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { getOpenReservationsOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures } from '@/lib/brand'
 import { isOpenReservation } from '@/features/places/status'

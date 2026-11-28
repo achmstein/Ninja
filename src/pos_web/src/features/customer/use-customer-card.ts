@@ -1,10 +1,10 @@
 import { AxiosError } from 'axios'
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
-import { getAccountBalanceOptions } from '@/api/accounts/@tanstack/react-query.gen'
-import type { AccountSummaryViewModel } from '@/api/accounts/types.gen'
-import { getAccountOptions } from '@/api/loyalty/@tanstack/react-query.gen'
-import type { AccountDto } from '@/api/loyalty/types.gen'
-import { recordTabPaymentMutation } from '@/api/sales/@tanstack/react-query.gen'
+import { getAccountBalanceOptions } from '@ninja/api/accounts/@tanstack/react-query.gen'
+import type { AccountSummaryViewModel } from '@ninja/api/accounts/types.gen'
+import { getAccountOptions } from '@ninja/api/loyalty/@tanstack/react-query.gen'
+import type { AccountDto } from '@ninja/api/loyalty/types.gen'
+import { recordTabPaymentMutation } from '@ninja/api/sales/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 
 // What the till may know about a customer: their points, as information,

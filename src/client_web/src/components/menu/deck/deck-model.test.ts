@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
+import type { CatalogItemDto, ItemCustomizationDto } from '@ninja/api/catalog'
 import type { MenuSectionData } from '@/components/menu/data/sections'
 import { buildDeck, canQuickAdd, columnAt, pickUsual, pinchIntent, positionOf, quickAddChoice } from './deck-model'
 

@@ -1,4 +1,4 @@
-import { type RangeReport } from '@/api/sales'
+import { type RangeReport } from '@ninja/api/sales'
 import { useT } from '@/lib/i18n'
 import { useModules } from '@/lib/modules'
 import { formatEgp, toNumber } from '@/lib/money'

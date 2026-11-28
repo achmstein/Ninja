@@ -7,14 +7,14 @@ import {
   type CatalogTypeDto,
   type LocalizeResponse,
   type UpdateCatalogItemRequest,
-} from '@/api/catalog'
+} from '@ninja/api/catalog'
 import {
   createCustomizationMutation,
   createItemMutation,
   deleteItemPictureMutation,
   updateItemMutation,
   uploadItemPictureMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'

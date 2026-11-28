@@ -3,8 +3,8 @@ import {
   type LocalizedText,
   type SuggestCustomizationsRequest,
   type SuggestCustomizationsResponse,
-} from '@/api/catalog'
-import { suggestCustomizationsMutation } from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog'
+import { suggestCustomizationsMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'

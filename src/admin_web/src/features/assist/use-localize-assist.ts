@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { type LocalizeRequest, type LocalizeResponse } from '@/api/catalog'
-import { localizeMenuTextMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { type LocalizeRequest, type LocalizeResponse } from '@ninja/api/catalog'
+import { localizeMenuTextMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { toast } from '@/lib/toast'

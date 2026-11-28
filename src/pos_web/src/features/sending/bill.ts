@@ -1,4 +1,4 @@
-import type { TicketDetail } from '@/api/sales/types.gen'
+import type { TicketDetail } from '@ninja/api/sales/types.gen'
 import { toNumber } from '@/lib/money'
 
 const money = (value: number) => Math.round(value * 100) / 100

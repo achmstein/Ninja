@@ -1,9 +1,9 @@
 import { useQuery } from '@tanstack/react-query'
 import { isOwner } from '@/config/oidc-config'
 import { useAuth } from 'react-oidc-context'
-import { getTalabatOptions } from '@/api/catalog/@tanstack/react-query.gen'
-import { getCourierProvidersOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { type TenantFeatures } from '@/api/tenant/types.gen'
+import { getTalabatOptions } from '@ninja/api/catalog/@tanstack/react-query.gen'
+import { getCourierProvidersOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { type TenantFeatures } from '@ninja/api/tenant/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 

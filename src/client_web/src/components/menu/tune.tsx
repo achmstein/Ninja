@@ -10,7 +10,7 @@ import {
   useTransform,
   type AnimationPlaybackControls,
 } from 'motion/react'
-import type { CatalogItemDto, ItemCustomizationDto } from '@/api/catalog'
+import type { CatalogItemDto, ItemCustomizationDto } from '@ninja/api/catalog'
 import type { CartCustomization } from '@/lib/cart'
 import { useLocalized, usePrice, useT } from '@/lib/i18n'
 import { blurSwap, ease, fade } from '@/lib/motion'

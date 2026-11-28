@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getPlace, type PlaceSuggestion, type TenantMaps } from '@/api/tenant'
-import { autocompletePlacesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getPlace, type PlaceSuggestion, type TenantMaps } from '@ninja/api/tenant'
+import { autocompletePlacesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import type { LatLng } from '@/lib/geo'
 
 /**

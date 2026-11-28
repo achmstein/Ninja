@@ -14,12 +14,12 @@ import {
   Search,
   UserCheck,
 } from 'lucide-react'
-import { type BranchResponse } from '@/api/tenant'
+import { type BranchResponse } from '@ninja/api/tenant'
 import {
   getAllBranchesOptions,
   updateBranchMutation,
   updateBranchSettingsMutation,
-} from '@/api/tenant/@tanstack/react-query.gen'
+} from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useFeatures, useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

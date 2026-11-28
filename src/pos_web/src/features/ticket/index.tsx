@@ -21,13 +21,13 @@ import {
   UserPlus,
 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
-import { assignOrderCustomerMutation } from '@/api/ordering/@tanstack/react-query.gen'
+import { assignOrderCustomerMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import {
   assignTicketLinesCustomerMutation,
   getTicketOptions,
   moveTicketLinesMutation,
-} from '@/api/sales/@tanstack/react-query.gen'
-import type { TicketLineView } from '@/api/sales/types.gen'
+} from '@ninja/api/sales/@tanstack/react-query.gen'
+import type { TicketLineView } from '@ninja/api/sales/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'

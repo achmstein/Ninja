@@ -1,0 +1,19 @@
+# Prettier formats the app's source and its config files only
+/*
+!/src
+!index.html
+!package.json
+!tsconfig*.json
+!vite.config.ts
+!vitest.config.ts
+!eslint.config.js
+!prettier.config.js
+!README.md
+
+# Generated: never hand-formatted
+/src/gen
+/src/routeTree.gen.ts
+/src/**/*.gen.ts
+# shadcn primitives stay byte-identical across the staff apps
+/src/components/ui
+!scripts

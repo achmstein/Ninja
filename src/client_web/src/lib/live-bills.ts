@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { type OrderSummary } from '@/api/ordering'
-import { getOrdersByUserOptions } from '@/api/ordering/@tanstack/react-query.gen'
-import { type BillView } from '@/api/sales'
+import { type OrderSummary } from '@ninja/api/ordering'
+import { getOrdersByUserOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
+import { type BillView } from '@ninja/api/sales'
 import { API_VERSION } from '@/lib/api-client'
 import { closedAt, isOpen, useMyBills, useNow } from '@/lib/bills'
 

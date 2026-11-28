@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { CalendarClock, Loader2, Search, X } from 'lucide-react'
-import { type PlaceViewModel } from '@/api/spaces'
+import { type PlaceViewModel } from '@ninja/api/spaces'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { Button } from '@/components/ui/button'

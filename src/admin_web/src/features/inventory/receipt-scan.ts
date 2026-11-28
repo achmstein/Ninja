@@ -1,4 +1,4 @@
-import { type ProposedLine, type ReceiptProposal, type StockItemView } from '@/api/inventory'
+import { type ProposedLine, type ReceiptProposal, type StockItemView } from '@ninja/api/inventory'
 import { toNumber } from '@/lib/money'
 import { isBlank, toLocalizedValue, type LocalizedValue } from '@/components/localized-input'
 import { type Line, money, newLine, perUnit } from './lines'

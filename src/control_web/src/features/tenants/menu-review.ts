@@ -1,7 +1,7 @@
 // The menu read while a business is created, as its review holds it and as
 // Catalog's import takes it (POST /api/catalog/menu/import). No catalog yet,
 // so every section goes in as a new category.
-import type { LocalizedText, MenuProposal, ProposedChoice } from '@/api/control'
+import type { LocalizedText, MenuProposal, ProposedChoice } from '@ninja/api/control'
 
 export type DropItem = {
   key: string

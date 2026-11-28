@@ -2,8 +2,11 @@ import { useState } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Copy, Download, MonitorSmartphone, Plus, Trash2 } from 'lucide-react'
-import type { PrintConnectorView } from '@/api/ordering'
-import { createConnectorPairingMutation, deletePrintConnectorMutation } from '@/api/ordering/@tanstack/react-query.gen'
+import type { PrintConnectorView } from '@ninja/api/ordering'
+import {
+  createConnectorPairingMutation,
+  deletePrintConnectorMutation,
+} from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { useLanguage, useLocale, useT } from '@/lib/i18n'

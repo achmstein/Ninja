@@ -1,7 +1,12 @@
 import { useState } from 'react'
 import { getRouteApi, Link } from '@tanstack/react-router'
 import { Armchair, CalendarClock, History, MoreHorizontal, Plus, QrCode } from 'lucide-react'
-import { type PlaceViewModel, type ReservationViewModel, type StayViewModel, type TariffViewModel } from '@/api/spaces'
+import {
+  type PlaceViewModel,
+  type ReservationViewModel,
+  type StayViewModel,
+  type TariffViewModel,
+} from '@ninja/api/spaces'
 import { useFeatures } from '@/lib/brand'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { cn } from '@/lib/utils'

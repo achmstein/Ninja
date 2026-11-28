@@ -1,5 +1,5 @@
 import { Bike, Store, TriangleAlert } from 'lucide-react'
-import { type PlatformOrderView } from '@/api/ordering'
+import { type PlatformOrderView } from '@ninja/api/ordering'
 import { useLocale, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'

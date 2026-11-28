@@ -6,7 +6,7 @@ import {
   getRecurringExpensesOptions,
   getSupplierLedgerOptions,
   getSuppliersOptions,
-} from '@/api/finance/@tanstack/react-query.gen'
+} from '@ninja/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 
 // Every finance list follows the active branch (X-Branch-Id)

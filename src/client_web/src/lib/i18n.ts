@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { createJSONStorage, persist } from 'zustand/middleware'
-import type { LocalizedText } from '@/api/catalog'
+import type { LocalizedText } from '@ninja/api/catalog'
 import { formatMoney, formatMoneyWhole, useCurrency } from '@/lib/currency'
 import { openingLanguage } from '@/lib/opening-language'
 import { preview } from '@/lib/preview'

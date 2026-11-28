@@ -1,5 +1,5 @@
 import { Bike, Check, Printer, ShoppingBag, TriangleAlert, Undo2, X } from 'lucide-react'
-import type { KitchenOrder } from '@/api/ordering/types.gen'
+import type { KitchenOrder } from '@ninja/api/ordering/types.gen'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'

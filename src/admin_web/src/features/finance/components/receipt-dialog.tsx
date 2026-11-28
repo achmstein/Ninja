@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Paperclip, Trash2, Upload } from 'lucide-react'
-import { type ExpenseView } from '@/api/finance'
+import { type ExpenseView } from '@ninja/api/finance'
 import { apiClient } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

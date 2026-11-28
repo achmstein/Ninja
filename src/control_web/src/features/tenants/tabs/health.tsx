@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { RefreshCw, Server } from 'lucide-react'
-import type { TenantDetail } from '@/api/control'
+import type { TenantDetail } from '@ninja/api/control'
 import {
   getTenantContainersOptions,
   getTenantHealthOptions,
   getTenantLogsOptions,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useT } from '@/lib/i18n'
 import { isStamped, tenantStatus } from '@/lib/tenant'
 import { cn } from '@/lib/utils'

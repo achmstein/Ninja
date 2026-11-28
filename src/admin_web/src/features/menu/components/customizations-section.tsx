@@ -1,13 +1,13 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { GripVertical, Pencil, Plus, SlidersHorizontal, Trash2, X } from 'lucide-react'
-import { type CatalogItemDto, type ItemCustomization, type ItemCustomizationDto } from '@/api/catalog'
+import { type CatalogItemDto, type ItemCustomization, type ItemCustomizationDto } from '@ninja/api/catalog'
 import {
   createCustomizationMutation,
   deleteCustomizationMutation,
   getItemCustomizationsOptions,
   updateCustomizationMutation,
-} from '@/api/catalog/@tanstack/react-query.gen'
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'

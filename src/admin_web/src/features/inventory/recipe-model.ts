@@ -1,4 +1,4 @@
-import { type RecipeRequest, type RecipeView } from '@/api/inventory'
+import { type RecipeRequest, type RecipeView } from '@ninja/api/inventory'
 import { toNumber } from '@/lib/money'
 
 /**

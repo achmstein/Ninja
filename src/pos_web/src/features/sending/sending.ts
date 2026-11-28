@@ -1,6 +1,6 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
-import type { PosOrderRequest } from '@/api/ordering/types.gen'
+import type { PosOrderRequest } from '@ninja/api/ordering/types.gen'
 import { API_VERSION, apiClient } from '@/lib/api-client'
 import { translate } from '@/lib/i18n'
 import { isConnectionError } from '@/lib/network-status'

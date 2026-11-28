@@ -1,4 +1,4 @@
-import { type MenuImportRequest, type MenuProposal, type ProposedChoice } from '@/api/catalog'
+import { type MenuImportRequest, type MenuProposal, type ProposedChoice } from '@ninja/api/catalog'
 import { fromLocalizedValue, isBlank, type LocalizedValue, toLocalizedValue } from '@/lib/localized-value'
 import { toNumber } from '@/lib/money'
 

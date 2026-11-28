@@ -1,5 +1,5 @@
 import { ChevronUp } from 'lucide-react'
-import { type PlaceViewModel, type StayViewModel } from '@/api/spaces'
+import { type PlaceViewModel, type StayViewModel } from '@ninja/api/spaces'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { useDockSheet } from '@/lib/dock-sheet'
 import { useLocalized, useT } from '@/lib/i18n'

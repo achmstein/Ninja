@@ -1,7 +1,7 @@
 import { useRef, useState } from 'react'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
-import { createPosOrderMutation } from '@/api/ordering/@tanstack/react-query.gen'
+import { createPosOrderMutation } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { handleServerError } from '@/lib/handle-server-error'

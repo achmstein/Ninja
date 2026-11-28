@@ -1,5 +1,5 @@
 import { Check, User, Users } from 'lucide-react'
-import type { RateOptionViewModel } from '@/api/spaces/types.gen'
+import type { RateOptionViewModel } from '@ninja/api/spaces/types.gen'
 import { useLocalized } from '@/lib/i18n'
 import { cn } from '@/lib/utils'
 

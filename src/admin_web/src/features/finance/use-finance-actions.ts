@@ -8,7 +8,7 @@ import {
   type RecurringExpenseRequest,
   type SupplierEntryRequest,
   type SupplierRequest,
-} from '@/api/finance'
+} from '@ninja/api/finance'
 import {
   attachExpenseReceiptMutation,
   postPartnerEntryMutation,
@@ -20,7 +20,7 @@ import {
   savePartnerMutation,
   saveSupplierMutation,
   voidExpenseMutation,
-} from '@/api/finance/@tanstack/react-query.gen'
+} from '@ninja/api/finance/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toast } from '@/lib/toast'

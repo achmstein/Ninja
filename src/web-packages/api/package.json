@@ -1,0 +1,45 @@
+{
+  "name": "@ninja/api",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "description": "The generated API clients and TanStack Query helpers, once for every web app (npm run generate). Each app registers its axios instance with registerApiClient.",
+  "exports": {
+    "./runtime": "./src/runtime.ts",
+    "./*/@tanstack/react-query.gen": "./src/gen/*/@tanstack/react-query.gen.ts",
+    "./*/types.gen": "./src/gen/*/types.gen.ts",
+    "./*/sdk.gen": "./src/gen/*/sdk.gen.ts",
+    "./*": "./src/gen/*/index.ts"
+  },
+  "scripts": {
+    "generate": "node scripts/generate.mjs",
+    "build": "tsc -p tsconfig.json",
+    "lint": "eslint . --max-warnings 0",
+    "format:check": "prettier --check .",
+    "format": "prettier --write ."
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": "*",
+    "axios": "*"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.1",
+    "@hey-api/openapi-ts": "^0.99.0",
+    "@ninja/config": "*",
+    "@tanstack/react-query": "5.103.1",
+    "@trivago/prettier-plugin-sort-imports": "^6.0.0",
+    "@types/react": "^19.2.7",
+    "axios": "1.20.0",
+    "eslint": "^9.39.1",
+    "eslint-plugin-react-hooks": "^7.0.1",
+    "eslint-plugin-react-refresh": "^0.4.24",
+    "globals": "^16.5.0",
+    "prettier": "^3.6.2",
+    "prettier-plugin-tailwindcss": "^0.7.1",
+    "react": "19.3.1",
+    "typescript": "~5.9.3",
+    "typescript-eslint": "^8.48.0",
+    "vite": "^7.2.4",
+    "vitest": "^5.0.1"
+  }
+}

@@ -1,6 +1,6 @@
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { setOrderReady, setOrderStationReady } from '@/api/ordering/sdk.gen'
-import type { KitchenOrder } from '@/api/ordering/types.gen'
+import { setOrderReady, setOrderStationReady } from '@ninja/api/ordering/sdk.gen'
+import type { KitchenOrder } from '@ninja/api/ordering/types.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { serverNow } from '@/lib/server-clock'

@@ -1,4 +1,4 @@
-import { type CatalogItemDto } from '@/api/catalog'
+import { type CatalogItemDto } from '@ninja/api/catalog'
 import { toNumber } from '@/lib/money'
 
 // The item's customization options, in menu order, the shape the recipe

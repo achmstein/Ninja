@@ -1,6 +1,14 @@
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Info } from 'lucide-react'
+import type { BrandDto, TenantDetail } from '@ninja/api/control'
+import {
+  deleteTenantBrandImageMutation,
+  getTenantBrandOptions,
+  getTenantBrandQueryKey,
+  updateTenantBrandMutation,
+  uploadTenantBrandImageMutation,
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import {
   ARABIC_FONT_CATALOG,
   ARABIC_FONTS,
@@ -10,14 +18,6 @@ import {
   LATIN_FONTS,
   type BrandFont,
 } from '@ninja/web-core/brand-fonts'
-import type { BrandDto, TenantDetail } from '@/api/control'
-import {
-  deleteTenantBrandImageMutation,
-  getTenantBrandOptions,
-  getTenantBrandQueryKey,
-  updateTenantBrandMutation,
-  uploadTenantBrandImageMutation,
-} from '@/api/control/@tanstack/react-query.gen'
 import { imageOf, imagesFromUrls, VARIANT_SLOTS, type BrandImages, type ImageSlot } from '@/lib/brand-slots'
 import { RADII, type BrandThemeInput } from '@/lib/brand-theme'
 import { useT, type TranslationKey } from '@/lib/i18n'

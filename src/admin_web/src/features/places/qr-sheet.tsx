@@ -1,5 +1,5 @@
 import { useQuery } from '@tanstack/react-query'
-import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
+import { listPlacesOptions } from '@ninja/api/spaces/@tanstack/react-query.gen'
 import { useCustomerOrigin } from '@/lib/brand'
 import { bilingual, useT } from '@/lib/i18n'
 import { placeQrUrl } from '@/lib/qr'

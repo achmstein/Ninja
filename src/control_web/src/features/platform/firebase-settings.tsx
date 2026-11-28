@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { FirebaseTestResult } from '@/api/control'
+import type { FirebaseTestResult } from '@ninja/api/control'
 import {
   getFirebaseSettingsOptions,
   getFirebaseSettingsQueryKey,
   saveFirebaseSettingsMutation,
   testFirebaseMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { readFileText } from '@/lib/files'
 import { useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'

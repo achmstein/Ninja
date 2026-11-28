@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { AlertTriangle, Banknote, Bike, Check, ExternalLink, Truck, Undo2, UserRound, X } from 'lucide-react'
-import type { RiderView } from '@/api/ordering/types.gen'
+import type { RiderView } from '@ninja/api/ordering/types.gen'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber, useMoney } from '@/lib/money'
 import { defaultDisposition, type StockDisposition } from '@/lib/stock-disposition'

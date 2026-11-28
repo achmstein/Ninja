@@ -1,4 +1,4 @@
-import type { CatalogItemDto, LocalizedText } from '@/api/catalog'
+import type { CatalogItemDto, LocalizedText } from '@ninja/api/catalog'
 
 /** What a section of the menu is: the customer's own picks, the business's most popular, or one of its categories. */
 export type SectionKind = 'usuals' | 'favorites' | 'popular' | 'offers' | 'category'

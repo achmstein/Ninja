@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Plus, X } from 'lucide-react'
-import { type StockLevelView } from '@/api/inventory'
+import { type StockLevelView } from '@ninja/api/inventory'
 import { useBranchStore } from '@/stores/branch-store'
 import { useLocalized, useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

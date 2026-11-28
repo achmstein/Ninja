@@ -1,4 +1,4 @@
-import type { PaymentSettingsRequest, PaymentSettingsView } from '@/api/sales/types.gen'
+import type { PaymentSettingsRequest, PaymentSettingsView } from '@ninja/api/sales/types.gen'
 
 /**
  * A secret as the owner edits it. The server never sends one back, only

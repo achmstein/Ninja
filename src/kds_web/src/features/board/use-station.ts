@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { getKitchenStationsOptions } from '@/api/ordering/@tanstack/react-query.gen'
+import { getKitchenStationsOptions } from '@ninja/api/ordering/@tanstack/react-query.gen'
 import { useBranchStore } from '@/stores/branch-store'
 import { useStationStore } from '@/stores/station-store'
 import { API_VERSION } from '@/lib/api-client'

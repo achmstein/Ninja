@@ -1,4 +1,4 @@
-import { type ItemCustomization, type ProposedCustomization } from '@/api/catalog'
+import { type ItemCustomization, type ProposedCustomization } from '@ninja/api/catalog'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useLocalized, useT } from '@/lib/i18n'
 import { cn } from '@/lib/utils'

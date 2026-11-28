@@ -1,6 +1,6 @@
 // Finding a branch's named delivery area from what the caller says: "Degla",
 // "المعادي". Kept apart from the picker so it can be tested.
-import type { StaffDeliveryZone } from '@/api/ordering/types.gen'
+import type { StaffDeliveryZone } from '@ninja/api/ordering/types.gen'
 import type { Language } from '@/lib/i18n'
 import { normalizeName } from '@/lib/names'
 

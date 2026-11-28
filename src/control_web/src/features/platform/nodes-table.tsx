@@ -1,6 +1,6 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import type { NodeDto, NodeStatus } from '@/api/control'
+import type { NodeDto, NodeStatus } from '@ninja/api/control'
 import {
   drainNodeMutation,
   evacuateNodeMutation,
@@ -8,7 +8,7 @@ import {
   listNodesQueryKey,
   retireNodeMutation,
   updateNodeMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { megabytes } from '@/lib/format'
 import { useT } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

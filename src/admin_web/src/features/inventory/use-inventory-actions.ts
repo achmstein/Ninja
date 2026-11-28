@@ -8,7 +8,7 @@ import {
   type StockCountRequest,
   type StockItemRequest,
   type TransferRequest,
-} from '@/api/inventory'
+} from '@ninja/api/inventory'
 import {
   createStockItemMutation,
   postStockAdjustmentMutation,
@@ -21,7 +21,7 @@ import {
   trackByUnitMutation,
   transferStockMutation,
   updateStockItemMutation,
-} from '@/api/inventory/@tanstack/react-query.gen'
+} from '@ninja/api/inventory/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useT } from '@/lib/i18n'
 import { toNumber } from '@/lib/money'

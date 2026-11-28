@@ -1,7 +1,7 @@
 import type { ReactNode, RefObject } from 'react'
 import { ChevronRight, Minus, Plus, UtensilsCrossed } from 'lucide-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import type { CatalogItemDto } from '@/api/catalog'
+import type { CatalogItemDto } from '@ninja/api/catalog'
 import { lineKey, useCart } from '@/lib/cart'
 import { useLocalized, useT } from '@/lib/i18n'
 import { blurSwap } from '@/lib/motion'

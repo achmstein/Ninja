@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { KeyRound, LogOut, MoreHorizontal, ShieldOff, UserCheck, UserPlus, UserX } from 'lucide-react'
-import type { OperatorResponse } from '@/api/control'
+import type { OperatorResponse } from '@ninja/api/control'
 import {
   disableOperatorMutation,
   enableOperatorMutation,
@@ -11,7 +11,7 @@ import {
   resetOperatorAuthenticatorMutation,
   resetOperatorPasswordMutation,
   signOutOperatorMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { useFormat } from '@/lib/format'
 import { useT, type TranslationKey } from '@/lib/i18n'
 import { problemDetail } from '@/lib/problem'

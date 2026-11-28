@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import type { ShiftView } from '@/api/sales/types.gen'
+import type { ShiftView } from '@ninja/api/sales/types.gen'
 import { drawerFormula } from './drawer'
 
 // A shift as Sales works it out: float 500; a bill of 85 paid with 100 cash

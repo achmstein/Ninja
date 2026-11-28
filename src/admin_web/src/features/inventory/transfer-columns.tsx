@@ -1,5 +1,5 @@
 import { ArrowRight } from 'lucide-react'
-import { type TransferView } from '@/api/inventory'
+import { type TransferView } from '@ninja/api/inventory'
 import { type TranslateParams, type TranslationKey } from '@/lib/i18n'
 import { createAppColumnHelper } from '@/components/data-table'
 import { When } from '@/components/when'

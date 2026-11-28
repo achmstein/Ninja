@@ -2,8 +2,12 @@ import { useMemo, useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTable } from '@tanstack/react-table'
 import { Plus, Trash2 } from 'lucide-react'
-import { type PromoCodeDto } from '@/api/catalog'
-import { deletePromoMutation, listPromosOptions, setPromoActiveMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { type PromoCodeDto } from '@ninja/api/catalog'
+import {
+  deletePromoMutation,
+  listPromosOptions,
+  setPromoActiveMutation,
+} from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { formatDay } from '@/lib/business-day'
 import { useLocale, useT } from '@/lib/i18n'

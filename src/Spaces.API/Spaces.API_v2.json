@@ -29,6 +29,14 @@
             "schema": {
               "type": "boolean"
             }
+          },
+          {
+            "name": "bookable",
+            "in": "query",
+            "description": "Only the places a customer can book: in service and taking bookings (the customer apps' Book tab)",
+            "schema": {
+              "type": "boolean"
+            }
           }
         ],
         "responses": {

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Archive, Download, History, ShieldCheck, Trash2 } from 'lucide-react'
-import type { BackupInfo, TenantDetail } from '@/api/control'
+import type { BackupInfo, TenantDetail } from '@ninja/api/control'
 import {
   createTenantBackupMutation,
   deleteTenantBackupMutation,
@@ -10,7 +10,7 @@ import {
   listTenantBackupsQueryKey,
   listTenantsQueryKey,
   restoreTenantBackupMutation,
-} from '@/api/control/@tanstack/react-query.gen'
+} from '@ninja/api/control/@tanstack/react-query.gen'
 import { apiClient } from '@/lib/api-client'
 import { bytes, useFormat } from '@/lib/format'
 import { useT } from '@/lib/i18n'

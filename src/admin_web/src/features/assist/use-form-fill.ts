@@ -1,6 +1,6 @@
 import { useMutation } from '@tanstack/react-query'
-import { type FormField } from '@/api/catalog'
-import { fillFormMutation } from '@/api/catalog/@tanstack/react-query.gen'
+import { type FormField } from '@ninja/api/catalog'
+import { fillFormMutation } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import { API_VERSION } from '@/lib/api-client'
 import { useContentLanguages } from '@/lib/content-languages'
 import { type LocalizedValue } from '@/lib/localized-value'

@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { keepPreviousData, useQuery } from '@tanstack/react-query'
-import { getPlace, type PlaceSuggestion } from '@/api/tenant'
-import { autocompletePlacesOptions } from '@/api/tenant/@tanstack/react-query.gen'
+import { getPlace, type PlaceSuggestion } from '@ninja/api/tenant'
+import { autocompletePlacesOptions } from '@ninja/api/tenant/@tanstack/react-query.gen'
 import { useDebounced } from '@/lib/use-debounced'
 
 /**
