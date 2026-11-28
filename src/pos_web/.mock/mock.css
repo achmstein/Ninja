@@ -1,0 +1,4 @@
+/* The web till's own stylesheet, and its own sources for the classes it draws */
+@import '../src/styles/index.css';
+@source '../src';
+@source './';
