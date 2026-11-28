@@ -47,7 +47,7 @@ void main() {
     await tester.pumpWidget(ProviderScope(
       overrides: [
         moneyProvider.overrideWithValue(MoneyFormat('EGP', const Locale('en'))),
-        featuresProvider.overrideWithValue(TenantFeatures.all),
+        featuresProvider.overrideWithValue(TenantFeatures.customerUnsaid),
         myBillsProvider.overrideWith(_Bills.new),
         ordersProvider.overrideWith(_Orders.new),
         myStaysProvider.overrideWith(_NoStays.new),

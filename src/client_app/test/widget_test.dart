@@ -22,7 +22,7 @@ class _Tenant implements TenantRepository {
     this.brand = const TenantBrand(
       name: LocalizedText(en: 'Chillax', ar: 'تشيلاكس'),
       primaryColorHex: '#0ea5e9',
-      features: TenantFeatures(reservations: false, timeBilling: false),
+      features: TenantFeatures(reservations: false, timeBilling: false, delivery: false),
     ),
   ]);
 
@@ -187,8 +187,8 @@ void main() {
     });
 
     test('nothing set leaves the neutral slate untouched', () {
-      expect(brandedColors(NinjaColors.light, TenantBrand.neutral), NinjaColors.light);
-      expect(brandedColors(NinjaColors.dark, TenantBrand.neutral), NinjaColors.dark);
+      expect(brandedColors(NinjaColors.light, customerNeutralBrand), NinjaColors.light);
+      expect(brandedColors(NinjaColors.dark, customerNeutralBrand), NinjaColors.dark);
     });
 
     test('the radius token sets the style\'s corners', () {
@@ -197,7 +197,7 @@ void main() {
       expect(brandRadius('xl'), 24);
       expect(brandRadius('round'), isNull);
       // Ninja's corners when the business chose none
-      expect(ThemeState.themeFor(Brightness.light, TenantBrand.neutral).radius, 24);
+      expect(ThemeState.themeFor(Brightness.light, customerNeutralBrand).radius, 24);
       const lg = TenantBrand(name: LocalizedText(en: 'Chillax'), theme: TenantTheme(radius: 'lg'));
       expect(ThemeState.themeFor(Brightness.light, lg).radius, 16);
     });

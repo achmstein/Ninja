@@ -1,5 +1,7 @@
-import 'dart:ui' show Color, Locale;
+import 'dart:ui' show Brightness, Color, Locale;
+import 'package:flutter/foundation.dart' show mapEquals;
 import '../models/localized_text.dart';
+import 'package:ninja_app_core/utils/phone.dart' as phones;
 
 /// The switches a tenant can turn off. Every one is on until the brand is
 /// known, so nothing flashes off and back at startup.
@@ -19,9 +21,10 @@ class TenantFeatures {
   final bool onlinePayments;
 
   /// The business's own delivery: the till's board, taking a delivery over the
-  /// phone, and the whole of the rider app. An add-on it buys; on until the
-  /// brand says otherwise, and when a stack older than the switch says nothing
-  /// (it delivered before delivery was sold on its own).
+  /// phone, the rider app, and ordering one in the customer app. An add-on it
+  /// buys. The staff apps take it as on until the brand says otherwise (a stack
+  /// older than the switch delivered before delivery was sold on its own); the
+  /// customer app as off ([customerUnsaid]).
   final bool delivery;
 
   /// A call centre takes the business's phone orders: an account given every
@@ -43,9 +46,14 @@ class TenantFeatures {
     this.callCentre = false,
   });
 
+  /// What the staff apps take until the brand says otherwise
   static const all = TenantFeatures();
 
-  factory TenantFeatures.fromJson(Map<String, dynamic> json) => TenantFeatures(
+  /// What the customer app takes until the brand says otherwise: no delivery
+  static const customerUnsaid = TenantFeatures(delivery: false);
+
+  /// A switch the brand does not name takes its value from [unsaid]
+  factory TenantFeatures.fromJson(Map<String, dynamic> json, {TenantFeatures unsaid = all}) => TenantFeatures(
         // A cache from before the split says "spaces" for both
         reservations: json['reservations'] as bool? ?? json['spaces'] as bool? ?? true,
         timeBilling: json['timeBilling'] as bool? ?? json['spaces'] as bool? ?? true,
@@ -57,8 +65,8 @@ class TenantFeatures {
         kds: json['kds'] as bool? ?? true,
         // A cache from before the rename says "payAtTable"
         onlinePayments: json['onlinePayments'] as bool? ?? json['payAtTable'] as bool? ?? false,
-        delivery: json['delivery'] as bool? ?? true,
-        callCentre: json['callCentre'] as bool? ?? false,
+        delivery: json['delivery'] as bool? ?? unsaid.delivery,
+        callCentre: json['callCentre'] as bool? ?? unsaid.callCentre,
       );
 
   Map<String, dynamic> toJson() => {
@@ -74,6 +82,116 @@ class TenantFeatures {
         'delivery': delivery,
         'callCentre': callCentre,
       };
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantFeatures &&
+          other.callCentre == callCentre &&
+          other.reservations == reservations &&
+          other.timeBilling == timeBilling &&
+          other.loyalty == loyalty &&
+          other.tabs == tabs &&
+          other.inventory == inventory &&
+          other.finance == finance &&
+          other.payroll == payroll &&
+          other.kds == kds &&
+          other.onlinePayments == onlinePayments &&
+          other.delivery == delivery;
+
+  @override
+  int get hashCode =>
+      Object.hash(reservations, timeBilling, loyalty, tabs, inventory, finance, payroll, kds, onlinePayments, delivery, callCentre);
+}
+
+/// The wide logo for headers and sign-in. [width] and [height] are the
+/// trimmed PNG's pixels, so a box can be reserved before it loads.
+class TenantWordmark {
+  /// Absolute, versioned, immutable
+  final String url;
+  final int width;
+  final int height;
+
+  const TenantWordmark({required this.url, required this.width, required this.height});
+
+  double get aspectRatio => width / height;
+
+  /// A relative `url` is resolved against [baseUrl]; anything short of a
+  /// URL and two positive sides is no wordmark
+  static TenantWordmark? parse(Object? json, {String? baseUrl}) {
+    if (json is! Map<String, dynamic>) return null;
+    final url = json['url'] as String?;
+    final width = (json['width'] as num?)?.toInt() ?? 0;
+    final height = (json['height'] as num?)?.toInt() ?? 0;
+    if (url == null || url.isEmpty || width <= 0 || height <= 0) return null;
+    return TenantWordmark(url: _absolute(url, baseUrl), width: width, height: height);
+  }
+
+  Map<String, dynamic> toJson() => {'url': url, 'width': width, 'height': height};
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantWordmark && other.url == url && other.width == width && other.height == height;
+
+  @override
+  int get hashCode => Object.hash(url, width, height);
+}
+
+/// The cover photo: the same shape as a wordmark (an absolute, versioned
+/// URL and its pixel size), so the banner can reserve its box
+typedef TenantCover = TenantWordmark;
+
+/// The wide lockups by language and scheme. A missing one falls back: the
+/// dark to the light, Arabic to English, and to the mark and the name when
+/// the tenant has none at all.
+class TenantWordmarks {
+  final TenantWordmark? en;
+  final TenantWordmark? enDark;
+  final TenantWordmark? ar;
+  final TenantWordmark? arDark;
+
+  const TenantWordmarks({this.en, this.enDark, this.ar, this.arDark});
+
+  static const none = TenantWordmarks();
+
+  static TenantWordmarks parse(Object? json, {String? baseUrl}) {
+    if (json is! Map<String, dynamic>) return none;
+    return TenantWordmarks(
+      en: TenantWordmark.parse(json['en'], baseUrl: baseUrl),
+      enDark: TenantWordmark.parse(json['enDark'], baseUrl: baseUrl),
+      ar: TenantWordmark.parse(json['ar'], baseUrl: baseUrl),
+      arDark: TenantWordmark.parse(json['arDark'], baseUrl: baseUrl),
+    );
+  }
+
+  Map<String, dynamic> toJson() => {
+        'en': en?.toJson(),
+        'enDark': enDark?.toJson(),
+        'ar': ar?.toJson(),
+        'arDark': arDark?.toJson(),
+      };
+
+  /// The one to show for [locale] on a page of [brightness]
+  TenantWordmark? resolve(Locale locale, Brightness brightness) {
+    final arabic = locale.languageCode == 'ar';
+    final dark = brightness == Brightness.dark;
+    final order = arabic
+        ? (dark ? [arDark, ar, enDark, en] : [ar, en])
+        : (dark ? [enDark, en] : [en]);
+    for (final candidate in order) {
+      if (candidate != null) return candidate;
+    }
+    return null;
+  }
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantWordmarks && other.en == en && other.enDark == enDark && other.ar == ar && other.arDark == arDark;
+
+  @override
+  int get hashCode => Object.hash(en, enDark, ar, arDark);
 }
 
 /// Where the tenant trades: what its prices are counted in, what its
@@ -92,12 +210,57 @@ class TenantLocale {
   /// `ar` or `en`
   final String language;
 
+  /// `standard` or `egyptian`: which Arabic the app speaks
+  final String arabicStyle;
+
+  /// `both`, `ar` or `en`: the languages the business writes its menu, places
+  /// and names in. A one-language business's app speaks that language and offers
+  /// no switch.
+  final String contentLanguages;
+
+  /// The loose shape the tenant's sign-in page holds a number to. The app
+  /// itself reads a number against the country ([isValidPhone]); this is only
+  /// carried as the tenant sends it.
+  final String phonePattern;
+
+  /// A mobile as the country writes one, to show in a phone field: `010 01234567`
+  final String phonePlaceholder;
+
   const TenantLocale({
     this.country = 'EG',
     this.currency = 'EGP',
     this.timeZone = 'Africa/Cairo',
     this.language = 'ar',
+    this.arabicStyle = 'egyptian',
+    this.contentLanguages = 'both',
+    this.phonePattern = r'^\+?[0-9]{7,15}$',
+    this.phonePlaceholder = '',
   });
+
+  /// Whether this is a customer's number here: a mobile of the business's
+  /// country, however it is typed or a phone's autofill hands it over.
+  bool isValidPhone(String phone) => phones.isValidPhone(phone, country);
+
+  /// The number in the one international form it is sent and kept in
+  /// (+201012345678); what was typed, without its separators, when it is not
+  /// a number here.
+  String normalizePhone(String phone) => phones.normalizePhone(phone, country);
+
+  /// A kept number as people here write it (010 12345678), for showing: inside
+  /// a left-to-right isolate, so in an Arabic line its groups keep their order.
+  String showPhone(String? phone) {
+    final shown = phones.formatPhone(phone, country);
+    return shown.isEmpty ? shown : '\u2066$shown\u2069';
+  }
+
+  /// The same number bare, for a field someone types in.
+  String editablePhone(String? phone) => phones.formatPhone(phone, country);
+
+  /// The app's Arabic: Modern Standard is the `ar_001` locale, Egyptian the plain `ar`
+  bool get speaksStandardArabic => arabicStyle == 'standard';
+
+  /// The business writes one language only: the app speaks it, with no switch
+  bool get writesOneLanguage => contentLanguages != 'both';
 
   static const egypt = TenantLocale();
 
@@ -113,6 +276,17 @@ class TenantLocale {
       currency: read('currency', egypt.currency).toUpperCase(),
       timeZone: read('timeZone', egypt.timeZone),
       language: read('language', egypt.language).toLowerCase(),
+      // Older stacks do not say: Egyptian for Egypt, Standard anywhere else
+      arabicStyle: read('arabicStyle', read('country', egypt.country).toUpperCase() == 'EG' ? 'egyptian' : 'standard')
+          .toLowerCase(),
+      // Older stacks do not say: both
+      contentLanguages: switch (read('contentLanguages', 'both').toLowerCase()) {
+        'ar' => 'ar',
+        'en' => 'en',
+        _ => 'both',
+      },
+      phonePattern: read('phonePattern', egypt.phonePattern),
+      phonePlaceholder: read('phonePlaceholder', egypt.phonePlaceholder),
     );
   }
 
@@ -121,6 +295,10 @@ class TenantLocale {
         'currency': currency,
         'timeZone': timeZone,
         'language': language,
+        'arabicStyle': arabicStyle,
+        'contentLanguages': contentLanguages,
+        'phonePattern': phonePattern,
+        'phonePlaceholder': phonePlaceholder,
       };
 
   @override
@@ -130,15 +308,192 @@ class TenantLocale {
           other.country == country &&
           other.currency == currency &&
           other.timeZone == timeZone &&
-          other.language == language;
+          other.language == language &&
+          other.arabicStyle == arabicStyle &&
+          other.contentLanguages == contentLanguages &&
+          other.phonePattern == phonePattern;
 
   @override
-  int get hashCode => Object.hash(country, currency, timeZone, language);
+  int get hashCode => Object.hash(country, currency, timeZone, language, arabicStyle, contentLanguages, phonePattern);
 }
 
-/// The tenant this build runs for: name, one brand color, a logo, its locale
-/// and the feature switches (`GET /api/tenant`). Cached between runs, so the
-/// app paints the right brand before the network answers.
+/// The dark scheme's own seeds, for a brand whose lifted colours do not
+/// suit it; null derives everything from the light seeds.
+class TenantThemeDark {
+  final String? primaryHex;
+  final String? accentHex;
+  final String? surfaceHex;
+
+  const TenantThemeDark({this.primaryHex, this.accentHex, this.surfaceHex});
+
+  static TenantThemeDark? parse(Object? json) {
+    if (json is! Map<String, dynamic>) return null;
+    final dark = TenantThemeDark(
+      primaryHex: _hex(json['primary'] as String?),
+      accentHex: _hex(json['accent'] as String?),
+      surfaceHex: _hex(json['surface'] as String?),
+    );
+    return dark.primaryHex == null && dark.accentHex == null && dark.surfaceHex == null ? null : dark;
+  }
+
+  Map<String, dynamic> toJson() => {'primary': primaryHex, 'accent': accentHex, 'surface': surfaceHex};
+
+  Color? get primary => _color(primaryHex);
+  Color? get accent => _color(accentHex);
+  Color? get surface => _color(surfaceHex);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantThemeDark && other.primaryHex == primaryHex && other.accentHex == accentHex && other.surfaceHex == surfaceHex;
+
+  @override
+  int get hashCode => Object.hash(primaryHex, accentHex, surfaceHex);
+}
+
+/// The seeds of the tenant's design on top of the neutral palette: every
+/// field is optional; null keeps the platform default. The colours are
+/// derived for both schemes by [brandedColors], the same way the web apps do.
+class TenantTheme {
+  static const radii = {'none', 'sm', 'md', 'lg', 'xl'};
+
+  /// `#rrggbb`: chips, badges and secondary buttons
+  final String? accentHex;
+
+  /// `#rrggbb`: the page, light scheme; its hue tints the neutrals of both schemes
+  final String? surfaceHex;
+
+  /// One of [radii]
+  final String? radius;
+
+  /// "sm", "md" or "lg": the room the web app's header gives the wordmark. The
+  /// app shows its wordmark hero-sized (login, profile) rather than in a
+  /// header, so it only carries the seed through the cached document.
+  final String? headerSize;
+
+  /// Google Fonts family names, one per script
+  final String? fontLatin;
+  final String? fontArabic;
+
+  /// The dark scheme's own seeds, when derived ones do not suit the brand
+  final TenantThemeDark? dark;
+
+  /// The style the business chose. The customer app wears one style now,
+  /// Ninja (see styles.dart), whatever this says; kept for the cached document
+  final String? style;
+
+  /// The parts the business dressed its own way, as sent; the app reads
+  /// `menuItem` (how the menu shows its items) and `places` (how the Book tab
+  /// lists its places). Resolved by `resolveLayout`.
+  final Map<String, String>? layout;
+
+  /// The dock's colour: null a deep shade of the brand colour, "neutral" near-black
+  final String? slab;
+
+  const TenantTheme({
+    this.accentHex,
+    this.surfaceHex,
+    this.radius,
+    this.headerSize,
+    this.fontLatin,
+    this.fontArabic,
+    this.dark,
+    this.style,
+    this.layout,
+    this.slab,
+  });
+
+  TenantTheme copyWith({String? radius, String? headerSize, String? fontLatin, String? fontArabic}) => TenantTheme(
+        accentHex: accentHex,
+        surfaceHex: surfaceHex,
+        radius: radius ?? this.radius,
+        headerSize: headerSize ?? this.headerSize,
+        fontLatin: fontLatin ?? this.fontLatin,
+        fontArabic: fontArabic ?? this.fontArabic,
+        dark: dark,
+        style: style,
+        layout: layout,
+        slab: slab,
+      );
+
+  static const headerSizes = ['sm', 'md', 'lg'];
+
+  static const neutral = TenantTheme();
+
+  factory TenantTheme.fromJson(Map<String, dynamic> json) {
+    final radius = (json['radius'] as String?)?.trim().toLowerCase();
+    final headerSize = (json['headerSize'] as String?)?.trim().toLowerCase();
+    String? font(String key) {
+      final value = (json[key] as String?)?.trim();
+      return value == null || value.isEmpty ? null : value;
+    }
+
+    return TenantTheme(
+      accentHex: _hex(json['accent'] as String?),
+      surfaceHex: _hex(json['surface'] as String?),
+      radius: radius != null && radii.contains(radius) ? radius : null,
+      headerSize: headerSize != null && headerSizes.contains(headerSize) ? headerSize : null,
+      fontLatin: font('fontLatin'),
+      fontArabic: font('fontArabic'),
+      dark: TenantThemeDark.parse(json['dark']),
+      style: font('style')?.toLowerCase(),
+      layout: _layout(json['layout']),
+      slab: font('slab')?.toLowerCase(),
+    );
+  }
+
+  /// The string parts of a layout object; anything else is no layout
+  static Map<String, String>? _layout(Object? json) {
+    if (json is! Map) return null;
+    final parts = <String, String>{
+      for (final entry in json.entries)
+        if (entry.key is String && entry.value is String && (entry.value as String).isNotEmpty)
+          entry.key as String: entry.value as String,
+    };
+    return parts.isEmpty ? null : parts;
+  }
+
+  static TenantTheme parse(Object? json) => json is Map<String, dynamic> ? TenantTheme.fromJson(json) : neutral;
+
+  Map<String, dynamic> toJson() => {
+        'accent': accentHex,
+        'surface': surfaceHex,
+        'radius': radius,
+        'headerSize': headerSize,
+        'fontLatin': fontLatin,
+        'fontArabic': fontArabic,
+        'dark': dark?.toJson(),
+        'style': style,
+        'layout': layout,
+        'slab': slab,
+      };
+
+  Color? get accent => _color(accentHex);
+  Color? get surface => _color(surfaceHex);
+
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantTheme &&
+          other.accentHex == accentHex &&
+          other.surfaceHex == surfaceHex &&
+          other.radius == radius &&
+          other.fontLatin == fontLatin &&
+          other.fontArabic == fontArabic &&
+          other.headerSize == headerSize &&
+          other.dark == dark &&
+          other.style == style &&
+          other.slab == slab &&
+          mapEquals(other.layout, layout);
+
+  @override
+  int get hashCode => Object.hash(
+      accentHex, surfaceHex, radius, fontLatin, fontArabic, headerSize, dark, style, slab, Object.hashAllUnordered(layout?.entries.map((e) => '${e.key}=${e.value}') ?? const []));
+}
+
+/// The tenant this build runs for: name, brand color, logo, wordmark, theme
+/// tokens, locale and the feature switches (`GET /api/tenant`). Cached
+/// between runs, so the app paints the right brand before the network answers.
 class TenantBrand {
   final LocalizedText name;
 
@@ -148,27 +503,41 @@ class TenantBrand {
   /// Absolute URL of the uploaded mark, or null when there is none
   final String? logoUrl;
 
-  /// Absolute URL of the English wide logo, the one paper prints
-  final String? wordmarkUrl;
+  /// The mark for dark pages, or null to use [logoUrl]
+  final String? logoDarkUrl;
+
+  /// The wide logos; the mark and the name stand in for a missing one
+  final TenantWordmarks wordmarks;
+
+  /// The business's cover photo, for the banner header; null when there is none
+  final TenantCover? cover;
+  final TenantTheme theme;
   final TenantLocale locale;
 
-  /// `light` or `dark` for someone who has not chosen; null keeps the app's own default
+  /// `light` or `dark` for someone who has not chosen; null follows the device
   final String? defaultThemeMode;
   final TenantFeatures features;
-
-  /// The kind of place the business was created as (`coffee_shop`,
-  /// `cloud_kitchen`, ...); null from a stack that does not say
-  final String? businessType;
-
-  /// Where customers open the menu (`https://…`, no trailing slash); null
-  /// when provisioning has not said. The app link a counter customer
-  /// claims their account with points there.
-  final String? customerUrl;
   final int version;
 
+  /// The customer site ("https://business.example.com"), or null when the stack
+  /// was not told
+  final String? customerUrl;
+
+  /// The providers customers may sign in with ("google", "apple"); null when
+  /// the stack does not say (an older one, or a brand cached before it did),
+  /// which keeps both, as the app always offered them
+  final Set<String>? socialProviders;
+
+  /// "cafe", "restaurant", "cloud_kitchen" or "game_station"; null when the stack does not say
+  final String? businessType;
+
   /// Whether the business has address search (Google Maps on, with the
-  /// platform's key): the till's delivery form shows a search field
+  /// platform's key): the address form shows a search field above the map
   final bool addressSearch;
+
+  /// The menu leaves out an item that is off or sold out; false shows it greyed
+  /// and marked, as the customer's web does (the Brand page's switch)
+  final bool hideSoldOutItems;
 
   /// How the till's sale pad shows the items, as the owner chose in admin:
   /// `photos` (a tile with each item's picture) or `compact` (text tiles,
@@ -184,14 +553,19 @@ class TenantBrand {
     required this.name,
     this.primaryColorHex,
     this.logoUrl,
-    this.wordmarkUrl,
+    this.logoDarkUrl,
+    this.wordmarks = TenantWordmarks.none,
+    this.cover,
+    this.theme = TenantTheme.neutral,
     this.locale = TenantLocale.egypt,
     this.defaultThemeMode,
     this.features = TenantFeatures.all,
-    this.businessType,
-    this.customerUrl,
     this.version = 0,
+    this.customerUrl,
+    this.socialProviders,
+    this.businessType,
     this.addressSearch = false,
+    this.hideSoldOutItems = false,
     this.tillItems = 'photos',
     this.onlinePaymentsInPlan = false,
   });
@@ -202,39 +576,45 @@ class TenantBrand {
   /// ISO 4217: what the business's money is counted in
   String get currency => locale.currency;
 
-  /// A cloud kitchen has no tables to open or seat: its orders are counter
-  /// bills and app orders, never a floor
-  bool get isCloudKitchen => businessType == 'cloud_kitchen';
+  /// Absolute URL of the English wide logo, the one paper prints
+  String? get wordmarkUrl => wordmarks.en?.url;
 
   /// What a receipt prints at the top: the wide logo, else the mark, else nothing (the name stands in)
   String? get receiptImageUrl => wordmarkUrl ?? logoUrl;
 
-  /// What shows until anything is known: a neutral name, no color, no logo,
-  /// every feature on
+  /// A cloud kitchen has no tables: an order is collected or brought, never eaten in
+  bool get isCloudKitchen => businessType == 'cloud_kitchen';
+
+  /// What a staff app shows until anything is known: no name, no color, no
+  /// logo, every feature on. The customer app has its own, named Ninja.
   static const neutral = TenantBrand(name: LocalizedText(en: ''));
 
-  /// The API's shape; relative URLs are relative to [baseUrl]
-  factory TenantBrand.fromApi(Map<String, dynamic> json, {required String baseUrl}) {
+  /// The API's shape; relative URLs are relative to [baseUrl]; a feature the
+  /// brand does not name takes its value from [unsaid]
+  factory TenantBrand.fromApi(Map<String, dynamic> json,
+      {required String baseUrl, TenantFeatures unsaid = TenantFeatures.all}) {
     final logo = json['logoUrl'] as String?;
-    final wordmarks = json['wordmarks'];
-    final wordmark = wordmarks is Map<String, dynamic> && wordmarks['en'] is Map<String, dynamic>
-        ? (wordmarks['en'] as Map<String, dynamic>)['url'] as String?
-        : null;
-    String? absolute(String? url) => url == null ? null : (url.startsWith('http') ? url : '$baseUrl$url');
+    final logoDark = json['logoDarkUrl'] as String?;
     return TenantBrand(
       name: LocalizedText.parse(json['name']),
       primaryColorHex: _hex(json['primaryColor'] as String?),
-      logoUrl: absolute(logo),
-      wordmarkUrl: absolute(wordmark),
+      logoUrl: logo == null ? null : _absolute(logo, baseUrl),
+      logoDarkUrl: logoDark == null ? null : _absolute(logoDark, baseUrl),
+      wordmarks: TenantWordmarks.parse(json['wordmarks'], baseUrl: baseUrl),
+      cover: TenantCover.parse(json['cover'], baseUrl: baseUrl),
+      theme: TenantTheme.parse(json['theme']),
       locale: TenantLocale.parse(json['locale']),
+
       defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : null),
       features: json['features'] is Map<String, dynamic>
-          ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
-          : TenantFeatures.all,
-      businessType: json['businessType'] as String?,
-      customerUrl: _origin(json['customerUrl']),
+          ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>, unsaid: unsaid)
+          : unsaid,
       version: (json['version'] as num?)?.toInt() ?? 0,
+      customerUrl: _origin(json['customerUrl']),
+      socialProviders: _social(json['auth'] is Map ? (json['auth'] as Map)['social'] : null),
+      businessType: json['businessType'] as String?,
       addressSearch: json['maps'] is Map && (json['maps'] as Map)['search'] == true,
+      hideSoldOutItems: json['hideSoldOutItems'] == true,
       tillItems: _tillItems(json['tillItems']),
       onlinePaymentsInPlan: _inPlan(json, 'onlinePayments'),
     );
@@ -245,24 +625,36 @@ class TenantBrand {
       (json['entitlements'] is Map && (json['entitlements'] as Map)[key] == true) ||
       (json['features'] is Map && (json['features'] as Map)[key] == true);
 
-  /// The cached shape (what [toJson] wrote). A cache from before the locale
-  /// was kept whole says only `currency`; it still counts.
-  factory TenantBrand.fromJson(Map<String, dynamic> json) => TenantBrand(
+  /// The API's auth.social ([{provider, hint}]) as the names the app offers
+  static Set<String>? _social(Object? value) => value is List
+      ? {for (final p in value) if (p is Map && p['provider'] is String) p['provider'] as String}
+      : null;
+
+  /// The cached shape (what [toJson] wrote); a cache from an older build
+  /// simply lacks the newer keys, and one from before the locale was kept
+  /// whole says only `currency`
+  factory TenantBrand.fromJson(Map<String, dynamic> json, {TenantFeatures unsaid = TenantFeatures.all}) => TenantBrand(
         name: LocalizedText.parse(json['name']),
         primaryColorHex: _hex(json['primaryColor'] as String?),
         logoUrl: json['logoUrl'] as String?,
-        wordmarkUrl: json['wordmarkUrl'] as String?,
+        logoDarkUrl: json['logoDarkUrl'] as String?,
+        wordmarks: TenantWordmarks.parse(json['wordmarks']),
+        cover: TenantCover.parse(json['cover']),
+        theme: TenantTheme.parse(json['theme']),
         locale: json['locale'] is Map<String, dynamic>
             ? TenantLocale.parse(json['locale'])
             : TenantLocale(currency: _currency(json['currency'])),
-        defaultThemeMode: _mode(json['theme'] is Map ? (json['theme'] as Map)['mode'] : json['defaultThemeMode']),
+        // The cache keeps it at the top (toJson); the API's shape has it in the theme
+        defaultThemeMode: _mode(json['defaultThemeMode'] ?? (json['theme'] is Map ? (json['theme'] as Map)['mode'] : null)),
         features: json['features'] is Map<String, dynamic>
-            ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>)
-            : TenantFeatures.all,
-        businessType: json['businessType'] as String?,
-        customerUrl: _origin(json['customerUrl']),
+            ? TenantFeatures.fromJson(json['features'] as Map<String, dynamic>, unsaid: unsaid)
+            : unsaid,
         version: (json['version'] as num?)?.toInt() ?? 0,
+        customerUrl: _origin(json['customerUrl']),
+        socialProviders: json['social'] is List ? {for (final p in json['social'] as List) if (p is String) p} : null,
+        businessType: json['businessType'] as String?,
         addressSearch: json['addressSearch'] == true,
+        hideSoldOutItems: json['hideSoldOutItems'] == true,
         tillItems: _tillItems(json['tillItems']),
         onlinePaymentsInPlan: json['onlinePaymentsInPlan'] == true,
       );
@@ -271,23 +663,30 @@ class TenantBrand {
         'name': name.toJson(),
         'primaryColor': primaryColorHex,
         'logoUrl': logoUrl,
-        'wordmarkUrl': wordmarkUrl,
+        'logoDarkUrl': logoDarkUrl,
+        'wordmarks': wordmarks.toJson(),
+        'cover': cover?.toJson(),
+        'theme': theme.toJson(),
         'locale': locale.toJson(),
         'defaultThemeMode': defaultThemeMode,
         'features': features.toJson(),
-        'businessType': businessType,
-        'customerUrl': customerUrl,
         'version': version,
+        'customerUrl': customerUrl,
+        'social': socialProviders?.toList(),
+        'businessType': businessType,
         'addressSearch': addressSearch,
+        'hideSoldOutItems': hideSoldOutItems,
         'tillItems': tillItems,
         'onlinePaymentsInPlan': onlinePaymentsInPlan,
       };
 
-  Color? get primaryColor {
-    final hex = primaryColorHex;
-    if (hex == null) return null;
-    return Color(0xFF000000 | int.parse(hex.substring(1), radix: 16));
-  }
+  Color? get primaryColor => _color(primaryColorHex);
+
+  /// The mark for a page of [brightness]; the dark one falls back to the light one
+  String? logoFor(Brightness brightness) => (brightness == Brightness.dark ? logoDarkUrl : null) ?? logoUrl;
+
+  /// The wide logo for [locale] on a page of [brightness], or null
+  TenantWordmark? wordmarkFor(Locale locale, Brightness brightness) => wordmarks.resolve(locale, brightness);
 
   String displayName(Locale locale) => name.getText(locale);
 
@@ -297,12 +696,43 @@ class TenantBrand {
     return text.isEmpty ? '' : text.substring(0, 1).toUpperCase();
   }
 
-  static String? _hex(String? value) {
-    if (value == null) return null;
-    final v = value.trim().toLowerCase();
-    return RegExp(r'^#[0-9a-f]{6}$').hasMatch(v) ? v : null;
-  }
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      other is TenantBrand &&
+          other.name == name &&
+          other.primaryColorHex == primaryColorHex &&
+          other.logoUrl == logoUrl &&
+          other.logoDarkUrl == logoDarkUrl &&
+          other.wordmarks == wordmarks &&
+          other.cover == cover &&
+          other.theme == theme &&
+          other.locale == locale &&
+          other.features == features &&
+          other.version == version &&
+          other.customerUrl == customerUrl &&
+          other.businessType == businessType &&
+          other.addressSearch == addressSearch &&
+          other.hideSoldOutItems == hideSoldOutItems &&
+          other.tillItems == tillItems &&
+          other.onlinePaymentsInPlan == onlinePaymentsInPlan;
+
+  @override
+  int get hashCode => Object.hash(name, primaryColorHex, logoUrl, logoDarkUrl, wordmarks, cover, theme, locale, features, version, customerUrl, businessType, addressSearch, hideSoldOutItems, tillItems, onlinePaymentsInPlan);
 }
+
+String _absolute(String url, String? baseUrl) => url.startsWith('http') || baseUrl == null ? url : '$baseUrl$url';
+
+String? _hex(String? value) {
+  if (value == null) return null;
+  final v = value.trim().toLowerCase();
+  return RegExp(r'^#[0-9a-f]{6}$').hasMatch(v) ? v : null;
+}
+
+Color? _color(String? hex) => hex == null ? null : Color(0xFF000000 | int.parse(hex.substring(1), radix: 16));
+
+/// `light` or `dark`, anything else follows the device
+String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;
 
 /// An absolute http(s) origin without its trailing slash, else null
 String? _origin(Object? value) {
@@ -311,9 +741,6 @@ String? _origin(Object? value) {
   if (!v.startsWith('http://') && !v.startsWith('https://')) return null;
   return v.endsWith('/') ? v.substring(0, v.length - 1) : v;
 }
-
-/// `light` or `dark`, anything else leaves the app's own default
-String? _mode(Object? value) => value == 'light' || value == 'dark' ? value as String : null;
 
 /// `compact` when the brand says so; anything else (none yet, an older stack) is `photos`
 String _tillItems(Object? value) => value == 'compact' ? 'compact' : 'photos';

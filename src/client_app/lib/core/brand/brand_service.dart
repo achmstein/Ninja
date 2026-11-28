@@ -17,7 +17,7 @@ class ApiTenantRepository implements TenantRepository {
   @override
   Future<TenantBrand> getBrand() async {
     final response = await _apiClient.get<Map<String, dynamic>>('');
-    return TenantBrand.fromApi(response.data ?? const {}, baseUrl: AppConfig.bffBaseUrl);
+    return TenantBrand.fromApi(response.data ?? const {}, baseUrl: AppConfig.bffBaseUrl, unsaid: TenantFeatures.customerUnsaid);
   }
 }
 

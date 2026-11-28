@@ -82,7 +82,7 @@ Widget _app({required Locale locale, required bool open}) => ProviderScope(
         branchProvider.overrideWith(_NoBranches.new),
         localeProvider.overrideWith(() => _Locale(locale)),
         cartProvider.overrideWith(_Cart.new),
-        featuresProvider.overrideWithValue(TenantFeatures.all),
+        featuresProvider.overrideWithValue(TenantFeatures.customerUnsaid),
         menuByIdProvider.overrideWithValue(const {}),
         orderDestinationProvider.overrideWithValue(null),
       ],

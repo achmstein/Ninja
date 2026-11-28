@@ -16,7 +16,7 @@ Future<void> _settle(WidgetTester tester) => tester.runAsync(() => Future<void>.
 /// The neutral brand, without asking the network for it
 class _Brand extends BrandNotifier {
   @override
-  TenantBrand build() => TenantBrand.neutral;
+  TenantBrand build() => customerNeutralBrand;
 }
 
 ProviderContainer _container() {

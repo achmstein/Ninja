@@ -59,7 +59,7 @@ Bill _bill({required bool settled}) => Bill(
 Widget _host(Bill bill, {List<PendingRound> pending = const []}) => ProviderScope(
       overrides: [
         moneyProvider.overrideWithValue(MoneyFormat('EGP', const Locale('en'))),
-        featuresProvider.overrideWithValue(TenantFeatures.all),
+        featuresProvider.overrideWithValue(TenantFeatures.customerUnsaid),
         myStaysProvider.overrideWith(_NoStays.new),
         minuteClockProvider.overrideWith((ref) => Stream.value(DateTime(2026, 10, 1, 20))),
       ],

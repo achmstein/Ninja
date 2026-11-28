@@ -88,7 +88,7 @@ Widget _app({required void Function(TrayMotion motion) onMotion, bool reduced = 
         branchProvider.overrideWith(_NoBranches.new),
         localeProvider.overrideWith(_Locale.new),
         cartProvider.overrideWith(_Cart.new),
-        featuresProvider.overrideWithValue(TenantFeatures.all),
+        featuresProvider.overrideWithValue(TenantFeatures.customerUnsaid),
         menuByIdProvider.overrideWithValue(const {}),
         orderDestinationProvider.overrideWithValue(null),
       ],

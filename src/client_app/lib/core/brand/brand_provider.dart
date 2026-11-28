@@ -19,7 +19,7 @@ Future<void> initializeBrand() async {
     final prefs = await SharedPreferences.getInstance();
     final raw = prefs.getString(_brandKey);
     if (raw != null) {
-      _initialBrand = TenantBrand.fromJson(jsonDecode(raw) as Map<String, dynamic>);
+      _initialBrand = TenantBrand.fromJson(jsonDecode(raw) as Map<String, dynamic>, unsaid: TenantFeatures.customerUnsaid);
     }
   } catch (e) {
     debugPrint('Failed to read the cached brand: $e');
@@ -27,12 +27,12 @@ Future<void> initializeBrand() async {
 }
 
 /// The tenant's brand: the cached copy first, the network's when it lands,
-/// and [TenantBrand.neutral] until either is known.
+/// and [customerNeutralBrand] until either is known.
 class BrandNotifier extends Notifier<TenantBrand> {
   @override
   TenantBrand build() {
     refresh();
-    return _initialBrand ?? TenantBrand.neutral;
+    return _initialBrand ?? customerNeutralBrand;
   }
 
   /// Re-read the brand; the screen follows and the cache is updated
