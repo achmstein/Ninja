@@ -1,16 +1,4 @@
-import { create } from 'zustand'
-import { persist } from 'zustand/middleware'
-
-export type Language = 'en' | 'ar'
-
-type LocalizedTextLike = {
-  en?: string | null
-  ar?: string | null
-} | null
-
-type PluralForms = Record<string, string>
-
-type Message = { en: string; ar: string } | { plural: string; en: PluralForms; ar: PluralForms }
+import { createI18n, createLanguageStore, type Message, type TranslateParams } from '@ninja/web-core/i18n'
 
 // The whole kitchen-display dictionary. Same mechanism as pos_web's i18n.ts
 // (small zustand-backed dictionary, no framework), and the same voice as
@@ -99,84 +87,11 @@ const dictionary = {
 
 export type TranslationKey = keyof typeof dictionary
 
-type LanguageState = {
-  language: Language
-  setLanguage: (language: Language) => void
-}
+export type { Language, TranslateParams } from '@ninja/web-core/i18n'
 
-function applyLanguage(language: Language) {
-  document.documentElement.lang = language
-  // Direction follows the language directly (no separate direction setting
-  // like admin_web) — one less thing on a kitchen screen.
-  document.documentElement.dir = language === 'ar' ? 'rtl' : 'ltr'
-}
+/** The `t` function shape shared by `useT()` and `translate` */
+export type Translate = (key: TranslationKey, params?: TranslateParams) => string
 
-export const useLanguage = create<LanguageState>()(
-  persist(
-    (set) => ({
-      language: 'en',
-      setLanguage: (language) => {
-        applyLanguage(language)
-        set({ language })
-      },
-    }),
-    {
-      name: 'ninja-kds-language',
-      onRehydrateStorage: () => (state) => {
-        applyLanguage(state?.language ?? 'en')
-      },
-    }
-  )
-)
+export const useLanguage = createLanguageStore({ storageKey: 'ninja-kds-language', followDirection: true })
 
-export type TranslateParams = Record<string, string | number>
-
-// CLDR plural category per language ("few" = 3–10 in Arabic, etc.), so
-// plural entries can carry proper Arabic forms beyond the `=N`/other
-// shorthand.
-const pluralRules: Record<Language, Intl.PluralRules> = {
-  en: new Intl.PluralRules('en-US'),
-  ar: new Intl.PluralRules('ar-EG'),
-}
-
-function format(entry: Message, language: Language, params?: TranslateParams): string {
-  let template: string
-  if ('plural' in entry) {
-    const count = Number(params?.[entry.plural] ?? 0)
-    const forms = entry[language]
-    template = forms[`=${count}`] ?? forms[pluralRules[language].select(count)] ?? forms.other ?? ''
-  } else {
-    template = entry[language] || entry.en
-  }
-  if (!params) return template
-  return template.replace(/\{(\w+)\}/g, (whole, name) => (name in params ? String(params[name]) : whole))
-}
-
-export function useT() {
-  const language = useLanguage((s) => s.language)
-  return (key: TranslationKey, params?: TranslateParams) => format(dictionary[key], language, params)
-}
-
-// For code living outside the React tree (query-cache error handlers)
-export function translate(key: TranslationKey, params?: TranslateParams): string {
-  return format(dictionary[key], useLanguage.getState().language, params)
-}
-
-// Picks the right side of a LocalizedText for the active language
-export function useLocalized() {
-  const language = useLanguage((s) => s.language)
-  return (text: LocalizedTextLike | undefined): string =>
-    (language === 'ar' ? text?.ar : text?.en) || text?.en || text?.ar || ''
-}
-
-// Locale tag for date/number formatting
-/**
- * The BCP 47 tag every Intl formatter and toLocale*() call should use.
- * Arabic keeps its own month and weekday names but, as everywhere in
- * Egypt, Western digits: the `nu-latn` extension pins that, so 12/09 and
- * 1,250 points read the same in both languages (owner's call).
- */
-export function useLocale(): string {
-  const language = useLanguage((s) => s.language)
-  return language === 'ar' ? 'ar-EG-u-nu-latn' : 'en-US'
-}
+export const { useT, translate, bilingual, useLocalized, useLocale } = createI18n(dictionary, useLanguage)
