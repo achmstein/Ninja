@@ -667,5 +667,8 @@
   "deliveryCardCallCafe": "كلّم {name}",
   "deliveryCardDoor": "باب بيتك",
   "deliveryCardMin": "دقيقة",
-  "deliveryCardStale": "افتح التطبيق لآخر تحديث"
+  "deliveryCardStale": "افتح التطبيق لآخر تحديث",
+  "dockCallRider": "اتصل",
+  "dockCallWaiter": "نادي الويتر",
+  "dockAboutMinutes": "حوالي {n} د"
 }

@@ -2108,6 +2108,17 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get deliveryCardStale => 'افتح التطبيق لآخر تحديث';
+
+  @override
+  String get dockCallRider => 'اتصل';
+
+  @override
+  String get dockCallWaiter => 'نادي الويتر';
+
+  @override
+  String dockAboutMinutes(int n) {
+    return 'حوالي $n د';
+  }
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).

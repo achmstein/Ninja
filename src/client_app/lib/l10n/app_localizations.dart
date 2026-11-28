@@ -3770,6 +3770,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Open the app for the latest'**
   String get deliveryCardStale;
+
+  /// No description provided for @dockCallRider.
+  ///
+  /// In en, this message translates to:
+  /// **'Call'**
+  String get dockCallRider;
+
+  /// No description provided for @dockCallWaiter.
+  ///
+  /// In en, this message translates to:
+  /// **'Call waiter'**
+  String get dockCallWaiter;
+
+  /// No description provided for @dockAboutMinutes.
+  ///
+  /// In en, this message translates to:
+  /// **'about {n} min'**
+  String dockAboutMinutes(int n);
 }
 
 class _AppLocalizationsDelegate

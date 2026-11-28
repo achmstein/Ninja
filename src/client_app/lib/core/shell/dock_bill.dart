@@ -3,10 +3,13 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:url_launcher/url_launcher.dart';
 import '../../features/bills/services/bills_service.dart';
 import '../../features/cart/services/checkout_flow.dart';
 import '../../l10n/app_localizations.dart';
 import '../motion/motion.dart';
+import '../network/api_client.dart';
+import '../services/delivery_card_service.dart' show DeliveryLive;
 import '../providers/current_place_provider.dart';
 import '../theme/theme_provider.dart';
 import '../ui/ui.dart';
@@ -49,12 +52,49 @@ final dockRowShownProvider = Provider<bool>((ref) {
       ref.watch(orderDestinationProvider) != null;
 });
 
+/// A delivery being made or on its way, as the server says it live
+/// (Ordering's `GET {id}/delivery/live`): about how many minutes are left, who
+/// is bringing it and their number while they are. Read again when the order
+/// moves on and every half minute while it is followed; nothing for any other
+/// order, and nothing where the server cannot be reached (the row then says
+/// the stage alone).
+final dockDeliveryProvider = FutureProvider.autoDispose<DeliveryLive?>((ref) async {
+  final live = ref.watch(liveOrderProvider);
+  final orderId = live?.orderId;
+  if (orderId == null || (live!.stage != OrderStage.preparing && live.stage != OrderStage.onTheWay)) return null;
+  final again = Timer(const Duration(seconds: 30), ref.invalidateSelf);
+  ref.onDispose(again.cancel);
+  try {
+    final response = await ref.watch(ordersApiProvider).get<Map<String, dynamic>>('$orderId/delivery/live');
+    final data = response.data;
+    return data == null ? null : DeliveryLive.fromJson(data);
+  } catch (_) {
+    return null;
+  }
+});
+
+/// Where an order has got to, in the customer's words; null for no order
+String? orderStageWord(AppLocalizations l10n, OrderStage? stage) => switch (stage) {
+      OrderStage.awaitingPayment => l10n.orderStageAwaitingPayment,
+      OrderStage.sent => l10n.orderStageSent,
+      OrderStage.confirmed => l10n.orderStageConfirmed,
+      OrderStage.preparing => l10n.orderStagePreparing,
+      OrderStage.onTheWay => l10n.orderStageOnTheWay,
+      OrderStage.delivered => l10n.orderStageDelivered,
+      OrderStage.notDelivered => l10n.orderStageNotDelivered,
+      OrderStage.cancelled => l10n.orderStageCancelled,
+      null => null,
+    };
+
 /// The bill running now and the order on its way, on the dock
 /// (client_web's dock-bill.tsx): the row says where the order has got to
 /// (Sent, Confirmed) above what the bill comes to, rolling as rounds land,
 /// each change swapping in with a short blur. At a table or in a room the
 /// row is that place too. A tap opens it: the table's requests, the room's
-/// page, or the bills.
+/// page, or the bills. The row's end button is the next thing to do: the
+/// waiter called at a table with nothing ordered yet, the rider rung while a
+/// delivery is on its way, Pay once there is something to pay and nothing
+/// still coming.
 class DockBill extends ConsumerWidget {
   final double height;
 
@@ -80,17 +120,16 @@ class DockBill extends ConsumerWidget {
     final stage = live?.stage;
     // Waiting for its payment ahead: the row is the way to pay it, not the bill
     final toPay = stage == OrderStage.awaitingPayment && live?.orderId != null;
-    final stageWord = switch (stage) {
-      OrderStage.awaitingPayment => l10n.orderStageAwaitingPayment,
-      OrderStage.sent => l10n.orderStageSent,
-      OrderStage.confirmed => l10n.orderStageConfirmed,
-      OrderStage.preparing => l10n.orderStagePreparing,
-      OrderStage.onTheWay => l10n.orderStageOnTheWay,
-      OrderStage.delivered => l10n.orderStageDelivered,
-      OrderStage.notDelivered => l10n.orderStageNotDelivered,
-      OrderStage.cancelled => l10n.orderStageCancelled,
-      null => null,
-    };
+    final stageWord = orderStageWord(l10n, stage);
+    // A delivery: about how long is left, said after the stage where the server says it
+    final delivery = ref.watch(dockDeliveryProvider).value;
+    final minutes = delivery?.etaMinutes;
+    final headline = stageWord == null
+        ? null
+        : (minutes != null && minutes > 0 ? '$stageWord · ${l10n.dockAboutMinutes(minutes)}' : stageWord);
+    // On its way: its rider is the quiet line, and ringing them the end button
+    final rider = stage == OrderStage.onTheWay ? (delivery?.riderName ?? live?.rider) : null;
+    final riderPhone = stage == OrderStage.onTheWay ? delivery?.riderPhone : null;
     // The room's clock ticks in the row (client_web's dock-bill.tsx), so the tab it lived on can go back to booking
     final stay = destination?.isStay == true
         ? ref.watch(myStaysProvider).value?.where((s) => s.id == destination!.sessionId && s.startedAt != null).firstOrNull
@@ -105,8 +144,25 @@ class DockBill extends ConsumerWidget {
     // The end button is the next thing to do: Pay, once there is something to pay and nothing still on its
     // way (what it opens has the way to pay under the bill)
     final payNext = !toPay && total > 0 && (stage == null || stage == OrderStage.delivered);
+    // At a table, with nothing ordered and nothing asked for, the waiter is the next thing to want
+    final callWaiter = destination != null && !destination.isStay && stage == null && total == 0 && !asking;
+    // The end button's own press, where it does something other than open what the row stands for
+    final VoidCallback? endPress = riderPhone != null
+        ? () => launchUrl(Uri.parse('tel:$riderPhone'))
+        : callWaiter
+            ? () => ref.read(serviceRequestProvider.notifier).submitRequest(CreateServiceRequest(
+                  placeId: destination.placeId,
+                  placeKind: destination.placeKind,
+                  placeName: destination.name,
+                  requestType: ServiceRequestType.callWaiter,
+                ))
+            : null;
     final label = toPay
         ? l10n.orderPayNow
+        : riderPhone != null
+        ? l10n.dockCallRider
+        : callWaiter
+        ? l10n.dockCallWaiter
         : payNext
         ? l10n.dockPay
         : destination == null
@@ -127,6 +183,8 @@ class DockBill extends ConsumerWidget {
       OrderStage.cancelled => (LucideIcons.x, NinjaColors.errorSolid, Colors.white),
       null => (destination?.placeKind.icon ?? LucideIcons.receiptText, c.foreground.withValues(alpha: 0.12), c.foreground),
     };
+
+    final lit = toPay || payNext || endPress != null;
 
     void onTap() {
       if (toPay) {
@@ -196,18 +254,18 @@ class DockBill extends ConsumerWidget {
                     children: [
                       // An order on its way: where it has got to is the row's headline, the place (or the
                       // waiter asked for) and the bill quiet under it, as client_web's dock row
-                      if (stageWord != null) ...[
+                      if (headline != null) ...[
                         BlurSwap(
                           child: Text(
-                            stageWord,
-                            key: ValueKey(stageWord),
+                            headline,
+                            key: ValueKey(headline),
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
                             style: context.localeText(theme.typography.name.copyWith(fontWeight: FontWeight.w700, color: c.foreground)),
                           ),
                         ),
                         Text(
-                          [asking ? l10n.dockWaiterComing : place, if (total > 0) money(total)].join(' · '),
+                          [asking ? l10n.dockWaiterComing : (rider ?? place), if (total > 0) money(total)].join(' · '),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: context.localeText(theme.typography.caption.copyWith(
@@ -271,20 +329,29 @@ class DockBill extends ConsumerWidget {
                     ],
                   ),
                 ),
-                Container(
-                  height: 40,
-                  padding: const EdgeInsetsDirectional.only(start: 16, end: 12),
-                  // Waiting for its payment: the way to pay it, lit
-                  decoration: ShapeDecoration(color: toPay || payNext ? c.foreground : c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: toPay || payNext ? c.background : c.foreground))),
-                      if (!toPay && !payNext) ...[
-                        const SizedBox(width: 4),
-                        Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
+                // Its own press where it has one (the rider rung, the waiter called): the row under it still opens
+                GestureDetector(
+                  onTap: endPress,
+                  behavior: HitTestBehavior.opaque,
+                  child: Container(
+                    height: 40,
+                    padding: EdgeInsetsDirectional.only(start: riderPhone != null ? 12 : 16, end: lit ? 16 : 12),
+                    // The next thing to do, lit: the way to pay, the rider's number, the waiter
+                    decoration: ShapeDecoration(color: lit ? c.foreground : c.foreground.withValues(alpha: 0.12), shape: const StadiumBorder()),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        if (riderPhone != null) ...[
+                          Icon(LucideIcons.phone, size: 16, color: c.background),
+                          const SizedBox(width: 4),
+                        ],
+                        Text(label, style: context.localeText(theme.typography.note.copyWith(fontWeight: FontWeight.w600, color: lit ? c.background : c.foreground))),
+                        if (!lit) ...[
+                          const SizedBox(width: 4),
+                          Icon(LucideIcons.chevronUp, size: 16, color: c.foreground),
+                        ],
                       ],
-                    ],
+                    ),
                   ),
                 ),
               ],

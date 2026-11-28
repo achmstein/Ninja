@@ -1009,5 +1009,9 @@
   "@deliveryCardCallCafe": {"placeholders": {"name": {"type": "String"}}},
   "deliveryCardDoor": "Your door",
   "deliveryCardMin": "min",
-  "deliveryCardStale": "Open the app for the latest"
+  "deliveryCardStale": "Open the app for the latest",
+  "dockCallRider": "Call",
+  "dockCallWaiter": "Call waiter",
+  "dockAboutMinutes": "about {n} min",
+  "@dockAboutMinutes": { "placeholders": { "n": { "type": "int" } } }
 }

@@ -13,6 +13,7 @@ import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
 import '../../../core/utils/money.dart';
 import '../../../l10n/app_localizations.dart';
+import '../../../core/shell/dock_bill.dart' show orderStageWord;
 import '../../orders/services/order_service.dart';
 import '../models/cart_item.dart';
 import '../services/cart_service.dart';
@@ -290,9 +291,25 @@ class _TrayRowState extends ConsumerState<TrayRow> {
                                           heightFactor: 1 - open,
                                           child: Opacity(
                                             opacity: (1 - open * 2.5).clamp(0.0, 1.0),
-                                            child: Text(
-                                              l10n.trayItemCount(summary.count),
+                                            // The order already sent is said here while the tray holds another not yet
+                                            // sent: this row covers the dock's, so it went out of sight (client_web's
+                                            // OrderOnItsWay)
+                                            child: Consumer(
+                                              builder: (context, ref, _) {
+                                                final sent = ref.watch(liveOrderProvider);
+                                                final word = sent == null || sent.stage == OrderStage.awaitingPayment
+                                                    ? null
+                                                    : orderStageWord(l10n, sent.stage);
+                                                return Text(
+                                              [
+                                                l10n.trayItemCount(summary.count),
+                                                if (word != null) sent?.orderId == null ? word : '$word #\u200f${sent!.orderId}',
+                                              ].join(' · '),
+                                              maxLines: 1,
+                                              overflow: TextOverflow.ellipsis,
                                               style: context.localeText(theme.typography.caption.copyWith(color: c.foreground.withValues(alpha: 0.7))),
+                                                );
+                                              },
                                             ),
                                           ),
                                         ),

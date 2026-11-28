@@ -2117,4 +2117,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get deliveryCardStale => 'Open the app for the latest';
+
+  @override
+  String get dockCallRider => 'Call';
+
+  @override
+  String get dockCallWaiter => 'Call waiter';
+
+  @override
+  String dockAboutMinutes(int n) {
+    return 'about $n min';
+  }
 }
