@@ -1,4 +1,4 @@
-import 'package:dio/dio.dart';
+import 'package:ninja_app_core/network/app_failure.dart';
 import '../../features/tickets/services/tickets_service.dart';
 import '../../l10n/app_localizations.dart';
 
@@ -8,11 +8,5 @@ import '../../l10n/app_localizations.dart';
 /// handle-server-error.
 String describeError(Object error, AppLocalizations l10n) {
   if (error is SalesException) return error.message;
-  if (error is DioException) {
-    final data = error.response?.data;
-    if (data is String && data.isNotEmpty && data.length < 200) return data;
-    if (data is Map && data['title'] is String) return data['title'] as String;
-    if (data is Map && data['detail'] is String) return data['detail'] as String;
-  }
-  return l10n.somethingWentWrong;
+  return serverReason(error) ?? l10n.somethingWentWrong;
 }

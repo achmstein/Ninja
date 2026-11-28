@@ -1,5 +1,6 @@
 import 'package:dio/dio.dart';
 import '../../l10n/app_localizations.dart';
+import 'package:ninja_app_core/network/app_failure.dart';
 import 'package:ninja_app_core/network/network_status.dart';
 
 /// What a failed call means to the rider, read from the answer's shape
@@ -33,14 +34,6 @@ enum ApiFailure {
 
   /// Anything else
   other,
-}
-
-/// The stable code a ProblemDetails answer carries, if any
-String? problemCode(Object error) {
-  if (error is! DioException) return null;
-  final data = error.response?.data;
-  if (data is Map && data['code'] is String) return data['code'] as String;
-  return null;
 }
 
 ApiFailure classifyError(Object error) {
