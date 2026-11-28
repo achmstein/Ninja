@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../core/theme/kitchen_type.dart';
 import '../../../core/utils/bidi.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
@@ -124,7 +125,9 @@ class OrderCard extends StatelessWidget {
     };
     const inset = EdgeInsets.symmetric(horizontal: 16);
     final struck = isCancelled ? TextDecoration.lineThrough : null;
-    final quiet = theme.typography.sm.copyWith(color: theme.colors.mutedForeground, height: 20 / 14);
+    // Every size on the ticket is one of the kitchen's roles (core/theme/kitchen_type.dart)
+    final type = theme.kitchen;
+    final quiet = type.quiet.copyWith(color: theme.colors.mutedForeground);
 
     return Container(
       clipBehavior: Clip.antiAlias,
@@ -155,12 +158,7 @@ class OrderCard extends StatelessWidget {
                       else
                         Text(
                           channel,
-                          style: theme.typography.xl.copyWith(
-                            fontSize: 22,
-                            height: 28 / 22,
-                            fontWeight: FontWeight.w700,
-                            color: isCancelled ? theme.colors.mutedForeground : theme.colors.foreground,
-                          ),
+                          style: type.place.copyWith(color: isCancelled ? theme.colors.mutedForeground : theme.colors.foreground),
                         ),
                       Text(
                         who.isEmpty ? hashNumber(order.orderNumber) : '${hashNumber(order.orderNumber)} · $who',
@@ -180,8 +178,7 @@ class OrderCard extends StatelessWidget {
                 ],
                 Text(
                   clock,
-                  style: theme.typography.xl.copyWith(
-                      fontSize: 26, height: 28 / 26, fontWeight: FontWeight.w700, color: clockColor, fontFeatures: tabular),
+                  style: type.clock.copyWith(color: clockColor),
                 ),
               ],
             ),
@@ -195,7 +192,7 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(l10n.orderCancelled,
-                        style: theme.typography.lg.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive, height: 24 / 18)),
+                        style: type.action.copyWith(fontWeight: FontWeight.w700, color: theme.colors.destructive)),
                   ),
                 ],
               ),
@@ -208,7 +205,7 @@ class OrderCard extends StatelessWidget {
                   Icon(platform?.expedition == 'Pickup' ? FIcons.shoppingBag : FIcons.bike,
                       size: Sizes.iconSmall, color: theme.colors.mutedForeground),
                   const SizedBox(width: 6),
-                  Expanded(child: Text(handover, style: theme.typography.sm.copyWith(fontSize: 15, fontWeight: FontWeight.w500))),
+                  Expanded(child: Text(handover, style: type.detail.copyWith(fontWeight: FontWeight.w500))),
                 ],
               ),
             ),
@@ -221,7 +218,7 @@ class OrderCard extends StatelessWidget {
                   const SizedBox(width: 6),
                   Expanded(
                     child: Text(l10n.platformCancelled,
-                        style: theme.typography.sm.copyWith(fontSize: 15, fontWeight: FontWeight.w600, color: theme.colors.destructive)),
+                        style: type.detail.copyWith(fontWeight: FontWeight.w600, color: theme.colors.destructive)),
                   ),
                 ],
               ),
@@ -242,26 +239,18 @@ class OrderCard extends StatelessWidget {
                       index: index,
                       enabled: onReady != null && !isCancelled,
                       units: '${item.units}×',
-                      unitsStyle: theme.typography.xl.copyWith(
-                          fontSize: 20,
-                          height: 26 / 20,
-                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w700,
-                          decoration: struck,
-                          fontFeatures: tabular),
+                      unitsStyle: type.item.copyWith(
+                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w700, decoration: struck, fontFeatures: tabular),
                       name: item.productName.localized(context),
-                      nameStyle: theme.typography.lg.copyWith(
-                          fontSize: 19,
-                          height: 26 / 19,
-                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w600,
-                          decoration: struck,
-                          color: theme.colors.foreground),
+                      nameStyle: type.item.copyWith(
+                          fontWeight: isCancelled ? FontWeight.w500 : FontWeight.w600, decoration: struck, color: theme.colors.foreground),
                       details: [
                         if (item.customizationsDescription != null)
                           Text(item.customizationsDescription!.localized(context),
-                              style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, color: theme.colors.mutedForeground)),
+                              style: type.detail.copyWith(color: theme.colors.mutedForeground)),
                         if (item.specialInstructions != null)
                           Text(item.specialInstructions!,
-                              style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w600, color: amber)),
+                              style: type.detail.copyWith(fontWeight: FontWeight.w600, color: amber)),
                       ],
                     ),
                   ],
@@ -279,7 +268,7 @@ class OrderCard extends StatelessWidget {
                 border: const BorderDirectional(start: BorderSide(color: AppColors.amber500, width: 3)),
               ),
               child: Text(order.customerNote!,
-                  style: theme.typography.sm.copyWith(fontSize: 15, height: 22 / 15, fontWeight: FontWeight.w500, color: theme.colors.foreground)),
+                  style: type.detail.copyWith(fontWeight: FontWeight.w500, color: theme.colors.foreground)),
             ),
           if (parts.isNotEmpty)
             // The stations it is split between, in words: the ones still making
@@ -338,7 +327,7 @@ class OrderCard extends StatelessWidget {
         if (logo != null)
           Image.asset(logo, height: 20, semanticLabel: platform.name)
         else
-          Text(platform.name, style: theme.typography.base.copyWith(fontWeight: FontWeight.w600)),
+          Text(platform.name, style: theme.kitchen.detail.copyWith(fontWeight: FontWeight.w600)),
         const SizedBox(width: 8),
         Flexible(
           child: Directionality(
@@ -346,10 +335,7 @@ class OrderCard extends StatelessWidget {
             child: Text(
               platform.code,
               overflow: TextOverflow.ellipsis,
-              style: theme.typography.xl.copyWith(
-                fontSize: 22,
-                height: 28 / 22,
-                fontWeight: FontWeight.w700,
+              style: theme.kitchen.place.copyWith(
                 color: theme.colors.foreground,
                 fontFamily: 'monospace',
                 fontFeatures: const [FontFeature.tabularFigures()],
@@ -369,7 +355,7 @@ class OrderCard extends StatelessWidget {
         variant: variant,
         onPress: acting ? null : onPress,
         prefix: icon == null ? null : Icon(icon, size: Sizes.icon),
-        child: Text(label, style: theme.typography.lg.forButton.copyWith(fontWeight: FontWeight.w600)),
+        child: Text(label, style: theme.kitchen.action.forButton),
       ),
     );
   }

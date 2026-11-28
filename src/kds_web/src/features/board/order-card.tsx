@@ -120,18 +120,18 @@ export function OrderCard({
               {platformLogo ? (
                 <img src={platformLogo} alt={platform.name} className='h-5 w-auto shrink-0' />
               ) : (
-                <span className='text-base font-semibold'>{platform.name}</span>
+                <span className='type-body font-semibold'>{platform.name}</span>
               )}
-              <span className='truncate font-mono text-[22px] leading-7 font-bold tabular-nums' dir='ltr'>
+              <span className='type-place truncate font-mono tabular-nums' dir='ltr'>
                 {platform.shortCode ?? platform.code}
               </span>
             </div>
           ) : (
-            <div className={cn('text-[22px] leading-7 font-bold break-words', isCancelled && 'text-muted-foreground')}>
+            <div className={cn('type-place break-words', isCancelled && 'text-muted-foreground')}>
               {channel}
             </div>
           )}
-          <div className='text-muted-foreground line-clamp-2 text-sm leading-5 break-words'>
+          <div className='text-muted-foreground type-quiet line-clamp-2 break-words'>
             {/* The mark keeps the hash before the number in Arabic */}
             <span className='tabular-nums'>
               {'#\u200F'}
@@ -140,17 +140,17 @@ export function OrderCard({
             {who && <> · {who}</>}
           </div>
         </div>
-        <span className={cn('shrink-0 text-[26px] leading-7 font-bold tabular-nums', toneClockClass(tone))}>{clock}</span>
+        <span className={cn('type-clock shrink-0', toneClockClass(tone))}>{clock}</span>
       </header>
 
       {isCancelled && (
-        <div className='text-destructive flex items-center gap-2 px-4 pb-2.5 text-lg leading-6 font-bold'>
+        <div className='text-destructive type-action flex items-center gap-2 px-4 pb-2.5 font-bold'>
           <X className='size-5 shrink-0' />
           {t('orderCancelled')}
         </div>
       )}
       {handover && (
-        <div className='flex items-center gap-1.5 px-4 pb-2.5 text-[15px] font-medium'>
+        <div className='type-detail flex items-center gap-1.5 px-4 pb-2.5 font-medium'>
           {platform?.expedition === 'Pickup' ? (
             <ShoppingBag className='text-muted-foreground size-4 shrink-0' />
           ) : (
@@ -160,7 +160,7 @@ export function OrderCard({
         </div>
       )}
       {platform?.cancelledAt && (
-        <div className='text-destructive flex items-center gap-1.5 px-4 pb-2.5 text-[15px] font-semibold'>
+        <div className='text-destructive type-detail flex items-center gap-1.5 px-4 pb-2.5 font-semibold'>
           <TriangleAlert className='size-4 shrink-0' />
           {t('platformCancelled')}
         </div>
@@ -169,20 +169,20 @@ export function OrderCard({
       <ul className={cn('divide-border divide-y border-t px-4', isCancelled && 'opacity-55')}>
         {(order.items ?? []).map((item, index) => (
           <li key={index} className='flex gap-3 py-2.5'>
-            <span className={cn('w-9 shrink-0 text-xl leading-[26px] font-bold tabular-nums', isCancelled && 'font-medium line-through')}>
+            <span className={cn('type-item w-9 shrink-0 font-bold tabular-nums', isCancelled && 'font-medium line-through')}>
               {item.units}×
             </span>
             <div className='min-w-0 flex-1'>
-              <div className={cn('text-[19px] leading-[26px] font-semibold', isCancelled && 'font-medium line-through')}>
+              <div className={cn('type-item', isCancelled && 'font-medium line-through')}>
                 {localized(item.productName)}
               </div>
               {item.customizationsDescription && (
-                <div className='text-muted-foreground text-[15px] leading-[22px]'>
+                <div className='text-muted-foreground type-detail'>
                   {localized(item.customizationsDescription)}
                 </div>
               )}
               {item.specialInstructions && (
-                <div className='text-[15px] leading-[22px] font-semibold text-amber-700 dark:text-amber-400'>
+                <div className='type-detail font-semibold text-amber-700 dark:text-amber-400'>
                   {item.specialInstructions}
                 </div>
               )}
@@ -192,14 +192,14 @@ export function OrderCard({
       </ul>
 
       {order.customerNote && (
-        <div className='bg-muted/60 mx-4 mb-3 border-s-[3px] border-amber-500 px-3 py-2 text-[15px] leading-[22px] font-medium'>
+        <div className='bg-muted/60 mx-4 mb-3 border-s-[3px] border-amber-500 px-3 py-2 type-detail font-medium'>
           {order.customerNote}
         </div>
       )}
 
       {parts.length > 0 && (
         // The stations it is split between, in words: the ones still making it stand out, a done one is ticked
-        <div className='text-muted-foreground flex flex-wrap items-center gap-x-1.5 px-4 pb-2.5 text-sm'>
+        <div className='text-muted-foreground type-quiet flex flex-wrap items-center gap-x-1.5 px-4 pb-2.5'>
           {parts.map((part, index) => {
             const done = part.readyAt != null
             return (
@@ -218,17 +218,17 @@ export function OrderCard({
       {(onReady || onBringBack) && (
         <footer className='mt-auto px-3 pb-3'>
           {onBringBack ? (
-            <Button variant='outline' className='h-14 w-full gap-2 text-lg font-semibold' disabled={isActing} onClick={onBringBack}>
+            <Button variant='outline' className='type-action h-14 w-full gap-2' disabled={isActing} onClick={onBringBack}>
               <Undo2 className='size-5' />
               {t('bringBack')}
             </Button>
           ) : isCancelled ? (
             // The same call as Ready: it takes the ticket off this screen
-            <Button variant='outline' className='h-14 w-full text-lg font-semibold' disabled={isActing} onClick={onReady}>
+            <Button variant='outline' className='type-action h-14 w-full' disabled={isActing} onClick={onReady}>
               {t('cancelledRemove')}
             </Button>
           ) : (
-            <Button className='h-14 w-full text-lg font-semibold' disabled={isActing} onClick={onReady}>
+            <Button className='type-action h-14 w-full' disabled={isActing} onClick={onReady}>
               {t('ready')}
             </Button>
           )}

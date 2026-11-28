@@ -48,11 +48,11 @@ export function HistoryDialog() {
       </DialogTrigger>
       <DialogContent className='flex h-[85svh] flex-col gap-0 p-0 sm:max-w-5xl'>
         <DialogHeader className='border-b px-4 py-3'>
-          <DialogTitle className='text-xl'>{t('history')}</DialogTitle>
+          <DialogTitle className='type-place'>{t('history')}</DialogTitle>
         </DialogHeader>
         <div className='bg-muted/60 dark:bg-background min-h-0 flex-1 overflow-y-auto p-4'>
           {finished.length === 0 ? (
-            <p className='text-muted-foreground p-6 text-center text-lg'>
+            <p className='text-muted-foreground type-item p-6 text-center'>
               {t('noHistory')}
             </p>
           ) : (

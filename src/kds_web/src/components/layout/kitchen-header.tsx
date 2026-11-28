@@ -102,7 +102,7 @@ export function KitchenHeader() {
             {showInstall && (
               <>
                 <DropdownMenuItem
-                  className='min-h-12 gap-2 p-3 text-base'
+                  className='type-body min-h-12 gap-2 p-3'
                   onSelect={handleInstall}
                 >
                   <Download className='size-5' />
@@ -114,7 +114,7 @@ export function KitchenHeader() {
             {/* Two languages, two themes: each row states where it stands
                 and flips on tap — no submenu to chase on a touchscreen */}
             <DropdownMenuItem
-              className='min-h-12 gap-2 p-3 text-base'
+              className='type-body min-h-12 gap-2 p-3'
               onSelect={() => setLanguage(language === 'ar' ? 'en' : 'ar')}
             >
               <Languages className='size-5' />
@@ -124,7 +124,7 @@ export function KitchenHeader() {
               </span>
             </DropdownMenuItem>
             <DropdownMenuItem
-              className='min-h-12 gap-2 p-3 text-base'
+              className='type-body min-h-12 gap-2 p-3'
               onSelect={() =>
                 setTheme(resolvedTheme === 'dark' ? 'light' : 'dark')
               }
@@ -142,7 +142,7 @@ export function KitchenHeader() {
             <DropdownMenuSeparator />
             <DropdownMenuItem
               variant='destructive'
-              className='min-h-12 gap-2 p-3 text-base'
+              className='type-body min-h-12 gap-2 p-3'
               onSelect={() => auth.signoutRedirect()}
             >
               <LogOut className='size-5' />

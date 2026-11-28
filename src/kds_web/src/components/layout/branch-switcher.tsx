@@ -43,11 +43,11 @@ export function BranchSwitcher() {
   // The business's logo (its square mark), its name and the branch, as the admin shows them
   const brand = (
     <>
-      <BrandMark className='size-8 text-base' />
-      <div className='grid flex-1 text-start text-sm leading-tight'>
+      <BrandMark className='type-body size-8' />
+      <div className='type-quiet grid flex-1 text-start'>
         <span className='truncate font-semibold'>{business || label}</span>
         {/* One branch: the business is the place, and its branch says nothing more */}
-        {business && branches.length > 1 && <span className='text-muted-foreground truncate text-xs'>{label}</span>}
+        {business && branches.length > 1 && <span className='text-muted-foreground type-caption truncate'>{label}</span>}
       </div>
     </>
   )
@@ -65,14 +65,14 @@ export function BranchSwitcher() {
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='start' className='min-w-56 rounded-lg'>
-        <DropdownMenuLabel className='text-muted-foreground text-xs'>
+        <DropdownMenuLabel className='text-muted-foreground type-caption'>
           {t('branches')}
         </DropdownMenuLabel>
         {branches.map((branch) => (
           <DropdownMenuItem
             key={String(branch.id)}
             onClick={() => handleSelect(Number(branch.id))}
-            className='min-h-12 gap-2 p-3 text-base'
+            className='type-body min-h-12 gap-2 p-3'
           >
             <span className='flex-1 truncate'>{localized(branch.name)}</span>
             {Number(branch.id) === branchId && <Check className='size-5' />}

@@ -15,17 +15,16 @@ export function BoardTally() {
   const { orders } = useKitchenOrders()
   const open = orders.filter((order) => order.readyAt == null && order.cancelledAt == null)
   const late = open.filter((order) => orderUrgency(order.confirmedAt ?? order.date, nowMs) === 'delayed').length
-  const figure = 'text-[22px] leading-[26px] font-bold tabular-nums'
 
   return (
     <div className='flex items-center gap-6 px-2 max-sm:hidden'>
       <div className='text-center'>
-        <div className={figure}>{open.length}</div>
-        <div className='text-muted-foreground text-xs'>{t('tallyOrders')}</div>
+        <div className='type-tally'>{open.length}</div>
+        <div className='text-muted-foreground type-caption'>{t('tallyOrders')}</div>
       </div>
       <div className='text-center'>
-        <div className={cn(figure, late > 0 ? 'text-destructive' : 'text-muted-foreground')}>{late}</div>
-        <div className='text-muted-foreground text-xs'>{t('tallyLate')}</div>
+        <div className={cn('type-tally', late > 0 ? 'text-destructive' : 'text-muted-foreground')}>{late}</div>
+        <div className='text-muted-foreground type-caption'>{t('tallyLate')}</div>
       </div>
     </div>
   )

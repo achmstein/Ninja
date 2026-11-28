@@ -34,7 +34,7 @@ export function Board() {
       {!isLoading && open.length === 0 ? (
         <div className='text-muted-foreground flex flex-1 flex-col items-center justify-center gap-3 p-6 text-center'>
           <ChefHat className='size-16 opacity-40' />
-          <p className='text-2xl font-semibold'>{t('noOrders')}</p>
+          <p className='type-place'>{t('noOrders')}</p>
         </div>
       ) : (
         <div className='min-h-0 flex-1 overflow-y-auto p-4'>

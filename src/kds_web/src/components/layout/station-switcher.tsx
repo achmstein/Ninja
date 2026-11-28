@@ -29,18 +29,18 @@ export function StationSwitcher() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant='outline' className='h-12 gap-2 px-3 text-base'>
+        <Button variant='outline' className='type-body h-12 gap-2 px-3'>
           <Icon className='size-5' />
           <span className='max-w-40 truncate'>{label}</span>
           <ChevronsUpDown className='text-muted-foreground size-4' />
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align='start' className='min-w-56 rounded-lg'>
-        <DropdownMenuLabel className='text-muted-foreground text-xs'>
+        <DropdownMenuLabel className='text-muted-foreground type-caption'>
           {t('station')}
         </DropdownMenuLabel>
         <DropdownMenuItem
-          className='min-h-12 gap-2 p-3 text-base'
+          className='type-body min-h-12 gap-2 p-3'
           onSelect={() => setStationId(null)}
         >
           <LayoutGrid className='size-5' />
@@ -51,7 +51,7 @@ export function StationSwitcher() {
         {screens.map((s) => (
           <DropdownMenuItem
             key={String(s.id)}
-            className='min-h-12 gap-2 p-3 text-base'
+            className='type-body min-h-12 gap-2 p-3'
             onSelect={() => setStationId(Number(s.id))}
           >
             <ChefHat className='size-5' />
