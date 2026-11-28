@@ -1,17 +1,16 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
-import { Armchair, ChevronRight, DoorOpen, ReceiptText, ShoppingBag, Split, X, type LucideIcon } from 'lucide-react'
+import { Armchair, ChevronRight, DoorOpen, Plus, ShoppingBag, Split, X, type LucideIcon } from 'lucide-react'
 import { getOpenTicketsOptions } from '@/api/sales/@tanstack/react-query.gen'
 import type { TicketDetail, TicketSummary } from '@/api/sales/types.gen'
 import { listPlacesOptions } from '@/api/spaces/@tanstack/react-query.gen'
-import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
-import { Label } from '@/components/ui/label'
 import { API_VERSION } from '@/lib/api-client'
 import { useIsCloudKitchen } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
+import { cn } from '@/lib/utils'
 
 const typeIcon: Record<string, LucideIcon> = {
   Room: DoorOpen,
@@ -34,7 +33,7 @@ type MoveTargetDialogProps = {
   count: number
   /** Every movable line is selected: a same-place split would just be a rename. */
   allSelected: boolean
-  /** The one customer every selected line is for: the new tab's name, ready to take or change */
+  /** The one customer every selected line is for: the first name offered for a bill of their own */
   suggestedName?: string | null
   isPending: boolean
   onPick: (target: MoveTarget) => void
@@ -44,16 +43,26 @@ function Caption({ children }: { children: React.ReactNode }) {
   return <div className='text-muted-foreground type-label px-4 pt-3 pb-1'>{children}</div>
 }
 
+/** A name to give a bill to: one tap */
+const nameClass =
+  'hover:border-foreground/40 type-heading inline-flex min-h-13 items-center gap-2 rounded-xl border px-4 py-2 text-start disabled:opacity-50'
+/** The likeliest name, or the new one being typed */
+const nameLit = 'bg-primary text-primary-foreground border-primary hover:border-primary'
+
 const rowClass = 'hover:bg-muted flex min-h-14 w-full items-center gap-3 border-b px-4 py-2 text-start last:border-b-0 disabled:opacity-50'
 
 /**
- * Moving the picked lines: one list of every place they can go, one tap each.
- * A bill already on the floor (the customer who ordered at a table and then
- * took a room). A new tab by name, for whoever is paying on their own. A
- * second bill for the same place, when an order landed on the previous
- * group's bill. A free table, opened and filled in one step. A room's own
- * bill follows its stay, so a room never gets a second one. The box on the
- * top row narrows the list by a bill's or a table's name.
+ * Moving the picked lines: every place they can go, one tap each. First a
+ * bill in someone's name, for whoever is paying on their own: the people
+ * already on this bill are names to tap (the one the picked lines are for
+ * comes first, lit), and a new name is typed in the box on the top row and
+ * taken with Enter or a tap. Naming a bill used to be a row, then a field,
+ * then Create. Then a bill already on the floor (the customer who ordered
+ * at a table and then took a room), a second bill for the same place (an
+ * order landed on the previous group's bill), and a free table, opened and
+ * filled in one step. A room's own bill follows its stay, so a room never
+ * gets a second one. What is typed in the box also narrows the bills and
+ * the tables by name.
  */
 export function MoveTargetDialog({
   open,
@@ -69,16 +78,11 @@ export function MoveTargetDialog({
   const localized = useLocalized()
   const money = useMoney()
   const [search, setSearch] = useState('')
-  // The new tab's name is asked only once that row is tapped: a step replaces the row
-  const [naming, setNaming] = useState(false)
-  const [label, setLabel] = useState('')
+  const searchRef = useRef<HTMLInputElement>(null)
 
-  // Opened, the picked lines' one customer is already the new tab's name
   useEffect(() => {
     setSearch('')
-    setNaming(false)
-    setLabel(open ? (suggestedName ?? '') : '')
-  }, [open, suggestedName])
+  }, [open])
 
   const cloudKitchen = useIsCloudKitchen()
   const { data: tickets = [] } = useQuery({
@@ -109,9 +113,16 @@ export function MoveTargetDialog({
     )
     .filter((table) => !q || has(localized(table.name)) || has(t('table')))
   const canSplit = ticket.sessionId == null && !allSelected
+  // Who is on this bill: each a name to give a bill of their own, the picked lines' one customer first
+  const people = [suggestedName ?? '', ...(ticket.lines ?? []).map((line) => line.customerName ?? '')]
+    .map((name) => name.trim())
+    .filter((name, index, all) => name !== '' && all.indexOf(name) === index)
+    .filter((name) => !q || has(name))
+  // What is typed is a new name unless it is one of theirs already
+  const typed = search.trim()
+  const fresh = typed !== '' && !people.some((name) => name.toLowerCase() === q)
+  const named = (name: string) => onPick({ kind: 'counter', label: name })
   const place = localized(ticket.locationName) || ticket.label || t('counter')
-  // A new bill's rows are for when nothing is being searched for by name
-  const offersNew = !q
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -123,8 +134,11 @@ export function MoveTargetDialog({
 
         <div className='relative'>
           <Input
+            ref={searchRef}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
+            // Enter takes what is typed as the new bill's name
+            onKeyDown={(e) => e.key === 'Enter' && typed !== '' && !isPending && named(typed)}
             placeholder={t('moveFind')}
             className='h-12 pe-12 text-base'
             autoComplete='off'
@@ -142,6 +156,41 @@ export function MoveTargetDialog({
         </div>
 
         <div className='flex flex-col overflow-hidden rounded-lg border'>
+          <Caption>{t('moveNamedBill')}</Caption>
+          <div className='flex flex-wrap gap-2 border-b px-4 pt-1 pb-3'>
+            {fresh && (
+              <button type='button' disabled={isPending} onClick={() => named(typed)} className={cn(nameClass, nameLit)}>
+                <bdi>{t('moveNewNamed', { name: typed })}</bdi>
+              </button>
+            )}
+            {people.map((name, index) => {
+              // The picked lines' own customer is the likeliest: lit, and said why
+              const theirs = name === (suggestedName ?? '').trim()
+              return (
+                <button
+                  key={name}
+                  type='button'
+                  disabled={isPending}
+                  onClick={() => named(name)}
+                  className={cn(nameClass, theirs && index === 0 && !fresh && nameLit)}
+                >
+                  <bdi>{name}</bdi>
+                  {theirs && <span className='type-caption opacity-75'>{t('moveNamedTheirs')}</span>}
+                </button>
+              )
+            })}
+            {!typed && (
+              <button
+                type='button'
+                onClick={() => searchRef.current?.focus()}
+                className={cn(nameClass, 'text-muted-foreground border-dashed font-medium')}
+              >
+                <Plus className='size-4' aria-hidden />
+                {t('moveAnotherName')}
+              </button>
+            )}
+          </div>
+
           {others.length > 0 && <Caption>{t('moveOpenBills')}</Caption>}
           {others.map((target) => {
             const Icon = typeIcon[target.type ?? ''] ?? ShoppingBag
@@ -168,54 +217,17 @@ export function MoveTargetDialog({
             )
           })}
 
-          {offersNew && (
-            <>
-              <Caption>{t('moveNewBill')}</Caption>
-              {naming ? (
-                <div className='flex items-end gap-2 border-b px-4 py-3'>
-                  <div className='flex min-w-0 flex-1 flex-col gap-1.5'>
-                    <Label htmlFor='move-tab-name'>{t('tabName')}</Label>
-                    <Input
-                      id='move-tab-name'
-                      value={label}
-                      onChange={(e) => setLabel(e.target.value)}
-                      onKeyDown={(e) => e.key === 'Enter' && onPick({ kind: 'counter', label: label.trim() || null })}
-                      className='h-12 text-base'
-                      autoComplete='off'
-                      autoFocus
-                    />
-                  </div>
-                  <Button
-                    className='h-12 min-w-24'
-                    disabled={isPending}
-                    onClick={() => onPick({ kind: 'counter', label: label.trim() || null })}
-                  >
-                    {t('moveCreate')}
-                  </Button>
-                </div>
-              ) : (
-                <button type='button' disabled={isPending} onClick={() => setNaming(true)} className={rowClass}>
-                  <ReceiptText className='text-muted-foreground size-5 shrink-0' aria-hidden />
-                  <span className='min-w-0 flex-1'>
-                    <span className='type-heading block truncate'>{t('moveTabWithName')}</span>
-                    <span className='text-muted-foreground type-detail block truncate'>{t('moveTabWithNameHint')}</span>
-                  </span>
-                  <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' aria-hidden />
-                </button>
-              )}
-              {canSplit && (
-                <button type='button' disabled={isPending} onClick={() => onPick({ kind: 'split' })} className={rowClass}>
-                  <Split className='text-muted-foreground size-5 shrink-0' aria-hidden />
-                  <span className='min-w-0 flex-1'>
-                    <span className='type-heading block truncate'>
-                      <bdi>{t('moveSecondBill', { place })}</bdi>
-                    </span>
-                    <span className='text-muted-foreground type-detail block truncate'>{t('moveSecondBillHint')}</span>
-                  </span>
-                  <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' aria-hidden />
-                </button>
-              )}
-            </>
+          {!q && canSplit && (
+            <button type='button' disabled={isPending} onClick={() => onPick({ kind: 'split' })} className={rowClass}>
+              <Split className='text-muted-foreground size-5 shrink-0' aria-hidden />
+              <span className='min-w-0 flex-1'>
+                <span className='type-heading block truncate'>
+                  <bdi>{t('moveSecondBill', { place })}</bdi>
+                </span>
+                <span className='text-muted-foreground type-detail block truncate'>{t('moveSecondBillHint')}</span>
+              </span>
+              <ChevronRight className='text-muted-foreground size-4 shrink-0 rtl:rotate-180' aria-hidden />
+            </button>
           )}
 
           {freeTables.length > 0 && (
@@ -238,9 +250,6 @@ export function MoveTargetDialog({
             </>
           )}
 
-          {others.length === 0 && freeTables.length === 0 && !offersNew && (
-            <p className='text-muted-foreground type-body px-4 py-8 text-center'>{t('moveNothing')}</p>
-          )}
         </div>
       </DialogContent>
     </Dialog>
