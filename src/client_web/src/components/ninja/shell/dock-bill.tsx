@@ -1,4 +1,3 @@
-import { useEffect, useState } from 'react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useNavigate } from '@tanstack/react-router'
 import { Bike, Check, ChefHat, ChevronUp, CircleHelp, Coffee, CreditCard, House, ReceiptText, Send, X } from 'lucide-react'
@@ -74,14 +73,6 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const enhanced = preview.on
   const stage = enhanced && preview.stage ? preview.stage : followed.stage
   const orderNumber = enhanced && preview.stage ? 142 : followed.orderNumber
-  // A stage arrived at is said out loud for a few seconds, over the dock: the dock grows only when it has something to say
-  const [announcing, setAnnouncing] = useState(false)
-  useEffect(() => {
-    if (!enhanced || !stage) return
-    setAnnouncing(true)
-    const id = setTimeout(() => setAnnouncing(false), 4000)
-    return () => clearTimeout(id)
-  }, [enhanced, stage])
   const navigate = useNavigate()
   // Waiting for its payment ahead: the row is the way to pay it, not the bill
   const toPay = stage === 'awaitingPayment' && orderNumber != null
@@ -140,7 +131,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   return (
     <>
       <AnimatePresence>
-        {enhanced && stage && (announcing || !trayEmpty) && (
+        {enhanced && stage && !trayEmpty && (
           <motion.button
             key='said'
             type='button'
@@ -148,12 +139,9 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
             initial={{ opacity: 0, y: 12, x: '-50%' }}
             animate={{ opacity: 1, y: 0, x: '-50%' }}
             exit={{ opacity: 0, y: 12, x: '-50%' }}
-            className={cn(
-              'slab absolute left-1/2 z-10 flex items-center gap-2 rounded-full font-semibold whitespace-nowrap shadow-(--slab-shadow)',
-              announcing ? '-top-14 h-11 px-5 text-note' : '-top-10 h-8 px-3.5 text-caption',
-            )}
+            className='slab absolute -top-10 left-1/2 z-10 flex h-8 items-center gap-2 rounded-full px-3.5 text-caption font-semibold whitespace-nowrap shadow-(--slab-shadow)'
           >
-            {StageIcon && <StageIcon className={announcing ? 'size-4' : 'size-3.5'} />}
+            {StageIcon && <StageIcon className='size-3.5' />}
             {headline}
           </motion.button>
         )}
