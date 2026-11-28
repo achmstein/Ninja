@@ -2,12 +2,12 @@ import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
+import { renewSession } from '@ninja/web-core/session'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { brandQueryKey, type Brand } from '@/lib/brand'
 import { translate, useLanguage } from '@/lib/i18n'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
-import { renewSession } from '@/context/session'
 import { unitLabel } from '@/features/inventory/format'
 
 type OrderStatusChangedEvent = {

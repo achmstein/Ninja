@@ -1,5 +1,5 @@
 import { createContext, useContext, useState } from 'react'
-import { getCookie, setCookie } from '@/lib/cookies'
+import { getCookie, setCookie } from '@ninja/web-core/cookies'
 
 type Collapsible = 'offcanvas' | 'icon' | 'none'
 type Variant = 'inset' | 'sidebar' | 'floating'

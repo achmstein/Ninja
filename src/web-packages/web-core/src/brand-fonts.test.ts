@@ -9,7 +9,6 @@ import {
   LATIN_FONT_CATALOG,
   LATIN_FONTS,
 } from './brand-fonts'
-import { brandTokens } from './brand-theme'
 
 describe('brand fonts', () => {
   it('keeps the defaults in the catalog, each family once', () => {
@@ -41,9 +40,5 @@ describe('brand fonts', () => {
     expect(knownFont('Satoshi', LATIN_FONTS)).toBe('Satoshi')
     expect(knownFont('Poppins', LATIN_FONTS)).toBeNull()
     expect(knownFont('Cairo', LATIN_FONTS)).toBeNull()
-    const tokens = brandTokens({ theme: { fontLatin: 'Nunito', fontArabic: 'Readex Pro' } })
-    expect(tokens.fontLatin).toBeNull()
-    expect(tokens.light['--font-latin']).toBeUndefined()
-    expect(tokens.light['--font-arabic']).toBe("'Readex Pro'")
   })
 })

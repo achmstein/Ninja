@@ -2,6 +2,15 @@ import { useMemo, useState, type ReactNode } from 'react'
 import { AxiosError } from 'axios'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { ChevronDown, Lock, X } from 'lucide-react'
+import {
+  ARABIC_FONT_CATALOG,
+  ARABIC_FONTS,
+  ensureFontPreviews,
+  knownFont,
+  LATIN_FONT_CATALOG,
+  LATIN_FONTS,
+  type BrandFont,
+} from '@ninja/web-core/brand-fonts'
 import { type TenantFeatures, type TenantThemeDto } from '@/api/tenant'
 import {
   deleteTenantImageMutation,
@@ -16,15 +25,6 @@ import {
   useIsCloudKitchen,
   type Brand,
 } from '@/lib/brand'
-import {
-  ARABIC_FONT_CATALOG,
-  ARABIC_FONTS,
-  ensureFontPreviews,
-  knownFont,
-  LATIN_FONT_CATALOG,
-  LATIN_FONTS,
-  type BrandFont,
-} from '@/lib/brand-fonts'
 import { imageOf, isMark, isPhoto, type ImageSlot } from '@/lib/brand-slots'
 import { RADII } from '@/lib/brand-theme'
 import { contentLanguagesOf, type ContentLanguages } from '@/lib/content-languages'

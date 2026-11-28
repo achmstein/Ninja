@@ -28,3 +28,12 @@ describe('the slab', () => {
     expect(brandTokens({}).light['--slab']).toBeUndefined()
   })
 })
+
+describe('brand theme fonts', () => {
+  it('reads a family outside the catalog as the default', () => {
+    const tokens = brandTokens({ theme: { fontLatin: 'Nunito', fontArabic: 'Readex Pro' } })
+    expect(tokens.fontLatin).toBeNull()
+    expect(tokens.light['--font-latin']).toBeUndefined()
+    expect(tokens.light['--font-arabic']).toBe("'Readex Pro'")
+  })
+})

@@ -18,6 +18,7 @@
   "dependencies": {
     "@mapbox/mapbox-gl-rtl-text": "0.3.0",
     "@microsoft/signalr": "9.0.19",
+    "@ninja/web-core": "*",
     "@radix-ui/react-alert-dialog": "1.1.23",
     "@radix-ui/react-dialog": "1.1.23",
     "@radix-ui/react-direction": "1.1.4",

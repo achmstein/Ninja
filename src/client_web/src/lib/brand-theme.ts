@@ -17,7 +17,7 @@
  * a port of it, so every surface derives the same colours from the same
  * seeds.
  */
-import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from './brand-fonts'
+import { ARABIC_FONTS, fontStylesheetUrl, knownFont, LATIN_FONTS } from '@ninja/web-core/brand-fonts'
 import { NINJA, withStyleDefaults } from './styles'
 
 const STYLE_ID = 'brand-theme'
@@ -72,7 +72,7 @@ export {
   fontStylesheetUrl,
   knownFont,
   type BrandFont,
-} from './brand-fonts'
+} from '@ninja/web-core/brand-fonts'
 
 export type Scheme = 'light' | 'dark'
 

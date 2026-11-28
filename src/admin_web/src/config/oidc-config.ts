@@ -1,6 +1,6 @@
 import { User, WebStorageStateStore } from 'oidc-client-ts'
 import type { AuthProviderNoUserManagerProps as AuthProviderProps } from 'react-oidc-context'
-import { readBranchClaim } from '@/lib/branch-claim'
+import { readBranchClaim } from '@ninja/web-core/branch-claim'
 
 // OIDC configuration for Keycloak
 // In development, VITE_KEYCLOAK_URL is injected by the Aspire AppHost

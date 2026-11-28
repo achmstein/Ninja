@@ -2,6 +2,7 @@ import { useEffect } from 'react'
 import { useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
+import { renewSession } from '@ninja/web-core/session'
 import { getBranchesQueryKey } from '@/api/tenant/@tanstack/react-query.gen'
 import type { BranchResponse } from '@/api/tenant/types.gen'
 import { getActiveBranchId } from '@/stores/branch-store'
@@ -10,7 +11,6 @@ import { translate, useLanguage } from '@/lib/i18n'
 import { isOwnOrder } from '@/lib/own-orders'
 import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
-import { renewSession } from '@/context/session'
 
 /** A phone delivery another branch's till took and sent to one of the business's branches */
 type OrderSentToBranchEvent = {

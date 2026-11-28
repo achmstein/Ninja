@@ -1,7 +1,7 @@
 import { createContext, useContext, useEffect, useState, useMemo } from 'react'
 import { create } from 'zustand'
+import { getCookie, setCookie, removeCookie } from '@ninja/web-core/cookies'
 import { applyThemeColor } from '@/lib/brand-theme'
-import { getCookie, setCookie, removeCookie } from '@/lib/cookies'
 import { preview } from '@/lib/preview'
 
 type Theme = 'dark' | 'light' | 'system'

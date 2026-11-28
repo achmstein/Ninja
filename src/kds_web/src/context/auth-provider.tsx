@@ -1,6 +1,6 @@
 import { useMemo, type ReactNode } from 'react'
 import { getOidcConfig } from '@/config/oidc-config'
-import { SessionProvider } from './session'
+import { SessionProvider } from '@ninja/web-core/session'
 
 interface AuthProviderProps {
   children: ReactNode

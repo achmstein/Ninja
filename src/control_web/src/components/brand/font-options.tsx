@@ -1,4 +1,4 @@
-import { type BrandFont } from '@/lib/brand-fonts'
+import { type BrandFont } from '@ninja/web-core/brand-fonts'
 import { SelectGroup, SelectItem, SelectLabel, SelectSeparator } from '@/components/ui/select'
 
 /**
