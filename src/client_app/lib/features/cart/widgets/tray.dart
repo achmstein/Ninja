@@ -5,7 +5,7 @@ import 'package:flutter/physics.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';

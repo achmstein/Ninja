@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 double _num(dynamic v) => v is num ? v.toDouble() : double.tryParse('${v ?? ''}') ?? 0;
 

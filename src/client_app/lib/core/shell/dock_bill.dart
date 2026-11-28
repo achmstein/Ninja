@@ -13,7 +13,7 @@ import '../services/delivery_card_service.dart' show DeliveryLive;
 import '../providers/current_place_provider.dart';
 import '../theme/theme_provider.dart';
 import '../ui/ui.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../utils/money.dart';
 import '../widgets/destination_chip.dart';
 import '../../features/places/screens/places_screen.dart' show showRoomSheet;

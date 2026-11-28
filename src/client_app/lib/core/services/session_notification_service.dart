@@ -11,7 +11,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../l10n/app_localizations.dart';
 import '../auth/auth_service.dart';
 import '../config/app_config.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../theme/theme_provider.dart';
 import '../ui/ui.dart';
 import '../widgets/app_text.dart';

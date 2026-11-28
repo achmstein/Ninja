@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// The customer's own copy of the printed receipt, as Sales returns it for a
 /// bill they were on.

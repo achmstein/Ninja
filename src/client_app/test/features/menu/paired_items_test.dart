@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/features/cart/models/cart_item.dart';
 import 'package:ninja_client/features/menu/models/menu_item.dart';
 import 'package:ninja_client/features/menu/models/user_preference.dart';

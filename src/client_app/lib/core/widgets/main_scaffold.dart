@@ -6,7 +6,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../l10n/app_localizations.dart';
 import '../brand/brand_provider.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../motion/motion.dart';
 import '../providers/branch_provider.dart';
 import '../providers/branch_switch.dart';

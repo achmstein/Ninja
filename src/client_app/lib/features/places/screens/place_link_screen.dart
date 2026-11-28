@@ -5,7 +5,7 @@ import '../widgets/hold_form.dart';
 import '../../../core/ui/ui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/auth/auth_service.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';

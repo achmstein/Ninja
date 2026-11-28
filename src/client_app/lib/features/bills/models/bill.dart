@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../places/models/place.dart';
 
 /// A bill as the customer sees it: the till's arithmetic, none of the

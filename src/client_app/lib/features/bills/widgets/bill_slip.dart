@@ -4,7 +4,7 @@ import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/brand/brand_mark.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../../core/utils/money.dart';

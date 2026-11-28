@@ -573,6 +573,22 @@ packages:
     description: flutter
     source: sdk
     version: "0.0.0"
+  forui:
+    dependency: transitive
+    description:
+      name: forui
+      sha256: "68e35cc6e989d960bcc4d31e49f22464e80f4c1f2d40c7ad63c1ba74386c209c"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.19.0"
+  forui_assets:
+    dependency: transitive
+    description:
+      name: forui_assets
+      sha256: ba80eeee720f517468bc06974a83905a183fa148ab34ea080b8fe7909806218c
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.19.0"
   freezed:
     dependency: "direct dev"
     description:
@@ -1013,6 +1029,21 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.17.4"
+  ninja_app_core:
+    dependency: "direct main"
+    description:
+      path: "../ninja_app_core"
+      relative: true
+    source: path
+    version: "1.0.0"
+  nitrogen_types:
+    dependency: transitive
+    description:
+      name: nitrogen_types
+      sha256: "5d4ec453aea14e34607bc6021ff1381192e8fcd8541bf103638baa4d013e668f"
+      url: "https://pub.dev"
+    source: hosted
+    version: "0.4.0+1"
   node_preamble:
     dependency: transitive
     description:
@@ -1514,6 +1545,14 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "1.4.1"
+  sugar:
+    dependency: transitive
+    description:
+      name: sugar
+      sha256: a0a97f1d3552a3ef4cbec7c6e62c7b52c151cd5c11e984e8311700a918f73dc5
+      url: "https://pub.dev"
+    source: hosted
+    version: "4.0.0"
   synchronized:
     dependency: transitive
     description:

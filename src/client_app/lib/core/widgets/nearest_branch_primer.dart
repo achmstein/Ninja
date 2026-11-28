@@ -4,7 +4,7 @@ import 'package:geolocator/geolocator.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../features/delivery/services/delivery_service.dart';
 import '../../l10n/app_localizations.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../providers/branch_provider.dart';
 import '../providers/branch_switch.dart';
 import '../services/location_service.dart';

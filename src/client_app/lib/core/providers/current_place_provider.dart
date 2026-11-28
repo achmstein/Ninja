@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'branch_provider.dart';
 import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/brand/brand_provider.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/branch_switch.dart';

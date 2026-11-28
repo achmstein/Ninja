@@ -4,7 +4,7 @@ import '../../../core/motion/motion.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
 import 'package:intl/intl.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/widgets/app_text.dart';
 import '../../../l10n/app_localizations.dart';

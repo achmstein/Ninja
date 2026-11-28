@@ -8,7 +8,7 @@ import '../../features/places/models/place.dart';
 import '../../features/places/services/place_service.dart';
 import '../../l10n/app_localizations.dart';
 import '../models/branch.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../services/location_service.dart';
 import '../ui/ui.dart';
 import '../widgets/app_text.dart';

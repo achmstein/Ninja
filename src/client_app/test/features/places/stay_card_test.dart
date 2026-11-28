@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/places/models/place.dart';

@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:ninja_client/core/brand/brand_provider.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/core/providers/branch_provider.dart';
 import 'package:ninja_client/core/providers/current_place_provider.dart';
 import 'package:ninja_client/core/providers/locale_provider.dart';

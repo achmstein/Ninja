@@ -9,6 +9,9 @@ environment:
 dependencies:
   flutter:
     sdk: flutter
+  # What the platform's Flutter apps share (sign-in, API, brand, models, motion)
+  ninja_app_core:
+    path: ../ninja_app_core
   flutter_localizations:
     sdk: flutter
 

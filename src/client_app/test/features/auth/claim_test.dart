@@ -7,7 +7,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:ninja_client/core/brand/brand_service.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/features/auth/claim/claim_screen.dart';
 import 'package:ninja_client/features/auth/claim/claim_service.dart';
 import 'package:ninja_client/l10n/app_localizations.dart';

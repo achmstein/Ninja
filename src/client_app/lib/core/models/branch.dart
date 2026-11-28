@@ -1,4 +1,4 @@
-import 'localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 class Branch {
   final int id;

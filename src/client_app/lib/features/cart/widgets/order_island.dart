@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/ui/ui.dart';
 import '../../../l10n/app_localizations.dart';
 import '../../orders/models/order.dart';

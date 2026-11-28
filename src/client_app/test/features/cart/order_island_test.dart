@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/core/ui/ui.dart';
 import 'package:ninja_client/features/cart/widgets/order_island.dart';
 import 'package:ninja_client/features/orders/models/order.dart';

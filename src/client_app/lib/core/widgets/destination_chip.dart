@@ -4,7 +4,7 @@ import '../ui/ui.dart';
 import '../brand/brand_style.dart';
 import '../../features/bills/widgets/open_bills.dart';
 import '../../features/service_request/widgets/request_tiles.dart';
-import '../models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../providers/current_place_provider.dart';
 import 'app_text.dart';
 import '../../features/service_request/models/service_request.dart';

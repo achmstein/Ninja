@@ -1,4 +1,4 @@
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/core/utils/money.dart';
 import 'package:ninja_client/features/places/models/place.dart';
 import 'package:ninja_client/features/places/screens/places_screen.dart';

@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../../core/ui/ui.dart';
 
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../places/models/place.dart';
 
 /// Types of service requests users can make

@@ -1,6 +1,6 @@
-// The motion language of the platform's Flutter apps (pos_app keeps its own
-// copy, identical), with the
-// same numbers as client_web's src/lib/motion.ts.
+// The motion language of the platform's Flutter apps, with the same numbers as
+// client_web's src/lib/motion.ts, and the springs the customer app's dock, tray
+// and sheets use.
 //
 // One element changes shape instead of cutting to another; springs land
 // with at most a hair of overshoot; every step is 150–350 ms and nothing
@@ -42,6 +42,16 @@ abstract final class Motion {
 
   /// For springs measured in pixels: done within half a pixel
   static const pixelTolerance = Tolerance(distance: 0.5, velocity: 5);
+
+  /// A view opening out of what it came from: quick and firm
+  static const springOpen = SpringDescription(mass: 1, stiffness: 380, damping: 36);
+
+  /// The tray's order sheet rising out of the dock
+  static const springTray = SpringDescription(mass: 1, stiffness: 420, damping: 40);
+
+  /// The liquid pill: its leading edge darts, its trailing edge follows
+  static const pillLead = SpringDescription(mass: 0.7, stiffness: 520, damping: 38);
+  static const pillTrail = SpringDescription(mass: 0.9, stiffness: 190, damping: 24);
 }
 
 /// The platform asked for less motion: fades only, no travel, no shake.

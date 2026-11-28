@@ -13,7 +13,7 @@ import '../../bills/widgets/open_bills.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/brand/brand_style.dart';
 import '../../../core/brand/styles.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/widgets/notice_card.dart';

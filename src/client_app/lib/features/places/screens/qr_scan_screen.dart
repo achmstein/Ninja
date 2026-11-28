@@ -4,7 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/hold_form.dart';
 import '../../../core/ui/ui.dart';
 import 'package:mobile_scanner/mobile_scanner.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/current_place_provider.dart';

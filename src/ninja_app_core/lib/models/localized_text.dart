@@ -25,14 +25,18 @@ class LocalizedText {
     return _hasArabic(clean) ? LocalizedText(ar: clean) : LocalizedText(en: clean);
   }
 
-  /// Parse from dynamic value - handles both string and object formats
-  static LocalizedText parse(dynamic value) {
-    if (value is String) {
-      return LocalizedText.fromString(value);
-    } else if (value is Map<String, dynamic>) {
+  /// Parse from dynamic value — handles JSON object, plain string, or null.
+  /// With [arValue] the string is the English side and [arValue] the Arabic;
+  /// a lone string of unknown language goes to the side of its script.
+  static LocalizedText parse(dynamic value, [String? arValue]) {
+    if (value is Map<String, dynamic>) {
       return LocalizedText.fromJson(value);
     }
-    return LocalizedText.fromString(value?.toString() ?? '');
+    final text = value?.toString();
+    if (arValue != null) {
+      return LocalizedText(en: _clean(text), ar: _clean(arValue));
+    }
+    return LocalizedText.fromString(text ?? '');
   }
 
   /// Parse nullable value

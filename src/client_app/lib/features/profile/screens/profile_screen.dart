@@ -9,7 +9,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/config/app_config.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/branch_switch.dart';
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/widgets/branch_switcher.dart';
 import '../../delivery/widgets/address_sheet.dart';
 import '../../../core/widgets/app_text.dart';

@@ -1,4 +1,4 @@
-import '../../../core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 
 /// Menu item model
 class MenuItem {

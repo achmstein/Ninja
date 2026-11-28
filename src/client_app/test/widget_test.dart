@@ -11,7 +11,7 @@ import 'package:ninja_client/core/brand/brand_service.dart';
 import 'package:ninja_client/core/theme/theme_provider.dart';
 import 'package:ninja_client/core/brand/brand_theme.dart';
 import 'package:ninja_client/core/brand/tenant_brand.dart';
-import 'package:ninja_client/core/models/localized_text.dart';
+import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:ninja_client/main.dart';
 
 /// The tenant answering like Tenant.API's GET /api/tenant
