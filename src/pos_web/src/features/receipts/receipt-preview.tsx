@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { Banknote, Check, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
+import { Banknote, Check, ChevronDown, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
 import type { TicketDetail } from '@/api/sales'
 import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
@@ -15,6 +15,7 @@ import { ChangeTenderDialog, CORRECTABLE_TENDERS, type TenderFix } from '@/featu
 import { tenderLabelKey } from '@/features/ticket/tenders'
 import { useRefund } from '@/features/ticket/use-refund'
 import { API_VERSION } from '@/lib/api-client'
+import { friendlyDay, friendlyTime } from '@/lib/friendly-day'
 import { useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
@@ -26,11 +27,14 @@ const label = 'text-muted-foreground type-label pt-4 pb-1'
 
 /**
  * One closed bill, worked on where it is picked: beside the receipts list, or
- * in a sheet over it on a phone. What was on it, what it came to, how it was
- * paid and what went back since, across the whole width it is given. And what
- * is done to a closed bill is done here: it is printed again, the way it was
- * paid is put right, and an owner gives money back, the same pane turning to
- * the refund and back. The bill's own page was three steps away for each.
+ * in a sheet over it on a phone. Its head says whose it is and, quietly, its
+ * number, when it closed and who closed it. Under the head one band holds the
+ * money: what it came to, once, and how it was paid, the way it was paid
+ * being a button that puts it right (Cash pressed, InstaPay sent). Then what
+ * was on it, and what went back since. Nothing is said twice: no second
+ * total, no list of payments repeating the amount. And what is done to a
+ * closed bill is done here: it is printed again, and an owner gives money
+ * back, the same pane turning to the refund and back.
  */
 export function ReceiptPreview({
   ticketId,
@@ -111,8 +115,12 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
     const key = tenderLabelKey[tender ?? '']
     return key ? t(key) : (tender ?? '')
   }
-  const when = (iso: string | null | undefined) =>
-    iso ? new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(iso)) : ''
+  // The day in words and the time: "Today 1:25 AM", never a full date on every line
+  const when = (iso: string | null | undefined) => {
+    if (!iso) return ''
+    const at = new Date(iso)
+    return `${friendlyDay(at, locale, { today: t('today'), yesterday: t('yesterday') })} ${friendlyTime(at, locale)}`
+  }
 
   // What earlier credit notes took of each line, said on the line
   const backByLine = new Map<number, number>()
@@ -131,26 +139,96 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
   }
 
   const head = (
-    // As tall as the list's head beside it (8 + 48 + 8), so the two rules under them meet in one line
+    // As tall as the list's head beside it (8 + 48 + 8) while the name fits one line, so the two rules under them meet
     <div className='flex min-h-16 shrink-0 items-center gap-3 border-b px-4 py-2 max-md:pe-14'>
-      <h2 className='type-title flex min-w-0 flex-1 items-baseline gap-2'>
-        <span className='shrink-0 tabular-nums'>
-          {refunding
-            ? t('refundTitle', { number })
-            : ticket.receiptNumber != null
-              ? t('receiptNumber', { number })
-              : t('ticketNumber', { id: toNumber(ticket.id) })}
-        </span>
-        <span className='text-muted-foreground min-w-0 truncate font-normal'>{title}</span>
-      </h2>
       {refunding ? (
-        <Button variant='ghost' size='icon' className='size-12 shrink-0' aria-label={t('cancel')} disabled={making.pending} onClick={leave}>
-          <X className='size-5' />
-        </Button>
+        <>
+          <h2 className='type-title min-w-0 flex-1 truncate tabular-nums'>{t('refundTitle', { number })}</h2>
+          <Button variant='ghost' size='icon' className='size-12 shrink-0' aria-label={t('cancel')} disabled={making.pending} onClick={leave}>
+            <X className='size-5' />
+          </Button>
+        </>
       ) : (
-        <span className='text-muted-foreground type-detail min-w-0 shrink truncate max-sm:hidden'>
-          {[when(ticket.settledAt), ticket.settledBy && `${t('closedBy')} ${ticket.settledBy}`, takenBy].filter(Boolean).join(' · ')}
-        </span>
+        <div className='min-w-0 flex-1'>
+          {/* Whose it is, whole: a long name wraps, it is never cut */}
+          <h2 className='type-title break-words'>{title}</h2>
+          <p className='text-muted-foreground type-detail tabular-nums'>
+            {[
+              ticket.receiptNumber != null ? t('receiptNumber', { number }) : t('ticketNumber', { id: toNumber(ticket.id) }),
+              when(ticket.settledAt),
+              ticket.settledBy,
+              takenBy,
+            ]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
+        </div>
+      )}
+    </div>
+  )
+
+  // The money, once: what it came to, and how it was paid. One payment says only its way; several say who and how much each
+  const single = payments.length === 1
+  const band = (
+    <div className='bg-muted/40 flex shrink-0 items-center gap-4 border-b px-4 py-3 max-sm:flex-col max-sm:items-stretch'>
+      <div className='min-w-0 flex-1'>
+        <div className='text-muted-foreground type-label'>{t('total')}</div>
+        <div className='type-figure'>{money(total)}</div>
+        {refunded > 0 && (
+          <div className='text-destructive type-detail font-semibold tabular-nums'>
+            {t('refundedSoFar')} −{money(refunded)}
+          </div>
+        )}
+      </div>
+      {payments.length > 0 && (
+        <div className='flex flex-col gap-1.5 sm:min-w-64'>
+          {payments.map((payment, i) => {
+            // A cash, card or InstaPay payment can be put right, until money has gone back against the bill
+            const canFix = !isVoided && payment.id != null && refunds.length === 0 && CORRECTABLE_TENDERS.includes(payment.tender ?? '')
+            return (
+              <div key={String(payment.id ?? i)}>
+                <div className='flex items-center gap-3'>
+                  <span className='text-muted-foreground type-detail min-w-0 flex-1 truncate'>
+                    {single ? t('paidTag') : <bdi>{payment.customerName ?? ''}</bdi>}
+                  </span>
+                  {!single && <span className='type-body font-semibold tabular-nums'>{money(payment.amount)}</span>}
+                  {canFix ? (
+                    <Button
+                      variant='outline'
+                      className='h-11 gap-2 font-semibold'
+                      aria-label={`${tenderLabel(payment.tender)}: ${t('changeTender')}`}
+                      onClick={() => setTenderFix({ paymentId: toNumber(payment.id), tender: payment.tender ?? '', amount: money(payment.amount) })}
+                    >
+                      {tenderLabel(payment.tender)}
+                      <ChevronDown className='text-muted-foreground size-4' />
+                    </Button>
+                  ) : (
+                    <span className='type-body font-semibold'>{tenderLabel(payment.tender)}</span>
+                  )}
+                </div>
+                {payment.tenderChangedFrom && (
+                  // Who changed it and when is the back office's to read; here, only that it was changed
+                  <p
+                    className='text-muted-foreground type-caption text-end'
+                    title={t('tenderChangedFrom', {
+                      from: tenderLabel(payment.tenderChangedFrom),
+                      name: payment.tenderChangedBy ?? '',
+                      time: when(payment.tenderChangedAt),
+                    })}
+                  >
+                    {t('tenderWas', { from: tenderLabel(payment.tenderChangedFrom) })}
+                  </p>
+                )}
+              </div>
+            )
+          })}
+          {change > 0 && (
+            <div className='text-muted-foreground type-detail flex justify-between gap-4 tabular-nums'>
+              <span>{t('changeDue')}</span>
+              <span>{money(change)}</span>
+            </div>
+          )}
+        </div>
       )}
     </div>
   )
@@ -193,97 +271,38 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
         })}
       </ul>
 
-      <dl className='space-y-1 pt-3 tabular-nums'>
-        {hasBreakdown && (
-          <div className='text-muted-foreground type-detail space-y-1'>
-            <Row label={t('subtotal')} value={money(subtotal)} />
-            {discount > 0 && <Row label={t('discount')} value={`−${money(discount)}`} />}
-            {service > 0 && <Row label={t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} value={money(service)} />}
-            {vat > 0 && !ticket.vatIncluded && <Row label={t('vat', { rate: percent(ticket.vatRate) })} value={money(vat)} />}
+      {/* How the total was made up, only when a discount, service or VAT is in it: the total itself is in the band above */}
+      {(hasBreakdown || (vat > 0 && ticket.vatIncluded)) && (
+        <dl className='text-muted-foreground type-detail space-y-1 pt-3 tabular-nums'>
+          {hasBreakdown && (
+            <>
+              <Row label={t('subtotal')} value={money(subtotal)} />
+              {discount > 0 && <Row label={t('discount')} value={`−${money(discount)}`} />}
+              {service > 0 && <Row label={t('serviceCharge', { rate: percent(ticket.serviceChargeRate) })} value={money(service)} />}
+              {vat > 0 && !ticket.vatIncluded && <Row label={t('vat', { rate: percent(ticket.vatRate) })} value={money(vat)} />}
+            </>
+          )}
+          {vat > 0 && ticket.vatIncluded && <Row label={t('vatIncluded', { rate: percent(ticket.vatRate) })} value={money(vat)} />}
+        </dl>
+      )}
+
+      {/* Credit notes: money that went back, each with its reason, behind a red rule */}
+      {refunds.map((refund) => (
+        <div key={String(refund.id)} className='border-s-destructive bg-destructive/5 mt-4 border-s-[3px] px-3 py-2'>
+          <div className='flex items-baseline justify-between gap-4'>
+            <span className='type-body min-w-0 font-medium'>
+              <span className='tabular-nums'>{t('creditNote', { number: toNumber(refund.number) })}</span>
+              {refund.reason && ` · ${refund.reason}`}
+            </span>
+            <span className='text-destructive type-body shrink-0 font-semibold tabular-nums'>−{money(refund.amount)}</span>
           </div>
-        )}
-        <div className='flex items-baseline justify-between gap-4'>
-          <dt className='type-body'>{t('total')}</dt>
-          <dd className='type-figure'>{money(total)}</dd>
+          <p className='text-muted-foreground type-caption tabular-nums'>
+            {[refund.tender === 'Account' ? t('account') : t('cash'), refund.customerName, refund.refundedBy, when(refund.refundedAt)]
+              .filter(Boolean)
+              .join(' · ')}
+          </p>
         </div>
-        {vat > 0 && ticket.vatIncluded && (
-          <div className='text-muted-foreground type-detail'>
-            <Row label={t('vatIncluded', { rate: percent(ticket.vatRate) })} value={money(vat)} />
-          </div>
-        )}
-        {refunded > 0 && (
-          <div className='text-destructive type-body flex justify-between gap-4 font-medium'>
-            <dt>{t('refundedSoFar')}</dt>
-            <dd>−{money(refunded)}</dd>
-          </div>
-        )}
-      </dl>
-
-      {/* How it was paid; a cash, card or InstaPay payment can be put right (Cash pressed, InstaPay sent) */}
-      {payments.length > 0 && (
-        <>
-          <h3 className={label}>{t('paymentsTitle')}</h3>
-          <div className='divide-y border-y'>
-            {payments.map((payment, i) => (
-              <div key={String(payment.id ?? i)} className='flex min-h-12 flex-col justify-center py-1.5'>
-                <div className='flex items-center gap-3'>
-                  <span className='type-body min-w-0 flex-1 truncate font-medium'>
-                    {[tenderLabel(payment.tender), payment.customerName].filter(Boolean).join(' · ')}
-                  </span>
-                  <span className='type-body font-semibold tabular-nums'>{money(payment.amount)}</span>
-                  {!isVoided && payment.id != null && refunds.length === 0 && CORRECTABLE_TENDERS.includes(payment.tender ?? '') && (
-                    <Button
-                      variant='outline'
-                      className='h-10'
-                      onClick={() => setTenderFix({ paymentId: toNumber(payment.id), tender: payment.tender ?? '', amount: money(payment.amount) })}
-                    >
-                      {t('changeTender')}
-                    </Button>
-                  )}
-                </div>
-                {payment.tenderChangedFrom && (
-                  <p className='text-muted-foreground type-caption tabular-nums'>
-                    {t('tenderChangedFrom', {
-                      from: tenderLabel(payment.tenderChangedFrom),
-                      name: payment.tenderChangedBy ?? '',
-                      time: when(payment.tenderChangedAt),
-                    })}
-                  </p>
-                )}
-              </div>
-            ))}
-            {change > 0 && (
-              <div className='text-muted-foreground flex min-h-10 items-center justify-between gap-4 tabular-nums'>
-                <span>{t('changeDue')}</span>
-                <span>{money(change)}</span>
-              </div>
-            )}
-          </div>
-        </>
-      )}
-
-      {/* Credit notes: money that went back, each with its reason */}
-      {refunds.length > 0 && (
-        <>
-          <h3 className={label}>{t('refundsTitle')}</h3>
-          <div className='divide-y border-y'>
-            {refunds.map((refund) => (
-              <div key={String(refund.id)} className='py-2'>
-                <div className='flex items-baseline justify-between gap-4'>
-                  <span className='type-body font-medium tabular-nums'>{t('creditNote', { number: toNumber(refund.number) })}</span>
-                  <span className='text-destructive type-body font-semibold tabular-nums'>−{money(refund.amount)}</span>
-                </div>
-                {refund.reason && <p className='type-detail'>{refund.reason}</p>}
-                <p className='text-muted-foreground type-caption tabular-nums'>
-                  {[refund.tender === 'Account' ? t('account') : t('cash'), refund.customerName, refund.refundedBy, when(refund.refundedAt)]
-                    .filter(Boolean)
-                    .join(' · ')}
-                </p>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
+      ))}
     </>
   )
 
@@ -399,6 +418,7 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
   return (
     <>
       {head}
+      {!refunding && band}
       {/* Across the whole width the pane is given: a receipt held to a column left the rest of a wide screen empty */}
       <div className='min-h-0 flex-1 overflow-y-auto px-4 pb-4'>{refunding ? refundingBody : reading}</div>
 

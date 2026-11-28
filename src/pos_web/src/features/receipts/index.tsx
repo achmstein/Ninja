@@ -1,18 +1,7 @@
-import { useEffect, useRef, useState } from 'react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { keepPreviousData, useInfiniteQuery } from '@tanstack/react-query'
 import { Link } from '@tanstack/react-router'
-import {
-  Armchair,
-  ArrowLeft,
-  ArrowRight,
-  Bike,
-  ChevronRight,
-  DoorOpen,
-  Loader2,
-  Search,
-  ShoppingBag,
-  type LucideIcon,
-} from 'lucide-react'
+import { ArrowLeft, ArrowRight, ChevronRight, Loader2, Search } from 'lucide-react'
 import { getSettledTickets } from '@/api/sales/sdk.gen'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -22,23 +11,20 @@ import { BillTitle } from '@/features/deliveries/bill-title'
 import { billLabel } from '@/features/deliveries/delivery-format'
 import { useIsMobile } from '@/hooks/use-is-mobile'
 import { API_VERSION } from '@/lib/api-client'
+import { dayKey, friendlyDay, friendlyTime } from '@/lib/friendly-day'
 import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useMoney, toNumber } from '@/lib/money'
 import { cn } from '@/lib/utils'
 import { ReceiptPreview } from './receipt-preview'
-
-const typeIcon: Record<string, LucideIcon> = {
-  Room: DoorOpen,
-  Table: Armchair,
-  Counter: ShoppingBag,
-}
 
 const PAGE_SIZE = 50
 
 /**
  * The bills that have closed, newest receipt first — the way back to one
  * after it left the floor, to reprint it or issue a credit note against it.
- * Typing a receipt number finds that one; otherwise the recent ones show.
+ * Typing a receipt number finds that one; otherwise the recent ones show,
+ * under the day they closed on (Today, Yesterday, then the day by name), each
+ * with its name first and whole and its time alone.
  *
  * A receipt is read where it is picked: the list keeps its place and the
  * bill shows beside it (the newest to begin with), or in a sheet over it on
@@ -114,7 +100,6 @@ export function Receipts() {
           ? t('table')
           : t('counter')
     return {
-      delivery: label.delivery,
       title: localized(bill.locationName) || label.text || typeLabel,
     }
   }
@@ -128,7 +113,7 @@ export function Receipts() {
     <ReceiptPreview
       key={shownId}
       ticketId={shownId}
-      title={<BillTitle title={titleOf(shown).title} className='block truncate' />}
+      title={<BillTitle title={titleOf(shown).title} className='block break-words' />}
     />
   )
 
@@ -165,9 +150,7 @@ export function Receipts() {
           <div className='divide-y border-b'>
             {Array.from({ length: 8 }).map((_, i) => (
               <div key={i} className='flex h-16 w-full items-center gap-3 px-4'>
-                {/* number, icon, place + date, total: a receipt row's shape */}
-                <Skeleton className='h-5 w-10 shrink-0' />
-                <Skeleton className='size-5 shrink-0 rounded' />
+                {/* the name over its number and time, and the total: a receipt row's shape */}
                 <div className='min-w-0 flex-1 space-y-1.5'>
                   <Skeleton className='h-4 w-1/2' />
                   <Skeleton className='h-3 w-1/3' />
@@ -179,38 +162,47 @@ export function Receipts() {
         ) : bills.length === 0 ? (
           <p className='text-muted-foreground py-16 text-center'>{t('noReceipts')}</p>
         ) : (
-          <div className='divide-y border-b'>
-            {bills.map((bill) => {
-              const { delivery, title } = titleOf(bill)
-              const Icon = delivery ? Bike : (typeIcon[bill.type ?? ''] ?? ShoppingBag)
+          <div>
+            {bills.map((bill, index) => {
+              const { title } = titleOf(bill)
               const refunded = toNumber(bill.refundedTotal)
               const id = toNumber(bill.id)
               const reading = id === shownId
+              const settled = bill.settledAt ? new Date(bill.settledAt) : null
+              const before = bills[index - 1]?.settledAt
+              // The day is said once, over the first receipt of it
+              const startsDay = settled != null && (!before || dayKey(new Date(before)) !== dayKey(settled))
               return (
-                <button
-                  key={String(bill.id)}
-                  type='button'
-                  onClick={() => setPickedId(id)}
-                  aria-current={reading ? 'true' : undefined}
-                  className={cn(
-                    'hover:bg-accent/50 flex min-h-16 w-full items-center gap-3 px-4 py-2 text-start',
-                    // The one being read: tinted, and marked down its start edge
-                    reading && 'bg-accent hover:bg-accent border-primary border-s-[3px] ps-[calc(1rem-3px)]',
+                <Fragment key={String(bill.id)}>
+                  {startsDay && (
+                    <div className='bg-muted text-muted-foreground type-label sticky top-0 z-10 border-b px-4 pt-3 pb-1'>
+                      {friendlyDay(settled, locale, { today: t('today'), yesterday: t('yesterday') })}
+                    </div>
                   )}
-                >
-                  <span className='type-heading w-14 shrink-0 tabular-nums'>#{toNumber(bill.receiptNumber)}</span>
-                  <Icon className='text-muted-foreground size-5 shrink-0' />
-                  <span className='min-w-0 flex-1'>
-                    <BillTitle title={title} className='type-heading block truncate' />
-                    <span className='text-muted-foreground type-detail block truncate'>
-                      {bill.settledAt &&
-                        new Intl.DateTimeFormat(locale, { dateStyle: 'medium', timeStyle: 'short' }).format(new Date(bill.settledAt))}
-                      {refunded > 0 && <span className='text-destructive'>{` · ${t('refundedSoFar')} −${money(refunded)}`}</span>}
+                  <button
+                    type='button'
+                    onClick={() => setPickedId(id)}
+                    aria-current={reading ? 'true' : undefined}
+                    className={cn(
+                      'hover:bg-accent/50 flex min-h-16 w-full items-center gap-3 border-b px-4 py-2 text-start',
+                      // The one being read: tinted, and marked down its start edge
+                      reading && 'bg-accent hover:bg-accent border-s-primary border-s-[3px] ps-[calc(1rem-3px)]',
+                    )}
+                  >
+                    <span className='min-w-0 flex-1'>
+                      {/* The name first and whole: it wraps, it is never cut */}
+                      <BillTitle title={title} className='type-heading block break-words' />
+                      <span className='text-muted-foreground type-detail block tabular-nums'>
+                        {'#\u200F'}
+                        {toNumber(bill.receiptNumber)}
+                        {settled && ` · ${friendlyTime(settled, locale)}`}
+                        {refunded > 0 && <span className='text-destructive'>{` · ${t('refundedSoFar')} −${money(refunded)}`}</span>}
+                      </span>
                     </span>
-                  </span>
-                  <span className='type-heading shrink-0 tabular-nums'>{money(bill.total)}</span>
-                  <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />
-                </button>
+                    <span className='type-heading shrink-0 tabular-nums'>{money(bill.total)}</span>
+                    <ChevronRight className='text-muted-foreground size-5 shrink-0 md:hidden rtl:rotate-180' />
+                  </button>
+                </Fragment>
               )
             })}
           </div>
