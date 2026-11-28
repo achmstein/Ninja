@@ -17,10 +17,11 @@ const platformLogos: Record<string, string> = {
  * means something.
  *
  * - a thin bar across the top and the clock's colour say how late it is;
- * - where it goes is the biggest line (the kitchen sends it there), with the
- *   ticket's number and who to call quiet under it, and the clock opposite;
- * - the lines, big enough to read at arm's length, the count in its own
- *   column, options under the item, what the customer asked for in amber;
+ * - where it goes is the first line (the kitchen sends it there), with the
+ *   ticket's number and who to call quiet under it, and the clock opposite,
+ *   no larger than the place;
+ * - the lines at the till's own size, the count in its own column, options
+ *   under the item, what the customer asked for in amber;
  * - the order's note behind an amber rule, and on the pass the stations it
  *   is split between, in words;
  * - the one tap that moves it along: Ready on the board, Bring back in the
@@ -111,9 +112,9 @@ export function OrderCard({
         isCancelled ? 'border-dashed bg-transparent' : 'bg-card',
       )}
     >
-      <div className={cn('h-[5px] shrink-0', toneBarClass(tone))} />
+      <div className={cn('h-[3px] shrink-0', toneBarClass(tone))} />
 
-      <header className='flex items-start gap-3 px-4 pt-3 pb-2.5'>
+      <header className='flex items-start gap-3 px-3.5 pt-2.5 pb-2'>
         <div className='min-w-0 flex-1'>
           {platform ? (
             <div className='flex min-w-0 items-center gap-2'>
@@ -166,10 +167,10 @@ export function OrderCard({
         </div>
       )}
 
-      <ul className={cn('divide-border divide-y border-t px-4', isCancelled && 'opacity-55')}>
+      <ul className={cn('divide-border divide-y border-t px-3.5', isCancelled && 'opacity-55')}>
         {(order.items ?? []).map((item, index) => (
-          <li key={index} className='flex gap-3 py-2.5'>
-            <span className={cn('type-item w-9 shrink-0 font-bold tabular-nums', isCancelled && 'font-medium line-through')}>
+          <li key={index} className='flex gap-2.5 py-2'>
+            <span className={cn('type-item w-7 shrink-0 font-semibold tabular-nums', isCancelled && 'font-medium line-through')}>
               {item.units}×
             </span>
             <div className='min-w-0 flex-1'>
@@ -216,19 +217,19 @@ export function OrderCard({
       )}
 
       {(onReady || onBringBack) && (
-        <footer className='mt-auto px-3 pb-3'>
+        <footer className='mt-auto px-3 pt-0.5 pb-3'>
           {onBringBack ? (
-            <Button variant='outline' className='type-action h-14 w-full gap-2' disabled={isActing} onClick={onBringBack}>
-              <Undo2 className='size-5' />
+            <Button variant='outline' className='type-action h-11 w-full gap-2' disabled={isActing} onClick={onBringBack}>
+              <Undo2 className='size-4' />
               {t('bringBack')}
             </Button>
           ) : isCancelled ? (
             // The same call as Ready: it takes the ticket off this screen
-            <Button variant='outline' className='type-action h-14 w-full' disabled={isActing} onClick={onReady}>
+            <Button variant='outline' className='type-action h-11 w-full' disabled={isActing} onClick={onReady}>
               {t('cancelledRemove')}
             </Button>
           ) : (
-            <Button className='type-action h-14 w-full' disabled={isActing} onClick={onReady}>
+            <Button className='type-action h-11 w-full' disabled={isActing} onClick={onReady}>
               {t('ready')}
             </Button>
           )}
@@ -246,24 +247,24 @@ export function OrderCard({
 export function OrderCardSkeleton({ items = 2 }: { items?: number }) {
   return (
     <div className='bg-card flex flex-col overflow-hidden rounded-xl border'>
-      <div className='bg-muted h-[5px]' />
-      <div className='flex items-start gap-3 px-4 pt-3 pb-2.5'>
+      <div className='bg-muted h-[3px]' />
+      <div className='flex items-start gap-3 px-3.5 pt-2.5 pb-2'>
         <div className='flex-1 space-y-2'>
-          <Skeleton className='h-6 w-28' />
+          <Skeleton className='h-5 w-28' />
           <Skeleton className='h-4 w-20' />
         </div>
-        <Skeleton className='h-7 w-14' />
+        <Skeleton className='h-5 w-14' />
       </div>
-      <div className='divide-y border-t px-4'>
+      <div className='divide-y border-t px-3.5'>
         {Array.from({ length: items }, (_, i) => (
-          <div key={i} className='flex gap-3 py-2.5'>
-            <Skeleton className='h-6 w-9 shrink-0' />
+          <div key={i} className='flex gap-2.5 py-2'>
+            <Skeleton className='h-6 w-7 shrink-0' />
             <Skeleton className='h-6 flex-1' />
           </div>
         ))}
       </div>
       <div className='px-3 pt-1 pb-3'>
-        <Skeleton className='h-14 w-full rounded-md' />
+        <Skeleton className='h-11 w-full rounded-md' />
       </div>
     </div>
   )

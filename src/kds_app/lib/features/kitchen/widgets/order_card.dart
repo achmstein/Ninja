@@ -141,7 +141,7 @@ class OrderCard extends StatelessWidget {
         children: [
           // A cancelled ticket's bar is hatched: it is not late, it is off
           SizedBox(
-            height: 5,
+            height: 3,
             child: isCancelled ? CustomPaint(painter: _Hatch(bar)) : ColoredBox(color: bar),
           ),
           Padding(
@@ -350,7 +350,7 @@ class OrderCard extends StatelessWidget {
   /// The ticket's main action across its whole width, tapped with a wet finger
   Widget _button(FThemeData theme, {required FButtonVariant? variant, IconData? icon, required String label, required VoidCallback onPress}) {
     return SizedBox(
-      height: Sizes.controlLarge,
+      height: Sizes.control,
       child: FButton(
         variant: variant,
         onPress: acting ? null : onPress,

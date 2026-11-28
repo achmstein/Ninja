@@ -7,37 +7,38 @@
 /*
  * The kitchen display's type: the till's rule (a piece of text says what it
  * IS, and takes its size, weight and line from that; nothing is sized by
- * hand) on a larger scale, since a ticket is read at arm's length and a till
- * at a hand's. How each is used is in docs/type.md. Colour is not part of a
- * role.
+ * hand), at the till's own sizes. It was a step larger throughout, for
+ * reading at arm's length, and the board read as loud: weight and colour
+ * carry a ticket now, not size. How each is used is in docs/type.md. Colour
+ * is not part of a role.
  */
 /* Where a ticket goes: its one biggest line. Also a surface's own name */
 @utility type-place {
-  @apply text-[1.375rem] leading-7 font-bold;
+  @apply text-[1.0625rem] leading-6 font-semibold;
 }
 /* How long it has waited: the loudest thing on a ticket */
 @utility type-clock {
-  @apply text-[1.625rem] leading-7 font-bold tabular-nums;
+  @apply text-[1.0625rem] leading-6 font-semibold tabular-nums;
 }
 /* What is made: an item's name, and its count beside it */
 @utility type-item {
-  @apply text-[1.1875rem] leading-[1.625rem] font-semibold;
+  @apply text-base leading-6 font-medium;
 }
 /* What goes with an item: its options, what the customer asked for, the order's note */
 @utility type-detail {
-  @apply text-[0.9375rem] leading-[1.375rem] font-normal;
+  @apply text-sm leading-5 font-normal;
 }
 /* What is read last: the ticket's number and who to call, the stations it is split between */
 @utility type-quiet {
-  @apply text-sm leading-5 font-normal;
+  @apply text-[0.8125rem] leading-5 font-normal;
 }
 /* A ticket's one word of warning (cancelled), and the words on its main button */
 @utility type-action {
-  @apply text-lg leading-6 font-semibold;
+  @apply text-[0.9375rem] leading-5 font-semibold;
 }
 /* A count read across the kitchen: how many orders, how many late */
 @utility type-tally {
-  @apply text-[1.375rem] leading-[1.625rem] font-bold tabular-nums;
+  @apply text-lg leading-6 font-semibold tabular-nums;
 }
 /* A menu's row, a switcher's words: the chrome around the board */
 @utility type-body {

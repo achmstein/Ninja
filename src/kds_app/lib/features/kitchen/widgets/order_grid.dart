@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_staggered_grid_view/flutter_staggered_grid_view.dart';
 
-/// The kitchen's card grid, as kds_web's CSS columns: as many columns as
+/// The kitchen's card grid, as many columns as
 /// fit at [minCardWidth], each card as tall as its own order, and every
 /// next card dropped into the shortest column — no holes under the short
 /// ones, which a row-aligned grid would leave.
