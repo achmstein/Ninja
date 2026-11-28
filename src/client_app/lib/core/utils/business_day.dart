@@ -1,4 +1,4 @@
-import '../models/branch.dart';
+import 'package:ninja_app_core/models/branch.dart';
 
 /// When the branch's current business day started. A business day runs from
 /// its start hour to the same hour the next day, whatever the hours it is

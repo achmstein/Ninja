@@ -1,25 +1,10 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../models/branch.dart';
+import 'package:ninja_app_core/services/branch_service.dart' show ApiBranchRepository, BranchRepository;
 import '../network/api_client.dart';
 
-abstract class BranchRepository {
-  Future<List<Branch>> getBranches();
-}
+export 'package:ninja_app_core/services/branch_service.dart' show ApiBranchRepository, BranchRepository;
 
-class ApiBranchRepository implements BranchRepository {
-  final ApiClient _apiClient;
-
-  ApiBranchRepository(this._apiClient);
-
-  @override
-  Future<List<Branch>> getBranches() async {
-    final response = await _apiClient.get<List<dynamic>>('');
-    return (response.data ?? [])
-        .map((e) => Branch.fromJson(e as Map<String, dynamic>))
-        .toList();
-  }
-}
-
+/// The branch list (ninja_app_core's repository) through this app's own client
 final branchRepositoryProvider = Provider<BranchRepository>((ref) {
   final apiClient = ref.read(branchesApiProvider);
   return ApiBranchRepository(apiClient);

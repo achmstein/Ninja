@@ -24,7 +24,7 @@ import '../../../core/brand/brand_provider.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/branch_switch.dart';
 import '../../../core/services/location_service.dart';
-import '../../../core/models/branch.dart';
+import 'package:ninja_app_core/models/branch.dart';
 import '../../../core/widgets/branch_switcher.dart';
 import '../../../core/widgets/main_scaffold.dart';
 import '../../notifications/services/notification_service.dart';

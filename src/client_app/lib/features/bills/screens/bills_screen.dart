@@ -4,7 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart' show DateFormat;
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/brand/brand_style.dart';
-import '../../../core/models/branch.dart';
+import 'package:ninja_app_core/models/branch.dart';
 import '../../../core/providers/branch_provider.dart';
 import '../../../core/providers/locale_provider.dart';
 import '../../../core/theme/theme_provider.dart';

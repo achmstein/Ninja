@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import '../../../core/models/branch.dart';
+import 'package:ninja_app_core/models/branch.dart';
 import '../../../core/motion/motion.dart';
 import '../../../core/theme/theme_provider.dart';
 import '../../../core/ui/ui.dart';
