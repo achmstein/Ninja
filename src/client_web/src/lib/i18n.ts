@@ -497,7 +497,7 @@ const webExtras = {
   deliveryPhone: { en: 'Phone for the rider', ar: 'رقم للمندوب' },
   deliveryYourName: { en: 'Your name', ar: 'اسمك' },
   deliveryDetails: { en: 'Details that help the rider', ar: 'تفاصيل تساعد المندوب' },
-  deliveryLandmark: { en: 'Landmark', ar: 'علامة مميزة' },
+  deliveryRiderNote: { en: 'Note for the rider', ar: 'ملاحظة للمندوب' },
   optional: { en: 'Optional', ar: 'اختياري' },
   phoneGateTitle: { en: 'Your mobile number?', ar: 'رقم موبايلك؟' },
   phoneGateHint: { en: "We'll text you a code. No password, no email.", ar: 'هنبعتلك كود في رسالة. من غير باسورد ولا إيميل.' },

@@ -474,7 +474,7 @@ function AddressForm({
             { key: 'building', label: t('deliveryBuilding'), value: building, onChange: setBuilding, maxLength: 100 },
             { key: 'floor', label: t('deliveryFloor'), value: floor, onChange: setFloor, numeric: true, maxLength: 50 },
             { key: 'apartment', label: t('deliveryApartment'), value: apartment, onChange: setApartment, maxLength: 50 },
-            { key: 'directions', label: t('deliveryLandmark'), value: directions, onChange: setDirections, wide: true, maxLength: 500 },
+            { key: 'directions', label: t('deliveryRiderNote'), value: directions, onChange: setDirections, wide: true, maxLength: 500 },
           ]}
         />
       ) : (

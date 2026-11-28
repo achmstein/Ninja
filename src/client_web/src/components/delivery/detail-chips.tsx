@@ -9,14 +9,15 @@ export type AddressDetail = {
   onChange: (value: string) => void
   /** A number is typed (a floor) */
   numeric?: boolean
-  /** Words are typed (a landmark): a wider field */
+  /** Words are typed (a note): a wider field */
   wide?: boolean
   maxLength?: number
 }
 
 /**
  * What helps the rider find the door, each added only if the customer wants
- * to: the building, the floor, the apartment, a landmark. Three empty boxes
+ * to: the building, the floor, the apartment, a word for the rider (the street's
+ * own box already takes a landmark, so this is never a second one). Three empty boxes
  * under the street read as three things owed; a row of small "+ Building"
  * chips reads as nothing owed at all. A tap turns a chip into its field,
  * Enter goes on to the next one not yet given, and a given one shows what
