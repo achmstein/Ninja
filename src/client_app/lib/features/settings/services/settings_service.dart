@@ -34,19 +34,19 @@ class ApiSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> updateNotificationPreferences(NotificationPreferences preferences) async {
-    await _notificationsApiClient.put('preferences', data: preferences.toJson());
+    await _notificationsApiClient.put<dynamic>('preferences', data: preferences.toJson());
   }
 
   @override
   Future<void> changePassword(String newPassword) async {
-    await _identityApiClient.post('change-password', data: {
+    await _identityApiClient.post<dynamic>('change-password', data: {
       'newPassword': newPassword,
     });
   }
 
   @override
   Future<void> updateProfile(String firstName, String lastName, String phoneNumber) async {
-    await _identityApiClient.post('update-profile', data: {
+    await _identityApiClient.post<dynamic>('update-profile', data: {
       'firstName': firstName,
       'lastName': lastName,
       'phoneNumber': phoneNumber,
@@ -65,7 +65,7 @@ class ApiSettingsRepository implements SettingsRepository {
 
   @override
   Future<void> deleteAccount() async {
-    await _identityApiClient.delete('delete-account');
+    await _identityApiClient.delete<dynamic>('delete-account');
   }
 }
 

@@ -170,7 +170,7 @@ class SendingNotifier extends Notifier<List<Sending>> {
       await _update(requestId, (s) => s.copyWith(status: SendStatus.placed, orderId: orderId, startedAt: DateTime.now()));
       if (ref.mounted) {
         if (send.ticketId != null) ref.invalidate(ticketProvider(send.ticketId!));
-        ref.read(openTicketsProvider.notifier).refresh();
+        unawaited(ref.read(openTicketsProvider.notifier).refresh());
       }
       return SendOutcome.placed;
     } catch (e) {

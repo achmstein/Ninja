@@ -66,7 +66,7 @@ class ApiKitchenPrintQueue implements KitchenPrintQueue {
   @override
   Future<bool> claim(int jobId, String deviceId) async {
     try {
-      await _api.post('print-jobs/$jobId/claim', data: {'deviceId': deviceId});
+      await _api.post<dynamic>('print-jobs/$jobId/claim', data: {'deviceId': deviceId});
       return true;
     } on DioException catch (e) {
       // Printed already, or another device has it
@@ -76,10 +76,10 @@ class ApiKitchenPrintQueue implements KitchenPrintQueue {
   }
 
   @override
-  Future<void> printed(int jobId) => _api.post('print-jobs/$jobId/printed');
+  Future<void> printed(int jobId) => _api.post<dynamic>('print-jobs/$jobId/printed');
 
   @override
-  Future<void> failed(int jobId, String error) => _api.post('print-jobs/$jobId/failed', data: {'error': error});
+  Future<void> failed(int jobId, String error) => _api.post<dynamic>('print-jobs/$jobId/failed', data: {'error': error});
 }
 
 /// This till as the kitchen's printer: while printing is on, every push
@@ -193,4 +193,4 @@ final branchPrintsKitchenTicketsProvider = FutureProvider<bool>((ref) async {
 });
 
 /// Ask for an order's kitchen tickets again: every station that printed its part
-Future<void> reprintOrderTickets(ApiClient orders, int orderId) => orders.post('$orderId/reprint');
+Future<void> reprintOrderTickets(ApiClient orders, int orderId) => orders.post<dynamic>('$orderId/reprint');

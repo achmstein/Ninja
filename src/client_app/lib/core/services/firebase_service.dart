@@ -29,7 +29,7 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
       await _nativeChannel.invokeMethod('show', {
         'placeName': data['placeName'] ?? '',
         'duration': '00:00:00',
-        'startTimeMs': int.tryParse(data['startTimeMs'] ?? ''),
+        'startTimeMs': int.tryParse((data['startTimeMs'] ?? '') as String),
         'locale': data['locale'] ?? 'en',
       });
     } catch (_) {
@@ -39,23 +39,23 @@ Future<void> firebaseMessagingBackgroundHandler(RemoteMessage message) async {
     // Save the stay and its place for the native action fallback
     final prefs = await SharedPreferences.getInstance();
     if (data['sessionId'] != null) {
-      await prefs.setInt('active_session_id', int.parse(data['sessionId']));
+      await prefs.setInt('active_session_id', int.parse(data['sessionId'] as String));
     }
     if (data['placeId'] != null) {
-      await prefs.setInt('active_session_place_id', int.parse(data['placeId']));
+      await prefs.setInt('active_session_place_id', int.parse(data['placeId'] as String));
     }
     if (data['placeKind'] != null) {
-      await prefs.setString('active_session_place_kind', data['placeKind']);
+      await prefs.setString('active_session_place_kind', data['placeKind'] as String);
     }
     if (data['placeNameEn'] != null) {
-      await prefs.setString('active_session_place_name_en', data['placeNameEn']);
+      await prefs.setString('active_session_place_name_en', data['placeNameEn'] as String);
     }
     final placeNameAr = data['placeNameAr'] as String?;
     if (placeNameAr != null && placeNameAr.isNotEmpty) {
       await prefs.setString('active_session_place_name_ar', placeNameAr);
     }
     if (data['accessToken'] != null) {
-      await prefs.setString('active_session_access_token', data['accessToken']);
+      await prefs.setString('active_session_access_token', data['accessToken'] as String);
     }
   } else if (type == 'session_ended') {
     try {
@@ -142,7 +142,7 @@ class FirebaseService {
         for (int i = 0; i < 5; i++) {
           apnsToken = await _messaging!.getAPNSToken();
           if (apnsToken != null) break;
-          await Future.delayed(const Duration(seconds: 1));
+          await Future<void>.delayed(const Duration(seconds: 1));
         }
         if (apnsToken == null) return null;
       }

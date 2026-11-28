@@ -117,7 +117,7 @@ class _PayOrderSheetState extends ConsumerState<PayOrderSheet> with WidgetsBindi
       _tickWhile(order.isDue);
       if (widget.start && order.isDue && !_autoStarted) {
         _autoStarted = true;
-        _startPaying();
+        unawaited(_startPaying());
       }
     } catch (_) {
       if (!mounted) return;
@@ -156,10 +156,10 @@ class _PayOrderSheetState extends ConsumerState<PayOrderSheet> with WidgetsBindi
       await _openCheckout(started);
     } on PayException catch (e) {
       if (mounted) showIsland(context: context, title: Text(e.message));
-      _load();
+      unawaited(_load());
     } catch (_) {
       if (mounted) showIsland(context: context, title: Text(l10n.payAheadStartFailed));
-      _load();
+      unawaited(_load());
     } finally {
       if (mounted) setState(() => _starting = false);
     }
@@ -197,9 +197,9 @@ class _PayOrderSheetState extends ConsumerState<PayOrderSheet> with WidgetsBindi
       setState(() => _status = status);
       if (!status.isPending) {
         _statusTimer?.cancel();
-        _closeCheckout();
+        unawaited(_closeCheckout());
         // The dock follows the order from here: paid, it is with the business
-        ref.read(ordersProvider.notifier).refresh();
+        unawaited(ref.read(ordersProvider.notifier).refresh());
         return;
       }
     } catch (_) {
@@ -235,13 +235,13 @@ class _PayOrderSheetState extends ConsumerState<PayOrderSheet> with WidgetsBindi
     setState(() => _cancelling = true);
     try {
       await ref.read(orderRepositoryProvider).cancelUnpaid(widget.orderId);
-      ref.read(ordersProvider.notifier).refresh();
+      unawaited(ref.read(ordersProvider.notifier).refresh());
       if (!mounted) return;
       Navigator.of(context).pop();
       showIsland(title: Text(l10n.payAheadCancelled), icon: const Icon(LucideIcons.check, color: NinjaColors.success));
     } catch (_) {
       if (mounted) showIsland(context: context, title: Text(l10n.payAheadCancelFailed));
-      _load();
+      unawaited(_load());
     } finally {
       if (mounted) setState(() => _cancelling = false);
     }

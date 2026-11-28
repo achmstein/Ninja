@@ -251,7 +251,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   void _handleSignOut(BuildContext context) {
     final l10n = AppLocalizations.of(context)!;
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       builder: (context) => NinjaDialog(
         title: AppText(l10n.signOutQuestion, style: TextStyle(fontWeight: FontWeight.bold)),
@@ -275,7 +275,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
   }
 
   void _showAboutSheet(BuildContext context) {
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       padding: EdgeInsets.zero,
       builder: (context) => const _AboutSheet(),

@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:go_router/go_router.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import 'package:pos_app/core/auth/auth_service.dart';
@@ -281,7 +282,7 @@ Widget _routed(TicketDetail bill, {_Orders? orders, _Tickets? tickets}) => tillR
       overrides: _overrides(bill, orders: orders, tickets: tickets),
     );
 
-List _overrides(TicketDetail? bill, {_Orders? orders, _Tickets? tickets}) => [
+List<Override> _overrides(TicketDetail? bill, {_Orders? orders, _Tickets? tickets}) => [
         customerSearchServiceProvider.overrideWithValue(_Customers()),
         authServiceProvider.overrideWith(_Owner.new),
         catalogItemsProvider.overrideWith(_Items.new),

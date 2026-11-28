@@ -126,7 +126,7 @@ class ApiMenuRepository implements MenuRepository {
   /// Save user's preferences after successful order
   @override
   Future<void> saveUserPreferences(SaveUserPreferencesRequest request) async {
-    await _apiClient.post(
+    await _apiClient.post<dynamic>(
       'preferences',
       data: request.toJson(),
     );
@@ -146,13 +146,13 @@ class ApiMenuRepository implements MenuRepository {
   /// Add an item to favorites
   @override
   Future<void> addFavorite(int itemId) async {
-    await _apiClient.post('favorites/$itemId');
+    await _apiClient.post<dynamic>('favorites/$itemId');
   }
 
   /// Remove an item from favorites
   @override
   Future<void> removeFavorite(int itemId) async {
-    await _apiClient.delete('favorites/$itemId');
+    await _apiClient.delete<dynamic>('favorites/$itemId');
   }
 
   /// Get the current user's most-frequently-ordered item IDs, ranked

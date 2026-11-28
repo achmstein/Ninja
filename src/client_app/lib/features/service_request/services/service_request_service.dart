@@ -40,7 +40,7 @@ class ApiServiceRequestRepository implements ServiceRequestRepository {
   }
 
   @override
-  Future<void> cancel(int id) => _apiClient.delete('service-requests/$id');
+  Future<void> cancel(int id) => _apiClient.delete<dynamic>('service-requests/$id');
 }
 
 /// Provider for service request repository

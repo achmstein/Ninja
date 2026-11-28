@@ -36,7 +36,7 @@ class ApiOrderRepository implements OrderRepository {
 
   @override
   Future<List<Order>> getPendingOrders() async {
-    final response = await _api.get('pending');
+    final response = await _api.get<dynamic>('pending');
     final itemsList = response.data as List<dynamic>;
     final orders = itemsList
         .map((e) => Order.fromJson(e as Map<String, dynamic>))
@@ -47,19 +47,19 @@ class ApiOrderRepository implements OrderRepository {
 
   @override
   Future<bool> confirmOrder(int orderId, {String? requestId}) async {
-    await _api.put('confirm', data: {'orderNumber': orderId}, requestId: requestId);
+    await _api.put<dynamic>('confirm', data: {'orderNumber': orderId}, requestId: requestId);
     return true;
   }
 
   @override
   Future<bool> rejectGuestOrder(int orderId, {String? requestId}) async {
-    await _api.post('$orderId/reject-guest', requestId: requestId);
+    await _api.post<dynamic>('$orderId/reject-guest', requestId: requestId);
     return true;
   }
 
   @override
   Future<bool> cancelOrder(int orderId, {String? requestId, String? platformReason, String? stockDisposition}) async {
-    await _api.put(
+    await _api.put<dynamic>(
       'cancel',
       data: {'orderNumber': orderId, 'platformReason': ?platformReason, 'stockDisposition': ?stockDisposition},
       requestId: requestId,
@@ -69,7 +69,7 @@ class ApiOrderRepository implements OrderRepository {
 
   @override
   Future<Order> getOrderDetails(int orderId) async {
-    final response = await _api.get('$orderId');
+    final response = await _api.get<dynamic>('$orderId');
     return Order.fromJson(response.data as Map<String, dynamic>);
   }
 
@@ -85,7 +85,7 @@ class ApiOrderRepository implements OrderRepository {
   @override
   Future<void> assignOrderCustomer(int orderId,
       {String? customerUserId, required String customerName, String? requestId}) async {
-    await _api.put(
+    await _api.put<dynamic>(
       '$orderId/customer',
       data: {'customerUserId': customerUserId, 'customerName': customerName},
       requestId: requestId,

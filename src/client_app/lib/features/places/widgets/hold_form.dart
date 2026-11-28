@@ -81,7 +81,7 @@ class _HoldFormState extends ConsumerState<HoldForm> {
     if (!mounted) return;
     if (ok) {
       setState(() => _phase = _Phase.success);
-      SoundService.instance.playSuccess();
+      unawaited(SoundService.instance.playSuccess());
       // The tick has its beat, then the hold is read again and the form goes
       _done = Timer(_successHold, () {
         _refresh();

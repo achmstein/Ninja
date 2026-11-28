@@ -94,7 +94,7 @@ void main() {
           'fontArabic': 'Tajawal',
           'dark': {'primary': null, 'accent': null, 'surface': '#1a1412'},
         },
-        'features': {},
+        'features': <String, dynamic>{},
         'version': 7,
       }, baseUrl: 'https://api.test');
 

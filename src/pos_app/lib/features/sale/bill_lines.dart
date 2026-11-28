@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
@@ -89,7 +90,7 @@ Future<bool> assignPickedLines(
   if (customer == null || !context.mounted) return false;
   final accountId = customer.id ?? '';
   if (session != null && accountId.isNotEmpty && !roster.any((member) => member.id == accountId)) {
-    StayActions(ref, context).addMember(session.id, accountId, customer.name);
+    unawaited(StayActions(ref, context).addMember(session.id, accountId, customer.name));
   }
   final l10n = AppLocalizations.of(context)!;
   onBusy?.call(true);
@@ -112,7 +113,7 @@ Future<bool> assignPickedLines(
           );
     }
     ref.invalidate(ticketProvider(ticket.id));
-    ref.read(openTicketsProvider.notifier).refresh();
+    unawaited(ref.read(openTicketsProvider.notifier).refresh());
     if (context.mounted) showPosToast(context, PosToastType.success, l10n.customerAssigned);
     return true;
   } catch (e) {
@@ -167,7 +168,7 @@ Future<({int ticketId, String? label})?> movePickedLines(
         );
     ref.invalidate(ticketProvider(ticket.id));
     ref.invalidate(ticketProvider(landedOn));
-    ref.read(openTicketsProvider.notifier).refresh();
+    unawaited(ref.read(openTicketsProvider.notifier).refresh());
     if (context.mounted) showPosToast(context, PosToastType.success, l10n.linesMoved);
     return (ticketId: landedOn, label: label);
   } catch (e) {

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/hold_form.dart';
@@ -89,7 +90,7 @@ class _PlaceLinkScreenState extends ConsumerState<PlaceLinkScreen> {
       // The QR belongs to a specific branch — switch to it
       final currentBranchId = ref.read(selectedBranchIdProvider);
       if (result.branchId != currentBranchId) {
-        ref.read(branchProvider.notifier).selectBranch(result.branchId);
+        unawaited(ref.read(branchProvider.notifier).selectBranch(result.branchId));
       }
 
       // Already in the party here — nothing to decide

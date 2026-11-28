@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 
@@ -229,7 +230,7 @@ class ApiOrderRepository implements OrderRepository {
   /// Cancel order
   @override
   Future<void> cancelOrder(int id) async {
-    await _apiClient.put('$id/cancel');
+    await _apiClient.put<dynamic>('$id/cancel');
   }
 
   /// Rate an order
@@ -449,7 +450,7 @@ class CheckoutNotifier extends Notifier<CheckoutState> {
       _cartNotifier.clear();
 
       // Refresh orders so the new order appears when navigating to orders page
-      ref.read(ordersProvider.notifier).refresh();
+      unawaited(ref.read(ordersProvider.notifier).refresh());
 
       state = state.copyWith(isLoading: false, placedOrderId: placedId);
       return true;

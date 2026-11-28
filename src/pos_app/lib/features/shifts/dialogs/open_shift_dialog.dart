@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -51,10 +52,10 @@ class _OpenShiftDialogState extends ConsumerState<_OpenShiftDialog> {
     setState(() => _pending = true);
     try {
       await ref.read(shiftsRepositoryProvider).openShift(amount, requestId: _requestId);
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       // Opening the shift turned the branch's taking-orders / reservations
       // flags on (through Tenant.API)
-      ref.read(branchProvider.notifier).refresh();
+      unawaited(ref.read(branchProvider.notifier).refresh());
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.shiftOpened);
       Navigator.of(context, rootNavigator: true).pop(true);

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'package:dio/dio.dart';
 import 'package:flutter/foundation.dart';
@@ -83,7 +84,7 @@ class OfflineQueueNotifier extends Notifier<List<OfflineSale>> {
         }
       }
       if (ref.mounted && state.isNotEmpty) {
-        ref.read(openTicketsProvider.notifier).refresh();
+        unawaited(ref.read(openTicketsProvider.notifier).refresh());
       }
     } finally {
       _draining = false;

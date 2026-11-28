@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../widgets/hold_form.dart';
@@ -51,7 +52,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     }
 
     setState(() => _isProcessing = true);
-    _scannerController.stop();
+    unawaited(_scannerController.stop());
 
     try {
       await _handlePlace(placeId);
@@ -107,7 +108,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
     // Auto-switch branch if the place belongs to a different branch
     final currentBranchId = ref.read(selectedBranchIdProvider);
     if (result.branchId != currentBranchId) {
-      ref.read(branchProvider.notifier).selectBranch(result.branchId);
+      unawaited(ref.read(branchProvider.notifier).selectBranch(result.branchId));
     }
 
     if (result.isAlreadyMember) {
@@ -166,7 +167,7 @@ class _QrScanScreenState extends ConsumerState<QrScanScreen> {
 
       if (!mounted) return;
 
-      ref.read(myStaysProvider.notifier).refresh();
+      unawaited(ref.read(myStaysProvider.notifier).refresh());
       final branchId = ref.read(selectedBranchIdProvider);
       if (branchId != null) ref.invalidate(placesProvider(branchId));
 

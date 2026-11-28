@@ -56,7 +56,7 @@ class ApiClient {
             // Retry the request
             final token = await _authService.getAccessToken();
             error.requestOptions.headers['Authorization'] = 'Bearer $token';
-            final response = await _dio.fetch(error.requestOptions);
+            final response = await _dio.fetch<dynamic>(error.requestOptions);
             return handler.resolve(response);
           }
         }

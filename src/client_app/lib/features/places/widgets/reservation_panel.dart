@@ -304,7 +304,7 @@ class _CancelHoldState extends ConsumerState<_CancelHold> {
       setState(() => _phase = _Phase.done);
       await Future<void>.delayed(const Duration(milliseconds: 700));
       ref.invalidate(myReservationsProvider);
-      ref.read(myStaysProvider.notifier).refresh();
+      unawaited(ref.read(myStaysProvider.notifier).refresh());
       final branchId = ref.read(selectedBranchIdProvider);
       if (branchId != null) ref.invalidate(placesProvider(branchId));
     } catch (_) {

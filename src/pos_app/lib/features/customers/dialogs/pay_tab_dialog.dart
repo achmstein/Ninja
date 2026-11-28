@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -101,7 +102,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
             requestId: _requestId,
           );
       invalidateCustomerFrom(ref, widget.customer.id);
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       if (!mounted) return;
       final slip = TabPaymentSlip(
         number: result.number,
@@ -113,7 +114,7 @@ class _PayTabDialogState extends ConsumerState<_PayTabDialog> {
       );
       setState(() => _slip = slip);
       // The slip comes out by itself, and cash opens the drawer
-      if (ref.read(printServiceProvider).isConfigured) _print(slip, auto: true);
+      if (ref.read(printServiceProvider).isConfigured) unawaited(_print(slip, auto: true));
     } catch (e) {
       if (!mounted) return;
       final l10n = AppLocalizations.of(context)!;

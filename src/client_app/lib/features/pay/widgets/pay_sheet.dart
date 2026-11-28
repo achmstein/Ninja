@@ -203,7 +203,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       await _openCheckout(started);
     } on PayException catch (e) {
       if (mounted) setState(() => _startError = e.message);
-      _load();
+      unawaited(_load());
     } catch (_) {
       if (mounted) setState(() => _startError = l10n.payFailedToStart);
     } finally {
@@ -245,9 +245,9 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       setState(() => _status = status);
       if (!status.isPending) {
         _statusTimer?.cancel();
-        _closeCheckout();
+        unawaited(_closeCheckout());
         // The bills tab shows the new paid and remaining money
-        ref.read(myBillsProvider.notifier).refresh();
+        unawaited(ref.read(myBillsProvider.notifier).refresh());
         ref.invalidate(payViewProvider);
         return;
       }
@@ -333,7 +333,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
     try {
       await ref.read(payRepositoryProvider).cancel(started.key);
       _statusTimer?.cancel();
-      _closeCheckout();
+      unawaited(_closeCheckout());
       ref.invalidate(payViewProvider);
       if (!mounted) return;
       setState(() {
@@ -347,7 +347,7 @@ class _PaySheetState extends ConsumerState<PaySheet> with WidgetsBindingObserver
       if (!mounted) return;
       showIsland(context: context, title: Text(e is PayException ? e.message : l10n.payCancelFailed));
       // It may have gone through meanwhile: say how it stands
-      _pollStatus();
+      unawaited(_pollStatus());
     } finally {
       if (mounted) setState(() => _cancelling.remove(started.key));
     }

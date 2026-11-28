@@ -116,7 +116,7 @@ class SessionNotificationService {
     _activeSession = session;
 
     // Save session info in parallel, don't block notification display
-    _saveSessionInfo(session);
+    unawaited(_saveSessionInfo(session));
 
     final placeName = session.placeName.inLanguage(locale);
 
@@ -159,7 +159,7 @@ class SessionNotificationService {
     final needsDrinks = _cachedSessionId != session.id ||
         (_cachedDrinks?.isEmpty ?? true);
     if (needsDrinks) {
-      _resolveFavoriteDrinks(locale).then((drinks) async {
+      unawaited(_resolveFavoriteDrinks(locale).then((drinks) async {
         _cachedDrinks = drinks;
         _cachedSessionId = session.id;
         _drink1Item = drinks.isNotEmpty ? drinks[0].item : null;
@@ -171,7 +171,7 @@ class SessionNotificationService {
         _waitingAction = null;
         _waitingSince = null;
         if (waiting != null && since != null && DateTime.now().difference(since) < const Duration(seconds: 20)) {
-          _handleDrinkOrder(waiting);
+          unawaited(_handleDrinkOrder(waiting));
         }
 
         if (drinks.isEmpty) return;
@@ -189,7 +189,7 @@ class SessionNotificationService {
         } catch (e) {
           debugPrint('Failed to update notification with drinks: $e');
         }
-      });
+      }));
     }
   }
 
@@ -309,7 +309,7 @@ class SessionNotificationService {
         queryParameters: {'api-version': '1.0'},
       ));
 
-      await dio.post('service-requests', data: {
+      await dio.post<dynamic>('service-requests', data: {
         'sessionId': _activeSession!.id,
         'placeId': _activeSession!.placeId,
         'requestType': requestType,
@@ -375,7 +375,7 @@ class SessionNotificationService {
         preference: preference,
       );
 
-      _ref.read(ordersProvider.notifier).refresh();
+      unawaited(_ref.read(ordersProvider.notifier).refresh());
       _ref.read(routerProvider).go('/bills');
     } catch (e) {
       debugPrint('Failed to submit drink order from notification: $e');

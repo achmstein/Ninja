@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/ui/ui.dart';
@@ -22,7 +23,7 @@ class PayBillBar extends ConsumerWidget {
     final source = PaySource.ticket(ticketId);
     await showPaySheet(context, source, split: split);
     ref.invalidate(payViewProvider(source));
-    ref.read(myBillsProvider.notifier).refresh();
+    unawaited(ref.read(myBillsProvider.notifier).refresh());
   }
 
   @override

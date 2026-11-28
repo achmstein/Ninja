@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -111,8 +112,8 @@ class _BillMenuState extends ConsumerState<BillMenu> with SingleTickerProviderSt
           .read(ticketsRepositoryProvider)
           .returnPartPayment(widget.ticket.id, part.id, requestId: const Uuid().v4());
       ref.invalidate(ticketProvider(widget.ticket.id));
-      ref.read(openTicketsProvider.notifier).refresh();
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       if (mounted) showPosToast(context, PosToastType.success, l10n.partGivenBack);
     } catch (e) {
       if (mounted) showPosToast(context, PosToastType.error, describeError(e, l10n));

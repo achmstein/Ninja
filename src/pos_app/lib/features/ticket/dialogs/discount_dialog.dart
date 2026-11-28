@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -74,7 +75,7 @@ class _DiscountDialogState extends ConsumerState<_DiscountDialog> {
     setState(() => _pending = true);
     try {
       await action();
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       ref.invalidate(ticketProvider(widget.ticket.id));
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop();

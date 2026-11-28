@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -136,7 +137,7 @@ class _MovementDialogState extends ConsumerState<_MovementDialog> {
             ),
             requestId: _requestId,
           );
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       ref.invalidate(shiftProvider(widget.shiftId));
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.movementRecorded);

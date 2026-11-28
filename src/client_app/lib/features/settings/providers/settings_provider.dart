@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../../core/auth/auth_service.dart';
@@ -85,11 +86,11 @@ class SettingsNotifier extends Notifier<SettingsState> {
       // Register/unregister FCM token based on order notification toggle
       if (orderStatusUpdates == true) {
         final lang = ref.read(localeProvider).languageCode;
-        ref.read(notificationRepositoryProvider).registerForOrderNotifications(
+        unawaited(ref.read(notificationRepositoryProvider).registerForOrderNotifications(
           preferredLanguage: lang,
-        );
+        ));
       } else if (orderStatusUpdates == false) {
-        ref.read(notificationRepositoryProvider).unregisterFromOrderNotifications();
+        unawaited(ref.read(notificationRepositoryProvider).unregisterFromOrderNotifications());
       }
     } catch (e) {
       // Revert on error

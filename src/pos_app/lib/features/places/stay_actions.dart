@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../core/widgets/pos_toast.dart';
@@ -20,7 +21,7 @@ class StayActions {
   Future<bool> _run(Future<bool> Function() call, {String? success, required String failure}) async {
     final ok = await call();
     // The notifier reloaded rooms and sessions itself; the bills follow
-    ref.read(openTicketsProvider.notifier).refresh();
+    unawaited(ref.read(openTicketsProvider.notifier).refresh());
     ref.invalidate(ticketProvider);
     ref.invalidate(stayProvider);
     if (!context.mounted) return ok;

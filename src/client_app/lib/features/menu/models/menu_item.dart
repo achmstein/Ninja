@@ -48,12 +48,12 @@ class MenuItem {
   factory MenuItem.fromJson(Map<String, dynamic> json) {
     return MenuItem(
       id: json['id'] as int,
-      name: _parseLocalizedText(json['name'], json['nameAr']),
-      description: _parseLocalizedText(json['description'] ?? '', json['descriptionAr']),
+      name: _parseLocalizedText(json['name'], json['nameAr'] as String?),
+      description: _parseLocalizedText(json['description'] ?? '', json['descriptionAr'] as String?),
       price: (json['price'] as num).toDouble(),
       pictureUri: json['pictureUri'] as String?,
       catalogTypeId: json['catalogTypeId'] as int,
-      catalogTypeName: _parseLocalizedText(json['catalogTypeName'] ?? '', json['catalogTypeNameAr']),
+      catalogTypeName: _parseLocalizedText(json['catalogTypeName'] ?? '', json['catalogTypeNameAr'] as String?),
       isAvailable: json['isAvailable'] as bool? ?? true,
       isOutOfStock: json['isOutOfStock'] as bool? ?? false,
       isOnOffer: json['isOnOffer'] as bool? ?? false,
@@ -96,7 +96,7 @@ class ItemCustomization {
   factory ItemCustomization.fromJson(Map<String, dynamic> json) {
     return ItemCustomization(
       id: json['id'] as int,
-      name: MenuItem._parseLocalizedText(json['name'], json['nameAr']),
+      name: MenuItem._parseLocalizedText(json['name'], json['nameAr'] as String?),
       isRequired: json['isRequired'] as bool? ?? false,
       allowMultiple: json['allowMultiple'] as bool? ?? false,
       options: (json['options'] as List<dynamic>?)
@@ -129,7 +129,7 @@ class CustomizationOption {
   factory CustomizationOption.fromJson(Map<String, dynamic> json) {
     return CustomizationOption(
       id: json['id'] as int,
-      name: MenuItem._parseLocalizedText(json['name'], json['nameAr']),
+      name: MenuItem._parseLocalizedText(json['name'], json['nameAr'] as String?),
       priceAdjustment: (json['priceAdjustment'] as num?)?.toDouble() ?? 0,
       isDefault: json['isDefault'] as bool? ?? false,
       isOutOfStock: json['isOutOfStock'] as bool? ?? false,
@@ -156,7 +156,7 @@ class MenuCategory {
       // Old format: { "type": "...", "typeAr": "..." }
       name: MenuItem._parseLocalizedText(
         json['name'] ?? json['type'] ?? '',
-        json['typeAr'] ?? json['nameAr'],
+        (json['typeAr'] ?? json['nameAr']) as String?,
       ),
       displayOrder: json['displayOrder'] as int? ?? 0,
     );

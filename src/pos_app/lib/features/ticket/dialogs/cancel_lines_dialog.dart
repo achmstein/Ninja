@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -105,7 +106,7 @@ class _CancelLinesDialogState extends ConsumerState<CancelLinesDialog> {
             requestId: _requestId,
           );
       ref.invalidate(ticketProvider(widget.ticket.id));
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.itemsCancelled);
       Navigator.of(context, rootNavigator: true).pop(true);

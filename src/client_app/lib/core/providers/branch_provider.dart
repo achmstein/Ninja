@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -86,7 +87,7 @@ class BranchNotifier extends Notifier<BranchState> {
                 ordered.firstOrNull)
             ?.id;
         if (selectedId != null) {
-          _saveBranchId(selectedId);
+          unawaited(_saveBranchId(selectedId));
         }
       }
 
@@ -95,7 +96,7 @@ class BranchNotifier extends Notifier<BranchState> {
         selectedBranchId: selectedId,
         isLoading: false,
       );
-      if (firstVisit && branches.length > 1) _nearestOnFirstVisit(branches);
+      if (firstVisit && branches.length > 1) unawaited(_nearestOnFirstVisit(branches));
     } catch (e) {
       debugPrint('Failed to load branches: $e');
       state = state.copyWith(isLoading: false, error: e.toString());

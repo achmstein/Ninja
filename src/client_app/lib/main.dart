@@ -83,7 +83,7 @@ class NinjaApp extends ConsumerStatefulWidget {
 
 class _NinjaAppState extends ConsumerState<NinjaApp>
     with WidgetsBindingObserver {
-  final List<StreamSubscription> _signalRSubscriptions = [];
+  final List<StreamSubscription<dynamic>> _signalRSubscriptions = [];
   bool _wasAuthenticated = false;
 
   @override
@@ -145,7 +145,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     }
 
     // Initialize Firebase messaging in background (never blocks UI)
-    _initializeFirebaseMessaging();
+    unawaited(_initializeFirebaseMessaging());
 
     // Listen for navigation from native (e.g. notification tap)
     const navigationChannel = MethodChannel('com.chillax.client/navigation');
@@ -222,7 +222,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
     _signalRSubscriptions.add(
       signalR.onBranchSettingsChanged.listen((_) async {
         // The brand is edited on the same admin page as the branch settings
-        ref.read(brandProvider.notifier).refresh();
+        unawaited(ref.read(brandProvider.notifier).refresh());
         await ref.read(branchProvider.notifier).refreshSilently();
         WidgetsBinding.instance.ensureVisualUpdate();
       }),

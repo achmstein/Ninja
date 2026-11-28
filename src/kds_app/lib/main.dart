@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -32,7 +33,7 @@ void main() async {
     DeviceOrientation.landscapeRight,
   ]);
   await SystemChrome.setEnabledSystemUIMode(SystemUiMode.immersiveSticky);
-  WakelockPlus.enable();
+  unawaited(WakelockPlus.enable());
 
   // Initialize locale and branch before app starts
   await initializeLocale(override: kDemoMode ? kDemoLocale : null);

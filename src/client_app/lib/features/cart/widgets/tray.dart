@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/physics.dart';
@@ -492,7 +493,7 @@ class OrderButton extends ConsumerWidget {
               ? showDeliveryNote
               : open
               ? () async {
-                  HapticFeedback.mediumImpact();
+                  unawaited(HapticFeedback.mediumImpact());
                   final placed = await placeTrayOrder(context, ref);
                   if (placed) motion.setExpanded(false);
                 }

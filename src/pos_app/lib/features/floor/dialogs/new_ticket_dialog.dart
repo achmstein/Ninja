@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -103,7 +104,7 @@ class _NewTicketDialogState extends ConsumerState<_NewTicketDialog> {
       if (who?.id != null && who!.id!.isNotEmpty) {
         pendingTicketCustomer[ticketId] = who;
       }
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       if (!mounted) return;
       Navigator.of(context, rootNavigator: true).pop(ticketId);
     } catch (e) {

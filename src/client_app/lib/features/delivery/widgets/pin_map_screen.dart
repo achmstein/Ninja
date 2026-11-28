@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -91,7 +92,7 @@ class _PinMapScreenState extends ConsumerState<PinMapScreen> {
       final permission = await ref.read(locationProvider.notifier).permission();
       if (!mounted) return;
       if (permission == LocationPermission.whileInUse || permission == LocationPermission.always) {
-        ref.read(locationProvider.notifier).request(precise: true);
+        unawaited(ref.read(locationProvider.notifier).request(precise: true));
       } else if (permission == LocationPermission.denied) {
         setState(() => _explain = true);
       }

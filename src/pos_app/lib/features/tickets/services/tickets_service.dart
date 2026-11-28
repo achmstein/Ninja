@@ -188,7 +188,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> discard(int id, {String? requestId}) async {
     try {
-      await _apiClient.delete('tickets/$id', requestId: requestId);
+      await _apiClient.delete<dynamic>('tickets/$id', requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
     }
@@ -212,7 +212,7 @@ class ApiTicketsRepository implements TicketsRepository {
   Future<void> assignLinesCustomer(int id,
       {required List<int> lineIds, String? customerId, required String customerName, String? requestId}) async {
     try {
-      await _apiClient.post(
+      await _apiClient.post<dynamic>(
         'tickets/$id/lines/customer',
         data: {'lineIds': lineIds, 'customerId': customerId, 'customerName': customerName},
         requestId: requestId,
@@ -225,7 +225,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> voidTicket(int id, String reason, {String? requestId, String? stockDisposition}) async {
     try {
-      await _apiClient.post('tickets/$id/void',
+      await _apiClient.post<dynamic>('tickets/$id/void',
           data: {'reason': reason, 'stockDisposition': ?stockDisposition}, requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
@@ -235,7 +235,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> cancelLines(int id, CancelLinesRequest request, {String? requestId}) async {
     try {
-      await _apiClient.post('tickets/$id/lines/cancel', data: request.toJson(), requestId: requestId);
+      await _apiClient.post<dynamic>('tickets/$id/lines/cancel', data: request.toJson(), requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
     }
@@ -244,7 +244,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> applyDiscount(int id, {double? rate, double? amount, required String reason, String? requestId}) async {
     try {
-      await _apiClient.post('tickets/$id/discount',
+      await _apiClient.post<dynamic>('tickets/$id/discount',
           data: {'reason': reason, 'rate': rate, 'amount': amount}, requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
@@ -254,7 +254,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> removeDiscount(int id) async {
     try {
-      await _apiClient.delete('tickets/$id/discount');
+      await _apiClient.delete<dynamic>('tickets/$id/discount');
     } on DioException catch (e) {
       throw asSalesException(e);
     }
@@ -291,7 +291,7 @@ class ApiTicketsRepository implements TicketsRepository {
   @override
   Future<void> changePaymentTender(int ticketId, int paymentId, PaymentTender tender, {String? requestId}) async {
     try {
-      await _apiClient.post(
+      await _apiClient.post<dynamic>(
         'tickets/$ticketId/payments/$paymentId/tender',
         data: {'tender': tender.name_},
         requestId: requestId,

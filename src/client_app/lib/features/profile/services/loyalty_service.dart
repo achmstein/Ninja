@@ -19,7 +19,7 @@ class ApiLoyaltyRepository implements LoyaltyRepository {
   @override
   Future<LoyaltyInfo?> getAccount(String userId) async {
     try {
-      final response = await _apiClient.get(
+      final response = await _apiClient.get<dynamic>(
         '/accounts/$userId',
         queryParameters: {'api-version': '1.0'},
       ).timeout(const Duration(seconds: 3));
@@ -35,7 +35,7 @@ class ApiLoyaltyRepository implements LoyaltyRepository {
 
   @override
   Future<List<PointsTransaction>> getTransactions(String userId, {int max = 10}) async {
-    final response = await _apiClient.get(
+    final response = await _apiClient.get<dynamic>(
       '/transactions/$userId',
       queryParameters: {'api-version': '1.0', 'max': max},
     );
@@ -47,7 +47,7 @@ class ApiLoyaltyRepository implements LoyaltyRepository {
 
   @override
   Future<void> joinProgram(String userId) async {
-    await _apiClient.post(
+    await _apiClient.post<dynamic>(
       '/accounts',
       data: {'userId': userId},
     );
@@ -57,7 +57,7 @@ class ApiLoyaltyRepository implements LoyaltyRepository {
   Future<double?> getPointsValue(int points) async {
     if (points <= 0) return 0;
     try {
-      final response = await _apiClient.get(
+      final response = await _apiClient.get<dynamic>(
         '/points-value',
         queryParameters: {'api-version': '1.0', 'points': points},
       );

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -93,7 +94,7 @@ class _VoidDialogState extends ConsumerState<VoidDialog> {
             // Only orders took stock; a bill of manual lines says nothing
             stockDisposition: _hasFood ? _disposition.wire : null,
           );
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       ref.invalidate(ticketProvider(widget.ticketId));
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.ticketVoided);

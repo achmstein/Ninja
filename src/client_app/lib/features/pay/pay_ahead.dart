@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -171,7 +172,7 @@ class PayChoiceNotifier extends Notifier<PayMethod> {
   Future<void> set(PayMethod method) async {
     state = method;
     try {
-      (await SharedPreferences.getInstance()).setString(_key, method.name);
+      unawaited((await SharedPreferences.getInstance()).setString(_key, method.name));
     } catch (_) {}
   }
 }

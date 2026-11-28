@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -119,11 +120,11 @@ class _PartPaymentSheetState extends ConsumerState<PartPaymentSheet> {
             lineIds: part.lineIds,
             requestId: _requestId,
           );
-      if (_tender == PaymentTender.cash) _openDrawer();
+      if (_tender == PaymentTender.cash) unawaited(_openDrawer());
       ref.invalidate(ticketProvider(widget.ticketId));
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       // The drawer's expected cash just moved
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.partPaymentTaken(said));
       Navigator.of(context, rootNavigator: true).pop(true);

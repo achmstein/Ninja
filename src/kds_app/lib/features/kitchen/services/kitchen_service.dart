@@ -49,7 +49,7 @@ class ApiKitchenRepository implements KitchenRepository {
   @override
   Future<void> setReady(int orderNumber, bool ready, {int? stationId, required String requestId}) async {
     final path = stationId == null ? '$orderNumber/ready' : '$orderNumber/stations/$stationId/ready';
-    await _orders.put(path, data: {'ready': ready}, requestId: requestId);
+    await _orders.put<dynamic>(path, data: {'ready': ready}, requestId: requestId);
   }
 
   @override

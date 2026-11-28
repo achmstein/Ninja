@@ -27,12 +27,12 @@ class ApiServiceRequestsRepository implements ServiceRequestsRepository {
 
   @override
   Future<void> acknowledgeRequest(int requestId) async {
-    await _api.put('service-requests/$requestId/acknowledge');
+    await _api.put<dynamic>('service-requests/$requestId/acknowledge');
   }
 
   @override
   Future<void> completeRequest(int requestId) async {
-    await _api.put('service-requests/$requestId/complete');
+    await _api.put<dynamic>('service-requests/$requestId/complete');
   }
 }
 

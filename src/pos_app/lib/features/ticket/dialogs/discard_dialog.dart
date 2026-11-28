@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -48,7 +49,7 @@ class _DiscardDialogState extends ConsumerState<_DiscardDialog> {
     setState(() => _pending = true);
     try {
       await ref.read(ticketsRepositoryProvider).discard(widget.ticketId, requestId: _requestId);
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.ticketDiscarded);
       Navigator.of(context, rootNavigator: true).pop(true);

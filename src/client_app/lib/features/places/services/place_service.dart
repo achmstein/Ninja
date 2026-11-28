@@ -80,12 +80,12 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<void> cancelHold(int reservationId) async {
-    await _reservations.post('my/$reservationId/cancel');
+    await _reservations.post<dynamic>('my/$reservationId/cancel');
   }
 
   @override
   Future<void> leaveStay(int sessionId) async {
-    await _stays.post('$sessionId/leave');
+    await _stays.post<dynamic>('$sessionId/leave');
   }
 
   @override

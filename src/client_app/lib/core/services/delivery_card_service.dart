@@ -140,7 +140,7 @@ class DeliveryCardService {
 
   DeliveryCardService(this._ref) {
     _channel.setMethodCallHandler((call) async {
-      if (call.method == 'onAction') _onAction((call.arguments as Map?)?.cast<String, dynamic>() ?? const {});
+      if (call.method == 'onAction') unawaited(_onAction((call.arguments as Map?)?.cast<String, dynamic>() ?? const {}));
     });
   }
 

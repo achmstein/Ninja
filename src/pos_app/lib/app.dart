@@ -45,7 +45,7 @@ class NinjaPosApp extends ConsumerStatefulWidget {
 }
 
 class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingObserver {
-  final List<StreamSubscription> _signalRSubscriptions = [];
+  final List<StreamSubscription<dynamic>> _signalRSubscriptions = [];
 
   /// A till on screen all day never comes back to the front, so it asks again
   /// what the business has set (its till items, its features) every few
@@ -138,13 +138,13 @@ class _NinjaPosAppState extends ConsumerState<NinjaPosApp> with WidgetsBindingOb
     // New builds from the platform's download page; sales still waiting to replay hold an install back
     final updates = ref.read(updateProvider.notifier);
     updates.isBusy = () => ref.read(offlineQueueProvider).any((sale) => sale.status == OfflineSaleStatus.queued);
-    updates.start();
+    unawaited(updates.start());
 
     // Connect SignalR and load branches if authenticated
     final authState = ref.read(authServiceProvider);
     if (authState.isAuthenticated) {
       if (!kDemoMode) _connectSignalR();
-      ref.read(branchProvider.notifier).loadBranches();
+      unawaited(ref.read(branchProvider.notifier).loadBranches());
     }
   }
 

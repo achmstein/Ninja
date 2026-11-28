@@ -1,0 +1,23 @@
+# The strict lint set every Flutter package is held to (docs/frontend-architecture-plan.md,
+# step 0). Each package's analysis_options.yaml includes it by path:
+#
+#   include: ../ninja_app_core/analysis_options_strict.yaml
+#
+# and adds only its own excludes. All six packages pass it with no issues, and the pull
+# request runs flutter analyze on each, so it stays that way.
+include: package:flutter_lints/flutter.yaml
+
+analyzer:
+  language:
+    strict-casts: true
+    strict-inference: true
+    strict-raw-types: true
+
+linter:
+  rules:
+    unawaited_futures: true
+    discarded_futures: false
+    use_build_context_synchronously: true
+    avoid_dynamic_calls: false
+    cancel_subscriptions: true
+    close_sinks: true

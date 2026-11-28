@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:convert';
 import 'dart:math';
 
@@ -265,7 +266,7 @@ class AuthService extends Notifier<AuthState> {
       'lastName': (currentLast?.isNotEmpty ?? false) ? currentLast : last,
     };
     try {
-      await _dio.post(
+      await _dio.post<dynamic>(
         '${AppConfig.bffBaseUrl}/api/identity/update-profile',
         data: data,
         options: Options(
@@ -284,7 +285,7 @@ class AuthService extends Notifier<AuthState> {
   /// Load the user's full profile (name + phone) from the backend.
   /// Called once after authentication — result is cached in state.
   void _loadProfile() {
-    _dio.get(
+    _dio.get<dynamic>(
       '${AppConfig.bffBaseUrl}/api/identity/my-profile',
       options: Options(
         headers: {'Authorization': 'Bearer ${state.accessToken}'},
@@ -312,11 +313,11 @@ class AuthService extends Notifier<AuthState> {
           phoneNumber: phone,
         );
         // Cache for offline access
-        if (effectiveName != null) _storage.write(key: _nameKey, value: effectiveName);
-        if (phone != null) _storage.write(key: _phoneKey, value: phone);
+        if (effectiveName != null) unawaited(_storage.write(key: _nameKey, value: effectiveName));
+        if (phone != null) unawaited(_storage.write(key: _phoneKey, value: phone));
         debugPrint('Profile loaded - name: $name, phone: $phone');
       }
-    }).catchError((e) {
+    }).catchError((Object e) {
       debugPrint('Failed to load profile: $e');
     });
   }
@@ -345,7 +346,7 @@ class AuthService extends Notifier<AuthState> {
   /// Anything but tokens comes back as an OAuth error whose description says which
   Future<PhoneAnswer> _phoneGrant(Map<String, String> fields) async {
     try {
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         _tokenEndpoint,
         data: {
           'grant_type': 'password',
@@ -358,9 +359,9 @@ class AuthService extends Notifier<AuthState> {
       final data = response.data;
       if (response.statusCode != 200 || data is! Map || data['access_token'] == null) return PhoneAnswer.failed;
       await _saveTokens(
-        accessToken: data['access_token'],
-        refreshToken: data['refresh_token'],
-        idToken: data['id_token'],
+        accessToken: data['access_token'] as String,
+        refreshToken: data['refresh_token'] as String?,
+        idToken: data['id_token'] as String?,
       );
       _loadProfile();
       return PhoneAnswer.signedIn;
@@ -387,7 +388,7 @@ class AuthService extends Notifier<AuthState> {
   Future<bool> signIn(String username, String password) async {
     debugPrint('Attempting sign in to: $_tokenEndpoint');
     try {
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         _tokenEndpoint,
         data: {
           'grant_type': 'password',
@@ -405,9 +406,9 @@ class AuthService extends Notifier<AuthState> {
       if (response.statusCode == 200) {
         final data = response.data;
         await _saveTokens(
-          accessToken: data['access_token'],
-          refreshToken: data['refresh_token'],
-          idToken: data['id_token'],
+          accessToken: data['access_token'] as String,
+          refreshToken: data['refresh_token'] as String?,
+          idToken: data['id_token'] as String?,
         );
         _loadProfile();
         return true;
@@ -540,7 +541,7 @@ class AuthService extends Notifier<AuthState> {
     try {
       final got = await _providerToken(provider);
       if (got == null) return null;
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         _tokenEndpoint,
         data: {
           'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
@@ -577,7 +578,7 @@ class AuthService extends Notifier<AuthState> {
     debugPrint('Exchanging $providerAlias token with Keycloak');
 
     try {
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         _tokenEndpoint,
         data: {
           'grant_type': 'urn:ietf:params:oauth:grant-type:token-exchange',
@@ -596,9 +597,9 @@ class AuthService extends Notifier<AuthState> {
       if (response.statusCode == 200) {
         final data = response.data;
         await _saveTokens(
-          accessToken: data['access_token'],
-          refreshToken: data['refresh_token'],
-          idToken: data['id_token'],
+          accessToken: data['access_token'] as String,
+          refreshToken: data['refresh_token'] as String?,
+          idToken: data['id_token'] as String?,
         );
 
         // Mark as social login
@@ -622,7 +623,7 @@ class AuthService extends Notifier<AuthState> {
       final described = data is Map ? data['error_description']?.toString() : data?.toString();
       if (!linked && providerAlias == 'google' && e.response?.statusCode == 400 && (described?.contains('User already exists') ?? false)) {
         try {
-          await _dio.post(
+          await _dio.post<dynamic>(
             '${AppConfig.keycloakUrl}/api/control/social/google/link',
             data: {'realm': AppConfig.keycloakRealm, 'accessToken': socialToken},
           );
@@ -643,7 +644,7 @@ class AuthService extends Notifier<AuthState> {
   Future<bool> register(String firstName, String lastName, String email, String phone, String password) async {
     try {
       // Call the BFF registration endpoint which handles Keycloak user creation
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         '${AppConfig.bffBaseUrl}/api/identity/register',
         data: {
           'firstName': firstName,
@@ -676,15 +677,15 @@ class AuthService extends Notifier<AuthState> {
     await _clearTokens();
 
     // Fire-and-forget: cleanup SignalR, Keycloak session, and social providers
-    Future(() async {
+    unawaited(Future(() async {
       try {
-        ref.read(signalRServiceProvider).disconnect();
+        unawaited(ref.read(signalRServiceProvider).disconnect());
       } catch (e) {
         debugPrint('SignalR disconnect error: $e');
       }
       try {
         if (refreshToken != null) {
-          await _dio.post(
+          await _dio.post<dynamic>(
             _logoutEndpoint,
             data: {
               'client_id': AppConfig.clientId,
@@ -703,7 +704,7 @@ class AuthService extends Notifier<AuthState> {
       } catch (_) {
         // May not be signed in with Google
       }
-    });
+    }));
   }
 
   /// The refresh in flight, shared by every caller that asks meanwhile
@@ -722,7 +723,7 @@ class AuthService extends Notifier<AuthState> {
 
     try {
       debugPrint('Token refresh - calling $_tokenEndpoint');
-      final response = await _dio.post(
+      final response = await _dio.post<dynamic>(
         _tokenEndpoint,
         data: {
           'grant_type': 'refresh_token',
@@ -737,9 +738,9 @@ class AuthService extends Notifier<AuthState> {
       if (response.statusCode == 200) {
         final data = response.data;
         await _saveTokens(
-          accessToken: data['access_token'],
-          refreshToken: data['refresh_token'],
-          idToken: data['id_token'],
+          accessToken: data['access_token'] as String,
+          refreshToken: data['refresh_token'] as String?,
+          idToken: data['id_token'] as String?,
         );
         debugPrint('Token refresh - success');
         return true;
@@ -827,7 +828,7 @@ class AuthService extends Notifier<AuthState> {
     );
 
     // Connect SignalR for realtime updates
-    ref.read(signalRServiceProvider).connect();
+    unawaited(ref.read(signalRServiceProvider).connect());
   }
 
   Future<void> _clearTokens() async {

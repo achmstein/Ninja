@@ -817,7 +817,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> with PlaceRequ
   void _confirmLeaveSession(int sessionId) {
     final l10n = AppLocalizations.of(context)!;
 
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       builder: (dialogContext) => NinjaDialog(
         title: AppText(l10n.leaveRoomQuestion),
@@ -835,7 +835,7 @@ class _ActiveStayViewState extends ConsumerState<_ActiveStayView> with PlaceRequ
                 await ref.read(placeRepositoryProvider).leaveStay(sessionId);
                 if (!mounted) return;
 
-                ref.read(myStaysProvider.notifier).refresh();
+                unawaited(ref.read(myStaysProvider.notifier).refresh());
                 final branchId = ref.read(selectedBranchIdProvider);
                 if (branchId != null) ref.invalidate(placesProvider(branchId));
 

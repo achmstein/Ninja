@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -119,8 +120,8 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
             requestId: _requestId,
           );
       ref.invalidate(ticketProvider(ticket.id));
-      ref.read(openTicketsProvider.notifier).refresh();
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       widget.onChanged?.call();
       if (!mounted) return;
       showPosToast(context, PosToastType.success, l10n.ticketRefunded(money(context, result.amount), result.number));

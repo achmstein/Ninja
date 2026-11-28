@@ -125,7 +125,7 @@ class DioClaimRepository implements ClaimRepository {
 
 /// What an answer from Identity means for the screen
 ClaimFailure failureOf(int? status, Object? body) {
-  final data = body is Map ? body : const {};
+  final data = body is Map ? body : const <dynamic, dynamic>{};
   return switch (status) {
     404 => ClaimFailure.invalid,
     410 => data['reason'] == 'used' ? ClaimFailure.used : ClaimFailure.expired,

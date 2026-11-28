@@ -44,7 +44,7 @@ class OrderRating {
   factory OrderRating.fromJson(Map<String, dynamic> json) {
     return OrderRating(
       ratingValue: (json['ratingValue'] ?? json['RatingValue']) as int,
-      comment: json['comment'] ?? json['Comment'] as String?,
+      comment: (json['comment'] ?? json['Comment']) as String?,
       createdAt: DateTime.parse((json['createdAt'] ?? json['CreatedAt']) as String),
     );
   }
@@ -79,13 +79,13 @@ class OrderItem {
     final customizationsValue = json['customizationsDescription'] ?? json['CustomizationsDescription'];
 
     return OrderItem(
-      productId: json['productId'] ?? json['ProductId'] as int?,
+      productId: (json['productId'] ?? json['ProductId']) as int?,
       productName: LocalizedText.parse(productNameValue),
       unitPrice: ((json['unitPrice'] ?? json['UnitPrice']) as num).toDouble(),
       units: (json['units'] ?? json['Units']) as int,
-      pictureUrl: json['pictureUrl'] ?? json['PictureUrl'] as String?,
+      pictureUrl: (json['pictureUrl'] ?? json['PictureUrl']) as String?,
       customizationsDescription: LocalizedText.parseNullable(customizationsValue),
-      specialInstructions: json['specialInstructions'] ?? json['SpecialInstructions'] as String?,
+      specialInstructions: (json['specialInstructions'] ?? json['SpecialInstructions']) as String?,
     );
   }
 }
@@ -485,13 +485,13 @@ class Order {
     final ratingValueRaw = json['ratingValue'] ?? json['RatingValue'];
 
     return Order(
-      id: json['orderNumber'] ?? json['OrderNumber'] ?? json['orderId'] ?? json['id'] as int,
-      userId: json['userId'] ?? json['UserId'] as String?,
-      userName: json['userName'] ?? json['UserName'] ?? json['userDisplayName'] ?? json['UserDisplayName'] as String?,
+      id: (json['orderNumber'] ?? json['OrderNumber'] ?? json['orderId'] ?? json['id']) as int,
+      userId: (json['userId'] ?? json['UserId']) as String?,
+      userName: (json['userName'] ?? json['UserName'] ?? json['userDisplayName'] ?? json['UserDisplayName']) as String?,
       date: DateTime.parse((json['date'] ?? json['Date']) as String),
       status: status,
-      description: json['description'] ?? json['Description'] as String?,
-      customerNote: json['customerNote'] ?? json['CustomerNote'] as String?,
+      description: (json['description'] ?? json['Description']) as String?,
+      customerNote: (json['customerNote'] ?? json['CustomerNote']) as String?,
       total: ((json['total'] ?? json['Total']) as num).toDouble(),
       pointsToRedeem: (json['pointsToRedeem'] ?? json['PointsToRedeem'] ?? 0) as int,
       loyaltyDiscount: ((json['loyaltyDiscount'] ?? json['LoyaltyDiscount'] ?? 0) as num).toDouble(),

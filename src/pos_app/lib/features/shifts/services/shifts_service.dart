@@ -82,7 +82,7 @@ class ApiShiftsRepository implements ShiftsRepository {
   @override
   Future<void> addMovement(int id, CashMovementRequest request, {String? requestId}) async {
     try {
-      await _apiClient.post('shifts/$id/movements', data: request.toJson(), requestId: requestId);
+      await _apiClient.post<dynamic>('shifts/$id/movements', data: request.toJson(), requestId: requestId);
     } on DioException catch (e) {
       throw asSalesException(e);
     }

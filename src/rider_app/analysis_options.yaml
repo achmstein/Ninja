@@ -1,21 +1,6 @@
-# The rider app's analyzer: Flutter's recommended lints, plus the strict
-# type checks and the async rules that matter on a phone used on the road
-# (a future nobody awaits, a context used after an await).
-include: package:flutter_lints/flutter.yaml
+# The strict set every Flutter package shares; see the file for how a package catches up
+include: ../ninja_app_core/analysis_options_strict.yaml
 
 analyzer:
-  language:
-    strict-casts: true
-    strict-inference: true
-    strict-raw-types: true
   exclude:
     - lib/l10n/app_localizations*.dart
-
-linter:
-  rules:
-    unawaited_futures: true
-    discarded_futures: false
-    use_build_context_synchronously: true
-    avoid_dynamic_calls: false
-    cancel_subscriptions: true
-    close_sinks: true

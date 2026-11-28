@@ -200,7 +200,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
             // A retry on business Wi-Fi must not become a second command
             requestId: const Uuid().v4(),
           );
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       if (!mounted) return;
       // A new bill has nothing on it yet: straight to the pad, pointed at it
       context.go('/order/$ticketId');
@@ -262,7 +262,7 @@ class _FloorScreenState extends ConsumerState<FloorScreen> {
         context.go(billRoute(bill.id, label: bill.label));
         return;
       }
-      await Future.delayed(const Duration(milliseconds: 600));
+      await Future<void>.delayed(const Duration(milliseconds: 600));
     }
   }
 

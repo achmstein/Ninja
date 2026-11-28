@@ -43,7 +43,7 @@ class ApiCatalogRepository implements CatalogRepository {
 
   @override
   Future<void> setAvailability(int itemId, bool isAvailable, {String? requestId}) async {
-    await _apiClient.patch('items/$itemId/availability', data: {'isAvailable': isAvailable}, requestId: requestId);
+    await _apiClient.patch<dynamic>('items/$itemId/availability', data: {'isAvailable': isAvailable}, requestId: requestId);
   }
 
   @override
@@ -79,7 +79,7 @@ class ApiCatalogRepository implements CatalogRepository {
   Future<void> saveCustomerPreferences(String userId, List<Map<String, dynamic>> items) async {
     if (items.isEmpty) return;
     try {
-      await _apiClient.post('customers/$userId/preferences', data: {'items': items});
+      await _apiClient.post<dynamic>('customers/$userId/preferences', data: {'items': items});
     } catch (_) {
       // A failure just means the customer's choices aren't remembered this time.
     }

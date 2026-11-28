@@ -74,7 +74,7 @@ class NinjaTopBar extends ConsumerWidget {
                   NinjaIconButton(
                     size: 36,
                     semanticLabel: l10n.claimScan,
-                    onPress: () => Navigator.of(context).push(MaterialPageRoute(builder: (_) => const QrScanScreen())),
+                    onPress: () => Navigator.of(context).push(MaterialPageRoute<void>(builder: (_) => const QrScanScreen())),
                     child: const Icon(LucideIcons.scanLine),
                   ),
                 ],

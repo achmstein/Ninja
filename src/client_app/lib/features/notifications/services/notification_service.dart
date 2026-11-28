@@ -63,7 +63,7 @@ class ApiNotificationRepository implements NotificationRepository {
       final prefs = await SharedPreferences.getInstance();
       final branchId = prefs.getInt('selected_branch_id');
 
-      final response = await _apiClient.post(
+      final response = await _apiClient.post<dynamic>(
         'subscriptions/room-availability',
         data: {
           'fcmToken': fcmToken,
@@ -91,7 +91,7 @@ class ApiNotificationRepository implements NotificationRepository {
   @override
   Future<bool> unsubscribeFromRoomAvailability() async {
     try {
-      final response = await _apiClient.delete('subscriptions/room-availability')
+      final response = await _apiClient.delete<dynamic>('subscriptions/room-availability')
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 204) {
@@ -116,7 +116,7 @@ class ApiNotificationRepository implements NotificationRepository {
         return false;
       }
 
-      final response = await _apiClient.post(
+      final response = await _apiClient.post<dynamic>(
         'subscriptions/user-orders',
         data: {
           'fcmToken': fcmToken,
@@ -140,7 +140,7 @@ class ApiNotificationRepository implements NotificationRepository {
   @override
   Future<void> unregisterFromOrderNotifications() async {
     try {
-      await _apiClient.delete('subscriptions/user-orders')
+      await _apiClient.delete<dynamic>('subscriptions/user-orders')
           .timeout(const Duration(seconds: 5));
       debugPrint('Unregistered from order notifications');
     } catch (e) {
@@ -158,7 +158,7 @@ class ApiNotificationRepository implements NotificationRepository {
         return false;
       }
 
-      final response = await _apiClient.post(
+      final response = await _apiClient.post<dynamic>(
         'subscriptions/user-sessions',
         data: {
           'fcmToken': fcmToken,
@@ -179,7 +179,7 @@ class ApiNotificationRepository implements NotificationRepository {
   @override
   Future<void> unregisterFromSessionNotifications() async {
     try {
-      await _apiClient.delete('subscriptions/user-sessions')
+      await _apiClient.delete<dynamic>('subscriptions/user-sessions')
           .timeout(const Duration(seconds: 5));
       debugPrint('Unregistered from session notifications');
     } catch (e) {
@@ -191,7 +191,7 @@ class ApiNotificationRepository implements NotificationRepository {
   @override
   Future<SubscriptionStatus> getRoomAvailabilitySubscription() async {
     try {
-      final response = await _apiClient.get('subscriptions/room-availability')
+      final response = await _apiClient.get<dynamic>('subscriptions/room-availability')
           .timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200 && response.data != null) {

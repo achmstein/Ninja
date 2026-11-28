@@ -33,7 +33,7 @@ class NinjaKdsApp extends ConsumerStatefulWidget {
 }
 
 class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingObserver {
-  final List<StreamSubscription> _signalRSubscriptions = [];
+  final List<StreamSubscription<dynamic>> _signalRSubscriptions = [];
 
   @override
   void initState() {
@@ -88,13 +88,13 @@ class _NinjaKdsAppState extends ConsumerState<NinjaKdsApp> with WidgetsBindingOb
     FlutterNativeSplash.remove();
 
     // New builds from the platform's download page
-    ref.read(updateProvider.notifier).start();
+    unawaited(ref.read(updateProvider.notifier).start());
 
     // Connect SignalR and load branches if authenticated
     final authState = ref.read(authServiceProvider);
     if (authState.isAuthenticated) {
       if (!kDemoMode) _connectSignalR();
-      ref.read(branchProvider.notifier).loadBranches();
+      unawaited(ref.read(branchProvider.notifier).loadBranches());
     }
   }
 

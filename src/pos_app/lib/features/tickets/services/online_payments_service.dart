@@ -41,7 +41,7 @@ class ApiOnlinePaymentsRepository implements OnlinePaymentsRepository {
   @override
   Future<bool> refund(String key) async {
     try {
-      final response = await _api.post('sales/payments/$key/refund');
+      final response = await _api.post<dynamic>('sales/payments/$key/refund');
       return response.statusCode != 202;
     } on DioException catch (e) {
       // A ProblemDetails whose detail is the reason (closed bill, provider said no)
@@ -56,7 +56,7 @@ class ApiOnlinePaymentsRepository implements OnlinePaymentsRepository {
   @override
   Future<void> cancel(String key) async {
     try {
-      await _api.post('sales/payments/$key/cancel');
+      await _api.post<dynamic>('sales/payments/$key/cancel');
     } on DioException catch (e) {
       // A ProblemDetails whose detail is the reason (no longer in checkout)
       final data = e.response?.data;

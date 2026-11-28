@@ -59,7 +59,7 @@ void main() {
           'recordedBy': 'Mona',
           'recordedAt': '2026-11-27T10:00:00Z',
         },
-        {'id': 5, 'tender': 'Cash', 'amount': '30.50', 'payerName': null, 'lineIds': [], 'recordedBy': 'Mona', 'recordedAt': '2026-11-27T10:05:00Z'},
+        {'id': 5, 'tender': 'Cash', 'amount': '30.50', 'payerName': null, 'lineIds': <dynamic>[], 'recordedBy': 'Mona', 'recordedAt': '2026-11-27T10:05:00Z'},
       ],
       'partPaid': 150.5,
     });
@@ -128,7 +128,7 @@ void main() {
     expect(result.paid, 120);
     expect(result.remaining, 180);
 
-    final repeated = PartPaymentResult.fromJson({'partPaymentIds': [], 'paid': 120, 'remaining': 180});
+    final repeated = PartPaymentResult.fromJson({'partPaymentIds': <dynamic>[], 'paid': 120, 'remaining': 180});
     expect(repeated.partPaymentIds, isEmpty);
   });
 

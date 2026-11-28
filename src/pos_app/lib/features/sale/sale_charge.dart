@@ -310,7 +310,7 @@ mixin SaleCharge<W extends ConsumerStatefulWidget> on ConsumerState<W>, BillPeop
       } else {
         unawaited(ref.read(deliveriesProvider.notifier).refresh());
       }
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       showPosToast(
         context,
         PosToastType.success,

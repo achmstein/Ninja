@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'dart:ui' show PlatformDispatcher;
 
 import 'package:firebase_core/firebase_core.dart';
@@ -40,7 +41,7 @@ void main() async {
   // reported its size, which at this point it often has not.
   await initializeDeviceMode();
   await applyDeviceMode(widgetsBinding.platformDispatcher.views.first);
-  WakelockPlus.enable();
+  unawaited(WakelockPlus.enable());
 
   // Initialize locale and branch before app starts
   await initializeLocale(override: kDemoMode ? kDemoLocale : null);

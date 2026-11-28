@@ -157,13 +157,13 @@ class LiveOrderNotifier extends Notifier<LiveOrder?> {
 
   Future<void> _keep() async {
     try {
-      (await SharedPreferences.getInstance()).setInt(_followKey, _before);
+      unawaited((await SharedPreferences.getInstance()).setInt(_followKey, _before));
     } catch (_) {}
   }
 
   Future<void> _forget() async {
     try {
-      (await SharedPreferences.getInstance()).remove(_followKey);
+      unawaited((await SharedPreferences.getInstance()).remove(_followKey));
     } catch (_) {}
   }
 
@@ -308,9 +308,9 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
     ref.read(loyaltyRedemptionProvider.notifier).reset();
     ref.read(promoProvider.notifier).clear();
     // Keep the table alive through a long sitting with several rounds
-    ref.read(currentPlaceProvider.notifier).stampOrdered();
+    unawaited(ref.read(currentPlaceProvider.notifier).stampOrdered());
     // Points earned show once the order is confirmed
-    ref.read(loyaltyProvider.notifier).refresh();
+    unawaited(ref.read(loyaltyProvider.notifier).refresh());
     ref.read(liveOrderProvider.notifier).sent();
     if (payOnline) {
       // Straight on to paying it. The same request answered again carries no number: the order is then on
@@ -322,14 +322,14 @@ Future<bool> placeTrayOrder(BuildContext context, WidgetRef ref) async {
         showIsland(title: Text(l10n.payAheadFinishFromDock), icon: const Icon(LucideIcons.creditCard, color: NinjaColors.warning));
       }
     } else {
-      SoundService.instance.playSuccess();
+      unawaited(SoundService.instance.playSuccess());
       showIsland(title: Text(l10n.orderPlacedSuccessfully), icon: const Icon(LucideIcons.check, color: NinjaColors.success));
     }
   } else {
     final checkout = ref.read(checkoutProvider);
     // A rule the order broke is said in the customer's words; a delivery switched off under the open order drops it
     final code = checkout.errorCode;
-    if (code == 'delivery.not_delivering') ref.read(brandProvider.notifier).refresh();
+    if (code == 'delivery.not_delivering') unawaited(ref.read(brandProvider.notifier).refresh());
     final said = deliveryProblemText(l10n, code);
     showIsland(title: Text(said ?? checkout.error ?? l10n.failedToPlaceOrder), icon: const Icon(LucideIcons.circleX, color: NinjaColors.error));
   }

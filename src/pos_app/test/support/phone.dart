@@ -3,6 +3,7 @@ import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_riverpod/misc.dart' show Override;
 import 'package:flutter_test/flutter_test.dart';
 import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
@@ -43,7 +44,7 @@ class _Tenant implements TenantRepository {
 
 /// [home] in the till's theme and language, on a branch, as the app wraps it.
 /// [home] is built under the navigator, so it can open dialogs and pages.
-Widget tillApp(Widget home, {Locale locale = const Locale('en'), List overrides = const []}) => ProviderScope(
+Widget tillApp(Widget home, {Locale locale = const Locale('en'), List<Override> overrides = const []}) => ProviderScope(
       overrides: [
         selectedBranchIdProvider.overrideWithValue(1),
         tenantRepositoryProvider.overrideWithValue(_Tenant()),
@@ -68,7 +69,7 @@ Widget tillApp(Widget home, {Locale locale = const Locale('en'), List overrides 
     );
 
 /// The same, on the till's router: for a screen that goes on to another one
-Widget tillRouterApp(GoRouter router, {Locale locale = const Locale('en'), List overrides = const []}) => ProviderScope(
+Widget tillRouterApp(GoRouter router, {Locale locale = const Locale('en'), List<Override> overrides = const []}) => ProviderScope(
       overrides: [
         selectedBranchIdProvider.overrideWithValue(1),
         tenantRepositoryProvider.overrideWithValue(_Tenant()),

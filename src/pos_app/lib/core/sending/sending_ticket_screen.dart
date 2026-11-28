@@ -116,7 +116,7 @@ class _SendingTicketScreenState extends ConsumerState<SendingTicketScreen> {
       _stop();
       _left = true;
       await ref.read(sendingProvider.notifier).drop(widget.requestId);
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       if (mounted) context.go('/ticket/$ticketId?settle=true');
     });
 

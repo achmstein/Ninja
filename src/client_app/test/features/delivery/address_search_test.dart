@@ -25,7 +25,7 @@ void main() {
     test('the brand says whether the business has address search, and keeps it in the cache', () {
       final on = TenantBrand.fromApi({
         'name': {'en': 'Blue'},
-        'maps': {'search': true, 'webKey': null, 'webDomains': []},
+        'maps': {'search': true, 'webKey': null, 'webDomains': <dynamic>[]},
       }, baseUrl: 'https://api.blue.test');
       expect(on.addressSearch, isTrue);
       expect(TenantBrand.fromJson(on.toJson()).addressSearch, isTrue);

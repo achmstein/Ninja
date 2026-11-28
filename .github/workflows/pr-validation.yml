@@ -140,6 +140,10 @@ jobs:
           # The printing the till and the kitchen display share
           - app: ninja_printing
             codegen: false
+          # Sign-in, API and hub clients the staff apps share; holds the
+          # strict lint set all six packages include
+          - app: ninja_app_core
+            codegen: false
     defaults:
       run:
         working-directory: src/${{ matrix.app }}

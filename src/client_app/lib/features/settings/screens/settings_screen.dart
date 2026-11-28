@@ -93,7 +93,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final l10n = AppLocalizations.of(context)!;
     final authState = ref.read(authServiceProvider);
 
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       padding: EdgeInsets.zero,
       builder: (sheetContext) => _UpdateProfileSheet(
@@ -115,7 +115,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   void _showChangePasswordSheet(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
 
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       padding: EdgeInsets.zero,
       builder: (sheetContext) => _ChangePasswordSheet(
@@ -135,7 +135,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
   void _showDeleteAccountDialog(BuildContext context, WidgetRef ref) {
     final l10n = AppLocalizations.of(context)!;
-    showNinjaSheet(
+    showNinjaSheet<dynamic>(
       context: context,
       builder: (dialogContext) => NinjaDialog(
         title: AppText(l10n.deleteAccountQuestion, style: TextStyle(fontWeight: FontWeight.bold)),

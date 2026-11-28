@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
@@ -68,15 +69,15 @@ class _CloseShiftDialogState extends ConsumerState<_CloseShiftDialog> {
     setState(() => _pending = true);
     try {
       final z = await ref.read(shiftsRepositoryProvider).closeShift(widget.shift.id, amount, requestId: _requestId);
-      ref.read(currentShiftProvider.notifier).refresh();
+      unawaited(ref.read(currentShiftProvider.notifier).refresh());
       ref.invalidate(closedShiftsProvider);
       // Closing the shift turned the branch's flags off (through Tenant.API)
-      ref.read(branchProvider.notifier).refresh();
+      unawaited(ref.read(branchProvider.notifier).refresh());
       if (!mounted) return;
       setState(() => _result = z);
       showPosToast(context, PosToastType.success, l10n.shiftClosed);
       // The Z comes out by itself, like a receipt; a till with no printer stays quiet
-      if (ref.read(printServiceProvider).isConfigured) _print(z, auto: true);
+      if (ref.read(printServiceProvider).isConfigured) unawaited(_print(z, auto: true));
     } catch (e) {
       if (!mounted) return;
       setState(() => _pending = false);

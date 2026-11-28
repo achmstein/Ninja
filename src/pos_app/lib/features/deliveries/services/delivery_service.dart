@@ -16,31 +16,31 @@ class DeliveryRepository {
       [for (final e in (data as List<dynamic>? ?? const <dynamic>[])) (e as Map).cast<String, dynamic>()];
 
   Future<List<DeliveryOrder>> getDeliveries() async {
-    final response = await _orders.get('deliveries');
+    final response = await _orders.get<dynamic>('deliveries');
     return [for (final e in _list(response.data)) DeliveryOrder.fromJson(e)];
   }
 
   /// The branch's riders, on duty first, with those who have not opened the app yet
   Future<List<TillRider>> getRiders() async {
-    final response = await _orders.get('riders');
+    final response = await _orders.get<dynamic>('riders');
     return [for (final e in _list(response.data)) TillRider.fromJson(e)];
   }
 
   /// The server names the rider from its own list; the till says only which
   Future<void> assignRider(int orderId, TillRider rider) =>
-      _orders.put('$orderId/delivery/rider', data: {'riderUserId': rider.userId});
+      _orders.put<dynamic>('$orderId/delivery/rider', data: {'riderUserId': rider.userId});
 
-  Future<void> unassignRider(int orderId) => _orders.delete('$orderId/delivery/rider');
+  Future<void> unassignRider(int orderId) => _orders.delete<dynamic>('$orderId/delivery/rider');
 
   /// The courier companies the business lists, switched-off ones last
   Future<List<CourierProvider>> getCourierProviders() async {
-    final response = await _orders.get('couriers');
+    final response = await _orders.get<dynamic>('couriers');
     return [for (final e in _list(response.data)) CourierProvider.fromJson(e)];
   }
 
   /// Given to a courier company instead of a rider: who it sent, when it said, and its fee for this one
   Future<void> assignCourier(int orderId, {required int providerId, String? courierName, String? courierPhone, double? fee}) =>
-      _orders.put('$orderId/delivery/courier', data: {
+      _orders.put<dynamic>('$orderId/delivery/courier', data: {
         'providerId': providerId,
         'courierName': courierName,
         'courierPhone': courierPhone,
@@ -49,24 +49,24 @@ class DeliveryRepository {
 
   /// The courier handed it over and collected this much: the bill settles to the company
   Future<void> courierDelivered(int orderId, double collected) =>
-      _orders.put('$orderId/delivery/courier-delivered', data: {'collected': collected});
+      _orders.put<dynamic>('$orderId/delivery/courier-delivered', data: {'collected': collected});
 
-  Future<void> markOut(int orderId) => _orders.put('$orderId/delivery/out');
+  Future<void> markOut(int orderId) => _orders.put<dynamic>('$orderId/delivery/out');
 
-  Future<void> markDelivered(int orderId) => _orders.put('$orderId/delivery/delivered');
+  Future<void> markDelivered(int orderId) => _orders.put<dynamic>('$orderId/delivery/delivered');
 
   /// The rider could not hand it over; [reason] is a code (NoAnswer, Refused, WrongAddress, Other)
-  Future<void> markFailed(int orderId, String reason) => _orders.put('$orderId/delivery/failed', data: {'reason': reason});
+  Future<void> markFailed(int orderId, String reason) => _orders.put<dynamic>('$orderId/delivery/failed', data: {'reason': reason});
 
   /// The bag is back at the branch
-  Future<void> markReturned(int orderId) => _orders.put('$orderId/delivery/returned');
+  Future<void> markReturned(int orderId) => _orders.put<dynamic>('$orderId/delivery/returned');
 
   /// The rider handed in [amount] for it; the bill is settled with it
-  Future<void> cashIn(int orderId, double amount) => _orders.put('$orderId/delivery/cash-in', data: {'amount': amount});
+  Future<void> cashIn(int orderId, double amount) => _orders.put<dynamic>('$orderId/delivery/cash-in', data: {'amount': amount});
 
   /// A rider handed in the cash for several deliveries at once, each with what
   /// was counted for it; all or nothing on the server
-  Future<void> cashInMany(Map<int, double> amounts) => _orders.put('deliveries/cash-in', data: {
+  Future<void> cashInMany(Map<int, double> amounts) => _orders.put<dynamic>('deliveries/cash-in', data: {
         'items': [
           for (final e in amounts.entries) {'orderId': e.key, 'amount': e.value},
         ],
@@ -76,7 +76,7 @@ class DeliveryRepository {
   /// phone; with a pasted [location], the pin read from it and how far; with
   /// [zoneId], the fee and minimum of that named area of the branch
   Future<TillDeliveryQuote> tillQuote({String? location, int? zoneId}) async {
-    final response = await _orders.get('delivery/till-quote', queryParameters: {
+    final response = await _orders.get<dynamic>('delivery/till-quote', queryParameters: {
       if ((location ?? '').trim().isNotEmpty) 'location': location!.trim(),
       'zoneId': ?zoneId,
     });
@@ -86,7 +86,7 @@ class DeliveryRepository {
   /// Where a caller asked to be delivered before, by account or number;
   /// [everyBranch] is the call centre's: any branch's earlier deliveries
   Future<List<KnownAddress>> knownAddresses({String? customerUserId, String? phone, bool everyBranch = false}) async {
-    final response = await _orders.get('delivery/known-addresses', queryParameters: {
+    final response = await _orders.get<dynamic>('delivery/known-addresses', queryParameters: {
       if ((customerUserId ?? '').isNotEmpty) 'customerUserId': customerUserId,
       if ((phone ?? '').isNotEmpty) 'phone': phone,
       if (everyBranch) 'everyBranch': true,
@@ -96,13 +96,13 @@ class DeliveryRepository {
 
   /// A link for the caller to share where their phone is, for this branch, good for a day
   Future<LocationShareLink> createLocationShare() async {
-    final response = await _orders.post('delivery/location-shares');
+    final response = await _orders.post<dynamic>('delivery/location-shares');
     return LocationShareLink.fromJson((response.data as Map).cast<String, dynamic>());
   }
 
   /// What came back through a link this branch made: nothing yet, the point, or expired
   Future<LocationShare> getLocationShare(String token) async {
-    final response = await _orders.get('delivery/location-shares/${Uri.encodeComponent(token)}');
+    final response = await _orders.get<dynamic>('delivery/location-shares/${Uri.encodeComponent(token)}');
     return LocationShare.fromJson((response.data as Map).cast<String, dynamic>());
   }
 
@@ -110,7 +110,7 @@ class DeliveryRepository {
   /// [location] (a Google Maps link or coordinates), nearest first
   Future<StaffDeliveryResolution> resolveForStaff(String location) async {
     // With no point on the map the answer lists every branch that delivers, for the agent to pick from
-    final response = await _orders.get('delivery/resolve-staff',
+    final response = await _orders.get<dynamic>('delivery/resolve-staff',
         queryParameters: location.trim().isEmpty ? null : {'location': location.trim()});
     return StaffDeliveryResolution.fromJson((response.data as Map).cast<String, dynamic>());
   }

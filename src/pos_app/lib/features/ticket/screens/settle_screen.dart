@@ -404,7 +404,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       final result = await ref
           .read(ticketsRepositoryProvider)
           .settle(widget.ticket.id, SettleRequest(payments: List.of(_payments)), requestId: _requestId);
-      ref.read(openTicketsProvider.notifier).refresh();
+      unawaited(ref.read(openTicketsProvider.notifier).refresh());
       ref.invalidate(ticketProvider(widget.ticket.id));
       // Whatever went on a tab changed what its holder owes
       for (final p in _payments) {
@@ -423,7 +423,7 @@ class _SettleScreenState extends ConsumerState<_SettleScreen> {
       // No paper by default — many single-item orders never need one. Cash
       // still opens the drawer; the receipt waits for the Print button. Only
       // cash taken now: a part's cash went in when it was taken.
-      _openDrawerForCash(_payments);
+      unawaited(_openDrawerForCash(_payments));
       await _land(outcome, AppLocalizations.of(context)!.receiptNumber(result.receiptNumber));
     } catch (e) {
       if (!mounted) return;

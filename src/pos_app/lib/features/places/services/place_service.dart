@@ -43,9 +43,9 @@ class ApiPlaceRepository implements PlaceRepository {
   @override
   Future<({List<Place> places, List<Stay> openStays, List<Reservation> openReservations})> loadPlaces() async {
     final results = await Future.wait([
-      _places.get(''),
-      _stays.get('open'),
-      _reservations.get('open'),
+      _places.get<dynamic>(''),
+      _stays.get<dynamic>('open'),
+      _reservations.get<dynamic>('open'),
     ]);
 
     final placesData = results[0].data as List<dynamic>;
@@ -61,32 +61,32 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<void> holdPlace(int placeId) async {
-    await _reservations.post('', data: {'placeId': placeId, 'startOnConfirm': false});
+    await _reservations.post<dynamic>('', data: {'placeId': placeId, 'startOnConfirm': false});
   }
 
   @override
   Future<void> seatReservation(int reservationId, {String? optionCode}) async {
-    await _reservations.post('$reservationId/seat', data: {'optionCode': optionCode});
+    await _reservations.post<dynamic>('$reservationId/seat', data: {'optionCode': optionCode});
   }
 
   @override
   Future<void> confirmReservation(int reservationId) async {
-    await _reservations.post('$reservationId/confirm', data: {});
+    await _reservations.post<dynamic>('$reservationId/confirm', data: <String, dynamic>{});
   }
 
   @override
   Future<void> cancelReservation(int reservationId) async {
-    await _reservations.post('$reservationId/cancel');
+    await _reservations.post<dynamic>('$reservationId/cancel');
   }
 
   @override
   Future<void> completeReservation(int reservationId) async {
-    await _reservations.post('$reservationId/complete');
+    await _reservations.post<dynamic>('$reservationId/complete');
   }
 
   @override
   Future<void> assignReservationCustomer(int reservationId, String customerId, String? customerName) async {
-    await _reservations.post('$reservationId/assign-customer', data: {
+    await _reservations.post<dynamic>('$reservationId/assign-customer', data: {
       'customerId': customerId,
       'customerName': customerName,
     });
@@ -94,17 +94,17 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<void> endStay(int stayId) async {
-    await _stays.post('$stayId/end');
+    await _stays.post<dynamic>('$stayId/end');
   }
 
   @override
   Future<void> cancelStay(int stayId) async {
-    await _stays.post('$stayId/cancel');
+    await _stays.post<dynamic>('$stayId/cancel');
   }
 
   @override
   Future<void> assignStayCustomer(int stayId, String customerId, String? customerName) async {
-    await _stays.post('$stayId/assign-customer', data: {
+    await _stays.post<dynamic>('$stayId/assign-customer', data: {
       'customerId': customerId,
       'customerName': customerName,
     });
@@ -112,7 +112,7 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<void> addStayMember(int stayId, String customerId, String? customerName) async {
-    await _stays.post('$stayId/members', data: {
+    await _stays.post<dynamic>('$stayId/members', data: {
       'customerId': customerId,
       'customerName': customerName,
     });
@@ -120,28 +120,28 @@ class ApiPlaceRepository implements PlaceRepository {
 
   @override
   Future<void> removeStayMember(int stayId, String customerId) async {
-    await _stays.delete('$stayId/members/$customerId');
+    await _stays.delete<dynamic>('$stayId/members/$customerId');
   }
 
   @override
   Future<void> startWalkIn(int placeId, {String? optionCode}) async {
-    await _places.post('$placeId/walk-in', data: {'optionCode': optionCode});
+    await _places.post<dynamic>('$placeId/walk-in', data: {'optionCode': optionCode});
   }
 
   @override
   Future<void> changeOption(int stayId, String optionCode) async {
-    await _stays.put('$stayId/option', data: {'optionCode': optionCode});
+    await _stays.put<dynamic>('$stayId/option', data: {'optionCode': optionCode});
   }
 
   @override
   Future<Stay?> getStay(int stayId) async {
-    final response = await _stays.get('$stayId');
+    final response = await _stays.get<dynamic>('$stayId');
     return Stay.fromJson(response.data as Map<String, dynamic>);
   }
 
   @override
   Future<List<Stay>> getStayHistory(int placeId, {int limit = 20}) async {
-    final response = await _places.get('$placeId/stays', queryParameters: {'limit': limit});
+    final response = await _places.get<dynamic>('$placeId/stays', queryParameters: {'limit': limit});
     final historyData = response.data as List<dynamic>;
     return historyData.map((e) => Stay.fromJson(e as Map<String, dynamic>)).toList();
   }

@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:dio/dio.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -83,7 +84,7 @@ mixin PlaceRequests<T extends ConsumerStatefulWidget> on ConsumerState<T> {
       }
     } finally {
       if (mounted) setState(() => sendingRequest = null);
-      ref.read(myRequestsProvider.notifier).refresh();
+      unawaited(ref.read(myRequestsProvider.notifier).refresh());
     }
   }
 
@@ -103,7 +104,7 @@ mixin PlaceRequests<T extends ConsumerStatefulWidget> on ConsumerState<T> {
     // Seen at once, then confirmed by the server's own list
     final created = ref.read(serviceRequestProvider).lastRequest;
     if (success && created != null) ref.read(myRequestsProvider.notifier).add(created);
-    ref.read(myRequestsProvider.notifier).refresh();
+    unawaited(ref.read(myRequestsProvider.notifier).refresh());
     if (!mounted) return;
     setState(() => sendingRequest = null);
     if (success) {
