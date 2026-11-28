@@ -4,7 +4,7 @@
     <CentralPackageTransitivePinningEnabled>true</CentralPackageTransitivePinningEnabled>
     <AspnetVersion>10.0.0</AspnetVersion>
     <MicrosoftExtensionsVersion>10.0.0</MicrosoftExtensionsVersion>
-    <AspireVersion>13.0.1</AspireVersion>
+    <AspireVersion>13.6.5</AspireVersion>
     <AspireUnstablePackagesVersion>13.0.0-preview.1.25560.3</AspireUnstablePackagesVersion>
     <GrpcVersion>2.71.0</GrpcVersion>
     <ApiVersioningVersion>8.1.0</ApiVersioningVersion>
@@ -50,7 +50,7 @@
     <PackageVersion Include="MSTest" Version="4.0.2" />
     <PackageVersion Include="MSTest.TestFramework" Version="4.0.2" />
     <!-- Version together with EF -->
-    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.0" />
+    <PackageVersion Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.Design" Version="10.0.0" />
     <PackageVersion Include="Microsoft.EntityFrameworkCore.InMemory" Version="10.0.0" />
     <PackageVersion Include="Testcontainers" Version="4.15.0" />
@@ -86,7 +86,7 @@
     <PackageVersion Include="AspNetCore.HealthChecks.Uris" Version="9.0.0" />
     <!-- Open Telemetry -->
     <PackageVersion Include="OpenTelemetry.Exporter.OpenTelemetryProtocol" Version="1.12.0" />
-    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.12.0" />
+    <PackageVersion Include="OpenTelemetry.Extensions.Hosting" Version="1.17.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.AspNetCore" Version="1.12.0" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.GrpcNetClient" Version="1.12.0-beta.1" />
     <PackageVersion Include="OpenTelemetry.Instrumentation.Http" Version="1.12.0" />
@@ -119,7 +119,7 @@
     <PackageVersion Include="Aspire.Hosting.Testing" Version="$(AspireVersion)" />
     <PackageVersion Include="Microsoft.AspNetCore.SignalR.Client" Version="$(AspnetVersion)" />
     <PackageVersion Include="RabbitMQ.Client" Version="7.1.2" />
-    <PackageVersion Include="Npgsql" Version="10.0.0" />
+    <PackageVersion Include="Npgsql" Version="10.0.3" />
     <PackageVersion Include="AWSSDK.S3" Version="4.0.103.3" />
     <PackageVersion Include="MailKit" Version="4.18.0" />
     <PackageVersion Include="Microsoft.CodeAnalysis.CSharp" Version="4.14.0" />
