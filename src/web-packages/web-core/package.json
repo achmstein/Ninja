@@ -6,6 +6,7 @@
   "description": "What the web apps copied between them: session, cookies, brand fonts, branch claims. TypeScript source; each app compiles it as its own.",
   "exports": {
     "./branch-claim": "./src/branch-claim.ts",
+    "./branches": "./src/branches.ts",
     "./brand": "./src/brand.ts",
     "./brand-fonts": "./src/brand-fonts.ts",
     "./cn": "./src/cn.ts",

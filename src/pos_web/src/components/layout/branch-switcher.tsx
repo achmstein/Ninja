@@ -1,10 +1,10 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useNavigate } from '@tanstack/react-router'
 import { Check, ChevronsUpDown, Headset } from 'lucide-react'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { useBrandName } from '@/lib/brand'
 import { useLocalized, useT } from '@/lib/i18n'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { useCallCentre } from '@/hooks/use-call-centre'
 import { Button } from '@/components/ui/button'
 import {

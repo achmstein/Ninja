@@ -9,11 +9,11 @@ import {
   saveTalabatMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
 import type { TalabatStatusView } from '@ninja/api/catalog/types.gen'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { API_VERSION } from '@/lib/api-client'
 import { useLocale, useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { toast } from '@/lib/toast'
 import { formatWhen } from '@/lib/when'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'

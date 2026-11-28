@@ -2,9 +2,9 @@ import { useEffect } from 'react'
 import { useIsRestoring } from '@tanstack/react-query'
 import { Loader2, Store } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { useT } from '@/lib/i18n'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 
 /**

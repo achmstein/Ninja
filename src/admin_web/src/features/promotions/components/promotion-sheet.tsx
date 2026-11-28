@@ -11,6 +11,7 @@ import {
   updatePromotionMutation,
   uploadPromotionPictureMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { API_VERSION } from '@/lib/api-client'
 import { useBrand } from '@/lib/brand'
 import { formatDay } from '@/lib/business-day'
@@ -18,7 +19,6 @@ import { useLanguage, useLocale, useLocalized, useT } from '@/lib/i18n'
 import { useModules } from '@/lib/modules'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'

@@ -6,13 +6,13 @@ import {
   removeBranchItemOverrideMutation,
   setBranchItemOverrideMutation,
 } from '@ninja/api/catalog/@tanstack/react-query.gen'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useBranchStore } from '@/stores/branch-store'
 import { API_VERSION } from '@/lib/api-client'
 import { useCurrencyLabel } from '@/lib/currency'
 import { useT } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Skeleton } from '@/components/ui/skeleton'

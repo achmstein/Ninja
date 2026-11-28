@@ -16,11 +16,11 @@ import {
 } from 'lucide-react'
 import { useAuth } from 'react-oidc-context'
 import { type StockLevelView } from '@ninja/api/inventory'
+import { useAllowedBranches } from '@ninja/web-core/branches'
 import { useLocalized, useT, type TranslationKey } from '@/lib/i18n'
 import { formatEgp, toNumber } from '@/lib/money'
 import { toast } from '@/lib/toast'
 import { cn } from '@/lib/utils'
-import { useAllowedBranches } from '@/hooks/use-allowed-branches'
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
