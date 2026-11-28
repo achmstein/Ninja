@@ -1,0 +1,42 @@
+/* The customer web's own stylesheet, and its own sources for the classes it draws */
+@import '../src/styles/index.css';
+@source '../src';
+@source './';
+
+/* Only the mock-up's own props: a still map, and the phone's message banner */
+.mock-map {
+  background:
+    linear-gradient(90deg, transparent 48%, #fff 48% 52%, transparent 52%),
+    linear-gradient(0deg, transparent 58%, #fff 58% 63%, transparent 63%),
+    linear-gradient(135deg, #e8eef5, #e3efe6);
+}
+.mock-map::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: 18px;
+  height: 18px;
+  border-radius: 50% 50% 50% 0;
+  transform: rotate(-45deg) translateY(-6px);
+  background: var(--primary);
+  box-shadow: 0 2px 6px rgb(0 0 0 / 0.3);
+}
+.mock-sms {
+  position: fixed;
+  inset-inline: 10px;
+  top: 10px;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 12px 32px rgb(15 23 42 / 0.25);
+  transform: translateY(-160%);
+  transition: transform 0.35s cubic-bezier(0.2, 0.9, 0.3, 1.2);
+}
+.mock-sms.in {
+  transform: none;
+}
