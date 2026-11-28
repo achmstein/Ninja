@@ -23,16 +23,6 @@ export const useDockPreview = create<{
 /** About how many minutes are left at each stage, for the row's headline */
 export const PREVIEW_MINUTES: Partial<Record<PillStage, number>> = { confirmed: 12, preparing: 8, onTheWay: 4 }
 
-/** How far along the order is, as a share of the line across the dock's top */
-export const STAGE_PROGRESS: Partial<Record<PillStage, number>> = {
-  sent: 0.12,
-  confirmed: 0.32,
-  preparing: 0.6,
-  onTheWay: 0.85,
-  delivered: 1,
-  paid: 1,
-}
-
 const STAGES: Array<[PillStage | null, string]> = [
   [null, 'No order'],
   ['sent', 'Sent'],

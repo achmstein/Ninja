@@ -15,7 +15,7 @@ import { TableView } from '@/components/places/table-view'
 import { RoomView } from '@/components/places/room-view'
 import { formatClock, useSecondTick } from '@/lib/clock'
 import { useDockSheet } from '@/lib/dock-sheet'
-import { PREVIEW_MINUTES, STAGE_PROGRESS, useDockPreview } from '@/lib/dock-preview'
+import { PREVIEW_MINUTES, useDockPreview } from '@/lib/dock-preview'
 import { useActiveStay } from '@/lib/stays'
 import { hasLiveBill, OpenBills } from '@/components/bills/open-bills'
 import { trayOpensAfterDrag } from '@/components/tray/tray-model'
@@ -67,7 +67,7 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const setOpen = useDockSheet((s) => s.setOpen)
   const followed = useLiveOrder()
   // The proposed row, tried in the preview with an order the panel sets (lib/dock-preview): the stage is the
-  // headline with the minutes left, a line across the top fills as it moves, a waiter asked for is said in
+  // headline with the minutes left, a waiter asked for is said in
   // words, and an order on its way stays in sight over an unsent one
   const preview = useDockPreview()
   const enhanced = preview.on
@@ -105,7 +105,6 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
   const clock = stay?.startedAt ? formatClock((now - new Date(stay.startedAt).getTime()) / 1000) : null
   const minutes = enhanced && stage ? PREVIEW_MINUTES[stage] : undefined
   const headline = stage ? `${words(STAGE_LABEL[stage], language, standard)}${minutes ? ` · ${t('dockAboutMinutes', { n: minutes })}` : ''}` : ''
-  const progress = enhanced && stage ? STAGE_PROGRESS[stage] : undefined
   const line = enhanced && asking && !stage
     ? t('dockWaiterComing')
     : stage
@@ -162,19 +161,6 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           >
             {/* The dock's grab handle, as on the tray's row: every row of the dock has it */}
             <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
-            {/* How far along the order is: one thin line across the row's top edge, in the dock's own ink so it reads
-                on any brand's colour. Nothing is drawn on the icon: a ring round it, and one pulsing out of it, were
-                tried and were too much */}
-            {progress != null && (
-              <span aria-hidden className='bg-background/15 absolute inset-x-7 top-0 h-[2px] overflow-hidden rounded-full'>
-                <motion.span
-                  className='bg-background/80 block h-full origin-left rtl:origin-right'
-                  initial={false}
-                  animate={{ scaleX: progress }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                />
-              </span>
-            )}
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
