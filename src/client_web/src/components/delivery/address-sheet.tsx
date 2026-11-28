@@ -25,7 +25,9 @@ import { Input } from '@/components/ui/input'
 import { pillAction } from '@/components/ui/ninja-sheet'
 import * as SheetPrimitive from '@radix-ui/react-dialog'
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from '@/components/ui/sheet'
+import { accountPreview } from '@/components/auth/phone-gate'
 import { AddressSearch } from './address-search'
+import { DetailChips } from './detail-chips'
 import { MapPicker } from './map-pin'
 
 /** Where the map opens when neither the customer nor the branch is placed: the middle of the business's country */
@@ -463,18 +465,34 @@ function AddressForm({
         maxLength={300}
         autoComplete='street-address'
       />
-      <div className='grid grid-cols-3 gap-2'>
-        <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder={t('deliveryBuilding')} aria-label={t('deliveryBuilding')} maxLength={100} />
-        <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' maxLength={50} />
-        <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} maxLength={50} />
-      </div>
-      <Input
-        value={directions}
-        onChange={(e) => setDirections(e.target.value)}
-        placeholder={t('deliveryDirectionsHint')}
-        aria-label={t('deliveryDirections')}
-        maxLength={500}
-      />
+      {accountPreview() ? (
+        // Tried beside the account-by-phone flow: the details as chips, each added only if wanted
+        <DetailChips
+          title={t('deliveryDetails')}
+          optional={t('optional')}
+          details={[
+            { key: 'building', label: t('deliveryBuilding'), value: building, onChange: setBuilding, maxLength: 100 },
+            { key: 'floor', label: t('deliveryFloor'), value: floor, onChange: setFloor, numeric: true, maxLength: 50 },
+            { key: 'apartment', label: t('deliveryApartment'), value: apartment, onChange: setApartment, maxLength: 50 },
+            { key: 'directions', label: t('deliveryLandmark'), value: directions, onChange: setDirections, wide: true, maxLength: 500 },
+          ]}
+        />
+      ) : (
+        <>
+        <div className='grid grid-cols-3 gap-2'>
+          <Input value={building} onChange={(e) => setBuilding(e.target.value)} placeholder={t('deliveryBuilding')} aria-label={t('deliveryBuilding')} maxLength={100} />
+          <Input value={floor} onChange={(e) => setFloor(e.target.value)} placeholder={t('deliveryFloor')} aria-label={t('deliveryFloor')} inputMode='numeric' maxLength={50} />
+          <Input value={apartment} onChange={(e) => setApartment(e.target.value)} placeholder={t('deliveryApartment')} aria-label={t('deliveryApartment')} maxLength={50} />
+        </div>
+        <Input
+          value={directions}
+          onChange={(e) => setDirections(e.target.value)}
+          placeholder={t('deliveryDirectionsHint')}
+          aria-label={t('deliveryDirections')}
+          maxLength={500}
+        />
+        </>
+      )}
       {isGuest && (
         <Input
           value={name}
