@@ -1,8 +1,9 @@
-// Alert chime for admin notifications — the exact sound the mobile apps ship
-// (client_app assets/sounds/success.mp3), so web and app alerts sound alike.
+// Alert chime for staff alerts (new orders, owner notifications): the exact sound
+// the mobile apps ship (client_app assets/sounds/success.mp3), so every staff
+// surface rings alike. Each app serves it at /sounds/success.mp3.
 //
 // Browsers block audio until the page has seen a user interaction; a freshly
-// opened tab stays silent until the admin clicks anywhere once. Rejections
+// opened tab stays silent until someone taps anywhere once. Rejections
 // are swallowed — the toast still carries the alert.
 
 let audio: HTMLAudioElement | null = null

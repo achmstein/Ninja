@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useState } from 'react'
+import { ensurePushToken, pushConfigured } from '@ninja/web-core/push'
 import { apiClient } from '@/lib/api-client'
 import { useLanguage } from '@/lib/i18n'
-import { ensurePushToken, pushConfigured } from '@/lib/push'
 
 // Remembered per browser: this device opted in. The subscription itself
 // lives in Notification.API, keyed on the user; the flag only says whether

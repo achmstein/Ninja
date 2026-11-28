@@ -3,9 +3,9 @@ import { useQueryClient } from '@tanstack/react-query'
 import { getStoredUser } from '@/config/oidc-config'
 import { HubConnectionBuilder, HubConnectionState } from '@microsoft/signalr'
 import { renewSession } from '@ninja/web-core/session'
+import { playAlertSound } from '@ninja/web-core/sound'
 import { getActiveBranchId } from '@/stores/branch-store'
 import { translate } from '@/lib/i18n'
-import { playAlertSound } from '@/lib/sound'
 import { toast } from '@/lib/toast'
 
 type OrderStatusChangedEvent = {

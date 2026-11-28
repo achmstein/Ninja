@@ -1,8 +1,8 @@
 import { useEffect } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
+import { ensurePushToken, onForegroundMessage, pushConfigured } from '@ninja/web-core/push'
 import { useLanguage } from './i18n'
-import { ensurePushToken, onForegroundMessage, pushConfigured } from './push'
 import { subscribe, unsubscribe } from './services/notifications'
 
 /**
