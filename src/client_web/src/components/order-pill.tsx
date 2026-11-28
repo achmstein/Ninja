@@ -8,7 +8,7 @@ import { API_VERSION } from '@/lib/api-client'
 import { useBrandName } from '@/lib/brand'
 import { useArabicStyle, useLanguage, useLocalized, usePrice } from '@/lib/i18n'
 import { island, type IslandFace } from '@/lib/island'
-import { useLiveOrder } from '@/lib/live-order'
+import { clearLiveOrder, getDeliveryLive, useLiveOrder } from '@/lib/live-order'
 import {
   CLOCK_SLACK_MS,
   nextCheck,
@@ -134,11 +134,26 @@ export function OrderPill() {
     setShown(visible ? orderNumber : null, visible)
   }, [visible, orderNumber, setShown])
 
+  // A delivery being made or on its way: the server says about how long is left and who is
+  // bringing it. Keyed as an order, so the hub's OrderStatusChanged reads it again at once
+  const onItsWay = visible && order?.delivery != null && orderNumber != null && (stage === 'preparing' || stage === 'onTheWay')
+  const liveQuery = useQuery({
+    queryKey: [{ _id: 'getOrder', part: 'deliveryLive', orderNumber }],
+    queryFn: () => getDeliveryLive(orderNumber!),
+    enabled: onItsWay,
+    refetchInterval: onItsWay ? 30_000 : false,
+  })
+  const live = onItsWay ? liveQuery.data : null
+  const minutes = live?.etaMinutes != null && live.etaMinutes > 0 ? live.etaMinutes : null
+  const riderName = live?.riderName ?? (onItsWay ? order?.delivery?.riderName : null) ?? null
+  const riderPhone = stage === 'onTheWay' ? (live?.riderPhone ?? null) : null
+
   // The dock shows the order while it is followed (components/ninja/dock-bill.tsx)
   useEffect(() => {
-    useLiveOrder.setState(visible ? { stage, orderNumber } : { stage: null, orderNumber: null })
-  }, [visible, stage, orderNumber])
-  useEffect(() => () => useLiveOrder.setState({ stage: null, orderNumber: null }), [])
+    if (visible) useLiveOrder.setState({ stage, orderNumber, minutes, riderName, riderPhone })
+    else clearLiveOrder()
+  }, [visible, stage, orderNumber, minutes, riderName, riderPhone])
+  useEffect(() => clearLiveOrder, [])
 
   // What is worth interrupting for (turned down) the island says out loud, opened with the order's
   // items; the rest of the way the dock's quiet change is enough

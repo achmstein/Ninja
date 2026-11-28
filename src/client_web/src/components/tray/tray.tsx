@@ -2,7 +2,9 @@ import { createContext, useContext, useEffect, useLayoutEffect, useRef, useState
 import { animate, AnimatePresence, motion, useMotionValue, useMotionValueEvent, useReducedMotion, useTransform, type MotionValue, type PanInfo } from 'motion/react'
 import { Check, CreditCard, Loader2, LogIn, Minus, Plus, ShoppingBag, Trash2 } from 'lucide-react'
 import { lineKey, useCart, type CartLine } from '@/lib/cart'
-import { useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useArabicStyle, useLanguage, useLocalized, usePrice, useT } from '@/lib/i18n'
+import { useDockOrder } from '@/lib/live-order'
+import { STAGE_LABEL, words } from '@/lib/order-pill'
 import { PlaceIcon } from '@/lib/places'
 import { toast } from '@/lib/toast'
 import { blurSwap, ease } from '@/lib/motion'
@@ -412,10 +414,11 @@ export function Tray({
                   ) : (
                     <>
                       <motion.span
-                        className='block overflow-hidden text-caption opacity-70'
+                        className='block truncate text-caption opacity-70'
                         style={reduced ? undefined : { opacity: countOpacity, height: countHeight }}
                       >
                         {t('itemCount', { count: summary.count })}
+                        <OrderOnItsWay />
                       </motion.span>
                       <motion.span
                         className='block origin-[0%_50%] rtl:origin-[100%_50%]'
@@ -809,5 +812,27 @@ function OrderButton({
         </motion.span>
       </AnimatePresence>
     </motion.button>
+  )
+}
+
+/**
+ * The order already sent, said on the tray's own row while the tray holds
+ * another not yet sent: the row covers the dock's, so an order on its way
+ * went out of sight the moment something new went into the tray. Quiet, in
+ * the row's caption beside the count: a pill over the dock for it read as
+ * an alert.
+ */
+function OrderOnItsWay() {
+  const { stage, orderNumber } = useDockOrder()
+  const language = useLanguage((s) => s.language)
+  const standard = useArabicStyle((s) => s.standard)
+  // Waiting for its payment is the dock's own business, with the way to pay
+  if (!stage || stage === 'awaitingPayment') return null
+  return (
+    <>
+      {' · '}
+      {words(STAGE_LABEL[stage], language, standard)}
+      {orderNumber != null && <span className='tabular-nums'>{' #\u200f'}{orderNumber}</span>}
+    </>
   )
 }

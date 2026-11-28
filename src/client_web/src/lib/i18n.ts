@@ -499,6 +499,8 @@ const webExtras = {
   dockAboutMinutes: { en: 'about {n} min', ar: 'حوالي {n} د' },
   dockWaiterComing: { en: 'The waiter is on the way', ar: 'الويتر جاي' },
   dockPay: { en: 'Pay', ar: 'ادفع' },
+  dockCallRider: { en: 'Call', ar: 'اتصل' },
+  dockCallWaiter: { en: 'Call waiter', ar: 'نادي الويتر' },
   deliveryDetails: { en: 'Details that help the rider', ar: 'تفاصيل تساعد المندوب' },
   deliveryRiderNote: { en: 'Note for the rider', ar: 'ملاحظة للمندوب' },
   optional: { en: 'Optional', ar: 'اختياري' },
