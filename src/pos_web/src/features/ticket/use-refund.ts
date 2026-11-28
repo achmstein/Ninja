@@ -116,6 +116,10 @@ export function useRefund(ticket: TicketDetail, onDone: () => void) {
       return { ...prev, [entry.id]: Math.max(0, Math.min(entry.left, next)) }
     })
 
+  /** A line ticked or unticked, as lines are picked on an order: ticked, all that is left of it comes back */
+  const toggle = (entry: RefundEntry) =>
+    setQtyByLine((prev) => ({ ...prev, [entry.id]: (prev[entry.id] ?? 0) > 0 ? 0 : entry.left }))
+
   const pickEverything = () => setQtyByLine(Object.fromEntries(lines.map((entry) => [entry.id, entry.left])))
 
   const canRefund =
@@ -142,6 +146,7 @@ export function useRefund(ticket: TicketDetail, onDone: () => void) {
     preview,
     everythingPicked,
     step,
+    toggle,
     pickEverything,
     reason,
     setReason,

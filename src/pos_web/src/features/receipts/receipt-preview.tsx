@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useAuth } from 'react-oidc-context'
-import { Banknote, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
+import { Banknote, Check, Loader2, Minus, Plus, Printer, Undo2, User, X } from 'lucide-react'
 import type { TicketDetail } from '@/api/sales'
 import { getTicketOptions } from '@/api/sales/@tanstack/react-query.gen'
 import { Button } from '@/components/ui/button'
@@ -299,26 +299,52 @@ function Receipt({ ticket, title }: { ticket: TicketDetail; title: React.ReactNo
       {making.lines.length === 0 ? (
         <p className='text-muted-foreground py-10 text-center'>{t('nothingLeftToRefund')}</p>
       ) : (
+        // Picked as lines are picked on an order: a tap ticks the row, and all that is left of it
+        // comes back. A row with more than one shows its count once ticked, to give back fewer
         <ul className='divide-y border-y'>
-          {making.lines.map((entry) => (
-            <li key={entry.id} className='flex min-h-16 items-center gap-3 py-2'>
-              <span className='min-w-0 flex-1'>
-                <span className='type-body block truncate font-medium'>{localized(entry.line.description)}</span>
-                <span className='text-muted-foreground type-detail block tabular-nums'>
-                  {t('leftToRefund', { count: entry.left })} · {money(entry.line.unitPrice)}
-                </span>
-              </span>
-              <span className='flex shrink-0 items-center gap-1'>
-                <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={entry.picked <= 0} aria-label={t('decrease')} onClick={() => making.step(entry, -1)}>
-                  <Minus className='size-4' />
-                </Button>
-                <span className='type-body w-10 text-center font-semibold tabular-nums'>{entry.picked}</span>
-                <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={entry.picked >= entry.left} aria-label={t('increase')} onClick={() => making.step(entry, 1)}>
-                  <Plus className='size-4' />
-                </Button>
-              </span>
-            </li>
-          ))}
+          {making.lines.map((entry) => {
+            const picked = entry.picked > 0
+            const several = entry.left > 1 || !Number.isInteger(entry.left)
+            return (
+              <li key={entry.id} className={cn('flex min-h-16 items-center gap-2', picked && 'bg-accent')}>
+                <button
+                  type='button'
+                  role='checkbox'
+                  aria-checked={picked}
+                  disabled={making.pending}
+                  onClick={() => making.toggle(entry)}
+                  className='hover:bg-accent/60 flex min-h-16 min-w-0 flex-1 items-center gap-3 px-2 py-2 text-start'
+                >
+                  <span
+                    aria-hidden
+                    className={cn(
+                      'flex size-6 shrink-0 items-center justify-center rounded-md border',
+                      picked ? 'border-primary bg-primary text-primary-foreground' : 'border-muted-foreground/50',
+                    )}
+                  >
+                    {picked && <Check className='size-4' />}
+                  </span>
+                  <span className='min-w-0 flex-1'>
+                    <span className='type-body block truncate font-medium'>{localized(entry.line.description)}</span>
+                    <span className='text-muted-foreground type-detail block tabular-nums'>
+                      {t('leftToRefund', { count: entry.left })} · {money(entry.line.unitPrice)}
+                    </span>
+                  </span>
+                </button>
+                {picked && several && (
+                  <span className='flex shrink-0 items-center gap-1 pe-2'>
+                    <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={making.pending} aria-label={t('decrease')} onClick={() => making.step(entry, -1)}>
+                      <Minus className='size-4' />
+                    </Button>
+                    <span className='type-body w-10 text-center font-semibold tabular-nums'>{entry.picked}</span>
+                    <Button variant='outline' size='icon' className='size-11 rounded-full' disabled={making.pending || entry.picked >= entry.left} aria-label={t('increase')} onClick={() => making.step(entry, 1)}>
+                      <Plus className='size-4' />
+                    </Button>
+                  </span>
+                )}
+              </li>
+            )
+          })}
         </ul>
       )}
 
