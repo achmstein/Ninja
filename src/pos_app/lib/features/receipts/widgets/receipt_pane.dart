@@ -7,10 +7,13 @@ import 'package:uuid/uuid.dart';
 import '../../../core/auth/auth_service.dart';
 import '../../../core/brand/brand_provider.dart';
 import '../../../core/models/dates.dart';
+import '../../../core/models/friendly_day.dart';
 import '../../../core/models/money.dart';
 import '../../../core/network/api_errors.dart';
 import '../../../core/printing/print_service.dart';
+import '../../../core/services/branch_names.dart';
 import '../../../core/theme/type_roles.dart';
+import '../../../core/utils/bidi.dart';
 import '../../../core/widgets/count_column.dart';
 import '../../../core/widgets/pos_toast.dart';
 import '../../../core/widgets/skeleton.dart';
@@ -26,12 +29,14 @@ import '../../tickets/providers/tickets_provider.dart';
 import '../../tickets/services/tickets_service.dart';
 
 /// One closed bill, worked on where it is picked: beside the receipts list.
-/// What was on it, what it came to, how it was paid and what went back since,
-/// across the whole width it is given. And what is done to a closed bill is
-/// done here: it is printed again, the way it was paid is put right, and an
-/// owner gives money back, the same pane turning to the refund and back. The
-/// bill's own page was three steps away for each. The web till's
-/// ReceiptPreview is the same.
+/// Its head says whose it is and, quietly, its number, when it closed and who
+/// closed it. Under the head one band holds the money: what it came to, once,
+/// and how it was paid, the way it was paid being a button that puts it right
+/// (Cash pressed, InstaPay sent). Then what was on it, and what went back
+/// since. Nothing is said twice: no second total, no list of payments
+/// repeating the amount. And what is done to a closed bill is done here: it
+/// is printed again, and an owner gives money back, the same pane turning to
+/// the refund and back. The web till's ReceiptPreview is the same.
 class ReceiptPane extends ConsumerStatefulWidget {
   final int ticketId;
 
@@ -179,58 +184,57 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
     final ready =
         preview > 0 && _reason.text.trim().isNotEmpty && (_tender == PaymentTender.cash || holder != null) && !_pending;
 
+    final takenBy = (ticket.takenBy ?? '').isNotEmpty && ticket.takenAtBranchId != null
+        ? l10n.takenByAt(
+            ticket.takenBy!, branchNameOf(ref.watch(allBranchesProvider).value, ticket.takenAtBranchId, context))
+        : null;
     final meta = [
-      if (ticket.settledAt != null) formatDateTime(context, ticket.settledAt!),
-      if ((ticket.settledBy ?? '').isNotEmpty) '${l10n.closedBy} ${ticket.settledBy}',
+      number == null ? l10n.ticketNumber(ticket.id) : l10n.receiptNumber(number),
+      if (ticket.settledAt != null) _when(context, ticket.settledAt!),
+      if ((ticket.settledBy ?? '').isNotEmpty) bidiIsolate(ticket.settledBy!),
+      ?takenBy,
     ].join(' · ');
 
-    // As tall as the list's head beside it (8 + 48 + 8), so the two rules under them meet in one line
+    // As tall as the list's head beside it (8 + 48 + 8) while the name fits one line, so the two rules under them meet
     final head = Container(
+      constraints: const BoxConstraints(minHeight: Sizes.header + 1),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(border: Border(bottom: rule)),
       child: Row(
-        children: [
-          Expanded(
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.baseline,
-              textBaseline: TextBaseline.alphabetic,
-              children: [
-                Text(
-                  _refunding
-                      ? l10n.refundTitle(number ?? 0)
-                      : (number == null ? l10n.receipts : l10n.receiptNumber(number)),
-                  maxLines: 1,
-                  style: theme.type.title.copyWith(fontFeatures: tabular),
-                ),
-                const SizedBox(width: 8),
-                Flexible(
-                  child: Text(widget.title,
+        children: _refunding
+            ? [
+                Expanded(
+                  child: Text(l10n.refundTitle(number ?? 0),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: theme.type.title.copyWith(fontWeight: FontWeight.w400, color: theme.colors.mutedForeground)),
+                      style: theme.type.title.copyWith(fontFeatures: tabular)),
+                ),
+                const SizedBox(width: 12),
+                SizedBox.square(
+                  dimension: Sizes.control,
+                  child: Semantics(
+                    label: l10n.cancel,
+                    child: FButton.icon(
+                      variant: FButtonVariant.ghost,
+                      onPress: _pending ? null : _leave,
+                      child: const Icon(FIcons.x, size: Sizes.iconNav),
+                    ),
+                  ),
+                ),
+              ]
+            : [
+                Expanded(
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      // Whose it is, whole: a long name wraps, it is never cut
+                      Text(billTitleText(widget.title), style: theme.type.title),
+                      Text(meta, style: muted.copyWith(fontFeatures: tabular)),
+                    ],
+                  ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(width: 12),
-          if (_refunding)
-            SizedBox.square(
-              dimension: Sizes.control,
-              child: Semantics(
-                label: l10n.cancel,
-                child: FButton.icon(
-                  variant: FButtonVariant.ghost,
-                  onPress: _pending ? null : _leave,
-                  child: const Icon(FIcons.x, size: Sizes.iconNav),
-                ),
-              ),
-            )
-          else ...[
-            Flexible(child: Text(meta, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted.copyWith(fontFeatures: tabular))),
-            // The head keeps its height with no button in it
-            const SizedBox(height: Sizes.control),
-          ],
-        ],
       ),
     );
 
@@ -238,6 +242,7 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         head,
+        if (!_refunding) _band(context, ticket, rule),
         // Across the whole width the pane is given: a receipt held to a column left the rest of a wide screen empty
         Expanded(
           child: SingleChildScrollView(
@@ -338,8 +343,6 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
     final countWidth =
         countColumnWidth(context, [for (final line in ticket.lines) '${_qty(line.qty)}×'], countStyle, min: 32) + 8;
     final hasBreakdown = ticket.discount > 0 || ticket.serviceCharge > 0 || ticket.vat > 0;
-    final paid = ticket.payments.fold<double>(0, (sum, p) => sum + p.amount);
-    final change = paid - ticket.total > 0 ? paid - ticket.total : 0.0;
 
     Widget sum(String label, String value, {TextStyle? style}) => Padding(
           padding: const EdgeInsets.symmetric(vertical: 2),
@@ -382,7 +385,8 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
                               style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
                           if (details.isNotEmpty) Text(details, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
                           if ((line.customerName ?? '').isNotEmpty)
-                            Text(line.customerName!, maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                            Text(bidiIsolate(line.customerName!), maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                          if (line.discount > 0) Text('${l10n.discount} −${money(context, line.discount)}', style: muted),
                         ],
                       ),
                     ),
@@ -413,123 +417,154 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
         }),
       ],
       divider,
-      const SizedBox(height: 12),
+      // How the total was made up, only when a discount, service or VAT is in it: the total itself is in the band above
+      if (hasBreakdown || (ticket.vat > 0 && ticket.vatIncluded)) const SizedBox(height: 12),
       if (hasBreakdown) ...[
         sum(l10n.subtotal, money(context, ticket.subtotal)),
         if (ticket.discount > 0) sum(l10n.discount, '−${money(context, ticket.discount)}'),
         if (ticket.serviceCharge > 0) sum(l10n.serviceCharge(rateText(ticket.serviceChargeRate)), money(context, ticket.serviceCharge)),
         if (ticket.vat > 0 && !ticket.vatIncluded) sum(l10n.vat(rateText(ticket.vatRate)), money(context, ticket.vat)),
       ],
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.baseline,
-        textBaseline: TextBaseline.alphabetic,
-        children: [
-          Expanded(child: Text(l10n.total, style: theme.type.body)),
-          Text(money(context, ticket.total), style: theme.type.figure),
-        ],
-      ),
       if (ticket.vat > 0 && ticket.vatIncluded) sum(l10n.vatIncluded(rateText(ticket.vatRate)), money(context, ticket.vat)),
-      if (ticket.refundedTotal > 0)
-        sum(l10n.refundedSoFar, '−${money(context, ticket.refundedTotal)}',
-            style: theme.type.body.copyWith(fontWeight: FontWeight.w500, color: theme.colors.destructive)),
 
-      // How it was paid; a Cash, Card or InstaPay payment recorded under the wrong one can be put
-      // right, until a refund leans on it
-      if (ticket.payments.isNotEmpty) ...[
-        _label(l10n.payments),
-        divider,
-        for (final payment in ticket.payments) ...[
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: Sizes.control),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 6),
-              child: Row(
+      // Credit notes: money that went back, each with its reason, behind a red rule
+      for (final refund in ticket.refunds)
+        Container(
+          margin: const EdgeInsets.only(top: 16),
+          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+          decoration: BoxDecoration(
+            color: theme.colors.destructive.withValues(alpha: 0.05),
+            border: BorderDirectional(start: BorderSide(color: theme.colors.destructive, width: 3)),
+          ),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Text(
+                        [l10n.creditNote(refund.number), if (refund.reason.isNotEmpty) bidiIsolate(refund.reason)].join(' · '),
+                        style: theme.type.body.copyWith(fontWeight: FontWeight.w500, fontFeatures: tabular)),
+                  ),
+                  const SizedBox(width: 16),
+                  Text('−${money(context, refund.amount)}',
+                      style: theme.type.body.copyWith(
+                          fontWeight: FontWeight.w600, color: theme.colors.destructive, fontFeatures: tabular)),
+                ],
+              ),
+              Text(
+                  [
+                    refund.tender == PaymentTender.account ? l10n.account : l10n.cash,
+                    if ((refund.customerName ?? '').isNotEmpty) bidiIsolate(refund.customerName!),
+                    if (refund.refundedBy.isNotEmpty) bidiIsolate(refund.refundedBy),
+                    if (refund.refundedAt != null) _when(context, refund.refundedAt!),
+                  ].join(' · '),
+                  style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+            ],
+          ),
+        ),
+    ];
+  }
+
+  /// The day in words and the time: "Today 1:25 AM", never a full date on every line
+  static String _when(BuildContext context, DateTime at) => '${friendlyDay(context, at)} ${formatTime(context, at)}';
+
+  /// The money, once: what it came to, and how it was paid. One payment says
+  /// only its way; several say who and how much each
+  Widget _band(BuildContext context, TicketDetail ticket, BorderSide rule) {
+    final theme = context.theme;
+    final l10n = AppLocalizations.of(context)!;
+    const tabular = [FontFeature.tabularFigures()];
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground);
+    final payments = ticket.payments;
+    final single = payments.length == 1;
+    final paid = payments.fold<double>(0, (sum, p) => sum + p.amount);
+    final change = paid - ticket.total > 0 ? paid - ticket.total : 0.0;
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: theme.colors.muted.withValues(alpha: 0.4),
+        border: Border(bottom: rule),
+      ),
+      child: Row(
+        children: [
+          Expanded(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                TypeLabel(l10n.total),
+                Text(money(context, ticket.total), style: theme.type.figure),
+                if (ticket.refundedTotal > 0)
+                  Text('${l10n.refundedSoFar} −${money(context, ticket.refundedTotal)}',
+                      style: theme.type.detail.copyWith(
+                          fontWeight: FontWeight.w600, color: theme.colors.destructive, fontFeatures: tabular)),
+              ],
+            ),
+          ),
+          if (payments.isNotEmpty) ...[
+            const SizedBox(width: 16),
+            ConstrainedBox(
+              constraints: const BoxConstraints(minWidth: 256, maxWidth: 360),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.end,
+                children: [
+                  for (final (index, payment) in payments.indexed) ...[
+                    if (index > 0) const SizedBox(height: 6),
+                    Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                            [tenderLabel(l10n, payment.tender), if ((payment.customerName ?? '').isNotEmpty) payment.customerName!]
-                                .join(' · '),
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
-                        if (payment.tenderChangedFrom != null)
-                          Text(
-                              l10n.tenderChangedFrom(
-                                tenderLabel(l10n, payment.tenderChangedFrom!),
-                                payment.tenderChangedBy ?? '',
-                                payment.tenderChangedAt == null ? '' : formatDateTimeShort(context, payment.tenderChangedAt!),
+                        Flexible(
+                          child: Text(single ? l10n.paidTag : bidiIsolate(payment.customerName ?? ''),
+                              maxLines: 1, overflow: TextOverflow.ellipsis, style: muted),
+                        ),
+                        const SizedBox(width: 12),
+                        if (!single) ...[
+                          Text(money(context, payment.amount),
+                              style: theme.type.body.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
+                          const SizedBox(width: 12),
+                        ],
+                        // A cash, card or InstaPay payment can be put right, until money has gone back against the bill
+                        if (!ticket.isVoided && ticket.refunds.isEmpty && payment.canChangeTender)
+                          SizedBox(
+                            height: 44,
+                            child: Semantics(
+                              label: '${tenderLabel(l10n, payment.tender)}: ${l10n.changeTenderAction}',
+                              excludeSemantics: true,
+                              child: FButton(
+                                variant: FButtonVariant.outline,
+                                mainAxisSize: MainAxisSize.min,
+                                onPress: () => showChangeTenderDialog(context, ticket, payment),
+                                suffix: Icon(FIcons.chevronDown, size: Sizes.iconSmall, color: theme.colors.mutedForeground),
+                                child: Text(tenderLabel(l10n, payment.tender),
+                                    style: theme.type.button.copyWith(fontWeight: FontWeight.w600)),
                               ),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
+                            ),
+                          )
+                        else
+                          Text(tenderLabel(l10n, payment.tender),
+                              style: theme.type.body.copyWith(fontWeight: FontWeight.w600)),
                       ],
                     ),
-                  ),
-                  const SizedBox(width: 12),
-                  Text(money(context, payment.amount),
-                      style: theme.type.body.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
-                  if (!ticket.isVoided && ticket.refunds.isEmpty && payment.canChangeTender) ...[
-                    const SizedBox(width: 12),
-                    SizedBox(
-                      height: Sizes.controlSmall,
-                      child: FButton(
-                        variant: FButtonVariant.outline,
-                        mainAxisSize: MainAxisSize.min,
-                        onPress: () => showChangeTenderDialog(context, ticket, payment),
-                        child: Text(l10n.changeTenderAction, style: theme.type.buttonSmall),
-                      ),
-                    ),
+                    // Who changed it and when is the back office's to read; here, only that it was changed
+                    if (payment.tenderChangedFrom != null)
+                      Text(l10n.tenderWas(tenderLabel(l10n, payment.tenderChangedFrom!)),
+                          style: theme.type.caption.copyWith(color: theme.colors.mutedForeground)),
+                  ],
+                  if (change > 0) ...[
+                    const SizedBox(height: 6),
+                    Text('${l10n.changeDue} ${money(context, change)}', style: muted.copyWith(fontFeatures: tabular)),
                   ],
                 ],
               ),
             ),
-          ),
-          divider,
+          ],
         ],
-        if (change > 0) sum(l10n.changeDue, money(context, change)),
-      ],
-
-      // Credit notes: money that went back, each with its reason
-      if (ticket.refunds.isNotEmpty) ...[
-        _label(l10n.refundsTitle),
-        divider,
-        for (final refund in ticket.refunds) ...[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(l10n.creditNote(refund.number),
-                          style: theme.type.body.copyWith(fontWeight: FontWeight.w500, fontFeatures: tabular)),
-                    ),
-                    Text('−${money(context, refund.amount)}',
-                        style: theme.type.body.copyWith(
-                            fontWeight: FontWeight.w600, color: theme.colors.destructive, fontFeatures: tabular)),
-                  ],
-                ),
-                if (refund.reason.isNotEmpty) Text(refund.reason, style: theme.type.detail),
-                Text(
-                    [
-                      refund.tender == PaymentTender.account ? l10n.account : l10n.cash,
-                      if ((refund.customerName ?? '').isNotEmpty) refund.customerName!,
-                      if (refund.refundedBy.isNotEmpty) refund.refundedBy,
-                      if (refund.refundedAt != null) formatDateTimeShort(context, refund.refundedAt!),
-                    ].join(' · '),
-                    style: theme.type.caption.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
-              ],
-            ),
-          ),
-          divider,
-        ],
-      ],
-    ];
+      ),
+    );
   }
 
   List<Widget> _refundBody(BuildContext context, TicketDetail ticket, List<RefundEntry> entries,
@@ -589,59 +624,94 @@ class _ReceiptPaneState extends ConsumerState<ReceiptPane> {
           child: Text(l10n.nothingLeftToRefund, textAlign: TextAlign.center, style: muted),
         )
       else
+        // Picked as lines are picked on an order: a tap ticks the row, and all that is left of it
+        // comes back. A row with more than one shows its count once ticked, to give back fewer
         for (final entry in entries) ...[
-          ConstrainedBox(
-            constraints: const BoxConstraints(minHeight: 64),
-            child: Padding(
-              padding: const EdgeInsets.symmetric(vertical: 8),
+          Builder(builder: (context) {
+            final count = _picked[entry.line.id] ?? 0;
+            final picked = count > 0;
+            final several = entry.left > 1 || entry.left != entry.left.roundToDouble();
+            void set(double value) => setState(() => _picked[entry.line.id] = value.clamp(0, entry.left).toDouble());
+            return Container(
+              constraints: const BoxConstraints(minHeight: 64),
+              color: picked ? theme.colors.secondary : null,
               child: Row(
                 children: [
                   Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(entry.line.description?.localized(context) ?? '',
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                            style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
-                        Text('${l10n.leftToRefund(entry.left.round())} · ${money(context, entry.line.unitPrice)}',
-                            style: muted.copyWith(fontFeatures: tabular)),
-                      ],
+                    child: Semantics(
+                      checked: picked,
+                      child: FTappable(
+                        onPress: _pending ? null : () => set(picked ? 0 : entry.left),
+                        child: Padding(
+                          padding: const EdgeInsets.all(8),
+                          child: Row(
+                            children: [
+                              Container(
+                                width: 24,
+                                height: 24,
+                                decoration: BoxDecoration(
+                                  color: picked ? theme.colors.primary : null,
+                                  borderRadius: BorderRadius.circular(6),
+                                  border: Border.all(
+                                    color: picked
+                                        ? theme.colors.primary
+                                        : theme.colors.mutedForeground.withValues(alpha: 0.5),
+                                  ),
+                                ),
+                                child: picked
+                                    ? Icon(FIcons.check, size: Sizes.iconSmall, color: theme.colors.primaryForeground)
+                                    : null,
+                              ),
+                              const SizedBox(width: 12),
+                              Expanded(
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(entry.line.description?.localized(context) ?? '',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
+                                    Text(
+                                        '${l10n.leftToRefund(entry.left.round())} · ${money(context, entry.line.unitPrice)}',
+                                        style: muted.copyWith(fontFeatures: tabular)),
+                                  ],
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
                     ),
                   ),
-                  const SizedBox(width: 12),
-                  SizedBox.square(
-                    dimension: Sizes.controlSmall,
-                    child: FButton.icon(
-                      variant: FButtonVariant.outline,
-                      onPress: (_picked[entry.line.id] ?? 0) <= 0
-                          ? null
-                          : () => setState(() => _picked[entry.line.id] =
-                              ((_picked[entry.line.id] ?? 0) - refundStep(entry)).clamp(0, entry.left).toDouble()),
-                      child: const Icon(FIcons.minus, size: Sizes.iconSmall),
+                  if (picked && several) ...[
+                    SizedBox.square(
+                      dimension: 44,
+                      child: FButton.icon(
+                        variant: FButtonVariant.outline,
+                        onPress: _pending ? null : () => set(count - refundStep(entry)),
+                        child: const Icon(FIcons.minus, size: Sizes.iconSmall),
+                      ),
                     ),
-                  ),
-                  SizedBox(
-                    width: 44,
-                    child: Text(_qty(_picked[entry.line.id] ?? 0),
-                        textAlign: TextAlign.center, style: theme.type.heading.copyWith(fontFeatures: tabular)),
-                  ),
-                  SizedBox.square(
-                    dimension: Sizes.controlSmall,
-                    child: FButton.icon(
-                      variant: FButtonVariant.outline,
-                      onPress: (_picked[entry.line.id] ?? 0) >= entry.left
-                          ? null
-                          : () => setState(() => _picked[entry.line.id] =
-                              ((_picked[entry.line.id] ?? 0) + refundStep(entry)).clamp(0, entry.left).toDouble()),
-                      child: const Icon(FIcons.plus, size: Sizes.iconSmall),
+                    SizedBox(
+                      width: 44,
+                      child: Text(_qty(count),
+                          textAlign: TextAlign.center, style: theme.type.body.copyWith(fontWeight: FontWeight.w600, fontFeatures: tabular)),
                     ),
-                  ),
+                    SizedBox.square(
+                      dimension: 44,
+                      child: FButton.icon(
+                        variant: FButtonVariant.outline,
+                        onPress: _pending || count >= entry.left ? null : () => set(count + refundStep(entry)),
+                        child: const Icon(FIcons.plus, size: Sizes.iconSmall),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
                 ],
               ),
-            ),
-          ),
+            );
+          }),
           divider,
         ],
 

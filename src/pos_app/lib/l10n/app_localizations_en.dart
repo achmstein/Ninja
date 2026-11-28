@@ -3059,4 +3059,15 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get couldNotOpenWhatsApp => 'Couldn\'t open WhatsApp';
+
+  @override
+  String get today => 'Today';
+
+  @override
+  String get yesterday => 'Yesterday';
+
+  @override
+  String tenderWas(String from) {
+    return 'Was $from';
+  }
 }

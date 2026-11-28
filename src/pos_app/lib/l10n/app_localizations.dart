@@ -5257,6 +5257,24 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Couldn\'t open WhatsApp'**
   String get couldNotOpenWhatsApp;
+
+  /// No description provided for @today.
+  ///
+  /// In en, this message translates to:
+  /// **'Today'**
+  String get today;
+
+  /// No description provided for @yesterday.
+  ///
+  /// In en, this message translates to:
+  /// **'Yesterday'**
+  String get yesterday;
+
+  /// No description provided for @tenderWas.
+  ///
+  /// In en, this message translates to:
+  /// **'Was {from}'**
+  String tenderWas(String from);
 }
 
 class _AppLocalizationsDelegate

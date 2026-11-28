@@ -27,3 +27,18 @@ TextDirection textDirectionFor(String text) => Bidi.startsWithRtl(text) ? TextDi
 /// card is the far side from the icon; this pins it back.
 TextAlign textAlignFor(BuildContext context) =>
     Directionality.of(context) == TextDirection.rtl ? TextAlign.right : TextAlign.left;
+
+final _deliveryLabel = RegExp(r'^#(\d+)(?:\s·\s?(.*))?$');
+
+/// A bill's title as one line in the till's own direction. A delivery's
+/// "#42 · Mona" is laid out in its parts: the number with its sign as the
+/// till's language reads it, and the name isolated, so a Latin name never
+/// pulls "#42" into its left-to-right run (in Arabic that put the sign after
+/// the number). Any other title is isolated in its own script. pos_web's
+/// BillTitle is the same.
+String billTitleText(String title) {
+  final match = _deliveryLabel.firstMatch(title.trim());
+  if (match == null) return bidiIsolate(title);
+  final name = (match.group(2) ?? '').trim();
+  return name.isEmpty ? hashNumber(match.group(1)!) : '${hashNumber(match.group(1)!)} · ${bidiIsolate(name)}';
+}

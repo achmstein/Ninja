@@ -3070,4 +3070,15 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get couldNotOpenWhatsApp => 'تعذّر فتح واتساب';
+
+  @override
+  String get today => 'اليوم';
+
+  @override
+  String get yesterday => 'أمس';
+
+  @override
+  String tenderWas(String from) {
+    return 'كانت $from';
+  }
 }

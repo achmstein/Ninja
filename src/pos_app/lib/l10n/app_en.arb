@@ -1341,5 +1341,9 @@
   "deliveryShareReceived": "Location received from the customer",
   "deliveryShareExpired": "The link expired before they shared. Send a new one.",
   "deliveryShareFailed": "Couldn't make the link. Try again.",
-  "couldNotOpenWhatsApp": "Couldn't open WhatsApp"
+  "couldNotOpenWhatsApp": "Couldn't open WhatsApp",
+  "today": "Today",
+  "yesterday": "Yesterday",
+  "tenderWas": "Was {from}",
+  "@tenderWas": { "placeholders": { "from": { "type": "String" } } }
 }

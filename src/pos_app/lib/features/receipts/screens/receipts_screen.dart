@@ -6,13 +6,14 @@ import 'package:forui/forui.dart';
 import 'package:go_router/go_router.dart';
 import '../../../core/widgets/skeleton.dart';
 import '../../../core/models/dates.dart';
+import '../../../core/models/friendly_day.dart';
 import 'package:ninja_app_core/models/localized_text.dart';
 import '../../../core/models/money.dart';
 import '../../../core/utils/bidi.dart';
 import 'package:ninja_app_core/providers/branch_provider.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../../l10n/app_localizations.dart';
-import '../../floor/widgets/bill_card.dart' show ticketTypeIcon, ticketTypeLabel;
+import '../../floor/widgets/bill_card.dart' show ticketTypeLabel;
 import '../../receipt/receipt_preview_dialog.dart';
 import '../widgets/receipt_pane.dart';
 import '../../tickets/models/settled_ticket_summary.dart';
@@ -25,33 +26,31 @@ const _searchDebounce = Duration(milliseconds: 250);
 /// The bills that have closed, newest receipt first — the way back to one
 /// after it left the floor, to reprint it or issue a credit note against
 /// it. Typing a receipt number finds that one; otherwise the recent ones
-/// show, a page at a time as the cashier scrolls. `/settled` has no total
-/// count, so a full page means "maybe more" and a short page is the end.
+/// show, a page at a time as the cashier scrolls, under the day they closed
+/// on (Today, Yesterday, then the day by name), each with its name first and
+/// whole and its time alone. `/settled` has no total count, so a full page
+/// means "maybe more" and a short page is the end.
 ///
 /// On a wide screen a receipt is read where it is picked, as on the web till:
 /// the list keeps its place and the receipt shows beside it (the newest to
 /// begin with). Looking for one bill among a night's meant opening each in a
 /// pop-up and closing it again. A narrow screen still opens it over the list.
-// A receipt row's shape: the number, the type icon, then the place and meta.
+// A receipt row's shape: the name over its number and time, and the total.
 Widget _receiptRowSkeleton(BuildContext context) {
   return SizedBox(
     height: Sizes.header,
     child: Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 12),
+      padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Row(
         children: [
-          SizedBox(width: 44, child: skeletonBar(context, widthFactor: 1, height: 14)),
-          const SizedBox(width: 12),
-          skeletonBox(context, width: 20, height: 20),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                skeletonBar(context, widthFactor: 0.5, height: 13),
+                skeletonBar(context, widthFactor: 0.5, height: 14),
                 const SizedBox(height: 8),
-                skeletonBar(context, widthFactor: 0.35, height: 11),
+                skeletonBar(context, widthFactor: 0.33, height: 11),
               ],
             ),
           ),
@@ -156,6 +155,19 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
     }
   }
 
+  /// The receipts in runs of one day each, in the order they came (newest first)
+  static List<List<SettledTicketSummary>> _days(List<SettledTicketSummary> bills) {
+    final days = <List<SettledTicketSummary>>[];
+    int? last;
+    for (final bill in bills) {
+      final key = bill.settledAt == null ? null : dayKey(bill.settledAt!);
+      if (days.isEmpty || key != last) days.add([]);
+      days.last.add(bill);
+      last = key;
+    }
+    return days;
+  }
+
   static String _titleOf(BuildContext context, AppLocalizations l10n, SettledTicketSummary bill) {
     final placeName = bill.locationName?.localized(context) ?? '';
     return placeName.isNotEmpty ? placeName : (bill.label ?? ticketTypeLabel(l10n, bill.type));
@@ -222,12 +234,9 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
               if (_hasMore && !_loading && notification.metrics.extentAfter < 200) _load();
               return false;
             },
-            child: SingleChildScrollView(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  if (bills == null)
-                    Skeleton(
+            child: bills == null
+                ? SingleChildScrollView(
+                    child: Skeleton(
                       child: Column(
                         children: [
                           for (var i = 0; i < 8; i++) ...[
@@ -236,38 +245,55 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
                           ],
                         ],
                       ),
-                    )
-                  else if (bills.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 16),
-                      child: Text(_failed ? l10n.somethingWentWrong : l10n.noReceipts,
-                          textAlign: TextAlign.center,
-                          style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
-                    )
-                  else
-                    for (final bill in bills) ...[
-                      _ReceiptRow(
-                        bill: bill,
-                        reading: wide && bill.id == shown?.id,
-                        opensOver: !wide,
-                        onTap: wide
-                            ? () => setState(() => _pickedId = bill.id)
-                            : () => showReceiptPreview(context, bill.id),
-                      ),
-                      Container(height: 1, color: theme.colors.border),
-                    ],
-                  if (_hasMore)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 16),
-                      child: Center(
-                        child: _loading
-                            ? const SizedBox.square(dimension: 24, child: CircularProgressIndicator(strokeWidth: 2))
-                            : const SizedBox(height: 24),
-                      ),
                     ),
-                ],
-              ),
-            ),
+                  )
+                : bills.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 64, horizontal: 16),
+                        child: Text(_failed ? l10n.somethingWentWrong : l10n.noReceipts,
+                            textAlign: TextAlign.center,
+                            style: theme.type.body.copyWith(color: theme.colors.mutedForeground)),
+                      )
+                    : CustomScrollView(
+                        slivers: [
+                          // The day is said once, over the receipts of it, and stays in sight while they pass
+                          for (final day in _days(bills))
+                            SliverMainAxisGroup(
+                              slivers: [
+                                if (day.first.settledAt != null)
+                                  SliverPersistentHeader(
+                                    pinned: true,
+                                    delegate: _DayHeading(friendlyDay(context, day.first.settledAt!), theme),
+                                  ),
+                                SliverList.list(
+                                  children: [
+                                    for (final bill in day)
+                                      _ReceiptRow(
+                                        bill: bill,
+                                        reading: wide && bill.id == shown?.id,
+                                        opensOver: !wide,
+                                        onTap: wide
+                                            ? () => setState(() => _pickedId = bill.id)
+                                            : () => showReceiptPreview(context, bill.id),
+                                      ),
+                                  ],
+                                ),
+                              ],
+                            ),
+                          if (_hasMore)
+                            SliverToBoxAdapter(
+                              child: Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                child: Center(
+                                  child: _loading
+                                      ? const SizedBox.square(
+                                          dimension: 24, child: CircularProgressIndicator(strokeWidth: 2))
+                                      : const SizedBox(height: 24),
+                                ),
+                              ),
+                            ),
+                        ],
+                      ),
           ),
         ),
       ],
@@ -308,6 +334,39 @@ class _ReceiptsScreenState extends ConsumerState<ReceiptsScreen> {
   }
 }
 
+/// The day over its receipts: a quiet band that stays at the top of the list while they pass
+class _DayHeading extends SliverPersistentHeaderDelegate {
+  final String day;
+  final FThemeData theme;
+
+  const _DayHeading(this.day, this.theme);
+
+  static const double _height = 36;
+
+  @override
+  double get minExtent => _height;
+
+  @override
+  double get maxExtent => _height;
+
+  @override
+  Widget build(BuildContext context, double shrinkOffset, bool overlapsContent) {
+    return Container(
+      height: _height,
+      alignment: AlignmentDirectional.bottomStart,
+      padding: const EdgeInsetsDirectional.only(start: 16, end: 16, bottom: 4),
+      decoration: BoxDecoration(
+        color: theme.colors.muted,
+        border: Border(bottom: BorderSide(color: theme.colors.border)),
+      ),
+      child: TypeLabel(day),
+    );
+  }
+
+  @override
+  bool shouldRebuild(_DayHeading oldDelegate) => oldDelegate.day != day || oldDelegate.theme != theme;
+}
+
 class _ReceiptRow extends StatelessWidget {
   final SettledTicketSummary bill;
   final VoidCallback onTap;
@@ -327,16 +386,17 @@ class _ReceiptRow extends StatelessWidget {
     const tabular = [FontFeature.tabularFigures()];
     final placeName = bill.locationName?.localized(context) ?? '';
     final title = placeName.isNotEmpty ? placeName : (bill.label ?? ticketTypeLabel(l10n, bill.type));
+    final muted = theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular);
     final meta = [
-      if (bill.settledAt != null) formatDateTime(context, bill.settledAt!),
-      if (bill.refundedTotal > 0) '${l10n.refundedSoFar} −${money(context, bill.refundedTotal)}',
+      hashNumber(bill.receiptNumber),
+      if (bill.settledAt != null) formatTime(context, bill.settledAt!),
     ].join(' · ');
 
     return FTappable(
       onPress: onTap,
       builder: (context, states, child) => Container(
-        height: Sizes.header,
-        padding: const EdgeInsetsDirectional.only(start: 13, end: 16),
+        constraints: const BoxConstraints(minHeight: Sizes.header),
+        padding: const EdgeInsetsDirectional.only(start: 13, end: 16, top: 8, bottom: 8),
         // The one being read: tinted, and marked down its start edge
         decoration: BoxDecoration(
           color: reading
@@ -346,38 +406,38 @@ class _ReceiptRow extends StatelessWidget {
                   : null,
           border: BorderDirectional(
             start: BorderSide(color: reading ? theme.colors.primary : Colors.transparent, width: 3),
+            bottom: BorderSide(color: theme.colors.border),
           ),
         ),
         child: child,
       ),
       child: Row(
         children: [
-          SizedBox(
-            width: 56,
-            child: Text(hashNumber(bill.receiptNumber),
-                style: theme.type.heading.copyWith(fontFeatures: tabular)),
-          ),
-          Icon(ticketTypeIcon(bill.type), size: Sizes.icon, color: theme.colors.mutedForeground),
-          const SizedBox(width: 12),
           Expanded(
             child: Column(
               mainAxisSize: MainAxisSize.min,
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.type.body.copyWith(fontWeight: FontWeight.w500)),
-                Text(meta,
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                    style: theme.type.detail.copyWith(color: theme.colors.mutedForeground, fontFeatures: tabular)),
+                // The name first and whole: it wraps, it is never cut
+                Text(billTitleText(title), style: theme.type.heading),
+                Text.rich(
+                  TextSpan(
+                    text: meta,
+                    children: [
+                      if (bill.refundedTotal > 0)
+                        TextSpan(
+                          text: ' · ${l10n.refundedSoFar} −${money(context, bill.refundedTotal)}',
+                          style: TextStyle(color: theme.colors.destructive),
+                        ),
+                    ],
+                  ),
+                  style: muted,
+                ),
               ],
             ),
           ),
           const SizedBox(width: 12),
-          Text(money(context, bill.total),
-              style: theme.type.heading.copyWith(fontFeatures: tabular)),
+          Text(money(context, bill.total), style: theme.type.heading.copyWith(fontFeatures: tabular)),
           if (opensOver) ...[
             const SizedBox(width: 8),
             Icon(FIcons.chevronRight, size: Sizes.icon, color: theme.colors.mutedForeground),

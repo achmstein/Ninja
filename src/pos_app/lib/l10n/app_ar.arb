@@ -1197,5 +1197,8 @@
   "deliveryShareReceived": "وصل موقع العميل",
   "deliveryShareExpired": "اللينك انتهى قبل ما يشارك. ابعت لينك جديد.",
   "deliveryShareFailed": "تعذّر عمل اللينك. حاول تاني.",
-  "couldNotOpenWhatsApp": "تعذّر فتح واتساب"
+  "couldNotOpenWhatsApp": "تعذّر فتح واتساب",
+  "today": "اليوم",
+  "yesterday": "أمس",
+  "tenderWas": "كانت {from}"
 }

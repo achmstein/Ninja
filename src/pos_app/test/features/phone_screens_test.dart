@@ -173,7 +173,8 @@ void main() {
       expectFits(tester);
       await tester.pumpAndSettle();
       expectFits(tester);
-      await toTheFoot(tester);
+      await tester.drag(find.byType(CustomScrollView).first, const Offset(0, -3000));
+      await tester.pumpAndSettle();
       expectFits(tester);
     });
 
@@ -198,7 +199,7 @@ void main() {
       final pane = find.byType(ReceiptPane);
       Finder inPane(Finder what) => find.descendant(of: pane, matching: what);
       expect(pane, findsOneWidget);
-      expect(inPane(find.text(l10n.receiptNumber(120481))), findsOneWidget);
+      expect(inPane(find.textContaining(l10n.receiptNumber(120481))), findsOneWidget);
       expect(inPane(find.text('Latte')), findsOneWidget);
       expect(inPane(find.widgetWithText(FButton, l10n.print)), findsOneWidget);
       expect(inPane(find.widgetWithText(FButton, l10n.refundTicket)), findsOneWidget);
@@ -208,14 +209,14 @@ void main() {
       expect(list, inInclusiveRange(320, 448));
       expect(locale.languageCode == 'ar' ? rect.left : rect.right, locale.languageCode == 'ar' ? 0 : 1280);
       // Its lines run the pane's width: the amount sits at the pane's far edge, not in a column held to the middle
-      final amount = tester.getRect(inPane(find.text(money(tester.element(pane), 120))).first);
+      final amount = tester.getRect(inPane(find.text(money(tester.element(pane), 120))).last);
       expect(locale.languageCode == 'ar' ? amount.left - rect.left : rect.right - amount.right, lessThanOrEqualTo(24));
 
       // Another receipt is a tap on the list: it shows in the same place, the list staying where it was
-      await tester.tap(find.text(hashNumber(120479)));
+      await tester.tap(find.textContaining(hashNumber(120479), findRichText: true));
       await tester.pumpAndSettle();
       expectFits(tester);
-      expect(inPane(find.text(l10n.receiptNumber(120479))), findsOneWidget);
+      expect(inPane(find.textContaining(l10n.receiptNumber(120479))), findsOneWidget);
 
       // A refund is made where the receipt is read: the pane turns to it, and back once it is made
       await tester.tap(inPane(find.widgetWithText(FButton, l10n.refundTicket)));
@@ -225,7 +226,10 @@ void main() {
       // Nothing picked and no reason yet: nothing to give back
       Finder confirm() => inPane(find.widgetWithText(FButton, l10n.refundTicket));
       expect(tester.widget<FButton>(confirm()).onPress, isNull);
-      await tester.tap(inPane(find.byIcon(FIcons.plus)).first);
+      // A tap ticks the line and all that is left of it comes back; the count gives back fewer
+      await tester.tap(inPane(find.text('Latte')));
+      await tester.pump();
+      await tester.tap(inPane(find.byIcon(FIcons.minus)).first);
       await tester.pump();
       expect(tester.widget<FButton>(confirm()).onPress, isNull, reason: 'a reason is the audit trail');
       await tester.tap(inPane(find.widgetWithText(FButton, l10n.refundReasonWrongOrder)));
@@ -239,7 +243,7 @@ void main() {
       expect(tickets.refunded.single.request.reason, l10n.refundReasonWrongOrder);
       expect(tickets.refunded.single.request.lines.single.qty, 1);
       // Back on the receipt, the list where it was
-      expect(inPane(find.text(l10n.receiptNumber(120479))), findsOneWidget);
+      expect(inPane(find.textContaining(l10n.receiptNumber(120479))), findsOneWidget);
       expect(find.byType(ReceiptsScreen), findsOneWidget);
 
       await tester.pumpWidget(const SizedBox.shrink());
