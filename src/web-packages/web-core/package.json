@@ -8,6 +8,7 @@
     "./branch-claim": "./src/branch-claim.ts",
     "./brand-fonts": "./src/brand-fonts.ts",
     "./cookies": "./src/cookies.ts",
+    "./oidc": "./src/oidc.ts",
     "./push": "./src/push.ts",
     "./session": "./src/session.tsx",
     "./sound": "./src/sound.ts",

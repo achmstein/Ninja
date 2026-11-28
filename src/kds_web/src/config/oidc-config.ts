@@ -1,100 +1,13 @@
-import { User, WebStorageStateStore } from 'oidc-client-ts'
-import type { AuthProviderNoUserManagerProps as AuthProviderProps } from 'react-oidc-context'
+import { createOidc } from '@ninja/web-core/oidc'
 
-// OIDC configuration for Keycloak
-// In development, VITE_KEYCLOAK_URL is injected by the Aspire AppHost;
-// production builds pin it to auth.chillax.site (see deploy-web.yml).
-const keycloakUrl = import.meta.env.VITE_KEYCLOAK_URL || 'http://localhost:8080'
-// A stamped tenant is told its realm by its API (brand.auth.authority); the
-// Chillax stack names its own in VITE_KEYCLOAK_REALM. The platform realm
-// is the last resort, never a tenant's.
-const realm = import.meta.env.VITE_KEYCLOAK_REALM || 'ninja'
-const kdsUrl = import.meta.env.VITE_KDS_URL || window.location.origin
+export { getBranchClaim, getRealmRoles, holdsAllBranches, isOwner, loginPageParams } from '@ninja/web-core/oidc'
 
-/**
- * The authority a provisioned stack was given (brand.auth.authority, cached
- * by brand.ts before the first render); the build's own setting otherwise.
- * Read lazily, after bootBrand(), so a first visit to a tenant already signs
- * in against its own realm.
- */
-function brandAuthority(): string | null {
-  try {
-    const raw = localStorage.getItem('ninja-brand')
-    const auth = raw ? (JSON.parse(raw) as { auth?: { authority?: string } }).auth : null
-    return auth?.authority || null
-  } catch {
-    return null
-  }
-}
+// The kitchen signs in against its business's realm, and reads orders and nothing else
+const oidc = createOidc({
+  clientId: 'kds-web',
+  appUrl: import.meta.env.VITE_KDS_URL || window.location.origin,
+  scope: 'openid profile email roles orders branches',
+  brandRealm: true,
+})
 
-export function getAuthority(): string {
-  return brandAuthority() ?? `${keycloakUrl}/realms/${realm}`
-}
-export const clientId = 'kds-web'
-
-export function getOidcConfig(): AuthProviderProps {
-  const authority = getAuthority()
-  return {
-    authority,
-    // Pin the endpoints instead of fetching the discovery document at
-    // runtime: a stale cached discovery response once sent the token
-    // request to a dead http endpoint (mixed-content blocked), and these
-    // are stable, path-derived Keycloak URLs anyway.
-    metadata: {
-      issuer: authority,
-      authorization_endpoint: `${authority}/protocol/openid-connect/auth`,
-      token_endpoint: `${authority}/protocol/openid-connect/token`,
-      userinfo_endpoint: `${authority}/protocol/openid-connect/userinfo`,
-      end_session_endpoint: `${authority}/protocol/openid-connect/logout`,
-      jwks_uri: `${authority}/protocol/openid-connect/certs`,
-      revocation_endpoint: `${authority}/protocol/openid-connect/revoke`,
-    },
-    client_id: clientId,
-    redirect_uri: `${kdsUrl}/auth/callback`,
-    post_logout_redirect_uri: `${kdsUrl}/signed-out`,
-    response_type: 'code',
-    // The kitchen reads orders and nothing else
-    scope: 'openid profile email roles orders branches',
-    // Renewed by SessionKeeper (session.tsx), one tab at a time
-    automaticSilentRenew: false,
-    loadUserInfo: true,
-    // localStorage (not the sessionStorage default) so sign-in survives new
-    // tabs and browser restarts; combined with silent renew and long Keycloak
-    // SSO sessions, a wall-mounted screen rarely sees the login page.
-    userStore: new WebStorageStateStore({ store: window.localStorage }),
-    onSigninCallback: () => {
-      // Remove the code and state from the URL after successful sign-in
-      window.history.replaceState({}, document.title, window.location.pathname)
-    },
-  }
-}
-
-// Reads the user that react-oidc-context persisted to local storage.
-// Needed by code living outside the React tree (e.g. the axios interceptor).
-export function getStoredUser(): User | null {
-  const stored = localStorage.getItem(`oidc.user:${getAuthority()}:${clientId}`)
-  return stored ? User.fromStorageString(stored) : null
-}
-
-export function getRealmRoles(user: User | null | undefined): string[] {
-  return (user?.profile?.realm_access as { roles?: string[] })?.roles ?? []
-}
-
-export function isOwner(user: User | null | undefined): boolean {
-  return getRealmRoles(user).includes('Owner')
-}
-
-// Branch ids from the `branches` claim (id_token + userinfo, merged into the
-// profile by loadUserInfo). A missing claim is no branch, never every branch.
-export function getBranchClaim(user: User | null | undefined): number[] {
-  const raw = (user?.profile as Record<string, unknown> | undefined)?.branches
-  const values = Array.isArray(raw) ? raw : raw == null ? [] : [raw]
-  return values.map(Number).filter(Number.isInteger)
-}
-
-// The Keycloak page follows the app that sent the user there: language via
-// the standard ui_locales parameter, colour scheme via a `theme` parameter
-// the login theme reads before first paint.
-export function loginPageParams(theme: 'light' | 'dark', language: string) {
-  return { extraQueryParams: { ui_locales: language, theme } }
-}
+export const { clientId, getAuthority, getOidcConfig, getStoredUser } = oidc
