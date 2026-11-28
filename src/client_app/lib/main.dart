@@ -20,6 +20,7 @@ import 'core/providers/branch_provider.dart';
 import 'core/providers/current_place_provider.dart';
 import 'core/providers/locale_provider.dart';
 import 'core/services/firebase_service.dart';
+import 'core/services/delivery_card_service.dart';
 import 'core/services/session_notification_service.dart';
 import 'core/services/signalr_service.dart';
 import 'core/theme/theme_provider.dart';
@@ -131,6 +132,7 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
         // Start session notification listener — it will eagerly fetch
         // sessions and show the notification if one is already active.
         ref.read(sessionNotificationServiceProvider).startListening();
+        ref.read(deliveryCardServiceProvider).startListening();
       }
     } catch (e, stack) {
       debugPrint('App initialization error: $e\n$stack');
@@ -254,12 +256,14 @@ class _NinjaAppState extends ConsumerState<NinjaApp>
       _connectSignalR();
       _registerForNotifications();
       ref.read(sessionNotificationServiceProvider).startListening();
+      ref.read(deliveryCardServiceProvider).startListening();
     } else if (!authState.isAuthenticated && _wasAuthenticated) {
       _wasAuthenticated = false;
       _cancelSignalRSubscriptions();
       ref.read(notificationRepositoryProvider).unregisterFromOrderNotifications();
       ref.read(notificationRepositoryProvider).unregisterFromSessionNotifications();
       ref.read(sessionNotificationServiceProvider).stopListening();
+      ref.read(deliveryCardServiceProvider).stopListening();
       ref.invalidate(favoritesProvider);
     }
 

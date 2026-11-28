@@ -108,6 +108,10 @@
                 <action android:name="com.chillax.client.ACTION_ORDER_DRINK_2"/>
             </intent-filter>
         </receiver>
+        <!-- "I'm coming down" on the delivery card: said to the server without opening the app -->
+        <receiver
+            android:name=".DeliveryActionReceiver"
+            android:exported="false" />
         <!-- Don't delete the meta-data below.
              This is used by the Flutter tool to generate GeneratedPluginRegistrant.java -->
         <meta-data

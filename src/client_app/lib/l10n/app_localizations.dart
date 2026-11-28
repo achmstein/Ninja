@@ -3608,6 +3608,138 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'You\'ll collect your order at the counter'**
   String get orderToCollect;
+
+  /// No description provided for @deliveryCardPreparing.
+  ///
+  /// In en, this message translates to:
+  /// **'Preparing your order'**
+  String get deliveryCardPreparing;
+
+  /// No description provided for @deliveryCardReady.
+  ///
+  /// In en, this message translates to:
+  /// **'Ready, leaving soon'**
+  String get deliveryCardReady;
+
+  /// No description provided for @deliveryCardOnTheWay.
+  ///
+  /// In en, this message translates to:
+  /// **'On the way to you'**
+  String get deliveryCardOnTheWay;
+
+  /// No description provided for @deliveryCardNear.
+  ///
+  /// In en, this message translates to:
+  /// **'Almost there'**
+  String get deliveryCardNear;
+
+  /// No description provided for @deliveryCardDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Delivered'**
+  String get deliveryCardDelivered;
+
+  /// No description provided for @deliveryCardNotDelivered.
+  ///
+  /// In en, this message translates to:
+  /// **'Not delivered'**
+  String get deliveryCardNotDelivered;
+
+  /// No description provided for @deliveryCardOrder.
+  ///
+  /// In en, this message translates to:
+  /// **'Order #{number}'**
+  String deliveryCardOrder(String number);
+
+  /// No description provided for @deliveryCardAbout.
+  ///
+  /// In en, this message translates to:
+  /// **'about {minutes} min'**
+  String deliveryCardAbout(String minutes);
+
+  /// No description provided for @deliveryCardBringing.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is bringing it'**
+  String deliveryCardBringing(String rider);
+
+  /// No description provided for @deliveryCardNearRider.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} is about a minute away'**
+  String deliveryCardNearRider(String rider);
+
+  /// No description provided for @deliveryCardNearNoRider.
+  ///
+  /// In en, this message translates to:
+  /// **'About a minute away'**
+  String get deliveryCardNearNoRider;
+
+  /// No description provided for @deliveryCardKnows.
+  ///
+  /// In en, this message translates to:
+  /// **'{rider} knows you are coming down'**
+  String deliveryCardKnows(String rider);
+
+  /// No description provided for @deliveryCardKnowsNoRider.
+  ///
+  /// In en, this message translates to:
+  /// **'The rider knows you are coming down'**
+  String get deliveryCardKnowsNoRider;
+
+  /// No description provided for @deliveryCardEnjoy.
+  ///
+  /// In en, this message translates to:
+  /// **'Enjoy! How was it?'**
+  String get deliveryCardEnjoy;
+
+  /// No description provided for @deliveryCardCall.
+  ///
+  /// In en, this message translates to:
+  /// **'Call rider'**
+  String get deliveryCardCall;
+
+  /// No description provided for @deliveryCardComing.
+  ///
+  /// In en, this message translates to:
+  /// **'I\'m coming down'**
+  String get deliveryCardComing;
+
+  /// No description provided for @deliveryCardTold.
+  ///
+  /// In en, this message translates to:
+  /// **'✓ Rider told'**
+  String get deliveryCardTold;
+
+  /// No description provided for @deliveryCardRate.
+  ///
+  /// In en, this message translates to:
+  /// **'Rate your order'**
+  String get deliveryCardRate;
+
+  /// No description provided for @deliveryCardCallCafe.
+  ///
+  /// In en, this message translates to:
+  /// **'Call {name}'**
+  String deliveryCardCallCafe(String name);
+
+  /// No description provided for @deliveryCardDoor.
+  ///
+  /// In en, this message translates to:
+  /// **'Your door'**
+  String get deliveryCardDoor;
+
+  /// No description provided for @deliveryCardMin.
+  ///
+  /// In en, this message translates to:
+  /// **'min'**
+  String get deliveryCardMin;
+
+  /// No description provided for @deliveryCardStale.
+  ///
+  /// In en, this message translates to:
+  /// **'Open the app for the latest'**
+  String get deliveryCardStale;
 }
 
 class _AppLocalizationsDelegate

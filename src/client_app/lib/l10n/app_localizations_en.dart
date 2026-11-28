@@ -2024,4 +2024,82 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get orderToCollect => 'You\'ll collect your order at the counter';
+
+  @override
+  String get deliveryCardPreparing => 'Preparing your order';
+
+  @override
+  String get deliveryCardReady => 'Ready, leaving soon';
+
+  @override
+  String get deliveryCardOnTheWay => 'On the way to you';
+
+  @override
+  String get deliveryCardNear => 'Almost there';
+
+  @override
+  String get deliveryCardDelivered => 'Delivered';
+
+  @override
+  String get deliveryCardNotDelivered => 'Not delivered';
+
+  @override
+  String deliveryCardOrder(String number) {
+    return 'Order #$number';
+  }
+
+  @override
+  String deliveryCardAbout(String minutes) {
+    return 'about $minutes min';
+  }
+
+  @override
+  String deliveryCardBringing(String rider) {
+    return '$rider is bringing it';
+  }
+
+  @override
+  String deliveryCardNearRider(String rider) {
+    return '$rider is about a minute away';
+  }
+
+  @override
+  String get deliveryCardNearNoRider => 'About a minute away';
+
+  @override
+  String deliveryCardKnows(String rider) {
+    return '$rider knows you are coming down';
+  }
+
+  @override
+  String get deliveryCardKnowsNoRider => 'The rider knows you are coming down';
+
+  @override
+  String get deliveryCardEnjoy => 'Enjoy! How was it?';
+
+  @override
+  String get deliveryCardCall => 'Call rider';
+
+  @override
+  String get deliveryCardComing => 'I\'m coming down';
+
+  @override
+  String get deliveryCardTold => '✓ Rider told';
+
+  @override
+  String get deliveryCardRate => 'Rate your order';
+
+  @override
+  String deliveryCardCallCafe(String name) {
+    return 'Call $name';
+  }
+
+  @override
+  String get deliveryCardDoor => 'Your door';
+
+  @override
+  String get deliveryCardMin => 'min';
+
+  @override
+  String get deliveryCardStale => 'Open the app for the latest';
 }

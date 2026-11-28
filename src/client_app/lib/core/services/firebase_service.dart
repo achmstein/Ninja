@@ -7,6 +7,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../router/app_router.dart';
+import 'delivery_card_service.dart';
 import '../../features/notifications/services/notification_service.dart';
 import '../../features/places/services/place_service.dart';
 
@@ -162,6 +163,9 @@ class FirebaseService {
       _handleSessionStarted(data);
     } else if (type == 'session_ended') {
       _handleSessionEnded();
+    } else if (type == 'delivery_card') {
+      // The card moved: the app, being open, reads the delivery again and hands it over
+      _ref?.read(deliveryCardServiceProvider).onPush(data);
     } else if (type == 'room_available') {
       // Backend auto-deletes the subscription after notifying — reset cached state
       _ref?.invalidate(roomAvailabilitySubscriptionProvider);
@@ -191,7 +195,8 @@ class FirebaseService {
 
     final type = message.data['type'];
     final route = switch (type) {
-      'order_confirmed' || 'order_cancelled' => '/bills',
+      // A delivery's pushes, and its card: the order is on the bills page
+      'order_confirmed' || 'order_cancelled' || 'order_on_the_way' || 'order_delivered' || 'order_not_delivered' || 'delivery_card' => '/bills',
       'session_started' || 'session_ended' || 'reservation_cancelled' || 'room_available' => '/places',
       _ => null,
     };

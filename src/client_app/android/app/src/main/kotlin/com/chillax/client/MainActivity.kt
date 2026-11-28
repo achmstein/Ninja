@@ -14,6 +14,12 @@ class MainActivity : FlutterActivity() {
     companion object {
         const val EXTRA_SESSION_ACTION = "session_action"
         var sessionChannel: MethodChannel? = null
+
+        /** The delivery card's line to Flutter; null while no engine is up. */
+        var deliveryChannel: MethodChannel? = null
+
+        /** A tap on the delivery card that opened the app before Flutter was listening: asked for once it is. */
+        private var pendingDeliveryAction: Map<String, Any>? = null
         private var navigationChannel: MethodChannel? = null
     }
 
@@ -62,6 +68,30 @@ class MainActivity : FlutterActivity() {
             }
         }
 
+        // The customer's live delivery card: Flutter hands over what it reads, the card draws itself
+        val delivery = MethodChannel(flutterEngine.dartExecutor.binaryMessenger, DeliveryCard.CHANNEL_NAME)
+        deliveryChannel = delivery
+        delivery.setMethodCallHandler { call, result ->
+            val args = call.arguments as? Map<*, *> ?: emptyMap<Any, Any>()
+            when (call.method) {
+                "configure" -> {
+                    DeliveryCard.configure(applicationContext, args)
+                    // A tap that opened the app before Flutter was listening
+                    pendingDeliveryAction?.let { sendDeliveryAction(it) }
+                    result.success(null)
+                }
+                "show" -> {
+                    DeliveryCard.apply(applicationContext, args.entries.associate { it.key.toString() to it.value })
+                    result.success(null)
+                }
+                "dismiss" -> {
+                    DeliveryCard.dismiss(applicationContext)
+                    result.success(null)
+                }
+                else -> result.notImplemented()
+            }
+        }
+
         // The app's own light or dark (the person's choice, else the business's starting theme),
         // kept by the system for the app: from Android 12 the next launch screen is drawn in it
         // rather than in the phone's mode. uiMode is in the manifest's configChanges, so the
@@ -103,12 +133,34 @@ class MainActivity : FlutterActivity() {
             sessionChannel?.invokeMethod("onAction", action)
             intent?.removeExtra(EXTRA_SESSION_ACTION)
         }
+
+        // A button on the delivery card that needs the app: "I'm coming down" with a stale sign-in, or Rate
+        val deliveryAction = intent?.getStringExtra(DeliveryCard.EXTRA_ACTION)
+        if (deliveryAction != null) {
+            sendDeliveryAction(mapOf("action" to deliveryAction, "orderId" to (intent?.getLongExtra(DeliveryCard.EXTRA_ORDER_ID, -1) ?: -1L)))
+            intent?.removeExtra(DeliveryCard.EXTRA_ACTION)
+        }
+    }
+
+    /** Hands a card tap to Flutter; kept until Flutter is listening when the tap itself started the app. */
+    private fun sendDeliveryAction(action: Map<String, Any>) {
+        pendingDeliveryAction = action
+        deliveryChannel?.invokeMethod("onAction", action, object : MethodChannel.Result {
+            override fun success(result: Any?) {
+                if (pendingDeliveryAction === action) pendingDeliveryAction = null
+            }
+
+            override fun error(errorCode: String, errorMessage: String?, errorDetails: Any?) {}
+
+            override fun notImplemented() {}
+        })
     }
 
     override fun onDestroy() {
         // Don't dismiss notification on destroy — the foreground service keeps it alive
         // Only clear the channel reference
         sessionChannel = null
+        deliveryChannel = null
         navigationChannel = null
         super.onDestroy()
     }

@@ -2015,6 +2015,84 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get orderToCollect => 'هتستلم طلبك من الكاشير';
+
+  @override
+  String get deliveryCardPreparing => 'الأوردر بيتحضّر';
+
+  @override
+  String get deliveryCardReady => 'جاهز وهيتحرك حالًا';
+
+  @override
+  String get deliveryCardOnTheWay => 'الأوردر في الطريق ليك';
+
+  @override
+  String get deliveryCardNear => 'قرّب يوصل';
+
+  @override
+  String get deliveryCardDelivered => 'الأوردر وصل';
+
+  @override
+  String get deliveryCardNotDelivered => 'الأوردر ما اتسلّمش';
+
+  @override
+  String deliveryCardOrder(String number) {
+    return 'أوردر #‏$number';
+  }
+
+  @override
+  String deliveryCardAbout(String minutes) {
+    return 'حوالي $minutes دقيقة';
+  }
+
+  @override
+  String deliveryCardBringing(String rider) {
+    return '$rider هيوصّله';
+  }
+
+  @override
+  String deliveryCardNearRider(String rider) {
+    return '$rider على بُعد دقيقة تقريبًا';
+  }
+
+  @override
+  String get deliveryCardNearNoRider => 'على بُعد دقيقة تقريبًا';
+
+  @override
+  String deliveryCardKnows(String rider) {
+    return '$rider عرف إنك نازل';
+  }
+
+  @override
+  String get deliveryCardKnowsNoRider => 'المندوب عرف إنك نازل';
+
+  @override
+  String get deliveryCardEnjoy => 'بالهنا والشفا! إيه رأيك؟';
+
+  @override
+  String get deliveryCardCall => 'كلّم المندوب';
+
+  @override
+  String get deliveryCardComing => 'أنا نازل';
+
+  @override
+  String get deliveryCardTold => '✓ المندوب عرف';
+
+  @override
+  String get deliveryCardRate => 'قيّم الأوردر';
+
+  @override
+  String deliveryCardCallCafe(String name) {
+    return 'كلّم $name';
+  }
+
+  @override
+  String get deliveryCardDoor => 'باب بيتك';
+
+  @override
+  String get deliveryCardMin => 'دقيقة';
+
+  @override
+  String get deliveryCardStale => 'افتح التطبيق لآخر تحديث';
 }
 
 /// The translations for Arabic, as used in World (`ar_001`).
@@ -3665,4 +3743,82 @@ class AppLocalizationsAr001 extends AppLocalizationsAr {
 
   @override
   String get orderToCollect => 'ستستلم طلبك من الكاشير';
+
+  @override
+  String get deliveryCardPreparing => 'جارٍ تحضير طلبك';
+
+  @override
+  String get deliveryCardReady => 'جاهز وسيخرج حالًا';
+
+  @override
+  String get deliveryCardOnTheWay => 'طلبك في الطريق إليك';
+
+  @override
+  String get deliveryCardNear => 'على وشك الوصول';
+
+  @override
+  String get deliveryCardDelivered => 'تم التوصيل';
+
+  @override
+  String get deliveryCardNotDelivered => 'لم يتم التوصيل';
+
+  @override
+  String deliveryCardOrder(String number) {
+    return 'طلب #‏$number';
+  }
+
+  @override
+  String deliveryCardAbout(String minutes) {
+    return 'حوالي $minutes دقيقة';
+  }
+
+  @override
+  String deliveryCardBringing(String rider) {
+    return '$rider سيوصله';
+  }
+
+  @override
+  String deliveryCardNearRider(String rider) {
+    return '$rider على بُعد دقيقة تقريبًا';
+  }
+
+  @override
+  String get deliveryCardNearNoRider => 'على بُعد دقيقة تقريبًا';
+
+  @override
+  String deliveryCardKnows(String rider) {
+    return '$rider علم أنك نازل';
+  }
+
+  @override
+  String get deliveryCardKnowsNoRider => 'علم المندوب أنك نازل';
+
+  @override
+  String get deliveryCardEnjoy => 'بالهناء والشفاء! ما رأيك؟';
+
+  @override
+  String get deliveryCardCall => 'اتصل بالمندوب';
+
+  @override
+  String get deliveryCardComing => 'أنا نازل';
+
+  @override
+  String get deliveryCardTold => '✓ علم المندوب';
+
+  @override
+  String get deliveryCardRate => 'قيّم طلبك';
+
+  @override
+  String deliveryCardCallCafe(String name) {
+    return 'اتصل بـ$name';
+  }
+
+  @override
+  String get deliveryCardDoor => 'باب بيتك';
+
+  @override
+  String get deliveryCardMin => 'دقيقة';
+
+  @override
+  String get deliveryCardStale => 'افتح التطبيق لآخر تحديث';
 }

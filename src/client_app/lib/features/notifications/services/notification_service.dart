@@ -2,6 +2,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/network/api_client.dart';
+import '../../../core/services/delivery_card_service.dart';
 import '../../../core/services/firebase_service.dart';
 
 /// Subscription status response from the backend
@@ -120,6 +121,8 @@ class ApiNotificationRepository implements NotificationRepository {
         data: {
           'fcmToken': fcmToken,
           'preferredLanguage': preferredLanguage,
+          // This build draws the live delivery card itself: the server sends its data
+          'platform': ?DeliveryCardService.platform,
         },
       ).timeout(const Duration(seconds: 5));
 
