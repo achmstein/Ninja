@@ -502,14 +502,18 @@ void main() {
       expect(tester.widget<FButton>(assign).onPress, isNull);
       expect(tester.widget<FButton>(move).onPress, isNull);
 
-      // A tap ticks a line; Cancel puts the order back as it was
+      // A tap ticks a line; Back puts the order back as it was
       final flatWhite = inPanel(find.text(_room.lines.last.description!.getText(locale)));
       await tester.tap(flatWhite);
       await tester.pump();
       expect(inPanel(find.byIcon(FIcons.check)), findsOneWidget);
       expect(inPanel(find.text(l10n.selectedLinesCount(1))), findsOneWidget);
       expect(tester.widget<FButton>(move).onPress, isNotNull);
-      await tester.tap(inPanel(find.widgetWithText(FButton, l10n.cancel)));
+      // An owner can also cancel the ticked item, the bill staying open
+      final cancelItems = inPanel(find.widgetWithText(FButton, l10n.cancelItemsAction(1)));
+      expect(tester.widget<FButton>(cancelItems).onPress, isNotNull);
+      expectFits(tester);
+      await tester.tap(inPanel(find.widgetWithText(FButton, l10n.goBack)));
       await tester.pump();
       expect(inPanel(find.widgetWithText(FButton, l10n.settleAction)), findsOneWidget);
       expect(inPanel(find.text('2×')), findsNWidgets(2), reason: 'merged again');

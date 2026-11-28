@@ -341,6 +341,40 @@ class _DemoTicketsRepository implements TicketsRepository {
   }
 
   @override
+  Future<void> cancelLines(int id, CancelLinesRequest request, {String? requestId}) async {
+    final ticket = _tickets[id];
+    if (ticket == null) throw const TicketNotFound();
+    if (!ticket.isOpen) throw const SalesException('Only an open bill can have items cancelled.');
+    final wanted = {for (final line in request.lines) line.lineId: line.qty};
+    if (cancelsEverything(ticket.lines, wanted)) {
+      throw const SalesException('That is everything on the bill — void the bill instead.');
+    }
+    _tickets[id] = _withLines(ticket, [
+      for (final line in ticket.lines)
+        if (wanted[line.id] case final qty?)
+          TicketLineView(
+            id: line.id,
+            source: line.source,
+            orderId: line.orderId,
+            description: line.description,
+            details: line.details,
+            qty: line.qty - qty,
+            unitPrice: line.unitPrice,
+            total: (line.qty - qty) * line.unitPrice,
+            customerId: line.customerId,
+            customerName: line.customerName,
+            guestId: line.guestId,
+            cancelledQty: line.cancelledQty + qty,
+            cancelReason: request.reason,
+            cancelledBy: 'Demo Cashier',
+            cancelledAt: DateTime.now(),
+          )
+        else
+          line,
+    ]);
+  }
+
+  @override
   Future<void> applyDiscount(int id, {double? rate, double? amount, required String reason, String? requestId}) async {
     final ticket = _tickets[id];
     if (ticket == null) throw const TicketNotFound();

@@ -3102,4 +3102,74 @@ class AppLocalizationsAr extends AppLocalizations {
 
   @override
   String get searchResults => 'نتائج البحث';
+
+  @override
+  String cancelItemsAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إلغاء $count صنفًا',
+      few: 'إلغاء $count أصناف',
+      two: 'إلغاء صنفين',
+      one: 'إلغاء صنف واحد',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelItemsHint => 'يرى المطبخ الإلغاء فورًا.';
+
+  @override
+  String cancelItemsConfirm(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'إلغاء $count صنفًا · $amount',
+      few: 'إلغاء $count أصناف · $amount',
+      two: 'إلغاء صنفين · $amount',
+      one: 'إلغاء صنف واحد · $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelReasonChangedMind => 'غيّر العميل رأيه';
+
+  @override
+  String get cancelReasonMistake => 'سُجّل بالخطأ';
+
+  @override
+  String get cancelReasonRanOut => 'نفد من عندنا';
+
+  @override
+  String get cancelReasonTooLong => 'تأخر كثيرًا';
+
+  @override
+  String get cancelOtherReason => 'سبب آخر';
+
+  @override
+  String cancelCountOf(String count, String left) {
+    return '$count من $left';
+  }
+
+  @override
+  String get cancelOneLess => 'واحد أقل';
+
+  @override
+  String get cancelOneMore => 'واحد أكثر';
+
+  @override
+  String get cancelEverythingHint =>
+      'هذا كل ما في الفاتورة: ألغِ الفاتورة نفسها بدلًا من ذلك.';
+
+  @override
+  String get itemsCancelled => 'تم الإلغاء';
+
+  @override
+  String get cancelledAll => 'أُلغي';
+
+  @override
+  String cancelledSome(String count, String total) {
+    return 'أُلغي $count من $total';
+  }
 }

@@ -7,7 +7,8 @@ import '../tickets/models/ticket_detail.dart';
 /// rows, all of which stay exactly as they are underneath — but on screen
 /// they add up to "Cappuccino 2 ×". Only identical lines merge: same item,
 /// same options, same price, same discount, same origin; and what a part
-/// payment already paid for stays apart from what is still to pay.
+/// payment already paid for stays apart from what is still to pay, and a
+/// line with items cancelled stays apart from everything.
 List<TicketLineView> mergeIdenticalLines(List<TicketLineView> lines) {
   final merged = <TicketLineView>[];
   final seen = <String, int>{};
@@ -24,6 +25,9 @@ List<TicketLineView> mergeIdenticalLines(List<TicketLineView> lines) {
       line.unitPrice,
       line.discount,
       line.paid,
+      // A line with items cancelled says so under it, by its own reason:
+      // it stands on its own
+      if (line.isCancelled) line.id,
     ]);
 
     final at = seen[key];

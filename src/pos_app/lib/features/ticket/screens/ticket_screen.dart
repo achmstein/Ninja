@@ -51,6 +51,7 @@ import '../dialogs/discount_dialog.dart';
 import '../dialogs/kitchen_reprint_dialog.dart';
 import '../dialogs/breakdown_dialog.dart';
 import '../lines.dart';
+import '../cancelled_line.dart';
 import '../../../core/utils/bidi.dart';
 import '../../../core/theme/type_roles.dart';
 
@@ -955,7 +956,9 @@ class _LineRow extends StatelessWidget {
                 overflow: TextOverflow.ellipsis,
                 style: theme.type.body.copyWith(
                   fontWeight: FontWeight.w500,
-                  color: negative ? emerald : null,
+                  color: negative ? emerald : (line.cancelledWhole ? theme.colors.mutedForeground : null),
+                  decoration: line.cancelledWhole ? TextDecoration.lineThrough : null,
+                  decorationColor: theme.colors.mutedForeground,
                 ),
               ),
               if (details != null && details.isNotEmpty)
@@ -973,6 +976,8 @@ class _LineRow extends StatelessWidget {
                   ),
                 ],
               ),
+              // Items of it cancelled while the bill was open: how many and why, in red
+              if (line.isCancelled) CancelledNote(line),
             ],
           ),
           ),

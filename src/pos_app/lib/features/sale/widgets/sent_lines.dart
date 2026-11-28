@@ -7,6 +7,7 @@ import '../../../core/utils/bidi.dart';
 import '../../../l10n/app_localizations.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import '../../tickets/models/ticket_detail.dart';
+import '../../ticket/cancelled_line.dart';
 import '../bill_lines.dart';
 import '../bill_people.dart';
 import '../../../core/theme/type_roles.dart';
@@ -110,10 +111,9 @@ class _SentRow extends StatelessWidget {
     this.onToggle,
   });
 
-  static String _qty(double qty) => qty == qty.roundToDouble() ? qty.toStringAsFixed(0) : qty.toString();
-
-  /// A line's count as the list writes it
-  static String count(TicketLineView line) => '${_qty(line.qty)}×';
+  /// A line's count as the list writes it: what is still sold, or what was
+  /// rung up when all of it was cancelled
+  static String count(TicketLineView line) => '${qtyText(line.cancelledWhole ? line.originalQty : line.qty)}×';
 
   static TextStyle countStyle(BuildContext context) => context.theme.type.detail
       .copyWith(fontWeight: FontWeight.w500, fontFeatures: const [FontFeature.tabularFigures()]);
@@ -124,7 +124,13 @@ class _SentRow extends StatelessWidget {
     final negative = line.total < 0;
     final emerald = AppColors.emerald(theme.colors.brightness);
     final ink = negative ? emerald : theme.colors.mutedForeground;
-    final style = theme.type.detail.copyWith(color: ink);
+    // Cancelled whole: it stays on the bill, struck, and comes to nothing
+    final struck = line.cancelledWhole;
+    final style = theme.type.detail.copyWith(
+      color: ink,
+      decoration: struck ? TextDecoration.lineThrough : null,
+      decorationColor: ink,
+    );
     const tabular = [FontFeature.tabularFigures()];
     final details = line.details?.localized(context) ?? '';
     final who = line.customerName ?? '';
@@ -170,7 +176,11 @@ class _SentRow extends StatelessWidget {
               child: Text(count(line),
                   maxLines: 1,
                   softWrap: false,
-                  style: countStyle(context).copyWith(color: theme.colors.mutedForeground)),
+                  style: countStyle(context).copyWith(
+                    color: theme.colors.mutedForeground,
+                    decoration: struck ? TextDecoration.lineThrough : null,
+                    decorationColor: theme.colors.mutedForeground,
+                  )),
             ),
           ),
           const SizedBox(width: 8),
@@ -201,6 +211,8 @@ class _SentRow extends StatelessWidget {
                       color: theme.colors.foreground.withValues(alpha: 0.7),
                     ),
                   ),
+                // Items of it cancelled: how many and why, in red
+                if (line.isCancelled) CancelledNote(line),
               ],
             ),
             ),
@@ -210,7 +222,11 @@ class _SentRow extends StatelessWidget {
             const PaidTag(),
           ],
           const SizedBox(width: 8),
-          PaidDim(paid: paid, child: Text(money(context, line.total), style: style.copyWith(fontFeatures: tabular))),
+          // What it still comes to; struck at what it was, once all of it went
+          PaidDim(
+              paid: paid,
+              child: Text(money(context, struck ? line.unitPrice * line.originalQty : line.total),
+                  style: style.copyWith(fontFeatures: tabular))),
         ],
       ),
     );

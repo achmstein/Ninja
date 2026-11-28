@@ -4,7 +4,9 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:forui/forui.dart';
 import 'package:ninja_app_core/theme/sizes.dart';
 import 'package:go_router/go_router.dart';
+import '../../core/auth/auth_service.dart';
 import '../../l10n/app_localizations.dart';
+import '../ticket/dialogs/cancel_lines_dialog.dart';
 import '../tickets/models/ticket_detail.dart';
 import '../tickets/providers/tickets_provider.dart';
 import 'bill_lines.dart';
@@ -69,14 +71,29 @@ mixin BillLinePicking<W extends ConsumerStatefulWidget> on ConsumerState<W>, Bil
     context.go(billRoute(to.ticketId, label: to.label));
   }
 
+  /// The picked items are cancelled, the bill staying open: an owner's to do,
+  /// as a void is
+  Future<void> _cancelPicked() async {
+    final ticketId = billId;
+    final ticket = ticketId == null ? null : ref.read(ticketProvider(ticketId)).value;
+    if (ticket == null) return;
+    final cancelled = await showCancelLinesDialog(context, ticket, pickedOn(ticket));
+    if (cancelled) _stopPicking();
+  }
+
   /// What stands in the order's button's place while lines are picked: how
   /// many, the way out, and the two things done with them (say whose they
-  /// are, or move them), side by side at the same width
+  /// are, or move them), side by side at the same width. An owner also has
+  /// cancelling them under those, once every picked line is an item that can be
   Widget pickingFoot(BuildContext context, TicketDetail ticket) {
     final theme = context.theme;
     final l10n = AppLocalizations.of(context)!;
-    final count = pickedOn(ticket).length;
+    final chosen = pickedOn(ticket);
+    final count = chosen.length;
     final none = count == 0 || _lineBusy;
+    // Cancelling an item is Owner-only (the server enforces the same rule)
+    final isOwner = ref.watch(authServiceProvider.select((s) => s.isOwner));
+    final canCancel = !none && ticket.lines.where((line) => chosen.contains(line.id)).every((line) => line.cancellable);
 
     // The words shrink to their half of the order's column before they are cut
     Widget action(String label, IconData icon, {required VoidCallback onPress, FButtonVariant? variant}) => Expanded(
@@ -112,7 +129,8 @@ mixin BillLinePicking<W extends ConsumerStatefulWidget> on ConsumerState<W>, Bil
                 variant: FButtonVariant.ghost,
                 mainAxisSize: MainAxisSize.min,
                 onPress: _stopPicking,
-                child: Text(l10n.cancel, style: theme.type.button),
+                // "Back", as the mock-up has it: "Cancel" read as cancelling the items below it
+                child: Text(l10n.goBack, style: theme.type.button),
               ),
             ),
           ],
@@ -125,6 +143,26 @@ mixin BillLinePicking<W extends ConsumerStatefulWidget> on ConsumerState<W>, Bil
             action(l10n.moveItems, FIcons.arrowRightLeft, onPress: _movePicked),
           ],
         ),
+        if (isOwner) ...[
+          const SizedBox(height: 8),
+          SizedBox(
+            height: Sizes.controlLarge,
+            child: FButton(
+              variant: FButtonVariant.outline,
+              onPress: canCancel ? _cancelPicked : null,
+              prefix: Icon(FIcons.x, size: Sizes.icon, color: canCancel ? theme.colors.destructive : null),
+              child: Flexible(
+                child: FittedBox(
+                  fit: BoxFit.scaleDown,
+                  child: Text(l10n.cancelItemsAction(count),
+                      maxLines: 1,
+                      style: theme.type.button.copyWith(
+                          fontWeight: FontWeight.w600, color: canCancel ? theme.colors.destructive : null)),
+                ),
+              ),
+            ),
+          ),
+        ],
       ],
     );
   }

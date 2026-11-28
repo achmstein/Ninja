@@ -3089,4 +3089,70 @@ class AppLocalizationsEn extends AppLocalizations {
 
   @override
   String get searchResults => 'Search results';
+
+  @override
+  String cancelItemsAction(int count) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Cancel $count items',
+      one: 'Cancel 1 item',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelItemsHint => 'The kitchen sees it at once.';
+
+  @override
+  String cancelItemsConfirm(int count, String amount) {
+    String _temp0 = intl.Intl.pluralLogic(
+      count,
+      locale: localeName,
+      other: 'Cancel $count items · $amount',
+      one: 'Cancel 1 item · $amount',
+    );
+    return '$_temp0';
+  }
+
+  @override
+  String get cancelReasonChangedMind => 'Customer changed their mind';
+
+  @override
+  String get cancelReasonMistake => 'Rung up by mistake';
+
+  @override
+  String get cancelReasonRanOut => 'We ran out';
+
+  @override
+  String get cancelReasonTooLong => 'Took too long';
+
+  @override
+  String get cancelOtherReason => 'Another reason';
+
+  @override
+  String cancelCountOf(String count, String left) {
+    return '$count of $left';
+  }
+
+  @override
+  String get cancelOneLess => 'One less';
+
+  @override
+  String get cancelOneMore => 'One more';
+
+  @override
+  String get cancelEverythingHint =>
+      'That is everything on the bill: void the bill instead.';
+
+  @override
+  String get itemsCancelled => 'Cancelled';
+
+  @override
+  String get cancelledAll => 'Cancelled';
+
+  @override
+  String cancelledSome(String count, String total) {
+    return 'Cancelled $count of $total';
+  }
 }

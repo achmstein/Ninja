@@ -21,8 +21,8 @@ import 'widgets/customer_dialog.dart';
 /// web till's `useBillLines` is the same.
 
 /// Whether a sent line can be picked: the room's time is the room's, and
-/// what a part payment paid for is done
-bool pickableLine(TicketLineView line) => line.source != 'SessionTime' && !line.paid;
+/// what a part payment paid for is done, as is an item cancelled whole
+bool pickableLine(TicketLineView line) => line.source != 'SessionTime' && !line.paid && !line.cancelledWhole;
 
 /// The one customer every given line is for, by name: none when a line is
 /// nobody's or there are two. A new tab for the lines opens under it

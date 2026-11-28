@@ -22,6 +22,14 @@ class TicketLineView {
   /// again, nor moved
   final bool paid;
 
+  /// How many of it were cancelled while the bill was open, with why, by
+  /// whom and when. [qty] is what is still sold: a line cancelled whole has
+  /// a qty of 0 and stays on the bill, struck
+  final double cancelledQty;
+  final String? cancelReason;
+  final String? cancelledBy;
+  final DateTime? cancelledAt;
+
   const TicketLineView({
     required this.id,
     this.source = 'Order',
@@ -36,7 +44,25 @@ class TicketLineView {
     this.customerName,
     this.guestId,
     this.paid = false,
+    this.cancelledQty = 0,
+    this.cancelReason,
+    this.cancelledBy,
+    this.cancelledAt,
   });
+
+  /// Some of it was cancelled
+  bool get isCancelled => cancelledQty > 0;
+
+  /// All of it was cancelled: nothing of it is sold any more
+  bool get cancelledWhole => isCancelled && qty <= 0;
+
+  /// As many as were rung up, before any were cancelled
+  double get originalQty => qty + cancelledQty;
+
+  /// An item that can still be cancelled (the server's own rule): one from an
+  /// order or rung up by hand at a price, with some of it left, not yet paid
+  /// for by a part payment. The room's time, a delivery fee and money off are not
+  bool get cancellable => (source == 'Order' || source == 'Manual') && unitPrice > 0 && qty > 0 && !paid;
 
   factory TicketLineView.fromJson(Map<String, dynamic> json) {
     return TicketLineView(
@@ -53,8 +79,50 @@ class TicketLineView {
       customerName: json['customerName'] as String?,
       guestId: json['guestId'] as String?,
       paid: json['paid'] as bool? ?? false,
+      // A server from before cancelling items sends none of these: nothing cancelled
+      cancelledQty: toNumber(json['cancelledQty']),
+      cancelReason: json['cancelReason'] as String?,
+      cancelledBy: json['cancelledBy'] as String?,
+      cancelledAt: json['cancelledAt'] == null ? null : DateTime.tryParse(json['cancelledAt'] as String),
     );
   }
+}
+
+/// One item of an open bill to cancel, and how many of it
+class CancelLineRequest {
+  final int lineId;
+  final double qty;
+
+  const CancelLineRequest({required this.lineId, required this.qty});
+
+  Map<String, dynamic> toJson() => {'lineId': lineId, 'qty': qty};
+}
+
+/// `POST /api/tickets/{id}/lines/cancel`: items the kitchen already has,
+/// taken off an open bill without voiding it. The reason is mandatory, the
+/// audit trail; [stockDisposition] ("Waste" or "Restock") says what became of
+/// the food, null for items with no order behind them
+class CancelLinesRequest {
+  final List<CancelLineRequest> lines;
+  final String reason;
+  final String? stockDisposition;
+
+  const CancelLinesRequest({required this.lines, required this.reason, this.stockDisposition});
+
+  Map<String, dynamic> toJson() => {
+        'lines': lines.map((l) => l.toJson()).toList(),
+        'reason': reason,
+        'stockDisposition': ?stockDisposition,
+      };
+}
+
+/// Whether cancelling [wanted] (line id to how many) leaves nothing sold on
+/// the bill, which the server refuses as a void (Sales `Ticket.CancelLines`)
+bool cancelsEverything(List<TicketLineView> lines, Map<int, double> wanted) {
+  final items = lines.where((l) => l.total > 0 && (l.source == 'Order' || l.source == 'Manual'));
+  final leftAfter = items.fold<double>(0, (sum, l) => sum + l.qty - (wanted[l.id] ?? 0));
+  final otherSold = lines.any((l) => l.total > 0 && l.source != 'Order' && l.source != 'Manual');
+  return leftAfter <= 0.0001 && !otherSold;
 }
 
 /// Money the till took for part of an open bill (Sales `PartPaymentView`):

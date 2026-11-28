@@ -5293,6 +5293,96 @@ abstract class AppLocalizations {
   /// In en, this message translates to:
   /// **'Search results'**
   String get searchResults;
+
+  /// No description provided for @cancelItemsAction.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Cancel 1 item} other{Cancel {count} items}}'**
+  String cancelItemsAction(int count);
+
+  /// No description provided for @cancelItemsHint.
+  ///
+  /// In en, this message translates to:
+  /// **'The kitchen sees it at once.'**
+  String get cancelItemsHint;
+
+  /// No description provided for @cancelItemsConfirm.
+  ///
+  /// In en, this message translates to:
+  /// **'{count, plural, =1{Cancel 1 item · {amount}} other{Cancel {count} items · {amount}}}'**
+  String cancelItemsConfirm(int count, String amount);
+
+  /// No description provided for @cancelReasonChangedMind.
+  ///
+  /// In en, this message translates to:
+  /// **'Customer changed their mind'**
+  String get cancelReasonChangedMind;
+
+  /// No description provided for @cancelReasonMistake.
+  ///
+  /// In en, this message translates to:
+  /// **'Rung up by mistake'**
+  String get cancelReasonMistake;
+
+  /// No description provided for @cancelReasonRanOut.
+  ///
+  /// In en, this message translates to:
+  /// **'We ran out'**
+  String get cancelReasonRanOut;
+
+  /// No description provided for @cancelReasonTooLong.
+  ///
+  /// In en, this message translates to:
+  /// **'Took too long'**
+  String get cancelReasonTooLong;
+
+  /// No description provided for @cancelOtherReason.
+  ///
+  /// In en, this message translates to:
+  /// **'Another reason'**
+  String get cancelOtherReason;
+
+  /// No description provided for @cancelCountOf.
+  ///
+  /// In en, this message translates to:
+  /// **'{count} of {left}'**
+  String cancelCountOf(String count, String left);
+
+  /// No description provided for @cancelOneLess.
+  ///
+  /// In en, this message translates to:
+  /// **'One less'**
+  String get cancelOneLess;
+
+  /// No description provided for @cancelOneMore.
+  ///
+  /// In en, this message translates to:
+  /// **'One more'**
+  String get cancelOneMore;
+
+  /// No description provided for @cancelEverythingHint.
+  ///
+  /// In en, this message translates to:
+  /// **'That is everything on the bill: void the bill instead.'**
+  String get cancelEverythingHint;
+
+  /// No description provided for @itemsCancelled.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get itemsCancelled;
+
+  /// No description provided for @cancelledAll.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled'**
+  String get cancelledAll;
+
+  /// No description provided for @cancelledSome.
+  ///
+  /// In en, this message translates to:
+  /// **'Cancelled {count} of {total}'**
+  String cancelledSome(String count, String total);
 }
 
 class _AppLocalizationsDelegate
