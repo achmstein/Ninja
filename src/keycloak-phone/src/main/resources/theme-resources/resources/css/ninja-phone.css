@@ -1,0 +1,7 @@
+/* The line under the title that says where the code went, or why a name is asked */
+.nj-phone-hint {
+  margin: 0 0 1rem;
+  color: var(--nj-muted-foreground, #64748b);
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}

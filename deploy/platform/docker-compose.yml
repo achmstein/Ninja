@@ -93,6 +93,12 @@ services:
       KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
       KC_DB_USERNAME: postgres
       KC_DB_PASSWORD: ${POSTGRES_PASSWORD}
+      # The customers' account by phone (src/keycloak-phone): how its codes are sent. None, and the
+      # phone is never offered; "test" sends nothing and lets the named test numbers in with the
+      # test code, so the flow can be tried on a live business before a sending account exists
+      NINJA_PHONE_SENDER: ${NINJA_PHONE_SENDER:-none}
+      NINJA_PHONE_TEST_NUMBERS: ${NINJA_PHONE_TEST_NUMBERS:-}
+      NINJA_PHONE_TEST_CODE: ${NINJA_PHONE_TEST_CODE:-}
     volumes:
       # The platform realm (ninja) on first boot; tenant realms are created by the control plane
       - ./realms:/opt/keycloak/data/import:ro

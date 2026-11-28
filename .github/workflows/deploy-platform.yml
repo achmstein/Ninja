@@ -177,6 +177,9 @@ jobs:
           (cd src/keycloak-pin && mvn -q -B package)
           mkdir -p platform-artifacts/providers
           cp src/keycloak-pin/target/ninja-keycloak-pin.jar platform-artifacts/providers/
+          # The customers' account by phone: another extension (src/keycloak-phone), loaded the same way
+          (cd src/keycloak-phone && mvn -q -B package)
+          cp src/keycloak-phone/target/ninja-keycloak-phone.jar platform-artifacts/providers/
           # The native apps' download page; the APKs land beside it from mobile-deploy.yml
           cp deploy/platform/apps/index.html platform-artifacts/apps/
           # Push: the stacks mount it read-only; without it their pushes are only logged

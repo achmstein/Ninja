@@ -1,0 +1,2 @@
+net.ninjapp.keycloak.phone.PhoneFormAuthenticatorFactory
+net.ninjapp.keycloak.phone.PhoneDirectGrant
