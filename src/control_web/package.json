@@ -9,7 +9,7 @@
     "preview": "vite preview",
     "generate:api": "node scripts/generate-api.mjs",
     "test": "vitest run",
-    "lint": "eslint . --max-warnings 47",
+    "lint": "eslint . --max-warnings 46",
     "format:check": "prettier --check .",
     "format": "prettier --write ."
   },
