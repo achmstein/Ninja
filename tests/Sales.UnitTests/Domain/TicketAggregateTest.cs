@@ -679,6 +679,234 @@ public class TicketAggregateTest
         Assert.AreEqual("Table", plain.PlaceKind);
     }
 
+    // ---- Cancelling sent items off an open bill ----
+
+    [TestMethod]
+    public void Cancelling_part_of_a_line_leaves_what_is_still_sold_and_keeps_what_came_off()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 3, 50, discount: 30), Item(2, "Tea", 1, 20)], 0);
+        Assert.AreEqual(140m, ticket.GetSubtotal());
+
+        ticket.CancelLines([new LineCancel(1, 1)], "  Changed their mind ", "owner");
+
+        var latte = ticket.Lines.Single(l => l.Id == 1);
+        Assert.AreEqual(2m, latte.Qty, "Qty is what is still sold");
+        Assert.AreEqual(1m, latte.CancelledQty);
+        Assert.AreEqual(3m, latte.OriginalQty);
+        Assert.AreEqual(20m, latte.Discount, "the line's discount shrinks with it: 30 x 2/3");
+        Assert.AreEqual(80m, latte.Total);
+        Assert.AreEqual(40m, latte.CancelledAmount, "120 before, 80 after");
+        Assert.AreEqual("Changed their mind", latte.CancelReason);
+        Assert.AreEqual("owner", latte.CancelledBy);
+        Assert.IsNotNull(latte.CancelledAt);
+        Assert.AreEqual(100m, ticket.GetSubtotal());
+
+        // The tea was not touched
+        var tea = ticket.Lines.Single(l => l.Id == 2);
+        Assert.AreEqual(0m, tea.CancelledQty);
+        Assert.IsNull(tea.CancelReason);
+    }
+
+    [TestMethod]
+    public void Cancelling_a_whole_line_keeps_it_on_the_bill_at_nothing()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 2, 50, discount: 10), Item(2, "Tea", 1, 20)], 0);
+
+        // The same line asked for twice is one request for the sum
+        ticket.CancelLines([new LineCancel(1, 1), new LineCancel(1, 1)], "Ran out", "owner");
+
+        var latte = ticket.Lines.Single(l => l.Id == 1);
+        Assert.HasCount(2, ticket.Lines, "struck, not removed");
+        Assert.AreEqual(0m, latte.Qty);
+        Assert.AreEqual(0m, latte.Discount);
+        Assert.AreEqual(0m, latte.Total);
+        Assert.AreEqual(2m, latte.CancelledQty);
+        Assert.AreEqual(90m, latte.CancelledAmount);
+        Assert.AreEqual(20m, ticket.GetSubtotal());
+    }
+
+    [TestMethod]
+    public void Cancelling_needs_a_reason_under_the_cap_and_a_person()
+    {
+        var ticket = TwoItems();
+
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 1)], " ", "owner"));
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            ticket.CancelLines([new LineCancel(1, 1)], new string('x', TicketLine.CancelReasonLength + 1), "owner"));
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 1)], "Cold", " "));
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([], "Cold", "owner"));
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(99, 1)], "Cold", "owner"));
+
+        // Exactly at the cap is kept, and nothing above changed the bill
+        Assert.AreEqual(120m, ticket.GetSubtotal());
+        ticket.CancelLines([new LineCancel(1, 1)], new string('x', TicketLine.CancelReasonLength), "owner");
+        Assert.AreEqual(70m, ticket.GetSubtotal());
+    }
+
+    [TestMethod]
+    public void Only_items_sold_can_be_cancelled_not_time_fees_or_money_off()
+    {
+        var ticket = Ticket.OpenForSession(7, 2, new LocalizedText("VIP", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 2, 50), Fee(2, 25), Item(3, "Loyalty discount", 1, -10)], 0);
+        ticket.AddManualLine(new LocalizedText("Extra", null), 1, 10, 0, "cashier");
+        ticket.AppendSessionTime([Time(1m, 50)]);
+        var manual = ticket.Lines.Single(l => l.Source == TicketLineSource.Manual);
+        var time = ticket.Lines.Single(l => l.Source == TicketLineSource.SessionTime);
+        typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(manual, 4);
+        typeof(Entity).GetProperty(nameof(Entity.Id))!.SetValue(time, 5);
+
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(2, 1)], "No", "owner"), "delivery fee");
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(3, 1)], "No", "owner"), "money off");
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(5, 1)], "No", "owner"), "room time");
+
+        // A manual line is a thing sold
+        ticket.CancelLines([new LineCancel(4, 1)], "Rung up wrong", "owner");
+        Assert.AreEqual(1m, manual.CancelledQty);
+    }
+
+    [TestMethod]
+    public void More_than_is_left_or_nothing_cannot_be_cancelled()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 2, 50), Item(2, "Tea", 3, 20)], 0);
+        ticket.CancelLines([new LineCancel(1, 1)], "Cold", "owner");
+
+        var tooMany = Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 2)], "Cold", "owner"));
+        Assert.Contains("left to cancel", tooMany.Message);
+        Assert.AreEqual(1m, ticket.Lines.Single(l => l.Id == 1).Qty);
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 0)], "Cold", "owner"));
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, -1)], "Cold", "owner"));
+    }
+
+    [TestMethod]
+    public void Cancelling_everything_sold_is_a_void()
+    {
+        var ticket = TwoItems();
+
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            ticket.CancelLines([new LineCancel(1, 2), new LineCancel(2, 1)], "Left", "owner"));
+
+        // One at a time comes to the same thing
+        ticket.CancelLines([new LineCancel(1, 2)], "Left", "owner");
+        var refused = Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(2, 1)], "Left", "owner"));
+        Assert.Contains("void the bill instead", refused.Message);
+        Assert.AreEqual(20m, ticket.GetSubtotal());
+    }
+
+    [TestMethod]
+    public void A_cancel_never_leaves_the_bill_worth_less_than_nothing()
+    {
+        // 70 of items, 60 off in points: the latte going would leave -40
+        var ticket = Ticket.OpenForCounter(branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 1, 50), Item(2, "Tea", 1, 20), Item(3, "Loyalty discount", 1, -60)], 0);
+
+        var refused = Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 1)], "Cold", "owner"));
+        Assert.Contains("less than nothing", refused.Message);
+    }
+
+    [TestMethod]
+    public void Every_item_can_go_while_the_room_s_time_stays_on_the_bill()
+    {
+        var room = Ticket.OpenForSession(7, 2, new LocalizedText("VIP", null), branchId: 1);
+        room.AppendOrder(41, [Item(1, "Latte", 2, 50)], 0);
+        room.AppendSessionTime([Time(1m, 50)]);
+
+        room.CancelLines([new LineCancel(1, 2)], "Spilled", "owner");
+
+        Assert.AreEqual(50m, room.GetSubtotal(), "the time is still sold");
+    }
+
+    [TestMethod]
+    public void A_settled_bill_is_refunded_not_cancelled()
+    {
+        var ticket = TwoItems();
+        ticket.Settle([new Payment(PaymentTender.Cash, 120, "cashier")], "cashier");
+
+        Assert.ThrowsExactly<SalesDomainException>(() => ticket.CancelLines([new LineCancel(1, 1)], "Cold", "owner"));
+    }
+
+    [TestMethod]
+    public void The_cancel_event_carries_what_came_off_and_each_order_as_it_was_before()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 2, 50)], 0);
+        ticket.AppendOrder(42, [Item(2, "Tea", 2, 20)], 0);
+
+        // Nothing cancelled yet: as rung up is as it stands
+        CollectionAssert.AreEquivalent(ticket.GetAmountByOrder().ToList(), ticket.GetOriginalAmountByOrder().ToList());
+
+        ticket.ClearDomainEvents();
+        ticket.CancelLines([new LineCancel(1, 1), new LineCancel(2, 1)], "Wrong table", "owner", "Restock");
+
+        var cancelled = ticket.DomainEvents!.OfType<TicketLinesCancelledDomainEvent>().Single();
+        Assert.AreSame(ticket, cancelled.Ticket);
+        Assert.AreEqual("Wrong table", cancelled.Reason);
+        Assert.AreEqual("owner", cancelled.CancelledBy);
+        Assert.AreEqual("Restock", cancelled.StockDisposition);
+        Assert.HasCount(2, cancelled.Lines);
+        Assert.AreEqual(50m, cancelled.Lines.Single(l => l.Line.Id == 1).Amount);
+        Assert.AreEqual(1m, cancelled.Lines.Single(l => l.Line.Id == 1).Qty);
+        Assert.AreEqual(20m, cancelled.Lines.Single(l => l.Line.Id == 2).Amount);
+        Assert.AreEqual(100m, cancelled.OriginalAmountByOrder[41], "before this cancel");
+        Assert.AreEqual(40m, cancelled.OriginalAmountByOrder[42]);
+
+        // After it: what stands, and what was rung up
+        Assert.AreEqual(50m, ticket.GetAmountByOrder()[41]);
+        Assert.AreEqual(20m, ticket.GetAmountByOrder()[42]);
+        Assert.AreEqual(100m, ticket.GetOriginalAmountByOrder()[41]);
+        Assert.AreEqual(40m, ticket.GetOriginalAmountByOrder()[42]);
+
+        // A second cancel still reports the order as rung up, not as it stood after the first
+        ticket.ClearDomainEvents();
+        ticket.CancelLines([new LineCancel(1, 1)], "Wrong table", "owner");
+        var second = ticket.DomainEvents!.OfType<TicketLinesCancelledDomainEvent>().Single();
+        Assert.AreEqual(100m, second.OriginalAmountByOrder[41]);
+        Assert.IsNull(second.StockDisposition);
+    }
+
+    [TestMethod]
+    public void A_refund_after_a_cancel_gives_back_only_what_was_still_sold()
+    {
+        var ticket = TwoItems();
+        ticket.CancelLines([new LineCancel(1, 1)], "Cold", "owner");
+        ticket.Settle([new Payment(PaymentTender.Cash, 70, "cashier")], "cashier");
+        Assert.AreEqual(70m, ticket.Total);
+
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(1, ticket, 9, [], [new RefundRequestLine(1, 2)], "Cold", PaymentTender.Cash, null, null, "owner", null),
+            "one latte was cancelled, only one was paid for");
+
+        var refund = Refund.Issue(1, ticket, 9, [], [new RefundRequestLine(1, 1)], "Cold", PaymentTender.Cash, null, null, "owner", null);
+        Assert.AreEqual(50m, refund.Amount);
+        Assert.ThrowsExactly<SalesDomainException>(() =>
+            Refund.Issue(2, ticket, 9, [refund], [new RefundRequestLine(1, 1)], "Again", PaymentTender.Cash, null, null, "owner", null));
+    }
+
+    /// <summary>A latte line (id 1, 2 x 50) and a tea line (id 2, 1 x 20) of order 41: 120.</summary>
+    private static Ticket TwoItems()
+    {
+        var ticket = Ticket.OpenForTable(3, new LocalizedText("Table 3", null), branchId: 1);
+        ticket.AppendOrder(41, [Item(1, "Latte", 2, 50), Item(2, "Tea", 1, 20)], 0);
+        return ticket;
+    }
+
+    private static TicketLine Item(int id, string name, decimal qty, decimal unitPrice, decimal discount = 0)
+        => new IdLine(id, TicketLineSource.Order, name, qty, unitPrice, discount);
+
+    private static TicketLine Fee(int id, decimal fee)
+        => new IdLine(id, TicketLineSource.DeliveryFee, "Delivery fee", 1, fee);
+
+    private sealed class IdLine : TicketLine
+    {
+        public IdLine(int id, TicketLineSource source, string name, decimal qty, decimal unitPrice, decimal discount = 0)
+            : base(source, new LocalizedText(name, null), qty, unitPrice, discount)
+        {
+            Id = id;
+        }
+    }
+
     /// <summary>One rate option's time, as Spaces reports it when the stay ends.</summary>
     private static SessionTimeLine Time(decimal hours, decimal cost, string option = "Single")
         => new(new LocalizedText(option, null), hours, cost);
