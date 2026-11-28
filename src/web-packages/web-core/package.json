@@ -6,11 +6,13 @@
   "description": "What the web apps copied between them: session, cookies, brand fonts, branch claims. TypeScript source; each app compiles it as its own.",
   "exports": {
     "./branch-claim": "./src/branch-claim.ts",
+    "./brand": "./src/brand.ts",
     "./brand-fonts": "./src/brand-fonts.ts",
     "./cn": "./src/cn.ts",
     "./cookies": "./src/cookies.ts",
     "./i18n": "./src/i18n.ts",
     "./oidc": "./src/oidc.ts",
+    "./platform": "./src/platform.ts",
     "./push": "./src/push.ts",
     "./session": "./src/session.tsx",
     "./sound": "./src/sound.ts",
@@ -25,6 +27,7 @@
     "format": "prettier --write ."
   },
   "peerDependencies": {
+    "@tanstack/react-query": "*",
     "clsx": "*",
     "firebase": "*",
     "oidc-client-ts": "*",
@@ -37,6 +40,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.1",
     "@ninja/config": "*",
+    "@tanstack/react-query": "5.103.1",
     "@trivago/prettier-plugin-sort-imports": "^6.0.0",
     "@types/react": "^19.2.7",
     "clsx": "2.1.1",
@@ -65,5 +69,8 @@
     "sileo": {
       "optional": true
     }
+  },
+  "dependencies": {
+    "@ninja/api": "*"
   }
 }

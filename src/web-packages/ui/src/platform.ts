@@ -1,2 +1,1 @@
-/** The platform's name, as its wordmark reads */
-export const PLATFORM_NAME = 'ninja'
+export { PLATFORM_NAME } from '@ninja/web-core/platform'

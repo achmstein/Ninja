@@ -71,6 +71,16 @@ function theAppLanguage(): LanguageStore {
   return appLanguage
 }
 
+/** The app's language, for shared code: re-renders when it changes */
+export function useAppLanguage(): Language {
+  return theAppLanguage()((s) => s.language)
+}
+
+/** The app's language now, for shared code outside the React tree */
+export function getAppLanguage(): Language {
+  return theAppLanguage().getState().language
+}
+
 // CLDR plural category per language ("few" = 3–10 in Arabic, etc.), so plural
 // entries can carry proper Arabic forms (دقيقة/دقيقتين/دقائق) beyond the
 // `=N`/other shorthand
