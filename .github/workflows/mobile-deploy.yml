@@ -38,6 +38,11 @@ on:
         description: 'Build number (version code). Leave empty to auto-increment.'
         required: false
         type: string
+      release:
+        description: 'client_app only: release it to customers. Android is rolled out on the track instead of left as a draft (production sends it for review); iOS is sent for App Store review and released once approved'
+        required: false
+        type: boolean
+        default: false
       tenant:
         description: 'client_app only: which stack it is built for, tenants/<slug>.json (the till and the kitchen are generic)'
         required: false
@@ -57,6 +62,9 @@ env:
   # them: a value is then only ever a value, not shell
   BUILD_NUMBER: ${{ github.event.inputs.build_number || github.run_number }}
   TRACK: ${{ github.event.inputs.track || 'internal' }}
+  # The customer app only: true and the build goes on to the stores' customers (the Fastfiles'
+  # release); otherwise Play keeps it as a draft and Apple in TestFlight
+  RELEASE: ${{ github.event.inputs.release || 'false' }}
 
 jobs:
   # ==========================================
@@ -121,10 +129,13 @@ jobs:
       # from before Ninja (its own repo) went up to 183: a run's number is
       # offset by 1000 for the stores, which leaves that repo room to the
       # cutover. A build_number given in the run's form is taken as it is.
+      # The version customers see ends in that number too (pubspec's 1.1 becomes 1.1.<number>):
+      # Apple closes a version to new builds once it has approved it, so every build is a version
+      # of its own and none waits for a pubspec bump.
       - name: Build number
         env:
           GIVEN: ${{ github.event.inputs.build_number }}
-        run: echo "CLIENT_BUILD_NUMBER=${GIVEN:-$((GITHUB_RUN_NUMBER + 1000))}" >> "$GITHUB_ENV"
+        run: bash ../../tenants/build-version.sh
 
       - name: Stamp the business's own app
         env:
@@ -155,7 +166,7 @@ jobs:
           ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
           ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
           ANDROID_STORE_PASSWORD: ${{ secrets.ANDROID_STORE_PASSWORD }}
-        run: bundle exec fastlane beta track:"$TRACK" build_number:"$CLIENT_BUILD_NUMBER"
+        run: bundle exec fastlane beta track:"$TRACK" build_number:"$CLIENT_BUILD_NUMBER" build_name:"$CLIENT_BUILD_NAME" release:"$RELEASE"
 
       # A JKS upload key carried onto the record: its fingerprints, which the
       # control plane cannot read, go back to it (its App Links and Firebase use them)
@@ -183,7 +194,7 @@ jobs:
       # to test with where Play's signing key is not registered yet. A
       # business's app reaches its customers through its stores alone.
       - name: Build APK
-        run: flutter build apk --release --build-number="$CLIENT_BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
+        run: flutter build apk --release --build-number="$CLIENT_BUILD_NUMBER" --build-name="$CLIENT_BUILD_NAME" --dart-define-from-file="../../tenants/$TENANT.json"
 
       - name: Upload APK artifact
         uses: actions/upload-artifact@v4
@@ -572,14 +583,15 @@ jobs:
           MATCH_PASSWORD: ${{ secrets.MATCH_PASSWORD }}
         run: bash ../../tenants/match-env.sh "$TENANT"
 
-      # As on Android: TestFlight refuses a build number it has seen for a version
+      # As on Android: TestFlight refuses a build number it has seen for a version, and a
+      # version Apple has approved takes no more builds
       - name: Build number
         env:
           GIVEN: ${{ github.event.inputs.build_number }}
-        run: echo "CLIENT_BUILD_NUMBER=${GIVEN:-$((GITHUB_RUN_NUMBER + 1000))}" >> "$GITHUB_ENV"
+        run: bash ../../tenants/build-version.sh
 
       - name: Build Flutter (no codesign)
-        run: flutter build ios --release --no-codesign --build-number="$CLIENT_BUILD_NUMBER" --dart-define-from-file="../../tenants/$TENANT.json"
+        run: flutter build ios --release --no-codesign --build-number="$CLIENT_BUILD_NUMBER" --build-name="$CLIENT_BUILD_NAME" --dart-define-from-file="../../tenants/$TENANT.json"
 
       - name: Setup Ruby
         uses: ruby/setup-ruby@v1
@@ -608,16 +620,22 @@ jobs:
           echo "API_KEY_PATH=$API_KEY_PATH" >> $GITHUB_ENV
 
       # MATCH_PASSWORD and the repo come from Signing settings; setting them
-      # here again would override those
+      # here again would override those. A release waits while Apple processes
+      # the build (a quarter of an hour or so) before it can send it for review
       - name: Build and deploy with Fastlane
         working-directory: src/client_app/ios
         env:
           MATCH_GIT_BASIC_AUTHORIZATION: ${{ secrets.MATCH_GIT_BASIC_AUTHORIZATION }}
-        run: bundle exec fastlane beta
+        run: |
+          if [ "$RELEASE" = "true" ]; then bundle exec fastlane release; else bundle exec fastlane beta; fi
 
+      # Kept even when the release stops after the build (App Review still has
+      # the last one, or the app's page lacks something Apple asks for)
       - name: Upload IPA artifact
+        if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
+          if-no-files-found: ignore
           name: client-app-ios-ipa
           path: src/client_app/build/ios/ipa/*.ipa
 

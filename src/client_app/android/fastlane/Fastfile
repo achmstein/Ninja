@@ -1,11 +1,21 @@
 default_platform(:android)
 
 platform :android do
+  # Builds the bundle and puts it on Play's track. As a draft unless release:true, which rolls it
+  # out on the track with nobody opening Play Console (on production that is what sends it for
+  # review). Play takes only drafts for an app it has never published: its first release is still
+  # rolled out by hand.
   lane :beta do |options|
-    build_number = options[:build_number] || ENV['GITHUB_RUN_NUMBER'] || '1'
+    build_number = (options[:build_number] || ENV['GITHUB_RUN_NUMBER'] || '1').to_s
+    build_name = options[:build_name].to_s
     track = options[:track] || 'internal'
     tenant = options[:tenant] || ENV['TENANT'] || 'chillax'
+    release = options[:release].to_s == 'true'
     app_root = File.expand_path('../..', Dir.pwd)
+
+    # Both reach a shell command below
+    UI.user_error!("The build number is digits only, not '#{build_number}'") unless build_number.match?(/\A\d+\z/)
+    UI.user_error!("The version is numbers and dots, not '#{build_name}'") unless build_name.empty? || build_name.match?(/\A\d+(\.\d+){0,2}\z/)
 
     # Decode keystore from base64 in CI, unless tenants/fetch-kit.sh put the business's own in place
     if ENV['CI'] && ENV['ANDROID_KEYSTORE_BASE64'] && ENV['KIT_SIGNING'] != '1'
@@ -18,7 +28,8 @@ platform :android do
       PROPS
     end
 
-    sh("cd \"#{app_root}\" && flutter build appbundle --release --build-number=#{build_number} --dart-define-from-file=../../tenants/#{tenant}.json")
+    version = build_name.empty? ? '' : " --build-name=#{build_name}"
+    sh("cd \"#{app_root}\" && flutter build appbundle --release --build-number=#{build_number}#{version} --dart-define-from-file=../../tenants/#{tenant}.json")
 
     supply(
       track: track,
@@ -26,7 +37,7 @@ platform :android do
       skip_upload_metadata: true,
       skip_upload_images: true,
       skip_upload_screenshots: true,
-      release_status: 'draft',
+      release_status: release ? 'completed' : 'draft',
     )
   end
 
