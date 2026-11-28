@@ -9,6 +9,9 @@ import { hintBook, type HintKey } from './hints'
  */
 const useCueOnScreen = create<{ key: HintKey | null }>(() => ({ key: null }))
 
+/** Whether the app teaches its gestures on a first visit at all */
+const CUES_ON = false
+
 /**
  * One first-visit cue. `pending` is true until the cue has been shown or the
  * guest has done the gesture themselves; showing it (`show`) records it at
@@ -17,7 +20,10 @@ const useCueOnScreen = create<{ key: HintKey | null }>(() => ({ key: null }))
  * its caller asks again when its moment comes round.
  */
 export function useHint(key: HintKey) {
-  const [pending, setPending] = useState(() => !hintBook.seen(key))
+  // The first-visit cues are off: the owner found them useless (a fingertip showing the swipe, the pinch, the
+  // hold and the tray's pull, one after another, on a customer's first visit). No cue is ever pending, so
+  // none shows and nothing waits on one; the gestures themselves are unchanged
+  const [pending, setPending] = useState(() => CUES_ON && !hintBook.seen(key))
   const [showing, setShowing] = useState(false)
 
   const show = useCallback(() => {
