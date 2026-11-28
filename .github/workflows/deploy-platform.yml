@@ -120,6 +120,11 @@ jobs:
           PLATFORM_ENCRYPTION_KEY: ${{ secrets.PLATFORM_ENCRYPTION_KEY }}
           ADMIN_ALLOW_CIDR: ${{ vars.PLATFORM_ADMIN_ALLOW_CIDR }}
           PLATFORM_ADMIN_PASSWORD: ${{ secrets.PLATFORM_ADMIN_PASSWORD }}
+          # The customers' account by phone: how its codes are sent (src/keycloak-phone/README.md).
+          # Unset, there is no way to send one and the phone is never offered
+          NINJA_PHONE_SENDER: ${{ vars.NINJA_PHONE_SENDER }}
+          NINJA_PHONE_TEST_NUMBERS: ${{ vars.NINJA_PHONE_TEST_NUMBERS }}
+          NINJA_PHONE_TEST_CODE: ${{ vars.NINJA_PHONE_TEST_CODE }}
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
           # Optional: a copy of every backup off the box (any S3-compatible bucket) and the weekly restore drill
           OFFSITE_ENDPOINT: ${{ secrets.PLATFORM_OFFSITE_ENDPOINT }}
@@ -211,6 +216,9 @@ jobs:
           KEYCLOAK_CONTROL_PASSWORD=$KEYCLOAK_CONTROL_PASSWORD
           PLATFORM_ENCRYPTION_KEY=$PLATFORM_ENCRYPTION_KEY
           ADMIN_ALLOW_CIDR=${ADMIN_ALLOW_CIDR:-127.0.0.1/32}
+          NINJA_PHONE_SENDER=${NINJA_PHONE_SENDER:-none}
+          NINJA_PHONE_TEST_NUMBERS=$NINJA_PHONE_TEST_NUMBERS
+          NINJA_PHONE_TEST_CODE=$NINJA_PHONE_TEST_CODE
           GEMINI_API_KEY=$GEMINI_API_KEY
           OFFSITE_ENDPOINT=$OFFSITE_ENDPOINT
           OFFSITE_BUCKET=$OFFSITE_BUCKET
