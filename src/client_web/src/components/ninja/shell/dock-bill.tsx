@@ -162,17 +162,6 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
           >
             {/* The dock's grab handle, as on the tray's row: every row of the dock has it */}
             <span aria-hidden className='bg-background/30 absolute top-1.5 left-1/2 h-1 w-9 -translate-x-1/2 rounded-full' />
-            {progress != null && (
-              <span aria-hidden className='bg-background/15 absolute inset-x-7 top-0 h-[3px] overflow-hidden rounded-full'>
-                <motion.span
-                  // The dock's own ink, not a green: it reads on whatever colour the business made its dock
-                  className='bg-background block h-full origin-left rtl:origin-right'
-                  initial={false}
-                  animate={{ scaleX: progress }}
-                  transition={{ type: 'spring', stiffness: 120, damping: 20 }}
-                />
-              </span>
-            )}
             {/* The order's stage when one is on its way (its colour saying how it is going), else the place */}
             <span
               className={cn(
@@ -186,6 +175,26 @@ export function DockBill({ live, trayEmpty, className }: { live: LiveBills; tray
                       : 'bg-background/12'
               )}
             >
+              {/* How far along the order is, drawn round its own icon in the dock's ink: the ring fills as it moves
+                  from sent to delivered, as the tab's ring drains while a place is held */}
+              {progress != null && (
+                <svg aria-hidden viewBox='0 0 52 52' className='absolute -inset-1 size-[52px] -rotate-90'>
+                  <circle cx='26' cy='26' r='24.5' fill='none' stroke='currentColor' strokeOpacity={0.18} strokeWidth={2.5} className='text-background' />
+                  <motion.circle
+                    cx='26'
+                    cy='26'
+                    r='24.5'
+                    fill='none'
+                    stroke='currentColor'
+                    strokeWidth={2.5}
+                    strokeLinecap='round'
+                    className='text-background'
+                    initial={false}
+                    animate={{ pathLength: Math.max(0.001, progress) }}
+                    transition={{ type: 'spring', stiffness: 120, damping: 20 }}
+                  />
+                </svg>
+              )}
               {enhanced && stage && (
                 <motion.span
                   key={`arrived-${stage}`}
